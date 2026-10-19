@@ -293,6 +293,31 @@ so the design rule is **15–25 s of walking between fights**. Targets (revised 
 | **Sonnet** | content: maps, triggers, story/dialogue, enemies, UI screens, sprites | `world.js`, `hud.js`, `maps.js`, `art.js` |
 | **Haiku** | smoke **and scripted play tests** (kill → drop → equip → save → reload → die → checkpoint; 60 s fps sample on the largest map), data tables, balance sheets, docs | `tools/`, `README.md`, tables |
 
+## 12. Completionist scope: 4.5–5 hours at 100 %
+The main path stays ~2 hours. Optional content fills 2.5–3 more hours:
+
+| Optional layer | Content | Min |
+|---|---|---|
+| Secrets | 3 per outer map + 1 per dungeon = 20, ~1.5 min each | 30 |
+| Side quests | 1 per zone (5) + 2 hub chains | 35 |
+| Vaults | 5 key-gated vault maps (12–16 tiles): a puzzle room + gold chest | 30 |
+| Optional zone: Drifting Isles | 48 tiles, L20–26, sixth named legendary | 20 |
+| Optional zone: Starlit Shoals | 48 tiles, L28–34, Mythic chance | 20 |
+| Post-game: The Gloaming Below | 2 floors × 36 tiles, corrupted elites, L36–40 | 30 |
+| Arena | 10 tiers × ~2.5 min, Epic every 5 tiers | 25 |
+| Hunts / bestiary completion | 50-kill milestones (mostly overlaps the above) | 15 |
+| Fishing | see §13 | 20–30 |
+| **Optional total** | | **~225** |
+| **100 % first run** | main 120 + optional | **~5.5 h** (NG+ excluded) |
+
+Trim to 4.5 h by dropping Starlit Shoals first if behind. Map count: 17 critical + 5 vaults + 2 optional zones +
+2 Gloaming floors + arena = **27 maps**.
+* **Lane O (optional content)** ships one layer inside each milestone from M4: M4 vaults + secrets for Acts I–II;
+  M5 side quests + Drifting Isles; M6 arena + hunts; M7 Gloaming Below + Starlit Shoals; M8 completion pass (timed 100 %
+  run). A third Sonnet lane owns lane O (maps and triggers only).
+* Risks: 27 maps is 9× what exists (optional zones are cut first); completion minutes are estimates (±30 %) until the
+  scripted runs exist; L36–40 balance is tested in the arena, so the arena is built before the Gloaming Below.
+
 ## 11. Expanded scope: the 2-hour game (supersedes conflicting numbers in §2, §3, §8, §8b, §8c)
 Rule: reach 2 hours through **fight density per zone, not walking** (keep 15–25 s between fights). Every zone is now
 **outer map → mandatory dungeon (the Shard lies below; the outer map's elite drops the key) → boss map**.
@@ -382,11 +407,12 @@ shop), reputation, fishing and minigames, day/night, mounts, a separate hard mod
   additive stats, damage types + resistances plumbing (§5b), loot drops with fanfare, inventory UI, save/load with
   `version` + `migrate`, checkpoint shrines + persisted trigger state, death/respawn, discovery hooks (`G.seen`,
   first-hit weakness reveal) and the `huntBonus` slot, smoke test harness.
-* **M2 Act I slice** (~25 min playable): Pinewood outer + Root Hollow dungeon + Bramblehorn, hub 40, the data-driven boss
+* **M2 HUD rework + Act I slice** (~25 min playable): the complete "Dream Glass" UI from `docs/HUD.md` first
+  (`ui.js` primitives by Opus, bitmap font, all HUD elements and the Tab screens rebuilt on it by Sonnet B), then Pinewood outer + Root Hollow dungeon + Bramblehorn, hub 40, the data-driven boss
   system with a mini-boss, key/door, levers/gates, dialogue/camera/loot/checkpoint/quest actions, intro and Pip, elites,
   universal dodge, one side quest, 3 secrets, return-rift, scripted play test.
-* **M3 The Hero & Icons:** layered hero, gear overlays, rarity glow & particles, paper-doll, the icon set, hero status-icon
-  row, enemies rescaled, unified `rarityFx`; prototype the 4-tab layout.
+* **M3 The Hero & Icons:** layered hero, gear overlays, rarity glow & particles, paper-doll in the new Tab screen, the
+  icon set wired into the HUD, hero status-icon row, enemies rescaled, unified `rarityFx`.
 * **M4 Act II** (~45 min): Ruins (3 maps), Gloam Warden ported, 5 status effects + enemy status icons, set bonuses,
   Bestiary tab.
 * **M5 Act III** (~65 min): Grotto (3 maps), Mirelle, gem amplification complete, Drifting Isles if ahead of schedule.
