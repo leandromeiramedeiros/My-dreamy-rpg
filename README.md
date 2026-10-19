@@ -6,6 +6,8 @@ three bars and gear icons in the bottom-left, plus a diamond compass/minimap in 
 
 ## Play
 
+**Play online:** https://leandromeiramedeiros.github.io/My-dreamy-rpg/
+
 Open `index.html` in a browser (Chrome, Edge, Firefox or Safari). Nothing to build or install.
 Opening the file directly works. You can also serve the folder:
 
