@@ -17,7 +17,7 @@ module.exports = {
     g.room('flatW', { kind: 'flat', x: 23, y: 27, r: 4.5, lvl: 2 });
     g.room('flatE', { kind: 'flat', x: 49.5, y: 31, r: 4, lvl: 2 });
 
-    g.path('main', { kind: 'main', w: 3, meander: 4.2, every: 7, pts: ['start', [7, 38], [13, 31], [23, 27, 2, 4.5], [31, 33], 'clearA', [49.5, 31, 2, 4], [44, 21, 4], [34, 23], [27, 19], 'plazaB', [30, 6], [38, 4], 'hollowC'] });
+    g.path('main', { kind: 'main', w: 2.6, meander: 4.2, every: 7, pts: ['start', [7, 38], [13, 31], [23, 27, 2, 4.5], [31, 33], 'clearA', [49.5, 31, 2, 4], [44, 21, 4], [34, 23], [27, 19], 'plazaB', [30, 6], [38, 4], 'hollowC'] });
     g.path('tablet', { kind: 'branch', w: 2, meander: 1.5, from: { room: 'clearA' }, pts: [[30, 47, 0], 'nookTablet'] });
     g.path('elite', { kind: 'branch', w: 2, meander: 1.5, from: { room: 'clearA' }, pts: [[47, 45, 2], 'denElite'] });
     g.path('shortcut', { kind: 'loop', w: 2, meander: 2.5, from: { room: 'plazaB' }, pts: [[10, 18, 2], [4, 28, 2], [4, 38, 0], [7, 43, 0]] });

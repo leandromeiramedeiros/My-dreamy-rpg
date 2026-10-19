@@ -465,7 +465,7 @@ class MapGen {
         this.h[y][x] = rm.lvl; this.zone[y][x] |= ZONE.room;
         const k = rm.kind;
         const inner = -d;   // depth inside
-        if (k === 'plaza') this.type[y][x] = inner > 1.2 ? 'x' : inner > 0.4 ? 'p' : 'g';
+        if (k === 'plaza') this.type[y][x] = inner > 1.2 ? (this.n2.fbm(x * 0.35, y * 0.35, 2) > 0.34 ? 'x' : (this.n1.v(x * 0.7, y * 0.7) > 0.5 ? 'p' : 'd')) : inner > 0.4 ? 'p' : 'g';
         else if (k === 'arena') this.type[y][x] = inner > 0.8 ? 'x' : 'p';
         else if (k === 'chamber') this.type[y][x] = inner > 1 ? (this.n2.v(x * 0.5, y * 0.5) > 0.7 ? 'x' : 'd') : 'd';
         else if (k === 'clearing' || k === 'hub') { if (this.type[y][x] === 'd') this.type[y][x] = 'g'; }
@@ -725,6 +725,7 @@ class MapGen {
   }
 
   // ---------------------------------- portals/start ----------------------------
+  house(x, y) { this.blockers = this.blockers || []; this.blockers.push({ x0: x, y0: y, x1: x + 2, y1: y + 2 }); return this.addObj('house', x, y, { force: true, sp: 3.5 }); }
   setStart(x, y) { this.startPos = { x: r2(x), y: r2(y) }; }
   portal(x, y, to, o = {}) { const p = Object.assign({ x: r2(x), y: r2(y), to, open: true, marker: false }, o); this.portals.push(p); return p; }
 
