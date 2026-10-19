@@ -318,6 +318,58 @@ Trim to 4.5 h by dropping Starlit Shoals first if behind. Map count: 17 critical
 * Risks: 27 maps is 9× what exists (optional zones are cut first); completion minutes are estimates (±30 %) until the
   scripted runs exist; L36–40 balance is tested in the arena, so the arena is built before the Gloaming Below.
 
+## 13. Dreamfishing
+Fishing is a **second loot channel** that pays in the currencies the loop already wants (gems, Runes, keys, boss-prep
+food), not fish for their own sake.
+
+**Where:** 2 spots per outer map at water edges (Vale pond, Pinewood brook, Grotto crystal pools…), 1 hidden spot per
+zone behind a secret (it counts as that map's third secret). Late "impossible" spots need a rod tier: **lava fishing**
+in the Caldera (Cinder rod, T3), **void fishing** at the Spire's edges (Gloam rod, T4), **moon fishing** in the Vale
+pond once all Shards are lit (post-game/NG+). Spots are `fishspot` objects with a `pool` id, placed in the editor.
+
+**Minigame (one mechanic, all inputs):**
+1. Hold Interact to cast; hold time sets distance over 3 rings on the water (farther ring = rarer pool).
+2. The bobber waits 2–6 s; a **bite** = dip + splash + a 0.6 s "!" window; press Interact to hook (miss = the fish flees).
+3. **Reel** with a tension bar (48×6 px on the 480 grid, above the hero): the fish pulls in telegraphed bursts, its
+   glowing shadow visible in the water. Hold Interact to reel, release to rest; 1 s in the red snaps the line.
+4. Rare fish add a "turn" burst: push the stick / mouse / drag toward the arrow shown on the bobber.
+5. The catch lands with a rarity loot beam. Nothing faster than 4 Hz; 10–20 s per catch.
+Touch: hold the attack button to reel, drag anywhere to turn. Keyboard: Space. Gamepad: hold A + left stick.
+
+**Catches** (`FISH` table): 4 common fish per zone keyed to its element (Mossback, Dawnminnow, Frostgill, Cinderkoi,
+Voidlamprey, Moonmaw…), 1 rare per zone (far ring), 1 legendary per zone (hidden spot + rod tier + a condition hinted
+in the log). 15 % of bites are treasure instead: Chipped/Clear gems weighted to the zone element, Dream Dust, the hidden
+spot's Socket Rune (guaranteed the first time), the zone's **vault key** (one of the ways to get it), cosmetic hats and
+rod skins, and a 1 % Sunken Chest (Rare+ item).
+
+**What fish are for:**
+1. **Cooking at any shrine fire** (1 fish = 1 dish, no recipes): a 10-minute food buff. Zone fish = +15 to that zone's
+   resistance; rare fish = +10 % damage of an element; legendary fish = a unique effect (Moonmaw: kill-heal doubled).
+   One food buff at a time, shown in the status row: the pre-boss preparation moment.
+2. **Fishing Log** tab inside the Bestiary (silhouette → caught, size records). Rewards at 10/20/30 entries: a Socket
+   Rune, a Radiant gem of your choice, the Mythic rod. Hunts count fish.
+3. **Elder Stone trades:** 3 rare fish → a Clear gem of your choice; a legendary fish → choose which unique rule an
+   existing legendary has (the only reroll in the game, and it is fishing-gated).
+4. **The rod** is equipped in a fifth, non-combat `tool` slot: tiers T0–T4 (Twig → Dawn Rod → Cinder → Gloam →
+   Moonline), rarity like gear, **one socket** (Ruby = lava spots earlier; Sapphire = longer bite window; Topaz = more
+   treasure; Diamond = the line can't snap once per catch). Rods drop from fishing or are bought with Dust, and the rod
+   shows on the hero's back.
+
+**Budget:** 5–10 min on the main path (the first spot sits next to the first Vale chest and Pip points it out once),
+45–60 min for the full log (30 fish + 5 legendaries), inside the completionist optional time.
+**Art/audio:** per zone a bobber and 5 fish sprites (16×8, also the water shadow and the 3× log art), rod overlay ×5
+tiers, tension-bar strip, cooking-fire prop; sfx cast whoosh, plop, bite tick, reel ratchet (pitch rises with tension),
+snap, splash-catch, sizzle; music ducks 30 % while fishing.
+**Implementation:** `js/fishing.js` (Sonnet gameplay, Opus reviews input): state machine
+`idle → casting → waiting → bite → reeling → caught | snapped` driven by the Interact action; `G.fishing`; `fishspots` in
+`world.js` (editor gets a spot tool); `FISH`, `FOOD`, `ROD` tables in data.js (Haiku); catches go through the normal drop
+and `rarityFx` path; log state in the save. **Milestone M5** (optional lane), lava/void spots in M7.
+
+## 14. Controls
+See **`docs/CONTROLS.md`**: one input layer of actions (`js/input.js`) shared by keyboard + mouse, gamepad and touch,
+automatic button prompts for the last-used device, aim assist on stick/touch, a focus model for menus, rebinding and
+accessibility options. Interact is on Space (keyboard) / A (pad) / a context button (touch).
+
 ## 11. Expanded scope: the 2-hour game (supersedes conflicting numbers in §2, §3, §8, §8b, §8c)
 Rule: reach 2 hours through **fight density per zone, not walking** (keep 15–25 s between fights). Every zone is now
 **outer map → mandatory dungeon (the Shard lies below; the outer map's elite drops the key) → boss map**.
@@ -390,7 +442,7 @@ legendary + Mythic chance), one **secret vault per zone** (12–16 tiles, reache
 | NG+ modifiers: elites everywhere / no kill-heal / gloom everywhere, each raising drop rarity | nice | M7 |
 
 **Rejected:** potion/rune crafting and enchanting, gold and merchants (Dream Dust is the one currency; the Elder Stone is the
-shop), reputation, fishing and minigames, day/night, mounts, a separate hard mode (NG+ modifiers cover it).
+shop), reputation, minigames other than fishing (fishing is in, see §13), day/night, mounts, a separate hard mode (NG+ modifiers cover it).
 
 ### 11.7 Generator and tech
 * Three stamps: `outer` (coast + 3 rooms + branches + 3 secrets), `dungeon` (cave/crypt palette, 2 rooms + mini-boss arena +
@@ -408,7 +460,8 @@ shop), reputation, fishing and minigames, day/night, mounts, a separate hard mod
   `version` + `migrate`, checkpoint shrines + persisted trigger state, death/respawn, discovery hooks (`G.seen`,
   first-hit weakness reveal) and the `huntBonus` slot, smoke test harness.
 * **M2 HUD rework + Act I slice** (~25 min playable): the complete "Dream Glass" UI from `docs/HUD.md` first
-  (`ui.js` primitives by Opus, bitmap font, all HUD elements and the Tab screens rebuilt on it by Sonnet B), then Pinewood outer + Root Hollow dungeon + Bramblehorn, hub 40, the data-driven boss
+  (`ui.js` primitives + `input.js` action layer and focus model by Opus, bitmap font, all HUD elements and the Tab screens
+  rebuilt on it by Sonnet B), then Pinewood outer + Root Hollow dungeon + Bramblehorn, hub 40, the data-driven boss
   system with a mini-boss, key/door, levers/gates, dialogue/camera/loot/checkpoint/quest actions, intro and Pip, elites,
   universal dodge, one side quest, 3 secrets, return-rift, scripted play test.
 * **M3 The Hero & Icons:** layered hero, gear overlays, rarity glow & particles, paper-doll in the new Tab screen, the
