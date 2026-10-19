@@ -120,8 +120,7 @@ Each changes a skill's *rule*, not just numbers:
 ## 5. Skills
 * Weapon gives LMB + Q/E/R; chest F, helmet C, boots Shift (existing system kept).
 * Character skills 1/2/3 unlock by level: 2 at L1, more at L5, L10, L15, L20 (8 total: existing 6 + 2 new).
-* **Choice moments instead of talents:** at L5/10/15/20 pick 1 of 2 skill modifiers (e.g. "Chain Lightning +2 jumps"
-  vs "Chain Lightning stuns"). Respec free at the Elder Stone.
+* Skill modifiers come from per-skill ranks (§15.2).
 * **Universal dodge:** every boots skill has ≥0.25 s i-frames so telegraphs are fair for every build.
 * **Kill-heal** (existing +HP/+MP per kill) scales with a kill streak (`p.combo`).
 * Weapon skill options (two choices per slot) unlock with weapon tier: second option at weapon reqLvl ≥ 10.
@@ -401,6 +400,78 @@ Each reaction pops its name in its element colour with its own sound. Seven, no 
   reactions it triggers, modifier slots, which gems amplify it.
 * The ultimate charge bar replaces R's cooldown sweep.
 
+## 16. Polish, economy, save schema and technology (expert review; authoritative)
+### 16.1 Commercial-feel polish list
+1. **Hit feedback hierarchy:** enemy white flash 2 frames, 1 px knockback shake, reaction pops with unique sfx, hitstop
+   scaled by damage %.
+2. **Music:** a WebAudio step sequencer (16 steps, 3 voices: square / triangle / noise) on the existing `tone()`, one
+   4-bar loop per zone + a boss stinger; pattern tables in data. (M2b)
+3. **Transitions:** rift fade → map-name banner → control hint; the next map pre-rasters during the fade / on portal
+   proximity. (M2b)
+4. **Onboarding:** no help screen; contextual prompts via `IN.glyph()` the first time each system matters (first drop,
+   first gem, first Chill on an enemy: "slash to Shatter").
+5. **Difficulty:** a per-level-band sheet (enemy HP/DPS vs expected player power) checked by the scripted run, and a
+   **Story / Normal** setting (Story = damage taken ×0.6). (M2a setting, sheet by Haiku)
+6. **Save UX:** autosave glyph (2 s), title "Continue" shows zone / level / playtime, **3 save slots**. (M2b)
+7. **Settings + accessibility** from HUD.md and CONTROLS.md ship in **M2a**, not M8.
+8. **No hitching:** cached light sprites, pre-rastered maps, pooled particles with a verified hard cap.
+9. **Art consistency:** one shared palette (`PAL`) for icons, hero, UI frames and enemy recolours; enemies rescaled to the
+   24×34 hero (M3).
+10. **Death/retry:** respawn at the arena entrance, the boss intro is skipped on retries, "Retry" within 1 s.
+
+### 16.2 The first 10 minutes (every minute adds one new noun)
+0:00 title (soft music, Continue / New Dream) → 0:10 wake in the Vale, Pip's line, move prompt, camera pan to the
+cottage → 0:40 dummies teach attack, dodge, Q (one prompt each, numbers + white flash) → 1:30 first chest: beam, Uncommon
+weapon + Chipped gem, Pip's two lines, Tab opens on the item with Equip highlighted; equipping visibly changes the hero
+→ 2:30 fishing spot beside the chest: one cast, guaranteed gem, log unlocked → 3:30 Elder Stone riddle, lost-lantern
+quest, first Tome → 4:30 scripted ambush (3 slimes) in the garden: first drop, first kill-heal, Level 2 → 5:30 rift to
+Pinewood opens, banner, a fox flees → 6:30 room 1 ogres teach the brute telegraph, an elite aura visible ahead → 8:00
+first Shatter pop if the player has frost; bestiary badge → 9:30 shrine (checkpoint, potions, cooking fire) → 10:00 the
+Root Hollow door and the key hint.
+
+### 16.3 Dust economy
+Salvage is currently the only Dust source. Haiku owns one sheet listing every **source** with a rate (salvage by
+rarity, hunt milestones, fishing treasure, chests, arena tiers, quest rewards) and every **sink** with a price (Socket
+Rune, Chipped gem, Skill Rune at the Elder Stone, rod tiers); respec stays free. Balance target: a player who salvages
+everything can afford one Socket Rune + one Skill Rune per zone.
+
+### 16.4 One elite table
+Elite modifiers and elite element badges are the same thing: one `ELITE_MODS` table (Fast, Shielded, Burning, Frozen,
+Storm, Gloomed), each with its aura colour, badge icon, added element and stat changes.
+
+### 16.5 Save schema (named now so every lane uses the same shape)
+Key `dreamy.save.v1`, field `version`, one `migrate(save)`. Top-level fields:
+`player` (level, xp, equip, bag, dust, potions, tool), `skills` ({ id: { rank, xp, mods:[...] } }, known runes, known tomes,
+equipped character skills, ultimate charge not saved), `world` (map, checkpoint, trigger state per map, opened chests,
+secrets found, gates/levers state), `bosses` ({ id: { kills, firstKill } }), `bestiary` ({ type: { seen, kills, res:{},
+reactions:{} } }), `fishing` ({ fish: { caught, best } }, pearls applied), `quests` ({ id: { step, done } }),
+`zone100` ({ zone: true }), `settings` (audio, accessibility, difficulty), `bindings`, `stats` (playtime, deaths),
+`slot` (1–3).
+
+### 16.6 Technology roadmap (Canvas 2D, classic scripts, file://)
+**Now (M2a–M3):**
+1. **Cached light sprites:** pre-render one 64×64 radial sprite per (colour, alpha) and `drawImage` it scaled instead of
+   building `createRadialGradient` per light per frame.
+2. **Map rastering off the critical path:** split `rasterGround` into row bands over several frames, and pre-raster the
+   next map during the portal fade.
+3. **Fixed-step update** at 1/60 with an accumulator (deterministic reactions, hitstop and scripted tests).
+4. **Sprite atlases:** blit the many small hero/icon canvases into 2–3 atlases at boot.
+5. **Particle pool** with a hard cap and budget scaling (ambient motes are dropped first).
+6. **Mobile:** scene stays 480×270; HUD at min(DPR, 2); pause the loop on `visibilitychange`; one fog layer on
+   `pointer: coarse`.
+7. **WebAudio step sequencer** for music (M2b).
+
+**Later (M5–M6):** water reflections (sprites flipped at 30 % into a clipped water region + a 1 px per-row sine offset,
+the same trick for Caldera heat haze); a one-time palette quantize of static layers; ground rastering in a classic
+worker via a `blob:` URL with a synchronous fallback.
+
+**Not planned:** a WebGL2 renderer (rewrites render.js, hero/icon generation and every fx; the current look is already
+achieved in 2D), normal-mapped lighting (art cost), `ctx.filter` (unsupported on Safari). A CRT/scanline overlay only as an
+off-by-default setting.
+
+**Rules:** feature-detect OffscreenCanvas and workers; vibrate / fullscreen / gamepad only after a user gesture; every
+perf change is measured with Haiku's 60 s sample on the largest map logging **p95 frame time**, not the average.
+
 ## 13. Dreamfishing
 Fishing is a **second loot channel** that pays in the currencies the loop already wants (gems, Runes, keys, boss-prep
 food), not fish for their own sake.
@@ -412,10 +483,14 @@ pond once all Shards are lit (post-game/NG+). Spots are `fishspot` objects with 
 
 **Minigame (one mechanic, all inputs):**
 1. Hold Interact to cast; hold time sets distance over 3 rings on the water (farther ring = rarer pool).
-2. The bobber waits 2–6 s; a **bite** = dip + splash + a 0.6 s "!" window; press Interact to hook (miss = the fish flees).
+2. **The water shows the fish:** glowing shadows sized and coloured by rarity swim in the rings before you cast, so
+   choosing a ring is a visible decision; legendary shadows are huge and appear only under their condition.
+   The bobber waits 1–4 s (the first cast at a new spot bites at once); a **bite** = dip + splash + a **0.8 s** "!" window
+   (1.0 s with a Sapphire rod); press Interact to hook (miss = the fish flees).
 3. **Reel** with a tension bar (48×6 px on the 480 grid, above the hero): the fish pulls in telegraphed bursts, its
    glowing shadow visible in the water. Hold Interact to reel, release to rest; 1 s in the red snaps the line.
-4. Rare fish add a "turn" burst: push the stick / mouse / drag toward the arrow shown on the bobber.
+4. Rare fish add one "turn" burst, legendaries two: push the stick / mouse / drag toward the arrow on the bobber.
+   No catch lasts more than 20 s.
 5. The catch lands with a rarity loot beam. Nothing faster than 4 Hz; 10–20 s per catch.
 Touch: hold the attack button to reel, drag anywhere to turn. Keyboard: Space. Gamepad: hold A + left stick.
 
@@ -428,18 +503,20 @@ rod skins, and a 1 % Sunken Chest (Rare+ item).
 **What fish are for:**
 1. **Cooking at any shrine fire** (1 fish = 1 dish, no recipes): a 10-minute food buff. Zone fish = +15 to that zone's
    resistance; rare fish = +10 % damage of an element; legendary fish = a unique effect (Moonmaw: kill-heal doubled).
-   One food buff at a time, shown in the status row: the pre-boss preparation moment.
+   One food buff at a time, shown in the status row, **kept through death** and shown on the boss-intro card
+   ("Cinderkoi: fire resist +15"). Each zone's fish counters that zone's guardian (written into the `FISH` table).
 2. **Fishing Log** tab inside the Bestiary (silhouette → caught, size records). Rewards at 10/20/30 entries: a Socket
    Rune, a Radiant gem of your choice, the Mythic rod. Hunts count fish.
-3. **Elder Stone trades:** 3 rare fish → a Clear gem of your choice; a legendary fish → choose which unique rule an
-   existing legendary has (the only reroll in the game, and it is fishing-gated).
-4. **The rod** is equipped in a fifth, non-combat `tool` slot: tiers T0–T4 (Twig → Dawn Rod → Cinder → Gloam →
-   Moonline), rarity like gear, **one socket** (Ruby = lava spots earlier; Sapphire = longer bite window; Topaz = more
+3. **Elder Stone trades:** 3 rare fish → a Clear gem of your choice; a legendary fish → a **pearl slot** added to one
+   legendary item, holding that fish's unique effect (Moonmaw pearl: kill-heal ×2). No rerolls: each boss keeps *its* rule.
+4. **The rod** is equipped in a fifth, non-combat `tool` slot: **4 tiers** (Twig → Dawn Rod → Cinder → Moonline; void fishing
+   uses a Cinder rod with an Amethyst), rarity like gear, **one socket** (Ruby = lava spots earlier; Sapphire = longer bite window; Topaz = more
    treasure; Diamond = the line can't snap once per catch). Rods drop from fishing or are bought with Dust, and the rod
    shows on the hero's back.
 
-**Budget:** 5–10 min on the main path (the first spot sits next to the first Vale chest and Pip points it out once),
-45–60 min for the full log (30 fish + 5 legendaries), inside the completionist optional time.
+**Budget:** 5–10 min on the main path (the first spot sits next to the first Vale chest, Pip points it out once, and the first catch is a guaranteed
+Chipped gem),
+~35–45 min for the full log (30 fish + 5 legendaries), inside the completionist optional time.
 **Art/audio:** per zone a bobber and 5 fish sprites (16×8, also the water shadow and the 3× log art), rod overlay ×5
 tiers, tension-bar strip, cooking-fire prop; sfx cast whoosh, plop, bite tick, reel ratchet (pitch rises with tension),
 snap, splash-catch, sizzle; music ducks 30 % while fishing.
@@ -476,8 +553,7 @@ legendary + Mythic chance), one **secret vault per zone** (12–16 tiles, reache
 * Drops: ~every 3rd kill; room clear ≥Uncommon; elite Rare+; **mini-boss guaranteed Epic with ≥2 sockets**;
   boss = named Legendary; Morrow = Mythic.
 * Gems: 4–5 per zone (chest, mini-boss, secret, quest) → 22–25 socketed by the end; one Socket Rune per dungeon.
-* Character skills unlock at L1/5/10/15/20/25/30 (two new skills: one holy, one nature). Modifier picks at
-  L5/10/15/20/25/30. Second weapon-skill option at reqLvl ≥ 8.
+* Skills are acquired and grown per §15 (Dream Tomes, Skill Runes, per-skill ranks with modifier slots).
 * Potions: 3 charges, refilled at shrines; every dungeon has a midpoint shrine.
 * **Per zone the player gets:** 1 gear tier-up, 1 Epic, 1 Legendary, 4–5 gems, 1 Rune, 2 choice moments, ~7 levels.
 
@@ -495,14 +571,18 @@ legendary + Mythic chance), one **secret vault per zone** (12–16 tiles, reache
 * Rewards escalate gem → Socket Rune → gold chest with a guaranteed Rare+. Never a Legendary (those stay on bosses).
 * Every secret is a trigger area + `openGate`/`loot` action, so it stays editable in `editor.html`.
 
-### 11.4 Bestiary
-* A tab on the Tab screen: **Inventory | Skills | Bestiary | Quests**. Entries appear on first sight; unseen ones are "?"
-  silhouettes, grouped by zone.
-* Entry: animated sprite, name, archetype tag, one lore line in Pip's voice, kill count, the weak/resist row (each element
-  revealed by the first-hit discovery of §5b, unknown = "?"), drop hint. Bosses get a second lore line on kill.
-* Hunt milestones: 10 / 25 / 50 kills of a type give Dream Dust; 50 also gives a permanent +5% damage to that type
-  (`huntBonus`, additive into power).
-* The resist row uses the same icons as the enemy nameplate, so the lesson transfers.
+### 11.4 Bestiary (revised after expert review)
+* A tab on the Tab screen holding two lists: **Bestiary** and **Fishing Log** (same silhouette → seen model, same
+  milestone pips). List grouped by zone with counters ("7/9 seen"); a new-entry badge on the Tab icon.
+* Entry: sprite at 4× on a dark vignette, name, archetype tag **with its one-sentence rule** ("Armoured — resists slash,
+  breaks under stagger"), weak/resist row (each element revealed by §5b first-hit discovery, unknown = "?"),
+  **"Best reaction"** line auto-derived from its resists + §15.4 (e.g. Golem → "Chill, then slash: Shatter"), revealed the
+  first time you trigger that reaction on it. This line is the tutorial for the reaction system.
+* **Hunt milestones:** 10 kills = full resist row revealed; 25 = drop hint + Dream Dust; 50 = permanent +5 % damage to
+  that type (`huntBonus`, additive). Bosses: kill = lore2; 3 kills (arena / NG+) = their move list with telegraph names.
+* **Voice:** Pip's voice for common enemies; a guardian's lore2 is in the guardian's own words (STORY.md voice rules).
+* Quests reference bestiary ids (an entry shows a "Quest" marker until the quest is done). A zone's bestiary + fish +
+  tablets complete = the **zone 100 %** stamp the true ending checks.
 
 ### 11.5 Status icons (12×12, `ICONS.status(id)`)
 * **On enemies** (over the health bar; stacks as a corner digit, time as a pie sweep): Burn, Chill/Freeze, Poison, Shock,
@@ -520,7 +600,7 @@ legendary + Mythic chance), one **secret vault per zone** (12–16 tiles, reache
 | Hub arena: scaling waves, Dust, guaranteed Epic every 5 rounds (endgame + balance test bed) | should | M6 |
 | Pip companion: follows you, auto-picks up loot nearby, lights darkness, calls out a new enemy's first weakness | should | M7 |
 | Return-rift at each checkpoint shrine to the hub (fast travel) | should | M2 |
-| Achievements (20) | nice | M8 |
+| **Dream Record** page (achievements folded into bestiary / log / zone-100 % milestones) | nice | M8 |
 | NG+ modifiers: elites everywhere / no kill-heal / gloom everywhere, each raising drop rarity | nice | M7 |
 
 **Rejected:** potion/rune crafting and enchanting, gold and merchants (Dream Dust is the one currency; the Elder Stone is the
@@ -543,10 +623,12 @@ shop), reputation, minigames other than fishing (fishing is in, see §13), day/n
   first-hit weakness reveal) and the `huntBonus` slot, smoke test harness.
 * **M2a HUD, controls and combat feel** (ships on the existing maps): the complete "Dream Glass" UI from `docs/HUD.md`
   (`ui.js` primitives + `input.js` action layer and focus model by Opus, bitmap font, all HUD elements and Tab screens
-  rebuilt on it by Sonnet B), gamepad support, plus the §15 rhythm: MP-on-hit, ultimate charge, dodge-cancel, skill ranks.
+  rebuilt on it by Sonnet B), gamepad support, the §15 rhythm (MP-on-hit, ultimate charge, dodge-cancel, skill ranks),
+  the settings + accessibility screen with the Story/Normal toggle, and the §16.6 "now" performance items 1, 3, 5, 6.
 * **M2b Act I slice** (~25 min playable): Pinewood outer + Root Hollow dungeon + Bramblehorn, hub 40, the data-driven boss
   system with a mini-boss, key/door, levers/gates, dialogue/camera/loot/checkpoint/quest actions, intro and Pip, elites,
-  universal dodge, one side quest, 3 secrets, return-rift, the first Skill Rune drop and 2 Dream Tomes, scripted play test.
+  universal dodge, one side quest, 3 secrets, return-rift, the first Skill Rune drop and 2 Dream Tomes, music sequencer, map pre-rastering and fade transitions, 3 save
+  slots, the first 10 minutes per §16.2, scripted play test.
 * **M3 The Hero & Icons:** layered hero, gear overlays, rarity glow & particles, paper-doll in the new Tab screen, the
   icon set wired into the HUD, hero status-icon row, enemies rescaled, unified `rarityFx`.
 * **M4 Act II** (~45 min): Ruins (3 maps), Gloam Warden ported, 5 status effects + enemy status icons, set bonuses,
