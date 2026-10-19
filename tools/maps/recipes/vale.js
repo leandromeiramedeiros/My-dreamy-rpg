@@ -5,7 +5,7 @@ const valeRules = require('./_vale.js');
 
 module.exports = {
   id: 'vale',
-  opts: { W: 38, H: 38, seed: 2024, name: 'Whispering Vale', sub: 'A dream drifting above the clouds', theme: 'vale', objective: 'Explore. Rifts hum to the north-east and the south.', pad: 3.4, amp: 1.2 },
+  opts: { W: 38, H: 38, seed: 2024, name: 'Whispering Vale', sub: 'A dream drifting above the clouds', theme: 'vale', objective: 'Explore. Rifts hum to the north-east and the south.', pad: 2.7, amp: 1.2 },
   patch: { f: 0.62, d: -1 },
   layout(g, T) {
     g.room('start', { kind: 'hub', x: 6.5, y: 29, r: 4, lvl: 0, label: 'ARRIVAL', clear: true });
@@ -40,7 +40,7 @@ module.exports = {
     g.marker('gem_cache', R.isletGem.x, R.isletGem.y, { label: 'secret gem cache' });
     g.marker('tablet', R.cottage.x + 3.2, R.cottage.y + 2.4, { label: 'lore', text: 'Aerin\'s lantern burns low. Wake the Shards and the Vale will bloom again.' });
     g.ring('yard', 'lantern', 3, 0.9); g.ring('cottage', 'lantern', 3, 0.95); g.ring('ruinsRift', 'lantern_blue', 4, 0.9); g.ring('pineRift', 'lantern', 3, 0.9);
-    g.scatter(valeRules(0.62));
+    g.scatter(valeRules(0.85));
     const tr = g.triggers, Y = R.yard, P = R.plaza, C = R.nookChest;
     tr.push(T.mapEnter('dummies', 'Training dummies', [T.spawn('dummy', 1, Y.x - 0.8, Y.y - 0.6, null, { instant: true }), T.spawn('dummy', 1, Y.x + 0.8, Y.y + 0.8, null, { instant: true })]));
     tr.push(T.mapEnter('intro', 'Pip wakes Aerin', [T.dialogue('Pip', ['You are awake! I am Pip, your lantern spirit.', 'Hit a training dummy with your blade to warm up.'])]));

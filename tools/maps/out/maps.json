@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-19T22:32:19.721Z",
+ "generated": "2026-10-19T22:32:37.020Z",
  "maps": {
   "pinewood": {
    "name": "Misty Pinewood",
@@ -42,24 +42,24 @@
     "..gggssgggggppfff..ggggppppgggggggggwwwwwggpbbpppppggww.",
     "..gggsspggggppfff...fffgpppppppppppppgwwwwwbbbppppgggww.",
     "..gggsppgggfppggg....fffgpppppppppppppggwwwbbwggggggfww.",
-    ".ggggssgggggpppgff.....ggggggggggggppppggggppgggggggfff.",
-    ".gggppsgggggpppfff......ggggggggggggpppggggppgggggggfff.",
-    ".ggpppgppppppppgff............ggggggpppggggppggggffffff.",
-    ".ggpppppppppppgggf............ggggggpppgggpppggggf......",
-    ".ggpppppppppppgggf............gdggggpppggppppgggg.......",
-    ".ggppppgggggggggg.............ddggggppppppppggggg.......",
-    ".ggpppggggggggggg............dddgggppppppppgggggg...fgg.",
-    ".gpppppggggggggg.............dddgppppgpppppppgggg..gggg.",
-    ".gppgpppgggggg...............dddpppfffffffppppggggggggg.",
-    ".gpppgppgggggg...............ddsppffffffffffpppgggggggg.",
-    ".gpppgggggggggg.............dddssffffffffffffpppggggggg.",
-    ".ggpppggggggggg...........ddddpssffgggggggffddpppppfgggg",
-    ".ggpppppggggggg...ddddd..ddddpppddgggggggddddddgpppppggg",
-    ".gggppppggggggg...dddddddddppppddddddddddddfffggffpppgg.",
-    ".ggggpppggggggg...dddgggdppppdddddddddddgg...ffgfffffgg.",
-    ".ggggggggggggg...dddgggpppppdddd..dddddgg....ffffffffgg.",
-    ".ggggggggggggg...gddgpppppdddddd..............fffffffgg.",
-    "..ggggggggggg.....gdgppggddddd.................fffffggg.",
+    ".ggggssgggggpppgff.....ggggggggggggppggggggppgggggggfff.",
+    ".gggppsgggggpppfff......ggggggggggggggggggggpgggggggfff.",
+    ".ggpppgppppppppgff............gggggggggggggggggggffffff.",
+    ".ggpppppppppppgggf............gggggggggggggggggggf......",
+    ".ggpppppppppppgggf............gdggggggggggggggggg.......",
+    ".ggppppgggggggggg.............ddggggggggggggggggg.......",
+    ".ggpppggggggggggg............dddggggggfffgggggggg...fgg.",
+    ".gpppppggggggggg.............dddggffggffffffggggg..gggg.",
+    ".gppgpppgggggg...............dddgffffffffffffpggggggggg.",
+    ".gpppggggggggg...............ddsgffffffffffffppgggggggg.",
+    ".gppggggggggggg.............dddssffffffffffffpppggggggg.",
+    ".ggpggggggggggg...........ddddpssffgggggggffddppppffgggg",
+    ".ggpggggggggggg...ddddd..ddddpppddgggggggddddddgpfffgggg",
+    ".gggggggggggggg...dddddddddppppddddddddddddfffggfffffgg.",
+    ".gggggggggggggg...dddgggdppppdddddddddddgg...ffgfffffgg.",
+    ".ggggggggggggg...dddgggggpppdddd..dddddgg....ffffffffgg.",
+    ".ggggggggggggg...gddgggggpdddddd..............fffffffgg.",
+    "..ggggggggggg.....gdgggggddddd.................fffffggg.",
     "...fggggggg.......ggggggdddd....................fffffgg.",
     "...fffffg.........gggggdddd.....................fffffgg.",
     "....gffff..........ggggddd........................ffg...",
@@ -1841,9 +1841,9 @@
     ".ggffffffgssppppgffff...",
     ".gfffffffpsspppppgfffff.",
     ".ggggggggpsggggppppggff.",
-    ".fggppgggssggggggpppgff.",
-    ".ggppppppsppggggggppgff.",
-    ".gggpppppppgg..gfggpfff.",
+    ".fgggggggssggggggpgggff.",
+    ".gggggggpsppgggggggggff.",
+    ".ggggggppppgg..gfgggfff.",
     ".ggggggppppgg..ffffffff.",
     ".ggggggggggg....fffffff.",
     "........................"
@@ -2559,75 +2559,75 @@
    "H": 38,
    "tiles": [
     "......................................",
-    ".......gggg.................fffff.....",
-    "....ggggggggg.gggg.........fffffggg...",
-    "..ggggggggggggggggg.......fffggggggg..",
-    ".gggggggggggggggggggg.....ffgppppgggg.",
-    ".ggggggggggggggffggggg...ffgpxxppgggg.",
-    ".gggggggffgggffffffggg...gfpxxdpxpggg.",
-    ".ggggggfffgggppppffgggg..ggpxxxxxpgg..",
-    ".ggggffppppppppppffgggggggggpxxxpggg..",
-    ".ggggffpppppppppfffgggggffppgpxppggg..",
-    ".gggggfffffggpppffgggggggsssggggggg...",
-    ".gggggggffggpppggggggggfgpssgggggg....",
-    "..ggggggggggppgggggggfffsppgggggg.....",
-    "..ggpgggggggpppgggggpsspsspgggggw.....",
-    ".ggpppggggpppppgggggsssppsggg.........",
-    ".ggbbppgpppppppppxxppgsspfgg..........",
+    "........g...................ffff......",
+    ".......ggggg...gg...........ffffggg...",
+    "...gggggggggg.gggg.........ffgggggg...",
+    "..gggggggggggggggggg......ffgppppggg..",
+    ".ggggggggggggggffgggg.....fgpxxppggg..",
+    ".gggggggffgggffffffggg....fpxxdpxpgg..",
+    ".ggggggfffgggffffffggg...ggpxxxxxpgg..",
+    ".ggggfffffgggffffffggg...gggpxxxpggg..",
+    ".ggggfffffgggffffffggg..ffppgpxppgg...",
+    ".gggggfffffgggffffgggggggsssgggggg....",
+    ".gggggggffgggppggggggggfgpssggggg.....",
+    "..gggggggggggpgggggggfffsppgggggg.....",
+    "..ggpgggggggpppgggggpsspsspgg..g......",
+    "..gpppggggpppppgggggsssppsggg.........",
+    "..gbbppgpppppppppxxppgsspfg...........",
     ".ggbbpppppggpppxxxxxxpgfffg...........",
-    ".gggggggggggpppdxxxxxxpffgg...........",
-    ".ggggggggggggppxxxxxxxpgfgg...........",
-    ".gggg......gggpxxxxxxxpgggggwwffff....",
-    "...........fffpxxxxxxxpggggwwwffffff..",
-    "...........fffgpxxxxxpgggggwwffffgggg.",
-    "...ffffffffffffppxxxpggggggbbppfggggg.",
-    "..ggfggggffffffpgppgggggggpbbpppggggg.",
-    ".ggggggggggggggfpppggggggssbwgpppgggg.",
-    ".gggggggggggggggppppgpssppsgwggpggggg.",
-    ".ggggggggggggggggppppppssgggwwwgggggg.",
-    ".gggggggggggggggggppppffgggggwwggggff.",
-    ".ggggpppgggggggggppppffggggggwwggff...",
-    ".ggggpppgggggggppppppfgggggggwwwg.....",
-    ".gggggpppggggppppppgggppxpgggg........",
-    ".ggggggppppppppppppggpxxxxpggg........",
-    ".gggggggppppppppppppppxxxxpggg........",
-    "...ggggggppppgggppppppxxxxpggg........",
-    "...gggggggggggggggggggppxpgggw........",
-    "........gggggggfg...ggggggggww........",
-    "...........ggggf.....gggggggw.........",
+    ".gggggggggggpppdxxxxxxpffg............",
+    ".gggg.gggggggppxxxxxxxpgfg............",
+    ".gggg......gggpxxxxxxxpggg............",
+    "............ffpxxxxxxxpggg.wwwfffff...",
+    "............ffgpxxxxxpgggggwwffffggg..",
+    "............fffppxxxpggggggbbppfgggg..",
+    "...gfggggf..fffpgppgggggggpbbfffgggg..",
+    "..gggggggggggggfpppggggggssbwgfggggg..",
+    ".gggggggggggggggppppgpssppsgwgggggggg.",
+    ".ggggggggggggggggppppppssgggwwwggggg..",
+    ".gggggggggggggggggppppffgggggwwgggg...",
+    ".ggggggggggggggggppppffggggggwwggf....",
+    ".ggggggggggggggggppppfggggggg.........",
+    "..ggggggggggggggggpgggppxpggg.........",
+    ".ggggggggpggggggggpggpxxxxpgg.........",
+    "..ggggggppggggggggppppxxxxpgg.........",
+    "...ggggggpgggggggpppppxxxxpgg.........",
+    "....ggggggggggggggggggppxpggg.........",
+    ".........ggggggfg...ggggggggw.........",
+    "...........ggggf......gggggg..........",
     "......................................"
    ],
    "heights": [
     "00000000000000000000000000000000000000",
-    "00000000000000000000000000004444400000",
+    "00000000000000000000000000004444000000",
+    "00000000000000000000000000004444444000",
     "00000000000000000000000000044444444000",
     "00000000000000000000000000444444444400",
-    "00000000000000000000000000444444444440",
-    "00000000000000000000000004444444444440",
-    "00000000000000000000000004444444444440",
+    "00000000000000000000000000444444444400",
+    "00000000000000000000000000444444444400",
     "00000000000000000000000004444444444400",
-    "00000000000000000000044444444444444400",
-    "00000000000000000000044444444444444400",
-    "00000000000000000000044223444444444000",
-    "00000000000000000000442223334444440000",
+    "00000000000000000000040004444444444400",
+    "00000000000000000000040044444444444000",
+    "00000000000000000000044223444444440000",
+    "00000000000000000000442223334444400000",
     "00000000000000000000022233344444400000",
-    "00000000000000000000112223322444000000",
+    "00000000000000000000112223322004000000",
     "00000000000000000000112222222000000000",
-    "00000000000000000000011222220000000000",
+    "00000000000000000000011222200000000000",
     "00000000000000000000000022200000000000",
     "00000000000000000000000000000000000000",
     "00000000000000000000000000000000000000",
-    "00000000000000000000000000000022220000",
-    "00000000000000000000000000000022222200",
-    "00000000000000000000000002200222222220",
-    "00000000000000000000000022222222222220",
-    "00000000000000000000000022222222222220",
-    "00000000000000000000000001220222222220",
+    "00000000000000000000000000000000000000",
+    "00000000000000000000000000000022222000",
+    "00000000000000000000000002200222222200",
+    "00000000000000000000000022222222222200",
+    "00000000000000000000000022222222222200",
+    "00000000000000000000000001220222222200",
     "00000000000000000000000111120222222220",
-    "00000000000000000000000012220002222220",
-    "00000000000000000000000002222002222220",
-    "00000000000000000000000000000002222000",
-    "00000000000000000000000000000000200000",
+    "00000000000000000000000012220002222200",
+    "00000000000000000000000002222002222000",
+    "00000000000000000000000000000002220000",
+    "00000000000000000000000000000000000000",
     "00000000000000000000000000000000000000",
     "00000000000000000000000000000000000000",
     "00000000000000000000000000000000000000",
@@ -2782,8 +2782,15 @@
     },
     {
      "t": "tree_poplar",
-     "x": 2.18,
-     "y": 24.17,
+     "x": 26.22,
+     "y": 29.15,
+     "v": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 13.66,
+     "y": 21.26,
+     "v": 1,
      "f": 1
     },
     {
@@ -2792,11 +2799,6 @@
      "y": 27.86,
      "v": 2,
      "f": 1
-    },
-    {
-     "t": "tree_poplar",
-     "x": 27.85,
-     "y": 2.81
     },
     {
      "t": "tree_poplar",
@@ -2849,43 +2851,43 @@
      "f": 1
     },
     {
-     "t": "tree_teal",
+     "t": "tree_poplar",
      "x": 34.9,
      "y": 27.78,
      "v": 2
     },
     {
-     "t": "tree_teal",
+     "t": "tree_poplar",
      "x": 34.65,
      "y": 20.27,
      "v": 2
     },
     {
-     "t": "tree_teal",
+     "t": "tree_poplar",
      "x": 35.26,
      "y": 22.92,
      "v": 2,
      "f": 1
     },
     {
-     "t": "tree_teal",
+     "t": "tree_poplar",
+     "x": 1.72,
+     "y": 19.65,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
      "x": 19.89,
      "y": 4.29,
      "v": 2,
      "f": 1
     },
     {
-     "t": "tree_teal",
+     "t": "tree_poplar",
      "x": 2.33,
      "y": 31.22,
      "v": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 3.54,
-     "y": 34.35,
-     "v": 2,
-     "f": 1
     },
     {
      "t": "tree_teal",
@@ -2917,14 +2919,14 @@
     },
     {
      "t": "tree_teal",
-     "x": 33.32,
-     "y": 3.73
+     "x": 12.4,
+     "y": 24.95,
+     "v": 2
     },
     {
      "t": "tree_teal",
-     "x": 5.8,
-     "y": 22.71,
-     "v": 1
+     "x": 33.32,
+     "y": 3.73
     },
     {
      "t": "tree_teal",
@@ -2934,389 +2936,607 @@
      "f": 1
     },
     {
-     "t": "tree_round",
+     "t": "tree_teal",
+     "x": 3.81,
+     "y": 23.49,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 20.86,
+     "y": 35.6,
+     "v": 2
+    },
+    {
+     "t": "tree_teal",
      "x": 1.18,
      "y": 16.83,
      "f": 1
     },
     {
-     "t": "tree_round",
-     "x": 3.85,
-     "y": 22.54,
-     "v": 1
-    },
-    {
-     "t": "tree_round",
+     "t": "tree_teal",
      "x": 15.56,
      "y": 36.25,
      "v": 2,
      "f": 1
     },
     {
-     "t": "tree_round",
+     "t": "tree_teal",
      "x": 24.19,
      "y": 9.44,
      "v": 1
     },
     {
-     "t": "tree_round",
+     "t": "tree_teal",
      "x": 8.82,
      "y": 1.19,
      "v": 2
     },
     {
-     "t": "tree_round",
-     "x": 20.8,
-     "y": 11.57,
+     "t": "tree_teal",
+     "x": 16.15,
+     "y": 3.36
+    },
+    {
+     "t": "tree_teal",
+     "x": 22.72,
+     "y": 11.03,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 8.07,
+     "y": 18.73
+    },
+    {
+     "t": "tree_teal",
+     "x": 5.11,
+     "y": 34.73
+    },
+    {
+     "t": "tree_teal",
+     "x": 11.13,
+     "y": 36.33,
      "f": 1
     },
     {
      "t": "tree_round",
-     "x": 1.78,
-     "y": 27.25,
+     "x": 20.89,
+     "y": 9.75,
      "v": 1
     },
     {
-     "t": "tree_blossom",
-     "x": 20.05,
-     "y": 7.23,
+     "t": "tree_round",
+     "x": 9.45,
+     "y": 3,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 2.48,
+     "y": 26.48,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 35.81,
+     "y": 6.58,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 28.29,
+     "y": 1.05,
+     "v": 2
+    },
+    {
+     "t": "tree_round",
+     "x": 1.02,
+     "y": 10.79
+    },
+    {
+     "t": "tree_round",
+     "x": 11,
+     "y": 26.71,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 5.45,
+     "y": 24.95,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 13.58,
+     "y": 36.86,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 32.83,
+     "y": 12.95,
      "f": 1
     },
     {
      "t": "tree_blossom",
-     "x": 17.96,
-     "y": 12.75,
+     "x": 13.76,
+     "y": 23.31,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_blossom",
+     "x": 15.59,
+     "y": 13,
+     "v": 3
+    },
+    {
+     "t": "tree_blossom",
+     "x": 6.96,
+     "y": 33.73,
      "v": 3,
      "f": 1
     },
     {
      "t": "tree_blossom",
-     "x": 11.64,
-     "y": 21.71,
+     "x": 28.78,
+     "y": 3.64,
      "v": 2
     },
     {
      "t": "tree_blossom",
-     "x": 17.04,
-     "y": 3.04,
+     "x": 24.51,
+     "y": 21.01,
      "v": 3
     },
     {
      "t": "tree_blossom",
-     "x": 1.64,
-     "y": 19.56,
-     "f": 1
+     "x": 2.63,
+     "y": 15.15
+    },
+    {
+     "t": "tree_blossom",
+     "x": 30.2,
+     "y": 21.01,
+     "v": 1
     },
     {
      "t": "bush",
-     "x": 21.31,
-     "y": 8.92,
-     "v": 2,
-     "f": 1
+     "x": 14.42,
+     "y": 4.82
     },
     {
      "t": "bush",
-     "x": 22.21,
-     "y": 8.51,
-     "v": 2,
-     "f": 1
-    },
-    {
-     "t": "bush",
-     "x": 35.69,
-     "y": 3.56
-    },
-    {
-     "t": "bush",
-     "x": 36.49,
-     "y": 4.07,
+     "x": 13.57,
+     "y": 5.18,
      "v": 2
     },
     {
      "t": "bush",
-     "x": 23.34,
-     "y": 8.12
+     "x": 26.2,
+     "y": 4.43,
+     "v": 2
     },
     {
      "t": "bush",
-     "x": 9.84,
-     "y": 34.59,
+     "x": 27.98,
+     "y": 13.37,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 31.97,
+     "y": 21.91
+    },
+    {
+     "t": "bush",
+     "x": 28.33,
+     "y": 31.93,
+     "v": 2
+    },
+    {
+     "t": "bush",
+     "x": 3.97,
+     "y": 19.9,
      "v": 1,
      "f": 1
     },
     {
      "t": "bush",
-     "x": 16.11,
-     "y": 12.6
-    },
-    {
-     "t": "bush",
-     "x": 33.88,
-     "y": 26.08,
-     "f": 1
-    },
-    {
-     "t": "bush",
-     "x": 33.9,
-     "y": 10.6,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "bush",
-     "x": 28.35,
-     "y": 12.75,
+     "x": 17.49,
+     "y": 34.78,
      "v": 1
     },
     {
      "t": "bush",
-     "x": 7.33,
-     "y": 1.78,
+     "x": 11.84,
+     "y": 2.54,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 1.13,
+     "y": 31.62
+    },
+    {
+     "t": "bush",
+     "x": 7.54,
+     "y": 3.53
+    },
+    {
+     "t": "bush",
+     "x": 9.02,
+     "y": 34.43,
      "v": 2,
      "f": 1
     },
     {
-     "t": "rock",
-     "x": 24.14,
-     "y": 22.04,
-     "v": 1
-    },
-    {
-     "t": "rock",
-     "x": 20.61,
-     "y": 35.61,
-     "f": 1
-    },
-    {
-     "t": "rock",
-     "x": 6.01,
-     "y": 33.15
-    },
-    {
-     "t": "rock",
-     "x": 4.65,
-     "y": 17.8,
-     "v": 1
-    },
-    {
-     "t": "mushroom",
-     "x": 30.53,
-     "y": 6.64
-    },
-    {
-     "t": "mushroom",
-     "x": 11.48,
-     "y": 26.08
-    },
-    {
-     "t": "mushroom",
-     "x": 10.75,
-     "y": 26.09
-    },
-    {
-     "t": "mushroom",
-     "x": 4.96,
-     "y": 24.53
-    },
-    {
-     "t": "mushroom",
-     "x": 5.49,
-     "y": 23.94
-    },
-    {
-     "t": "mushroom",
-     "x": 4.73,
-     "y": 23.94
-    },
-    {
-     "t": "mushroom",
-     "x": 4.13,
-     "y": 18.85
-    },
-    {
-     "t": "mushroom",
-     "x": 31.1,
-     "y": 7.06
-    },
-    {
-     "t": "mushroom",
-     "x": 32.46,
-     "y": 10.77
-    },
-    {
-     "t": "grass",
-     "x": 19.33,
-     "y": 33.01,
+     "t": "bush",
+     "x": 25.2,
+     "y": 35.76,
      "v": 1,
      "f": 1
     },
     {
-     "t": "grass",
-     "x": 18.79,
-     "y": 31.98,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 3.21,
-     "y": 11.04
-    },
-    {
-     "t": "grass",
-     "x": 3.05,
-     "y": 10.2,
-     "v": 1
-    },
-    {
-     "t": "grass",
-     "x": 3.83,
-     "y": 10.39
-    },
-    {
-     "t": "grass",
-     "x": 2.33,
-     "y": 11.37,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 13.76,
-     "y": 12.39,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 12.99,
-     "y": 12.54
-    },
-    {
-     "t": "grass",
-     "x": 28.43,
-     "y": 11.9,
+     "t": "bush",
+     "x": 21.65,
+     "y": 6.98,
      "v": 1,
      "f": 1
     },
     {
-     "t": "grass",
+     "t": "bush",
+     "x": 15.78,
+     "y": 27.22,
+     "v": 1
+    },
+    {
+     "t": "rock",
+     "x": 19.09,
+     "y": 10.46,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 23.58,
+     "y": 22.99,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 25.09,
+     "y": 23,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 17.2,
+     "y": 11.51
+    },
+    {
+     "t": "rock",
+     "x": 21.37,
+     "y": 11.8,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 10.2,
+     "y": 17.71,
+     "f": 1
+    },
+    {
+     "t": "mushroom",
+     "x": 19.37,
+     "y": 13.79
+    },
+    {
+     "t": "mushroom",
+     "x": 18.68,
+     "y": 13.44
+    },
+    {
+     "t": "mushroom",
+     "x": 22.79,
+     "y": 32.19
+    },
+    {
+     "t": "mushroom",
+     "x": 30.04,
+     "y": 9.62
+    },
+    {
+     "t": "mushroom",
+     "x": 5.59,
+     "y": 27.83
+    },
+    {
+     "t": "mushroom",
+     "x": 9.26,
+     "y": 6.19
+    },
+    {
+     "t": "mushroom",
+     "x": 9.69,
+     "y": 5.74
+    },
+    {
+     "t": "mushroom",
+     "x": 9.93,
+     "y": 6.57
+    },
+    {
+     "t": "mushroom",
      "x": 27.81,
-     "y": 12.05,
-     "f": 1
+     "y": 36.25
+    },
+    {
+     "t": "mushroom",
+     "x": 9.8,
+     "y": 10.98
+    },
+    {
+     "t": "mushroom",
+     "x": 9.34,
+     "y": 10.56
+    },
+    {
+     "t": "mushroom",
+     "x": 10.49,
+     "y": 10.6
     },
     {
      "t": "grass",
-     "x": 27.16,
-     "y": 12.02,
-     "v": 1,
-     "f": 1
+     "x": 15.77,
+     "y": 11.02
     },
     {
      "t": "grass",
-     "x": 28.97,
-     "y": 11.46,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 11.7,
-     "y": 36.36
-    },
-    {
-     "t": "grass",
-     "x": 34.87,
-     "y": 2.04,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 24.8,
-     "y": 11.34,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 22.06,
-     "y": 10.24,
+     "x": 14.82,
+     "y": 10.56,
      "v": 1
     },
     {
      "t": "grass",
-     "x": 19.6,
-     "y": 25.09,
+     "x": 15.77,
+     "y": 10.41,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 15.91,
+     "y": 26.26,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 15.37,
+     "y": 26.08,
      "v": 1,
      "f": 1
     },
     {
      "t": "grass",
-     "x": 20.53,
-     "y": 24.86,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 20.26,
-     "y": 25.35
-    },
-    {
-     "t": "grass",
-     "x": 11.79,
-     "y": 5.47
-    },
-    {
-     "t": "grass",
-     "x": 10.84,
-     "y": 6.17,
+     "x": 9.33,
+     "y": 25.89,
      "v": 1
     },
     {
      "t": "grass",
-     "x": 11.43,
-     "y": 5.82,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 12.62,
-     "y": 6.11,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 16.74,
-     "y": 21.08,
+     "x": 10.28,
+     "y": 25.16,
      "v": 1
     },
     {
      "t": "grass",
-     "x": 16.26,
-     "y": 21.25
+     "x": 8.39,
+     "y": 25.36,
+     "v": 1
     },
     {
      "t": "grass",
-     "x": 17.81,
-     "y": 20.99,
+     "x": 15.58,
+     "y": 8.43,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 14.82,
+     "y": 8.14,
      "v": 1,
      "f": 1
     },
     {
      "t": "grass",
-     "x": 32.51,
-     "y": 28.86,
+     "x": 16.18,
+     "y": 8.93,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 2.41,
+     "y": 11.64,
      "v": 1
     },
     {
      "t": "grass",
-     "x": 32.87,
-     "y": 29.98
+     "x": 2.54,
+     "y": 10.84,
+     "v": 1,
+     "f": 1
     },
     {
      "t": "grass",
-     "x": 32.35,
-     "y": 27.77,
+     "x": 21.41,
+     "y": 31.04,
      "v": 1,
      "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 25.55,
+     "y": 18.3,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 15.18,
+     "y": 7.68,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 13.87,
+     "y": 7.68,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 10.47,
+     "y": 6.19,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 10.5,
+     "y": 7.15
+    },
+    {
+     "t": "grass",
+     "x": 3.81,
+     "y": 18.39,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 2,
+     "y": 17.99,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 10.25,
+     "y": 5.5,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 19.44,
+     "y": 23.99,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 19.07,
+     "y": 23.29,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 19.45,
+     "y": 24.54
+    },
+    {
+     "t": "grass",
+     "x": 18.89,
+     "y": 24.88,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 2.57,
+     "y": 17.26
+    },
+    {
+     "t": "grass",
+     "x": 10.62,
+     "y": 32.7,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 10.01,
+     "y": 33.33,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 16.7,
+     "y": 26.08,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 2.88,
+     "y": 13.08,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 22.08,
+     "y": 33.8,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 21.92,
+     "y": 34.37,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 4.41,
+     "y": 26.77
+    },
+    {
+     "t": "grass",
+     "x": 4.22,
+     "y": 27.48,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 34.95,
+     "y": 25.48
+    },
+    {
+     "t": "grass",
+     "x": 35.27,
+     "y": 24.92,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 13.42,
+     "y": 12.57,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 7.98,
+     "y": 2.34,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "crystal",
+     "x": 25.57,
+     "y": 7.21
     }
    ],
    "objective": "Explore. Rifts hum to the north-east and the south.",

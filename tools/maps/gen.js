@@ -492,7 +492,7 @@ class MapGen {
       const inRoom = this.zone[y][x] & ZONE.room;
       const rmHere = inRoom ? this.rooms.find(rm => rm.kind !== 'flat' && this.roomD(rm, x + 0.5, y + 0.5) <= 0) : null;
       if (!rmHere) { this.type[y][x] = p.type; this.h[y][x] = Math.round(p.prof[c.i]); this.zone[y][x] |= ZONE.path; if (p.kind !== 'main') this.zone[y][x] |= ZONE.side; if (p.kind === 'secret') this.zone[y][x] |= ZONE.secret; }
-      else { this.zone[y][x] |= ZONE.path; if (rmHere.kind === 'plaza' || rmHere.kind === 'arena') { /* keep floor */ } else if (this.type[y][x] !== p.type && rmHere.kind !== 'chamber') this.type[y][x] = p.type; }
+      else { this.zone[y][x] |= ZONE.path; if (rmHere.kind === 'plaza' || rmHere.kind === 'arena') { /* keep floor */ } }
     }
     // flats forced
     for (const rm of this.rooms) if (rm.kind === 'flat') {
