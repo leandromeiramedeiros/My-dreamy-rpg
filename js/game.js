@@ -273,7 +273,7 @@ function useSkill(p, slot) {
   const n0 = G.delays.length;
   withCast(c, () => s.cast(p, p.aim, G.mouse.wx, G.mouse.wy));
   if (id === 'orbit') p.orbitCast = c;
-  let dur = Math.max(0, p.castT);
+  let dur = Math.max(0, p.castT, p.swing ? p.swing.dur - p.swing.t : 0);
   for (let i = n0; i < G.delays.length; i++) if (G.delays[i].c === c) dur = Math.max(dur, G.delays[i].t);
   if (p.dash && p.dash.cast === c) dur = Math.max(dur, p.dash.t);
   p.cast = dodge ? null : { c, id, slot, age: 0, dur: Math.min(1.5, dur), mp };
@@ -940,8 +940,8 @@ function updateCritters(dt) {
 
 // ===== tuning (numbers editable in the editor's Tuning tab) ==============================
 // mpRegen was 7/s before §15.3 (basic attacks now build mpOnHit per hit); ultRate = charge per point of
-// pre-multiplier damage (~0.016 -> one ultimate every ~40 s of steady fighting with a common sword)
-G.tune = { player: { hp: 650, mp: 260, stamina: 100, speed: 3.7, regen: 2, mpRegen: 2, crit: 0.08, damage: 1, mpOnHit: 8, ultRate: 0.016 } };
+// pre-multiplier damage (0.01 -> ~50 s of basic hits on one target, ~30-40 s with skills; reactions x2 in M4)
+G.tune = { player: { hp: 650, mp: 260, stamina: 100, speed: 3.7, regen: 2, mpRegen: 2, crit: 0.08, damage: 1, mpOnHit: 8, ultRate: 0.01 } };
 const TUNE_ENEMY_KEYS = ['hp', 'speed', 'dmg', 'range', 'cd'];
 function applyTuning(t) {
   if (!t) return;

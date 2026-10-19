@@ -123,7 +123,8 @@ const IN = (() => {
   }
 
   // ---- gamepad ---------------------------------------------------------------------------------------------
-  const styleOf = id => /054c|playstation|dualshock|dualsense|wireless controller/i.test(id || '') ? 'ps' : 'xbox';
+  // Sony pads report 'DualSense…' / 'Wireless Controller (… Vendor: 054c …)'; Xbox pads also say 'Wireless Controller'
+  const styleOf = id => /xbox|045e/i.test(id || '') ? 'xbox' : /054c|playstation|dualshock|dualsense|wireless controller/i.test(id || '') ? 'ps' : 'xbox';
   // radial deadzone, rescaled so the edge of the deadzone = 0 and full tilt = 1
   function radial(x, y, dz) {
     const m = Math.hypot(x, y); if (m <= dz) return [0, 0, 0];
