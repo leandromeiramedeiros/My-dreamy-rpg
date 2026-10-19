@@ -10,6 +10,8 @@ const G = {
   keys: {}, ui: { open: false, help: false }, banner: null, msg: null, kills: {}, pendingSpawns: 0, objective: '',
   arena: null, fade: 0, fadeDir: 0, fadeTo: null, boss: null, muted: false, drops: [],
   prog: { chests: {}, firsts: {}, trig: {} }, checkpoint: null,
+  seen: {},   // bestiary hooks: seen[type] = { kills, res: { el: tier } } — set on first sight, saved
+
 };
 
 // ===== audio (tiny synth) ======================================================
@@ -111,6 +113,7 @@ function recalcStats(p, full) {
   for (const slot of SLOTS) { const it = p.equip[slot]; if (!it) continue; p.gear[slot] = familyOf(it.base); const st = statsOf(it); for (const k in st) s[k] = (s[k] || 0) + st[k]; }
   p.res = {}; for (const el of RES_ELS) p.res[el] = clamp((s[resKey(el)] || 0) + s.resAll, -0.5, 0.6);   // §5b: additive, clamped
   p.amp = gemAmp(p);
+  p.huntBonus = {};   // bestiary hunt milestones (+5% vs a type, additive into the damage sum) — filled by M-later
   const hpR = full || !p.maxHp ? 1 : p.hp / p.maxHp, mpR = full || !p.maxMp ? 1 : p.mp / p.maxMp;
   const B = G.tune.player, L = p.level - 1, w = item('weapon', p.gear.weapon);
   p.maxHp = Math.round(B.hp * (1 + 0.04 * L) + s.hp); p.maxMp = Math.round(B.mp + s.mp); p.maxSt = B.stamina;
@@ -323,7 +326,7 @@ function damageEnemy(e, base, o = {}) {
   // damage type: explicit > the skill's element > the weapon's (sword slash, staff arcane, bow pierce); burn ticks are fire
   const el = o.el || (o.dot ? 'fire' : c ? c.el : item('weapon', p.gear.weapon).element) || 'slash';
   // one additive sum: gear damage % (+ skill damage % and the element's gem amplification for skill hits)
-  let dmg = base * p.dmgBase * (1 + p.bonus + (c ? p.skillDmg + elementAmp(p, el) : 0)) * buffMul(p);
+  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (c ? p.skillDmg + elementAmp(p, el) : 0)) * buffMul(p);
   const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
   dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
   const st = o.stagger != null ? o.stagger : c && SKILLS[c.skill] ? SKILLS[c.skill].stagger || 0 : 0;
@@ -353,8 +356,9 @@ function damageEnemy(e, base, o = {}) {
   return true;
 }
 // the first weak/resist hit on an enemy type pops a nameplate; from then on its icons show by its HP bar (saved)
+const sighting = type => G.seen[type] || (G.seen[type] = { kills: 0, res: {} });
 function discoverRes(e, el, res) {
-  const seen = G.prog.seen || (G.prog.seen = {}), k = seen[e.type] || (seen[e.type] = {});
+  const k = sighting(e.type).res;
   if (k[el] != null) return;
   k[el] = res;
   text(e.x, e.y, e.z + e.hgt + 1.2, `${res < 0 ? 'WEAK' : res >= 1 ? 'IMMUNE' : 'RESIST'}: ${el.toUpperCase()}`, res < 0 ? '#ffe36a' : '#c8c0e0', true, 1.5);
@@ -464,6 +468,7 @@ function spawnEnemy(type, x, y, spawnT = 0.9) {
   const d = ENEMY[type], dummy = type === 'dummy', lvl = dummy ? 1 : enemyLevel(type), hp = dummy ? d.hp : Math.round(d.hp * enemyHpMul(lvl));
   const e = { type, x, y, z: 0, r: d.r || 0.4, hp, maxHp: hp, lvl, dm: dummy ? 1 : enemyDmgMul(lvl), el: d.element || 'slash', res: d.res || {}, tags: d.tags || [], hgt: d.hgt || 3, blood: d.blood || '#c7a8ff', kx: 0, ky: 0, flash: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss: type === 'boss', dummy: type === 'dummy' };
   G.enemies.push(e);
+  if (!dummy) sighting(type);
   if (spawnT > 0) fx({ type: 'summon', x, y, life: spawnT, col: type === 'boss' ? '#ff5aa0' : '#b36bff', r: type === 'boss' ? 2.4 : 0.9 });
   return e;
 }
@@ -471,6 +476,7 @@ function killEnemy(e) {
   e.dead = true; sfx('die');
   onEnemyKilled(e);   // XP + loot (items.js)
   G.kills[e.type] = (G.kills[e.type] || 0) + 1; G.kills.any = (G.kills.any || 0) + 1;
+  if (!e.dummy) sighting(e.type).kills++;
   burst(e.x, e.y, e.z + e.hgt * 0.5, e.boss ? 120 : 24, [e.blood, '#ffffff', '#ffb0e0'], e.boss ? 7 : 3.5);
   fx({ type: 'ring', x: e.x, y: e.y, r: e.boss ? 4 : 1.2, col: e.blood, life: 0.4 });
   // spirit motes drift up toward the player — a little healing

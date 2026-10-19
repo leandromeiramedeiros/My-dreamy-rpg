@@ -1244,7 +1244,7 @@ const WORLD_DATA = {
      "starter": true
     },
     {
-     "t": "checkpoint",
+     "t": "shrine",
      "x": 2.6,
      "y": 21.2
     }
@@ -1279,7 +1279,7 @@ const WORLD_DATA = {
    ],
    "level": [
     1,
-    2
+    3
    ]
   },
   "ruins": {
@@ -1646,8 +1646,8 @@ const WORLD_DATA = {
     }
    ],
    "level": [
-    8,
-    14
+    10,
+    17
    ]
   },
   "pinewood": {
@@ -2381,9 +2381,16 @@ const WORLD_DATA = {
      "tier": "silver"
     },
     {
-     "t": "checkpoint",
+     "t": "shrine",
      "x": 6.8,
      "y": 19.2
+    },
+    {
+     "t": "tablet",
+     "x": 4.6,
+     "y": 17.2,
+     "title": "Warden stone",
+     "text": "The Wardens planted the first pines to hold the Gloam back. Now the roots are black."
     }
    ],
    "objective": "Explore the pinewood. Something big lives to the north.",
@@ -2527,8 +2534,8 @@ const WORLD_DATA = {
     }
    ],
    "level": [
-    2,
-    8
+    3,
+    10
    ]
   }
  },

@@ -172,6 +172,11 @@ function drawHUD(ctx) {
     if (G.banner.sub) T(ctx, G.banner.sub, DW / 2, 186, 8, UI.text, 'center');
     ctx.globalAlpha = 1;
   }
+  if (G.tablet && G.tablet.src && G.state === 'play' && !G.ui.open) {   // lore tablet: read while standing beside it
+    const w = 520, x = (DW - w) / 2, y = 96;
+    panel(ctx, x, y, w, 70, true); T(ctx, G.tablet.src.title || 'Lore tablet', x + 16, y + 12, 8, UI.gold);
+    wrap(ctx, G.tablet.src.text || '...the words have worn away.', x + 16, y + 30, w - 32, 8, UI.text, 14);
+  }
   if (G.msg && G.msg.t > 0) { ctx.globalAlpha = Math.min(1, G.msg.t * 2); T(ctx, G.msg.s, DW / 2, DH - 170, 8, '#ffe6f0', 'center'); ctx.globalAlpha = 1; }
   const near = m.portals.find(pt => pt.open && dist(p.x, p.y, pt.x, pt.y) < 3.2);
   if (near && G.state === 'play') { const [a, b] = zoneLevel(near.to); T(ctx, `A rift to ${(G.world.maps[near.to] || {}).name || near.to} (Lv ${a}-${b}) hums... step in to cross over`, DW / 2, DH - 190, 8, '#e2c8ff', 'center'); }
@@ -281,6 +286,7 @@ const IS = 56, IB = 52;   // bag cell pitch / box (48 px icon = 24 px art at 2x)
 function drawInventory(ctx) {
   const X = 16, Y = 12, W = 928, H = 516;
   ctx.fillStyle = 'rgba(8,4,18,0.6)'; ctx.fillRect(0, 0, DW, DH);
+  ctx.fillStyle = '#120a24'; ctx.fillRect(X, Y, W, H);
   panel(ctx, X, Y, W, H, true);
   const tab = G.ui.tab || 'inv';
   [['inv', 'INVENTORY', 170], ['skills', 'SKILLS', 120]].reduce((tx, [id, label, w]) => {

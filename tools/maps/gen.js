@@ -143,6 +143,7 @@ const PROP = {
   house: { r: 0, sp: 3 }, pine_giant: { r: 0.45, sp: 2.8 }, pine: { r: 0.32, sp: 1.5 }, pine_young: { r: 0.22, sp: 0.9 },
   mushroom_red: { r: 0, sp: 0.5 }, moss: { r: 0, sp: 1.0 }, log: { r: 0.45, sp: 1.5 }, stump: { r: 0.3, sp: 0.9 }, sunbeam: { r: 0, sp: 3 },
   fox: { r: 0, sp: 3 }, rabbit: { r: 0, sp: 2 },
+  gate: { r: 0, sp: 1.5 }, hidden: { r: 0, sp: 1.5 }, keydoor: { r: 0, sp: 1.5 }, lever: { r: 0, sp: 1 },
 };
 // Object kinds the game does not know yet are written with a stand-in 't' and the intended kind in 'role'
 // (the engine drops unknown 't', so stand-ins keep the map playable).  --kinds=future writes the real names.
@@ -150,7 +151,10 @@ const STAND_IN = {
   chest: { t: 'crystal', tier: 'wood' }, chest_silver: { t: 'crystal', tier: 'silver' }, chest_gold: { t: 'crystal_violet', tier: 'gold' },
   tablet: { t: 'sign' }, rune_cache: { t: 'crystal_violet' }, gem_cache: { t: 'crystal_violet' }, elder_stone: { t: 'crystal_violet' },
   lever: { t: 'sign' }, tower: { t: 'pine_giant' },
+  // interactive blockers: omitted in compat mode (the passage is simply open) -- engine must support them in future mode
+  gate: { omit: true }, hidden: { omit: true }, keydoor: { omit: true },
 };
+const COMPAT_ENEMY = { shaman: 'ogre', thornmother: 'troll', bramblehorn: 'troll' };
 
 // ------------------------------- trigger cards -----------------------------
 // Builders producing exactly the card format used in js/world.js
@@ -164,6 +168,7 @@ const T = {
   shake: power => ({ type: 'shake', power }),
   openPortal: index => ({ type: 'open_portal', index }),
   spawn(enemy, count, x, y, radius, extra) {
+    enemy = T.enemy(enemy);
     const e = Object.assign({}, extra || {}); if (e.elite && T.mode !== 'future') delete e.elite;   // planned flag: spawn elite:true
     return Object.assign({ type: 'spawn', enemy, count, x: r2(x), y: r2(y) }, radius != null ? { radius } : {}, e);
   },
@@ -173,7 +178,9 @@ const T = {
   // --- planned engine actions (mode 'future'); 'compat' falls back to existing actions ---
   mode: 'compat',
   checkpoint(label) { return this.mode === 'future' ? { type: 'checkpoint', text: label || 'Checkpoint' } : { type: 'message', text: label || 'Rift shrine attuned.' }; },
-  loot(rarity, count, x, y) { return this.mode === 'future' ? Object.assign({ type: 'loot', rarity: rarity || 'uncommon', count: count || 1 }, x != null ? { x: r2(x), y: r2(y) } : {}) : { type: 'message', text: 'Treasure gleams nearby...' }; },
+  loot(rarity, count, x, y, extra) { return this.mode === 'future' ? Object.assign({ type: 'loot', rarity: rarity || 'uncommon', count: count || 1 }, x != null ? { x: r2(x), y: r2(y) } : {}, extra || {}) : { type: 'message', text: 'Treasure gleams nearby...' }; },
+  quest(id, title, text, done) { return this.mode === 'future' ? Object.assign({ type: 'quest', id, title, text }, done ? { done: true } : {}) : { type: 'message', text: (title ? title + ': ' : '') + text }; },
+  enemy(name) { return this.mode === 'future' ? name : (COMPAT_ENEMY[name] || name); },
   dialogue(speaker, lines) { return this.mode === 'future' ? { type: 'dialogue', speaker, lines } : { type: 'message', text: speaker + ': ' + lines.join(' ') }; },
   openGate(id) { return this.mode === 'future' ? { type: 'openGate', id } : { type: 'sound', name: 'portal' }; },
   timer: (id, name, seconds, after, actions, requires) => Object.assign({ id, name, when: { type: 'timer', seconds, after } }, requires ? { requires } : {}, { actions }),
@@ -620,6 +627,7 @@ class MapGen {
   hAt(x, y) { const i = Math.floor(x), j = Math.floor(y); return i < 0 || j < 0 || i >= this.W || j >= this.H ? 0 : this.h[j][i]; }
   walkTile(x, y) { const t = this.tileAt(x, y); return t !== '.' && t !== 'w' && t !== 'c'; }
   pathPoint(name, t) { const p = this.pathBy[name], i = clamp(Math.round(t * (p.samples.length - 1)), 0, p.samples.length - 1); return { x: p.samples[i].x, y: p.samples[i].y, h: Math.round(p.prof[i]), i }; }
+  pathAngle(name, t) { const p = this.pathBy[name], i = clamp(Math.round(t * (p.samples.length - 1)), 1, p.samples.length - 2), a = p.samples[i - 1], b = p.samples[i + 1]; return Math.atan2(b.y - a.y, b.x - a.x); }
   roomPos(id) { const r = this.roomBy[id]; return { x: r.x, y: r.y }; }
   // find a free walkable spot near (x,y) honouring a minimum path distance etc.
   nearWalkable(x, y, rad = 3) {
@@ -737,7 +745,7 @@ class MapGen {
       heights: this.h.map((r, y) => r.map((v, x) => (this.land[y][x] ? Math.min(35, v).toString(36) : '0')).join('')),
       start: this.startPos || { x: this.W / 2, y: this.H / 2 },
       portals: this.portals.map(p => Object.assign({}, p)),
-      objects: this.objs.map(o => this._emitObj(o)),
+      objects: this.objs.map(o => this._emitObj(o)).filter(Boolean),
       objective: this.objective,
     };
     if (this.sigil) m.sigil = { x: this.sigil.x, y: this.sigil.y };
@@ -745,6 +753,7 @@ class MapGen {
     return m;
   }
   _emitObj(o) {
+    if (STAND_IN[o.t] && STAND_IN[o.t].omit && this.kinds !== 'future') return null;
     const out = { t: o.t, x: o.x, y: o.y };
     if (o.v) out.v = o.v; if (o.f) out.f = 1;
     if (o.marker || STAND_IN[o.t]) {
@@ -834,6 +843,7 @@ class MapGen {
     for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) if (this.land[y][x]) { land++; levels.add(this.h[y][x]); if (R.has(x + 0.5, y + 0.5)) reachTiles++; }
     const counts = {}; for (const o of m.objects) counts[o.t] = (counts[o.t] || 0) + 1;
     Object.assign(info, { W: this.W, H: this.H, land, reachableTiles: reachTiles, levels: [...levels].sort((a, b) => a - b), objects: m.objects.length, objectCounts: counts, triggers: this.triggers.length, portals: this.portals.length, rooms: this.rooms.filter(r => r.kind !== 'flat').length });
+    this.lastReach = R;
     return { errors: errs, warnings: warns, info, reach: R };
   }
 }
@@ -851,4 +861,4 @@ function generate(recipe, opts = {}) {
   return { gen: g, map: g.toMap(), report: rep };
 }
 
-module.exports = { MapGen, generate, T, PROP, STAND_IN, ZONE, makeRng, makeNoise, catmull, distField, clamp, lerp, smoothstep, grid };
+module.exports = { COMPAT_ENEMY, MapGen, generate, T, PROP, STAND_IN, ZONE, makeRng, makeNoise, catmull, distField, clamp, lerp, smoothstep, grid };

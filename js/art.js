@@ -773,8 +773,10 @@ function buildArt() {
   buildChests();
   ART.icons = {};
 }
-// treasure chest (closed / open) for the `chest` world object
+// treasure chest (closed / open) for the `chest` world object, stone tablet for `tablet`
 function buildChests() {
+  ART.tablet = asciiSprite(['..KKKKKK..', '.KSSSSSSK.', 'KSsLLLLsSK', 'KSsssssSSK', 'KSLLLsLLSK', 'KSsssssSSK', 'KSLLsLLLSK', 'KSsssssSSK', 'KSSSSSSSSK', 'KKKKKKKKKK', '.KmmmmmmK.'],
+    { K: '#1a1326', S: '#8a84a8', s: '#5e5878', L: '#b8e0ff', m: '#3f6a4a' });
   const pal = { K: '#1a1326', W: '#8a5a34', w: '#5e3a20', G: '#ffd35a', g: '#b8862a', I: '#2a1a10', L: '#fff2b0' };
   ART.chest = asciiSprite([
     '..KKKKKKKKKK..', '.KWWWWWWWWWWK.', 'KWwwwwwwwwwwWK', 'KGGGGGGGGGGGGK', 'KWWWWWGGWWWWWK', 'KWwwwwGLwwwwWK',

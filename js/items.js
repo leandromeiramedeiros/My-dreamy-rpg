@@ -7,6 +7,7 @@
 // Loaded by index.html and editor.html right after data.js: no hud/render/main deps at load time.
 // ---------------------------------------------------------------------------
 const SLOTS = ['weapon', 'head', 'chest', 'boots'];
+const MAX_LEVEL = 40;
 const RARITY = {
   common:    { i: 0, name: 'Common',    col: '#d8d8d8', mult: 1.00, affixes: 0, sockets: [0, 1] },
   uncommon:  { i: 1, name: 'Uncommon',  col: '#6ee36e', mult: 1.15, affixes: 1, sockets: [1, 1] },
@@ -20,8 +21,8 @@ function mixHex(a, b, k) { const A = hexToRgb(a), B = hexToRgb(b); return '#' + 
 // mythic colour-cycles; everything else is its table colour
 const rarityCol = (r, t = G.t) => r === 'mythic' ? mixHex('#ff4f7a', '#ffb0f0', 0.5 + 0.5 * Math.sin(t * 3)) : RARITY[r].col;
 
-// ===== bases: 12 families x 5 tiers (tier 0..4). Existing family ids sit at tier 1 (L6). =====
-const TIER_REQ = [1, 6, 14, 22, 28], TIER_DMG = [0.7, 1, 1.5, 2.1, 2.8];
+// ===== bases: 12 families x 5 tiers (tier 0..4). Existing family ids sit at tier 1 (L8). =====
+const TIER_REQ = [1, 8, 16, 24, 32], MYTHIC_REQ = 36, TIER_DMG = [0.7, 1, 1.5, 2.1, 2.8];
 const TIER_PCT = [0.6, 1, 1.25, 1.5, 1.8], TIER_FLAT = [0.5, 1, 2, 3.2, 4.5];
 const FAMILY_TIERS = {
   dawnblade: ['rustyblade:Rusty Blade', 'dawnblade', 'sunforged:Sunforged Blade', 'auroraedge:Aurora Edge', 'dawneternal:Dawn Eternal'],
@@ -130,8 +131,9 @@ const newUid = () => 'i_' + (++UID);
 const rarityAtLeast = (r, min) => RARITY[r].i >= RARITY[min].i;
 function makeItem(base, rarity = 'common', ilvl, o = {}) {
   const b = BASES[base], R = RARITY[rarity];
-  ilvl = clamp(Math.round(ilvl || b.reqLvl), 1, 30);
-  const it = { uid: newUid(), base, slot: b.slot, rarity, ilvl, reqLvl: clamp(Math.max(b.reqLvl, ilvl - 2), 1, 30), affixes: [], sockets: [] };
+  ilvl = clamp(Math.round(ilvl || b.reqLvl), 1, MAX_LEVEL);
+  const req = Math.max(b.reqLvl, ilvl - 2, rarity === 'mythic' ? MYTHIC_REQ : 0);
+  const it = { uid: newUid(), base, slot: b.slot, rarity, ilvl, reqLvl: clamp(req, 1, MAX_LEVEL), affixes: [], sockets: [] };
   const pool = Object.keys(AFFIX).filter(k => AFFIX[k] !== 'res' && !(b.slot !== 'weapon' && k === 'skillDmg' && Math.random() < 0.5));
   for (let n = 0; n < 2; n++) pool.push(resKey(pick2(RES_ELS)));   // two resist candidates per roll (dupes are skipped)
   for (let n = 0; n < R.affixes && pool.length; n++) {
@@ -185,7 +187,7 @@ function drawRarityFrame(ctx, x, y, s, rarity, t = G.t) {
 }
 
 // ===== XP / levels (DESIGN §3) ===========================================================
-const MAX_LEVEL = 30;
+
 const xpToNext = L => Math.round(60 * Math.pow(L, 1.55));
 function gainXp(p, n) {
   if (p.level >= MAX_LEVEL || n <= 0) return;
@@ -390,6 +392,7 @@ function updateLoot(dt) {
   G.drops = G.drops.filter(d => !d.done);
   for (const o of G.map.objects) {
     if (o.chest && !o.opened && dist(p.x, p.y, o.x, o.y) < 1.0) openChest(o);
+    if (o.tablet) { const near = dist(p.x, p.y, o.x, o.y) < 1.4; if (near && G.tablet !== o) { G.tablet = o; sfx('pickup'); } else if (!near && G.tablet === o) G.tablet = null; }
     if (o.checkpoint && dist(p.x, p.y, o.x, o.y) < 1.3) { if (!o.cpOn) { o.cpOn = true; setCheckpoint(p.x, p.y); } } else if (o.checkpoint) o.cpOn = false;
   }
 }
@@ -410,12 +413,25 @@ const SAVE_KEY = 'dreamy.save.v1';
 const SAVE_ON = (() => { try { const q = new URLSearchParams(location.search); return !q.get('scene') && !q.get('playtest') && !q.get('map'); } catch (e) { return false; } })();
 function saveGame() {
   const p = G.player; if (!SAVE_ON || !p || !G.map || G.state === 'title') return false;
-  const s = { v: 1, t: Date.now(), level: p.level, xp: Math.floor(p.xp), potions: p.potions, dust: p.dust, map: G.map.id,
-    equip: p.equip, bag: p.bag, wsk: p.wsk, csk: p.csk, prog: G.prog, cp: G.checkpoint, uid: UID };
+  const s = { version: SAVE_VERSION, t: Date.now(), level: p.level, xp: Math.floor(p.xp), potions: p.potions, dust: p.dust, map: G.map.id,
+    equip: p.equip, bag: p.bag, wsk: p.wsk, csk: p.csk, prog: G.prog, seen: G.seen, cp: G.checkpoint, uid: UID };
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); return true; } catch (e) { return false; }
 }
 function readSave() {
-  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); return s && s.v === 1 && s.equip ? s : null; } catch (e) { return null; }
+  try { const s = migrate(JSON.parse(localStorage.getItem(SAVE_KEY))); return s && s.equip ? s : null; } catch (e) { return null; }
+}
+// the ONE place old saves are upgraded; add a step per schema change (bestiary, quests, secrets, mastery...)
+const SAVE_VERSION = 2;
+function migrate(s) {
+  if (!s || typeof s !== 'object') return null;
+  if (!s.version) s.version = s.v === 1 ? 1 : 0;            // v1 = the first M1 builds
+  if (s.version < 2) {                                        // v2: 3 gem grades, persisted discovery, level cap 40
+    const g3 = id => { const [t, g] = String(id).split('_'); return GEMS[t] ? `${t}_${clamp(Math.ceil(+g / 2), 1, GEM_MAX)}` : null; };
+    for (const it of Object.values(s.equip || {}).concat(s.bag || [])) { if (!it) continue; if (it.gem) it.gem = g3(it.gem); if (it.sockets) it.sockets = it.sockets.map(g => g && g3(g)); }
+    s.seen = s.seen || (s.prog && s.prog.seen) || {};
+    s.version = 2;
+  }
+  return s.version === SAVE_VERSION ? s : null;
 }
 function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
 const validItem = it => it && BASES[it.base] && RARITY[it.rarity] && Array.isArray(it.affixes) && Array.isArray(it.sockets);
@@ -427,7 +443,8 @@ function applySave(p, s) {
   (s.bag || []).slice(0, BAG_SIZE).forEach((e, i) => { if (validItem(e)) p.bag[i] = e; else if (e && gemParse(e.gem) && e.n > 0) p.bag[i] = { gem: e.gem, n: e.n | 0 }; });
   if (s.wsk) for (const f in p.wsk) for (const k of ['q', 'e', 'r']) if (s.wsk[f] && SKILLS[s.wsk[f][k]] && item('weapon', f)[k].includes(s.wsk[f][k])) p.wsk[f][k] = s.wsk[f][k];
   if (Array.isArray(s.csk)) p.csk = s.csk.filter(id => CHAR_SKILLS.includes(id)).slice(0, 3);
-  G.prog = { chests: (s.prog && s.prog.chests) || {}, firsts: (s.prog && s.prog.firsts) || {}, trig: (s.prog && s.prog.trig) || {}, seen: (s.prog && s.prog.seen) || {} };
+  G.prog = { chests: (s.prog && s.prog.chests) || {}, firsts: (s.prog && s.prog.firsts) || {}, trig: (s.prog && s.prog.trig) || {} };
+  G.seen = s.seen || {};
   G.checkpoint = s.cp || null;
   UID = Math.max(UID, +s.uid || 0);
   recalcStats(p, true);
@@ -439,20 +456,20 @@ function starterKit(p) {
     chest: makeItem('ironmail', 'common', 1, { sockets: 1 }), boots: makeItem('ironboots', 'common', 1, { sockets: 0 }) };
   p.bag = Array(BAG_SIZE).fill(null);
 }
-// ?scene=... showcases: a mid-level hero (L14) with rare/epic tier-2 gear of the chosen weapon family
+// ?scene=... showcases: a mid-level hero (L16) with rare/epic tier-2 gear of the chosen weapon family
 function showcaseKit(p, wfam = 'dawnblade') {
   const set = { dawnblade: ['knighthelm', 'knightplate', 'knightgreaves'], starfall: ['arcanecowl', 'dreamrobe', 'clothsandals'], moonbow: ['wardenhood', 'stalkerjacket', 'stalkershoes'] }[wfam] || ['knighthelm', 'knightplate', 'knightgreaves'];
   const t2 = f => FAMILY_TIERS[f][2].split(':')[0];
-  p.level = 14; p.xp = Math.round(xpToNext(14) * 0.4); p.dust = 140;
-  p.equip.weapon = makeItem(t2(wfam), 'epic', 14, { sockets: 2 }); p.equip.weapon.sockets[0] = 'ruby_3';
-  ['head', 'chest', 'boots'].forEach((s, i) => { p.equip[s] = makeItem(t2(set[i]), i === 1 ? 'epic' : 'rare', 14, { sockets: 1 }); });
+  p.level = 16; p.xp = Math.round(xpToNext(16) * 0.4); p.dust = 140;
+  p.equip.weapon = makeItem(t2(wfam), 'epic', 16, { sockets: 2 }); p.equip.weapon.sockets[0] = 'ruby_3';
+  ['head', 'chest', 'boots'].forEach((s, i) => { p.equip[s] = makeItem(t2(set[i]), i === 1 ? 'epic' : 'rare', 16, { sockets: 1 }); });
   p.equip.chest.sockets[0] = 'diamond_2'; p.equip.head.sockets[0] = 'topaz_2';
   recalcStats(p, true);
 }
 function sampleBag(p) {
   const L = p.level, put = e => bagAdd(p, e);
   RARITIES.slice(0, 5).forEach((r, i) => put(rollItem(L, r, SLOTS[i % 4])));
-  put(makeUnique('lanternplate', L)); put(makeItem('auroraedge', 'epic', 24));   // a named legendary; too high level: red requirement
+  put(makeUnique('lanternplate', L)); put(makeItem('auroraedge', 'epic', 26));   // a named legendary; too high level: red requirement
   for (let k = 0; k < 6; k++) put(rollItem(L - 4 + k, pick2(['common', 'uncommon', 'rare'])));
   GEM_TYPES.forEach((t, i) => put({ gem: `${t}_${1 + (i % 3)}`, n: 1 + (i % 3) }));
   put({ gem: 'amethyst_3', n: 1 });

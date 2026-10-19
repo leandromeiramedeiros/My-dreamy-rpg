@@ -26,7 +26,7 @@ function enterMap(id, at) {
   G.map = m; prepTheme(m);
   for (const pt of m.portals) pt.open = (G.world.maps[id].portals.find(q => q.x === pt.x && q.y === pt.y) || pt).open !== false;
   G.enemies = []; G.projs = []; G.effects = []; G.zones = []; G.parts = []; G.texts = []; G.delays = []; G.amb = []; G.drops = [];
-  G.boss = null;
+  G.boss = null; G.tablet = null;
   p.x = at ? at.x : m.start.x; p.y = at ? at.y : m.start.y; p.z = tileH(m, p.x, p.y); p.dash = null;
   syncChests(m);
   G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
@@ -35,9 +35,9 @@ function enterMap(id, at) {
   spawnCritters(m);
   if (G.state === 'play') saveGame();   // autosave on zone entry
 }
-function transition(to) {
+function transition(to, at) {
   if (G.fadeDir) return;
-  G.fadeDir = 1; G.fadeTo = to; sfx('portal');
+  G.fadeDir = 1; G.fadeTo = to; G.fadeAt = at || null; sfx('portal');
 }
 // death: lose 10% of this level's bar (never a level), wake at the last checkpoint (or this map's start) with
 // full HP and potions; settled triggers survive, so only the encounter you died in resets
@@ -63,7 +63,7 @@ function update(dt, rdt) {
 
   if (G.fadeDir) {
     G.fade += rdt * 1.6 * G.fadeDir;
-    if (G.fade >= 1 && G.fadeTo) { enterMap(G.fadeTo); G.fadeTo = null; G.fadeDir = -1; G.fade = 1; }
+    if (G.fade >= 1 && G.fadeTo) { enterMap(G.fadeTo, G.fadeAt); G.fadeTo = null; G.fadeAt = null; G.fadeDir = -1; G.fade = 1; }
     if (G.fade <= 0 && G.fadeDir < 0) { G.fade = 0; G.fadeDir = 0; }
   }
   if (G.state === 'play' || G.state === 'dead') {
@@ -73,7 +73,7 @@ function update(dt, rdt) {
     for (const d of G.delays.slice()) { d.t -= dt; if (d.t <= 0) { d.done = true; withCast(d.c || null, d.fn); } }
     G.delays = G.delays.filter(d => !d.done);
     if (G.state === 'play') {
-      for (const pt of m.portals) if (pt.open && G.world.maps[pt.to] && dist(p.x, p.y, pt.x, pt.y) < 0.85 && Math.abs(p.z - pt.z) < 0.6) transition(pt.to);
+      for (const pt of m.portals) if (pt.open && G.world.maps[pt.to] && dist(p.x, p.y, pt.x, pt.y) < 0.85 && Math.abs(p.z - pt.z) < 0.6) transition(pt.to, pt.arrive);
     }
     updateLoot(dt);
     if (G.state === 'dead') { G.deadT += rdt; if (G.deadT > 4.5) respawn(); }
@@ -166,7 +166,7 @@ function uiClick(x, y, alt) {
 }
 function beginPlay() { G.state = 'play'; initAudio(); G.banner = { s: G.map.name, sub: G.map.sub, t: 3.2, max: 3.2 }; }
 function newGame() {
-  clearSave(); G.prog = { chests: {}, firsts: {}, trig: {} }; G.checkpoint = null;
+  clearSave(); G.prog = { chests: {}, firsts: {}, trig: {} }; G.seen = {}; G.checkpoint = null;
   G.player = makePlayer(); G.state = 'title'; enterMap(G.world.start); beginPlay();
 }
 function continueGame(s) {

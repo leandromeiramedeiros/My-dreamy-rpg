@@ -11,10 +11,12 @@ const src = fs.readFileSync(file, 'utf8');
 const w = new Function(src + ';return WORLD_DATA;')();
 const worldSource = d => "'use strict';\n// The game world: maps, triggers (logic) and tuning. Edit it visually with editor.html,\n// which can publish straight back to this file on GitHub.\nconst WORLD_DATA = " + JSON.stringify(d, null, 1) + ';\n';
 
-const LEVELS = { vale: [1, 2], pinewood: [2, 8], pinewood_boss: [6, 8], ruins: [8, 14] };
+// DESIGN §3/§11 bands (always written, so a re-run follows the design)
+const LEVELS = { vale: [1, 3], pinewood: [3, 10], pinewood_boss: [8, 10], ruins: [10, 17] };
 const OBJECTS = {
-  vale: [{ t: 'chest', x: 4.5, y: 17.2, starter: true }, { t: 'checkpoint', x: 2.6, y: 21.2 }],
-  pinewood: [{ t: 'chest', x: 13.2, y: 3.0, tier: 'silver' }, { t: 'checkpoint', x: 6.8, y: 19.2 }],
+  vale: [{ t: 'chest', x: 4.5, y: 17.2, starter: true }, { t: 'shrine', x: 2.6, y: 21.2 }],
+  pinewood: [{ t: 'chest', x: 13.2, y: 3.0, tier: 'silver' }, { t: 'shrine', x: 6.8, y: 19.2 },
+    { t: 'tablet', x: 4.6, y: 17.2, title: 'Warden stone', text: 'The Wardens planted the first pines to hold the Gloam back. Now the roots are black.' }],
 };
 // trigger id -> actions appended once (matched by type)
 const ACTIONS = {
@@ -28,10 +30,11 @@ const ENEMIES = {
 };
 
 let n = 0;
-for (const [id, lv] of Object.entries(LEVELS)) { const m = w.maps[id]; if (m && !Array.isArray(m.level)) { m.level = lv; n++; } }
+for (const [id, lv] of Object.entries(LEVELS)) { const m = w.maps[id]; if (m && String(m.level) !== String(lv)) { m.level = lv; n++; } }
+for (const m of Object.values(w.maps)) m.objects.forEach(o => { if (o.t === 'checkpoint') { o.t = 'shrine'; n++; } });   // early M1 builds used 'checkpoint'
 for (const [id, list] of Object.entries(OBJECTS)) {
   const m = w.maps[id]; if (!m) continue;
-  for (const o of list) if (!m.objects.some(q => q.t === o.t)) { m.objects.push(o); n++; }
+  for (const o of list) if (!m.objects.some(q => q.t === o.t && Math.hypot(q.x - o.x, q.y - o.y) < 0.5)) { m.objects.push(o); n++; }
 }
 for (const [id, trs] of Object.entries(ACTIONS)) {
   const m = w.maps[id]; if (!m) continue;
