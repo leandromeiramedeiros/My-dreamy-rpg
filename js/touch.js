@@ -163,9 +163,9 @@ function drawTouchControls(ctx) {
         T(ctx, cd >= 1 ? Math.ceil(cd) + '' : cd.toFixed(1), b.x, b.y - 4, 8, '#ffffff', 'center');
       } else if ((sk.mp || 0) > p.mp || (sk.st || 0) > p.st) { ctx.fillStyle = 'rgba(40,60,160,0.55)'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill(); }
     }
-    ctx.strokeStyle = b.slot === 'r' ? UI.gold : (b.slot === 'f' || b.slot === 'c' || b.slot === 'shift') ? '#8fb0ff' : (/\d/.test(b.slot) ? '#ffb0e0' : UI.line);
+    ctx.strokeStyle = b.slot === 'r' ? HC.gold : (b.slot === 'f' || b.slot === 'c' || b.slot === 'shift') ? '#8fb0ff' : (/\d/.test(b.slot) ? '#ffb0e0' : HC.line);
     ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke();
     if (b.slot !== 'atk') T(ctx, SLOT_LABEL[b.slot], b.x - b.r + 2, b.y - b.r - 2, 8, '#ffffff');
   }
-  for (const m of TOUCH_MENU) { panel(ctx, m.x, m.y, m.w, m.h); T(ctx, m.label, m.x + m.w / 2, m.y + 12, 8, UI.text, 'center'); }
+  for (const m of TOUCH_MENU) { panel(ctx, m.x, m.y, m.w, m.h); T(ctx, m.label, m.x + m.w / 2, m.y + 12, 8, HC.text, 'center'); }
 }
