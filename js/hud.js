@@ -112,11 +112,6 @@ function drawHUD(ctx) {
   panel(ctx, 16, 14, 300, 54);
   T(ctx, m.name, 28, 24, 8, UI.gold);
   T(ctx, objective(), 28, 42, 8, UI.text);
-  // ---- potions (key 4) ----
-  panel(ctx, 324, 14, 76, 54);
-  drawIcon(ctx, miscIcon('potion'), 330, 25, 32);
-  T(ctx, `${p.potions}/${MAX_POTIONS}`, 368, 26, 8, p.potions ? '#ffb0c8' : UI.dim);
-  T(ctx, G.touch ? 'POT' : '[4]', 368, 44, 8, UI.dim);
 
   // ---- name plate + gear/buff icons (sketch: bar above portrait, icons to its right) ----
   const BY = DH - 148;
@@ -214,12 +209,20 @@ function objective() { return G.objective || ''; }
 const SLOT_LABEL = { lmb: 'LMB', q: 'Q', e: 'E', r: 'R', f: 'F', c: 'C', shift: 'SHF', 1: '1', 2: '2', 3: '3' };
 function drawSkillBar(ctx) {
   const p = G.player, w = item('weapon', p.gear.weapon);
-  const slots = ['lmb', 'q', 'e', 'r', '|', 'f', 'c', 'shift', '|', '1', '2', '3'];
+  const slots = ['lmb', 'q', 'e', 'r', '|', 'f', 'c', 'shift', '|', '1', '2', '3', '|', 'pot'];
   let x = 374; const y = DH - 60;
-  panel(ctx, x - 8, y - 8, 410, 56);
+  panel(ctx, x - 8, y - 8, 458, 56);
   let hoverSkill = null;
   for (const s of slots) {
     if (s === '|') { x += 10; continue; }
+    if (s === 'pot') {   // health potion, key 4
+      ctx.fillStyle = '#0a0614'; ctx.fillRect(x - 1, y - 1, 38, 38); drawIcon(ctx, miscIcon('potion'), x + 2, y + 2, 32);
+      if (!p.potions) { ctx.fillStyle = 'rgba(10,4,20,0.65)'; ctx.fillRect(x + 2, y + 2, 32, 32); }
+      ctx.strokeStyle = '#ff8aa8'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 38, 38);
+      T(ctx, '4', x, y - 2, 8, '#ffffff'); T(ctx, String(p.potions), x + 34, y + 25, 8, '#ffffff', 'right');
+      if (G.mouse.dx >= x && G.mouse.dx < x + 36 && G.mouse.dy >= y && G.mouse.dy < y + 36) hoverSkill = { name: 'Health Potion', desc: `Heal 40% of max HP. ${p.potions}/${MAX_POTIONS} charges, refilled at checkpoints.`, cd: 1 };
+      x += 38; continue;
+    }
     const id = s === 'lmb' ? null : slotSkill(p, s);
     const sk = id ? SKILLS[id] : null;
     ctx.fillStyle = '#0a0614'; ctx.fillRect(x - 1, y - 1, 38, 38);
@@ -320,14 +323,13 @@ function drawInventory(ctx) {
   const xf = p.level >= MAX_LEVEL ? 1 : p.xp / xpToNext(p.level);
   ctx.fillStyle = '#0a0614'; ctx.fillRect(hx + 16, hy + 244, 140, 6); ctx.fillStyle = '#b48aff'; ctx.fillRect(hx + 16, hy + 244, Math.round(140 * xf), 6);
   T(ctx, p.level >= MAX_LEVEL ? 'MAX' : `${Math.floor(p.xp)} / ${xpToNext(p.level)} XP`, hx + 86, hy + 256, 8, UI.dim, 'center');
-  drawIcon(ctx, miscIcon('potion'), hx + 36, hy + 278, 24); T(ctx, `${p.potions}/${MAX_POTIONS}`, hx + 64, hy + 286, 8, '#ffb0c8');
+  T(ctx, 'RESIST', hx + 86, hy + 274, 8, UI.dim, 'center');
+  RES_ELS.forEach((el, i) => { const v = Math.round((p.res[el] || 0) * 100); T(ctx, `${RES_SHORT[el]}${v > 0 ? '+' : ''}${v}`, hx + 8 + (i % 4) * 42, hy + 288 + Math.floor(i / 4) * 14, 8, v > 0 ? EL_COL[el] : v < 0 ? '#ff7a8a' : UI.dim); });
   // --- stat sheet ---
   const st = [['Attack', Math.round(item('weapon', p.gear.weapon).basic.dmg * p.power)], ['HP', p.maxHp], ['MP', p.maxMp], ['Defence', pct(p.def)],
     ['Crit', pct(p.crit)], ['Crit dmg', '+' + pct(p.critDmg)], ['Atk speed', '+' + pct(p.haste)], ['Cooldowns', '-' + pct(p.cdr)],
-    ['Skill dmg', '+' + pct(p.skillDmg)], ['Regen', `${+p.regen.toFixed(1)}/s`]];
+    ['Skill dmg', '+' + pct(p.skillDmg)], ['Regen', `${+p.regen.toFixed(1)}/s`], ['Potions', `${p.potions}/${MAX_POTIONS}`], ['Dust', p.dust]];
   st.forEach(([k, v], i) => { const sx = X + 20 + (i % 2) * 138, sy = Y + 400 + Math.floor(i / 2) * 15; T(ctx, k, sx, sy, 8, UI.dim); T(ctx, String(v), sx + 128, sy, 8, UI.text, 'right'); });
-  T(ctx, 'Resist', X + 20, Y + 478, 8, UI.dim);
-  RES_ELS.forEach((el, i) => { const v = p.res[el] || 0; T(ctx, `${RES_SHORT[el]}${Math.round(v * 100)}`, X + 82 + i * 34, Y + 478, 8, v > 0 ? EL_COL[el] : UI.dim); });
   // --- bag 6x5 ---
   const BX = X + 300, BY = Y + 66;
   T(ctx, `BAG  ${p.bag.filter(Boolean).length}/${BAG_SIZE}`, BX, BY - 12, 8, '#ffe08a');
