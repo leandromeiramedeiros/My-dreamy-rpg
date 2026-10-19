@@ -11,7 +11,8 @@
 // additive detail passes (t>=1 trim, t>=2 gold, t>=3 big silhouette pieces, t>=4 ornate) over a palette ramp.
 // ---------------------------------------------------------------------------
 const HERO = (function () {
-  const FW = 24, FH = 32;
+  const FW = 24, FH = 34, TOP = 2;   // 2px headroom: layers paint in 24x32 design space, shifted down TOP
+  const REST = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.15];   // default weapon tilt per frame (outward, keeps face clear)
   // ---- colour helpers ------------------------------------------------------
   const toHex = a => '#' + a.map(v => Math.round(clamp(v, 0, 255)).toString(16).padStart(2, '0')).join('');
   const dk = (c, f) => toHex(hexToRgb(c).map(v => v * f));
@@ -67,7 +68,8 @@ const HERO = (function () {
   const FR = [
     { bob: 0, la: 0, ra: 0, lay: 0, ray: 0, sw: 0 }, { bob: 1, la: 0, ra: 0, lay: 0, ray: 0, sw: 0 },
     { bob: 1, la: 1, ra: 0, lay: 1, ray: -1, sw: -1 }, { bob: 0, la: 2, ra: 0, lay: 1, ray: -1, sw: 0 },
-    { bob: 1, la: 0, ra: 1, lay: -1, ray: 1, sw: 1 }, { bob: 0, la: 0, ra: 2, lay: -1, ray: 1, sw: 0 }];
+    { bob: 1, la: 0, ra: 1, lay: -1, ray: 1, sw: 1 }, { bob: 0, la: 0, ra: 2, lay: -1, ray: 1, sw: 0 },
+    { bob: 1, la: 0, ra: 0, lay: 1, ray: -4, sw: 0 }];   // 6 = attack: right arm thrust up/out
 
   // ---- BODY (skin / underclothes / hair / face) ----------------------------
   function body(g, P, back, o) {
@@ -101,51 +103,53 @@ const HERO = (function () {
   const M_STEEL = mapT(['#7d8494', '#98a6bd', '#b4c4dc', '#c9d6ec', '#dfe8f8']);
   const FUR = [{ h: '#f4f0e6', m: '#e4e0d4', l: '#bdb8a8' }][0];
 
-  // ---- BOOTS ---------------------------------------------------------------
+  // ---- BOOTS (every tier changes the silhouette: shaft height, flared cops/cuffs, fins, wings) ----
   const BOOTS = {
     knightgreaves: {
-      anc: [[8, 28], [14, 28], [10, 25]],
+      anc: [[8, 29], [14, 29], [9, 26]],
       draw(g, P, back, T) {
-        const R = M_STEEL[T];
+        const R = M_STEEL[T], top = [28, 27, 26, 26, 26][T];
         for (let s = 0; s < 2; s++) {
           g.oy = -(s ? P.ra : P.la); const M = g.mir(s);
-          M.b(9, 26, 3, 4, R); M.b(8, 29, 4, 2, R); M.p(7, 30, R.l); M.r(9, 28, 3, 1, R.l);
-          if (T >= 1) { M.b(9, 25, 3, 2, R); M.p(10, 25, R.h); }               // knee cop
-          if (T >= 2) { M.r(9, 26, 3, 1, GOLD.m); M.r(8, 29, 4, 1, GOLD.m); }
-          if (T >= 3) { M.p(7, 30, GOLD.m); M.p(8, 30, GOLD.h); M.p(9, 24, GOLD.m); M.p(10, 24, GOLD.h); }
-          if (T >= 4) { M.p(7, 27, WHITE.h); M.p(6, 26, WHITE.m); M.p(7, 26, WHITE.h); M.p(6, 27, WHITE.m); M.p(7, 28, GOLD.m); M.p(6, 25, GOLD.h); }
+          if (T >= 4) {                                              // feathered wings
+            M.r(5, 25, 3, 1, WHITE.h); M.r(4, 26, 4, 1, WHITE.m); M.r(3, 27, 5, 1, WHITE.h); M.r(4, 28, 4, 1, GOLD.m); M.r(5, 29, 2, 1, GOLD.h);
+          }
+          M.b(9, top, 3, 29 - top, R); M.b(8, 29, 4, 2, R); M.p(7, 30, R.l);
+          M.r(9, 28, 3, 1, R.l);
+          if (T === 2) { M.b(8, 25, 4, 3, R); M.r(8, 27, 4, 1, GOLD.m); M.p(7, 29, R.m); M.p(7, 30, GOLD.m); }
+          if (T >= 3) { M.b(7, 24, 5, 3, R); M.r(7, 26, 5, 1, GOLD.m); M.p(6, 25, GOLD.h); M.p(6, 24, GOLD.m); M.p(7, 29, GOLD.m); M.p(7, 30, GOLD.h); M.r(8, 29, 4, 1, GOLD.m); }
+          if (T >= 4) { M.r(9, 24, 3, 1, GOLD.h); M.p(8, 23, GOLD.m); }
         }
       }
     },
     clothsandals: {
-      anc: [[8, 28], [14, 28], [10, 26]],
+      anc: [[8, 29], [14, 29], [9, 27]],
       draw(g, P, back, T) {
         const C = mapT(['#b8a078', '#c8a868', '#5a84c0', '#7a5cc8', '#e8e0f8'])[T], tie = mapT(['#8a7050', '#a07848', '#d8c070', '#e8b830', '#ffe27a'])[T];
+        const top = [28, 27, 26, 25, 25][T];
         for (let s = 0; s < 2; s++) {
           g.oy = -(s ? P.ra : P.la); const M = g.mir(s);
-          M.b(9, 26, 3, 3, C); M.p(9, 27, C.l); M.p(10, 26, C.l); M.p(11, 27, C.l); M.p(10, 27, C.h);   // leg wraps
-          M.b(8, 29, 4, 2, tie); M.r(8, 30, 4, 1, tie.d);                      // sole
-          M.r(9, 29, 3, 1, C.m);
-          if (T >= 1) M.r(9, 26, 3, 1, tie.m);
-          if (T >= 2) { M.r(9, 28, 3, 1, GOLD.m); M.p(10, 28, GOLD.h); }
-          if (T >= 3) { M.p(8, 28, C.h); M.p(7, 28, C.m); M.p(7, 29, C.l); M.p(8, 27, C.h); }
-          if (T >= 4) { M.p(7, 26, GOLD.h); M.p(6, 27, GOLD.m); M.p(7, 25, GOLD.h); M.p(6, 28, '#ffffff'); }
+          if (T >= 3) { M.r(5, 25, 3, 1, C.h); M.r(4, 26, 4, 1, C.m); M.r(3, 27, 5, 1, C.h); M.r(4, 28, 4, 1, C.l); if (T >= 4) { M.r(2, 26, 2, 1, GOLD.h); M.r(3, 28, 2, 1, GOLD.m); } }
+          M.b(8, 29, 4, 2, tie); M.r(8, 30, 4, 1, tie.d);
+          M.b(9, top, 3, 29 - top, C);
+          for (let y = top; y < 29; y += 2) { M.p(9, y, C.l); M.p(11, y + 1 > 28 ? 28 : y + 1, C.l); }
+          if (T >= 1) M.r(9, top, 3, 1, tie.m);
+          if (T >= 2) { M.r(7, 27, 2, 1, tie.m); M.p(7, 28, tie.l); M.p(6, 28, tie.m); M.r(9, 28, 3, 1, GOLD.m); }
+          if (T >= 4) { M.r(9, 25, 3, 1, GOLD.m); }
         }
       }
     },
     stalkershoes: {
-      anc: [[8, 28], [14, 28], [10, 29]],
+      anc: [[8, 29], [14, 29], [9, 26]],
       draw(g, P, back, T) {
-        const L = mapT(['#8a6840', '#745638', '#5e5a34', '#3e5a3a', '#2c3430'])[T];
+        const L = mapT(['#8a6840', '#745638', '#5e5a34', '#3e5a3a', '#2c3430'])[T], top = [28, 27, 27, 27, 27][T];
         for (let s = 0; s < 2; s++) {
           g.oy = -(s ? P.ra : P.la); const M = g.mir(s);
-          M.b(9, 26, 3, 4, L); M.b(8, 29, 4, 2, L); M.r(8, 30, 4, 1, L.d);
-          M.r(8, 26, 4, 1, L.l); M.r(9, 25, 3, 1, L.h);                         // folded cuff
-          M.p(10, 28, '#d8c8a0'); M.p(9, 27, '#d8c8a0'); M.p(11, 27, '#d8c8a0');  // laces
-          if (T >= 1) M.p(9, 29, '#b0b0b8');
-          if (T >= 2) { M.p(8, 29, GOLD.m); M.p(11, 29, GOLD.m); }
-          if (T >= 3) { M.r(8, 25, 4, 1, FUR.m); M.p(9, 24, FUR.l); M.p(11, 24, FUR.l); M.p(8, 26, FUR.l); }
-          if (T >= 4) { M.r(8, 29, 1, 2, GOLD.m); M.p(10, 29, GOLD.h); M.p(11, 29, GOLD.m); M.p(10, 25, GOLD.h); }
+          M.b(9, top, 3, 29 - top, L); M.b(8, 29, 4, 2, L); M.r(8, 30, 4, 1, L.d);
+          if (T >= 1) { M.p(10, 28, '#d8c8a0'); M.p(9, 27, '#d8c8a0'); M.p(11, 27, '#d8c8a0'); M.p(9, 29, '#b0b0b8'); }
+          if (T >= 2) { M.b(8, 25, 4, 2, L); M.r(8, 26, 4, 1, L.l); M.p(8, 29, GOLD.m); M.p(10, 25, GOLD.m); }
+          if (T >= 3) { M.r(7, 24, 5, 2, FUR.m); M.p(7, 26, FUR.l); M.p(6, 25, FUR.m); M.p(8, 23, FUR.m); M.p(10, 23, FUR.l); M.r(7, 24, 5, 1, FUR.h); }
+          if (T >= 4) { M.r(7, 29, 1, 2, GOLD.m); M.p(6, 30, GOLD.h); M.p(6, 27, GOLD.m); M.p(5, 26, GOLD.h); M.p(6, 28, GOLD.l); M.p(11, 29, GOLD.m); }
         }
       }
     }
@@ -453,6 +457,7 @@ const HERO = (function () {
   const piece = p => (p && p.family ? { family: p.family, tier: clamp(p.tier | 0, 0, 4), gems: p.gems || null } : null);
   function renderFrame(L, back, fi, only) {
     const { c, x } = makeCanvas(FW, FH), g = mkG(x, back), P = FR[fi];
+    x.translate(0, TOP);
     const run = (slot, tbl, args) => {
       const p = L[slot]; if (!p || (only && only !== slot)) return;
       const fam = tbl[p.family]; if (!fam) return;
@@ -486,7 +491,7 @@ const HERO = (function () {
     const b = { key, look: L, w: FW, h: FH, front: [], back: [], hand: { front: [], back: [] }, _slots: {} };
     for (let i = 0; i < FR.length; i++) {
       b.front.push(renderFrame(L, false, i)); b.back.push(renderFrame(L, true, i));
-      const hp = { x: 17, y: 24 + FR[i].bob + FR[i].ray };
+      const hp = { x: 17, y: 24 + TOP + FR[i].bob + FR[i].ray };
       b.hand.front.push(hp); b.hand.back.push(hp);
     }
     if (L.weapon) {
@@ -495,7 +500,7 @@ const HERO = (function () {
     } else { b.weapon = null; b.weaponGrip = { x: 0, y: 0 }; b.weaponTip = { x: 0, y: 0 }; }
     const h0 = b.hand.front[0];
     b.anchors = {
-      head: { x: 12, y: 9 }, chest: { x: 12, y: 19 }, boots: { x: 12, y: 28 },
+      head: { x: 12, y: 9 + TOP }, chest: { x: 12, y: 19 + TOP }, boots: { x: 12, y: 28 + TOP },
       weapon: b.weapon ? { x: h0.x - b.weaponGrip.x + b.weaponTip.x, y: h0.y - b.weaponGrip.y + b.weaponTip.y } : { x: h0.x, y: h0.y }
     };
     cache.set(key, b);
@@ -516,7 +521,8 @@ const HERO = (function () {
     const wp = () => {
       if (!b.weapon || opt.noWeapon) return;
       const h = b.hand[view][fi];
-      ctx.save(); ctx.translate(h.x, h.y); if (opt.angle) ctx.rotate(opt.angle);
+      const ang = opt.angle != null ? opt.angle : REST[fi] || 0;
+      ctx.save(); ctx.translate(h.x, h.y); if (ang) ctx.rotate(ang);
       ctx.drawImage(b.weapon, -b.weaponGrip.x, -b.weaponGrip.y); ctx.restore();
     };
     if (view === 'back') wp();
@@ -529,10 +535,10 @@ const HERO = (function () {
   const rarityFx = {
     common:    { color: '#d8d8d8', alpha: 0,    pulse: 0,   rate: 0,  kind: 'none',    light: 0,  rim: 0, aura: false },
     uncommon:  { color: '#6ee36e', alpha: 0.38, pulse: 0,   rate: 0,  kind: 'none',    light: 14, rim: 1, aura: false },
-    rare:      { color: '#5aa8ff', alpha: 0.55, pulse: 1.4, rate: 2,  kind: 'sparkle', light: 26, rim: 1, aura: false },
-    epic:      { color: '#c070ff', alpha: 0.66, pulse: 2.4, rate: 6,  kind: 'mote',    light: 40, rim: 2, aura: false },
-    legendary: { color: '#ffb030', alpha: 0.8,  pulse: 3.2, rate: 10, kind: 'ember',   light: 60, rim: 2, aura: false },
-    mythic:    { color: '#ff4f7a', alpha: 0.92, pulse: 3.8, rate: 18, kind: 'star',    light: 84, rim: 3, aura: true, cycle: ['#ff4f7a', '#ffb030', '#c070ff', '#5aa8ff'] }
+    rare:      { color: '#5aa8ff', alpha: 0.55, pulse: 1.4, rate: 5,  kind: 'sparkle', light: 26, rim: 1, aura: false },
+    epic:      { color: '#c070ff', alpha: 0.66, pulse: 2.4, rate: 12, kind: 'mote',    light: 40, rim: 2, aura: false },
+    legendary: { color: '#ffb030', alpha: 0.8,  pulse: 3.2, rate: 18, kind: 'ember',   light: 60, rim: 2, aura: false },
+    mythic:    { color: '#ff5ac8', alpha: 0.92, pulse: 3.8, rate: 30, kind: 'star',    light: 84, rim: 3, aura: true, cycle: ['#ff5ac8', '#a060ff', '#40e8ff'] }
   };
   function rarityColor(r, t) {
     const f = rarityFx[r] || rarityFx.common; if (!f.cycle) return f.color;
@@ -562,6 +568,15 @@ const HERO = (function () {
       const gr = ctx.createRadialGradient(cx, cy, 2, cx, cy, R);
       gr.addColorStop(0, rgba(col, 0.28 * p)); gr.addColorStop(0.6, rgba(col, 0.1 * p)); gr.addColorStop(1, rgba(col, 0));
       ctx.fillStyle = gr; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+      ctx.globalCompositeOperation = 'source-over';           // starry halo: twinkling pinpoints orbiting the hero
+      for (let i = 0; i < 12; i++) {
+        const an = i * 2.399 + t * (0.25 + (i % 3) * 0.08), rr = R * (0.55 + 0.4 * ((i * 37) % 10) / 10), tw = 0.5 + 0.5 * Math.sin(t * 5 + i * 1.7);
+        const sx = Math.round(cx + Math.cos(an) * rr * 0.9), sy = Math.round(cy + Math.sin(an) * rr * 1.05);
+        ctx.globalAlpha = 0.35 + 0.65 * tw; ctx.fillStyle = rarityColor(rarity, t + i * 0.7);
+        if (tw > 0.6) { ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3); }
+        ctx.fillStyle = '#fff'; ctx.fillRect(sx, sy, 1, 1);
+      }
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'lighter';
     }
     if (!scratch) scratch = makeCanvas(W, H);
     if (scratch.c.width !== W || scratch.c.height !== H) { scratch.c.width = W; scratch.c.height = H; scratch.x.imageSmoothingEnabled = false; }
@@ -580,11 +595,11 @@ const HERO = (function () {
     arr.acc = (arr.acc || 0) + f.rate * dt;
     while (arr.acc >= 1) {
       arr.acc -= 1; if (arr.length >= (cap || 160)) continue;
-      const x = bx + frand(0, bw), y = by + frand(0, bh), p = { x, y, vx: 0, vy: 0, age: 0, life: 0.8, kind: f.kind, col: rarityColor(rarity, frand(0, 8)) };
-      if (f.kind === 'sparkle') { p.life = frand(0.4, 0.9); }
-      else if (f.kind === 'mote') { p.vx = frand(-5, 5); p.vy = frand(1, 7); p.life = frand(0.8, 1.5); }
-      else if (f.kind === 'ember') { p.vx = frand(-6, 6); p.vy = -frand(8, 22); p.life = frand(0.7, 1.3); p.col = pick(['#ffd070', '#ff9a20', '#ff5a10']); }
-      else if (f.kind === 'star') { p.vx = frand(-5, 5); p.vy = -frand(6, 16); p.life = frand(0.9, 1.6); }
+      const p = { x: bx + frand(0, bw), y: by + frand(0, bh), vx: 0, vy: 0, age: 0, life: 0.8, kind: f.kind, ph: frand(0, 6.28), col: rarityColor(rarity, frand(0, 9)) };
+      if (f.kind === 'sparkle') { p.life = frand(0.5, 1.0); }
+      else if (f.kind === 'mote') { p.vx = frand(-6, 6); p.vy = frand(2, 9); p.life = frand(0.9, 1.6); }
+      else if (f.kind === 'ember') { p.vx = frand(-6, 6); p.vy = -frand(10, 26); p.life = frand(0.8, 1.5); p.col = pick(['#ffd070', '#ffa020', '#ff6a18']); }
+      else if (f.kind === 'star') { p.vx = frand(-4, 4); p.vy = -frand(7, 17); p.life = frand(1.1, 2.0); }
       arr.push(p);
     }
   }
@@ -593,27 +608,34 @@ const HERO = (function () {
       const p = arr[i]; p.age += dt;
       if (p.age >= p.life) { arr.splice(i, 1); continue; }
       p.x += p.vx * dt; p.y += p.vy * dt;
-      if (p.kind === 'ember') p.vx += Math.sin(p.age * 9 + i) * 14 * dt;
+      if (p.kind === 'ember' || p.kind === 'star') p.vx += Math.sin(p.age * 8 + p.ph) * 12 * dt;
     }
   }
+  // 1-3 px, saturated body + white core, source-over so they stay readable on bright grass
   function drawParticles(ctx, arr) {
-    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.save();
     for (const p of arr) {
-      const u = p.age / p.life, a = p.kind === 'sparkle' ? Math.sin(Math.PI * u) : 1 - u;
-      ctx.globalAlpha = clamp(a, 0, 1); ctx.fillStyle = p.col;
+      const u = p.age / p.life, fade = u > 0.65 ? (1 - u) / 0.35 : 1;
       const x = Math.round(p.x), y = Math.round(p.y);
+      let a = fade;
+      if (p.kind === 'sparkle') a = Math.sin(Math.PI * u);
+      if (p.kind === 'star') a = fade * (0.55 + 0.45 * Math.sin(p.age * 16 + p.ph));
+      ctx.globalAlpha = clamp(a, 0, 1); ctx.fillStyle = p.col;
       if (p.kind === 'sparkle' || p.kind === 'star') {
-        ctx.fillRect(x, y, 1, 1);
-        if (a > 0.45) { ctx.fillRect(x - 1, y, 1, 1); ctx.fillRect(x + 1, y, 1, 1); ctx.fillRect(x, y - 1, 1, 1); ctx.fillRect(x, y + 1, 1, 1); }
-        if (p.kind === 'star') { ctx.fillStyle = '#fff'; ctx.fillRect(x, y, 1, 1); }
-      } else if (p.kind === 'mote') { ctx.fillRect(x, y, 1, 1); ctx.globalAlpha *= 0.4; ctx.fillRect(x, y - 1, 1, 1); }
-      else { ctx.fillRect(x, y, 1, 1); if (u < 0.5) { ctx.globalAlpha *= 0.5; ctx.fillRect(x, y + 1, 1, 1); } }
+        ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3);
+        if (p.kind === 'star' && a > 0.7) { ctx.fillRect(x - 2, y, 1, 1); ctx.fillRect(x + 2, y, 1, 1); ctx.fillRect(x, y - 2, 1, 1); ctx.fillRect(x, y + 2, 1, 1); }
+        ctx.fillStyle = '#fff'; ctx.fillRect(x, y, 1, 1);
+      } else if (p.kind === 'mote') {
+        ctx.fillRect(x, y, 2, 2); ctx.globalAlpha *= 0.5; ctx.fillRect(x, y - 2, 1, 2); ctx.globalAlpha = clamp(a, 0, 1); ctx.fillStyle = '#fff'; ctx.fillRect(x, y, 1, 1);
+      } else {
+        ctx.fillRect(x, y, 1, 2); ctx.fillStyle = '#fff4c0'; ctx.fillRect(x, y, 1, 1); ctx.globalAlpha *= 0.5; ctx.fillStyle = p.col; ctx.fillRect(x, y + 2, 1, 1);
+      }
     }
     ctx.restore();
   }
 
   return {
-    FW, FH, FRAMES: FR.length, build, drawHero, slotSprite, rarityFx, rarityColor, drawGlow, emit, stepParticles, drawParticles,
+    FW, FH, TOP, FRAMES: FR.length, ATTACK: 6, REST_ANGLE: REST, build, drawHero, slotSprite, rarityFx, rarityColor, drawGlow, emit, stepParticles, drawParticles,
     FAMILIES: { head: Object.keys(HEAD), chest: Object.keys(CHEST), boots: Object.keys(BOOTS), weapon: Object.keys(WEAP) },
     GEMS: Object.keys(GEMC), RARITIES: ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'],
     gemColor: n => GEMC[n]

@@ -12,8 +12,8 @@ const RARITY = {
   uncommon:  { i: 1, name: 'Uncommon',  col: '#6ee36e', mult: 1.15, affixes: 1, sockets: [1, 1] },
   rare:      { i: 2, name: 'Rare',      col: '#5aa8ff', mult: 1.35, affixes: 2, sockets: [1, 2] },
   epic:      { i: 3, name: 'Epic',      col: '#c070ff', mult: 1.60, affixes: 3, sockets: [2, 3] },
-  legendary: { i: 4, name: 'Legendary', col: '#ffb030', mult: 1.90, affixes: 3, sockets: [3, 3], unique: 1 },
-  mythic:    { i: 5, name: 'Mythic',    col: '#ff4f7a', mult: 2.30, affixes: 4, sockets: [3, 3], unique: 1.4 },
+  legendary: { i: 4, name: 'Legendary', col: '#ffb030', mult: 1.90, affixes: 3, sockets: [3, 3] },
+  mythic:    { i: 5, name: 'Mythic',    col: '#ff4f7a', mult: 2.30, affixes: 4, sockets: [3, 3] },
 };
 const RARITIES = Object.keys(RARITY);
 function mixHex(a, b, k) { const A = hexToRgb(a), B = hexToRgb(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * k).toString(16).padStart(2, '0')).join(''); }
@@ -43,7 +43,7 @@ for (const slot of SLOTS) for (const fam of ITEMS[slot]) FAMILY_TIERS[fam.id].fo
   BASES[id] = { id, name, slot, family: fam.id, tier, reqLvl: TIER_REQ[tier], icon: fam.icon, color: fam.color, kind: fam.kind };
 });
 const familyOf = base => (BASES[base] || {}).family;
-const PCT_STATS = { def: 1, power: 1, crit: 1, haste: 1, speed: 1, critDmg: 1, cdr: 1, skillDmg: 1, wdmg: 1 };
+const PCT_STATS = { def: 1, power: 1, crit: 1, haste: 1, speed: 1, critDmg: 1, cdr: 1, skillDmg: 1 };
 function baseStats(b) {
   const fam = item(b.slot, b.family);
   if (b.slot === 'weapon') return { dmg: fam.basic.dmg * TIER_DMG[b.tier] };
@@ -56,9 +56,9 @@ function baseStats(b) {
 // value at item level L = (a + b*L) * roll(0.6..1)
 const AFFIX = { hp: [25, 6], mp: [15, 3], def: [0.02, 0.002], power: [0.03, 0.004], crit: [0.02, 0.0015], haste: [0.03, 0.003],
   regen: [1, 0.25], mpRegen: [0.8, 0.15], speed: [0.1, 0.01], critDmg: [0.08, 0.008], cdr: [0.02, 0.002], skillDmg: [0.04, 0.004] };
-const STAT_NAME = { dmg: 'Damage', hp: 'HP', mp: 'MP', def: 'Defence', power: 'Power', crit: 'Crit chance', haste: 'Attack speed', regen: 'HP/s',
-  mpRegen: 'MP/s', speed: 'Move speed', critDmg: 'Crit damage', cdr: 'Cooldowns', skillDmg: 'Skill damage', wdmg: 'Weapon damage' };
-const STAT_ORDER = ['dmg', 'wdmg', 'hp', 'mp', 'def', 'power', 'skillDmg', 'crit', 'critDmg', 'haste', 'cdr', 'regen', 'mpRegen', 'speed'];
+const STAT_NAME = { dmg: 'Damage', hp: 'HP', mp: 'MP', def: 'Defence', power: 'Damage', crit: 'Crit chance', haste: 'Attack speed', regen: 'HP/s',
+  mpRegen: 'MP/s', speed: 'Move speed', critDmg: 'Crit damage', cdr: 'Cooldowns', skillDmg: 'Skill damage' };
+const STAT_ORDER = ['dmg', 'hp', 'mp', 'def', 'power', 'skillDmg', 'crit', 'critDmg', 'haste', 'cdr', 'regen', 'mpRegen', 'speed'];
 function fmtStat(k, v, sign = true) {
   const sg = sign ? (v >= 0 ? '+' : '-') : '', a = Math.abs(v);
   if (k === 'dmg') return `${sign && v < 0 ? '-' : ''}${Math.round(a)} ${STAT_NAME[k]}`;
@@ -67,28 +67,36 @@ function fmtStat(k, v, sign = true) {
   if (PCT_STATS[k]) return `${sg}${Math.round(a * 100)}% ${STAT_NAME[k]}`;
   return `${sg}${a < 10 ? +a.toFixed(1) : Math.round(a)} ${STAT_NAME[k]}`;
 }
+// Named legendaries (§4.5): first-kill boss drops that change a skill's RULE. Rules are hooks for M4
+// (check `hasUnique(p, id)` at the skill); M1 ships the table + drop path. `boss` = map:enemy that guarantees it.
 const UNIQUES = {
-  sunheart: { name: 'Sunheart', stats: { power: 0.12, crit: 0.05 } },
-  dreamwell: { name: 'Dreamwell', stats: { mp: 150, mpRegen: 4, cdr: 0.08 } },
-  starsoul: { name: 'Starsoul', stats: { critDmg: 0.5, skillDmg: 0.1 } },
-  wardensoath: { name: 'Warden\'s Oath', stats: { hp: 400, def: 0.06, regen: 6 } },
-  swiftwind: { name: 'Swiftwind', stats: { haste: 0.15, speed: 0.4 } },
+  rootcrown: { name: 'Root-Crown', base: 'mossmantle', boss: 'pinewood:bramblehorn', desc: 'Snare and Frost Nova root bosses for 1s.' },
+  lanternplate: { name: 'Warden\'s Lantern Plate', base: 'sunplate', boss: 'ruins:boss', desc: 'Bulwark reflects projectiles.' },
+  tideedge: { name: 'Tide-Edge', base: 'auroraedge', boss: 'grotto:mirelle', desc: 'Dash Strike leaves a frost trail that slows.' },
+  cinderstride: { name: 'Cinderstride Boots', base: 'sungreaves', boss: 'caldera:kharzul', desc: 'Boots skill leaves a fire trail; lava immunity 2s.' },
+  morrowbane: { name: 'Morrowbane', base: 'dawneternal', boss: 'spire:morrow', mythic: true, desc: 'R ultimate resets on boss phase change.' },
 };
+const hasUnique = (p, id) => SLOTS.some(s => p.equip[s] && p.equip[s].unique === id);
+const uniqueFor = key => Object.keys(UNIQUES).find(k => UNIQUES[k].boss === key);
+function makeUnique(id, ilvl) {
+  const U = UNIQUES[id], it = makeItem(U.base, U.mythic ? 'mythic' : 'legendary', Math.max(ilvl, BASES[U.base].reqLvl));
+  it.unique = id; return it;
+}
 
 // ===== gems (DESIGN §4.3) ==========================================================
-const GEM_GRADES = ['Chipped', 'Flawed', 'Clear', 'Brilliant', 'Radiant'];
-const G5 = a => g => a[g - 1];
+const GEM_GRADES = ['Chipped', 'Clear', 'Radiant'], GEM_MAX = 3;
+const G5 = a => g => a[g - 1];   // per-grade value table (grade 1..3)
 const GEMS = {
-  ruby: { name: 'Ruby', col: '#ff4a5a', el: 'fire', arm: g => ({ hp: G5([30, 60, 100, 160, 240])(g) }), wpn: g => ({ wdmg: G5([0.04, 0.07, 0.1, 0.14, 0.2])(g) }), amp: 'Fire skills' },
-  sapphire: { name: 'Sapphire', col: '#4a8cff', el: 'frost', arm: g => ({ mp: G5([20, 35, 55, 80, 110])(g), mpRegen: G5([0.5, 1, 1.5, 2.2, 3])(g) }), wpn: g => ({ cdr: G5([0.02, 0.035, 0.05, 0.07, 0.1])(g) }), amp: 'Frost skills' },
-  emerald: { name: 'Emerald', col: '#3ad67a', el: 'nature', arm: g => ({ regen: G5([1, 2, 3.5, 5, 7])(g) }), wpn: g => ({ haste: G5([0.03, 0.05, 0.08, 0.11, 0.15])(g) }), amp: 'Nature skills, heals' },
-  topaz: { name: 'Topaz', col: '#ffc83a', el: 'lightning', arm: g => ({ crit: G5([0.01, 0.02, 0.03, 0.045, 0.06])(g) }), wpn: g => ({ critDmg: G5([0.08, 0.14, 0.2, 0.3, 0.4])(g) }), amp: 'Lightning skills, +chain' },
-  amethyst: { name: 'Amethyst', col: '#b46aff', el: 'arcane', arm: g => ({ power: G5([0.02, 0.04, 0.06, 0.09, 0.12])(g) }), wpn: g => ({ skillDmg: G5([0.04, 0.07, 0.1, 0.14, 0.2])(g) }), amp: 'Arcane skills' },
-  diamond: { name: 'Diamond', col: '#e8f4ff', el: null, arm: g => ({ def: G5([0.01, 0.02, 0.03, 0.045, 0.06])(g) }),
-    wpn: g => { const v = G5([0.01, 0.015, 0.02, 0.03, 0.04])(g); return { power: v, def: v, crit: v / 2, haste: v }; }, amp: 'Ultimate cooldown' },
+  ruby: { name: 'Ruby', col: '#ff4a5a', el: 'fire', arm: g => ({ hp: G5([30, 100, 240])(g) }), wpn: g => ({ power: G5([0.04, 0.1, 0.2])(g) }), amp: 'Fire skills' },
+  sapphire: { name: 'Sapphire', col: '#4a8cff', el: 'frost', arm: g => ({ mp: G5([20, 55, 110])(g), mpRegen: G5([0.5, 1.5, 3])(g) }), wpn: g => ({ cdr: G5([0.02, 0.05, 0.1])(g) }), amp: 'Frost skills' },
+  emerald: { name: 'Emerald', col: '#3ad67a', el: 'nature', arm: g => ({ regen: G5([1, 3.5, 7])(g) }), wpn: g => ({ haste: G5([0.03, 0.08, 0.15])(g) }), amp: 'Nature skills, heals' },
+  topaz: { name: 'Topaz', col: '#ffc83a', el: 'lightning', arm: g => ({ crit: G5([0.01, 0.03, 0.06])(g) }), wpn: g => ({ critDmg: G5([0.08, 0.2, 0.4])(g) }), amp: 'Lightning skills, +chain' },
+  amethyst: { name: 'Amethyst', col: '#b46aff', el: 'arcane', arm: g => ({ power: G5([0.02, 0.06, 0.12])(g) }), wpn: g => ({ skillDmg: G5([0.04, 0.1, 0.2])(g) }), amp: 'Arcane skills' },
+  diamond: { name: 'Diamond', col: '#e8f4ff', el: null, arm: g => ({ def: G5([0.01, 0.03, 0.06])(g) }),
+    wpn: g => { const v = G5([0.01, 0.02, 0.04])(g); return { power: v, def: v, crit: v / 2, haste: v }; }, amp: 'Ultimate cooldown' },
 };
 const GEM_TYPES = Object.keys(GEMS);
-const gemParse = id => { const [t, g] = String(id).split('_'); return GEMS[t] && +g >= 1 && +g <= 5 ? { type: t, grade: +g, def: GEMS[t] } : null; };
+const gemParse = id => { const [t, g] = String(id).split('_'); return GEMS[t] && +g >= 1 && +g <= GEM_MAX ? { type: t, grade: +g, def: GEMS[t] } : null; };
 const gemName = id => { const g = gemParse(id); return g ? `${GEM_GRADES[g.grade - 1]} ${g.def.name}` : '?'; };
 const gemStats = (id, slot) => { const g = gemParse(id); return g ? (slot === 'weapon' ? g.def.wpn : g.def.arm)(g.grade) : {}; };
 // skill amplification (any slot): grades summed per gem type across all equipped sockets
@@ -98,12 +106,12 @@ function gemAmp(p) {
   for (const s of SLOTS) for (const id of (p.equip[s] || { sockets: [] }).sockets) { const g = id && gemParse(id); if (g) a[g.type] += g.grade; }
   return a;
 }
-// +3% per grade to that element's skills. M4 stubs: ruby burn on fireball/meteor, sapphire longer slows + nova radius,
-// emerald poison on hit, amethyst area radius — the hooks are elementMul / p.amp, wired at the call sites later.
-const elementMul = (p, el) => 1 + 0.03 * ((EL_GEM[el] && p.amp && p.amp[EL_GEM[el]]) || 0);
-const ultCdr = p => Math.min(0.4, 0.03 * ((p.amp && p.amp.diamond) || 0));
+// +5% per grade to that element's skills, ADDED to the hit's damage sum. M4 stubs: ruby burn on fireball/meteor,
+// sapphire longer slows + nova radius, emerald poison on hit, amethyst area radius (hooks: elementAmp / p.amp).
+const elementAmp = (p, el) => 0.05 * ((EL_GEM[el] && p.amp && p.amp[EL_GEM[el]]) || 0);
+const ultCdr = p => 0.05 * ((p.amp && p.amp.diamond) || 0);
 const chainBonus = p => Math.floor(((p.amp && p.amp.topaz) || 0) / 2);
-const healMul = p => 1 + 0.04 * ((p.amp && p.amp.emerald) || 0);
+const healMul = p => 1 + 0.06 * ((p.amp && p.amp.emerald) || 0);
 
 // ===== instances ====================================================================
 let UID = 0;
@@ -120,27 +128,25 @@ function makeItem(base, rarity = 'common', ilvl, o = {}) {
     v = PCT_STATS[k] ? Math.round(v * 1000) / 1000 : (v < 10 ? Math.round(v * 10) / 10 : Math.round(v));
     it.affixes.push({ stat: k, v });
   }
-  if (R.unique) { const u = Object.keys(UNIQUES); it.unique = u[(Math.random() * u.length) | 0]; }
   const [s0, s1] = R.sockets, ns = o.sockets != null ? o.sockets : (rarity === 'common' ? (Math.random() < 0.25 ? 1 : 0) : s0 + ((Math.random() * (s1 - s0 + 1)) | 0));
   for (let i = 0; i < ns; i++) it.sockets.push(null);
   return it;
 }
 // base + affix + unique + gem stats of one instance (summed)
-function itemParts(it) {
+function itemBase(it) {
   const b = BASES[it.base], R = RARITY[it.rarity], k = R.mult * (1 + 0.015 * Math.max(0, it.ilvl - b.reqLvl)), base = {};
   const bs = baseStats(b); for (const st in bs) base[st] = st === 'dmg' ? Math.round(bs[st] * k) : bs[st] * k;
-  const uniq = {}; if (it.unique && UNIQUES[it.unique]) { const U = UNIQUES[it.unique].stats; for (const st in U) uniq[st] = U[st] * (R.unique || 1); }
-  return { base, uniq };
+  return base;
 }
-function itemStats(it) {
-  const s = {}, add = (k, v) => { s[k] = (s[k] || 0) + v; }, { base, uniq } = itemParts(it);
+// one instance's stats: base + affixes + socketed gems, summed per stat (additive, §3 balance rule)
+function statsOf(it) {
+  const s = {}, add = (k, v) => { s[k] = (s[k] || 0) + v; }, base = itemBase(it);
   for (const k in base) add(k, base[k]);
   for (const a of it.affixes) add(a.stat, a.v);
-  for (const k in uniq) add(k, uniq[k]);
   for (const g of it.sockets) if (g) { const gs = gemStats(g, it.slot); for (const k in gs) add(k, gs[k]); }
   return s;
 }
-const itemName = it => BASES[it.base].name;
+const itemName = it => it.unique && UNIQUES[it.unique] ? UNIQUES[it.unique].name : BASES[it.base].name;
 const salvageValue = it => Math.round([1, 3, 8, 20, 50, 120][RARITY[it.rarity].i] * (1 + it.ilvl / 10));
 // renderer hook for M2: what the hero visibly wears in a slot
 function equippedVisual(slot, p = G.player) {
@@ -169,13 +175,13 @@ function gainXp(p, n) {
   if (p.level >= MAX_LEVEL || n <= 0) return;
   p.xp += n; text(p.x, p.y, p.z + 3.6, `+${n} XP`, '#c79bff');
   let up = false;
-  while (p.level < MAX_LEVEL && p.xp >= xpToNext(p.level)) { p.xp -= xpToNext(p.level); p.level++; p.tp = (p.tp || 0) + 1; up = true; }
+  while (p.level < MAX_LEVEL && p.xp >= xpToNext(p.level)) { p.xp -= xpToNext(p.level); p.level++; up = true; }
   if (p.level >= MAX_LEVEL) p.xp = 0;
   if (up) levelUpFx(p);
 }
 function levelUpFx(p) {
   recalcStats(p, true);   // full heal
-  G.banner = { s: `LEVEL ${p.level}`, sub: '+4% HP  +3% damage  +1 talent point', t: 2.8, max: 2.8, lvl: true };
+  G.banner = { s: `LEVEL ${p.level}`, sub: '+4% HP   +3% damage   fully healed', t: 2.8, max: 2.8, lvl: true };
   sfx('levelup'); shake(3);
   fx({ type: 'pillar', x: p.x, y: p.y, col: '#ffe9a0', life: 0.8, r: 1.1 });
   fx({ type: 'ring', x: p.x, y: p.y, r: 2.2, col: '#ffd35a', life: 0.6 });
@@ -201,10 +207,11 @@ function killXp(e) {
 }
 
 // ===== loot rolls ===============================================================================
-const RARITY_W = { normal: [60, 28, 9, 2.5, 0.5, 0.05], elite: [18, 40, 29, 9.5, 3, 0.5], chest: [20, 42, 27, 8.5, 2.2, 0.3], boss: [0, 0, 62, 28, 8.5, 1.5] };
+// first run: no random legendary/mythic — legendaries are the named first-kill uniques, mythic is Morrow's (NG+ later)
+const RARITY_W = { normal: [62, 29, 7.5, 1.5, 0, 0], elite: [18, 44, 30, 8, 0, 0], chest: [20, 46, 27, 7, 0, 0], boss: [0, 0, 65, 35, 0, 0] };
 function rollRarity(cls, lvl) {
   const w = RARITY_W[cls].map((v, i) => v * Math.pow(1 + lvl * 0.04, i));
-  let r = Math.random() * w.reduce((a, b) => a + b, 0);
+  let r = Math.random() * w.reduce((a, b) => a + b, 0);   // zone level shifts weight up the table
   for (let i = 0; i < w.length; i++) if ((r -= w[i]) < 0) return RARITIES[i];
   return 'common';
 }
@@ -219,12 +226,14 @@ function rollItem(lvl, rarity, slot) {
   const base = FAMILY_TIERS[fam][tier].split(':')[0];
   return makeItem(base, rarity, lvl + (Math.random() < 0.3 ? 1 : 0));
 }
-const rollGem = lvl => `${pick2(GEM_TYPES)}_${clamp(1 + Math.floor((lvl + frand(-3, 4)) / 7), 1, 5)}`;
+const rollGem = lvl => `${pick2(GEM_TYPES)}_${clamp(1 + Math.floor((lvl + frand(-3, 4)) / 10), 1, GEM_MAX)}`;
 // what an enemy leaves behind: [{ kind:'item'|'gem'|'potion', it?, gem? }]
-function rollLoot(cls, lvl, first) {
+// `unique`: named legendary id for a boss's first kill
+function rollLoot(cls, lvl, unique) {
   const out = [], itm = r => out.push({ kind: 'item', it: rollItem(lvl, r) });
   if (cls === 'boss') {
-    itm(first ? 'legendary' : rollRarity('boss', lvl)); itm(rollRarity('boss', lvl)); itm(rollRarity('elite', lvl));
+    if (unique) out.push({ kind: 'item', it: makeUnique(unique, lvl) });
+    itm(rollRarity('boss', lvl)); itm(rollRarity('boss', lvl)); itm(rollRarity('elite', lvl));
     out.push({ kind: 'gem', gem: rollGem(lvl + 4) }, { kind: 'gem', gem: rollGem(lvl) }, { kind: 'potion' });
   } else if (cls === 'elite') {
     itm(rollRarity('elite', lvl)); if (Math.random() < 0.5) itm(rollRarity('elite', lvl));
@@ -260,6 +269,47 @@ function bagAdd(p, e) {
 const bagFull = (p, gem) => !p.bag.some(b => !b) && !(gem && p.bag.some(b => b && b.gem === gem));
 function takeGem(p, i) { const s = p.bag[i]; if (!s || !s.gem) return null; const id = s.gem; if (--s.n <= 0) p.bag[i] = null; return id; }
 
+// ===== the inventory seams: each returns '' on success or the reason it refused ======================
+const isEquipped = (p, it) => SLOTS.some(s => p.equip[s] === it);
+function equipItem(p, inst) {
+  if (!inst || !BASES[inst.base]) return 'Nothing to equip';
+  if (inst.reqLvl > p.level) return `Requires level ${inst.reqLvl}`;
+  const i = p.bag.indexOf(inst), old = p.equip[inst.slot];
+  if (old === inst) return '';
+  p.equip[inst.slot] = inst;
+  if (i >= 0) p.bag[i] = old || null; else if (old && !bagAdd(p, old)) { p.equip[inst.slot] = old; return 'Bag full'; }
+  recalcStats(p, false); return '';
+}
+// gem from bag stack `bi` into socket `si` of `it` (first empty when si is null); a filled socket swaps
+function socketGem(p, it, si, bi) {
+  if (!p.bag[bi] || !p.bag[bi].gem) return 'Pick a gem first';
+  if (si == null) si = it.sockets.indexOf(null);
+  if (si < 0 || si >= it.sockets.length) return it.sockets.length ? 'No empty socket' : 'This item has no sockets';
+  const gem = p.bag[bi].gem;
+  if (it.sockets[si]) { const r = unsocketGem(p, it, si); if (r) return r; }
+  const k = p.bag.findIndex(b => b && b.gem === gem); takeGem(p, k);
+  it.sockets[si] = gem; recalcStats(p, false); return '';
+}
+function unsocketGem(p, it, si) {
+  const g = it.sockets[si]; if (!g) return '';
+  if (!bagAdd(p, { gem: g })) return 'Bag full';
+  it.sockets[si] = null; recalcStats(p, false); return '';
+}
+// gear -> Dream Dust; socketed gems return to the bag first. Returns the dust gained, or a reason string.
+function salvageItem(p, bi) {
+  const it = p.bag[bi]; if (!it || it.gem) return 'Only gear can be salvaged';
+  for (let k = 0; k < it.sockets.length; k++) if (it.sockets[k]) { if (!bagAdd(p, { gem: it.sockets[k] })) return 'Bag full'; it.sockets[k] = null; }
+  p.bag[bi] = null; const v = salvageValue(it); p.dust += v; return v;
+}
+// trigger action `loot`: N items of at least `rarity` at x,y (default: beside the hero) — room-clear rewards
+function lootAction(a) {
+  const p = G.player, [lo, hi] = zoneLevel(), L = clamp(p.level, lo, hi), min = RARITY[a.rarity] ? a.rarity : 'uncommon', list = [];
+  for (let i = 0; i < clamp(+a.count || 1, 1, 12); i++) { let r = rollRarity('elite', L); if (!rarityAtLeast(r, min)) r = min; list.push({ kind: 'item', it: rollItem(L, r) }); }
+  const has = v => v != null && v !== '', x = has(a.x) ? +a.x : p.x + 1, y = has(a.y) ? +a.y : p.y + 1;
+  fx({ type: 'pillar', x, y, col: rarityCol(min), life: 0.6, r: 0.8 });
+  dropLoot(x, y, list);
+}
+
 // ===== ground drops + chests + checkpoints (updated from main loop) ============================
 const MAX_DROPS = 40;
 function spawnDrop(x, y, d) {
@@ -268,6 +318,7 @@ function spawnDrop(x, y, d) {
   const rar = d.kind === 'item' ? d.it.rarity : d.kind === 'gem' ? 'rare' : 'uncommon';
   const name = d.kind === 'item' ? itemName(d.it) : d.kind === 'gem' ? gemName(d.gem) : 'Health Potion';
   G.drops.push(Object.assign({ sx: x, sy: y, x: tx, y: ty, z: tileH(m, tx, ty), t: 0, rar, name }, d));
+  if (RARITY[rar].i >= 1) sfx('drop' + RARITY[rar].i);   // pitch-stepped chime per rarity
   if (G.drops.length > MAX_DROPS) { const i = G.drops.findIndex(q => q.rar === 'common'); G.drops.splice(i >= 0 ? i : 0, 1); }
 }
 function dropLoot(x, y, list) { list.forEach((d, i) => delay(i * 0.08, () => spawnDrop(x, y, d))); }
@@ -275,9 +326,9 @@ function onEnemyKilled(e) {
   if (e.dummy || !G.player) return;
   const p = G.player, c = enemyClass(e.type);
   gainXp(p, killXp(e));
-  let first = false;
-  if (c === 'boss') { const k = G.map.id + ':' + e.type; first = !G.prog.firsts[k]; G.prog.firsts[k] = true; }
-  dropLoot(e.x, e.y, rollLoot(c, e.lvl, first));
+  let uq = null;
+  if (c === 'boss') { const k = G.map.id + ':' + e.type; if (!G.prog.firsts[k]) uq = uniqueFor(k); G.prog.firsts[k] = true; }
+  dropLoot(e.x, e.y, rollLoot(c, e.lvl, uq));
   if (c === 'boss') delay(1.5, saveGame);
 }
 function pickup(p, d) {
@@ -339,7 +390,7 @@ const SAVE_KEY = 'dreamy.save.v1';
 const SAVE_ON = (() => { try { const q = new URLSearchParams(location.search); return !q.get('scene') && !q.get('playtest') && !q.get('map'); } catch (e) { return false; } })();
 function saveGame() {
   const p = G.player; if (!SAVE_ON || !p || !G.map || G.state === 'title') return false;
-  const s = { v: 1, t: Date.now(), level: p.level, xp: Math.floor(p.xp), tp: p.tp || 0, potions: p.potions, dust: p.dust, map: G.map.id,
+  const s = { v: 1, t: Date.now(), level: p.level, xp: Math.floor(p.xp), potions: p.potions, dust: p.dust, map: G.map.id,
     equip: p.equip, bag: p.bag, wsk: p.wsk, csk: p.csk, prog: G.prog, cp: G.checkpoint, uid: UID };
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); return true; } catch (e) { return false; }
 }
@@ -349,7 +400,7 @@ function readSave() {
 function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
 const validItem = it => it && BASES[it.base] && RARITY[it.rarity] && Array.isArray(it.affixes) && Array.isArray(it.sockets);
 function applySave(p, s) {
-  p.level = clamp(+s.level || 1, 1, MAX_LEVEL); p.xp = Math.max(0, +s.xp || 0); p.tp = +s.tp || 0; p.dust = +s.dust || 0;
+  p.level = clamp(+s.level || 1, 1, MAX_LEVEL); p.xp = Math.max(0, +s.xp || 0); p.dust = +s.dust || 0;
   p.potions = clamp(s.potions != null ? +s.potions : MAX_POTIONS, 0, MAX_POTIONS);
   for (const slot of SLOTS) { const it = s.equip[slot]; if (validItem(it) && BASES[it.base].slot === slot) { it.sockets = it.sockets.map(g => gemParse(g) ? g : null); p.equip[slot] = it; } }
   p.bag = Array(BAG_SIZE).fill(null);
@@ -372,7 +423,7 @@ function starterKit(p) {
 function showcaseKit(p, wfam = 'dawnblade') {
   const set = { dawnblade: ['knighthelm', 'knightplate', 'knightgreaves'], starfall: ['arcanecowl', 'dreamrobe', 'clothsandals'], moonbow: ['wardenhood', 'stalkerjacket', 'stalkershoes'] }[wfam] || ['knighthelm', 'knightplate', 'knightgreaves'];
   const t2 = f => FAMILY_TIERS[f][2].split(':')[0];
-  p.level = 14; p.xp = Math.round(xpToNext(14) * 0.4); p.tp = 13; p.dust = 140;
+  p.level = 14; p.xp = Math.round(xpToNext(14) * 0.4); p.dust = 140;
   p.equip.weapon = makeItem(t2(wfam), 'epic', 14, { sockets: 2 }); p.equip.weapon.sockets[0] = 'ruby_3';
   ['head', 'chest', 'boots'].forEach((s, i) => { p.equip[s] = makeItem(t2(set[i]), i === 1 ? 'epic' : 'rare', 14, { sockets: 1 }); });
   p.equip.chest.sockets[0] = 'diamond_2'; p.equip.head.sockets[0] = 'topaz_2';
@@ -380,9 +431,9 @@ function showcaseKit(p, wfam = 'dawnblade') {
 }
 function sampleBag(p) {
   const L = p.level, put = e => bagAdd(p, e);
-  RARITIES.forEach((r, i) => put(rollItem(L + (i > 3 ? 2 : 0), r, SLOTS[i % 4])));
-  put(makeItem('auroraedge', 'legendary', 24));            // too high level: red requirement
+  RARITIES.slice(0, 5).forEach((r, i) => put(rollItem(L, r, SLOTS[i % 4])));
+  put(makeUnique('lanternplate', L)); put(makeItem('auroraedge', 'epic', 24));   // a named legendary; too high level: red requirement
   for (let k = 0; k < 6; k++) put(rollItem(L - 4 + k, pick2(['common', 'uncommon', 'rare'])));
-  GEM_TYPES.forEach((t, i) => put({ gem: `${t}_${1 + (i % 4)}`, n: 1 + (i % 3) }));
-  put({ gem: 'amethyst_5', n: 1 });
+  GEM_TYPES.forEach((t, i) => put({ gem: `${t}_${1 + (i % 3)}`, n: 1 + (i % 3) }));
+  put({ gem: 'amethyst_3', n: 1 });
 }
