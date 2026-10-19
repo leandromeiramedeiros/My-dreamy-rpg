@@ -474,7 +474,7 @@ const ICONS = (() => {
   const GR = [5.2, 6.4, 7.4, 8.4, 9.4];
   function drawGem(type, g) {
     const d = GEM[type] || GEM.ruby, cx = 11.5, cy = 11.5, r = GR[g];
-    const base = [mix(d.c, '#8c8c9c', 0.4), mix(d.c, '#8c8c9c', 0.15), d.c, mix(d.c, '#ffffff', 0.12), mix(d.c, '#ffffff', 0.2)][g];
+    const base = [mix(d.c, '#8c8c9c', 0.4), mix(d.c, '#8c8c9c', 0.15), d.c, mix(d.c, '#ffffff', 0.04), mix(d.c, '#ffffff', 0.08)][g];
     const rm = [mix(base, '#10081c', 0.62), mix(base, '#10081c', 0.32), base, mix(base, '#ffffff', 0.45)];
     let V = d.p.map((p) => [cx + p[0] * r * (type === 'amethyst' ? 0.9 : 1), cy + p[1] * r]);
     if (g === 0) V = V.map((p, i) => [p[0] + ((i * 7) % 3 - 1) * 0.8, p[1] + ((i * 5) % 3 - 1) * 0.8]);
