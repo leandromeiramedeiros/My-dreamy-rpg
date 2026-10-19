@@ -318,6 +318,87 @@ Trim to 4.5 h by dropping Starlit Shoals first if behind. Map count: 17 critical
 * Risks: 27 maps is 9× what exists (optional zones are cut first); completion minutes are estimates (±30 %) until the
   scripted runs exist; L36–40 balance is tested in the arena, so the arena is built before the Gloaming Below.
 
+## 15. Skill system (supersedes §5 and the skill lines of §11.1 / §11.6)
+"You are what you wear" stays: weapon family = LMB + Q/E/R, chest F, helm C, boots Shift (dodge with i-frames),
+character skills 1/2/3 chosen freely. On top of that loadout, skills now **grow, combine and are found**.
+
+### 15.1 Acquisition (skills are found, not dripped)
+* **Weapon skills** come with the weapon family. The **second option per slot is a Skill Rune** that drops (Rare+ tables,
+  mini-bosses guaranteed, the Elder Stone sells one per zone for Dust) and is learned permanently for that family.
+* **Character skills:** 2 known at L1; the rest are **Dream Tomes** found at lore tablets and side quests (one per zone,
+  two in the Vale) plus one from each guardian's last words. Levels gate equipping (L5/10/15/20/25/30).
+* **Armour skills** come with the piece.
+
+### 15.2 Skill ranks and modifiers
+* Every skill has **Rank 1–5**, earned by use (~25 casts that hit per rank), stored per skill id. Each rank +6 %
+  damage/effect. Ranks 3 and 5 each open a **modifier slot**: pick 1 of 2 modifiers for that skill.
+  This replaces the level-based modifier picks and the separate weapon-mastery system.
+* Modifiers are **data only** (`SKILL_MODS: { id, skill, apply(ctx) }`) and may only change numbers the cast reads
+  (`ctx.dmg, ctx.r, ctx.stun, ctx.element, ctx.extraProj`, …) — never new code branches.
+* Respec: modifiers free at the Elder Stone; character skill slots swappable anywhere outside combat; runes and tomes are
+  permanent.
+
+### 15.3 Resource rhythm
+* **Basic attacks generate 8 MP per hit** (builder); skills spend MP. Flat MP regen is small.
+* **Ultimates (R) use a charge bar** 0–100 fed by damage dealt and **doubled by reactions**; castable at 100, the slot glows
+  gold. Roughly one ultimate every ~40 s, more for players who play reactions.
+* Stamina is for the dodge only.
+* **Cancel rules:** dodge cancels any cast after its first 0.1 s (refund 50 % MP); attacks cancel into skills; skills
+  never cancel into attacks.
+
+### 15.4 Reactions (synergy core; one table in `damageEnemy`)
+| Reaction | Trigger | Effect |
+|---|---|---|
+| Shatter | slash/stagger hit on Frozen or 3× Chill | consumes; 150 % weapon damage AoE 1.5 tiles |
+| Wildfire | fire on Poisoned | consumes; Burn spreads to enemies within 2 tiles |
+| Conduct | lightning on Chilled | Shock jumps to every Chilled enemy within 3 tiles |
+| Overload | arcane on Shocked | consumes; +40 % damage, 1 s off the skill's cooldown |
+| Purify | holy on Burn/Poison | consumes; heals 5 % max HP, +50 % vs gloom |
+| Rupture | pierce on a full stagger bar | consumes the break; guaranteed crit |
+| Detonate | stagger ≥ 3 on Burning | consumes Burn stacks, each = 30 % weapon damage |
+Each reaction pops its name in its element colour with its own sound. Seven, no more.
+
+### 15.5 Roster (existing + 9 new casts; hard cap 12 new, reuse fx types)
+* **Sword** (basic 3-hit slash): Q Sunslash / Heroic Strike · E Dash Strike / Whirling Blade · R Radiant Judgement /
+  Dawn Wave / ***Cinder Cleave*** (fire, sets up Detonate).
+* **Staff** (basic arcane bolt): Q Firebolt / Frost Shards / ***Static Field*** (lightning zone, applies Shock) ·
+  E Arcane Barrage / Gravity Well · R Meteor / Starstorm.
+* **Bow** (basic pierce): Q Multishot / Piercing Shot · E Tumble / Snare Trap / ***Venom Volley*** (nature, sets up
+  Wildfire) · R Rain of Arrows / Moonbeam.
+* **Chest:** Bulwark, Mana Surge, Shadow Veil, ***Thornmail*** (nature, reflects poison).
+* **Helm:** War Cry, Frost Nova, Mend, ***Stormcall*** (lightning, Shock aura).
+* **Boots:** Charge, Blink, Sprint (all with i-frames).
+* **Character pool (10):** Second Wind, Arcane Orbit, Chain Lightning, Dreamveil, Blessing of Dawn, Shooting Star,
+  ***Dawn Lance*** (holy line, Purify), ***Briar Field*** (nature zone, Poison), ***Ember Mark*** (next 3 hits burn),
+  ***Thunderclap*** (lightning + stagger 2).
+
+### 15.6 Gems, legendaries and sets plug in without stacking
+* Gems add **status chance and reaction size** (e.g. Ruby: +burn chance, Detonate +10 %), never extra multipliers beyond
+  the one additive `power` sum.
+* Legendaries change rules (§4.5). Set bonuses change which reaction a family favours: Plate 3 — Shatter also staggers;
+  Robe 3 — Overload refunds 2 s; Jacket 3 — Rupture spreads Poison.
+* Everything feeds the capped `power` / `statusChance` / `reactionBonus` sums.
+
+### 15.7 Build archetypes the game must support
+1. **Shatter Knight** — sword, Knight set, Frost Nova, Sapphires in armour; Heroic Strike after Nova.
+2. **Pyromancer** — staff, Dreamweave robe, Rubies, Ember Mark + Firebolt + Meteor; Detonate with Thunderclap.
+3. **Stormcaller** — Static Field + Chain Lightning + Stormcall, Topaz; Conduct off Frost Shards.
+4. **Venom Ranger** — Venom Volley + Snare + Briar Field, Stalker set, Emeralds; Wildfire with Shooting Star.
+5. **Breaker** — Piercing Shot + War Cry + Charge, Diamonds; Rupture on every break; best against golems and bosses.
+6. **Dawn Paladin** — holy sword R + Dawn Lance + Blessing, Mend, Diamonds; Purify sustain, gloom killer.
+7. **Void Mage** — Gravity Well + Barrage + Blink + Arcane Orbit, Amethysts; Overload cooldown loop.
+8. **Duelist** — Dash Strike + Charge boots + Shadow Veil, crit affixes; no reactions needed. This build must stay viable
+   so players who ignore statuses (often touch/pad players) aren't punished.
+
+### 15.8 UI and feel
+* Every delayed skill shows its shape on the ground and a 2–3 frame wind-up on the hero; held skills glow brighter per
+  0.25 s held.
+* When a target in range carries a status your skill would react with, a small element dot shows on that skill's icon
+  ("this will Shatter").
+* Tooltip: name, rank bar, element/type icon, MP, cooldown, **damage computed with your current power**, status + chance,
+  reactions it triggers, modifier slots, which gems amplify it.
+* The ultimate charge bar replaces R's cooldown sweep.
+
 ## 13. Dreamfishing
 Fishing is a **second loot channel** that pays in the currencies the loop already wants (gems, Runes, keys, boss-prep
 food), not fish for their own sake.
@@ -437,7 +518,6 @@ legendary + Mythic chance), one **secret vault per zone** (12–16 tiles, reache
 | Hub arena: scaling waves, Dust, guaranteed Epic every 5 rounds (endgame + balance test bed) | should | M6 |
 | Pip companion: follows you, auto-picks up loot nearby, lights darkness, calls out a new enemy's first weakness | should | M7 |
 | Return-rift at each checkpoint shrine to the hub (fast travel) | should | M2 |
-| Weapon mastery: XP per weapon family, 5 ranks, +2% damage each, rank 5 cosmetic trail | nice | M8 |
 | Achievements (20) | nice | M8 |
 | NG+ modifiers: elites everywhere / no kill-heal / gloom everywhere, each raising drop rarity | nice | M7 |
 
@@ -459,15 +539,16 @@ shop), reputation, minigames other than fishing (fishing is in, see §13), day/n
   additive stats, damage types + resistances plumbing (§5b), loot drops with fanfare, inventory UI, save/load with
   `version` + `migrate`, checkpoint shrines + persisted trigger state, death/respawn, discovery hooks (`G.seen`,
   first-hit weakness reveal) and the `huntBonus` slot, smoke test harness.
-* **M2 HUD rework + Act I slice** (~25 min playable): the complete "Dream Glass" UI from `docs/HUD.md` first
-  (`ui.js` primitives + `input.js` action layer and focus model by Opus, bitmap font, all HUD elements and the Tab screens
-  rebuilt on it by Sonnet B), then Pinewood outer + Root Hollow dungeon + Bramblehorn, hub 40, the data-driven boss
+* **M2a HUD, controls and combat feel** (ships on the existing maps): the complete "Dream Glass" UI from `docs/HUD.md`
+  (`ui.js` primitives + `input.js` action layer and focus model by Opus, bitmap font, all HUD elements and Tab screens
+  rebuilt on it by Sonnet B), gamepad support, plus the §15 rhythm: MP-on-hit, ultimate charge, dodge-cancel, skill ranks.
+* **M2b Act I slice** (~25 min playable): Pinewood outer + Root Hollow dungeon + Bramblehorn, hub 40, the data-driven boss
   system with a mini-boss, key/door, levers/gates, dialogue/camera/loot/checkpoint/quest actions, intro and Pip, elites,
-  universal dodge, one side quest, 3 secrets, return-rift, scripted play test.
+  universal dodge, one side quest, 3 secrets, return-rift, the first Skill Rune drop and 2 Dream Tomes, scripted play test.
 * **M3 The Hero & Icons:** layered hero, gear overlays, rarity glow & particles, paper-doll in the new Tab screen, the
   icon set wired into the HUD, hero status-icon row, enemies rescaled, unified `rarityFx`.
 * **M4 Act II** (~45 min): Ruins (3 maps), Gloam Warden ported, 5 status effects + enemy status icons, set bonuses,
-  Bestiary tab.
+  Bestiary tab, the 7 reactions, Skills tab with ranks and modifiers.
 * **M5 Act III** (~65 min): Grotto (3 maps), Mirelle, gem amplification complete, Drifting Isles if ahead of schedule.
 * **M6 Act IV** (~85 min): Caldera (3 maps), Kharzul, hub arena, two new character skills.
 * **M7 Finale** (~110–120 min): Spire (3 maps), Morrow, Pip companion and sacrifice, ending, credits, NG+ and modifiers.
