@@ -165,6 +165,39 @@ const PAD_STUB = () => {
   check('save: v2 -> v3 migration keeps everything', mig.v === 3 && mig.level === 7 && mig.xp === 120 && mig.dust === 33 && mig.q === 'heroic' && mig.csk === 'orbit,chain' && mig.chest && mig.boss && mig.trig === 't1' && mig.slime === 4 && mig.res === -0.5 && mig.cp === 2 && mig.bag, mig);
   const st = await ev(() => { const a = setSetting('difficulty', 'story'), b = setSetting('shake', 999), c = damageTakenMul(); setSetting('difficulty', 'normal'); setSetting('shake', 100); return { a, b, c }; });
   check('settings: validated setters + Story difficulty x0.6', st.a === 'story' && st.b === 100 && st.c === 0.6, st);
+  // ---------- 4b. a press that closes a screen never leaks into gameplay ----------
+  await ev(() => { const p = G.player; p.hp = p.maxHp / 2; p.potions = 3; p.potT = 0; G.ui.open = false; G.ui.help = false; });
+  await tap(8); await wait(100);
+  await tap(1, 150); await wait(150);
+  check('input: B closing the bag does not also drink a potion', await ev(() => !G.ui.open && G.player.potions === 3), await ev(() => ({ open: G.ui.open, potions: G.player.potions })));
+  await tap(1, 120); await wait(80);
+  check('input: the next B press does drink it', await ev(() => G.player.potions === 2));
+  // ---------- 4c. ui.js primitives draw (bitmap font + atlas live) ----------
+  const prim = await ev(() => {
+    const c = document.createElement('canvas'); c.width = 960; c.height = 540; const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+    x.fillStyle = '#3b2a55'; x.fillRect(0, 0, 960, 540);
+    UI.begin();
+    UI.text(x, 'DreamSmall 0123 Lv 14 +12%', 16, 16, 'small'); UI.text(x, 'DreamBody: Whispering Vale', 16, 40, 'body', UI.C.gold);
+    UI.text(x, 'LEVEL 15', 480, 70, 'heading', UI.C.gold, 'center');
+    ['primary', 'plain', 'tab', 'tabInactive', 'slot', 'gold', 'danger', 'keyTag', 'keycap'].forEach((k, i) => UI.frame(x, 16 + i * 100, 120, 88, 72, k));
+    UI.frame(x, 16, 210, 48, 48, 'rarity', { rarity: 'epic', shape: true }); UI.frame(x, 76, 210, 48, 48, 'element', { el: 'fire' });
+    UI.frame(x, 136, 210, 48, 48, 'focus', { tint: UI.C.bright });
+    const id = 'test-hp'; UI.bar(x, 100, 300, 236, 18, 1, { id }); G.t += 0.05; UI.bar(x, 100, 300, 236, 18, 0.5, { id });
+    const ghost = UI.bar(x, 100, 300, 236, 18, 0.5, { id, label: '906/1813' }).ghost;
+    G.t += 0.05; UI.bar(x, 100, 330, 236, 12, 0.4, { id: 'mp', col: UI.C.mp, hi: UI.C.mpHi }); G.t += 0.05; const wipe = UI.bar(x, 100, 330, 236, 12, 0.8, { id: 'mp', col: UI.C.mp, hi: UI.C.mpHi }).wT >= 0;
+    UI.frame(x, 400, 300, 44, 44, 'slot'); UI.sweep(x, 400, 300, 44, 44, 0.6, { label: '3' });
+    const tip = UI.tooltip(x, 470, 290, { title: 'Sunslash', lines: ['Sweep a wide arc of dawnlight.', '', { s: '18 MP  CD 3s', col: UI.C.dim }] });
+    const b = UI.button(x, 760, 300, 160, 40, 'EQUIP', { fn: () => { window.__clicked = true; } });
+    UI.toast({ text: 'Lumen Edge', rarity: 'rare' }); UI.drawToasts(x);
+    const hit = UI.click(780, 310);
+    UI.focus.set('btn:760,300', true); UI.focus.draw(x);
+    window.__primShot = c.toDataURL('image/png');
+    return { glyphs: UI.image(FONT_ART.body.src) !== null, atlas: UI.image(UI_ART.src) !== null, w: UI.measure('Hello', 'body'), ghost: +ghost.toFixed(2), wipe, tip, hit, clicked: !!window.__clicked };
+  });
+  check('ui: primitives draw from the bitmap font + atlas (bar ghost, heal wipe, tooltip, button hit)', prim.glyphs && prim.atlas && prim.w > 0 && prim.ghost > 0.5 && prim.wipe && prim.tip.w === 280 && prim.hit && prim.clicked, prim);
+  const shot = await ev(() => window.__primShot);
+  fs.mkdirSync(path.join(__dirname, 'shots'), { recursive: true });
+  fs.writeFileSync(path.join(__dirname, 'shots', 'ui-primitives.png'), Buffer.from(shot.split(',')[1], 'base64'));
   // ---------- 5. frame time ----------
   await page.reload({ waitUntil: 'load' });
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
@@ -173,6 +206,17 @@ const PAD_STUB = () => {
   ft.splice(0, 5); ft.sort((a, b) => a - b);
   const avg = ft.reduce((a, b) => a + b, 0) / ft.length, p95 = ft[Math.floor(ft.length * 0.95)];
   check('perf: 60 fps (avg frame <= 17.5 ms)', avg <= 17.5, { avg: +avg.toFixed(2), p95: +p95.toFixed(2), frames: ft.length });
+  // ---------- 6. HUD at min(DPR, 2) ----------
+  const ctx2 = await br.newContext({ viewport: { width: 960, height: 540 }, deviceScaleFactor: 2 });
+  const p2 = await ctx2.newPage(); p2.on('pageerror', e => errs.push('pageerror(dpr2): ' + e.message));
+  await p2.goto(`${base}/index.html`, { waitUntil: 'load' });
+  await p2.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+  await wait(300);
+  const w2 = await p2.evaluate(() => ({ w: DISP.width, k: HUD_K }));
+  await p2.mouse.click(480, 360); await wait(300);
+  const st2 = await p2.evaluate(() => G.state);
+  check('dpr 2: HUD backing store 1920x1080, title click still lands', w2.w === 1920 && w2.k === 2 && st2 === 'play', { w2, st2 });
+  await ctx2.close();
   check('no page errors', errs.length === 0, errs.slice(0, 5));
   await br.close(); srv.close();
   console.log(fails ? `\n${fails} check(s) failed` : '\nAll play checks passed');

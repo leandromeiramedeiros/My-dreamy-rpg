@@ -155,27 +155,28 @@ const MENU_TABS = ['inv', 'skills'];
 function handleInput() {
   if (IN.pressed('mute')) { G.muted = !G.muted; if (typeof setSetting === 'function') setSetting('muted', G.muted); say(G.muted ? 'Sound off' : 'Sound on'); }
   if (IN.capturing()) return;
+  // any press that opens / closes a screen is swallowed so it can't also act in gameplay this step
+  const used = () => IN.swallow();
   const nav = () => { for (const [a, d] of [['menuUp', 'up'], ['menuDown', 'down'], ['menuLeft', 'left'], ['menuRight', 'right']]) if (IN.pressed(a)) UI.focus.move(d); };
   if (G.state === 'title') {
     nav();
-    if (IN.pressed('accept') || IN.pressed('interact') || IN.pressed('pause')) { initAudio(); if (UI.focus.showing() && UI.focus.current()) UI.focus.accept(); else titleDefault(); }
+    if (IN.pressed('accept') || IN.pressed('interact') || (IN.pressed('pause') && IN.device === 'pad')) { initAudio(); if (UI.focus.showing() && UI.focus.current()) UI.focus.accept(); else titleDefault(); used(); }
     return;
   }
-  if (G.state === 'dead') { if ((IN.pressed('accept') || IN.pressed('attack') || IN.pressed('interact')) && G.deadT > 1) respawn(); return; }
-  if (G.ui.help) { if (IN.pressed('accept') || IN.pressed('back') || IN.pressed('help') || IN.pressed('pause') || IN.pressed('interact')) G.ui.help = false; return; }
+  if (G.state === 'dead') { if ((IN.pressed('accept') || IN.pressed('attack') || IN.pressed('interact')) && G.deadT > 1) { respawn(); used(); } return; }
+  if (G.ui.help) { if (IN.pressed('accept') || IN.pressed('back') || IN.pressed('help') || IN.pressed('pause') || IN.pressed('interact')) { G.ui.help = false; used(); } return; }
   if (G.ui.open) {
-    if (IN.pressed('inventory') || IN.pressed('back') || IN.pressed('pause')) { closeInv(); return; }
+    if (IN.pressed('inventory') || IN.pressed('back') || IN.pressed('pause')) { closeInv(); used(); return; }
     nav();
-    if (IN.pressed('accept')) UI.focus.accept();
+    if (IN.pressed('accept')) { UI.focus.accept(); if (!G.ui.open) { used(); return; } }
     if (IN.pressed('menuAlt')) UI.focus.alt();
     const dt = IN.pressed('tabNext') ? 1 : IN.pressed('tabPrev') ? -1 : 0;
     if (dt) { const i = MENU_TABS.indexOf(G.ui.tab || 'inv'); G.ui.tab = MENU_TABS[(i + dt + MENU_TABS.length) % MENU_TABS.length]; G.ui.gem = null; G.ui.salvage = false; }
     return;
   }
   if (G.state !== 'play' || G.fadeDir) return;
-  if (IN.pressed('inventory')) { openInv(); IN.consume('Mouse0'); return; }
-  if (IN.pressed('help')) { G.ui.help = true; return; }
-  if (IN.pressed('pause') && IN.device === 'pad') { G.ui.help = true; return; }   // stand-in until the pause screen
+  if (IN.pressed('inventory')) { openInv(); used(); return; }
+  if (IN.pressed('help') || (IN.pressed('pause') && IN.device === 'pad')) { G.ui.help = true; used(); return; }   // pad Start: stand-in until the pause screen
 }
 DISP.addEventListener('mousedown', ev => {
   initAudio();

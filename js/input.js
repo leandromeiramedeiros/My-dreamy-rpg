@@ -68,7 +68,7 @@ const IN = (() => {
   let B = copy(DEFAULTS);
 
   // ---- raw device state --------------------------------------------------------------------------------
-  const keys = new Set(), downEdge = new Set(), upEdge = new Set(), ignored = new Set();
+  const keys = new Set(), downEdge = new Set(), upEdge = new Set(), ignored = new Set(), padIgnored = new Set();
   const touchHeld = new Set(), touchTaps = new Set();
   let touchVec = null;
   const pad = { btn: [], prev: [], val: [], axes: [0, 0, 0, 0], connected: false, id: '' };
@@ -143,6 +143,7 @@ const IN = (() => {
       const v = typeof b === 'number' ? b : (b.value || 0), on = typeof b === 'number' ? b > 0.5 : (b.pressed || v > 0.5);
       pad.btn[i] = on; pad.val[i] = on ? Math.max(v, 1e-3) : v;
       if (on && !pad.prev[i]) any = true;
+      if (!on) padIgnored.delete(i);
     });
     const ax = gp.axes || [];
     pad.axes = [ax[0] || 0, ax[1] || 0, ax[2] || 0, ax[3] || 0];
@@ -151,6 +152,7 @@ const IN = (() => {
     if (any || l[2] > 0.25 || r[2] > 0.25) setDevice('pad');
   }
   function padSrc(src) {
+    if (typeof src === 'number' && padIgnored.has(src)) return { on: false, edge: false, v: 0 };
     if (typeof src === 'number') return { on: !!pad.btn[src], edge: !!pad.btn[src] && !pad.prev[src], v: pad.val[src] || 0 };
     const [x, y] = [pad.axes[0], pad.axes[1]];
     const v = src === 'LS-up' ? -y : src === 'LS-down' ? y : src === 'LS-left' ? -x : src === 'LS-right' ? x : 0;
@@ -202,6 +204,14 @@ const IN = (() => {
     value: a => (st[a] ? st[a].value : 0),
     assist: () => api.device === 'touch' || (api.device === 'pad' && aim.mode !== 'cursor'),
     consume(code) { ignored.add(code); downEdge.delete(code); },
+    // swallow(): this step's presses are used up (a screen opened / closed); everything held stays ignored until
+    // released, so B closing the bag doesn't also drink a potion and A on "close" doesn't also Interact
+    swallow() {
+      for (const a of ACTIONS) { st[a].pressed = false; st[a].released = false; st[a].held = false; }
+      for (const k of keys) ignored.add(k);
+      pad.btn.forEach((on, i) => { if (on) padIgnored.add(i); });
+      touchHeld.clear(); touchTaps.clear(); downEdge.clear();
+    },
     touchHold(a, on) { if (on) touchHeld.add(a); else touchHeld.delete(a); },
     touchTap(a) { touchTaps.add(a); },
     touchMove(v) { touchVec = v; },

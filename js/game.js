@@ -232,7 +232,7 @@ function addSkillHit(p, id) {
   r.hits++;
   const after = skillRank(p, id);
   if (after > before) {
-    const sk = SKILLS[id], msg = `${sk.name} — Rank ${after}${after === 3 || after === 5 ? ' · modifier slot open' : ''}`;
+    const sk = SKILLS[id], msg = `${sk.name} — Rank ${after}${after === 3 || after === 5 ? ', modifier slot open' : ''}`;
     say(msg); sfx('levelup');
     if (typeof UI !== 'undefined') UI.toast({ text: msg, icon: typeof skillIcon === 'function' ? skillIcon(id) : null, col: '#ffd35a' });
   }
