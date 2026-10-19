@@ -38,17 +38,22 @@ and now drags every island into his endless night. The **Gloam** (shadow-stuff) 
 | Finale | Sleepless Spire (new) | Night sky, starfields, gloom knights. Pip's sacrifice is hinted. | **Morrow, the Unwaking King** (3 phases) |
 | Epilogue | Whispering Vale at dawn | Islands heal. Credits. New Game+ unlocked (keep gear, enemies ×1.6). | — |
 
-Story delivery: short dialogue boxes (portrait + name + 1–3 lines, click/tap/space to advance), banners on zone entry,
+Pip **does** sacrifice itself in the finale: it becomes the Dawn Burst ultimate (§7) and is gone in the epilogue,
+rekindled as a tiny flame after the credits. Story delivery: short dialogue boxes (portrait + name + 1–3 lines, click/tap/space to advance), banners on zone entry,
 a lore tablet or two per zone. No cutscene engine needed beyond a `dialogue` trigger action and camera pan.
 Each zone ends with the guardian's last words revealing one piece of Morrow's story.
 
 ## 3. Progression
 
-* **Level 1 → 30.** XP from kills, chests, quests. Curve: `xpToNext(L) = round(60 * L^1.55)`.
+* **Level 1 → 30.** XP from kills, chests, room clears. Curve: `xpToNext(L) = round(60 * L^1.55)`, tuned so a level-up
+  lands roughly every 2 minutes.
   Target levels: Vale 1–2, Pinewood 2–8, Ruins 8–14, Grotto 14–20, Caldera 20–26, Spire 26–30.
-* Per level: +4% base HP, +3% base damage, +1 **Talent point**.
-* Death: respawn at the zone's last checkpoint (rift shrine) with full HP, lose nothing but 10% of the
-  current level's XP progress. Boss fights restart cleanly.
+* Per level: +4% base HP, +3% base damage. **No talent tree** (cut, see §5).
+* Death: respawn at the **last checkpoint shrine touched** with full HP, lose 10% of the current level's XP progress.
+  Trigger state (fired triggers, cleared rooms, opened gates, opened chests) **persists** across death and in the save;
+  only the encounter you died in resets. Boss fights restart cleanly.
+* **Balance rule:** all gear, affix and gem bonuses are **additive** into one sum per stat (e.g. one `power` %),
+  then multiplied once. Temporary buffs stay multiplicative but are capped. No 10× stacking.
 * Checkpoints / autosave on zone entry, after each boss, and on inventory close.
 
 ## 4. Items
@@ -73,13 +78,17 @@ Blade (L14) → Aurora Edge (L22) → Dawn Eternal (legendary, L28). Same for st
 | Legendary | `#ffb030` | 1.90 | 3 + unique power | 3 | strong glow, orbiting embers, light on ground |
 | Mythic | `#ff4f7a`→ animated | 2.30 | 4 + unique | 3 | aura, rising particles, colour cycling, bloom |
 
+Mythic is the apex: in the first run it drops only from **Morrow** (guaranteed one) and the secret cache in the Spire;
+in NG+ it rolls everywhere. Legendary first-run drops are the **five named uniques** (§4.5).
+
 Drop weights by enemy class (normal / elite / boss) scale with zone; bosses guarantee ≥ rare and first-kill legendary.
 Required level gates equip; the inventory shows red requirement text and refuses.
 
 ### 4.3 Sockets and gems
 * Items roll 0–3 sockets within their rarity cap. A rare **Socket Rune** adds one (max 3).
-* Gems: 6 types × 5 grades (Chipped, Flawed, Clear, Brilliant, Radiant). 3 of a grade combine into the next at the
-  Elder Stone. Gems can be removed for free (they return to the bag).
+* Gems: 6 types × **3 grades** (Chipped, Clear, Radiant). 3 of a grade combine into the next at the
+  Elder Stone. Gems can be removed for free (they return to the bag). A first run should socket 12–15 gems.
+* **Build identity = weapon family + element + the gems that amplify it.** Amplification is the chase, not affixes.
 
 | Gem | Stat in armour | In weapon | Skill amplification (any slot) |
 |---|---|---|---|
@@ -92,17 +101,27 @@ Required level gates equip; the inventory shows red requirement text and refuses
 
 Each skill in `SKILLS` gets an `element` tag (fire/frost/nature/lightning/arcane/physical/holy) so gems can amplify it.
 
+### 4.5 Named legendaries (one per guardian, first-kill guaranteed)
+Each changes a skill's *rule*, not just numbers:
+* **Root-Crown** (helm, Bramblehorn): Snare / Frost Nova roots bosses for 1 s.
+* **Warden's Lantern Plate** (chest, Gloam Warden): Bulwark reflects projectiles.
+* **Tide-Edge** (sword family, Mirelle): Dash Strike leaves a frost trail that slows.
+* **Cinderstride Boots** (Kharzul): the boots skill leaves a fire trail and grants lava immunity for 2 s.
+* **Dawn Eternal / Morrowbane** (Mythic weapon, Morrow): R ultimate resets on boss phase change.
+
 ### 4.4 Inventory
 * Bag: 30 slots (grid 6×5), stackable gems/potions. Equipped panel shows the paper-doll hero rendered live with gear.
 * Tooltips: rarity-coloured name, ilvl/req, base stats, affixes, sockets, skill list, compare vs. equipped (green/red deltas).
-* Actions: equip, unequip, socket gem (drag or click-select), salvage into **Dream Dust** (used to reroll affixes / buy
-  Socket Runes at the Elder Stone). Potions: health potions on a hotkey (4), 3 charges, refilled at checkpoints.
+* Actions: equip, unequip, socket gem (drag or click-select), salvage into **Dream Dust** (spent at the Elder Stone on
+  Socket Runes and Chipped gems; **no affix reroll**). Potions: health potions on a hotkey (4), 3 charges, refilled at checkpoints.
 
 ## 5. Skills
 * Weapon gives LMB + Q/E/R; chest F, helmet C, boots Shift (existing system kept).
 * Character skills 1/2/3 unlock by level: 2 at L1, more at L5, L10, L15, L20 (8 total: existing 6 + 2 new).
-* **Talents:** 1 point per level into a small tree of 3 branches (Might / Arcana / Grace), 5 ranks per node.
-  Kept simple: ~12 nodes total, each +% stat or a skill modifier.
+* **Choice moments instead of talents:** at L5/10/15/20 pick 1 of 2 skill modifiers (e.g. "Chain Lightning +2 jumps"
+  vs "Chain Lightning stuns"). Respec free at the Elder Stone.
+* **Universal dodge:** every boots skill has ≥0.25 s i-frames so telegraphs are fair for every build.
+* **Kill-heal** (existing +HP/+MP per kill) scales with a kill streak (`p.combo`).
 * Weapon skill options (two choices per slot) unlock with weapon tier: second option at weapon reqLvl ≥ 10.
 
 ## 6. Hero visuals ("you see what you wear")
@@ -123,13 +142,22 @@ Each skill in `SKILLS` gets an `element` tag (fire/frost/nature/lightning/arcane
   Cooldown sweep and "not enough MP" dim are drawn by the HUD on top.
 * **Item icons:** per family *and tier*, so a tier-4 sword looks ornate and a tier-0 rusty. Rarity is shown by the slot frame
   (border colour + inner glow, animated shimmer for legendary/mythic), plus small gem dots for filled sockets.
-* **Gems:** 6 types × 5 grades. Higher grades get more facets and sparkle. **Misc:** potion, Dream Dust, Socket Rune, chest, XP, gold key.
+* **Gems:** 6 types × 3 grades (Chipped, Clear, Radiant). Higher grades get more facets and sparkle. **Misc:** potion, Dream Dust, Socket Rune, chest, XP, gold key, shrine, lore tablet.
 * API: `ICONS.skill(id)`, `ICONS.item(base, tier, rarity, gems)`, `ICONS.gem(type, grade)`, `ICONS.misc(name)`, `ICONS.frame(ctx, x, y, size, rarity, t)`.
 
 ## 7. Enemies and bosses
 * Each zone: 4–6 enemy types (reuse behaviours hopper/shooter/charger/brute + new: `caster` (AoE telegraphs),
   `summoner`, `elite` modifier (bigger, coloured aura, +HP, drops better)).
 * Bosses: 2–3 phases each, telegraphed attacks only (fairness), enrage banners, health bar with name.
+* **Data-driven boss system:** a `BOSS_MOVES` library (cleave, slam, volley, charge, voidrain, summon, lavaring, pull,
+  beam, tidewave…), each = telegraph shape + wind-up + hit, built on the existing `fx` / `tele` / `zone` effects.
+  Each boss is data in `world.js` enemies: sprite, stats, phases[] with move weights, HP thresholds and banners.
+  The Gloam Warden is ported to it first.
+* **Each boss has one mechanic the loot answers:** Bramblehorn's root grabs (dodge / Snare), Mirelle's pull
+  (Dreamveil, stand-firm), Kharzul's lava floor (boots, fire resistance from Ruby), Morrow's void tiles (blink).
+* **Elites:** a flag on the spawn action: 1.4× size, aura light, +150% HP, a modifier (Fast / Shielded / Burning),
+  guaranteed Rare drop.
+* Enemies are rescaled to sit right next to the 24×32 hero (M3).
 * Morrow final boss: P1 sword-knight, P2 dream-warp (arena tiles vanish / void zones), P3 giant form with
   starfall, Pip lends you a "Dawn Burst" ultimate for the finale.
 
@@ -147,40 +175,74 @@ Each skill in `SKILLS` gets an `element` tag (fire/frost/nature/lightning/arcane
 Each zone: ~3 encounter areas, 1 optional elite + chest, 1 lore tablet, 1 checkpoint, boss arena.
 
 ## 8b. Map scale and intricacy
-Current maps are 22–26 tiles square, about one screen of open ground. That is too small. Targets:
-* **Zones are 2 connected maps** (outer area → inner area/boss arena), each **56–80 tiles** on the long side, irregular
-  island shapes (not squares), plus small floating islets reached by bridges or rift-hops.
+Current maps are 22–26 tiles square, about one screen of open ground. That is too small. The player moves 3.7 tiles/s,
+so the design rule is **15–25 s of walking between fights**. Targets (revised after the senior director review):
+
+| Zone | Minutes | Outer map (tiles) | Boss map (tiles) | Rooms | Fights |
+|---|---|---|---|---|---|
+| Vale hub | 5 | 36–40 | — | tutorial + chest | dummies |
+| Pinewood | 12 | 56 | 22 | 3 + elite | 4 + boss |
+| Ruins | 12 | 48 | 22 (existing arena, enlarged) | 3 | 4 + boss |
+| Grotto | 13 | 64 | 24 | 3 + secret | 4–5 + boss |
+| Caldera | 13 | 64 | 24 | 3 + elite | 4–5 + boss |
+| Spire | 12 | 48 (vertical) | 28 (3-phase arena) | 3 | 4 + boss |
+
+* **Each zone = one outer map + one compact boss map.** Outer map: 3 rooms 12–16 tiles across (60–90 s of fighting each),
+  2 side branches (20–30 s), 1 shortcut, 1 elite, 1 lore tablet, 1 checkpoint shrine ≈ 9–10 min. Boss map 2–3 min.
+  Irregular island shapes (not squares), plus small floating islets reached by bridges.
 * **Layout grammar per map:** a winding main path with 3 encounter "rooms" (clearings, plazas, cave chambers) linked by
   corridors; 2+ side branches (dead-ends hide a chest, a lore tablet or an elite); **verticality** using 3–5 height
   levels with stairs and ramps, cliffs as walls; at least one shortcut that opens back to the checkpoint; landmarks
   visible from afar (giant tree, tower, waterfall, lava fall) so the player can navigate.
-* **Set dressing density:** dense props along edges and in clusters (≥250 objects on a large map), open space only where
+* **Set dressing density:** dense props along edges and in clusters (150–200 objects on a 56-tile map), open space only where
   fights happen. Each zone gets its own tile palette, props and ambient particles.
 * **Secrets:** each map has 1 hidden path (an illusory wall or a cracked bridge) leading to a Socket Rune or a gem cache.
 * **Interactables:** chests (wood / silver / gold by tier), checkpoint shrines, lore tablets, switch-gated portals,
   levers that lower bridges or open gates (implemented as triggers in `world.js`).
 * **Tech:** maps are authored with node generator scripts in `tools/maps/` (noise-shaped coast, path carving, room
   stamps, prop scattering with seeded RNG), output in the `world.js` format and then fine-tuned in `editor.html`.
-  The renderer must cull to the view so large maps stay at 60 fps, and the ground raster must be chunked if a single
-  canvas would exceed ~4096 px. The minimap gets fog-of-war revealed as you explore.
-* The Vale hub grows too (~48 tiles): cottage, Elder Stone, a garden, the dummies, and visible rifts to every zone,
+  The renderer must cull objects to the view so large maps stay at 60 fps (the ground raster is `(W+H)*16` px wide,
+  so up to 64-tile maps fit one canvas; no chunking needed). The minimap gets fog-of-war revealed as you explore.
+* The Vale hub grows too (36–40 tiles): cottage, Elder Stone, a garden, the dummies, and visible rifts to every zone,
   which open as Shards are relit.
+
+## 8c. Gameplay loop and reward cadence
+* **30 s:** read the telegraph → dodge → skill → basic chain → kill-heal. Damage numbers, XP ticks, a drop about every
+  3rd kill (Common/Uncommon), rarity-scaled drop fanfare (light beam, pitch-stepped chime, bouncing item).
+* **Encounter (3–5 min, one room):** 2 waves + 1 pressure enemy (caster or elite). Room clear = 1 guaranteed ≥Uncommon
+  (trigger `loot` action), ~1 level-up, a chest with a gem.
+* **Zone (10–15 min):** 3 rooms + elite + boss. Rare+ from the elite, 2–3 gems, a Socket Rune in the secret, boss =
+  named Legendary + a skill unlock / modifier choice + the next rift opens. **One new weapon tier per zone**, so the
+  sword visibly changes every zone.
+* **Hub between zones:** combine gems, re-socket for the next boss's element, Elder Stone story beat, spend Dust.
+* **Whole game (~70 min):** 5 named Legendaries + 1 Mythic, ~6 weapon tiers, 12–15 gems socketed, a full matching set
+  by the Spire. **NG+** (enemies ×1.6, keep gear) unlocks Mythic rolls everywhere and corrupted elites.
+* **Onboarding:** the first chest in the Vale drops an Uncommon weapon *and* a gem, each with one Pip line explaining it.
+* **Audio:** a short synth music loop per zone plus boss music, on the existing `tone()` synth.
 
 ## 9. Studio roles and file ownership
 | Who | Strengths used for | Default files |
 |---|---|---|
 | **Director** (me) | design, briefs, review, merge/ship | `docs/DESIGN.md` |
-| **Opus** | core systems, rendering, AI, tricky refactors | `game.js`, `render.js`, `data.js` core, `items.js` |
+| **Opus** | core systems, rendering, AI, tricky refactors; **owns the seams** (`equipItem`, `statsOf`, `recalcStats`, `buildPlayerSprites(gear instances)`, ICONS stub, boss move library) | `game.js`, `render.js`, `data.js` core, `items.js` |
 | **Sonnet** | content: maps, triggers, story/dialogue, enemies, UI screens, sprites | `world.js`, `hud.js`, `maps.js`, `art.js` |
-| **Haiku** | smoke tests, data tables, balance sheets, docs, screenshots | `tools/`, `README.md`, tables |
+| **Haiku** | smoke **and scripted play tests** (kill → drop → equip → save → reload → die → checkpoint; 60 s fps sample on the largest map), data tables, balance sheets, docs | `tools/`, `README.md`, tables |
 
-## 10. Milestone plan (each one ships live)
-* **M1 Foundation + Inventory & Loot** — item instances, rarity, level/XP, sockets & gems, loot drops, inventory UI,
-  save/load, death/respawn, smoke test harness.
-* **M2 The Hero** — detailed layered hero, gear overlays per tier, rarity glow & particles, paper-doll in inventory.
-* **M3 Story & Act I–II** — dialogue system, intro, Pip, Elder Stone hub, Pinewood boss Bramblehorn, Ruins re-paced.
-* **M4 Act III–IV** — Sunken Grotto + Emberfall Caldera, new enemies and two bosses, gem amplification complete, talents.
-* **M5 Finale** — Sleepless Spire, Morrow, ending, credits, NG+.
-* **M6 Polish & balance** — pacing to ≥60 min, audio, README, screenshots.
+## 10. Milestone plan (each one ships live) — revised after senior director review
+* **M1 Foundation + Inventory & Loot** — item instances, rarity, level/XP, sockets & gems (3 grades), additive stats,
+  loot drops with rarity fanfare, inventory UI, save/load, checkpoint shrines + persisted trigger state, death/respawn,
+  smoke test harness.
+* **M2 Vertical slice: Act I** — Pinewood at target size (outer + boss map) from the generator, bigger Vale hub,
+  dialogue + camera-pan + loot + checkpoint + gate trigger actions, intro and Pip, the data-driven boss system with
+  Old Bramblehorn, elites, universal dodge, loot/XP tuned for L1–8, scripted play test. Proves the loop end to end.
+* **M3 The Hero & Icons** — detailed layered hero, gear overlays per tier, rarity glow & particles (1–2 px, high
+  contrast), paper-doll in inventory, new icon set, enemies rescaled to the hero, drop FX unified on one `rarityFx` table.
+* **M4 Acts II–III** — Ruins rebuilt to size with the Gloam Warden ported to the boss system, Sunken Grotto + Mirelle,
+  gem skill amplification complete, skill modifier choices, gem-tinted skill visuals.
+* **M5 Act IV + Finale** — Emberfall Caldera + Kharzul, Sleepless Spire + Morrow (3 phases), Pip's sacrifice, ending,
+  credits, NG+.
+* **M6 Polish & balance** — pacing to ≥60 min (timed playthrough), music loops, minimap fog-of-war, README, screenshots.
 
-Ship gate per milestone: smoke test green → director review → PR → merge to `claude/dreamy-rpg-concept` (= live on Pages).
+Review gates: every map ships a screenshot and a timed main-path walk; every boss ships one screenshot per telegraph.
+
+Ship gate per milestone: smoke + play test green → director review → PR → merge to `claude/dreamy-rpg-concept` (= live on Pages).
