@@ -177,16 +177,101 @@ function slotSkill(p, slot) {
   if (slot === 'shift') return item('boots', p.gear.boots).skill;
   return p.csk[+slot - 1] || null;
 }
+// ===== skill casting: ultimate charge, dodge-cancel, ranks and modifiers (DESIGN §15.2–15.3) ===================
+const SLOT_ACTION = { lmb: 'attack', q: 'skillQ', e: 'skillE', r: 'skillR', f: 'skillF', c: 'skillC', shift: 'dodge', 1: 's1', 2: 's2', 3: 's3', pot: 'potion' };
+const CANCEL_AFTER = 0.1;            // dodge cancels a cast only after its first 0.1 s (buffered until then)
+const RANK_HITS = 25, RANK_MAX = 5, RANK_BONUS = 0.06;
+// SKILL_MODS: data only. { id: { id, skill, rank: 3|5, name, desc, apply(ctx) } } — apply() may only change the
+// numbers on ctx (dmg r stun slow burn cd mp dur extraProj are multipliers / counts, element a damage type).
+// Content arrives later (M4); the slots open at ranks 3 and 5.
+const SKILL_MODS = {};
+const MOD_NUM_KEYS = ['dmg', 'r', 'stun', 'slow', 'burn', 'cd', 'mp', 'dur', 'extraProj'];
+const skillRank = (p, id) => Math.min(RANK_MAX, 1 + Math.floor(((p.ranks[id] && p.ranks[id].hits) || 0) / RANK_HITS));
+const skillRankBonus = (p, id) => RANK_BONUS * (skillRank(p, id) - 1);
+function skillRankProgress(p, id) {
+  const hits = (p.ranks[id] && p.ranks[id].hits) || 0, rank = skillRank(p, id);
+  return { rank, hits, max: rank >= RANK_MAX, into: rank >= RANK_MAX ? RANK_HITS : hits - (rank - 1) * RANK_HITS, need: RANK_HITS, frac: rank >= RANK_MAX ? 1 : (hits - (rank - 1) * RANK_HITS) / RANK_HITS, bonus: skillRankBonus(p, id) };
+}
+const skillModOptions = (id, rank) => Object.values(SKILL_MODS).filter(m => m.skill === id && m.rank === rank);
+function skillModSlots(p, id) {
+  const r = skillRank(p, id);
+  return [3, 5].map(rank => ({ rank, open: r >= rank, chosen: (p.mods[id] && p.mods[id][rank]) || null, options: skillModOptions(id, rank) }));
+}
+function chooseSkillMod(p, id, rank, modId) {
+  const m = modId == null ? null : SKILL_MODS[modId];
+  if (modId != null && (!m || m.skill !== id || m.rank !== rank || skillRank(p, id) < rank)) return false;
+  const o = p.mods[id] || (p.mods[id] = {});
+  if (m) o[rank] = modId; else delete o[rank];
+  return true;
+}
+// numbers-only cast context: rank bonus lives in damageEnemy's additive sum; mods multiply these
+function skillCtx(p, id, s) {
+  const ctx = { dmg: 1, r: 1, stun: 1, slow: 1, burn: 1, cd: 1, mp: 1, dur: 1, extraProj: 0, element: s.element, rank: skillRank(p, id) };
+  const ch = p.mods[id] || {};
+  for (const rank of [3, 5]) {
+    const m = SKILL_MODS[ch[rank]]; if (!m || m.skill !== id || ctx.rank < rank || typeof m.apply !== 'function') continue;
+    const before = Object.assign({}, ctx);
+    try { m.apply(ctx); } catch (e) { Object.assign(ctx, before); }
+    for (const k of MOD_NUM_KEYS) if (typeof ctx[k] !== 'number' || !isFinite(ctx[k])) ctx[k] = before[k];
+    if (typeof ctx.element !== 'string' || !EL_COL[ctx.element]) ctx.element = before.element;
+    ctx.rank = before.rank;
+  }
+  return ctx;
+}
+const castR = () => (CAST && CAST.ctx ? CAST.ctx.r : 1);
+function addSkillHit(p, id) {
+  const r = p.ranks[id] || (p.ranks[id] = { hits: 0 }), before = skillRank(p, id);
+  if (before >= RANK_MAX) return;
+  r.hits++;
+  const after = skillRank(p, id);
+  if (after > before) {
+    const sk = SKILLS[id], msg = `${sk.name} — Rank ${after}${after === 3 || after === 5 ? ' · modifier slot open' : ''}`;
+    say(msg); sfx('levelup');
+    if (typeof UI !== 'undefined') UI.toast({ text: msg, icon: typeof skillIcon === 'function' ? skillIcon(id) : null, col: '#ffd35a' });
+  }
+}
+// ultimate charge: fed by the pre-multiplier damage of every hit (level-independent), reactions x2 (M4)
+const ultGain = (p, base, reaction) => base * G.tune.player.ultRate * (reaction ? 2 : 1) * (1 + ultChargeBonus(p));
+const castActive = p => !!(p.cast && p.cast.age < p.cast.dur);
+// dodge cancels the cast in progress: drops its pending delays and its dash, refunds 50 % of its MP
+function cancelCast(p) {
+  const c = p.cast; if (!c) return false;
+  G.delays = G.delays.filter(d => d.c !== c.c);
+  if (p.dash && p.dash.cast === c.c) p.dash = null;
+  p.castT = 0; p.swing = null; p.spin = 0;
+  p.mp = Math.min(p.maxMp, p.mp + c.mp * 0.5);
+  p.cast = null;
+  G.cancelled = { id: c.id, t: G.t };
+  return true;
+}
 function useSkill(p, slot) {
-  const id = slotSkill(p, slot); if (!id || p.dead) return;
-  const s = SKILLS[id];
-  if ((p.cds[id] || 0) > 0 || p.dash || p.rootT > 0) return;
-  if ((s.mp || 0) > p.mp) { say('Not enough mana'); return; }
-  if ((s.st || 0) > p.st) { say('Not enough stamina'); return; }
-  // cooldown reduction is additive too (affix/sapphire cdr + diamond on the ultimate), capped at 50%
-  p.mp -= s.mp || 0; p.st -= s.st || 0; p.cds[id] = p.cdm[id] = s.cd * (1 - Math.min(0.5, p.cdr + (slot === 'r' ? ultCdr(p) : 0)));
-  withCast({ skill: id, el: s.element }, () => s.cast(p, p.aim, G.mouse.wx, G.mouse.wy));
+  const id = slotSkill(p, slot); if (!id || p.dead) return false;
+  const s = SKILLS[id], ult = slot === 'r', dodge = slot === 'shift';
+  if ((p.cds[id] || 0) > 0 || p.rootT > 0) return false;
+  if ((s.st || 0) > p.st) { say('Not enough stamina'); return false; }
+  if (dodge && castActive(p)) {
+    if (p.cast.age < CANCEL_AFTER) { p.dodgeBuf = CANCEL_AFTER - p.cast.age + 0.02; return false; }   // buffered
+    cancelCast(p);
+  }
+  if (p.dash) return false;
+  if (ult && p.ult < 100) { if (!G.ultWarnT || G.t > G.ultWarnT) { say('Ultimate is still charging'); G.ultWarnT = G.t + 1.2; } return false; }
+  const ctx = skillCtx(p, id, s), mp = Math.round((s.mp || 0) * ctx.mp);
+  if (mp > p.mp) { say('Not enough mana'); return false; }
+  p.mp -= mp; p.st -= s.st || 0;
+  // ultimates use the charge bar instead of a cooldown (a short lockout stops double-casts)
+  if (ult) { p.ult = 0; p.cds[id] = p.cdm[id] = 0.5; }
+  else p.cds[id] = p.cdm[id] = s.cd * ctx.cd * (1 - Math.min(0.5, p.cdr));
+  if (p.swing && p.atkT > 0) p.swing = null;   // attacks cancel into skills
+  const c = { skill: id, el: ctx.element, slot, ctx, hit: false };
+  const n0 = G.delays.length;
+  withCast(c, () => s.cast(p, p.aim, G.mouse.wx, G.mouse.wy));
+  if (id === 'orbit') p.orbitCast = c;
+  let dur = Math.max(0, p.castT);
+  for (let i = n0; i < G.delays.length; i++) if (G.delays[i].c === c) dur = Math.max(dur, G.delays[i].t);
+  if (p.dash && p.dash.cast === c) dur = Math.max(dur, p.dash.t);
+  p.cast = dodge ? null : { c, id, slot, age: 0, dur: Math.min(1.5, dur), mp };
   G.lastCast = { slot, t: 0.25 };
+  return true;
 }
 function say(s) { G.msg = { s, t: 1.6 }; }
 // temporary buffs stay multiplicative but cap at 1.6x (bless x surge x focus was 2.37x)
@@ -197,7 +282,7 @@ function swingWeapon(p, dur, arc, dir) { p.swing = { t: 0, dur, arc, dir: dir ||
 function castAnim(p, t = 0.25) { p.castT = t; }
 
 function basicAttack(p) {
-  if (p.atkT > 0 || p.dash || p.dead || p.rootT > 0) return;
+  if (p.atkT > 0 || p.dash || p.dead || p.rootT > 0 || castActive(p)) return;   // skills never cancel into attacks
   const w = item('weapon', p.gear.weapon), a = p.aim;
   p.atkT = w.basic.rate / (1 + p.haste);
   if (w.kind === 'sword') {
