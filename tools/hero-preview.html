@@ -10,7 +10,7 @@
 <h2>Mixed outfits with gems (front, back, walk strip)</h2><canvas id="mix"></canvas>
 <h2>Rarity FX (animated): dark 5x, grass 5x, grass 2x &mdash; mythic = pink/violet/cyan starry aura</h2><canvas id="rar"></canvas>
 <h2>Scale check: old 16px hero (front/back) vs new hero at native 480x270 pixels (page shows it 2x like the game); right = new hero at 2x scene scale</h2><div id=scalehere></div>
-<h2>Trinkets (animated): belts T1-3 (front/back), amulet elements, ring glint on the attack frame (Epic+), tempered edge; trinket rarity rims uncommon..mythic. 5x</h2><canvas id="trk"></canvas>
+<h2>Trinkets (animated): belts T1-3 (front/back), amulet elements, ring glint on the attack frame (Epic+), tempered edge; trinket rarity rims uncommon..mythic. 6x</h2><canvas id="trk"></canvas>
 <h2>Walk cycle (idle 2f, walk 4f), front/back, mirrored side, 6x</h2><canvas id="walk"></canvas>
 <script src="../js/util.js"></script>
 <script src="../js/sprites.js"></script><script src="../js/art.js"></script><script src="../js/data.js"></script>
@@ -113,7 +113,7 @@ function rarRow(row, t, dt, y0, RS, bg) {
 })();
 
 // ---- trinkets (animated): belts, amulets, ring glint, tempered
-const TRX = cv('trk', 1280, 840);
+const TRX = cv('trk', 1280, 1000);
 const KN = { head: { family: 'knighthelm', tier: 3 }, chest: { family: 'knightplate', tier: 3 }, boots: { family: 'knightgreaves', tier: 3 }, weapon: { family: 'sword', tier: 3 } };
 const TR = [];
 ['rope_sash', 'mistwoven_belt', 'moonlit_girdle'].forEach((f, i) => TR.push([f.replace(/_/g, ' ') + ' (bare)', { belt: { family: f, tier: i + 1, rarity: ['uncommon', 'rare', 'epic'][i] } }, 'front', 0, 'belt']));
@@ -126,13 +126,13 @@ TR.push(['tempered gear', { head: { family: 'knighthelm', tier: 3, tempered: tru
   belt: { family: 'moonlit_girdle', tier: 3, rarity: 'legendary', tempered: true }, amulet: { tier: 3, element: 'holy', rarity: 'epic', tempered: true }, ring: { tier: 3, rarity: 'epic', tempered: true } }, 'front', 6, 'all']);
 TR.push(['tempered vs plain', { head: { family: 'arcanecowl', tier: 3, tempered: true }, chest: { family: 'dreamrobe', tier: 3 }, boots: { family: 'clothsandals', tier: 3, tempered: true }, belt: { family: 'mistwoven_belt', tier: 2, tempered: true } }, 'front', 0, 'all']);
 function trkDraw(t) {
-  TRX.fillStyle = '#1d1a2a'; TRX.fillRect(0, 0, 1280, 840);
+  TRX.fillStyle = '#1d1a2a'; TRX.fillRect(0, 0, 1280, 1000);
   TR.forEach(([name, look, view, fi], i) => {
-    const b = HERO.build(look), col = i % 8, row = Math.floor(i / 8), ox = col * 160 + 12, oy = row * 200 + 14;
-    cell(TRX, ox - 6, oy - 10, 150, 190);
-    TRX.save(); TRX.translate(ox + 8, oy + 8); TRX.scale(5, 5); TRX.imageSmoothingEnabled = false;
-    HERO.drawTrinketGlow(TRX, b, view, fi, 0, 0, t); HERO.drawHero(TRX, b, view, fi, 0, 0); TRX.restore();
-    label(TRX, name, ox - 2, oy + 4 + 180 - 14, '#ffd870');
+    const b = HERO.build(look), col = i % 6, row = Math.floor(i / 6), ox = col * 212 + 12, oy = row * 240 + 14;
+    cell(TRX, ox - 6, oy - 10, 204, 232);
+    TRX.save(); TRX.translate(ox + 36, oy + 4); TRX.scale(6, 6); TRX.imageSmoothingEnabled = false;
+    HERO.drawHero(TRX, b, view, fi, 0, 0, { noWeapon: fi !== 6 }); HERO.drawTrinketGlow(TRX, b, view, fi, 0, 0, t); TRX.restore();
+    label(TRX, name, ox, oy + 218, '#ffd870');
   });
 }
 // ---- walk (animated)

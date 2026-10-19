@@ -8,7 +8,7 @@
 //   trinkets (DESIGN 19.4): look.belt={family?,tier 1-3,color?,rarity?,tempered?}, look.amulet={tier,element?|color?,rarity?,tempered?},
 //     look.ring={tier,element?,rarity?,tempered?} (object or array; Epic+ rings glint 1px on the attack frame), any gear piece may carry tempered:true
 //     (bright edge). Belt/amulet are slots for HERO.slotSprite(b,'belt'|'amulet'|'ring',view,fi); HERO.drawTrinketGlow(ctx,b,view,fi,x,y,t)
-//     draws their rarityFx rim. HERO.BELT_COLORS / ELEMENT_COLORS list the palettes.
+//     draws their rarityFx rim (call it AFTER drawHero: the rim lies on the torso). HERO.BELT_COLORS / ELEMENT_COLORS list the palettes.
 //   HERO.rarityFx, HERO.rarityColor(r,t), HERO.drawGlow(ctx,sprite,x,y,rarity,t),
 //   HERO.emit/stepParticles/drawParticles, HERO.drawHero(...), HERO.slotSprite(built,slot,view,frame)
 // Painting model: each layer paints 1-px rects through a painter `g` (shape / shaded-box helpers). Tiers are
