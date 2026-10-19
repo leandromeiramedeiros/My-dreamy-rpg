@@ -165,6 +165,26 @@ const PAD_STUB = () => {
   check('save: v2 -> v3 migration keeps everything', mig.v === 3 && mig.level === 7 && mig.xp === 120 && mig.dust === 33 && mig.q === 'heroic' && mig.csk === 'orbit,chain' && mig.chest && mig.boss && mig.trig === 't1' && mig.slime === 4 && mig.res === -0.5 && mig.cp === 2 && mig.bag, mig);
   const st = await ev(() => { const a = setSetting('difficulty', 'story'), b = setSetting('shake', 999), c = damageTakenMul(); setSetting('difficulty', 'normal'); setSetting('shake', 100); return { a, b, c }; });
   check('settings: validated setters + Story difficulty x0.6', st.a === 'story' && st.b === 100 && st.c === 0.6, st);
+  // ---------- 3b. §20.5 MP builder: once per swing, 40 MP/s cap; ultimate gain cap ----------
+  const cleave = await ev(() => {
+    const p = G.player; G.enemies.length = 0; p.mpHits = []; G.t += 2;
+    for (let k = 0; k < 5; k++) { const e = spawnEnemy('slime', p.x + Math.cos(p.aim + (k - 2) * 0.15) * 1.0, p.y + Math.sin(p.aim + (k - 2) * 0.15) * 1.0, 0); e.hp = e.maxHp = 1e6; }
+    p.mp = 0; p.atkT = 0; p.cast = null; p.dash = null; p.rootT = 0; p.combo = 0;
+    const kind = item('weapon', p.gear.weapon).kind, hpBefore = G.enemies.map(e => e.hp);
+    basicAttack(p);
+    const hit = G.enemies.filter((e, i) => e.hp < hpBefore[i]).length, mp = p.mp; G.enemies.length = 0;
+    return { kind, hit, mp };
+  });
+  check('mp: a sword cleave hitting 5 enemies gives 8 MP, not 40', cleave.kind === 'sword' && cleave.hit === 5 && cleave.mp === 8, cleave);
+  const capT = await ev(() => {
+    const p = G.player; p.mpHits = []; p.mp = 0; G.t += 2; const t0 = G.t;
+    for (let i = 0; i < 20; i++) { basicMpGain(p, { basic: true }); G.t += 0.04; }   // 20 swings in 0.8 s = 160 MP uncapped
+    const in1s = p.mp; G.t = t0 + 1.05; basicMpGain(p, { basic: true });
+    return { in1s, after: p.mp };
+  });
+  check('mp: hard cap 40 MP/s from hits (rolling 1 s)', capT.in1s === 40 && capT.after === 48, capT);
+  const ultCap = await ev(() => ({ hit: ultGain(G.player, 1e6, false), reaction: ultGain(G.player, 1e6, true) }));
+  check('ultimate: gain capped at 5 % per hit, 10 % per reaction', ultCap.hit === 5 && ultCap.reaction === 10, ultCap);
   // ---------- 4b. a press that closes a screen never leaks into gameplay ----------
   await ev(() => { const p = G.player; p.hp = p.maxHp / 2; p.potions = 3; p.potT = 0; G.ui.open = false; G.ui.help = false; });
   await tap(8); await wait(100);

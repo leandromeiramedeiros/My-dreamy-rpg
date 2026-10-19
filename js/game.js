@@ -238,7 +238,22 @@ function addSkillHit(p, id) {
   }
 }
 // ultimate charge: fed by the pre-multiplier damage of every hit (level-independent), reactions x2 (M4)
-const ultGain = (p, base, reaction) => base * G.tune.player.ultRate * (reaction ? 2 : 1) * (1 + ultChargeBonus(p));
+// §20.5: a single hit adds at most 5 % charge, a reaction hit at most 10 %
+const ultGain = (p, base, reaction) => Math.min(reaction ? 10 : 5, base * G.tune.player.ultRate * (reaction ? 2 : 1) * (1 + ultChargeBonus(p)));
+// §20.5 MP builder: per weapon family, basic attacks only, ONCE per swing (not per target), hard cap 40 MP/s from
+// hits over a rolling 1 s window. Values ~ swing time so every family builds ~15-23 MP/s on basics
+// (sword 8 / 0.42 s, staff 9 / 0.48 s, bow 7 / 0.36 s, daggers 6 / 0.28 s, two-hander 14 / 0.62 s).
+const MP_ON_HIT = { sword: 8, staff: 9, bow: 7, daggers: 6, dagger: 6, twohander: 14 };
+const MP_HIT_CAP = 40;
+function basicMpGain(p, c) {
+  if (c && c.basic) { if (c.mpDone) return; c.mpDone = true; }
+  const w = item('weapon', p.gear.weapon), gain = MP_ON_HIT[w && w.kind] != null ? MP_ON_HIT[w.kind] : G.tune.player.mpOnHit;
+  const L = p.mpHits || (p.mpHits = []), t = G.t;
+  while (L.length && t - L[0][0] >= 1) L.shift();
+  const used = L.reduce((a, q) => a + q[1], 0), add = Math.max(0, Math.min(gain, MP_HIT_CAP - used));
+  if (add <= 0) return;
+  L.push([t, add]); p.mp = Math.min(p.maxMp, p.mp + add);
+}
 const castActive = p => !!(p.cast && p.cast.age < p.cast.dur);
 // dodge cancels the cast in progress: drops its pending delays and its dash, refunds 50 % of its MP
 function cancelCast(p) {
@@ -267,7 +282,7 @@ function useSkill(p, slot) {
   p.mp -= mp; p.st -= s.st || 0;
   // ultimates use the charge bar instead of a cooldown (a short lockout stops double-casts)
   if (ult) { p.ult = 0; p.cds[id] = p.cdm[id] = 0.5; }
-  else p.cds[id] = p.cdm[id] = s.cd * ctx.cd * (1 - Math.min(0.5, p.cdr));
+  else p.cds[id] = p.cdm[id] = s.cd * ctx.cd * (1 - Math.min(0.4, p.cdr));
   if (p.swing && p.atkT > 0) p.swing = null;   // attacks cancel into skills
   const c = { skill: id, el: ctx.element, slot, ctx, hit: false };
   const n0 = G.delays.length;
@@ -561,7 +576,7 @@ function damageEnemy(e, base, o = {}) {
   e.flash = 0.1;
   if (!o.dot) G.lastHit = e;
   // §15.3 resource rhythm: basic attacks (CAST null) build 8 MP per hit; all damage but the ultimate's own feeds the charge
-  if ((!c || c.basic) && !o.dot) p.mp = Math.min(p.maxMp, p.mp + G.tune.player.mpOnHit);
+  if ((!c || c.basic) && !o.dot) basicMpGain(p, c);
   if (eff < 1 && !(c && c.slot === 'r') && p.ult < 100) p.ult = Math.min(100, p.ult + ultGain(p, base * (1 - eff), o.reaction));
   // skill ranks: a cast counts once, on its first hit on a real enemy (training dummies don't rank skills)
   if (sk && c.slot && !c.hit && !o.dot && !e.dummy) { c.hit = true; addSkillHit(p, sk); }

@@ -1048,3 +1048,73 @@ Act IV, no tempering).
   * a hero level at Morrow outside 34–40 on either path
 * **When:** the sim and sheets land in **M2b**, and every later milestone ships only with the sim green.
 
+## 21. Enemy roster and behaviour parts (expert review; director-approved; supersedes §11.4 roster counts)
+
+**Rule:** more enemies are good **if each one adds a verb**, meaning a different player decision. Palette or stat
+swaps ("Elder Ogre") are banned. A zone variant counts as half an enemy: at most 2 per zone, each with one new part.
+
+### 21.1 Roster: 28 commons (every row is a distinct decision)
+| Zone | Enemies (verb → what the player does) |
+|---|---|
+| Vale | Dream Moth (swarm that drifts to light → AoE basics) · dummy |
+| Pinewood | Gloom Slime (splits → finish smalls) · Shade Hound (line lunge → sidestep, punish) · Bramble Shaman (poison zones + **heals** → kill first) · Ogre (cone brute → dodge through, stagger) · Thornback Boar (**burrows** → keep moving; surfaces staggered) · Mountain Troll (**sleeper**; Root Hollow only → skip or prep) |
+| Ruins | Wisp (kiting shooter → close with dash/holy) · Gloom Knight (**shield-front** → flank or break) · Grave Chanter (**summons** wisps, Dread aura → interrupt) · Pillar Mimic (ambush → read the room) · Shadeling Swarm (6 tiny chasers → nova) · Void Archer (**sniper** line from off-screen → line of sight) |
+| Grotto | Frost Jelly (split + Chill puddles) · Tide Crab (shield-front + **teleport** on bubbles) · Glowfin Shoal (orbiting swarm → nova timing) · Deepsinger (**aura-buffer** −50 % dmg → pull/kill her) · Lightning Eel (water-path-bound charges → fight on dry tiles) · Crystal Sentinel (turret, sweeping beam → cover timing) |
+| Caldera | Cinder Imp (**bomber** → range or dodge the fuse; Chill defuses) · Slag Golem (poise brute → charged swings) · Ash Wraith (teleport backstab → turn, counter) · Forge Priest (**trap-layer** lava mines + heals golems) · Magma Hopper (hops, fire pools, splits) |
+| Spire | Vigil Knight (linked shield pair → hit the one not blocking) · Star Archer (3-shot sniper from islets) · Dread Herald (aura + summons swarms → priority target) · **Unmade** (copies the hero's silhouette and last skill shape; ties to the twist) · Void Bomber (bomber swarm of 3) |
+
+Each row also defines element / damage type, weak / resist, and the reaction it teaches. The expert's table is the
+source for those; Haiku transcribes it into `ENEMY_DATA` when the part runtime lands.
+
+**Bosses (10 main + vault bosses):** Bramblehorn, Gloam Warden, Mirelle, Kharzul and Morrow; mini-bosses Mossjaw and
+Slagheart; optional Sorrel's Echo and the Unwaking Child.
+
+**Director ruling:** the **Oathless** (Crypt vault) and **Brinemother** (Drowned Vault) stay as **vault bosses**, built
+cheaply: Gloom Knight and Tide Crab rows at boss scale with 2 elite mods and a boss bar, so they need no new art. The
+**Twin Vigils** are the Vigil Knight linked pair in the Spire ascent's last room.
+
+**Cut order if art slips:** the 5th enemy of each zone first (Boar, Mimic, Eel, Magma Hopper, Void Bomber), never a
+support or ranged enemy.
+
+### 21.2 Behaviour parts (enemies are data)
+`{name, sprite, hp, speed, dmg, el, dmgType, stagger, res, tags, parts:[...], params:{part:{...}}}`
+* **Movement (one):** chase, kite, orbit, charge, burrow, teleport, path-bound, stationary, sleep, mimic.
+* **Attack (1–2):** brute (reuses the BOSS_MOVES cone/circle), shoot, beam, sniper, bomber, zone-caster, trap-layer.
+* **Support (0–1):** healer (4 s telegraphed heal, ≤ 30 % of the target's HP), aura-buffer, summon, shield-front,
+  linked.
+* **Death and group:** split, zone-on-death, swarm (a swarm counts as **one** enemy for XP and loot).
+* The editor's Enemies tab shows parts as checkboxes with param fields. Once the runtime exists, a new enemy costs one
+  data row (Haiku), one 12-frame sprite set (~0.5 Sonnet-day) and 3 sound recipes (Haiku).
+* **Director ruling:** the part runtime moves **from M4 to M2b**, because Pinewood's healer, burrower and sleeper need
+  it. The existing hopper, shooter, charger and brute become the first 4 data rows.
+
+### 21.3 Elite modifiers (8)
+* Shielded (a periodic front shield to break)
+* Storm (Shock aura that arcs when adjacent)
+* Burning (fire trail)
+* Frozen (rare)
+* Gloomed (Dread aura)
+* **Twin** (a linked copy at 50 %; replaces Fast, which was only a stat)
+* **Vampiric** (heals on hit)
+* **Summoner** (a periodic swarm)
+
+### 21.4 Encounter rules (validated by Haiku's sheet from the trigger data)
+* **Roles:** each pack has 1 anchor (brute or armoured), 2–4 pressure (chase, charge or swarm), 0–1 support and 0–1
+  ranged.
+* After room 1, every room has a support or ranged enemy that is the correct first target.
+* Each zone has one pack combining two supports (e.g. healer + shield-front).
+* Each zone has one pack that is the wrong weapon on purpose.
+* No pack has two enemies with the same movement part.
+* Elites never spawn alongside healers.
+* Sleepers and mimics appear at most once per map, and only after a shrine.
+* Swarms always have a visible source.
+
+### 21.5 Pacing and budget
+* **Bestiary:** ~56 entries (28 commons, ~12 bosses, fish).
+* **Main-path pacing:** a new enemy every ~4 min and a new verb every ≤ 6 min. Pinewood holds the troll back for Root
+  Hollow.
+* **CI data checks:**
+  * any 10-minute main-path window without a new enemy type
+  * any zone whose rooms use fewer than 4 movement parts
+* **Art per milestone (Sonnet-days):** M2b 4 · M4 4 · M5 4.5 · M6 5 · M7 5 · lane O 3, about 26 in total.
+

@@ -557,7 +557,7 @@ const WORLD_UNIQUES = [
 
 // ===== caps (§19.6): applied in recalcStats =====
 const CAPS = {
-  cdr: 0.5,            // cooldown reduction
+  cdr: 0.4,            // cooldown reduction (§20.5: 40 %, matches recalcStats)
   crit: 0.6,           // crit chance
   haste: 0.5,          // attack speed
   gearPower: 1.5,      // gear power
