@@ -90,20 +90,27 @@ function frame(w, h, o) {
   }
   return img;
 }
-const CRESCENT = ['.####.', '###...', '##....', '##....', '#.....', '.#....'];
-function ornament(img, color, hi, edge) {
+const CRESCENT = ['.####.', '######', '###...', '##....', '##....', '.#....'];
+function ornament(img, color, hi, edge, shade) {
   const w = img.w, h = img.h;
-  const c = hex(color), hc = hex(hi), ec = hex(edge);
+  const c = hex(color), hc = hex(hi), ec = hex(edge), sc = hex(shade);
   for (const [fx, fy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
     const px = (x, y) => [fx ? w - 1 - x : x, fy ? h - 1 - y : y];
-    const on = (x, y) => y >= 1 && y < 7 && x >= 1 && x < 7 && CRESCENT[y - 1][x - 1] === '#';
+    const OFF = 1;
+    const on = (x, y) => y >= OFF && y < 6 + OFF && x >= OFF && x < 6 + OFF && CRESCENT[y - OFF][x - OFF] === '#';
     // dark outline only where the frame has no solid pixel (so the frame lines flow into the horns)
     for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
-      if (on(x, y) || x > 6 || y > 6) continue; let near = false;
+      if (on(x, y) || x > 6 || y > 6 || x < 1 || y < 1) continue; let near = false;
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (on(x + dx, y + dy)) near = true;
       const [qx, qy] = px(x, y); if (near && img.get(qx, qy)[3] < 255) img.set(qx, qy, ec);
     }
-    for (let y = 1; y < 7; y++) for (let x = 1; x < 7; x++) if (on(x, y)) { const [qx, qy] = px(x, y); img.set(qx, qy, (x === 2 && y === 2) || (x === 1 && y === 3) || (x === 3 && y === 1) ? hc : c); }
+    for (let y = OFF; y < 6 + OFF; y++) for (let x = OFF; x < 6 + OFF; x++) if (on(x, y)) {
+      const [qx, qy] = px(x, y);
+      let col = c;
+      if (!on(x + 1, y + 1) || !on(x + 1, y) && x > 1 || !on(x, y + 1) && y > 1) col = sc;   // inner (concave) rim, darker
+      if ((x === 2 && y === 2) || (x === 3 && y === 1) || (x === 1 && y === 3) || (x === 2 && y === 3) || (x === 3 && y === 2)) col = hc;
+      img.set(qx, qy, col);
+    }
   }
 }
 const diamond = (n, cutMax, o) => { // octagonal / diamond mask sprite
@@ -164,14 +171,14 @@ const sprites = {}; // name -> {img, slice?, pad?}
 const add = (name, img, extra) => { sprites[name] = Object.assign({ img }, extra || {}); };
 
 function frameKind(name, w, h, slice, o, orn) {
-  const img = frame(w, h, o); if (orn) ornament(img, orn[0], orn[1], P.edge);
+  const img = frame(w, h, o); if (orn) ornament(img, orn[0], orn[1], P.edge, orn[2]);
   add(name, img, { slice, pad: o.pad });
 }
 const glass = { fill: P.bg, fillA: 224, sheen: ['#2a2152', '#1e1740'], shade: '#0e0920' };
-frameKind('primary', 16, 16, [7, 7, 7, 7], Object.assign({ rt: 2, layers: [P.edge, P.line, P.bevel], pad: 6 }, glass), [P.bright, '#f3ecff']);
+frameKind('primary', 16, 16, [7, 7, 7, 7], Object.assign({ rt: 2, layers: [P.edge, P.line, P.bevel], pad: 6 }, glass), [P.bright, '#ffffff', '#8f7bd6']);
 frameKind('plain', 12, 12, [5, 5, 5, 5], Object.assign({ rt: 2, layers: [P.edge, P.line, P.bevel], pad: 4 }, glass));
-frameKind('gold', 16, 16, [7, 7, 7, 7], { rt: 2, layers: [P.edge, P.gold, '#9a6a1e'], fill: '#1a1226', fillA: 228, sheen: ['#3a2a3c', '#271c33'], shade: '#0e0920', pad: 6 }, [P.gold, '#fff3c0']);
-frameKind('danger', 16, 16, [7, 7, 7, 7], { rt: 2, layers: [P.edge, P.danger, '#8a2244'], fill: '#2a0f22', fillA: 228, sheen: ['#4a1a36', '#35132b'], shade: '#150812', pad: 6 }, [P.hpHi, '#fff0f4']);
+frameKind('gold', 16, 16, [7, 7, 7, 7], { rt: 2, layers: [P.edge, P.gold, '#9a6a1e'], fill: '#1a1226', fillA: 228, sheen: ['#3a2a3c', '#271c33'], shade: '#0e0920', pad: 6 }, [P.gold, '#fff6cc', '#c8902a']);
+frameKind('danger', 16, 16, [7, 7, 7, 7], { rt: 2, layers: [P.edge, P.danger, '#8a2244'], fill: '#2a0f22', fillA: 228, sheen: ['#4a1a36', '#35132b'], shade: '#150812', pad: 6 }, [P.hpHi, '#fff0f4', '#e8476c']);
 frameKind('tabActive', 12, 12, [5, 5, 5, 3], { rt: 2, openBottom: true, layers: [P.edge, P.bright, P.line], fill: '#2b2058', fillA: 240, sheen: ['#43377f', '#35296b'], pad: 3 });
 frameKind('tabInactive', 12, 12, [5, 5, 5, 3], { rt: 2, openBottom: true, layers: [P.edge, P.bevel, '#2a2150'], fill: '#100b22', fillA: 214, pad: 3 });
 frameKind('slot', 12, 12, [4, 4, 4, 4], { rt: 1, layers: [P.edge, P.bevel], fill: '#0b0716', fillA: 236, sheen: ['#04020b', '#07040f'], shade: '#241b4a', pad: 2 });

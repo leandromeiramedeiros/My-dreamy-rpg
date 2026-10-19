@@ -704,8 +704,8 @@ shop), reputation, minigames other than fishing (fishing is in, see §13), day/n
 * **M3 The Hero & Icons:** layered hero, gear overlays, rarity glow & particles, paper-doll in the new Tab screen, the
   icon set wired into the HUD, hero status-icon row, enemies rescaled, unified `rarityFx`.
 * **M4 Act II** (~45 min): Ruins (3 maps), Gloam Warden ported, 5 status effects + enemy status icons, set bonuses,
-  Bestiary tab, the 7 reactions, Skills tab with ranks and modifiers.
-* **M5 Act III** (~65 min): Grotto (3 maps), Mirelle, gem amplification complete, Drifting Isles if ahead of schedule.
+  Bestiary tab, the 7 reactions, Skills tab with ranks and modifiers, **Thief: daggers + Shade leathers + Origins (§17)**.
+* **M5 Act III** (~65 min): Grotto (3 maps), Mirelle, **Warrior: two-handers (§17)**, gem amplification complete, Drifting Isles if ahead of schedule.
 * **M6 Act IV** (~85 min): Caldera (3 maps), Kharzul, hub arena, two new character skills.
 * **M7 Finale** (~110–120 min): Spire (3 maps), Morrow, Pip companion and sacrifice, ending, credits, NG+ and modifiers.
 * **M8 Polish:** timed 2-hour playthrough, music loops, minimap fog-of-war, mastery, achievements, secret vaults, README.
