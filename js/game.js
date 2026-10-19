@@ -124,9 +124,23 @@ function burst(x, y, z, n, cols, spd = 3, o = BURST_O) {
   }
 }
 const pick2 = arr => arr[(Math.random() * arr.length) | 0];
-function text(x, y, z, s, col, big = false, life = 0.9) { G.texts.push({ x, y, z, s, col, big, t: 0, life, vx: frand(-0.6, 0.6) }); }
+function text(x, y, z, s, col, big = false, life = 0.9) { const t = { x, y, z, s, col, big, t: 0, life, vx: frand(-0.6, 0.6) }; G.texts.push(t); return t; }
 // damage numbers respect the settings toggle (reveals like WEAK: FIRE always show)
-function dmgText(x, y, z, s, col, big) { if (typeof damageNumbersOn !== 'function' || damageNumbersOn()) text(x, y, z, s, col, big); }
+// o = { e: enemy, kind: 'crit'|'weak'|'resist'|'normal', v: raw damage }: the HUD styles by kind; hits on the same enemy
+// within 80 ms merge into one number (HUD.md)
+function dmgText(x, y, z, s, col, big, o) {
+  if (typeof damageNumbersOn === 'function' && !damageNumbersOn()) return;
+  if (o && o.e) {
+    const prev = o.e.lastDmgText;
+    if (prev && G.texts.includes(prev) && prev.t < 0.08 && prev.kind !== 'weak' === (o.kind !== 'weak')) {
+      prev.sum += o.v; prev.s = String(Math.round(prev.sum)) + (prev.kind === 'crit' || o.kind === 'crit' ? '!' : '');
+      if (o.kind === 'crit') { prev.kind = 'crit'; prev.col = col; }
+      prev.t = Math.min(prev.t, 0.03); return;
+    }
+  }
+  const t = text(x, y, z, s, col, big);
+  if (o) { t.kind = o.kind; t.sum = o.v || 0; if (o.e) o.e.lastDmgText = t; }
+}
 
 // ===== player ==================================================================
 function makePlayer() {
@@ -566,7 +580,10 @@ function damageEnemy(e, base, o = {}) {
   const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
   dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
   const st = o.stagger != null ? o.stagger : cx ? cx.stagger || 0 : sk && SKILLS[sk] ? SKILLS[sk].stagger || 0 : 0;
-  if (st) e.stagger = (e.stagger || 0) + st;   // stored for the M4 stagger bar
+  if (st) {   // the boss stagger bar (hud.js): fills with heavy hits, BREAK flash when full, then empties
+    e.stagger = (e.stagger || 0) + st;
+    if (e.boss && e.stagger >= STAGGER_CAP) { e.stagger = 0; e.breakT = G.t; }
+  }
   let crit = Math.random() < p.crit;
   if (p.buffs.veil && !o.dot) { crit = true; delete p.buffs.veil; }
   if (crit) dmg *= 1 + p.critDmg;
@@ -583,7 +600,8 @@ function damageEnemy(e, base, o = {}) {
   if (cx && cx.onHit.length) for (const fn of cx.onHit) fn(e, dmg, o);
   // numbers coloured by damage type; WEAK big + yellow, RESIST grey, IMMUNE spelled out
   if (eff >= 1) text(e.x, e.y, e.z + e.hgt, 'IMMUNE', '#9a92b0');
-  else dmgText(e.x, e.y, e.z + e.hgt, Math.round(dmg) + (crit ? '!' : ''), res < 0 ? '#ffe36a' : res > 0 ? '#9a92b0' : EL_COL[el] || '#ffffff', crit || res < 0);
+  else dmgText(e.x, e.y, e.z + e.hgt, Math.round(dmg) + (crit ? '!' : ''), res < 0 ? '#ffe36a' : res > 0 ? '#a7a3b8' : EL_COL[el] || '#ffffff', crit || res < 0,
+    { e, v: dmg, kind: res < 0 ? 'weak' : crit ? 'crit' : res > 0 ? 'resist' : 'normal' });
   if (res && !e.dummy) discoverRes(e, el, res);
   const fxx = o.fx != null ? o.fx : p.x, fyy = o.fy != null ? o.fy : p.y;
   if (o.knock && !e.boss && !e.dummy) {
@@ -702,6 +720,7 @@ function updateZones(dt) {
 }
 
 // ===== enemies ========================================================================
+const STAGGER_CAP = 12, STAGGER_DECAY = 1.2;   // boss stagger bar: heavy hits add 2-3, it drains 1.2/s
 const ENEMY = {
   // element = what its attacks deal; res = hand-authored tiers (-0.5 weak, 0.5 resist, 1 immune); tags: archetype (§5b)
   slime: { name: 'Gloom slime', ai: 'hopper', hp: 170, r: 0.38, speed: 2.0, dmg: 32, range: 1.0, wind: 0.55, cd: 1.1, aoe: 1.15, hgt: 1.8, blood: '#8b7cf6',
@@ -750,6 +769,7 @@ function updateEnemies(dt) {
   for (const e of G.enemies) {
     if (e.dead) continue;
     e.flash -= dt; e.anim += dt;
+    if (e.stagger > 0) e.stagger = Math.max(0, e.stagger - dt * STAGGER_DECAY);
     if (e.spawnT > 0) { e.spawnT -= dt; continue; }
     if (e.dummy) continue;
     const edt = dt * ts * (e.slowT > 0 ? 0.55 : 1);
