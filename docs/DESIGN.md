@@ -404,7 +404,7 @@ Each reaction pops its name in its element colour with its own sound. Seven, no 
 ### 16.1 Commercial-feel polish list
 1. **Hit feedback hierarchy:** enemy white flash 2 frames, 1 px knockback shake, reaction pops with unique sfx, hitstop
    scaled by damage %.
-2. **Music:** a WebAudio step sequencer (16 steps, 3 voices: square / triangle / noise) on the existing `tone()`, one
+2. **Music and sound:** see **`docs/AUDIO.md`** (authoritative). A WebAudio step sequencer (16 steps, 3 voices: square / triangle / noise) on the existing `tone()`, one
    4-bar loop per zone + a boss stinger; pattern tables in data. (M2b)
 3. **Transitions:** rift fade → map-name banner → control hint; the next map pre-rasters during the fade / on portal
    proximity. (M2b)
@@ -785,7 +785,7 @@ shop), reputation, minigames other than fishing (fishing is in, see §13), day/n
   the settings + accessibility screen with the Story/Normal toggle, and the §16.6 "now" performance items 1, 3, 5, 6.
 * **M2b Act I slice** (~25 min playable): Pinewood outer + Root Hollow dungeon + Bramblehorn, hub 40, the data-driven boss
   system with a mini-boss, key/door, levers/gates, dialogue/camera/loot/checkpoint/quest actions, intro and Pip, elites,
-  universal dodge, one side quest, 3 secrets, return-rift, the first Skill Rune drop and 2 Dream Tomes, music sequencer, map pre-rastering and fade transitions, 3 save
+  universal dodge, one side quest, 3 secrets, return-rift, the first Skill Rune drop and 2 Dream Tomes, audio engine + Vale/Pinewood music and core SFX per `docs/AUDIO.md`, map pre-rastering and fade transitions, 3 save
   slots, the first 10 minutes per §16.2, scripted play test.
 * **M3 The Hero & Icons:** layered hero, gear overlays, rarity glow & particles, paper-doll in the new Tab screen, the
   icon set wired into the HUD, hero status-icon row, enemies rescaled, unified `rarityFx`.
