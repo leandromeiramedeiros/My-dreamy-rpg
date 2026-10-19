@@ -40,9 +40,13 @@ function bar(ctx, x, y, w, h, frac, c1, c2, label) {
   if (label) T(ctx, label, x + w / 2, y + Math.round(h / 2 - 4), 8, '#ffffff', 'center');
 }
 
+// every button is also a focus target (UI.focus, shared with gamepad / keyboard menu navigation)
 function btn(ctx, x, y, w, h, fn, hover) {
   G.ui.btns.push({ x, y, w, h, fn, hover });
-  return G.mouse.dx >= x && G.mouse.dx < x + w && G.mouse.dy >= y && G.mouse.dy < y + h;
+  const id = `b${x},${y}`, foc = UI.focus.register({ x, y, w, h }, id, { fn });
+  const over = UI.mouseIn(x, y, w, h);
+  if (over && IN.device === 'kbm' && !UI.focus.nav) UI.focus.set(id);
+  return over || (foc && UI.focus.showing());
 }
 
 // ===== minimap ======================================================================
@@ -177,12 +181,14 @@ function drawHUD(ctx) {
     panel(ctx, x, y, w, 70, true); T(ctx, G.tablet.src.title || 'Lore tablet', x + 16, y + 12, 8, HC.gold);
     wrap(ctx, G.tablet.src.text || '...the words have worn away.', x + 16, y + 30, w - 32, 8, HC.text, 14);
   }
+  const ip = interactPrompt();   // Interact prompt (chests / shrines / tablets)
+  if (ip) T(ctx, `${ip.glyph ? '[' + ip.glyph + ']  ' : ''}${ip.text}`, DW / 2, DH - 210, 8, HC.gold, 'center');
   if (G.msg && G.msg.t > 0) { ctx.globalAlpha = Math.min(1, G.msg.t * 2); T(ctx, G.msg.s, DW / 2, DH - 170, 8, '#ffe6f0', 'center'); ctx.globalAlpha = 1; }
   const near = m.portals.find(pt => pt.open && dist(p.x, p.y, pt.x, pt.y) < 3.2);
   if (near && G.state === 'play') { const [a, b] = zoneLevel(near.to); T(ctx, `A rift to ${(G.world.maps[near.to] || {}).name || near.to} (Lv ${a}-${b}) hums... step in to cross over`, DW / 2, DH - 190, 8, '#e2c8ff', 'center'); }
 
   if (G.touch) { if (G.state === 'play' && !G.ui.open) drawTouchControls(ctx); }
-  else T(ctx, 'TAB inventory   4 potion   H help   M sound', DW - 20, 80, 8, 'rgba(244,236,255,0.6)', 'right', false);
+  else T(ctx, `${IN.glyph('inventory')} inventory   ${IN.glyph('potion')} potion   ${IN.glyph('interact')} interact   ${IN.glyph('help')} help   ${IN.glyph('mute')} sound`, DW - 20, 80, 8, 'rgba(244,236,255,0.6)', 'right', false);
   if (G.ui.help) drawHelp(ctx);
   if (G.ui.open) drawInventory(ctx);
   if (G.state === 'dead') {
@@ -224,7 +230,7 @@ function drawSkillBar(ctx) {
       ctx.fillStyle = '#0a0614'; ctx.fillRect(x - 1, y - 1, 38, 38); drawIcon(ctx, miscIcon('potion'), x + 2, y + 2, 32);
       if (!p.potions) { ctx.fillStyle = 'rgba(10,4,20,0.65)'; ctx.fillRect(x + 2, y + 2, 32, 32); }
       ctx.strokeStyle = '#ff8aa8'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 38, 38);
-      T(ctx, '4', x, y - 2, 8, '#ffffff'); T(ctx, String(p.potions), x + 34, y + 25, 8, '#ffffff', 'right');
+      T(ctx, IN.glyph('potion') || '4', x, y - 2, 8, '#ffffff'); T(ctx, String(p.potions), x + 34, y + 25, 8, '#ffffff', 'right');
       if (G.mouse.dx >= x && G.mouse.dx < x + 36 && G.mouse.dy >= y && G.mouse.dy < y + 36) hoverSkill = { name: 'Health Potion', desc: `Heal 40% of max HP. ${p.potions}/${MAX_POTIONS} charges, refilled at checkpoints.`, cd: 1 };
       x += 38; continue;
     }
@@ -233,7 +239,11 @@ function drawSkillBar(ctx) {
     ctx.fillStyle = '#0a0614'; ctx.fillRect(x - 1, y - 1, 38, 38);
     if (s === 'lmb') drawIcon(ctx, itemIcon(p.equip.weapon), x + 2, y + 2, 32);
     else if (sk) drawIcon(ctx, skillIcon(id), x + 2, y + 2, 32);
-    if (sk) {
+    if (sk && s === 'r') {   // the ultimate charge bar replaces R's cooldown (§15.3)
+      const f = ultCharge(p);
+      if (f < 1) { ctx.fillStyle = 'rgba(10,4,20,0.72)'; ctx.fillRect(x + 2, y + 2, 32, Math.round(32 * (1 - f))); T(ctx, Math.floor(f * 100) + '', x + 18, y + 14, 8, HC.gold, 'center'); }
+      else if (Math.sin(G.t * 8) > 0) { ctx.fillStyle = 'rgba(255,211,90,0.25)'; ctx.fillRect(x + 2, y + 2, 32, 32); }
+    } else if (sk) {
       const cd = p.cds[id] || 0;
       if (cd > 0) { const f = cd / (p.cdm[id] || sk.cd); ctx.fillStyle = 'rgba(10,4,20,0.72)'; ctx.fillRect(x + 2, y + 2, 32, Math.round(32 * f)); T(ctx, cd >= 1 ? Math.ceil(cd) + '' : cd.toFixed(1), x + 18, y + 14, 8, '#ffffff', 'center'); }
       else if ((sk.mp || 0) > p.mp || (sk.st || 0) > p.st) { ctx.fillStyle = 'rgba(40,60,160,0.55)'; ctx.fillRect(x + 2, y + 2, 32, 32); }
@@ -242,7 +252,7 @@ function drawSkillBar(ctx) {
     const isUlt = s === 'r';
     ctx.strokeStyle = isUlt ? HC.gold : (s === 'f' || s === 'c' || s === 'shift' ? '#8fb0ff' : (/\d/.test(s) ? '#ffb0e0' : HC.line));
     ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 38, 38);
-    T(ctx, SLOT_LABEL[s], x, y - 2, 8, '#ffffff');
+    T(ctx, IN.glyph(SLOT_ACTION[s]) || SLOT_LABEL[s], x, y - 2, 8, '#ffffff');
     if (G.mouse.dx >= x && G.mouse.dx < x + 36 && G.mouse.dy >= y && G.mouse.dy < y + 36) hoverSkill = sk ? sk : { name: w.basic.name, desc: `Basic attack of the ${w.name}.`, cd: w.basic.rate };
     x += 38;
   }
@@ -265,9 +275,9 @@ function drawHelp(ctx) {
     ['Drag from a skill', 'Aim, release to cast'], ['Q  E  R', 'Weapon skills (R = ultimate)'], ['F  C  SHF', 'Chest / helmet / boots skills'],
     ['1  2  3', 'Character skills (your choice)'], ['POT', 'Drink a potion (40% HP)'], ['GEAR', 'Inventory, gems & skills'], ['Tap', 'Close this help'],
   ] : [
-    ['WASD / Arrows', 'Move'], ['Mouse', 'Aim'], ['Left click (hold)', 'Weapon basic attack'],
-    ['Q  E  R', 'Weapon skills (R = ultimate)'], ['F', 'Chest armour skill'], ['C', 'Helmet skill'], ['Shift / Space', 'Boots skill'],
-    ['1  2  3', 'Character skills (your choice)'], ['4', 'Drink a potion (40% HP)'], ['TAB / I', 'Inventory, gems & skills'],
+    ['WASD / Arrows', 'Move'], ['Mouse', 'Aim'], ['Left click (hold)', 'Attack (+8 MP per hit)'],
+    ['Q  E  R', 'Weapon skills (R = ultimate, charges)'], ['F  /  C', 'Chest / helmet skill'], ['Shift / RMB', 'Dodge (boots skill)'],
+    ['1  2  3', 'Character skills (your choice)'], ['4  /  Space', 'Potion  /  interact'], ['TAB / I', 'Inventory, gems & skills'],
   ];
   lines.forEach(([k, v], i) => { T(ctx, k, x + 30, y + 52 + i * 20, 8, '#ffe08a'); T(ctx, v, x + 230, y + 52 + i * 20, 8, HC.text); });
   T(ctx, 'Like Albion: you are what you wear. Gear decides', x + 30, y + 262, 8, HC.dim);
@@ -395,7 +405,7 @@ function drawDetails(ctx, x, y, w, h, what) {
     line('In armour:', HC.dim); for (const [k, v] of Object.entries(g.def.arm(g.grade))) line(fmtStat(k, v), '#9fd0ff');
     line('In weapon:', HC.dim); for (const [k, v] of Object.entries(g.def.wpn(g.grade))) line(fmtStat(k, v), '#9fd0ff');
     line(''); line(`Amplifies: ${g.def.amp}`, HC.gold);
-    line(g.type === 'diamond' ? `-${Math.round(g.grade * 5)}% ultimate cooldown` : g.type === 'topaz' ? `+${g.grade * 5}% lightning dmg, chains +1 per 2 grades` : `+${g.grade * 5}% ${g.def.el} skill damage`, HC.text);
+    line(g.type === 'diamond' ? `+${Math.round(g.grade * 5)}% ultimate charge` : g.type === 'topaz' ? `+${g.grade * 5}% lightning dmg, chains +1 per 2 grades` : `+${g.grade * 5}% ${g.def.el} skill damage`, HC.text);
     line(''); line(what.sock ? 'Click the socket to remove it' : 'Pick it, then click a socket', HC.dim);
   } else {
     const it = what.it; if (!it || !BASES[it.base]) return;   // stale focus (gem used up, item salvaged)
@@ -482,7 +492,7 @@ function drawTitle(ctx) {
   T(ctx, 'MY DREAMY RPG', DW / 2 + 3, y + 3, 32, '#3a1a5a', 'center', false);
   T(ctx, 'MY DREAMY RPG', DW / 2, y, 32, '#ffe6f6', 'center', false);
   T(ctx, 'a high-fantasy dream above the clouds', DW / 2, y + 52, 8, '#ffd6ec', 'center');
-  const s = G.save, bw = 300, bx = DW / 2 - bw / 2;
+  const s = G.save && { level: G.save.player.level, map: G.save.world.map }, bw = 300, bx = DW / 2 - bw / 2;
   const button = (by, h, label, sub, fn, gold) => {
     const hov = btn(ctx, bx, by, bw, h, fn);
     panel(ctx, bx, by, bw, h, hov || gold);
@@ -490,7 +500,7 @@ function drawTitle(ctx) {
     if (sub) T(ctx, sub, DW / 2, by + 32, 8, HC.dim, 'center');
   };
   if (s) {
-    button(286, 48, 'CONTINUE', `Lv ${s.level}  ·  ${(G.world.maps[s.map] || {}).name || ''}`, () => continueGame(s), true);
+    button(286, 48, 'CONTINUE', `Lv ${s.level}  ·  ${(G.world.maps[s.map] || {}).name || ''}`, () => continueGame(G.save), true);
     const sure = G.ui.confirmNew > G.t;
     button(344, 30, sure ? 'CLICK AGAIN TO ERASE SAVE' : 'NEW GAME', '', () => { if (sure) newGame(); else G.ui.confirmNew = G.t + 3; });
   } else {

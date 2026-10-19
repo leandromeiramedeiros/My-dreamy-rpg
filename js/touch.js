@@ -4,17 +4,24 @@
 //  * left side: a floating joystick wherever the thumb lands;
 //  * right side: a big attack button (hold) ringed by the skill buttons.
 //    Tap a skill to auto-target the nearest enemy, or drag from it to aim and release to cast.
-// The touch aim drives a "virtual cursor" (G.mouse) so the rest of the game is input-agnostic.
+// Touch feeds the same ACTIONS as keyboard and pad (input.js): IN.touchMove / touchHold('attack') / touchTap(skill).
+// The touch aim drives the virtual cursor (G.mouse) that game.js resolveAim() hands to the cast.
+// Double-tap attack = dodge toward the movement direction; a context Interact button takes the potion's place
+// (the potion moves up a row) while a chest / shrine / tablet is in reach.
 // ---------------------------------------------------------------------------
 const TOUCH_CAPABLE = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window;
-const TOUCH = { ptrs: {}, lastDir: [1, 0] };
+const TOUCH = { ptrs: {}, lastDir: [1, 0], pendingAim: null, lastAtkT: -9 };
 const TC = { cx: DW - 92, cy: DH - 92 };
+const leftHanded = () => typeof SETTINGS !== 'undefined' && SETTINGS.leftHanded;
 
 function touchButtons() {
-  const B = [{ slot: 'atk', x: TC.cx, y: TC.cy, r: 42 }];
-  ['q', 'e', 'r'].forEach((s, i) => { const a = (190 + i * 35) * Math.PI / 180; B.push({ slot: s, x: TC.cx + Math.cos(a) * 100, y: TC.cy + Math.sin(a) * 100, r: 27 }); });
-  ['f', 'c', 'shift', '1', '2', '3'].forEach((s, i) => { const a = (180 + i * 19) * Math.PI / 180; B.push({ slot: s, x: TC.cx + Math.cos(a) * 168, y: TC.cy + Math.sin(a) * 168, r: 24 }); });
-  B.push({ slot: 'pot', x: TC.cx + 46, y: TC.cy - 96, r: 22 });   // health potion (key 4)
+  const L = leftHanded(), cx = L ? 92 : TC.cx, cy = TC.cy, m = L ? -1 : 1;   // left-handed: mirrored cluster
+  const B = [{ slot: 'atk', x: cx, y: cy, r: 42 }];
+  ['q', 'e', 'r'].forEach((s, i) => { const a = (190 + i * 35) * Math.PI / 180; B.push({ slot: s, x: cx + Math.cos(a) * 100 * m, y: cy + Math.sin(a) * 100, r: 27 }); });
+  ['f', 'c', 'shift', '1', '2', '3'].forEach((s, i) => { const a = (180 + i * 19) * Math.PI / 180; B.push({ slot: s, x: cx + Math.cos(a) * 168 * m, y: cy + Math.sin(a) * 168, r: 24 }); });
+  const near = typeof G !== 'undefined' && G.prompt;
+  if (near) B.push({ slot: 'interact', x: cx + 46 * m, y: cy - 96, r: 22 });
+  B.push({ slot: 'pot', x: cx + 46 * m, y: cy - 96 - (near ? 52 : 0), r: 22 });   // health potion
   return B;
 }
 const TOUCH_MENU = [
@@ -44,14 +51,13 @@ function initTouch() {
   DISP.addEventListener('pointermove', onTouchMove, { passive: false });
   DISP.addEventListener('pointerup', onTouchUp);
   DISP.addEventListener('pointercancel', onTouchUp);
-  // a mouse moving again switches the HUD back to desktop layout
-  DISP.addEventListener('pointermove', ev => { if (ev.pointerType === 'mouse' && G.touch && Math.abs(ev.movementX) + Math.abs(ev.movementY) > 2) G.touch = false; });
+  // a mouse moving again switches the HUD back to desktop layout: input.js (IN.device -> 'kbm')
 }
 
 function onTouchDown(ev) {
   if (ev.pointerType !== 'touch' && ev.pointerType !== 'pen') return;
   ev.preventDefault();               // also suppresses the emulated mouse events
-  G.touch = true; initAudio();
+  IN.setDevice('touch'); G.touch = true; initAudio();
   try { DISP.setPointerCapture(ev.pointerId); } catch (e) { /* ignore */ }
   const [x, y] = toDisplay(ev);
   G.mouse.dx = x; G.mouse.dy = y;
@@ -60,7 +66,7 @@ function onTouchDown(ev) {
   if (G.ui.help) { G.ui.help = false; return; }
   if (G.ui.open) { uiClick(x, y); return; }
   for (const m of TOUCH_MENU) if (x >= m.x && x < m.x + m.w && y >= m.y && y < m.y + m.h) {
-    if (m.id === 'gear') { if (G.state === 'play') openInv(); }
+    if (m.id === 'gear') { if (G.state === 'play') IN.touchTap('inventory'); }
     else if (m.id === 'help') G.ui.help = true;
     else tryFullscreen();
     return;
@@ -68,12 +74,20 @@ function onTouchDown(ev) {
   for (const b of touchButtons()) {
     if (Math.hypot(x - b.x, y - b.y) < b.r + 8) {
       TOUCH.ptrs[ev.pointerId] = { kind: 'btn', b, sx: x, sy: y, x, y };
-      if (b.slot === 'atk') { G.mouse.down = true; basicAttack(G.player); }
-      if (b.slot === 'pot') { delete TOUCH.ptrs[ev.pointerId]; drinkPotion(G.player); }
+      if (b.slot === 'atk') {
+        IN.touchHold('attack', true);
+        // double-tap attack = dodge toward the movement direction
+        if (G.t - TOUCH.lastAtkT < 0.3 && (typeof SETTINGS === 'undefined' || SETTINGS.doubleTapDodge)) {
+          const p = G.player, mv = IN.move, w = mv.mag > 0 ? viewDirToWorld(mv.x, mv.y) : [Math.cos(p.aim), Math.sin(p.aim)];
+          TOUCH.pendingAim = { wx: p.x + w[0] * 3, wy: p.y + w[1] * 3 }; IN.touchTap('dodge'); TOUCH.lastAtkT = -9;
+        } else TOUCH.lastAtkT = G.t;
+      }
+      if (b.slot === 'pot') { delete TOUCH.ptrs[ev.pointerId]; IN.touchTap('potion'); }
+      if (b.slot === 'interact') { delete TOUCH.ptrs[ev.pointerId]; IN.touchTap('interact'); }
       return;
     }
   }
-  if (x < DW * 0.6) TOUCH.ptrs[ev.pointerId] = { kind: 'stick', sx: x, sy: y, x, y };
+  if (leftHanded() ? x > DW * 0.4 : x < DW * 0.6) TOUCH.ptrs[ev.pointerId] = { kind: 'stick', sx: x, sy: y, x, y };
 }
 function onTouchMove(ev) {
   const t = TOUCH.ptrs[ev.pointerId]; if (!t) return;
@@ -85,33 +99,38 @@ function onTouchMove(ev) {
     if (l > 1) { // the base follows the thumb so you never run out of stick
       t.sx += (t.x - t.sx) * (1 - 1 / l); t.sy += (t.y - t.sy) * (1 - 1 / l); vx /= l; vy /= l;
     }
-    G.touchMove = l < 0.15 ? null : { x: vx, y: vy };
+    IN.touchMove(l < 0.15 ? null : { x: vx, y: vy });
   }
 }
 function onTouchUp(ev) {
   const t = TOUCH.ptrs[ev.pointerId]; if (!t) return;
   delete TOUCH.ptrs[ev.pointerId];
-  if (t.kind === 'stick') { G.touchMove = null; return; }
-  if (t.b.slot === 'atk') { G.mouse.down = Object.values(TOUCH.ptrs).some(p => p.kind === 'btn' && p.b.slot === 'atk'); return; }
+  if (t.kind === 'stick') { IN.touchMove(null); return; }
+  if (t.b.slot === 'atk') { IN.touchHold('attack', Object.values(TOUCH.ptrs).some(p => p.kind === 'btn' && p.b.slot === 'atk')); return; }
   if (G.state !== 'play' || G.fadeDir) return;
   const p = G.player;
-  touchAim(p, t);               // resolve the final aim for this cast
-  useSkill(p, t.b.slot);
+  touchAim(p, t);               // resolve the final aim for this cast; resolveAim() uses it on the next step
+  TOUCH.pendingAim = { wx: G.mouse.wx, wy: G.mouse.wy };
+  IN.touchTap(SLOT_ACTION[t.b.slot]);
 }
 const dragging = t => t && t.kind === 'btn' && Math.hypot(t.x - t.sx, t.y - t.sy) > 16;
-function activeAimPtr() { return Object.values(TOUCH.ptrs).find(t => t.kind === 'btn' && t.b.slot !== 'atk' && t.b.slot !== 'pot'); }
+function activeAimPtr() { return Object.values(TOUCH.ptrs).find(t => t.kind === 'btn' && t.b.slot !== 'atk' && t.b.slot !== 'pot' && t.b.slot !== 'interact'); }
 
 // Sets the virtual cursor: dragged skill > dragged attack > nearest enemy > movement direction.
 function touchAim(p, forced) {
+  if (!forced && TOUCH.pendingAim) {   // a released skill / double-tap dodge: aim exactly where it was released
+    G.mouse.wx = TOUCH.pendingAim.wx; G.mouse.wy = TOUCH.pendingAim.wy; TOUCH.pendingAim = null;
+    const [vx, vy] = worldToView(G.mouse.wx, G.mouse.wy, p.z); G.mouse.x = vx; G.mouse.y = vy; return;
+  }
   const t = forced || activeAimPtr() || Object.values(TOUCH.ptrs).find(q => q.kind === 'btn');
   let dir = null, d = 3;
   if (dragging(t)) {
     const w = toWorld((t.x - t.sx) / 2, (t.y - t.sy) / 2), l = Math.hypot(w[0], w[1]) || 1;
     dir = [w[0] / l, w[1] / l]; d = clamp(Math.hypot(t.x - t.sx, t.y - t.sy) / 80 * 7, 1.5, 7);
   } else {
-    const e = nearestEnemy(p.x, p.y, 9, null);
+    const e = typeof aimAssistCone === 'function' && aimAssistCone() === 0 ? null : autoTarget(p, 9, null, 0);   // prefers elites/bosses + last hit
     if (e) { const l = dist(p.x, p.y, e.x, e.y) || 1; dir = [(e.x - p.x) / l, (e.y - p.y) / l]; d = l; }
-    else if (G.touchMove) { const m = G.touchMove, wx = m.x + m.y, wy = m.y - m.x, l = Math.hypot(wx, wy) || 1; dir = [wx / l, wy / l]; }
+    else if (IN.move.mag > 0) { const m = IN.move, wx = m.x + m.y, wy = m.y - m.x, l = Math.hypot(wx, wy) || 1; dir = [wx / l, wy / l]; }
   }
   if (dir) TOUCH.lastDir = dir; else dir = TOUCH.lastDir;
   G.mouse.wx = p.x + dir[0] * d; G.mouse.wy = p.y + dir[1] * d;
@@ -147,6 +166,12 @@ function drawTouchControls(ctx) {
       if (!p.potions) { ctx.fillStyle = 'rgba(10,4,20,0.6)'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill(); }
       ctx.strokeStyle = '#ff8aa8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke();
       T(ctx, String(p.potions), b.x + b.r - 6, b.y + b.r - 10, 8, '#ffffff');
+      continue;
+    }
+    if (b.slot === 'interact') {
+      ctx.fillStyle = 'rgba(18,10,36,0.7)'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = HC.gold; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke();
+      T(ctx, G.prompt ? G.prompt.text.split(' ')[0].toUpperCase() : 'USE', b.x, b.y - 4, 8, HC.gold, 'center');
       continue;
     }
     const id = b.slot === 'atk' ? null : slotSkill(p, b.slot), sk = id ? SKILLS[id] : null;

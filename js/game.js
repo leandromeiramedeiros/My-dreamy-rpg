@@ -181,11 +181,17 @@ function slotSkill(p, slot) {
 const SLOT_ACTION = { lmb: 'attack', q: 'skillQ', e: 'skillE', r: 'skillR', f: 'skillF', c: 'skillC', shift: 'dodge', 1: 's1', 2: 's2', 3: 's3', pot: 'potion' };
 const CANCEL_AFTER = 0.1;            // dodge cancels a cast only after its first 0.1 s (buffered until then)
 const RANK_HITS = 25, RANK_MAX = 5, RANK_BONUS = 0.06;
+// Every cast — skills AND basic attacks — carries ONE mutable ctx, created in useSkill / basicAttack and threaded
+// (via CAST -> delays, projectiles, zones, dashes) into every hit it produces: damageEnemy reads cast.ctx.
+//   ctx = { dmg, r, stun, slow, burn, cd, mp, dur (multipliers), extraProj, count, stagger, element, rank, onHit:[] }
+// onHit[] = fn(enemy, dmg, opts) called per hit (the M4 EFFECTS layer hooks here). Single call sites for M4's bus:
+// cast = useSkill / basicAttack, dodge = useSkill(slot 'shift'), hit = damageEnemy, kill = killEnemy.
 // SKILL_MODS: data only. { id: { id, skill, rank: 3|5, name, desc, apply(ctx) } } — apply() may only change the
 // numbers on ctx (dmg r stun slow burn cd mp dur extraProj are multipliers / counts, element a damage type).
 // Content arrives later (M4); the slots open at ranks 3 and 5.
 const SKILL_MODS = {};
-const MOD_NUM_KEYS = ['dmg', 'r', 'stun', 'slow', 'burn', 'cd', 'mp', 'dur', 'extraProj'];
+const MOD_NUM_KEYS = ['dmg', 'r', 'stun', 'slow', 'burn', 'cd', 'mp', 'dur', 'extraProj', 'count', 'stagger'];
+const newCtx = (element, stagger = 0, rank = 1) => ({ dmg: 1, r: 1, stun: 1, slow: 1, burn: 1, cd: 1, mp: 1, dur: 1, extraProj: 0, count: 1, stagger, element, rank, onHit: [] });
 const skillRank = (p, id) => Math.min(RANK_MAX, 1 + Math.floor(((p.ranks[id] && p.ranks[id].hits) || 0) / RANK_HITS));
 const skillRankBonus = (p, id) => RANK_BONUS * (skillRank(p, id) - 1);
 function skillRankProgress(p, id) {
@@ -206,7 +212,7 @@ function chooseSkillMod(p, id, rank, modId) {
 }
 // numbers-only cast context: rank bonus lives in damageEnemy's additive sum; mods multiply these
 function skillCtx(p, id, s) {
-  const ctx = { dmg: 1, r: 1, stun: 1, slow: 1, burn: 1, cd: 1, mp: 1, dur: 1, extraProj: 0, element: s.element, rank: skillRank(p, id) };
+  const ctx = newCtx(s.element, s.stagger || 0, skillRank(p, id));
   const ch = p.mods[id] || {};
   for (const rank of [3, 5]) {
     const m = SKILL_MODS[ch[rank]]; if (!m || m.skill !== id || ctx.rank < rank || typeof m.apply !== 'function') continue;
@@ -215,6 +221,7 @@ function skillCtx(p, id, s) {
     for (const k of MOD_NUM_KEYS) if (typeof ctx[k] !== 'number' || !isFinite(ctx[k])) ctx[k] = before[k];
     if (typeof ctx.element !== 'string' || !EL_COL[ctx.element]) ctx.element = before.element;
     ctx.rank = before.rank;
+    if (!Array.isArray(ctx.onHit)) ctx.onHit = before.onHit;
   }
   return ctx;
 }
@@ -283,7 +290,12 @@ function castAnim(p, t = 0.25) { p.castT = t; }
 
 function basicAttack(p) {
   if (p.atkT > 0 || p.dash || p.dead || p.rootT > 0 || castActive(p)) return;   // skills never cancel into attacks
-  const w = item('weapon', p.gear.weapon), a = p.aim;
+  const w = item('weapon', p.gear.weapon);
+  // basic attacks are casts too (skill: null, basic: true) so their hits carry a ctx; they build MP on hit
+  withCast({ skill: null, basic: true, el: w.element || 'slash', slot: 'lmb', ctx: newCtx(w.element || 'slash') }, () => basicSwing(p, w));
+}
+function basicSwing(p, w) {
+  const a = p.aim;
   p.atkT = w.basic.rate / (1 + p.haste);
   if (w.kind === 'sword') {
     p.combo = (p.combo + 1) % 3;
@@ -531,13 +543,14 @@ function damageEnemy(e, base, o = {}) {
   const p = G.player, c = o.cast !== undefined ? o.cast : CAST;
   // damage type: explicit > the skill's element > the weapon's (sword slash, staff arcane, bow pierce); burn ticks are fire
   const el = o.el || (o.dot ? 'fire' : c ? c.el : item('weapon', p.gear.weapon).element) || 'slash';
+  const sk = c && c.skill ? c.skill : null;   // a skill cast (basic attacks run with c.basic, burn ticks with o.dot)
   // one additive sum: gear damage % (+ skill damage % and the element's gem amplification for skill hits)
   // skill rank (+6 %/rank above 1) joins the same additive sum; modifier ctx.dmg multiplies (numbers only)
   const cx = c && c.ctx;
-  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (c ? p.skillDmg + elementAmp(p, el) + (c.skill ? skillRankBonus(p, c.skill) : 0) : 0)) * buffMul(p) * (cx ? cx.dmg : 1);
+  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (sk ? p.skillDmg + elementAmp(p, el) + skillRankBonus(p, sk) : 0)) * buffMul(p) * (cx ? cx.dmg : 1);
   const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
   dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
-  const st = o.stagger != null ? o.stagger : c && SKILLS[c.skill] ? SKILLS[c.skill].stagger || 0 : 0;
+  const st = o.stagger != null ? o.stagger : cx ? cx.stagger || 0 : sk && SKILLS[sk] ? SKILLS[sk].stagger || 0 : 0;
   if (st) e.stagger = (e.stagger || 0) + st;   // stored for the M4 stagger bar
   let crit = Math.random() < p.crit;
   if (p.buffs.veil && !o.dot) { crit = true; delete p.buffs.veil; }
@@ -548,10 +561,11 @@ function damageEnemy(e, base, o = {}) {
   e.flash = 0.1;
   if (!o.dot) G.lastHit = e;
   // §15.3 resource rhythm: basic attacks (CAST null) build 8 MP per hit; all damage but the ultimate's own feeds the charge
-  if (!c && !o.dot) p.mp = Math.min(p.maxMp, p.mp + G.tune.player.mpOnHit);
+  if ((!c || c.basic) && !o.dot) p.mp = Math.min(p.maxMp, p.mp + G.tune.player.mpOnHit);
   if (eff < 1 && !(c && c.slot === 'r') && p.ult < 100) p.ult = Math.min(100, p.ult + ultGain(p, base * (1 - eff), o.reaction));
   // skill ranks: a cast counts once, on its first hit on a real enemy (training dummies don't rank skills)
-  if (c && c.slot && !c.hit && !o.dot && !e.dummy) { c.hit = true; addSkillHit(p, c.skill); }
+  if (sk && c.slot && !c.hit && !o.dot && !e.dummy) { c.hit = true; addSkillHit(p, sk); }
+  if (cx && cx.onHit.length) for (const fn of cx.onHit) fn(e, dmg, o);
   // numbers coloured by damage type; WEAK big + yellow, RESIST grey, IMMUNE spelled out
   if (eff >= 1) text(e.x, e.y, e.z + e.hgt, 'IMMUNE', '#9a92b0');
   else dmgText(e.x, e.y, e.z + e.hgt, Math.round(dmg) + (crit ? '!' : ''), res < 0 ? '#ffe36a' : res > 0 ? '#9a92b0' : EL_COL[el] || '#ffffff', crit || res < 0);

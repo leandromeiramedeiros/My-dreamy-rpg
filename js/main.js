@@ -4,14 +4,19 @@
 // ---------------------------------------------------------------------------
 const DISP = document.getElementById('game');
 const dctx = DISP.getContext('2d');
-DISP.width = DW; DISP.height = DH;
-
+// HUD at min(devicePixelRatio, 2) (§16.6.6): the backing store is DW*k x DH*k and every draw keeps using the
+// 960x540 coordinate space through one transform; the scene stays 480x270 and is scaled up into it.
+let HUD_K = 1;
 function fit() {
   const s = Math.min(window.innerWidth / DW, window.innerHeight / DH);
   DISP.style.width = Math.floor(DW * s) + 'px';
   DISP.style.height = Math.floor(DH * s) + 'px';
+  const k = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+  if (k !== HUD_K || DISP.width !== DW * k) { HUD_K = k; DISP.width = DW * k; DISP.height = DH * k; }
+  dctx.setTransform(HUD_K, 0, 0, HUD_K, 0, 0); dctx.imageSmoothingEnabled = false;
 }
 window.addEventListener('resize', fit); fit();
+IN.init(DISP);
 initTouch();
 
 const PARAMS = new URLSearchParams(location.search);
@@ -45,7 +50,7 @@ const deathXpLoss = p => Math.min(Math.floor(p.xp), Math.round(xpToNext(p.level)
 function respawn() {
   const p = G.player;
   p.xp -= deathXpLoss(p);
-  p.dead = false; p.buffs = {}; p.cds = {}; recalcStats(p, true); p.potions = MAX_POTIONS;
+  p.dead = false; p.buffs = {}; p.cds = {}; p.cast = null; p.ult = 0; recalcStats(p, true); p.potions = MAX_POTIONS;
   G.state = 'play';
   const cp = G.checkpoint && G.world.maps[G.checkpoint.map] ? G.checkpoint : null;
   enterMap(cp ? cp.map : G.map.id, cp);
@@ -55,6 +60,9 @@ function respawn() {
 // ===== update =========================================================================
 function update(dt, rdt) {
   G.t += rdt;
+  if (G.state === 'play') G.stats.playtime += rdt;
+  IN.update(rdt);
+  handleInput();
   const p = G.player, m = G.map;
   if (G.banner) G.banner.t -= rdt;
   if (G.msg) G.msg.t -= rdt;
@@ -81,13 +89,7 @@ function update(dt, rdt) {
   updateAmbient(rdt);
   for (const e of G.effects) { e.t += dt; if (e.t >= e.life) { e.done = true; if (e.onDone) e.onDone(e); } }
   G.effects = G.effects.filter(e => !e.done);
-  for (const q of G.parts) {
-    q.t += rdt; q.x += q.vx * rdt; q.y += q.vy * rdt; q.vz -= q.grav * rdt; q.z += q.vz * rdt;
-    if (q.z < 0 && !q.petal) { q.z = 0; q.vz *= -0.3; q.vx *= 0.6; q.vy *= 0.6; }
-    if (q.petal) { q.x += Math.sin(G.t * 2 + q.y) * rdt * 0.3; if (q.z < tileH(m, q.x, q.y)) { q.vz = 0; q.vx = 0; q.vy = 0; } }
-  }
-  G.parts = G.parts.filter(q => q.t < q.life);
-  if (G.parts.length > 600) G.parts.splice(0, G.parts.length - 600);   // DESIGN §0 hard cap
+  updateParts(rdt, m);   // pooled, hard cap PART.cap (game.js)
   for (const t of G.texts) t.t += rdt;
   G.texts = G.texts.filter(t => t.t < (t.life || 0.9));
   G.shakeA = Math.max(0, G.shakeA - rdt * 30);
@@ -105,7 +107,10 @@ function render() {
   drawScene();
   dctx.imageSmoothingEnabled = false;
   dctx.drawImage(SCN.c, 0, 0, DW, DH);
+  UI.begin();
   drawHUD(dctx);
+  if (G.ui.open || G.state === 'title') UI.focus.draw(dctx);
+  UI.drawToasts(dctx);
   if (G.fade > 0) {
     const g = dctx.createRadialGradient(DW / 2, DH / 2, 0, DW / 2, DH / 2, DW * 0.7);
     g.addColorStop(0, `rgba(255,240,255,${G.fade})`); g.addColorStop(1, `rgba(199,168,255,${G.fade})`);
@@ -113,69 +118,92 @@ function render() {
   }
 }
 
-let last = performance.now();
+// Fixed-step update at 1/60 s with an accumulator (§16.6.3): deterministic reactions, hitstop and scripted
+// tests; render once per display frame. Slow-mo and hitstop scale/zero the game step, never its size.
+const STEP = 1 / 60;
+let last = performance.now(), acc = 0, running = true, frameEma = 16.7;
 function loop(now) {
-  let rdt = Math.min(0.05, (now - last) / 1000); last = now;
-  if (G.slowmo > 0) { G.slowmo -= rdt; rdt *= 0.35; }
-  let dt = rdt;
-  if (G.hitstopT > 0) { G.hitstopT -= rdt; dt = 0; }
-  update(dt, rdt);
+  if (!running) return;
+  const fdt = Math.min(0.25, (now - last) / 1000); last = now;
+  frameEma += (fdt * 1000 - frameEma) * 0.05;
+  // particle budget follows the measured frame time: shed motes first when a device struggles
+  PART.budget = clamp(PART.budget + (frameEma > 20 ? -0.02 : frameEma < 17.5 ? 0.01 : 0), 0.35, 1);
+  acc += fdt;
+  let n = 0;
+  while (acc >= STEP && n < 5) {
+    let rdt = STEP;
+    if (G.slowmo > 0) { G.slowmo -= rdt; rdt *= 0.35; }
+    let dt = rdt;
+    if (G.hitstopT > 0) { G.hitstopT -= rdt; dt = 0; }
+    update(dt, rdt);
+    acc -= STEP; n++;
+  }
+  if (n === 5) acc = 0;   // spiral-of-death guard after a long stall
   render();
   requestAnimationFrame(loop);
 }
+// pause the loop while the tab is hidden; resume without a time jump
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { running = false; if (G.ui && !G.ui.open && G.state === 'play') saveGame(); }
+  else if (!running && window.__ready) { running = true; last = performance.now(); acc = 0; requestAnimationFrame(loop); }
+});
 
-// ===== input ===========================================================================
-const SKILL_KEYS = { q: 'q', e: 'e', r: 'r', f: 'f', c: 'c', '1': '1', '2': '2', '3': '3', shift: 'shift', ' ': 'shift' };
-window.addEventListener('keydown', ev => {
-  const k = ev.key.toLowerCase();
-  if (k === 'tab' || k === ' ' || k.startsWith('arrow')) ev.preventDefault();
-  if (G.state === 'title') { if (k === 'enter' || k === ' ') titleDefault(); return; }
-  if (ev.repeat && k !== 'w' && k !== 'a' && k !== 's' && k !== 'd') return;
-  G.keys[k] = true;
-  if (k === 'tab' || k === 'i') { if (G.ui.open) closeInv(); else if (G.state === 'play') openInv(); G.ui.help = false; return; }
-  if (k === 'escape') { closeInv(); G.ui.help = false; return; }
-  if (k === 'h') { G.ui.help = !G.ui.help; closeInv(); return; }
-  if (k === 'm') { G.muted = !G.muted; say(G.muted ? 'Sound off' : 'Sound on'); return; }
-  if (G.ui.open || G.state !== 'play' || G.fadeDir) return;
-  if (k === '4') { drinkPotion(G.player); return; }
-  if (SKILL_KEYS[k]) useSkill(G.player, SKILL_KEYS[k]);
-});
-window.addEventListener('keyup', ev => { G.keys[ev.key.toLowerCase()] = false; });
-window.addEventListener('blur', () => { G.keys = {}; G.mouse.down = false; });
-function mousePos(ev) {
-  const r = DISP.getBoundingClientRect();
-  G.mouse.dx = (ev.clientX - r.left) / r.width * DW;
-  G.mouse.dy = (ev.clientY - r.top) / r.height * DH;
-  G.mouse.x = G.mouse.dx / 2; G.mouse.y = G.mouse.dy / 2;
+// ===== input: actions (js/input.js) -> game ============================================================
+// Menus, title, death and help read actions here, once per step; gameplay actions are read in game.js
+// playerActions() after the aim resolves. Mouse clicks on UI keep going through uiClick (hit regions).
+const MENU_TABS = ['inv', 'skills'];
+function handleInput() {
+  if (IN.pressed('mute')) { G.muted = !G.muted; if (typeof setSetting === 'function') setSetting('muted', G.muted); say(G.muted ? 'Sound off' : 'Sound on'); }
+  if (IN.capturing()) return;
+  const nav = () => { for (const [a, d] of [['menuUp', 'up'], ['menuDown', 'down'], ['menuLeft', 'left'], ['menuRight', 'right']]) if (IN.pressed(a)) UI.focus.move(d); };
+  if (G.state === 'title') {
+    nav();
+    if (IN.pressed('accept') || IN.pressed('interact') || IN.pressed('pause')) { initAudio(); if (UI.focus.showing() && UI.focus.current()) UI.focus.accept(); else titleDefault(); }
+    return;
+  }
+  if (G.state === 'dead') { if ((IN.pressed('accept') || IN.pressed('attack') || IN.pressed('interact')) && G.deadT > 1) respawn(); return; }
+  if (G.ui.help) { if (IN.pressed('accept') || IN.pressed('back') || IN.pressed('help') || IN.pressed('pause') || IN.pressed('interact')) G.ui.help = false; return; }
+  if (G.ui.open) {
+    if (IN.pressed('inventory') || IN.pressed('back') || IN.pressed('pause')) { closeInv(); return; }
+    nav();
+    if (IN.pressed('accept')) UI.focus.accept();
+    if (IN.pressed('menuAlt')) UI.focus.alt();
+    const dt = IN.pressed('tabNext') ? 1 : IN.pressed('tabPrev') ? -1 : 0;
+    if (dt) { const i = MENU_TABS.indexOf(G.ui.tab || 'inv'); G.ui.tab = MENU_TABS[(i + dt + MENU_TABS.length) % MENU_TABS.length]; G.ui.gem = null; G.ui.salvage = false; }
+    return;
+  }
+  if (G.state !== 'play' || G.fadeDir) return;
+  if (IN.pressed('inventory')) { openInv(); IN.consume('Mouse0'); return; }
+  if (IN.pressed('help')) { G.ui.help = true; return; }
+  if (IN.pressed('pause') && IN.device === 'pad') { G.ui.help = true; return; }   // stand-in until the pause screen
 }
-DISP.addEventListener('mousemove', mousePos);
 DISP.addEventListener('mousedown', ev => {
-  mousePos(ev); initAudio();
-  if (G.state === 'title') { titleClick(G.mouse.dx, G.mouse.dy); return; }
-  if (G.state === 'dead') { if (G.deadT > 1) respawn(); return; }
-  if (G.ui.help) { G.ui.help = false; return; }
-  if (G.ui.open) { uiClick(G.mouse.dx, G.mouse.dy, ev.button === 2); return; }
-  if (ev.button === 0) { G.mouse.down = true; basicAttack(G.player); }
+  initAudio();
+  if (G.state === 'title') { titleClick(G.mouse.dx, G.mouse.dy); IN.consume('Mouse' + ev.button); return; }
+  if (G.state === 'dead') { if (G.deadT > 1) respawn(); IN.consume('Mouse' + ev.button); return; }
+  if (G.ui.help) { G.ui.help = false; IN.consume('Mouse' + ev.button); return; }
+  if (G.ui.open) { uiClick(G.mouse.dx, G.mouse.dy, ev.button === 2); IN.consume('Mouse' + ev.button); }
 });
-window.addEventListener('mouseup', () => { G.mouse.down = false; });
 DISP.addEventListener('contextmenu', ev => ev.preventDefault());
 // ===== title: Continue (when a save exists) / New Game ===================================
 function uiClick(x, y, alt) {
   for (const b of G.ui.btns) if (x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) { b.fn(alt); return true; }
-  return false;
+  return UI.click(x, y, alt);
 }
 function beginPlay() { G.state = 'play'; initAudio(); G.banner = { s: G.map.name, sub: G.map.sub, t: 3.2, max: 3.2 }; }
 function newGame() {
-  clearSave(); G.prog = { chests: {}, firsts: {}, trig: {} }; G.seen = {}; G.checkpoint = null;
+  clearSave(); G.prog = { chests: {}, firsts: {}, trig: {} }; G.seen = {}; G.checkpoint = null; G.stats = { playtime: 0, deaths: 0 };
   G.player = makePlayer(); G.state = 'title'; enterMap(G.world.start); beginPlay();
   G.checkpoint = { map: G.map.id, x: G.map.start.x, y: G.map.start.y };   // wake in the hub until a shrine is touched
 }
 function continueGame(s) {
   G.player = makePlayer(); applySave(G.player, s);
-  const id = G.world.maps[s.map] ? s.map : G.world.start, cp = G.checkpoint && G.checkpoint.map === id ? G.checkpoint : null;
+  const sm = s.world && s.world.map, id = G.world.maps[sm] ? sm : G.world.start, cp = G.checkpoint && G.checkpoint.map === id ? G.checkpoint : null;
   enterMap(id, cp); beginPlay();
 }
 G.save = SAVE_ON ? readSave() : null;
+if (G.save && G.save.bindings) IN.setBindings(G.save.bindings);   // the title screen already uses the player's bindings
+if (G.save && G.save.settings) applySettings(G.save.settings);
 function titleDefault() { if (G.save) continueGame(G.save); else newGame(); }
 // a click that misses the buttons does the default (Continue, else New Game)
 function titleClick(x, y) { initAudio(); if (!uiClick(x, y)) titleDefault(); }

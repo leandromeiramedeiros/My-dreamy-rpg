@@ -85,13 +85,13 @@ function updateAmbient(dt) {
   // petals from blossom trees
   if (m.themeId === 'vale' && Math.random() < dt * 6) {
     const blossoms = m.objects.filter(o => o.img && ART.trees.blossom.includes(o.img));
-    if (blossoms.length) { const b = pick2(blossoms); G.parts.push({ x: b.x + frand(-0.6, 0.6), y: b.y + frand(-0.6, 0.6), z: 5 + frand(0, 2), vx: frand(0.2, 0.6), vy: frand(-0.1, 0.3), vz: -0.5, life: 5, t: 0, col: pick2(['#ffd0e6', '#ffffff', '#f6a6c8']), grav: 0.05, size: 1, glow: false, petal: true }); }
+    if (blossoms.length) { const b = pick2(blossoms); addPart({ x: b.x + frand(-0.6, 0.6), y: b.y + frand(-0.6, 0.6), z: 5 + frand(0, 2), vx: frand(0.2, 0.6), vy: frand(-0.1, 0.3), vz: -0.5, life: 5, t: 0, col: pick2(['#ffd0e6', '#ffffff', '#f6a6c8']), grav: 0.05, size: 1, glow: false, petal: true }); }
   }
   // waterfall mist
   for (const f of m.falls) {
-    if (Math.random() < dt * (f.edge ? 0 : 14)) G.parts.push({ x: f.wx + frand(-0.5, 0.5), y: f.wy + frand(0, 0.6), z: 0.2, vx: frand(-0.3, 0.3), vy: frand(0, 0.6), vz: frand(0.5, 1.6), life: frand(0.8, 1.6), t: 0, col: '#e8fbff', grav: 0.2, size: 2, glow: false, mist: true });
+    if (Math.random() < dt * (f.edge ? 0 : 14)) addPart({ x: f.wx + frand(-0.5, 0.5), y: f.wy + frand(0, 0.6), z: 0.2, vx: frand(-0.3, 0.3), vy: frand(0, 0.6), vz: frand(0.5, 1.6), life: frand(0.8, 1.6), t: 0, col: '#e8fbff', grav: 0.2, size: 2, glow: false, mist: true });
   }
-  for (const ch of m.chimneys || []) if (Math.random() < dt * 4) G.parts.push({ x: ch.x, y: ch.y, z: ch.z, vx: 0.15, vy: -0.1, vz: 0.6, life: 3, t: 0, col: '#e6dcf0', grav: -0.05, size: 2, glow: false, mist: true });
+  for (const ch of m.chimneys || []) if (Math.random() < dt * 4) addPart({ x: ch.x, y: ch.y, z: ch.z, vx: 0.15, vy: -0.1, vz: 0.6, life: 3, t: 0, col: '#e6dcf0', grav: -0.05, size: 2, glow: false, mist: true });
 }
 
 // ===== frame ======================================================================
@@ -207,8 +207,10 @@ function drawScene() {
   // ---- fog & mist ----
   const forest = m.themeId === 'forest';
   drawFog(ctx, bg.fog, 256, 0.5, 7, 2.5, forest ? 0.24 : m.themeId === 'vale' ? 0.15 : 0.18);
-  drawFog(ctx, bg.fog2, 384, 0.8, -4, 1.2, forest ? 0.09 : m.themeId === 'vale' ? 0.07 : 0.1);
-  if (forest) drawFog(ctx, bg.fog, 512, 1.1, 3, 0.6, 0.14);   // heavy low mist banks
+  if (!COARSE_POINTER) {   // §16.6.6: one fog layer on touch devices
+    drawFog(ctx, bg.fog2, 384, 0.8, -4, 1.2, forest ? 0.09 : m.themeId === 'vale' ? 0.07 : 0.1);
+    if (forest) drawFog(ctx, bg.fog, 512, 1.1, 3, 0.6, 0.14);   // heavy low mist banks
+  }
 
   // ---- lighting ----
   for (const L of m.lights) lights.push(L);
@@ -217,7 +219,7 @@ function drawScene() {
   applyLighting(ctx, lights, th);
 
   // ---- bloom + grade ----
-  applyBloom(ctx, th.bloom);
+  applyBloom(ctx, th.bloom * (typeof flashCap === 'function' ? flashCap() : 1));
   ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.22; ctx.drawImage(GRADE[m.themeId], 0, 0);
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   if (p.buffs.dreamveil) { ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = 'rgba(255,140,220,0.25)'; ctx.fillRect(0, 0, RW, RH); ctx.globalCompositeOperation = 'source-over'; }
@@ -333,7 +335,7 @@ function drawDecal(ctx, e) {
     ctx.strokeStyle = rgba(e.col, 0.9 * (1 - k * 0.5)); ctx.lineWidth = 1;
     projRing(ctx, e.x, e.y, 0, e.r * (0.4 + k * 0.6)); ctx.stroke();
     projRing(ctx, e.x, e.y, 0, e.r * (1 - k) * 0.8, G.t * 4, G.t * 4 + 4); ctx.stroke();
-    if (Math.random() < 0.5) G.parts.push({ x: e.x + frand(-e.r, e.r) * 0.6, y: e.y + frand(-e.r, e.r) * 0.6, z: 0, vx: 0, vy: 0, vz: frand(2, 4), life: 0.5, t: 0, col: e.col, grav: 0, size: 1, glow: true });
+    if (Math.random() < 0.5) addPart({ x: e.x + frand(-e.r, e.r) * 0.6, y: e.y + frand(-e.r, e.r) * 0.6, z: 0, vx: 0, vy: 0, vz: frand(2, 4), life: 0.5, t: 0, col: e.col, grav: 0, size: 1, glow: true });
     ctx.globalCompositeOperation = 'source-over';
   }
 }
@@ -351,7 +353,7 @@ function drawItem(ctx, it, lights) {
     if (it.brazier) drawFlame(ctx, vx, vy - 9, '#c77bff', '#ffd6ff');
     if (it.checkpoint && G.checkpoint && G.checkpoint.map === G.map.id && dist(G.checkpoint.x, G.checkpoint.y, it.x, it.y) < 2.5) {
       glowDot(ctx, vx, vy - 22 + Math.sin(G.t * 3) * 1.5, '#9ef0ff', '#ffffff', 2);
-      if (Math.random() < 0.15) G.parts.push({ x: it.x + frand(-0.3, 0.3), y: it.y + frand(-0.3, 0.3), z: it.z + 1, vx: 0, vy: 0, vz: 1.2, life: 1, t: 0, col: '#9ef0ff', grav: 0, size: 1, glow: true });
+      if (Math.random() < 0.15) addPart({ x: it.x + frand(-0.3, 0.3), y: it.y + frand(-0.3, 0.3), z: it.z + 1, vx: 0, vy: 0, vz: 1.2, life: 1, t: 0, col: '#9ef0ff', grav: 0, size: 1, glow: true });
     }
     return;
   }
@@ -398,7 +400,7 @@ function drawDrop(ctx, d, lights) {
   ctx.fillStyle = d.kind === 'item' ? col : c; ctx.fillRect(Math.round(vx) - 1, Math.round(vy) - 3, 3, 3);
   ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(vx) - 1, Math.round(vy) - 3, 1, 1);
   if (F.L) lights.push({ sx: isoX(x, y), sy: isoY(x, y, d.z) - 6, r: F.L * (0.8 + 0.2 * pulse), col, a: 0.5 + R.i * 0.08 });
-  if (R.i >= 2 && grow >= 1 && Math.random() < 0.04 * R.i) G.parts.push({ x: x + frand(-0.15, 0.15), y: y + frand(-0.15, 0.15), z: d.z + frand(0.2, F.h / ZS), vx: 0, vy: 0, vz: 0.8, life: 0.8, t: 0, col, grav: 0, size: 1, glow: true });
+  if (R.i >= 2 && grow >= 1 && Math.random() < 0.04 * R.i) addPart({ x: x + frand(-0.15, 0.15), y: y + frand(-0.15, 0.15), z: d.z + frand(0.2, F.h / ZS), vx: 0, vy: 0, vz: 0.8, life: 0.8, t: 0, col, grav: 0, size: 1, glow: true });
 }
 function drawSunbeam(ctx, vx, vy, it) {
   // a soft shaft of dawn light falling onto this spot
@@ -410,7 +412,7 @@ function drawSunbeam(ctx, vx, vy, it) {
   ctx.beginPath(); ctx.moveTo(vx - 110, vy - 240); ctx.lineTo(vx - 80, vy - 240); ctx.lineTo(vx + 14, vy + 4); ctx.lineTo(vx - 18, vy + 6); ctx.closePath(); ctx.fill();
   ctx.fillStyle = `rgba(255,226,170,${a * 0.9})`; ctx.beginPath(); ctx.ellipse(vx, vy, 22, 10, 0, 0, Math.PI * 2); ctx.fill();
   ctx.globalCompositeOperation = 'source-over';
-  if (Math.random() < 0.08) G.parts.push({ x: it.x + frand(-0.5, 0.5), y: it.y + frand(-0.5, 0.5), z: frand(0.5, 3), vx: 0.1, vy: 0, vz: 0.1, life: 2, t: 0, col: '#ffe6b0', grav: 0, size: 1, glow: true });
+  if (Math.random() < 0.08) addPart({ x: it.x + frand(-0.5, 0.5), y: it.y + frand(-0.5, 0.5), z: frand(0.5, 3), vx: 0.1, vy: 0, vz: 0.1, life: 2, t: 0, col: '#ffe6b0', grav: 0, size: 1, glow: true });
 }
 function drawCritter(ctx, c) {
   const img = c.face < 0 ? ART.customF[c.type] : ART.custom[c.type];
@@ -452,7 +454,7 @@ function drawPortal(ctx, o, lights) {
     }
     ctx.fillStyle = rgba(col, 0.35); ctx.beginPath(); ctx.ellipse(vx, cy, 6, 10, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fillRect(Math.round(vx) - 1, Math.round(cy) - 4, 2, 8);
-    if (Math.random() < 0.4) G.parts.push({ x: o.x + frand(-0.4, 0.4), y: o.y + frand(-0.4, 0.4), z: o.z + frand(1, 5), vx: 0, vy: 0, vz: 0.6, life: 1, t: 0, col: pick2([col, '#ffd6ff', '#ffffff']), grav: 0, size: 1, glow: true });
+    if (Math.random() < 0.4) addPart({ x: o.x + frand(-0.4, 0.4), y: o.y + frand(-0.4, 0.4), z: o.z + frand(1, 5), vx: 0, vy: 0, vz: 0.6, life: 1, t: 0, col: pick2([col, '#ffd6ff', '#ffffff']), grav: 0, size: 1, glow: true });
     lights.push({ sx: isoX(o.x, o.y), sy: isoY(o.x, o.y, o.z) - 22, r: 110 + Math.sin(G.t * 3) * 8, col, a: 1 });
   }
   ctx.globalCompositeOperation = 'source-over';
@@ -499,9 +501,9 @@ function drawPlayer(ctx, p, lights) {
     lights.push({ sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 11, r: 40, col: '#bfd6ff', a: 0.6 });
   }
   if (p.buffs.bless || p.buffs.surge) {
-    if (Math.random() < 0.5) G.parts.push({ x: p.x + frand(-0.3, 0.3), y: p.y + frand(-0.3, 0.3), z: p.z, vx: 0, vy: 0, vz: frand(2, 3), life: 0.6, t: 0, col: p.buffs.bless ? '#ffe9a0' : '#c7a8ff', grav: 0, size: 1, glow: true });
+    if (Math.random() < 0.5) addPart({ x: p.x + frand(-0.3, 0.3), y: p.y + frand(-0.3, 0.3), z: p.z, vx: 0, vy: 0, vz: frand(2, 3), life: 0.6, t: 0, col: p.buffs.bless ? '#ffe9a0' : '#c7a8ff', grav: 0, size: 1, glow: true });
   }
-  if (p.buffs.mend && Math.random() < 0.3) G.parts.push({ x: p.x + frand(-0.3, 0.3), y: p.y + frand(-0.3, 0.3), z: p.z + 1, vx: 0, vy: 0, vz: 1.5, life: 0.7, t: 0, col: '#8fffa8', grav: 0, size: 1, glow: true });
+  if (p.buffs.mend && Math.random() < 0.3) addPart({ x: p.x + frand(-0.3, 0.3), y: p.y + frand(-0.3, 0.3), z: p.z + 1, vx: 0, vy: 0, vz: 1.5, life: 0.7, t: 0, col: '#8fffa8', grav: 0, size: 1, glow: true });
 }
 
 function drawWeapon(ctx, p, w, hx, hy, sa, lights) {
@@ -573,7 +575,7 @@ function drawEnemy(ctx, e, lights) {
     const glow = e.state !== 'chase' ? 1 : 0.6;
     lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2 - 40, r: 60, col: '#ff7ae0', a: glow });
     lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2 - 26, r: 40, col: '#c78bff', a: 0.8 });
-    if (Math.random() < 0.5) G.parts.push({ x: e.x + frand(-0.7, 0.7), y: e.y + frand(-0.7, 0.7), z: 0.3, vx: 0, vy: 0, vz: frand(0.5, 1.5), life: 1, t: 0, col: pick2(['#2a1c38', '#5f4690', '#ff7ae0']), grav: 0, size: 2, glow: false });
+    if (Math.random() < 0.5) addPart({ x: e.x + frand(-0.7, 0.7), y: e.y + frand(-0.7, 0.7), z: 0.3, vx: 0, vy: 0, vz: frand(0.5, 1.5), life: 1, t: 0, col: pick2(['#2a1c38', '#5f4690', '#ff7ae0']), grav: 0, size: 2, glow: false });
   } else if (e.type === 'dummy') {
     img = ART.dummy;
     const wob = e.flash > 0 ? Math.round(Math.sin(G.t * 60) * 1) : 0;
@@ -610,7 +612,7 @@ function drawProj(ctx, pr, lights) {
   } else {
     const core = pr.kind === 'fire' ? '#fff0c0' : '#ffffff', r = pr.kind === 'orb' ? 2 : (pr.kind === 'fire' ? 2 : 1);
     glowDot(ctx, vx, vy, pr.col, core, r);
-    if (Math.random() < 0.7) G.parts.push({ x: pr.x, y: pr.y, z: pr.z, vx: 0, vy: 0, vz: 0.2, life: 0.25, t: 0, col: pr.col, grav: 0, size: 1, glow: true });
+    if (Math.random() < 0.7) addPart({ x: pr.x, y: pr.y, z: pr.z, vx: 0, vy: 0, vz: 0.2, life: 0.25, t: 0, col: pr.col, grav: 0, size: 1, glow: true });
     L(pr.kind === 'fire' ? 50 : 34, 0.9);
   }
 }
@@ -710,29 +712,41 @@ function drawFog(ctx, tex, size, par, spx, spy, alpha) {
   ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false;
 }
 
+// §16.6.1: one cached 64x64 radial sprite per light colour (alpha 1 -> 0), drawn scaled with globalAlpha = L.a.
+// A linear alpha ramp scaled by globalAlpha equals the old per-light rgba(col, a) -> rgba(col, 0) gradient.
+const COARSE_POINTER = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+const LIGHT_SPR = new Map();
+function lightSprite(col) {
+  let c = LIGHT_SPR.get(col);
+  if (!c) {
+    const v = makeCanvas(64, 64), g = v.x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, rgba(col, 1)); g.addColorStop(1, rgba(col, 0));
+    v.x.fillStyle = g; v.x.fillRect(0, 0, 64, 64);
+    c = v.c; if (LIGHT_SPR.size > 64) LIGHT_SPR.clear(); LIGHT_SPR.set(col, c);
+  }
+  return c;
+}
 function applyLighting(ctx, lights, th) {
-  const x = LM.x;
-  x.globalCompositeOperation = 'source-over'; x.fillStyle = th.ambient; x.fillRect(0, 0, RW / 2, RH / 2);
-  x.globalCompositeOperation = 'lighter';
+  const x = LM.x, fc = typeof flashCap === 'function' ? flashCap() : 1;
+  x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; x.fillStyle = th.ambient; x.fillRect(0, 0, RW / 2, RH / 2);
+  x.globalCompositeOperation = 'lighter'; x.imageSmoothingEnabled = true;
   const vis = [];
   for (const L of lights) {
     const vx = L.sx - camX + RW / 2, vy = L.sy - camY + RH / 2;
     if (vx < -L.r || vx > RW + L.r || vy < -L.r || vy > RH + L.r) continue;
     vis.push([vx, vy, L]);
-    const g = x.createRadialGradient(vx / 2, vy / 2, 0, vx / 2, vy / 2, L.r / 2);
-    g.addColorStop(0, rgba(L.col, L.a)); g.addColorStop(1, rgba(L.col, 0));
-    x.fillStyle = g; x.fillRect(vx / 2 - L.r / 2, vy / 2 - L.r / 2, L.r, L.r);
+    x.globalAlpha = clamp(L.a, 0, 1); x.drawImage(lightSprite(L.col), vx / 2 - L.r / 2, vy / 2 - L.r / 2, L.r, L.r);
   }
+  x.globalAlpha = 1;
   ctx.globalCompositeOperation = 'multiply'; ctx.imageSmoothingEnabled = true;
   ctx.drawImage(LM.c, 0, 0, RW, RH);
   // additive halos — the "fake light" glow
   ctx.globalCompositeOperation = 'lighter';
   for (const [vx, vy, L] of vis) {
-    const r = L.r * 0.55, g = ctx.createRadialGradient(vx, vy, 0, vx, vy, r);
-    g.addColorStop(0, rgba(L.col, L.a * 0.32)); g.addColorStop(1, rgba(L.col, 0));
-    ctx.fillStyle = g; ctx.fillRect(vx - r, vy - r, r * 2, r * 2);
+    const r = L.r * 0.55;
+    ctx.globalAlpha = clamp(L.a * 0.32 * fc, 0, 1); ctx.drawImage(lightSprite(L.col), vx - r, vy - r, r * 2, r * 2);
   }
-  ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
 }
 
 function applyBloom(ctx, strength) {
