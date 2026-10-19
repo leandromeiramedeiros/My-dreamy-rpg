@@ -787,8 +787,11 @@ shop), reputation, minigames other than fishing (fishing is in, see §13), day/n
   system with a mini-boss, key/door, levers/gates, dialogue/camera/loot/checkpoint/quest actions, intro and Pip, elites,
   universal dodge, one side quest, 3 secrets, return-rift, the first Skill Rune drop and 2 Dream Tomes, audio engine + Vale/Pinewood music and core SFX per `docs/AUDIO.md`, map pre-rastering and fade transitions, 3 save
   slots, the first 10 minutes per §16.2, scripted play test.
-* **M3 The Hero & Icons:** layered hero, gear overlays, rarity glow & particles, paper-doll in the new Tab screen, the
-  icon set wired into the HUD, hero status-icon row, enemies rescaled, unified `rarityFx`.
+* **M3 The Hero, Icons & Items v2:** layered hero, gear overlays, rarity glow & particles, paper-doll in the new Tab screen, the
+  icon set wired into the HUD, hero status-icon row, enemies rescaled, unified `rarityFx`; **§19 items v2 core: implicits,
+  named prefix/suffix tiers + naming grammar, 4 trinket slots with boon tables, caps table, tooltip v2, temper, save v4,
+  starter origin ring, trinket icons + belt/amulet overlays** (ring resonance and belt gem-wrap boons land with the M4
+  combo engine; uniques 2–3 per milestone M4–M7; attune in M5).
 * **M4 Act II** (~45 min): Ruins (3 maps), Gloam Warden ported, 5 status effects + enemy status icons, set bonuses,
   Bestiary tab, the 7 reactions, Skills tab with ranks and modifiers, **combo layer engine + Combo Codex (§18)**, **Thief: daggers + Shade leathers + Origins (§17)**.
 * **M5 Act III** (~65 min): Grotto (3 maps), Mirelle, **Warrior: two-handers (§17)**, gem amplification complete, Drifting Isles if ahead of schedule.
@@ -803,3 +806,114 @@ lore, resist/set/quest data, and a **timed scripted main-path run** reporting mi
 Review gates: every map ships a screenshot and a timed main-path walk; every boss ships one screenshot per telegraph.
 
 Ship gate per milestone: smoke + play test green → director review → PR → merge to `claude/dreamy-rpg-concept` (= live on Pages).
+
+## 19. Equipment v2: affixes, item detail, trinkets (expert-reviewed; director-approved; supersedes §4 affix rules)
+
+**Principle:** M1 items are a correct skeleton but two Rare swords differ only in numbers. v2 gives every item an
+*identity*. **Gear = skills, trinkets = rules** (trinkets are passive only; the Albion rule stays clean).
+
+### 19.1 Affixes
+* **Implicit** (1 per base, fixed, not rerollable): each of the 60 family tiers gets a distinct implicit line
+  (Sunforged Blade "+10 % Shatter damage", Hunter's Bow "+1 pierce", Linen Robe "+10 % MP on hit"). `BASES[id].implicit`.
+  The tier's implicit *is* the variant; no extra base types (hero overlay cost).
+* **Prefixes** (offence/utility: power, crit, critDmg, haste, skillDmg, cdr, element dmg %, status chance %, +Mark cap,
+  charge speed) and **suffixes** (defence/sustain: hp, def, regen, mpRegen, speed, resists, resAll on Legendary+,
+  on-dodge / on-kill triggers on Epic+).
+* **3 named tiers per affix**, gated by ilvl (T1 1+, T2 14+, T3 28+): `power:[{name:'Keen',r:[3,6]},{name:'Fierce',
+  r:[7,11]},{name:'Savage',r:[12,18]}]`.
+* **Counts:** Common 0 · Uncommon 1 (P or S) · Rare 1P+1S · Epic 3 (2P+1S or 1P+2S) · Legendary 2P+2S + unique rule ·
+  Mythic 3P+2S + unique rule + 1 aspect (§18).
+* `req = max(base, ilvl−2)`; drop ilvl = enemy level ±2; ilvl 20+ may roll the rarity's max sockets.
+* **No affix reroll** (§4.4 stands); pearls (§13) remain the only post-drop change to a legendary rule.
+
+### 19.2 Crafting at the Elder Stone (Dust only)
+* **Temper:** raise one affix by one tier, once per item; 20 / 60 / 150 Dust (Rare / Epic / Legendary+).
+* **Imbue:** add a socket for Dust; the Socket Rune drop remains the free route.
+* **Attune** (M5): replace an item's implicit with another base's implicit from the same family and tier. This consumes
+  the donor item, which gives salvaging another purpose.
+
+### 19.3 Detailed items
+* **Tooltip v2, top to bottom (≤ 12 lines; on touch, affixes collapse to icon + number):**
+  1. the generated name, in rarity colour
+  2. icon row with family and tier
+  3. "Lv 14 · ilvl 16 · Rare"
+  4. the implicit, in dim blue
+  5. affixes, P then S, with tier pips ◆◆◇ and green/red compare deltas
+  6. sockets, as gem icons
+  7. the unique rule, in gold
+  8. the family line ("Knight 2/3 — 3: melee gains poise")
+  9. granted skills, as icons
+  10. the auto "Synergises with: zone, dash" line from §18 tags
+  11. one line of flavour
+  12. footer: "Found: Root Hollow · Kills 212 · Tempered"
+* **Naming:** `[prefix-tier name] [base] [of the suffix noun]`, e.g. "Fierce Sunforged Blade of the Fox".
+  * Suffix nouns come from a table per stat: speed = Fox, hp = Oak, resFire = Ember…
+  * Rare+ items get both parts and Uncommon gets one; uniques keep their own names; Mythic draws from a 30-name table.
+  * Haiku writes the word lists and the director reviews them once for tone (no silly names near the twist).
+* **Flavour:** 1 line per family tier (60) plus 1 per unique, in STORY.md voice.
+* **History:** `it.hist = {found, kills, bossKills, tempered}`. Kills count on the equipped weapon only. At 500 kills
+  the weapon gains a cosmetic trail ("my sword").
+* **Visuals:** a tempered item gets a bright edge highlight on its hero overlay. The implicit's element shows as a gem
+  dot on the icon frame.
+
+### 19.4 Trinkets: Ring ×2, Amulet, Belt
+* **Tiers:** 3 (reqLvl 1 / 16 / 32), with the same rarities as other gear. Mythic trinkets are NG+ only.
+* **Boons:** one per trinket from its slot's table (≈ 12 per slot). Uncommon gets a minor boon, Rare+ a major one, and
+  Legendary a unique boon plus a rule.
+* **Amulet → the ultimate.** 1P+1S, 1 socket.
+  * Example boons: +15 % charge from reactions; R gains the frost tag; R costs 80 charge; the first R in each fight is free.
+  * **Unique:** *Pip's Lantern* (R casts twice at 50 %), the reward of Pip's three-lanterns quest (Spire). This is the
+    director's placement: it ties the item to the story.
+* **Belt → consumables, sustain, and the gear it wraps.** S only, 1 socket; implicit +1 potion charge.
+  * Example boons: potions also cleanse; kill-heal +50 %; cooking buffs last 15 min; salvage Dust ×1.5.
+  * **The wrap-around boon:** gems in chest and boots count +1 grade, clamped at Radiant.
+* **Rings → elements and reactions.** P only, 0 sockets.
+  * Example boons: +15 % fire damage and +10 % Burn chance; Shatter radius +1; Conduct +1 jump; backstab arc +30°;
+    +1 Mark cap; charged swings 0.25 s faster; projectiles +1 pierce.
+  * **Ring resonance:** two rings of the same element give that element's reaction +25 % and an aura colour on the hero.
+    A Duo pair (fire + nature, frost + slash…) primes that Duo's reaction. Each pair is a Codex discovery.
+* **Origin starter ring:** the Origin passive (§17.1) *is* a free starter ring's boon, so ring slot 1 means something
+  at minute 3.
+* **Acquisition:**
+  * the first ring from the first Vale chest
+  * the amulet from Bramblehorn's choice chest
+  * the belt from the first secret vault
+  * after that, trinkets are 15 % of drops
+* **On the hero and in icons:**
+  * Rings don't show on the hero; an optional glint marks Epic+ rings.
+  * The belt is a band overlay with a buckle pixel, and the amulet a 2 px pendant in its element colour. Both get the
+    rarity rim glow.
+  * Icons: ring, amulet and belt × 3 tiers with element tints, plus the unique icons (≈ 15).
+* **Paper doll** (HUD.md, 220 px column): ring1 (24,88), ring2 (176,88), amulet (100,64), belt (100,300).
+
+### 19.5 Uniques: 18 total
+* 7 boss and optional-boss drops (already designed).
+* 6 trinket uniques (2 per slot type).
+* 5 **world uniques**, found only in secret vaults or Sunken Chests from fishing. They are built on §18 tags so they
+  work with every family (e.g. "Comet Band: projectiles curve toward Marked enemies").
+* Each unique has a fixed implicit and rule plus 2 random affixes, so two copies differ.
+* **No set items:** the armour-family 2/3 bonuses already cover it. Instead there is a **full-dream bonus**: 3 family
+  pieces plus that family's weapon apply the family's tag rule to trinket boons too.
+
+### 19.6 Guardrails
+* One `CAPS` table, applied in `recalcStats`: cdr 50 %, crit 60 %, haste 50 %, gear power 150 %, reaction bonus 50 %,
+  Mark cap 5, potions 5.
+* Trinket resists: at most +10 % per resist line and +15 % resAll across all four trinkets. The hero clamp [−0.5, +0.6]
+  still applies.
+* Boon ids never stack: two "+1 Mark cap" rings count as one.
+* Every boon is an `EFFECTS` row (§18, `src:'trinket'`), so the ICD, proc, chain-depth and boss caps apply automatically.
+
+### 19.7 Save v4
+* `player.equip` gains `ring1, ring2, amulet, belt`.
+* Items gain `implicit`, `affixes[].tier`, `boon`, `hist` and `tempered`.
+* `migrate(v3→v4)` fills each implicit from its base and assigns the tier of old affixes from their ilvl.
+
+### 19.8 Who builds it
+* **Haiku:** affix, name, implicit, flavour and boon tables (data, written in M2b's idle time).
+* **Opus:** `makeItem` v2, trinket slots and equip, CAPS, temper/imbue, save v4 (M3), then resonance and wrap boons on
+  the §18 bus (M4).
+* **Sonnet B:** tooltip v2, the 4 new paper-doll slots, names on drop toasts (M3); the Elder Stone craft panel (M5).
+* **Sonnet art:** trinket icons, belt and amulet overlays, the tempered highlight (M3).
+
+**Cut:** base-type variants, set items, affix reroll, a 5th trinket slot, sockets on rings, and skills on trinkets.
+
