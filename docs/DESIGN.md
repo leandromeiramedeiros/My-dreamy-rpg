@@ -923,7 +923,7 @@ Ship gate per milestone: smoke + play test green → director review → PR → 
 reached through honest replay (NG+ modifiers, a second family or origin run), never through padding.
 
 ### 20.2 Scope budget (hard caps)
-* **Maps: 17 max.** These are:
+* ~~Maps: 17 max~~ **superseded by §22: 27 maps, each with its own hook (client decision).** Former list: These are:
   * the hub
   * 5 outer zones
   * 5 boss arenas
@@ -1117,4 +1117,86 @@ support or ranged enemy.
   * any 10-minute main-path window without a new enemy type
   * any zone whose rooms use fewer than 4 movement parts
 * **Art per milestone (Sonnet-days):** M2b 4 · M4 4 · M5 4.5 · M6 5 · M7 5 · lane O 3, about 26 in total.
+
+## 22. The 27 maps and the studio (expert review; client chose 27 maps; supersedes §20.2's map list)
+
+**Rule:** a map exists only if it has a hook the previous map didn't. If a map's hook slips, cut the map; never ship it
+as corridors. Mechanics must be beatable by skill, never timers you wait out.
+
+### 22.1 Main path (16 maps, ~110 min)
+| # | Map | Kind / size | Hook |
+|---|---|---|---|
+| 1 | Whispering Vale | hub 40 | tutorial, Elder Stone; the hub visibly heals each act |
+| 2 | Misty Pinewood | outer 56 | enemy debuts; fleeing animals form a trail; fishing introduced |
+| 3 | Root Hollow | dungeon 32 (2 rooms) | key door, lever bridge, burrowing boars, Mossjaw |
+| 4 | Bramblehorn's Clearing | boss 22 | root-pillar arena |
+| 5 | Gloomspire Ruins | outer 56 | shield knights, snipers; the pillar names (twist seed) |
+| 6 | Warden Crypt | dungeon 36 | **darkness**: your light radius, relight lanterns; mimics and summoners |
+| 7 | Warden's Hall | boss 22 | falling pillars in phase 3 |
+| 8 | Sunken Grotto | outer 64 | **tide** tiles on a timer; water-bound eels |
+| 9 | Drowned Vault | dungeon 36 | **airlock** gates (only one open at a time); crabs, Deepsinger |
+| 10 | Mirelle's Basin | boss 24 | ring arena that floods each phase |
+| 11 | Emberfall Caldera | outer 64 | lava rivers crossed on timed cooling-slag **platforms** |
+| 12 | Forge Deep | dungeon 36 | furnace bellows **wind** zones; trap-layer priests |
+| 13 | The Anvil | boss 24 | the lava floor spreads each phase |
+| 14 | Spire Ascent | ascent 48 | 5 height levels (falling sends you back to the last ledge); snipers; Twin Vigils in the last room |
+| 15 | The Sleepless Court | 36 | void tiles vanish in a learnable rhythm; Dread Herald; the Unmade |
+| 16 | Morrow's Throne | boss 28 | three phases, Pip's light |
+
+### 22.2 Optional (11 maps; brings 100 % to ~4–4.5 h)
+| # | Map | Hook |
+|---|---|---|
+| 17 | Vale Moon Pond (hub extension, 16) | night fishing; the pearl ritual for the true ending |
+| 18 | Fox Warrens (vault 14) | **noise**: sneak past sleeping trolls |
+| 19 | Oath Reliquary (vault 16) | mimic gallery; the Oathless vault boss |
+| 20 | Glowfin Shallows (vault 16) | swarm fight on shrinking sandbars (tide) |
+| 21 | Slag Chambers (vault 16) | wind + mine puzzle; Slagheart optional encounter |
+| 22 | Vigil Walk (vault 16) | sniper gauntlet solved with cover |
+| 23 | Drifting Isles (48, L34–40) | rift-hop bridges; Sorrel's Echo; the sixth legendary |
+| 24 | Starlit Shoals (32) | **no combat**, fishing only; where the real Aerin drowned; **the Moonmaw lives here** (director ruling: story placement) |
+| 25 | The Gloaming Below (36, post-game) | corrupted elites, the Gloomed tint (−10 % res), no shrines (**Story mode gets one**); the Unwaking Child |
+| 26 | Dream Arena (24) | 5 tiers of mixed role packs; the balance test bed |
+| 27 | Pip's Lanterns (rooftop islet 12) | pure story: three lanterns, three memories; powers the true ending |
+
+Brinemother is the Drowned Vault's mini-boss. Each vault elite (Oathless, Slagheart, Twin Vigils) shares one data row
+with its common-enemy version.
+
+### 22.3 Keeping the cost per map low
+* **New stamps** (Opus, built once): `vault`, `ascent`, `arena`, `islet-chain`.
+* **Mechanic modules:** recipe fields that emit triggers. Each is a generator option plus one engine feature,
+  ~1–2 days each, reused across maps:
+  * `darkness`
+  * `tide:{period}`
+  * `airlock:[gates]`
+  * `wind:[zones]`
+  * `platforms:[timed]`
+  * `noise:{sleepers}`
+* **Per map:** a recipe drafted by Haiku, tuned by the level designer (Sonnet), and passed through `engine-check`, at
+  about 0.5–1 day per map.
+* Decoration comes from per-zone palette rules. Only rooms are hand-tuned.
+
+### 22.4 Studio
+* **Tiers:**
+  * **Opus:** engine and cross-system invariants. Its risk is over-building, so I review the diff against the brief's
+    non-goals.
+  * **Sonnet:** art, UI, music, levels. Its risk is drifting from the spec, so I review screenshots against the spec's
+    numbers.
+  * **Haiku:** data, tests, sheets. Its risk is inventing ids that don't exist, so `tools/validate-ids.js` catches them.
+* **File ownership is the lock.** A task that spans two owners' files is split into two prompts with an API contract
+  between them.
+* **Concurrency:** at most **4 agents at once** (1 Opus, 2 Sonnet, 1–2 Haiku).
+* **Merge order per milestone:** engine (Opus) → data (Haiku) → content and UI (Sonnet) → QA.
+* **Every owned file starts with a header:** purpose, exported globals, what it must never do, and which tests to run.
+* **Every prompt** is ≤ 25 lines: goal, owned files, allowed APIs, spec sections, non-goals, acceptance, report format.
+  Data tasks also include one filled example row.
+* **Agent reuse:** reuse an agent for a series of same-shaped tasks. Spawn fresh after a merge or a spec change. Never
+  reuse an Opus session across milestones.
+* **Effort:** Opus high only for engine work; Sonnet medium; Haiku low.
+* **New roles:**
+  * **QA play-tester** (Sonnet): scripted routes each build, reporting death spots, soft-locks and unreadable telegraphs.
+  * **Level designer** (Sonnet): owns the recipes.
+  * **Balance tuner** (Haiku + balsim): proposes number diffs.
+  * **Writer** (Haiku): lore lines only. Finale lines stay director-written.
+  * **Build captain** (Haiku): runs every check and keeps the README.
+* **Director ruling:** agents still never commit. The director commits after the checks pass.
 

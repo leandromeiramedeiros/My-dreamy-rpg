@@ -29,6 +29,17 @@ const fam = [['sword', 'dawnblade'], ['staff', 'starfall'], ['bow', 'moonbow'], 
   ['chest', 'knightplate'], ['chest', 'dreamrobe'], ['chest', 'stalkerjacket'], ['boots', 'knightgreaves'], ['boots', 'clothsandals'], ['boots', 'stalkershoes']];
 const RAR = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
 for (const [k, b] of fam) { r = group('Items: ' + b + ' tiers 0-4 (rarity common/uncommon/rare/epic/legendary)'); for (let t = 0; t < 5; t++) cell(r, b + ' T' + t, ICONS.item(b, t, RAR[t], t > 1 ? ['ruby_1', 'sapphire_2', null].slice(0, t - 1) : [])); }
+r = group('Trinkets: ring / amulet / belt x tier 1-3 (rarity uncommon..epic by tier)');
+const TB = ICONS.trinketIds; TB.forEach((id, i) => cell(r, id.replace(/_/g, ' '), ICONS.item(id, 0, RAR[1 + i % 3], i % 3 === 0 ? [] : ['ruby_1'])));
+r = group('Ring / amulet element tint (tier 3, epic): fire frost nature lightning arcane physical holy');
+for (const k of ['ring', 'amulet']) for (const e of ['fire', 'frost', 'nature', 'lightning', 'arcane', 'physical', 'holy']) cell(r, k + '\n' + e, ICONS.item(k, 3, 'epic', [], { element: e }));
+r = group('Tier-1 rings with element tint + tempered / implicit-element dot (right: plain vs tempered vs implicit vs both)');
+for (const e of ['fire', 'frost', 'nature']) cell(r, 'T1 ' + e, ICONS.item('ring', 1, 'rare', [], { element: e }));
+cell(r, 'plain', ICONS.item('dawnblade', 3, 'rare')); cell(r, 'tempered', ICONS.item('dawnblade', 3, 'rare', [], { tempered: true }));
+cell(r, 'implicit fire', ICONS.item('dawnblade', 3, 'rare', [], { implicit: 'fire' })); cell(r, 'both', ICONS.item('dawnblade', 3, 'rare', [], { implicit: 'frost', tempered: true }));
+cell(r, 'belt T3 tempered', ICONS.item('moonlit_girdle', 3, 'legendary', ['ruby_2'], { tempered: true, implicit: 'arcane' }));
+r = group('Uniques: trinket (pips lantern .. quiet girdle) + world (comet band .. hollow bell), legendary frame');
+for (const id of ICONS.uniqueIds) cell(r, id, ICONS.item(id, 3, 'legendary', id.includes('lantern') || id.includes('compass') ? ['topaz_1'] : []));
 r = group('Gems: 6 types x 3 grades (chipped, clear, radiant)');
 for (const g of ['ruby', 'sapphire', 'emerald', 'topaz', 'amethyst', 'diamond']) for (let k = 0; k < 3; k++) cell(r, g + ' ' + k, ICONS.gem(g, k));
 r = group('Misc');

@@ -7,7 +7,7 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * `docs/DESIGN.md` — design bible. Later sections supersede earlier ones where marked:
   §5b damage types/resistances · §10 milestone plan · §11 2-hour structure, bestiary, status icons, new systems ·
   §12 completionist scope (4.5–5 h, 27 maps) · §13 fishing · §14 controls pointer · §15 skill system ·
-  §16 polish, Dust economy, save schema, tech roadmap · §17 Thief/Warrior + Origins · §18 combo layer · §19 equipment v2 + trinkets · **§21 enemy roster (28 commons, behaviour parts)** · **§20 balance framework + scope budget (play-time target, 17 maps, 10 systems, CI red flags)**.
+  §16 polish, Dust economy, save schema, tech roadmap · §17 Thief/Warrior + Origins · §18 combo layer · §19 equipment v2 + trinkets · **§22 27 maps + studio staffing** · **§21 enemy roster (28 commons, behaviour parts)** · **§20 balance framework + scope budget (play-time target, 17 maps, 10 systems, CI red flags)**.
 * `docs/STORY.md` — story, twist, endings, beat sheet with final lines, 13 bosses, BOSS_MOVES library.
 * `docs/HUD.md` — "Dream Glass" UI spec (complete rework). `docs/CONTROLS.md` — input layer, gamepad, touch, a11y.
 * `docs/AUDIO.md` — music/sound design (all synthesized; no audio files — director decision).
@@ -57,10 +57,12 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * Equipment v2 (§19): trinkets are passive "rules" (gear = skills). No base variants or sets; tier implicits carry variety.
   Items v2 core is pulled forward from M4 into M3. Pip's Lantern amulet is the Pip quest reward. Save becomes v4.
 * **Play-time target changed with the client (§20.1):** dense ~95–110 min main path, ~3–3.5 h for 100 %, plus replay.
-  Maps capped at 17 (was 27). Dungeons: Root Hollow + Forge Deep mandatory; Crypt/Drowned Vault/gauntlet become
+  ~~Maps capped at 17~~ → client chose **27 maps with a hook each (§22)**. Dungeons: Root Hollow + Forge Deep mandatory; Crypt/Drowned Vault/gauntlet become
   optional vaults. Cut Starlit Shoals, Gloaming floor 2, rune-words, attune, separate Dream Tomes.
 * Balance is enforced by `tools/balsim.js` + CI red flags (§20.7), built in M2b; no milestone ships with the sim red.
 * The expert has a standing role: flag balance and bloat issues in every consult.
 * Enemies (§21): 28 commons, each with a distinct verb; behaviour-part runtime pulled into **M2b**; Oathless and
   Brinemother survive as cheap vault bosses; Twin Vigils = linked Vigil Knights.
+* §22: 16 main-path maps (~110 min) + 11 optional (100 % ≈ 4–4.5 h). Moonmaw stays in Starlit Shoals (story).
+  Max 4 agents at once; QA tester and level designer roles hired from M2a ship / M2b.
 
