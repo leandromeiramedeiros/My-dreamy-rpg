@@ -124,40 +124,70 @@ Each changes a skill's *rule*, not just numbers:
 * **Kill-heal** (existing +HP/+MP per kill) scales with a kill streak (`p.combo`).
 * Weapon skill options (two choices per slot) unlock with weapon tier: second option at weapon reqLvl ≥ 10.
 
-## 5b. Elemental system
-Seven damage types: **physical, fire, frost, nature, lightning, arcane, holy**, plus enemy-only **gloom** (Morrow's void).
-Every hit carries one element: weapon basics use the weapon's element (sword physical, staff arcane, bow physical
-unless converted by gems or legendaries), skills use their `element` tag, enemy attacks are tagged in enemy data.
+## 5b. Damage types, resistances and weaknesses (revised after expert review)
+**Damage types (tags on every hit):** **slash, pierce** (the two physical types), **fire, frost, nature, lightning,
+arcane, holy**, plus enemy-only **gloom** (Morrow's void). There is no blunt type: heavy hits carry a `stagger` value
+(0–3) instead, which is what "blunt" means in play (clubs, golems, shield bash).
 
-**Status effects** (one per element, short and readable, each with a coloured tint and a tiny icon over the target):
-| Element | Status | Effect |
+**Who deals what** (authoritative tags live in `data.js`; Haiku owns the tagging pass):
+* **Sword = slash:** Dawn Cut, Sunslash, Dash Strike, Whirling Blade; Heroic Strike slash + stagger 3; Judgement and Dawn Wave holy.
+* **Staff:** Arcane Bolt, Barrage, Gravity Well arcane; Firebolt, Meteor fire; Frost Shards frost; Starstorm holy.
+* **Bow = pierce:** Moon Arrow, Multishot, Piercing Shot, Rain of Arrows pierce; Snare nature; Moonbeam holy.
+* **Armour/character skills:** Bulwark shove, War Cry, Charge deal slash with stagger 2–3; Frost Nova frost; Chain Lightning
+  lightning; Shooting Star fire; Arcane Orbit arcane.
+* Gems in a **weapon** can convert part of the weapon's damage (Radiant Ruby in a sword: 30% of slash becomes fire).
+
+**Status effects (five; each readable in one hit):**
+| Type | Status | Effect |
 |---|---|---|
-| Physical | Stagger | builds up on heavy hits; when full, a brief stun (bosses: break bar → 2 s stun window) |
+| Slash / pierce + stagger | Stagger | hits fill a stagger bar (`staggerMax`); full = stun (bosses: 2 s break window, bar shown) |
 | Fire | Burn | damage over time 3 s, stacks ×3 |
-| Frost | Chill → Freeze | slow 30%; 3 chill stacks = 1.2 s freeze (bosses: slow only) |
-| Nature | Poison | damage over time 5 s, −20% enemy healing / shields |
-| Lightning | Shock | next hit taken +20%; arcs to one nearby enemy |
-| Arcane | Sunder | −15% resistances for 4 s |
-| Holy | Radiance | +50% damage to gloom-touched enemies; hits heal you for 2% of damage |
-| Gloom (enemy) | Dread | your skills cost +25% MP for 3 s; cleansed by holy or Dreamveil |
+| Frost | Chill → Freeze | slow 30%; 3 stacks = 1.2 s freeze (bosses: slow only) |
+| Nature | Poison | damage over time 5 s (Burn's code, green), −20% enemy healing |
+| Lightning | Shock | next hit taken +20% (no arc; Chain Lightning already arcs) |
+* **Arcane** has no status: it ignores 50% of the target's resistance (the reliable "neutral" element).
+* **Holy** has no status: +50% damage against gloom-tagged enemies.
+* **Gloom (enemy only)** applies **Dread**, the only hero debuff: −25% MP regen for 3 s, cleansed by holy skills or Dreamveil.
+* Status chance = skill base chance + the matching gem's bonus.
 
-Status chance = skill base chance + gem bonuses (the gem matching the element raises it).
+**Enemy resistances: hand-authored tiers.** weak −50%, neutral 0, resist +50%, immune +100% (bosses only, only to their
+own element, never to statuses). Default is `res: {}` (all neutral); authors list only non-zero entries.
+Damage = `dmg × (1 − res)`; arcane uses `res × 0.5`. Archetypes make weapon choice felt:
+* **Armoured** (gloom knights, golems): resist slash, neutral pierce, high stagger threshold with a long break window.
+* **Amorphous** (slimes, jellies): resist pierce, weak to slash.
+* **Ethereal** (wisps, shades): resist slash and pierce, weak to holy and lightning.
+* **Beasts** (hounds, ogres, trolls): neutral physical, weak to fire or frost by zone.
+```js
+golem: { name: 'Cinder Golem', ai: 'brute', hp: 1400, element: 'fire', dmgType: 'slash', stagger: 3, staggerMax: 6,
+  res: { slash: 0.5, pierce: 0.5, fire: 1.0, frost: -0.5 }, tags: ['armoured'] }
+```
 
-**Resistances:** player and enemies have `res: { fire, frost, … }` from −50% (weak) to +75% (cap).
-* Damage taken = `dmg × (1 − res)`. Player resistances come from gear affixes (`resFire` etc., or `resAll` on
-  legendaries) and from gems socketed in **armour**: Ruby → fire, Sapphire → frost, Emerald → nature, Topaz → lightning,
-  Amethyst → arcane and gloom, Diamond → small all-resist.
-* Every zone has an elemental identity, so swapping gems in the hub before a zone is a real decision:
-  | Zone | Enemies deal | Enemies weak to | Enemies resist |
-  |---|---|---|---|
-  | Pinewood | physical, nature | fire | nature |
-  | Ruins | gloom, arcane | holy | arcane |
-  | Grotto | frost, lightning | lightning (water!), fire | frost |
-  | Caldera | fire, physical | frost | fire (immune to burn) |
-  | Spire | gloom, arcane, all | holy | gloom |
-* **Feedback:** damage numbers are coloured by element and show WEAK (bigger, yellow) or RESIST (smaller, grey);
-  hovering or locking on an enemy shows its weakness icon next to its name and health bar; the boss bar always shows it.
-* Elites can roll an elemental modifier (Burning, Frozen, Storm) that adds that element to their attacks and an aura.
+**Hero resistances: continuous and additive** (per the §3 balance rule), clamped to **[−50%, +60%]**.
+* **Chest family sets the hero's built-in strength and weakness (±25%), always shown on the portrait:**
+  Plate: slash/pierce +25, lightning −25 · Robe: arcane +25, slash/pierce −25 · Jacket: pierce +25, fire −25.
+  Helmets and boots give skills, not resistances, so the player only has one thing to read.
+* **Armour-socketed gems:** Chipped/Clear/Radiant = 10/20/30 to their element: Ruby fire, Sapphire frost, Emerald nature,
+  Topaz lightning, Amethyst arcane and gloom; Diamond 5/10/15 to everything.
+* **Affixes:** `resSlash`, `resPierce`, `resFire`, `resFrost`, `resNature`, `resLightning`, `resArcane`, `resGloom` (10–20),
+  `resAll` (10, legendaries).
+* **No hidden temporary weaknesses.** Gloom areas apply a visible "Gloomed" tint (−10% all resistances) tied to a
+  trigger area and cleansed at shrines.
+
+**Zone identities:**
+| Zone | Enemies deal | Enemies weak to | Enemies resist |
+|---|---|---|---|
+| Pinewood | slash, nature | fire; beasts weak to slash | nature; trolls resist pierce |
+| Ruins | gloom, arcane, slash (knights) | holy, pierce; wisps weak to lightning | arcane; knights resist slash; wisps resist physical |
+| Grotto | frost, lightning, pierce (crystal shards) | lightning, fire; slimes weak to slash | frost; slimes resist pierce |
+| Caldera | fire, slash + stagger (golems) | frost; golems break easily under stagger | fire (immune to Burn); golems resist slash and pierce |
+| Spire | gloom, arcane, all | holy | gloom; knights resist slash |
+
+**Teaching it without a wiki:**
+* Damage numbers are coloured by type; WEAK is large and yellow, RESIST small and grey, IMMUNE shows "IMMUNE".
+* The **first weak or resist hit against an enemy type** pops a 1.5 s nameplate ("WEAK: FIRE") and from then on that
+  enemy's weakness and resistance icons show beside its health bar. That is the whole bestiary.
+* Boss bars always show weaknesses. The inventory shows the hero's resistances as one row of icons with numbers,
+  with compare deltas when hovering gear or gems.
 
 ## 6. Hero visuals ("you see what you wear")
 * Base hero redrawn at higher detail (≈24×32 px instead of 16×24): face, hair, cape, hands, shading, 4-dir-ish (front/back,
@@ -274,7 +304,7 @@ so the design rule is **15–25 s of walking between fights**. Targets (revised 
 * **M3 The Hero & Icons** — detailed layered hero, gear overlays per tier, rarity glow & particles (1–2 px, high
   contrast), paper-doll in inventory, new icon set, enemies rescaled to the hero, drop FX unified on one `rarityFx` table.
 * **M4 Acts II–III** — Ruins rebuilt to size with the Gloam Warden ported to the boss system, Sunken Grotto + Mirelle,
-  gem skill amplification complete, **all 8 elemental status effects** and zone resist tables, skill modifier choices, gem-tinted skill visuals.
+  gem skill amplification complete, **the 5 status effects** (stagger, burn, chill/freeze, poison, shock), Dread, and zone resistance tables, skill modifier choices, gem-tinted skill visuals.
 * **M5 Act IV + Finale** — Emberfall Caldera + Kharzul, Sleepless Spire + Morrow (3 phases), Pip's sacrifice, ending,
   credits, NG+.
 * **M6 Polish & balance** — pacing to ≥60 min (timed playthrough), music loops, minimap fog-of-war, README, screenshots.
