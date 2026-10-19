@@ -151,7 +151,7 @@ function startGame() { G.state = 'play'; initAudio(); G.banner = { s: G.map.name
 
 // ===== boot ==============================================================================
 async function boot() {
-  await loadPxlArt();
+  await loadSprites();
   buildArt(); initPost();
   G.maps.vale = buildVale();
   G.maps.ruins = buildRuins();

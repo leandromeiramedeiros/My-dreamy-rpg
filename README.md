@@ -55,15 +55,13 @@ the controls, FULL goes fullscreen.
 
 Plain HTML5 Canvas 2D with no runtime dependencies, written as classic scripts so it also runs from `file://`.
 
-* **Sprites are authored with [pxl](https://github.com/crsolver/claude-pxl)**, a pixel-art-as-code tool, in
-  `art/dreamy.px.js`. That covers the hero (three helmet shapes, front and back, four-frame walk), the weapons,
-  the slime, the hound, the boss, the trees, bushes, rocks, crystals, lanterns, props and the cottage.
-  `npm run art` renders them and packs them into `js/pxl-art.js` as data URIs.
-  `npm run art:watch` opens pxl's live viewer. `art/contact.px.js` builds a contact sheet of every sprite.
+* **Sprites** (the hero with three helmet shapes and a four-frame walk, weapons, monsters, the boss, trees,
+  bushes, rocks, crystals, lanterns, props and the cottage) are PNG images bundled in `js/sprites.js` as data URIs,
+  so the game still runs from `file://`.
 * The hero is drawn in Knight colours. At load time the game swaps those colours for whatever helmet, chest and
   boots you wear.
 * The ground, cliffs, the island underside, skies, mountains, clouds and skill icons are still **generated
-  procedurally** (world-continuous noise with ordered Bayer dithering). If `js/pxl-art.js` is missing, the older
+  procedurally** (world-continuous noise with ordered Bayer dithering). If `js/sprites.js` is missing, the older
   procedural sprites are used instead.
 * The scene renders at **480×270** and is scaled up 2× with nearest-neighbour filtering. The HUD is drawn crisply at 960×540.
 * Post-processing:
@@ -84,8 +82,7 @@ Plain HTML5 Canvas 2D with no runtime dependencies, written as classic scripts s
 | `js/render.js` | Scene and post-processing |
 | `js/hud.js` | HUD, loadout screen and minimap |
 | `js/touch.js` | Touch joystick, skill wheel and drag-to-aim |
-| `art/dreamy.px.js` | pxl sprite source |
-| `js/pxl-art.js` | Generated sprite pack |
+| `js/sprites.js` | Sprite images |
 | `js/main.js` | Main loop, input and transitions |
 
 Showcase URL parameters: `?scene=play`, `?scene=arena`, `?scene=boss`, `?scene=loadout`, `?scene=portal`, `&weapon=starfall|moonbow`.
