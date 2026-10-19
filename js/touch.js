@@ -139,7 +139,6 @@ function drawTouchControls(ctx) {
     ctx.beginPath(); ctx.ellipse(G.mouse.x * 2, G.mouse.y * 2, 22, 11, 0, 0, Math.PI * 2); ctx.stroke();
   }
   // buttons
-  const w = item('weapon', p.gear.weapon);
   for (const b of touchButtons()) {
     const held = Object.values(TOUCH.ptrs).some(t => t.kind === 'btn' && t.b.slot === b.slot);
     if (b.slot === 'pot') {

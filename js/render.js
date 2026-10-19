@@ -586,6 +586,11 @@ function drawEnemy(ctx, e, lights) {
     const bx = Math.round(vx - 8), by = Math.round(vy - e.hgt * ZS - (e.type === 'wisp' ? 2 : 4));
     ctx.fillStyle = '#1a1326'; ctx.fillRect(bx - 1, by - 1, 18, 4);
     ctx.fillStyle = '#ff5a7a'; ctx.fillRect(bx, by, Math.round(16 * e.hp / e.maxHp), 2);
+    // discovered weaknesses (right, element colour) and resists (left, element colour in a grey frame); M3 swaps in icons
+    const seen = G.prog.seen && G.prog.seen[e.type];
+    if (seen) { let wx = bx + 18, rx = bx - 4; for (const el in seen) {
+      if (seen[el] < 0) { ctx.fillStyle = '#ffe36a'; ctx.fillRect(wx, by - 1, 4, 4); ctx.fillStyle = EL_COL[el]; ctx.fillRect(wx + 1, by, 2, 2); wx += 5; }
+      else { ctx.fillStyle = '#5a5470'; ctx.fillRect(rx, by - 1, 4, 4); ctx.fillStyle = EL_COL[el]; ctx.fillRect(rx + 1, by, 2, 2); rx -= 5; } } }
   }
 }
 

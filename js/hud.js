@@ -39,7 +39,6 @@ function bar(ctx, x, y, w, h, frac, c1, c2, label) {
   for (let k = 1; k < 10; k++) { ctx.fillStyle = 'rgba(10,4,20,0.35)'; ctx.fillRect(x + Math.round(w * k / 10), y + h - 4, 2, 4); }
   if (label) T(ctx, label, x + w / 2, y + Math.round(h / 2 - 4), 8, '#ffffff', 'center');
 }
-function iconAt(ctx, glyph, color, x, y, s = 32) { ctx.imageSmoothingEnabled = false; ctx.drawImage(icon(glyph, color), x, y, s, s); }
 
 function btn(ctx, x, y, w, h, fn, hover) {
   G.ui.btns.push({ x, y, w, h, fn, hover });
@@ -131,7 +130,7 @@ function drawHUD(ctx) {
   ix += 6;
   for (const id in p.buffs) {
     const b = BUFFS[id]; if (!b) continue;
-    iconAt(ctx, b.icon, b.color, ix, BY - 3, 28);
+    drawIcon(ctx, buffIcon(id), ix, BY - 3, 28);
     const f = p.buffs[id].t / p.buffs[id].max;
     ctx.fillStyle = '#0a0614'; ctx.fillRect(ix, BY + 27, 28, 3); ctx.fillStyle = b.color; ctx.fillRect(ix, BY + 27, Math.round(28 * f), 3);
     ix += 32;
@@ -163,6 +162,10 @@ function drawHUD(ctx) {
     const w = 460, x = (DW - w) / 2, y = 26;
     T(ctx, `${(ENEMY.boss.name || 'Boss').toUpperCase()}   Lv ${b.lvl}`, DW / 2, y - 16, 8, '#ffb0e0', 'center');
     bar(ctx, x, y, w, 16, b.hp / b.maxHp, '#b0306e', '#ff7ae0', b.phase2 ? 'ENRAGED' : '');
+    // boss bars always show weaknesses / resistances (§5b)
+    const wk = Object.keys(b.res).filter(k => b.res[k] < 0), rs = Object.keys(b.res).filter(k => b.res[k] > 0);
+    if (wk.length) T(ctx, 'WEAK: ' + wk.join(' ').toUpperCase(), x, y + 22, 8, '#ffe36a');
+    if (rs.length) T(ctx, 'RESIST: ' + rs.join(' ').toUpperCase(), x + w, y + 22, 8, '#c8c0e0', 'right');
   }
   if (G.enemies.some(e => !e.dummy)) { const n = G.enemies.filter(e => !e.dummy).length; if (G.touch) T(ctx, `Enemies left: ${n}`, 28, 78, 8, '#ffb0e0'); else T(ctx, `Enemies left: ${n}`, DW - 20, 22, 8, '#ffb0e0', 'right'); }
 

@@ -175,6 +175,7 @@ const itemIcon = it => icon(BASES[it.base].icon, BASES[it.base].color);
 const gemIcon = (type, grade) => icon('gem', GEMS[type].col);
 const miscIcon = name => icon(name, { potion: '#ff6a8a', dust: '#c7a8ff', chest: '#c08a5e', xp: '#b48aff' }[name] || '#ffffff');
 const skillIcon = id => icon(SKILLS[id].icon, SKILLS[id].color);
+const buffIcon = id => icon(BUFFS[id].icon, BUFFS[id].color);
 function drawIcon(ctx, img, x, y, s) { ctx.imageSmoothingEnabled = false; ctx.drawImage(img, Math.round(x), Math.round(y), s, s); }
 function drawRarityFrame(ctx, x, y, s, rarity, t = G.t) {
   const c = rarityCol(rarity, t), R = RARITY[rarity];
