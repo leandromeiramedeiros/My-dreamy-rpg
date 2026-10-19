@@ -105,7 +105,7 @@ const IN = (() => {
   function onMouseMove(ev) {
     if (ev.pointerType && ev.pointerType !== 'mouse') return;
     mousePos(ev);
-    if (Math.abs(ev.movementX || 0) + Math.abs(ev.movementY || 0) > 2 || api.device === 'pad') setDevice('kbm');
+    if (Math.abs(ev.movementX || 0) + Math.abs(ev.movementY || 0) > 2 || api.device === 'pad') { setDevice('kbm'); if (typeof UI !== 'undefined') UI.focus.nav = false; }
   }
   function onMouseDown(ev) { mousePos(ev); codeDown('Mouse' + ev.button); }
   function onMouseUp(ev) { codeUp('Mouse' + ev.button); }
