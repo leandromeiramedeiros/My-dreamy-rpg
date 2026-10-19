@@ -61,7 +61,7 @@ function tileColor(m, x, y) {
 }
 
 function render(id, m, meta, outDir) {
-  const T = 10, W = m.W * T, H = m.H * T, top = 26;
+  const T = Math.max(10, Math.round(640 / Math.max(m.W, m.H))), W = m.W * T, H = m.H * T, top = 26;
   const im = new Img(W + 150, H + top, [10, 9, 18]);
   for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) im.rect(x * T, top + y * T, T, T, tileColor(m, x, y));
   // cliff lines (stronger) between tiles with |dh|>=2

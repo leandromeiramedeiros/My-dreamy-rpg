@@ -167,7 +167,7 @@ function uiClick(x, y, alt) {
 function beginPlay() { G.state = 'play'; initAudio(); G.banner = { s: G.map.name, sub: G.map.sub, t: 3.2, max: 3.2 }; }
 function newGame() {
   clearSave(); G.prog = { chests: {}, firsts: {}, trig: {} }; G.checkpoint = null;
-  G.player = makePlayer(); G.state = 'title'; enterMap(G.world.start); beginPlay(); saveGame();
+  G.player = makePlayer(); G.state = 'title'; enterMap(G.world.start); beginPlay();
 }
 function continueGame(s) {
   G.player = makePlayer(); applySave(G.player, s);

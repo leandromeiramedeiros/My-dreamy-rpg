@@ -106,20 +106,28 @@ function drawHUD(ctx) {
     T(ctx, t.s, x, y, t.big ? 16 : 8, t.col, 'center');
     ctx.globalAlpha = 1;
   }
+  drawDropNames(ctx);
   if (G.state === 'title') { drawTitle(ctx); return; }
 
   // ---- top-left: area + objective ----
   panel(ctx, 16, 14, 300, 54);
   T(ctx, m.name, 28, 24, 8, UI.gold);
   T(ctx, objective(), 28, 42, 8, UI.text);
+  // ---- potions (key 4) ----
+  panel(ctx, 324, 14, 76, 54);
+  drawIcon(ctx, miscIcon('potion'), 330, 25, 32);
+  T(ctx, `${p.potions}/${MAX_POTIONS}`, 368, 26, 8, p.potions ? '#ffb0c8' : UI.dim);
+  T(ctx, G.touch ? 'POT' : '[4]', 368, 44, 8, UI.dim);
 
   // ---- name plate + gear/buff icons (sketch: bar above portrait, icons to its right) ----
   const BY = DH - 148;
   panel(ctx, 16, BY, 214, 26);
   T(ctx, `${p.name}`, 28, BY + 9, 8, '#ffffff');
-  T(ctx, `Lv ${p.level} Dreamwalker`, 222, BY + 9, 8, UI.dim, 'right');
+  T(ctx, `Lv ${p.level} Dreamwalker`, 222, BY + 7, 8, UI.dim, 'right');
+  ctx.fillStyle = '#0a0614'; ctx.fillRect(22, BY + 18, 202, 4);
+  ctx.fillStyle = '#b48aff'; ctx.fillRect(22, BY + 18, Math.round(202 * (p.level >= MAX_LEVEL ? 1 : p.xp / xpToNext(p.level))), 4);
   let ix = 240;
-  for (const slot of ['weapon', 'chest', 'head', 'boots']) { const it = item(slot, p.gear[slot]); iconAt(ctx, it.icon, it.color, ix, BY - 3, 28); ix += 32; }
+  for (const slot of ['weapon', 'chest', 'head', 'boots']) { const it = p.equip[slot]; if (it) { drawIcon(ctx, itemIcon(it), ix, BY - 3, 28); ctx.strokeStyle = rarityCol(it.rarity); ctx.lineWidth = 2; ctx.strokeRect(ix, BY - 3, 28, 28); } ix += 32; }
   ix += 6;
   for (const id in p.buffs) {
     const b = BUFFS[id]; if (!b) continue;
@@ -153,7 +161,7 @@ function drawHUD(ctx) {
   const b = G.boss;
   if (b && !b.dead && b.spawnT <= 0.8) {
     const w = 460, x = (DW - w) / 2, y = 26;
-    T(ctx, 'THE GLOAM WARDEN', DW / 2, y - 16, 8, '#ffb0e0', 'center');
+    T(ctx, `${(ENEMY.boss.name || 'Boss').toUpperCase()}   Lv ${b.lvl}`, DW / 2, y - 16, 8, '#ffb0e0', 'center');
     bar(ctx, x, y, w, 16, b.hp / b.maxHp, '#b0306e', '#ff7ae0', b.phase2 ? 'ENRAGED' : '');
   }
   if (G.enemies.some(e => !e.dummy)) { const n = G.enemies.filter(e => !e.dummy).length; if (G.touch) T(ctx, `Enemies left: ${n}`, 28, 78, 8, '#ffb0e0'); else T(ctx, `Enemies left: ${n}`, DW - 20, 22, 8, '#ffb0e0', 'right'); }
@@ -162,21 +170,39 @@ function drawHUD(ctx) {
   if (G.banner && G.banner.t > 0) {
     const a = Math.min(1, G.banner.t, (G.banner.max || 3) - G.banner.t + 1);
     ctx.globalAlpha = clamp(a, 0, 1);
-    T(ctx, G.banner.s, DW / 2, 150, G.banner.boss ? 24 : 24, G.banner.boss ? '#ff7ae0' : UI.gold, 'center');
+    T(ctx, G.banner.s, DW / 2, 150, 24, G.banner.boss ? '#ff7ae0' : G.banner.lvl ? '#fff2b0' : UI.gold, 'center');
     if (G.banner.sub) T(ctx, G.banner.sub, DW / 2, 186, 8, UI.text, 'center');
     ctx.globalAlpha = 1;
   }
   if (G.msg && G.msg.t > 0) { ctx.globalAlpha = Math.min(1, G.msg.t * 2); T(ctx, G.msg.s, DW / 2, DH - 170, 8, '#ffe6f0', 'center'); ctx.globalAlpha = 1; }
   const near = m.portals.find(pt => pt.open && dist(p.x, p.y, pt.x, pt.y) < 3.2);
-  if (near && G.state === 'play') T(ctx, `A rift to ${(G.world.maps[near.to] || {}).name || near.to} hums... step in to cross over`, DW / 2, DH - 190, 8, '#e2c8ff', 'center');
+  if (near && G.state === 'play') { const [a, b] = zoneLevel(near.to); T(ctx, `A rift to ${(G.world.maps[near.to] || {}).name || near.to} (Lv ${a}-${b}) hums... step in to cross over`, DW / 2, DH - 190, 8, '#e2c8ff', 'center'); }
 
   if (G.touch) { if (G.state === 'play' && !G.ui.open) drawTouchControls(ctx); }
-  else T(ctx, 'TAB loadout   H help   M sound', DW - 20, 80, 8, 'rgba(244,236,255,0.6)', 'right', false);
+  else T(ctx, 'TAB inventory   4 potion   H help   M sound', DW - 20, 80, 8, 'rgba(244,236,255,0.6)', 'right', false);
   if (G.ui.help) drawHelp(ctx);
-  if (G.ui.open) drawLoadout(ctx);
+  if (G.ui.open) drawInventory(ctx);
   if (G.state === 'dead') {
-    ctx.fillStyle = `rgba(20,6,30,${Math.min(0.7, G.deadT * 0.5)})`; ctx.fillRect(0, 0, DW, DH);
-    if (G.deadT > 1) { T(ctx, 'You drift out of the dream...', DW / 2, 220, 16, '#ffb0e0', 'center'); T(ctx, (G.touch ? 'Tap' : 'Click') + ' to dream again', DW / 2, 260, 8, UI.text, 'center'); }
+    ctx.fillStyle = `rgba(20,6,30,${Math.min(0.75, G.deadT * 0.5)})`; ctx.fillRect(0, 0, DW, DH);
+    if (G.deadT > 0.8) {
+      const lost = deathXpLoss(p), cp = G.checkpoint && G.world.maps[G.checkpoint.map];
+      T(ctx, 'You fell...', DW / 2, 200, 24, '#ffb0e0', 'center');
+      T(ctx, lost ? `-${lost} XP` : 'The dream holds you gently.', DW / 2, 248, 8, '#c79bff', 'center');
+      T(ctx, `${G.touch ? 'Tap' : 'Click'} to wake at ${cp ? 'the last checkpoint' : 'the start of ' + m.name}`, DW / 2, 276, 8, UI.text, 'center');
+    }
+  }
+}
+// floating rarity-coloured names over ground loot (crisp HUD text)
+function drawDropNames(ctx) {
+  const p = G.player; if (!G.drops || !p) return;
+  for (const d of G.drops) {
+    if (d.t < 0.5) continue;
+    const i = RARITY[d.rar].i, dd = dist(p.x, p.y, d.x, d.y);
+    if (dd > (i >= 2 ? 9 : 5)) continue;
+    const [vx, vy] = worldToView(d.x, d.y, d.z), h = DROP_FX[i].h * Math.min(1, (d.t - 0.3) * 2.5);
+    ctx.globalAlpha = clamp(Math.min((d.t - 0.5) * 3, (i >= 2 ? 9 : 5) - dd), 0, 1);
+    T(ctx, d.name, Math.round(vx * 2), Math.round((vy - Math.max(10, h) - 5) * 2), 8, rarityCol(d.rar), 'center');
+    ctx.globalAlpha = 1;
   }
 }
 
@@ -194,11 +220,11 @@ function drawSkillBar(ctx) {
     const id = s === 'lmb' ? null : slotSkill(p, s);
     const sk = id ? SKILLS[id] : null;
     ctx.fillStyle = '#0a0614'; ctx.fillRect(x - 1, y - 1, 38, 38);
-    if (s === 'lmb') iconAt(ctx, w.icon, w.color, x + 2, y + 2);
-    else if (sk) iconAt(ctx, sk.icon, sk.color, x + 2, y + 2);
+    if (s === 'lmb') drawIcon(ctx, itemIcon(p.equip.weapon), x + 2, y + 2, 32);
+    else if (sk) drawIcon(ctx, skillIcon(id), x + 2, y + 2, 32);
     if (sk) {
       const cd = p.cds[id] || 0;
-      if (cd > 0) { const f = cd / sk.cd; ctx.fillStyle = 'rgba(10,4,20,0.72)'; ctx.fillRect(x + 2, y + 2, 32, Math.round(32 * f)); T(ctx, cd >= 1 ? Math.ceil(cd) + '' : cd.toFixed(1), x + 18, y + 14, 8, '#ffffff', 'center'); }
+      if (cd > 0) { const f = cd / (p.cdm[id] || sk.cd); ctx.fillStyle = 'rgba(10,4,20,0.72)'; ctx.fillRect(x + 2, y + 2, 32, Math.round(32 * f)); T(ctx, cd >= 1 ? Math.ceil(cd) + '' : cd.toFixed(1), x + 18, y + 14, 8, '#ffffff', 'center'); }
       else if ((sk.mp || 0) > p.mp || (sk.st || 0) > p.st) { ctx.fillStyle = 'rgba(40,60,160,0.55)'; ctx.fillRect(x + 2, y + 2, 32, 32); }
     }
     if (G.lastCast && G.lastCast.slot === s && G.lastCast.t > 0) { ctx.fillStyle = `rgba(255,255,255,${G.lastCast.t * 2})`; ctx.fillRect(x + 2, y + 2, 32, 32); }
@@ -226,94 +252,18 @@ function drawHelp(ctx) {
   const lines = G.touch ? [
     ['Left thumb', 'Joystick: move'], ['Big button (hold)', 'Weapon basic attack'], ['Tap a skill', 'Cast at nearest enemy'],
     ['Drag from a skill', 'Aim, release to cast'], ['Q  E  R', 'Weapon skills (R = ultimate)'], ['F  C  SHF', 'Chest / helmet / boots skills'],
-    ['1  2  3', 'Character skills (your choice)'], ['GEAR', 'Loadout: swap gear & skills'], ['FULL', 'Fullscreen'], ['Tap', 'Close this help'],
+    ['1  2  3', 'Character skills (your choice)'], ['POT', 'Drink a potion (40% HP)'], ['GEAR', 'Inventory, gems & skills'], ['Tap', 'Close this help'],
   ] : [
     ['WASD / Arrows', 'Move'], ['Mouse', 'Aim'], ['Left click (hold)', 'Weapon basic attack'],
     ['Q  E  R', 'Weapon skills (R = ultimate)'], ['F', 'Chest armour skill'], ['C', 'Helmet skill'], ['Shift / Space', 'Boots skill'],
-    ['1  2  3', 'Character skills (your choice)'], ['TAB / I', 'Loadout: swap gear & skills'], ['M', 'Toggle sound'],
+    ['1  2  3', 'Character skills (your choice)'], ['4', 'Drink a potion (40% HP)'], ['TAB / I', 'Inventory, gems & skills'],
   ];
   lines.forEach(([k, v], i) => { T(ctx, k, x + 30, y + 52 + i * 20, 8, '#ffe08a'); T(ctx, v, x + 230, y + 52 + i * 20, 8, UI.text); });
   T(ctx, 'Like Albion: you are what you wear. Gear decides', x + 30, y + 262, 8, UI.dim);
   T(ctx, 'Q E R F C SHIFT. Character skills are your pick.', x + 30, y + 278, 8, UI.dim);
 }
 
-function drawLoadout(ctx) {
-  const p = G.player;
-  const X = 70, Y = 30, W = 820, H = 484;
-  ctx.fillStyle = 'rgba(8,4,18,0.55)'; ctx.fillRect(0, 0, DW, DH);
-  panel(ctx, X, Y, W, H, true);
-  T(ctx, 'LOADOUT', X + W / 2, Y + 14, 16, UI.gold, 'center');
-  const xh = btn(ctx, X + W - 46, Y + 10, 34, 34, () => { G.ui.open = false; });
-  ctx.fillStyle = xh ? 'rgba(255,211,90,0.3)' : 'rgba(0,0,0,0.35)'; ctx.fillRect(X + W - 46, Y + 10, 34, 34);
-  T(ctx, 'X', X + W - 29, Y + 19, 16, UI.gold, 'center');
-  T(ctx, 'You are what you wear', X + W / 2, Y + 38, 8, UI.dim, 'center');
-  let tip = null;
-  // --- equipment ---
-  T(ctx, 'EQUIPMENT', X + 24, Y + 64, 8, '#ffe08a');
-  const rows = [['weapon', 'Weapon'], ['head', 'Helmet'], ['chest', 'Chest'], ['boots', 'Boots']];
-  rows.forEach(([slot, label], r) => {
-    const ry = Y + 84 + r * 76;
-    T(ctx, label, X + 24, ry, 8, UI.dim);
-    ITEMS[slot].forEach((it, i) => {
-      const bx = X + 24 + i * 74, by = ry + 14, eq = p.gear[slot] === it.id;
-      const hov = btn(ctx, bx, by, 66, 52, () => equip(slot, it.id));
-      ctx.fillStyle = eq ? 'rgba(255,211,90,0.18)' : hov ? 'rgba(199,168,255,0.15)' : 'rgba(0,0,0,0.3)'; ctx.fillRect(bx, by, 66, 52);
-      ctx.strokeStyle = eq ? UI.gold : hov ? UI.line : UI.dark; ctx.lineWidth = 2; ctx.strokeRect(bx, by, 66, 52);
-      iconAt(ctx, it.icon, it.color, bx + 17, by + 4);
-      T(ctx, it.name.split(' ')[0], bx + 33, by + 40, 8, eq ? UI.gold : UI.text, 'center');
-      if (hov) tip = { t: it.name, d: `${it.desc} ${slot === 'weapon' ? '' : 'Grants: ' + SKILLS[it.skill].name + ' — ' + SKILLS[it.skill].desc}` };
-    });
-  });
-  // --- weapon skills ---
-  const w = item('weapon', p.gear.weapon), SX = X + 280;
-  T(ctx, `${w.name.toUpperCase()} SKILLS`, SX, Y + 64, 8, '#ffe08a');
-  ['q', 'e', 'r'].forEach((slot, r) => {
-    const ry = Y + 84 + r * 76;
-    T(ctx, slot.toUpperCase() + (slot === 'r' ? '  (ultimate)' : ''), SX, ry, 8, UI.dim);
-    w[slot].forEach((id, i) => {
-      const sk = SKILLS[id], bx = SX + i * 130, by = ry + 14, sel = p.wsk[w.id][slot] === id;
-      const hov = btn(ctx, bx, by, 122, 52, () => { p.wsk[w.id][slot] = id; });
-      ctx.fillStyle = sel ? 'rgba(255,211,90,0.18)' : hov ? 'rgba(199,168,255,0.15)' : 'rgba(0,0,0,0.3)'; ctx.fillRect(bx, by, 122, 52);
-      ctx.strokeStyle = sel ? UI.gold : hov ? UI.line : UI.dark; ctx.lineWidth = 2; ctx.strokeRect(bx, by, 122, 52);
-      iconAt(ctx, sk.icon, sk.color, bx + 8, by + 10);
-      wrap(ctx, sk.name, bx + 46, by + 12, 72, 8, sel ? UI.gold : UI.text, 14);
-      if (hov) tip = { t: sk.name, d: `${sk.desc}  (${sk.mp || 0} MP, ${sk.cd}s)` };
-    });
-  });
-  const ay = Y + 84 + 3 * 76;
-  T(ctx, 'FROM ARMOUR', SX, ay, 8, UI.dim);
-  [['F', 'chest'], ['C', 'head'], ['SHF', 'boots']].forEach(([k, slot], i) => {
-    const sk = SKILLS[item(slot, p.gear[slot]).skill], bx = SX + i * 86, by = ay + 14;
-    const hov = btn(ctx, bx, by, 80, 52, () => {});
-    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(bx, by, 80, 52); ctx.strokeStyle = '#8fb0ff'; ctx.lineWidth = 2; ctx.strokeRect(bx, by, 80, 52);
-    iconAt(ctx, sk.icon, sk.color, bx + 6, by + 10); T(ctx, k, bx + 60, by + 22, 8, '#8fb0ff', 'center');
-    if (hov) tip = { t: sk.name, d: sk.desc };
-  });
-  // --- character skills ---
-  const CX = X + 560;
-  T(ctx, 'CHARACTER SKILLS', CX, Y + 64, 8, '#ffb0e0');
-  T(ctx, 'pick any 3', CX, Y + 80, 8, UI.dim);
-  CHAR_SKILLS.forEach((id, i) => {
-    const sk = SKILLS[id], bx = CX + (i % 2) * 124, by = Y + 98 + Math.floor(i / 2) * 64, idx = p.csk.indexOf(id);
-    const hov = btn(ctx, bx, by, 118, 56, () => toggleCharSkill(id));
-    ctx.fillStyle = idx >= 0 ? 'rgba(255,176,224,0.18)' : hov ? 'rgba(199,168,255,0.15)' : 'rgba(0,0,0,0.3)'; ctx.fillRect(bx, by, 118, 56);
-    ctx.strokeStyle = idx >= 0 ? '#ffb0e0' : hov ? UI.line : UI.dark; ctx.lineWidth = 2; ctx.strokeRect(bx, by, 118, 56);
-    iconAt(ctx, sk.icon, sk.color, bx + 6, by + 12);
-    wrap(ctx, sk.name, bx + 44, by + 12, 70, 8, idx >= 0 ? '#ffb0e0' : UI.text, 14);
-    if (idx >= 0) T(ctx, `[${idx + 1}]`, bx + 112, by + 40, 8, '#ffffff', 'right');
-    if (hov) tip = { t: sk.name, d: `${sk.desc}  (${sk.mp || 0} MP, ${sk.cd}s)` };
-  });
-  // --- tooltip ---
-  const ty = Y + H - 70;
-  ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(X + 20, ty, W - 40, 56);
-  if (tip) { T(ctx, tip.t, X + 32, ty + 10, 8, UI.gold); wrap(ctx, tip.d, X + 32, ty + 28, W - 70, 8, UI.text, 14); }
-  else T(ctx, G.touch ? 'Tap gear or skills to equip them. X to close.' : 'Hover anything for details. TAB to close.', X + 32, ty + 22, 8, UI.dim);
-}
-function equip(slot, id) {
-  const p = G.player;
-  if (p.gear[slot] === id) return;
-  p.gear[slot] = id; recalcStats(p, false); sfx('shield');
-}
+@@INV@@
 function toggleCharSkill(id) {
   const p = G.player, i = p.csk.indexOf(id);
   if (i >= 0) p.csk.splice(i, 1);
@@ -321,14 +271,4 @@ function toggleCharSkill(id) {
   else p.csk[2] = id;
 }
 
-function drawTitle(ctx) {
-  ctx.fillStyle = 'rgba(10,4,24,0.35)'; ctx.fillRect(0, 0, DW, DH);
-  const y = 140 + Math.sin(G.t * 1.2) * 4;
-  T(ctx, 'MY DREAMY RPG', DW / 2 + 3, y + 3, 32, '#3a1a5a', 'center', false);
-  T(ctx, 'MY DREAMY RPG', DW / 2, y, 32, '#ffe6f6', 'center', false);
-  T(ctx, 'a high-fantasy dream above the clouds', DW / 2, y + 52, 8, '#ffd6ec', 'center');
-  if (Math.sin(G.t * 3) > -0.4) T(ctx, TOUCH_CAPABLE ? 'TAP TO BEGIN' : 'CLICK TO BEGIN', DW / 2, 330, 16, UI.gold, 'center');
-  T(ctx, TOUCH_CAPABLE ? 'left thumb moves · hold the big button to attack · tap or drag skills to cast'
-    : 'WASD move · mouse aim · click attack · Q E R F C SHIFT 1 2 3 skills · TAB loadout', DW / 2, DH - 40, 8, UI.text, 'center');
-  if (TOUCH_CAPABLE && window.innerHeight > window.innerWidth) T(ctx, 'Turn your device sideways for the best view', DW / 2, 380, 8, '#ffb0e0', 'center');
-}
+@@TITLE@@
