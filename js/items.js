@@ -321,6 +321,24 @@ function salvageItem(p, bi) {
   for (let k = 0; k < it.sockets.length; k++) if (it.sockets[k]) { if (!bagAdd(p, { gem: it.sockets[k] })) return 'Bag full'; it.sockets[k] = null; }
   p.bag[bi] = null; const v = salvageValue(it); p.dust += v; return v;
 }
+// 3 gems of one kind and grade -> 1 of the next grade (bag stack `bi`). Returns '' or the reason it refused.
+function combineGems(p, bi) {
+  const e = p.bag[bi]; if (!e || !e.gem) return 'Pick a gem stack first';
+  const g = gemParse(e.gem); if (!g) return 'Unknown gem';
+  if (g.grade >= GEM_MAX) return 'Already the best grade';
+  if (e.n < 3) return `Need 3 ${gemName(e.gem)} (have ${e.n})`;
+  const next = `${g.type}_${g.grade + 1}`;
+  e.n -= 3; if (e.n <= 0) p.bag[bi] = null;
+  if (!bagAdd(p, { gem: next })) { if (p.bag[bi]) p.bag[bi].n += 3; else p.bag[bi] = { gem: e.gem, n: 3 }; return 'Bag full'; }
+  return '';
+}
+// bag sort: gear by rarity (best first) then slot then item level, gems last (grouped by type and grade)
+function sortBag(p) {
+  const rank = e => e.gem ? 1000 : -RARITY[e.rarity].i * 100 - e.ilvl / 100;
+  const slotI = e => e.gem ? 0 : SLOTS.indexOf(e.slot);
+  const list = p.bag.filter(Boolean).sort((a, b) => rank(a) - rank(b) || slotI(a) - slotI(b) || (a.gem ? String(a.gem).localeCompare(b.gem) : 0));
+  p.bag = list.concat(new Array(BAG_SIZE - list.length).fill(null));
+}
 // trigger action `loot`: N items of at least `rarity` at x,y (default: beside the hero) — room-clear rewards
 function lootAction(a) {
   const p = G.player, [lo, hi] = zoneLevel(), L = clamp(p.level, lo, hi), min = RARITY[a.rarity] ? a.rarity : 'uncommon', list = [];
@@ -395,6 +413,10 @@ function pickup(p, d) {
   } else if (d.kind === 'gem') { if (!bagAdd(p, { gem: d.gem })) return false; text(p.x, p.y, p.z + 3, gemName(d.gem), gemParse(d.gem).def.col); }
   else { if (!bagAdd(p, d.it)) return false; text(p.x, p.y, p.z + 3, itemName(d.it), RARITY[d.it.rarity].col, RARITY[d.it.rarity].i >= 3); }
   sfx(RARITY[d.rar].i >= 3 ? 'loot' : 'pickup');
+  if (typeof UI !== 'undefined' && d.kind !== 'potion') {   // loot toast on the right edge (HUD.md)
+    if (d.kind === 'gem') UI.toast({ text: gemName(d.gem), icon: gemIcon(gemParse(d.gem).type), col: gemParse(d.gem).def.col });
+    else UI.toast({ text: itemName(d.it), icon: itemIcon(d.it), rarity: d.it.rarity });
+  } else if (typeof UI !== 'undefined') UI.toast({ text: '+1 Potion', icon: miscIcon('potion'), col: '#ff8fa8' });
   burst(d.x, d.y, d.z + 0.3, 8 + RARITY[d.rar].i * 4, [rarityCol(d.rar), '#ffffff'], 2);
   return true;
 }

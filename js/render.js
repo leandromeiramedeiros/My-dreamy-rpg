@@ -584,16 +584,7 @@ function drawEnemy(ctx, e, lights) {
   if (e.frozen) { ctx.globalAlpha = 0.5 * spawnA; if (img) ctx.drawImage(silOf(img, '#bff4ff'), Math.round(vx - img.width / 2), Math.round(vy - img.height)); }
   ctx.globalAlpha = 1;
   if (e.stunT > 0 && !e.frozen) for (let k = 0; k < 3; k++) { const a = G.t * 6 + k * 2.1; ctx.fillStyle = '#ffe36a'; ctx.fillRect(Math.round(vx + Math.cos(a) * 6), Math.round(vy - e.hgt * ZS - 4 + Math.sin(a) * 2), 1, 1); }
-  if (!e.boss && !e.dummy && e.hp < e.maxHp && e.spawnT <= 0) {
-    const bx = Math.round(vx - 8), by = Math.round(vy - e.hgt * ZS - (e.type === 'wisp' ? 2 : 4));
-    ctx.fillStyle = '#1a1326'; ctx.fillRect(bx - 1, by - 1, 18, 4);
-    ctx.fillStyle = '#ff5a7a'; ctx.fillRect(bx, by, Math.round(16 * e.hp / e.maxHp), 2);
-    // discovered weaknesses (right, element colour) and resists (left, element colour in a grey frame); M3 swaps in icons
-    const seen = G.seen[e.type] && G.seen[e.type].res;
-    if (seen) { let wx = bx + 18, rx = bx - 4; for (const el in seen) {
-      if (seen[el] < 0) { ctx.fillStyle = '#ffe36a'; ctx.fillRect(wx, by - 1, 4, 4); ctx.fillStyle = EL_COL[el]; ctx.fillRect(wx + 1, by, 2, 2); wx += 5; }
-      else { ctx.fillStyle = '#5a5470'; ctx.fillRect(rx, by - 1, 4, 4); ctx.fillStyle = EL_COL[el]; ctx.fillRect(rx + 1, by, 2, 2); rx -= 5; } } }
-  }
+  // nameplates (bar, icons, statuses) are drawn by hud.js drawNameplates on the 2x grid
 }
 
 function drawProj(ctx, pr, lights) {

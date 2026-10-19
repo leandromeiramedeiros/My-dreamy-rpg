@@ -33,16 +33,16 @@
 // ---------------------------------------------------------------------------
 const IN = (() => {
   const ACTIONS = ['moveUp', 'moveDown', 'moveLeft', 'moveRight', 'attack', 'skillQ', 'skillE', 'skillR', 'skillF', 'skillC', 'dodge',
-    's1', 's2', 's3', 'potion', 'interact', 'inventory', 'quests', 'bestiary', 'map', 'pause', 'help', 'mute',
+    's1', 's2', 's3', 'potion', 'interact', 'inventory', 'character', 'quests', 'bestiary', 'map', 'pause', 'help', 'mute',
     'menuUp', 'menuDown', 'menuLeft', 'menuRight', 'accept', 'back', 'menuAlt', 'menuInfo', 'tabPrev', 'tabNext'];
   const LABEL = { moveUp: 'Move up', moveDown: 'Move down', moveLeft: 'Move left', moveRight: 'Move right', attack: 'Attack',
     skillQ: 'Weapon skill Q', skillE: 'Weapon skill E', skillR: 'Ultimate', skillF: 'Chest skill', skillC: 'Helmet skill', dodge: 'Dodge',
     s1: 'Character skill 1', s2: 'Character skill 2', s3: 'Character skill 3', potion: 'Potion', interact: 'Interact',
-    inventory: 'Inventory', quests: 'Quests', bestiary: 'Bestiary', map: 'Map', pause: 'Pause', help: 'Help', mute: 'Sound on/off',
+    inventory: 'Inventory', character: 'Character', quests: 'Quests', bestiary: 'Bestiary', map: 'Map', pause: 'Pause', help: 'Help', mute: 'Sound on/off',
     menuUp: 'Menu up', menuDown: 'Menu down', menuLeft: 'Menu left', menuRight: 'Menu right', accept: 'Confirm', back: 'Back',
     menuAlt: 'Secondary (salvage)', menuInfo: 'Compare', tabPrev: 'Previous tab', tabNext: 'Next tab' };
   const MENU = new Set(['menuUp', 'menuDown', 'menuLeft', 'menuRight', 'accept', 'back', 'menuAlt', 'menuInfo', 'tabPrev', 'tabNext']);
-  const GLOBAL = new Set(['inventory', 'quests', 'bestiary', 'map', 'pause', 'help', 'mute']);
+  const GLOBAL = new Set(['inventory', 'character', 'quests', 'bestiary', 'map', 'pause', 'help', 'mute']);
   const REPEAT = new Set(['menuUp', 'menuDown', 'menuLeft', 'menuRight']);
   const ctxOf = a => GLOBAL.has(a) ? 'global' : MENU.has(a) ? 'menu' : 'play';
 
@@ -51,7 +51,7 @@ const IN = (() => {
       moveUp: ['KeyW', 'ArrowUp'], moveDown: ['KeyS', 'ArrowDown'], moveLeft: ['KeyA', 'ArrowLeft'], moveRight: ['KeyD', 'ArrowRight'],
       attack: ['Mouse0'], skillQ: ['KeyQ'], skillE: ['KeyE'], skillR: ['KeyR'], skillF: ['KeyF'], skillC: ['KeyC'],
       dodge: ['ShiftLeft', 'ShiftRight', 'Mouse2'], s1: ['Digit1'], s2: ['Digit2'], s3: ['Digit3'], potion: ['Digit4'],
-      interact: ['Space'], inventory: ['Tab', 'KeyI'], quests: ['KeyJ'], bestiary: ['KeyB'], map: ['KeyM'], pause: ['Escape'],
+      interact: ['Space'], inventory: ['Tab', 'KeyI'], character: ['KeyK'], quests: ['KeyJ'], bestiary: ['KeyB'], map: ['KeyM'], pause: ['Escape'],
       help: ['KeyH'], mute: ['KeyN'],
       menuUp: ['ArrowUp', 'KeyW'], menuDown: ['ArrowDown', 'KeyS'], menuLeft: ['ArrowLeft', 'KeyA'], menuRight: ['ArrowRight', 'KeyD'],
       accept: ['Enter', 'Space'], back: ['Escape', 'Backspace'], menuAlt: ['KeyX'], menuInfo: ['KeyC'], tabPrev: ['KeyQ'], tabNext: ['KeyE'],
@@ -59,7 +59,7 @@ const IN = (() => {
     pad: {
       moveUp: [], moveDown: [], moveLeft: [], moveRight: [],   // the left stick (not rebindable)
       attack: [7], dodge: [6], skillQ: [5], skillE: [4], skillF: [2], skillC: [3], skillR: [11], interact: [0], potion: [1],
-      s1: [14], s2: [12], s3: [15], map: [13], pause: [9], inventory: [8], quests: [], bestiary: [], help: [], mute: [],
+      s1: [14], s2: [12], s3: [15], map: [13], pause: [9], inventory: [8], character: [], quests: [], bestiary: [], help: [], mute: [],
       menuUp: [12, 'LS-up'], menuDown: [13, 'LS-down'], menuLeft: [14, 'LS-left'], menuRight: [15, 'LS-right'],
       accept: [0], back: [1], menuAlt: [2], menuInfo: [3], tabPrev: [4], tabNext: [5],
     },
