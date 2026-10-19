@@ -96,14 +96,14 @@ function ornament(img, color, hi, edge) {
   const c = hex(color), hc = hex(hi), ec = hex(edge);
   for (const [fx, fy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
     const px = (x, y) => [fx ? w - 1 - x : x, fy ? h - 1 - y : y];
-    // dark outline first (8-neighbour ring around crescent), then body
-    const on = (x, y) => y >= 0 && y < 6 && x >= 0 && x < 6 && CRESCENT[y][x] === '#';
+    const on = (x, y) => y >= 1 && y < 7 && x >= 1 && x < 7 && CRESCENT[y - 1][x - 1] === '#';
+    // dark outline only where the frame has no solid pixel (so the frame lines flow into the horns)
     for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
-      if (on(x, y)) continue; let near = false;
+      if (on(x, y) || x > 6 || y > 6) continue; let near = false;
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (on(x + dx, y + dy)) near = true;
-      if (near) { const [qx, qy] = px(x, y); if (x < 7 && y < 7) img.set(qx, qy, ec); }
+      const [qx, qy] = px(x, y); if (near && img.get(qx, qy)[3] < 255) img.set(qx, qy, ec);
     }
-    for (let y = 0; y < 6; y++) for (let x = 0; x < 6; x++) if (on(x, y)) { const [qx, qy] = px(x, y); img.set(qx, qy, (x === 1 && y === 1) || (x === 0 && y === 2) ? hc : c); }
+    for (let y = 1; y < 7; y++) for (let x = 1; x < 7; x++) if (on(x, y)) { const [qx, qy] = px(x, y); img.set(qx, qy, (x === 2 && y === 2) || (x === 1 && y === 3) || (x === 3 && y === 1) ? hc : c); }
   }
 }
 const diamond = (n, cutMax, o) => { // octagonal / diamond mask sprite
@@ -246,8 +246,7 @@ add('arrowDown', grid(['#####', '.###.', '..#..'], { '#': hex(P.text) }));
 }
 for (const on of [false, true]) {
   const img = frame(9, 9, { rt: 1, layers: [P.edge, on ? P.bright : P.line], fill: on ? '#3a2c78' : '#0b0716' });
-  if (on) [[6, 2], [5, 3], [2, 4], [4, 4], [3, 5]].forEach(([x, y]) => img.set(x, y, hex(P.gold)));
-  if (on) [[6, 3], [5, 4]].forEach(([x, y]) => img.set(x, y, hex(P.gold)));
+  if (on) [[6, 2], [5, 3], [2, 4], [4, 4], [3, 5], [6, 3]].forEach(([x, y]) => img.set(x, y, hex(P.gold)));
   add(on ? 'checkOn' : 'checkOff', img);
 }
 for (const hov of [false, true]) {
