@@ -48,15 +48,15 @@
 const MUSIC_PATCHES = {
   // ---- leads / keys
   musicBox:  { osc:'triangle', detune:5, unison:2, adsr:[0.002, 0.45, 0.0, 0.8], filter:{ type:'lowpass', freq:4200, q:0.4, env:3000 }, send:{ delay:0.28, reverb:0.5 }, gain:0.4 },
-  celesta:   { osc:'sine',     detune:4, unison:2, adsr:[0.001, 0.3, 0.0, 0.6],  filter:{ type:'lowpass', freq:7000, q:0.3, env:0 },    send:{ delay:0.3,  reverb:0.55 }, gain:0.25 },
+  celesta:   { osc:'sine',     detune:4, unison:2, adsr:[0.001, 0.3, 0.0, 0.6],  filter:{ type:'lowpass', freq:7000, q:0.3, env:0 },    send:{ delay:0.3,  reverb:0.55 }, gain:0.2 },
   glassPing: { osc:'sine',     detune:6, unison:2, adsr:[0.001, 0.55, 0.0, 1.0], filter:{ type:'lowpass', freq:9000, q:0.3, env:0 },    send:{ delay:0.4,  reverb:0.6 }, gain:0.3 },
   pipTri:    { osc:'triangle', detune:0, unison:1, adsr:[0.002, 0.07, 0.0, 0.05], filter:{ type:'lowpass', freq:5200, q:0.5, env:0 },   send:{ delay:0.22, reverb:0.3 }, gain:0.3 },
   deathBox:  { osc:'triangle', detune:4, unison:2, adsr:[0.003, 1.0, 0.1, 2.4],  filter:{ type:'lowpass', freq:3000, q:0.4, env:1500 }, send:{ delay:0.35, reverb:0.9 }, gain:0.4 },
   drop:      { osc:'sine',     detune:0, unison:1, adsr:[0.001, 0.25, 0.0, 0.6], filter:{ type:'lowpass', freq:8000, q:0.3, env:0 },    send:{ delay:0.6,  reverb:0.6 }, gain:0.2 },
-  pluckLead: { osc:'square',   detune:6, unison:2, adsr:[0.003, 0.14, 0.12, 0.12], filter:{ type:'lowpass', freq:3000, q:1.0, env:2500 }, send:{ delay:0.25, reverb:0.3 }, gain:0.2 },
+  pluckLead: { osc:'square',   detune:6, unison:2, adsr:[0.003, 0.14, 0.12, 0.12], filter:{ type:'lowpass', freq:3000, q:1.0, env:2500 }, send:{ delay:0.25, reverb:0.3 }, gain:0.3 },
   flute:     { osc:'sine',     detune:0, unison:1, adsr:[0.08, 0.1, 0.85, 0.25], filter:{ type:'lowpass', freq:3500, q:0.5, env:0 },    send:{ delay:0.3, reverb:0.45 }, gain:0.1, vibrato:{ rate:5.2, depth:14, delay:0.25 } },
   morrowVoice:{ osc:'sine',    detune:5, unison:2, adsr:[0.12, 0.4, 0.7, 0.9],   filter:{ type:'lowpass', freq:900, q:0.6, env:300 },   send:{ delay:0.15, reverb:0.6 }, gain:0.15, vibrato:{ rate:4.6, depth:10, delay:0.4 } },
-  brassLead: { osc:'saw',      detune:8, unison:2, adsr:[0.005, 0.15, 0.5, 0.12], filter:{ type:'lowpass', freq:1800, q:2.0, env:2500 }, send:{ delay:0.2, reverb:0.3 }, gain:0.2 },
+  brassLead: { osc:'saw',      detune:8, unison:2, adsr:[0.005, 0.15, 0.5, 0.12], filter:{ type:'lowpass', freq:1800, q:2.0, env:2500 }, send:{ delay:0.2, reverb:0.3 }, gain:0.26 },
   brassSting:{ osc:'saw',      detune:10, unison:2, adsr:[0.01, 0.2, 0.5, 0.4],  filter:{ type:'lowpass', freq:1600, q:1.5, env:2000 }, send:{ delay:0.15, reverb:0.4 }, gain:0.12 },
   // ---- pads
   softPad:   { osc:'square',   detune:9, unison:2, adsr:[0.7, 0.5, 0.7, 1.4],    filter:{ type:'lowpass', freq:1100, q:0.8, env:700 },  send:{ delay:0.1, reverb:0.55 }, gain:0.03 },
@@ -67,7 +67,7 @@ const MUSIC_PATCHES = {
   choir:     { osc:'saw',      detune:14, unison:3, adsr:[0.9, 0.6, 0.75, 1.6],  filter:{ type:'lowpass', freq:1400, q:1.5, env:0 },    send:{ delay:0.15, reverb:0.85 }, gain:0.06, vibrato:{ rate:4.8, depth:8, delay:0.5 } },
   // ---- bass
   lullBass:  { osc:'triangle', detune:0, unison:1, adsr:[0.01, 0.3, 0.6, 0.3],   filter:{ type:'lowpass', freq:500, q:0.5, env:0 },     send:{ delay:0, reverb:0.15 }, gain:0.15 },
-  subBass:   { osc:'sine',     detune:0, unison:1, adsr:[0.01, 0.25, 0.7, 0.25],  filter:{ type:'lowpass', freq:400, q:0.4, env:0 },     send:{ delay:0, reverb:0.1 }, gain:0.22 },
+  subBass:   { osc:'sine',     detune:0, unison:1, adsr:[0.01, 0.25, 0.7, 0.25],  filter:{ type:'lowpass', freq:400, q:0.4, env:0 },     send:{ delay:0, reverb:0.1 }, gain:0.13 },
   pluckBass: { osc:'square',   detune:0, unison:1, adsr:[0.003, 0.14, 0.2, 0.08], filter:{ type:'lowpass', freq:700, q:1.0, env:900 },   send:{ delay:0, reverb:0.1 }, gain:0.12 },
   sawBass:   { osc:'saw',      detune:0, unison:1, adsr:[0.004, 0.2, 0.5, 0.1],   filter:{ type:'lowpass', freq:380, q:2.0, env:700 },   send:{ delay:0, reverb:0.1 }, gain:0.15 },
   // ---- beds / drones
