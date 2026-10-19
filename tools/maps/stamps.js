@@ -21,7 +21,7 @@ function placePortals(g, S) {
     const a = ANCHORS[S.id + '.' + k];
     const o = { open: p.open !== false, marker: !!p.marker };
     if (p.arrive) { const t = ANCHORS[p.arrive]; if (!t) throw new Error(`portal ${S.id}.${k}: unknown arrive anchor ${p.arrive}`); o.arrive = { x: Math.round(t.landing.x * 100) / 100, y: Math.round(t.landing.y * 100) / 100 }; }
-    const pr = g.portal(a.portal.x, a.portal.y, p.to, o); pr.key = k;
+    const pr = g.portal(a.portal.x, a.portal.y, p.to, o); pr.id = k;
     g.portalIdx = g.portalIdx || {}; g.portalIdx[k] = g.portals.length - 1;
   }
 }

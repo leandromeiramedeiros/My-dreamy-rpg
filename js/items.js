@@ -329,6 +329,44 @@ function lootAction(a) {
   dropLoot(x, y, list);
 }
 
+// ===== inventory actions (input-agnostic: mouse, touch and later gamepad/ui.js drive these) =================
+// State: G.ui.open/tab, G.ui.sel (focused item or gem), G.ui.gem (picked gem's bag index), G.ui.salvage, G.ui.note.
+// Mouse acts on the first click; touch selects on the first tap and acts on the second.
+function openInv(tab) { G.ui.open = true; G.ui.tab = tab || G.ui.tab || 'inv'; G.ui.gem = null; G.ui.salvage = false; G.mouse.down = false; }
+function closeInv() { if (!G.ui.open) return; G.ui.open = false; G.ui.gem = null; G.ui.salvage = false; G.ui.sel = null; saveGame(); }
+function invNote(s, col = '#ffb0c8') { G.ui.note = { s, col, t: G.t + 2.6 }; if (col === '#ffb0c8') sfx('hurt'); }
+// touch acts on the second tap; mouse acts at once
+const secondTap = key => { if (!G.touch || G.ui.sel === key) return true; G.ui.sel = key; return false; };
+function clickItem(it) {
+  const p = G.player;
+  if (G.ui.gem != null) { const r = socketGem(p, it, null, G.ui.gem); if (r) invNote(r); else { sfx('shield'); G.ui.gem = null; G.ui.sel = it; } return; }
+  G.ui.sel = it;
+}
+function clickSocket(it, k) {
+  const p = G.player;
+  if (G.ui.gem != null) { const r = socketGem(p, it, k, G.ui.gem); if (r) invNote(r); else { sfx('shield'); G.ui.gem = null; } return; }
+  if (it.sockets[k]) { const r = unsocketGem(p, it, k); if (r) invNote(r); else { invNote('Gem returned to the bag', '#9ef0ff'); sfx('blink'); } }
+  else invNote('Pick a gem from the bag first', '#a99cc8');
+}
+function clickBag(i, alt) {
+  const p = G.player, e = p.bag[i];
+  if (!e) { G.ui.gem = null; G.ui.sel = null; return; }
+  if (e.gem) {
+    if (G.ui.gem === i) { G.ui.gem = null; return; }
+    G.ui.gem = i; G.ui.sel = { gem: e.gem, gemIdx: i }; G.ui.salvage = false; sfx('pickup'); return;
+  }
+  if (G.ui.gem != null) { clickItem(e); return; }
+  if (alt || G.ui.salvage) {
+    if (!secondTap(e)) return;
+    if (RARITY[e.rarity].i >= 3 && G.ui.confirm !== e) { G.ui.confirm = e; invNote(`Salvage ${itemName(e)}? Click again`, '#ffd35a'); return; }
+    const r = salvageItem(p, i); G.ui.confirm = null;
+    if (typeof r === 'string') invNote(r); else { invNote(`+${r} Dream Dust`, '#d6c2ff'); sfx('chest'); G.ui.sel = null; }
+    return;
+  }
+  if (!secondTap(e)) return;
+  const r = equipItem(p, e);
+  if (r) invNote(r); else { sfx('shield'); G.ui.sel = e; }
+}
 // ===== ground drops + chests + checkpoints (updated from main loop) ============================
 const MAX_DROPS = 40;
 function spawnDrop(x, y, d) {

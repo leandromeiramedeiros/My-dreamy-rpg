@@ -5,7 +5,7 @@ const forestRules = require('./_forest.js');
 
 module.exports = outer({
   id: 'pinewood', name: 'Misty Pinewood', sub: 'The trees are leaning away from something', theme: 'forest', seed: 4107, pad: 3.4, amp: 1.7,
-  objective: 'Follow the dirt road north. The animals are fleeing.', palette: forestRules, density: 1.25, key: 'key_roothollow',
+  objective: 'Follow the dirt road north. The animals are fleeing.', palette: forestRules, density: 1.1, key: 'key_roothollow',
   rooms: {
     start: { kind: 'clearing', x: 7, y: 48, r: 4, lvl: 0 },
     r1: { kind: 'clearing', x: 38, y: 40, r: 6.5, lvl: 2 },

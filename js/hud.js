@@ -275,11 +275,8 @@ function drawHelp(ctx) {
 }
 
 // ===== inventory (TAB / I / GEAR): tab 1 = gear, bag, gems; tab 2 = the skill choices ======================
-// Mouse: hover = details, click = equip / pick gem / socket, right-click = salvage.
-// Touch: first tap selects (details), second tap acts. Gems: pick a gem, then tap a socket or an item.
-function openInv(tab) { G.ui.open = true; G.ui.tab = tab || G.ui.tab || 'inv'; G.ui.gem = null; G.ui.salvage = false; G.mouse.down = false; }
-function closeInv() { if (!G.ui.open) return; G.ui.open = false; G.ui.gem = null; G.ui.salvage = false; G.ui.sel = null; saveGame(); }
-function invNote(s, col = '#ffb0c8') { G.ui.note = { s, col, t: G.t + 2.6 }; if (col === '#ffb0c8') sfx('hurt'); }
+// DRAWING only: each frame registers hit regions (btn -> G.ui.btns) that call the actions in items.js
+// (clickBag / clickItem / clickSocket); selection + focus live in G.ui (sel, gem, salvage, tab).
 const SLOT_TITLE = { weapon: 'Weapon', head: 'Helmet', chest: 'Chest', boots: 'Boots' };
 const IS = 56, IB = 52;   // bag cell pitch / box (48 px icon = 24 px art at 2x)
 
@@ -383,38 +380,6 @@ function drawSocket(ctx, x, y, s, g, hi) {
   if (g) drawIcon(ctx, gemIcon(gemParse(g).type, gemParse(g).grade), x + 1, y + 1, s - 2);
   else { ctx.fillStyle = '#2a1f45'; ctx.fillRect(x + 3, y + 3, s - 6, s - 6); }
   ctx.strokeStyle = hi ? UI.gold : UI.dark; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, s - 1, s - 1);
-}
-// touch acts on the second tap; mouse acts at once
-const secondTap = key => { if (!G.touch || G.ui.sel === key) return true; G.ui.sel = key; return false; };
-function clickItem(it) {
-  const p = G.player;
-  if (G.ui.gem != null) { const r = socketGem(p, it, null, G.ui.gem); if (r) invNote(r); else { sfx('shield'); G.ui.gem = null; G.ui.sel = it; } return; }
-  G.ui.sel = it;
-}
-function clickSocket(it, k) {
-  const p = G.player;
-  if (G.ui.gem != null) { const r = socketGem(p, it, k, G.ui.gem); if (r) invNote(r); else { sfx('shield'); G.ui.gem = null; } return; }
-  if (it.sockets[k]) { const r = unsocketGem(p, it, k); if (r) invNote(r); else { invNote('Gem returned to the bag', '#9ef0ff'); sfx('blink'); } }
-  else invNote('Pick a gem from the bag first', UI.dim);
-}
-function clickBag(i, alt) {
-  const p = G.player, e = p.bag[i];
-  if (!e) { G.ui.gem = null; G.ui.sel = null; return; }
-  if (e.gem) {
-    if (G.ui.gem === i) { G.ui.gem = null; return; }
-    G.ui.gem = i; G.ui.sel = { gem: e.gem, gemIdx: i }; G.ui.salvage = false; sfx('pickup'); return;
-  }
-  if (G.ui.gem != null) { clickItem(e); return; }
-  if (alt || G.ui.salvage) {
-    if (!secondTap(e)) return;
-    if (RARITY[e.rarity].i >= 3 && G.ui.confirm !== e) { G.ui.confirm = e; invNote(`Salvage ${itemName(e)}? Click again`, UI.gold); return; }
-    const r = salvageItem(p, i); G.ui.confirm = null;
-    if (typeof r === 'string') invNote(r); else { invNote(`+${r} Dream Dust`, '#d6c2ff'); sfx('chest'); G.ui.sel = null; }
-    return;
-  }
-  if (!secondTap(e)) return;
-  const r = equipItem(p, e);
-  if (r) invNote(r); else { sfx('shield'); G.ui.sel = e; }
 }
 // details panel: rarity name, ilvl/req, base stats, affixes, unique, sockets, skills, compare vs equipped
 function drawDetails(ctx, x, y, w, h, what) {
