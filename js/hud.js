@@ -70,7 +70,7 @@ function shadeHex(h, f) { const c = hexToRgb(h); return `rgb(${Math.min(255, c[0
 function drawMinimap(ctx) {
   const m = G.map, p = G.player;
   if (!m.mini) buildMinimap(m);
-  const X = DW - 150, Y = DH - 150, R = 62, CX = X + 64, CY = Y + 64;
+  const [X, Y] = minimapPos(), R = 62, CX = X + 64, CY = Y + 64;
   // diamond frame
   ctx.fillStyle = 'rgba(18,10,36,0.85)';
   ctx.beginPath(); ctx.moveTo(CX, CY - R - 6); ctx.lineTo(CX + R + 6, CY); ctx.lineTo(CX, CY + R + 6); ctx.lineTo(CX - R - 6, CY); ctx.closePath(); ctx.fill();
@@ -134,7 +134,7 @@ function drawHUD(ctx) {
   const g = ctx.createLinearGradient(0, PY, 0, PY + 96); g.addColorStop(0, m.id === 'vale' ? '#f6b2b0' : '#7a1f4f'); g.addColorStop(1, m.id === 'vale' ? '#5d3f98' : '#1f0c33');
   ctx.fillStyle = g; ctx.fillRect(19, PY + 3, 90, 90);
   ctx.save(); ctx.beginPath(); ctx.rect(19, PY + 3, 90, 90); ctx.clip();
-  ctx.drawImage(p.spr.portrait, 0, 0, 16, 18, 16, PY + (p.gear.head === 'arcanecowl' ? 4 : -6), 96, 108);
+  ctx.drawImage(p.spr.portrait, p.spr.ox, p.spr.ox, 16, 18, 16, PY + (p.gear.head === 'arcanecowl' ? 4 : -6), 96, 108);
   ctx.restore();
   if (p.hurtT > 0) { ctx.fillStyle = `rgba(255,40,90,${p.hurtT})`; ctx.fillRect(19, PY + 3, 90, 90); }
 
@@ -145,7 +145,7 @@ function drawHUD(ctx) {
   bar(ctx, bx, PY + 70, bw, 22, p.st / p.maxSt, '#d9a23a', '#ffe08a', `${Math.floor(p.st)} / ${p.maxSt}`);
   T(ctx, 'HP', bx + bw + 8, PY + 11, 8, '#ff8aa8'); T(ctx, 'MP', bx + bw + 8, PY + 44, 8, '#8fb0ff'); T(ctx, 'ST', bx + bw + 8, PY + 77, 8, '#ffe08a');
 
-  drawSkillBar(ctx);
+  if (!G.touch) drawSkillBar(ctx);
   drawMinimap(ctx);
 
   // ---- boss bar ----
@@ -155,7 +155,7 @@ function drawHUD(ctx) {
     T(ctx, 'THE GLOAM WARDEN', DW / 2, y - 16, 8, '#ffb0e0', 'center');
     bar(ctx, x, y, w, 16, b.hp / b.maxHp, '#b0306e', '#ff7ae0', b.phase2 ? 'ENRAGED' : '');
   }
-  if (G.arena && G.arena.phase === 'wave') T(ctx, `Enemies left: ${G.enemies.length}`, DW - 20, 22, 8, '#ffb0e0', 'right');
+  if (G.arena && G.arena.phase === 'wave') { if (G.touch) T(ctx, `Enemies left: ${G.enemies.length}`, 28, 78, 8, '#ffb0e0'); else T(ctx, `Enemies left: ${G.enemies.length}`, DW - 20, 22, 8, '#ffb0e0', 'right'); }
 
   // ---- banner / messages ----
   if (G.banner && G.banner.t > 0) {
@@ -168,12 +168,13 @@ function drawHUD(ctx) {
   if (G.msg && G.msg.t > 0) { ctx.globalAlpha = Math.min(1, G.msg.t * 2); T(ctx, G.msg.s, DW / 2, DH - 170, 8, '#ffe6f0', 'center'); ctx.globalAlpha = 1; }
   if (m.id === 'vale' && dist(p.x, p.y, m.portal.x, m.portal.y) < 3.2 && G.state === 'play') T(ctx, 'A rift hums with nightmare... step in to cross over', DW / 2, DH - 190, 8, '#e2c8ff', 'center');
 
-  T(ctx, 'TAB loadout   H help   M sound', DW - 20, 80, 8, 'rgba(244,236,255,0.6)', 'right', false);
+  if (G.touch) { if (G.state === 'play' && !G.ui.open) drawTouchControls(ctx); }
+  else T(ctx, 'TAB loadout   H help   M sound', DW - 20, 80, 8, 'rgba(244,236,255,0.6)', 'right', false);
   if (G.ui.help) drawHelp(ctx);
   if (G.ui.open) drawLoadout(ctx);
   if (G.state === 'dead') {
     ctx.fillStyle = `rgba(20,6,30,${Math.min(0.7, G.deadT * 0.5)})`; ctx.fillRect(0, 0, DW, DH);
-    if (G.deadT > 1) { T(ctx, 'You drift out of the dream...', DW / 2, 220, 16, '#ffb0e0', 'center'); T(ctx, 'Click to dream again', DW / 2, 260, 8, UI.text, 'center'); }
+    if (G.deadT > 1) { T(ctx, 'You drift out of the dream...', DW / 2, 220, 16, '#ffb0e0', 'center'); T(ctx, (G.touch ? 'Tap' : 'Click') + ' to dream again', DW / 2, 260, 8, UI.text, 'center'); }
   }
 }
 
@@ -228,7 +229,11 @@ function drawHelp(ctx) {
   const x = 230, y = 90, w = 500, h = 300;
   panel(ctx, x, y, w, h, true);
   T(ctx, 'HOW TO PLAY', x + w / 2, y + 16, 16, UI.gold, 'center');
-  const lines = [
+  const lines = G.touch ? [
+    ['Left thumb', 'Joystick: move'], ['Big button (hold)', 'Weapon basic attack'], ['Tap a skill', 'Cast at nearest enemy'],
+    ['Drag from a skill', 'Aim, release to cast'], ['Q  E  R', 'Weapon skills (R = ultimate)'], ['F  C  SHF', 'Chest / helmet / boots skills'],
+    ['1  2  3', 'Character skills (your choice)'], ['GEAR', 'Loadout: swap gear & skills'], ['FULL', 'Fullscreen'], ['Tap', 'Close this help'],
+  ] : [
     ['WASD / Arrows', 'Move'], ['Mouse', 'Aim'], ['Left click (hold)', 'Weapon basic attack'],
     ['Q  E  R', 'Weapon skills (R = ultimate)'], ['F', 'Chest armour skill'], ['C', 'Helmet skill'], ['Shift / Space', 'Boots skill'],
     ['1  2  3', 'Character skills (your choice)'], ['TAB / I', 'Loadout: swap gear & skills'], ['M', 'Toggle sound'],
@@ -244,6 +249,9 @@ function drawLoadout(ctx) {
   ctx.fillStyle = 'rgba(8,4,18,0.55)'; ctx.fillRect(0, 0, DW, DH);
   panel(ctx, X, Y, W, H, true);
   T(ctx, 'LOADOUT', X + W / 2, Y + 14, 16, UI.gold, 'center');
+  const xh = btn(ctx, X + W - 46, Y + 10, 34, 34, () => { G.ui.open = false; });
+  ctx.fillStyle = xh ? 'rgba(255,211,90,0.3)' : 'rgba(0,0,0,0.35)'; ctx.fillRect(X + W - 46, Y + 10, 34, 34);
+  T(ctx, 'X', X + W - 29, Y + 19, 16, UI.gold, 'center');
   T(ctx, 'You are what you wear', X + W / 2, Y + 38, 8, UI.dim, 'center');
   let tip = null;
   // --- equipment ---
@@ -305,7 +313,7 @@ function drawLoadout(ctx) {
   const ty = Y + H - 70;
   ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(X + 20, ty, W - 40, 56);
   if (tip) { T(ctx, tip.t, X + 32, ty + 10, 8, UI.gold); wrap(ctx, tip.d, X + 32, ty + 28, W - 70, 8, UI.text, 14); }
-  else T(ctx, 'Hover anything for details. TAB to close.', X + 32, ty + 22, 8, UI.dim);
+  else T(ctx, G.touch ? 'Tap gear or skills to equip them. X to close.' : 'Hover anything for details. TAB to close.', X + 32, ty + 22, 8, UI.dim);
 }
 function equip(slot, id) {
   const p = G.player;
@@ -325,6 +333,8 @@ function drawTitle(ctx) {
   T(ctx, 'MY DREAMY RPG', DW / 2 + 3, y + 3, 32, '#3a1a5a', 'center', false);
   T(ctx, 'MY DREAMY RPG', DW / 2, y, 32, '#ffe6f6', 'center', false);
   T(ctx, 'a high-fantasy dream above the clouds', DW / 2, y + 52, 8, '#ffd6ec', 'center');
-  if (Math.sin(G.t * 3) > -0.4) T(ctx, 'CLICK TO BEGIN', DW / 2, 330, 16, UI.gold, 'center');
-  T(ctx, 'WASD move · mouse aim · click attack · Q E R F C SHIFT 1 2 3 skills · TAB loadout', DW / 2, DH - 40, 8, UI.text, 'center');
+  if (Math.sin(G.t * 3) > -0.4) T(ctx, TOUCH_CAPABLE ? 'TAP TO BEGIN' : 'CLICK TO BEGIN', DW / 2, 330, 16, UI.gold, 'center');
+  T(ctx, TOUCH_CAPABLE ? 'left thumb moves · hold the big button to attack · tap or drag skills to cast'
+    : 'WASD move · mouse aim · click attack · Q E R F C SHIFT 1 2 3 skills · TAB loadout', DW / 2, DH - 40, 8, UI.text, 'center');
+  if (TOUCH_CAPABLE && window.innerHeight > window.innerWidth) T(ctx, 'Turn your device sideways for the best view', DW / 2, 380, 8, '#ffb0e0', 'center');
 }

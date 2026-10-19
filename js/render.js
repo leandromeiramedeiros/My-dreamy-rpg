@@ -58,7 +58,7 @@ function initPost() {
     gg.addColorStop(0, top); gg.addColorStop(1, bot);
     c.x.fillStyle = gg; c.x.fillRect(0, 0, RW, RH); GRADE[k] = c.c;
   }
-  ART.dummy = asciiSprite([
+  if (!ART.dummy) ART.dummy = asciiSprite([
     '...KKKK...', '..KYYYYK..', '..KYkYkK..', '..KYYYYK..', '...KKKK...', 'KKKKWKKKKK', 'KYYYWYYYYK', 'KKKKWKKKKK', '...KWK....', '..KYYYK...', '..KYkYK...', '..KYYYK...', '..KYkYK...', '...KWK....', '...KWK....', '...KWK....', '..KKKKK...',
   ], { K: '#3a2418', Y: '#e8c06a', k: '#b08a3a', W: '#7a5236' });
 }
@@ -408,13 +408,13 @@ function drawPlayer(ctx, p, lights) {
   const [vx, vy] = worldToView(p.x, p.y, p.z);
   if (p.dead) {
     ctx.globalAlpha = Math.max(0, 1 - G.deadT); const spr = p.spr.front[0];
-    ctx.save(); ctx.translate(Math.round(vx), Math.round(vy)); ctx.rotate(Math.PI / 2 * Math.min(1, G.deadT * 2)); ctx.drawImage(spr, -8, -23); ctx.restore(); ctx.globalAlpha = 1; return;
+    ctx.save(); ctx.translate(Math.round(vx), Math.round(vy)); ctx.rotate(Math.PI / 2 * Math.min(1, G.deadT * 2)); ctx.drawImage(spr, -spr.width / 2, 1 - spr.height); ctx.restore(); ctx.globalAlpha = 1; return;
   }
   const spr = currentPlayerSprite(p);
   const bob = p.moving ? 0 : (Math.sin(G.t * 2.5) > 0.7 ? 1 : 0);
-  const dx = Math.round(vx - 8), dy = Math.round(vy - 23 + bob);
-  const w = item('weapon', p.gear.weapon);
-  const hx = dx + (p.face > 0 ? 12.5 : 3.5), hy = dy + 14.5;
+  const dx = Math.round(vx - spr.width / 2), dy = Math.round(vy - spr.height + 1 + bob);
+  const w = item('weapon', p.gear.weapon), o = p.spr.ox;
+  const hx = dx + (p.face > 0 ? 12.5 + o * 2 : 3.5), hy = dy + 14.5 + o;
   const sa = Math.atan2(G.mouse.y - hy, G.mouse.x - hx);
   if (p.buffs.veil) ctx.globalAlpha = 0.4;
   const drawW = () => drawWeapon(ctx, p, w, hx, hy, sa, lights);
@@ -466,13 +466,12 @@ function drawEnemy(ctx, e, lights) {
     const moving = e.state === 'chase', hop = moving ? Math.max(0, Math.sin(e.anim * 6)) : 0;
     const wind = e.state === 'wind' ? Math.sin(e.anim * 40) * 0.08 + 0.15 : 0;
     const sq = (e.squash > 0 ? e.squash : 0) + wind - hop * 0.12;
-    const w = 14 * (1 + sq), h = 11 * (1 - sq);
     img = e.flash > 0 ? ART.slime.w : ART.slime.n;
-    ctx.drawImage(img, Math.round(vx - w / 2), Math.round(vy - h - hop * 5), Math.round(w), Math.round(h));
+    ctx.drawImage(img, Math.round(vx - img.width * (1 + sq) / 2), Math.round(vy - img.height * (1 - sq) - hop * 5), Math.round(img.width * (1 + sq)), Math.round(img.height * (1 - sq)));
   } else if (e.type === 'hound') {
     const f = Math.floor(e.anim * (e.state === 'lunge' ? 16 : 8)) % 2;
     img = e.flash > 0 ? (e.face < 0 ? ART.hound.wf : ART.hound.w) : (e.face < 0 ? ART.hound.f[f] : ART.hound.n[f]);
-    ctx.drawImage(img, Math.round(vx - 9), Math.round(vy - 11));
+    ctx.drawImage(img, Math.round(vx - img.width / 2), Math.round(vy - img.height));
     lights.push({ sx: vx + camX - RW / 2 + e.face * 5, sy: vy + camY - RH / 2 - 8, r: 14, col: '#ff6b9a', a: 0.7 });
   } else if (e.type === 'wisp') {
     vy -= 14 + Math.sin(e.anim * 3) * 3;
@@ -484,7 +483,7 @@ function drawEnemy(ctx, e, lights) {
   } else if (e.type === 'boss') {
     const B = ART.boss;
     img = e.flash > 0 ? (e.face < 0 ? B.wf : B.w) : (e.face < 0 ? B.f : B.n);
-    ctx.drawImage(img, Math.round(vx - 22), Math.round(vy - 56));
+    ctx.drawImage(img, Math.round(vx - img.width / 2), Math.round(vy - img.height + 2));
     const glow = e.state !== 'chase' ? 1 : 0.6;
     lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2 - 40, r: 60, col: '#ff7ae0', a: glow });
     lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2 - 26, r: 40, col: '#c78bff', a: 0.8 });
@@ -492,7 +491,7 @@ function drawEnemy(ctx, e, lights) {
   } else if (e.type === 'dummy') {
     img = ART.dummy;
     const wob = e.flash > 0 ? Math.round(Math.sin(G.t * 60) * 1) : 0;
-    ctx.drawImage(e.flash > 0 ? silOf(img, '#ffffff') : img, Math.round(vx - 5 + wob), Math.round(vy - 16));
+    ctx.drawImage(e.flash > 0 ? silOf(img, '#ffffff') : img, Math.round(vx - img.width / 2 + wob), Math.round(vy - img.height + 1));
   }
   if (e.frozen) { ctx.globalAlpha = 0.5 * spawnA; if (img) ctx.drawImage(silOf(img, '#bff4ff'), Math.round(vx - img.width / 2), Math.round(vy - img.height)); }
   ctx.globalAlpha = 1;

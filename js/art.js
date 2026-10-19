@@ -98,6 +98,7 @@ function buildPlayerSprites(gear) {
   const pal = Object.assign({
     K: '#1a1326', S: '#f6d2b5', s: '#d9a088', E: '#2b2140', G: '#f2c45a', W: '#5a3b2e',
   }, head.pal, chest.pal, boots.pal);
+  if (ART.px['hero_' + gear.head + '_f']) return buildPxlPlayer(gear, Object.assign({}, head.pal, chest.pal, boots.pal));
   const ov = HEAD_OVERLAYS[gear.head];
   const build = (body, legs, over) => {
     const rows = body.slice();
@@ -113,7 +114,79 @@ function buildPlayerSprites(gear) {
   out.backF = out.back.map(flipH);
   out.white = silhouette(out.front[0], '#ffffff');
   out.portrait = out.front[0];
+  out.w = 16; out.h = 24; out.ox = 0;
   return out;
+}
+
+// ===== pxl-authored art (art/dreamy.px.js -> js/pxl-art.js) ==================
+// The hero is drawn in the Knight colours; these exact colours are swapped for the gear worn.
+const GEAR_MASK = {
+  H: '#cfd6ea', h: '#8e97b8', L: '#ffffff', R: '#e0475e', A: '#a9b4d4', a: '#6d779e', l: '#e6ecfa',
+  C: '#3b5bb5', c: '#263f86', P: '#4b4f6e', p: '#363a56', O: '#b9c2dc', o: '#7d86a6',
+};
+ART.px = {};
+function loadPxlArt() {
+  if (typeof PXL_ART === 'undefined') return Promise.resolve();
+  return Promise.all(Object.entries(PXL_ART).map(([name, a]) => new Promise(res => {
+    const im = new Image();
+    im.onload = () => {
+      const fw = im.width / a.frames;
+      ART.px[name] = [];
+      for (let i = 0; i < a.frames; i++) { const { c, x } = makeCanvas(fw, im.height); x.drawImage(im, -i * fw, 0); ART.px[name].push(c); }
+      res();
+    };
+    im.onerror = () => res();
+    im.src = a.src;
+  })));
+}
+function recolor(canvas, map) {
+  const { c, x } = makeCanvas(canvas.width, canvas.height);
+  x.drawImage(canvas, 0, 0);
+  const im = x.getImageData(0, 0, c.width, c.height), d = im.data;
+  for (let i = 0; i < d.length; i += 4) {
+    if (!d[i + 3]) continue;
+    const to = map[(d[i] << 16) | (d[i + 1] << 8) | d[i + 2]];
+    if (to) { d[i] = to[0]; d[i + 1] = to[1]; d[i + 2] = to[2]; }
+  }
+  x.putImageData(im, 0, 0);
+  return c;
+}
+function buildPxlPlayer(gear, want) {
+  if (want.P && !want.p) want.p = '#' + mulRgb(hexToRgb(want.P), 0.72).map(v => (v | 0).toString(16).padStart(2, '0')).join('');
+  if (want.O && !want.o) want.o = '#' + mulRgb(hexToRgb(want.O), 0.68).map(v => (v | 0).toString(16).padStart(2, '0')).join('');
+  const map = {};
+  for (const k in GEAR_MASK) if (want[k]) { const m = hexToRgb(GEAR_MASK[k]); map[(m[0] << 16) | (m[1] << 8) | m[2]] = hexToRgb(want[k]); }
+  const out = {
+    front: ART.px['hero_' + gear.head + '_f'].map(f => recolor(f, map)),
+    back: ART.px['hero_' + gear.head + '_b'].map(f => recolor(f, map)),
+  };
+  out.frontF = out.front.map(flipH); out.backF = out.back.map(flipH);
+  out.white = silhouette(out.front[0], '#ffffff');
+  out.portrait = out.front[0];
+  out.w = out.front[0].width; out.h = out.front[0].height; out.ox = 1;
+  return out;
+}
+const pxOne = n => ART.px[n] && ART.px[n][0];
+const pxFamily = prefix => Object.keys(ART.px).filter(k => k.startsWith(prefix)).sort().map(k => ART.px[k][0]);
+function applyPxlArt() {
+  if (!pxOne('slime')) return;
+  for (const k of ['sword', 'staff', 'bow', 'arrow']) ART.weapons[k] = pxOne(k);
+  ART.slime = { n: pxOne('slime'), w: silhouette(pxOne('slime')) };
+  const h = ART.px.hound;
+  ART.hound = { n: h, f: h.map(flipH), w: silhouette(h[0]), wf: silhouette(flipH(h[0])) };
+  const b = pxOne('boss');
+  ART.boss = { n: b, f: flipH(b), w: silhouette(b), wf: silhouette(flipH(b)) };
+  for (const k of ['round', 'poplar', 'blossom', 'teal', 'dead']) ART.trees[k] = pxFamily('tree_' + k + '_');
+  ART.bush = pxFamily('bush_');
+  ART.grass = pxFamily('grass_');
+  ART.rock = pxFamily('rock_') .filter(c => !pxFamily('rock_dark_').includes(c));
+  ART.rockDark = pxFamily('rock_dark_');
+  Object.assign(ART, {
+    lantern: pxOne('lantern'), lanternBlue: pxOne('lantern_blue'), mushroom: pxOne('mushroom'),
+    crystal: pxOne('crystal'), crystalViolet: pxOne('crystal_violet'), sign: pxOne('sign'),
+    brazier: pxOne('brazier'), shrine: pxOne('shrine'), dummy: pxOne('dummy'),
+  });
+  ART.house.c = pxOne('house');
 }
 
 // ===== Weapons ================================================================
@@ -575,6 +648,7 @@ function buildArt() {
   buildMonsters();
   buildFlora();
   buildProps();
+  applyPxlArt();
   ART.icons = {};
 }
 function icon(glyph, color) {

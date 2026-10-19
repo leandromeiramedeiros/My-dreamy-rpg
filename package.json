@@ -1,0 +1,10 @@
+{
+  "name": "my-dreamy-rpg",
+  "private": true,
+  "description": "High-fantasy dreamy pixel-art action RPG for the browser",
+  "scripts": {
+    "art": "npx -y github:crsolver/claude-pxl build art/dreamy.px.js --no-preview && node tools/pack-art.mjs",
+    "art:watch": "npx -y github:crsolver/claude-pxl serve art/dreamy.px.js",
+    "start": "python3 -m http.server 8000"
+  }
+}

@@ -12,6 +12,7 @@ function fit() {
   DISP.style.height = Math.floor(DH * s) + 'px';
 }
 window.addEventListener('resize', fit); fit();
+initTouch();
 
 const PARAMS = new URLSearchParams(location.search);
 
@@ -149,7 +150,8 @@ DISP.addEventListener('contextmenu', ev => ev.preventDefault());
 function startGame() { G.state = 'play'; initAudio(); G.banner = { s: G.map.name, sub: G.map.sub, t: 3.2, max: 3.2 }; }
 
 // ===== boot ==============================================================================
-function boot() {
+async function boot() {
+  await loadPxlArt();
   buildArt(); initPost();
   G.maps.vale = buildVale();
   G.maps.ruins = buildRuins();

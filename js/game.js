@@ -215,8 +215,11 @@ function updatePlayer(p, dt) {
 
   // aim
   const ps = worldToView(p.x, p.y, p.z);
-  const mwz = toWorld(G.mouse.x - RW / 2 + G.cam.x, G.mouse.y - RH / 2 + G.cam.y + p.z * ZS);
-  G.mouse.wx = mwz[0]; G.mouse.wy = mwz[1];
+  if (G.touch) touchAim(p);
+  else {
+    const mwz = toWorld(G.mouse.x - RW / 2 + G.cam.x, G.mouse.y - RH / 2 + G.cam.y + p.z * ZS);
+    G.mouse.wx = mwz[0]; G.mouse.wy = mwz[1];
+  }
   p.aim = Math.atan2(G.mouse.wy - p.y, G.mouse.wx - p.x);
   p.face = G.mouse.x >= ps[0] ? 1 : -1;
   p.back = G.mouse.y < ps[1] - 14;
@@ -239,11 +242,13 @@ function updatePlayer(p, dt) {
     if (K.s || K.arrowdown) sy += 1;
     if (K.a || K.arrowleft) sx -= 1;
     if (K.d || K.arrowright) sx += 1;
+    let mag = 1;
+    if (G.touchMove) { sx = G.touchMove.x; sy = G.touchMove.y; mag = Math.min(1, Math.hypot(sx, sy) * 1.25); }
     p.moving = (sx || sy) && p.rootT <= 0 && !G.ui.open;
     if (p.moving) {
       let wx = sx + sy, wy = sy - sx;
       const l = Math.hypot(wx, wy); wx /= l; wy /= l;
-      const sp = p.speed * (p.buffs.sprint ? 1.8 : 1) * (p.buffs.veil ? 1.4 : 1) * (p.slowT > 0 ? 0.6 : 1) * (p.castT > 0 ? 0.75 : 1) * (1 + 0.3 * Math.abs(sy) / Math.hypot(sx, sy));
+      const sp = mag * p.speed * (p.buffs.sprint ? 1.8 : 1) * (p.buffs.veil ? 1.4 : 1) * (p.slowT > 0 ? 0.6 : 1) * (p.castT > 0 ? 0.75 : 1) * (1 + 0.3 * Math.abs(sy) / Math.hypot(sx, sy));
       moveEntity(p, wx * sp * dt, wy * sp * dt, h0);
       p.walkT += dt;
       if (Math.random() < dt * 6) G.parts.push({ x: p.x, y: p.y, z: p.z, vx: frand(-0.3, 0.3), vy: frand(-0.3, 0.3), vz: 0.6, life: 0.4, t: 0, col: '#e8e0f8', grav: 1, size: 1, glow: false });
