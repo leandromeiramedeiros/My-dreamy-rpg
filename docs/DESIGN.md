@@ -22,6 +22,8 @@ Albion-style "you are what you wear" skills, Diablo-style loot with rarity, sock
 gear visibly changes him — the better the gear, the more it glows.
 
 ## 2. Story (brief but competent)
+> **Superseded by `docs/STORY.md`** (premise, twist, endings, beat sheet with final lines, every boss and mini-boss,
+> the BOSS_MOVES library). The table below is kept for the zone order only.
 
 **Hero:** Aerin, a young Dreamwarden who wakes in the Whispering Vale with no memory and a dim lantern-spirit, **Pip**.
 **Antagonist:** **Morrow, the Unwaking King** — once the first Dreamwarden, he refused to wake when his dream ended,
