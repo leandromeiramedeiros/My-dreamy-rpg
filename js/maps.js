@@ -173,9 +173,9 @@ function rasterGround(m) {
   const can = pb.toCanvas();
   const cx2 = can.getContext('2d');
   for (const s of m.crystalSpots) {
-    const img = m.id === 'ruins' ? ART.crystalViolet : ART.crystal;
+    const img = m.themeId === 'ruins' ? ART.crystalViolet : ART.crystal;
     cx2.save(); cx2.translate(s.px, s.py); cx2.scale(1, -1); cx2.drawImage(img, -8, -22); cx2.restore();
-    m.lights.push({ sx: s.px + minSX, sy: s.py + 8, r: 46, col: m.id === 'ruins' ? '#b36bff' : '#7fd2ff', a: 0.75 });
+    m.lights.push({ sx: s.px + minSX, sy: s.py + 8, r: 46, col: m.themeId === 'ruins' ? '#b36bff' : '#7fd2ff', a: 0.75 });
   }
   m.ground = can;
 }
@@ -267,169 +267,72 @@ function segDist(px, py, ax, ay, bx, by) {
 function polyDist(px, py, pts) { let d = 99; for (let i = 0; i < pts.length - 1; i++) d = Math.min(d, segDist(px, py, ...pts[i], ...pts[i + 1])); return d; }
 
 // =========================================================================
-// MAP 1 — The Whispering Vale (exploration, no enemies)
+// Maps are DATA (js/world.js, edited with editor.html). OBJ_TYPES says how each
+// placeable thing looks and behaves; buildMapFromData turns a map record into
+// the runtime structure (tiles, rasterised ground, columns, props, lights).
 // =========================================================================
-function buildVale() {
-  const m = newMap(24, 24, THEMES.vale);
-  m.id = 'vale'; m.name = 'Whispering Vale'; m.sub = 'A dream drifting above the clouds';
-  for (let y = 0; y < 24; y++) for (let x = 0; x < 24; x++) {
-    m.type[y][x] = fbm(x * 0.25, y * 0.25, 2, 3) > 0.6 || (x >= 20 && y >= 11) ? 'f' : 'g';
-  }
-  // eastern plateau
-  for (let y = 0; y <= 8; y++) for (let x = 16; x < 24; x++) m.h[y][x] = 4;
-  m.h[8][16] = 0; m.h[0][16] = 0; m.h[8][23] = 0;
-  for (const y of [3, 4]) { m.h[y][15] = 3; m.h[y][14] = 2; m.h[y][13] = 1; m.type[y][15] = m.type[y][14] = m.type[y][13] = 's'; }
-  // spring and stream on the plateau
-  for (const [x, y] of [[19, 5], [20, 5], [19, 6], [20, 6], [19, 7], [19, 8]]) m.type[y][x] = 'w';
-  // river below
-  const river = [];
-  for (let y = 9; y <= 10; y++) for (const x of [18, 19, 20]) river.push([x, y]);
-  for (let y = 11; y <= 14; y++) for (const x of [18, 19]) river.push([x, y]);
-  for (let y = 15; y <= 19; y++) for (const x of [17, 18]) river.push([x, y]);
-  for (let y = 20; y <= 23; y++) for (const x of [16, 17]) river.push([x, y]);
-  for (const [x, y] of river) m.type[y][x] = 'w';
-  m.type[13][18] = m.type[13][19] = 'b';
-  // paths
-  const main = [[2.5, 19.5], [5, 17.5], [7.5, 14.5], [9.5, 11.5], [11, 8.5], [11.6, 5.5], [12.6, 4]];
-  const branch = [[7.5, 14.5], [11, 13.6], [17, 13.5], [21, 13.5], [21.6, 16.8]];
-  const door = [[6.6, 5], [8.5, 5.6], [11.3, 6.6]];
-  for (let y = 0; y < 24; y++) for (let x = 0; x < 24; x++) {
-    if (!isGrassy(m.type[y][x]) || m.h[y][x] !== 0) continue;
-    const d = Math.min(polyDist(x + 0.5, y + 0.5, main), polyDist(x + 0.5, y + 0.5, branch), polyDist(x + 0.5, y + 0.5, door));
-    if (d < 0.85) m.type[y][x] = 'p';
-  }
-  // house (2x2 footprint, N corner at 4,4)
-  for (const [x, y] of [[4, 4], [5, 4], [4, 5], [5, 5]]) m.block[y][x] = true;
-  const H = ART.house;
-  const house = addProp(m, H.c, 5, 5, { ax: H.ox, ay: H.oy + 16, shadow: 0 });
-  house.lights = H.lights.map(L => ({ sx: isoX(4 + L.x, 4 + L.y), sy: isoY(4 + L.x, 4 + L.y, L.z), r: L.r, col: L.col, a: L.a }));
-  house.key = 10;
-  m.chimney = { x: 4 + H.chimney.x, y: 4 + H.chimney.y, z: H.chimney.z };
+const OBJ_TYPES = {
+  tree_round: { label: 'Round tree', img: () => ART.trees.round, r: 0.32, shadow: 11 },
+  tree_poplar: { label: 'Poplar', img: () => ART.trees.poplar, r: 0.32, shadow: 7 },
+  tree_blossom: { label: 'Blossom tree', img: () => ART.trees.blossom, r: 0.32, shadow: 11 },
+  tree_teal: { label: 'Teal tree', img: () => ART.trees.teal, r: 0.32, shadow: 11 },
+  tree_dead: { label: 'Dead tree', img: () => ART.trees.dead, r: 0.3, shadow: 8 },
+  bush: { label: 'Bush', img: () => ART.bush, r: 0.2, shadow: 6 },
+  rock: { label: 'Rock', img: () => ART.rock, r: 0.28, shadow: 6 },
+  rock_dark: { label: 'Dark rock', img: () => ART.rockDark, r: 0.28, shadow: 6 },
+  grass: { label: 'Tall grass', img: () => ART.grass, grass: true },
+  mushroom: { label: 'Glow mushroom', img: () => [ART.mushroom], light: { r: 22, col: '#6fd6ff', a: 0.8, h: 3 } },
+  lantern: { label: 'Lantern', img: () => [ART.lantern], r: 0.12, shadow: 3, light: { r: 60, col: '#ffbe73', a: 0.95, h: 14 } },
+  lantern_blue: { label: 'Blue lantern', img: () => [ART.lanternBlue], r: 0.12, light: { r: 50, col: '#8ff0ff', a: 0.8, h: 14 } },
+  crystal: { label: 'Crystal', img: () => [ART.crystal], r: 0.25, light: { r: 60, col: '#7fd2ff', a: 0.85, h: 10 } },
+  crystal_violet: { label: 'Violet crystal', img: () => [ART.crystalViolet], r: 0.25, light: { r: 50, col: '#b36bff', a: 0.8, h: 10 } },
+  sign: { label: 'Sign', img: () => [ART.sign], r: 0.15, shadow: 4 },
+  shrine: { label: 'Shrine', img: () => [ART.shrine], r: 0.35, shadow: 7 },
+  brazier: { label: 'Brazier', img: () => [ART.brazier], r: 0.3, shadow: 5, brazier: true, light: { r: 80, col: '#b36bff', a: 1, h: 12 } },
+  house: { label: 'Cottage (2x2)', img: () => [ART.house.c], house: true },
+};
+// tile characters used in world data
+const TILE_TYPES = {
+  g: 'Grass', f: 'Flower meadow', p: 'Cobble path', w: 'Water', b: 'Bridge', s: 'Stone stairs',
+  x: 'Flagstones', r: 'Rune floor', d: 'Dark moss', c: 'Pillar', '.': 'Void (no ground)',
+};
+const THEME_OF = {};   // map id -> theme id (for portal colours)
 
-  m.start = { x: 3.2, y: 19.2 };
-  m.portal = { x: 21.5, y: 2.5, z: 4 };
-  m.shrine = { x: 21.6, y: 19.6 };
-
-  seedRng(777);
-  const isPathish = (x, y) => { const t = typeAt(m, x, y); return t === 'p' || t === 'b' || t === 's' || t === 'w'; };
-  const nearPath = (x, y, r) => {
-    for (let ty = Math.floor(y - r); ty <= Math.floor(y + r); ty++) for (let tx = Math.floor(x - r); tx <= Math.floor(x + r); tx++) {
-      if (isPathish(tx, ty) && Math.hypot(tx + 0.5 - x, ty + 0.5 - y) < r + 0.5) return true;
-    }
-    return false;
-  };
-  const free = (x, y, r = 0.9) => {
-    const tx = Math.floor(x), ty = Math.floor(y);
-    if (!isGrassy(typeAt(m, tx, ty)) || m.block[ty][tx] || typeAt(m, tx, ty) === 'p') return false;
-    if (nearPath(x, y, r)) return false;
-    if (dist(x, y, 5, 5) < 2.3 || dist(x, y, m.start.x, m.start.y) < 1.6) return false;
-    if (dist(x, y, m.portal.x, m.portal.y) < 2.9 || dist(x, y, 16.5, 3.8) < 1.6 || dist(x, y, m.shrine.x, m.shrine.y) < 1.6) return false;
-    // keep tree trunks off the edge of the plateau cliff
-    const h = m.h[ty][tx];
-    for (const [dx, dy] of [[1, 0], [0, 1]]) { const nt = typeAt(m, tx + dx, ty + dy); if (h > 0 && nt && m.h[ty + dy][tx + dx] < h && (x - tx > 0.6 || y - ty > 0.6)) return false; }
-    for (const o of m.colliders) if (dist(o.x, o.y, x, y) < 0.8) return false;
-    return true;
-  };
-  const tree = (x, y, kind) => {
-    const img = pick(ART.trees[kind]);
-    addProp(m, img, x, y, { r: 0.32, shadow: kind === 'poplar' ? 7 : 11, sway: rand(0, 6.28), flip: rand() < 0.5 });
-  };
-  // forest along the north-west and north-east rims
-  for (let y = 0; y < 24; y++) for (const x of [0, 1]) {
-    const px = x + 0.5 + rand(-0.2, 0.2), py = y + 0.5 + rand(-0.2, 0.2);
-    if (free(px, py, 0.6)) tree(px, py, x === 0 ? pick(['poplar', 'poplar', 'teal']) : pick(['round', 'teal', 'poplar']));
+function buildMapFromData(id, d) {
+  const m = newMap(d.W, d.H, THEMES[d.theme] || THEMES.vale);
+  m.id = id; m.themeId = THEMES[d.theme] ? d.theme : 'vale';
+  m.name = d.name || id; m.sub = d.sub || ''; m.objective = d.objective || '';
+  m.triggers = d.triggers || [];
+  for (let y = 0; y < d.H; y++) for (let x = 0; x < d.W; x++) {
+    const ch = (d.tiles[y] || '')[x] || '.';
+    m.type[y][x] = ch === '.' ? null : ch === 'c' ? 'pillar' : ch;
+    m.h[y][x] = m.type[y][x] ? (parseInt((d.heights[y] || '')[x] || '0', 36) || 0) : 0;
+    if (m.type[y][x] === 'r') m.hasRunes = true;
   }
-  for (let x = 2; x < 16; x++) for (const y of [0, 1]) {
-    const px = x + 0.5 + rand(-0.2, 0.2), py = y + 0.5 + rand(-0.2, 0.2);
-    if (rand() < 0.85 && free(px, py, 0.6)) tree(px, py, y === 0 ? pick(['poplar', 'teal']) : pick(['round', 'teal', 'poplar']));
-  }
-  for (const [x, y] of [[3, 7.3], [7.6, 3.2], [2.6, 3.1], [9.2, 2.6]]) if (free(x, y, 0.5)) tree(x, y, 'blossom');
-  // plateau grove
-  for (let y = 0; y <= 8; y++) for (let x = 16; x < 24; x++) {
-    if (m.h[y][x] !== 4 || (x < 22 && y > 1) || rand() > 0.6) continue;
-    const px = x + 0.5 + rand(-0.15, 0.15), py = y + 0.5 + rand(-0.15, 0.15);
-    if (free(px, py, 0.5)) tree(px, py, pick(['poplar', 'teal', 'round']));
-  }
-  // meadow scatter
-  for (let i = 0; i < 260; i++) {
-    const x = rand(2, 23.5), y = rand(2, 23.5);
-    const east = x > 20 && y > 10;
-    if (rand() < (east ? 0.18 : 0.1) && free(x, y, 1.1)) tree(x, y, pick(['round', 'round', 'teal', 'blossom']));
-  }
-  for (let i = 0; i < 26; i++) { const x = rand(1, 23), y = rand(1, 23); if (free(x, y, 0.6)) addProp(m, pick(ART.bush), x, y, { r: 0.2, shadow: 6 }); }
-  for (let i = 0; i < 14; i++) { const x = rand(1, 23), y = rand(1, 23); if (free(x, y, 0.5)) addProp(m, pick(ART.rock), x, y, { r: 0.28, shadow: 6 }); }
-  for (let i = 0; i < 90; i++) { const x = rand(0.3, 23.7), y = rand(0.3, 23.7); const t = typeAt(m, Math.floor(x), Math.floor(y)); if ((t === 'g' || t === 'f') && !m.block[Math.floor(y)][Math.floor(x)]) addProp(m, ART.grass[0], x, y, { grass: true, sway: rand(0, 6.28) }); }
-  // glowing mushrooms in the forest shade
-  for (let i = 0; i < 16; i++) {
-    const x = rand(0.4, 2.6), y = rand(2, 23); const xx = i % 2 ? x : y, yy = i % 2 ? y : x;
-    const t = typeAt(m, Math.floor(xx), Math.floor(yy));
-    if (isGrassy(t) && !m.block[Math.floor(yy)][Math.floor(xx)]) addProp(m, ART.mushroom, xx, yy, { light: { r: 22, col: '#6fd6ff', a: 0.8, h: 3 } });
-  }
-  // lanterns lining the road
-  const lanternAlong = (pts, every, side) => {
-    let acc = every * 0.5;
-    for (let i = 0; i < pts.length - 1; i++) {
-      const [ax, ay] = pts[i], [bx, by] = pts[i + 1], L = Math.hypot(bx - ax, by - ay);
-      for (; acc < L; acc += every) {
-        const t = acc / L, x = ax + (bx - ax) * t + (-(by - ay) / L) * side, y = ay + (by - ay) * t + ((bx - ax) / L) * side;
-        const tx = Math.floor(x), ty = Math.floor(y);
-        if (isGrassy(typeAt(m, tx, ty)) && !m.block[ty][tx]) addProp(m, ART.lantern, x, y, { r: 0.12, shadow: 3, light: { r: 60, col: '#ffbe73', a: 0.95, h: 14 } });
-      }
-      acc -= L;
-    }
-  };
-  lanternAlong(main, 3.4, 1.0);
-  lanternAlong(branch, 4.2, -1.0);
-  addProp(m, ART.lantern, 17.2, 12.6, { r: 0.12, light: { r: 56, col: '#ffbe73', a: 0.9, h: 14 } });
-  addProp(m, ART.lantern, 20.8, 14.4, { r: 0.12, light: { r: 56, col: '#ffbe73', a: 0.9, h: 14 } });
-  addProp(m, ART.sign, 4.3, 18.4, { r: 0.15, shadow: 4 });
-  // shrine + crystals
-  addProp(m, ART.shrine, m.shrine.x, m.shrine.y, { r: 0.35, shadow: 7 });
-  addProp(m, ART.crystal, m.shrine.x + 0.7, m.shrine.y - 0.4, { r: 0.25, light: { r: 70, col: '#7fd2ff', a: 0.9, h: 10 } });
-  addProp(m, ART.crystal, 21.4, 6.8, { r: 0.25, light: { r: 60, col: '#7fd2ff', a: 0.85, h: 10 } });
-  addProp(m, ART.crystal, 18.2, 6.3, { r: 0.25, light: { r: 50, col: '#a6e8ff', a: 0.7, h: 10 } });
-  m.objects.push({ kind: 'portal', x: m.portal.x, y: m.portal.y, z: 4, key: m.portal.x + m.portal.y + 4 * 0.35 });
+  m.cx = d.sigil ? d.sigil.x : d.W / 2; m.cy = d.sigil ? d.sigil.y : d.H / 2;
+  m.start = { x: d.start.x, y: d.start.y };
+  m.portals = (d.portals || []).map(p => Object.assign({}, p, { z: tileH(m, p.x, p.y) }));
+  placeObjects(m, d);
   finalizeMap(m);
-  m.lights.push({ sx: isoX(19.5, 9.5), sy: isoY(19.5, 9.5), r: 70, col: '#9adff0', a: 0.55 });
   return m;
 }
-
-// =========================================================================
-// MAP 2 — Gloomspire Ruins (waves + boss)
-// =========================================================================
-function buildRuins() {
-  const m = newMap(22, 22, THEMES.ruins);
-  m.id = 'ruins'; m.name = 'Gloomspire Ruins'; m.sub = 'Where the dream turns to nightmare';
-  m.cx = 11; m.cy = 11;
-  for (let y = 0; y < 22; y++) for (let x = 0; x < 22; x++) {
-    const d = Math.hypot(x + 0.5 - 11, y + 0.5 - 11);
-    if (d < 10.4 + (fbm(x * 0.3, y * 0.3, 2, 5) - 0.5) * 1.6) m.type[y][x] = d > 9.2 ? 'd' : (d < 3 ? 'r' : 'x');
+// Props + portals from the data record (the editor re-runs this alone when only objects change).
+function placeObjects(m, d) {
+  m.objects = []; m.colliders = []; m.chimneys = [];
+  seedRng(m.id.length * 131 + d.W * 7 + d.H);
+  for (const o of d.objects || []) {
+    const def = OBJ_TYPES[o.t]; if (!def) continue;
+    if (def.house) {
+      for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) if (typeAt(m, o.x + dx, o.y + dy)) m.block[o.y + dy][o.x + dx] = true;
+      const H = ART.house, z = tileH(m, o.x, o.y);
+      if (!m.block[o.y]) continue;
+      const house = addProp(m, H.c, o.x + 1, o.y + 1, { ax: H.ox, ay: H.oy + 16, z, src: o });
+      house.lights = H.lights.map(L => ({ sx: isoX(o.x + L.x, o.y + L.y), sy: isoY(o.x + L.x, o.y + L.y, L.z + z), r: L.r, col: L.col, a: L.a }));
+      m.chimneys.push({ x: o.x + H.chimney.x, y: o.y + H.chimney.y, z: H.chimney.z + z });
+      continue;
+    }
+    const imgs = def.img(), img = imgs[(o.v || 0) % imgs.length];
+    addProp(m, img, o.x, o.y, { r: def.r || 0, shadow: def.shadow || 0, flip: !!o.f, grass: !!def.grass, sway: rand(0, 6.28), brazier: !!def.brazier, light: def.light ? Object.assign({}, def.light) : undefined, src: o });
   }
-  for (let k = 0; k < 12; k++) {
-    const a = k / 12 * Math.PI * 2 + 0.26, px = Math.floor(11 + Math.cos(a) * 8), py = Math.floor(11 + Math.sin(a) * 8);
-    if (!m.type[py][px]) continue;
-    const front = Math.cos(a) + Math.sin(a) > 0.5;
-    m.type[py][px] = 'pillar'; m.h[py][px] = front ? 2 : (k % 3 === 0 ? 4 : 8); m.block[py][px] = true;
-  }
-  seedRng(991);
-  for (let k = 0; k < 4; k++) {
-    const a = k * Math.PI / 2 + Math.PI / 4, x = 11 + Math.cos(a) * 5.6, y = 11 + Math.sin(a) * 5.6;
-    addProp(m, ART.brazier, x, y, { r: 0.3, shadow: 5, brazier: true, light: { r: 80, col: '#b36bff', a: 1, h: 12 } });
-  }
-  for (let i = 0; i < 70; i++) {
-    const x = rand(0, 22), y = rand(0, 22), d = Math.hypot(x - 11, y - 11);
-    const t = typeAt(m, Math.floor(x), Math.floor(y));
-    if (!t || t === 'pillar' || d < 9) continue;
-    if (m.colliders.some(o => dist(o.x, o.y, x, y) < 1)) continue;
-    const r = rand();
-    if (r < 0.3) addProp(m, pick(ART.trees.dead), x, y, { r: 0.3, shadow: 8, flip: rand() < 0.5 });
-    else if (r < 0.55) addProp(m, pick(ART.rockDark), x, y, { r: 0.28, shadow: 6 });
-    else if (r < 0.7) addProp(m, ART.crystalViolet, x, y, { r: 0.25, light: { r: 50, col: '#b36bff', a: 0.8, h: 10 } });
-  }
-  for (const a of [2.6, 4.0, 5.6]) addProp(m, ART.lanternBlue, 11 + Math.cos(a) * 9.4, 11 + Math.sin(a) * 9.4, { r: 0.12, light: { r: 50, col: '#8ff0ff', a: 0.8, h: 14 } });
-  m.start = { x: 6.2, y: 16.2 };
-  m.portal = { x: 4.6, y: 17.6, z: 0 };
-  m.objects.push({ kind: 'portal', x: m.portal.x, y: m.portal.y, z: 0, key: m.portal.x + m.portal.y, back: true });
-  finalizeMap(m);
-  return m;
+  for (const p of m.portals) m.objects.push({ kind: 'portal', x: p.x, y: p.y, z: p.z, key: p.x + p.y + p.z * 0.35, portal: p });
 }

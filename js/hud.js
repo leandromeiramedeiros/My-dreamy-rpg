@@ -79,9 +79,10 @@ function drawMinimap(ctx) {
   ctx.beginPath(); ctx.moveTo(CX, CY - R - 6); ctx.lineTo(CX + R + 6, CY); ctx.lineTo(CX, CY + R + 6); ctx.lineTo(CX - R - 6, CY); ctx.closePath(); ctx.stroke();
   const mp = (x, y) => [CX - 62 + m.mini.cx + (x - y) * m.mini.s, CY - 62 + m.mini.cy + (x + y) * m.mini.s];
   for (const e of G.enemies) { if (e.dummy) continue; const [ex, ey] = mp(e.x, e.y); ctx.fillStyle = e.boss ? '#ff3a7a' : '#ff8aa8'; const s = e.boss ? 6 : 3; ctx.fillRect(Math.round(ex - s / 2), Math.round(ey - s / 2), s, s); }
-  if (m.portal && (m.id === 'vale' || m.portalOpen)) {
-    const [qx, qy] = mp(m.portal.x, m.portal.y);
-    if (Math.sin(G.t * 6) > -0.3) { T(ctx, '!', Math.round(qx), Math.round(qy) - 10, 16, UI.gold, 'center'); }
+  for (const pt of m.portals) if (pt.open) {
+    const [qx, qy] = mp(pt.x, pt.y);
+    if (pt.marker) { if (Math.sin(G.t * 6) > -0.3) T(ctx, '!', Math.round(qx), Math.round(qy) - 10, 16, UI.gold, 'center'); }
+    else { ctx.fillStyle = '#9ef0ff'; ctx.fillRect(Math.round(qx) - 2, Math.round(qy) - 2, 4, 4); }
   }
   const [px, py] = mp(p.x, p.y);
   ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(px) - 2, Math.round(py) - 2, 5, 5);
@@ -131,7 +132,7 @@ function drawHUD(ctx) {
   // ---- portrait ----
   const PY = DH - 112;
   panel(ctx, 16, PY, 96, 96);
-  const g = ctx.createLinearGradient(0, PY, 0, PY + 96); g.addColorStop(0, m.id === 'vale' ? '#f6b2b0' : '#7a1f4f'); g.addColorStop(1, m.id === 'vale' ? '#5d3f98' : '#1f0c33');
+  const g = ctx.createLinearGradient(0, PY, 0, PY + 96); g.addColorStop(0, m.themeId === 'vale' ? '#f6b2b0' : '#7a1f4f'); g.addColorStop(1, m.themeId === 'vale' ? '#5d3f98' : '#1f0c33');
   ctx.fillStyle = g; ctx.fillRect(19, PY + 3, 90, 90);
   ctx.save(); ctx.beginPath(); ctx.rect(19, PY + 3, 90, 90); ctx.clip();
   ctx.drawImage(p.spr.portrait, p.spr.ox, p.spr.ox, 16, 18, 16, PY + (p.gear.head === 'arcanecowl' ? 4 : -6), 96, 108);
@@ -155,7 +156,7 @@ function drawHUD(ctx) {
     T(ctx, 'THE GLOAM WARDEN', DW / 2, y - 16, 8, '#ffb0e0', 'center');
     bar(ctx, x, y, w, 16, b.hp / b.maxHp, '#b0306e', '#ff7ae0', b.phase2 ? 'ENRAGED' : '');
   }
-  if (G.arena && G.arena.phase === 'wave') { if (G.touch) T(ctx, `Enemies left: ${G.enemies.length}`, 28, 78, 8, '#ffb0e0'); else T(ctx, `Enemies left: ${G.enemies.length}`, DW - 20, 22, 8, '#ffb0e0', 'right'); }
+  if (G.enemies.some(e => !e.dummy)) { const n = G.enemies.filter(e => !e.dummy).length; if (G.touch) T(ctx, `Enemies left: ${n}`, 28, 78, 8, '#ffb0e0'); else T(ctx, `Enemies left: ${n}`, DW - 20, 22, 8, '#ffb0e0', 'right'); }
 
   // ---- banner / messages ----
   if (G.banner && G.banner.t > 0) {
@@ -166,7 +167,8 @@ function drawHUD(ctx) {
     ctx.globalAlpha = 1;
   }
   if (G.msg && G.msg.t > 0) { ctx.globalAlpha = Math.min(1, G.msg.t * 2); T(ctx, G.msg.s, DW / 2, DH - 170, 8, '#ffe6f0', 'center'); ctx.globalAlpha = 1; }
-  if (m.id === 'vale' && dist(p.x, p.y, m.portal.x, m.portal.y) < 3.2 && G.state === 'play') T(ctx, 'A rift hums with nightmare... step in to cross over', DW / 2, DH - 190, 8, '#e2c8ff', 'center');
+  const near = m.portals.find(pt => pt.open && dist(p.x, p.y, pt.x, pt.y) < 3.2);
+  if (near && G.state === 'play') T(ctx, `A rift to ${(G.world.maps[near.to] || {}).name || near.to} hums... step in to cross over`, DW / 2, DH - 190, 8, '#e2c8ff', 'center');
 
   if (G.touch) { if (G.state === 'play' && !G.ui.open) drawTouchControls(ctx); }
   else T(ctx, 'TAB loadout   H help   M sound', DW - 20, 80, 8, 'rgba(244,236,255,0.6)', 'right', false);
@@ -178,15 +180,7 @@ function drawHUD(ctx) {
   }
 }
 
-function objective() {
-  const m = G.map, A = G.arena;
-  if (m.id === 'vale') return 'Explore. A rift hums to the NE.';
-  if (!A) return '';
-  if (A.phase === 'intro') return 'Brace yourself...';
-  if (A.phase === 'wave' || A.phase === 'break') return `Survive the waves (${A.wave + 1}/${WAVES.length})`;
-  if (A.phase === 'bossIntro' || A.phase === 'boss') return 'Defeat the Gloam Warden';
-  return 'Return through the rift (W)';
-}
+function objective() { return G.objective || ''; }
 
 const SLOT_LABEL = { lmb: 'LMB', q: 'Q', e: 'E', r: 'R', f: 'F', c: 'C', shift: 'SHF', 1: '1', 2: '2', 3: '3' };
 function drawSkillBar(ctx) {

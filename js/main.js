@@ -16,16 +16,20 @@ initTouch();
 
 const PARAMS = new URLSearchParams(location.search);
 
+function getMap(id) {
+  if (!G.maps[id]) G.maps[id] = buildMapFromData(id, G.world.maps[id]);
+  return G.maps[id];
+}
 function enterMap(id) {
-  const m = G.maps[id], p = G.player;
+  const m = getMap(id), p = G.player;
   G.map = m; prepTheme(m);
+  for (const pt of m.portals) pt.open = (G.world.maps[id].portals.find(q => q.x === pt.x && q.y === pt.y) || pt).open !== false;
   G.enemies = []; G.projs = []; G.effects = []; G.zones = []; G.parts = []; G.texts = []; G.delays = []; G.amb = [];
-  G.boss = null; G.arena = null;
+  G.boss = null;
   p.x = m.start.x; p.y = m.start.y; p.z = tileH(m, p.x, p.y); p.dash = null;
   G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
   G.banner = { s: m.name, sub: m.sub, t: 3.2, max: 3.2 };
-  if (id === 'ruins') { m.portalOpen = false; startArena(); }
-  else { spawnEnemy('dummy', 6.3, 19.6, 0); spawnEnemy('dummy', 7.2, 20.6, 0); }
+  startTriggers();
 }
 function transition(to) {
   if (G.fadeDir) return;
@@ -55,12 +59,11 @@ function update(dt, rdt) {
   if (G.state === 'play' || G.state === 'dead') {
     if (G.fadeDir <= 0) updatePlayer(p, dt);
     updateEnemies(dt); updateProjs(dt); updateZones(dt);
-    if (m.id === 'ruins') updateArena(dt);
+    updateTriggers(dt);
     for (const d of G.delays.slice()) { d.t -= dt; if (d.t <= 0) { d.done = true; d.fn(); } }
     G.delays = G.delays.filter(d => !d.done);
     if (G.state === 'play') {
-      if (m.id === 'vale' && dist(p.x, p.y, m.portal.x, m.portal.y) < 0.85 && p.z > 3.5) transition('ruins');
-      if (m.id === 'ruins' && m.portalOpen && dist(p.x, p.y, m.portal.x, m.portal.y) < 0.85) transition('vale');
+      for (const pt of m.portals) if (pt.open && G.world.maps[pt.to] && dist(p.x, p.y, pt.x, pt.y) < 0.85 && Math.abs(p.z - pt.z) < 0.6) transition(pt.to);
     }
     if (G.state === 'dead') G.deadT += rdt;
   }
@@ -150,21 +153,33 @@ DISP.addEventListener('contextmenu', ev => ev.preventDefault());
 function startGame() { G.state = 'play'; initAudio(); G.banner = { s: G.map.name, sub: G.map.sub, t: 3.2, max: 3.2 }; }
 
 // ===== boot ==============================================================================
+// The world (maps, triggers, tuning) comes from js/world.js. Play-testing from the editor
+// passes ?playtest=1, which loads the editor's unpublished draft from this browser instead.
+function loadWorld() {
+  if (PARAMS.get('playtest')) {
+    try { const d = JSON.parse(localStorage.getItem('dreamy.world.draft')); if (d && d.maps) return d; } catch (e) { /* fall through */ }
+  }
+  return WORLD_DATA;
+}
 async function boot() {
   await loadSprites();
   buildArt(); initPost();
-  G.maps.vale = buildVale();
-  G.maps.ruins = buildRuins();
+  G.world = loadWorld();
+  for (const id in G.world.maps) THEME_OF[id] = G.world.maps[id].theme;
+  applyTuning(G.world.tuning);
   G.player = makePlayer();
-  // dev / showcase params: ?scene=play|arena|boss|loadout  &weapon=starfall|moonbow
+  // ?map=<id> (play-test / showcase), ?scene=play|arena|boss|loadout|portal, &weapon=starfall|moonbow
   const w = PARAMS.get('weapon');
-  if (w && ITEMS.weapon.some(i => i.id === w)) G.player.gear.weapon = w;
+  if (w && ITEMS.weapon.some(i => i.id === w)) { G.player.gear.weapon = w; }
   const scene = PARAMS.get('scene');
-  enterMap(scene === 'arena' || scene === 'boss' ? 'ruins' : 'vale');
-  if (scene) G.state = 'play';
-  if (scene === 'boss') { G.arena.phase = 'bossIntro'; G.arena.t = 0.1; G.arena.wave = WAVES.length - 1; }
+  let start = PARAMS.get('map') || G.world.start;
+  if ((scene === 'arena' || scene === 'boss') && G.world.maps.ruins) start = 'ruins';
+  if (!G.world.maps[start]) start = Object.keys(G.world.maps)[0];
+  enterMap(start);
+  if (scene || PARAMS.get('playtest') || PARAMS.get('map')) G.state = 'play';
+  if (scene === 'boss') { const tr = G.map.triggers.find(t => (t.actions || []).some(a => a.type === 'spawn_boss')); if (tr) { G.trig.fired[tr.id] = true; for (const t of G.map.triggers.slice(0, G.map.triggers.indexOf(tr))) G.trig.fired[t.id] = true; for (const a of tr.actions) if (a.type !== 'wait') runAction(a); } }
   if (scene === 'loadout') G.ui.open = true;
-  if (scene === 'portal') { G.player.x = 20.5; G.player.y = 3.6; G.player.z = 4; }
+  if (scene === 'portal') { const pt = G.map.portals.find(q => q.marker) || G.map.portals[0]; if (pt) { G.player.x = pt.x - 1; G.player.y = pt.y + 1.1; G.player.z = tileH(G.map, G.player.x, G.player.y); } }
   document.getElementById('loading').style.display = 'none';
   window.__ready = true;
   requestAnimationFrame(loop);

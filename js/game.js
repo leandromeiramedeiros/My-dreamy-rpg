@@ -7,7 +7,7 @@ const G = {
   enemies: [], projs: [], effects: [], zones: [], parts: [], texts: [], delays: [],
   shakeA: 0, hitstopT: 0, state: 'title', cam: { x: 0, y: 0 },
   mouse: { x: RW / 2, y: RH / 2, dx: DW / 2, dy: DH / 2, wx: 0, wy: 0, down: false },
-  keys: {}, ui: { open: false, help: false }, banner: null, msg: null,
+  keys: {}, ui: { open: false, help: false }, banner: null, msg: null, kills: {}, pendingSpawns: 0, objective: '',
   arena: null, fade: 0, fadeDir: 0, fadeTo: null, boss: null, muted: false,
 };
 
@@ -91,8 +91,9 @@ function recalcStats(p, full) {
   const s = { hp: 0, mp: 0, def: 0, power: 0, crit: 0, haste: 0, regen: 0, mpRegen: 0, speed: 0 };
   for (const slot of ['head', 'chest', 'boots']) { const it = item(slot, p.gear[slot]); for (const k in it.stats) s[k] += it.stats[k]; }
   const hpR = full ? 1 : p.hp / p.maxHp, mpR = full ? 1 : p.mp / p.maxMp;
-  p.maxHp = 650 + s.hp; p.maxMp = 260 + s.mp; p.maxSt = 100;
-  p.def = s.def; p.power = 1 + s.power; p.crit = 0.08 + s.crit; p.haste = s.haste; p.regen = 2 + s.regen; p.mpRegen = 7 + s.mpRegen; p.speed = 3.7 + s.speed;
+  const B = G.tune.player;
+  p.maxHp = B.hp + s.hp; p.maxMp = B.mp + s.mp; p.maxSt = B.stamina;
+  p.def = s.def; p.power = (1 + s.power) * B.damage; p.crit = B.crit + s.crit; p.haste = s.haste; p.regen = B.regen + s.regen; p.mpRegen = B.mpRegen + s.mpRegen; p.speed = B.speed + s.speed;
   p.hp = p.maxHp * hpR; p.mp = p.maxMp * mpR; if (full) p.st = p.maxSt;
   p.spr = buildPlayerSprites(p.gear);
 }
@@ -383,7 +384,7 @@ function updateZones(dt) {
     if (z.pull) for (const e of G.enemies) {
       if (e.dead || e.boss || e.dummy || e.spawnT > 0) continue;
       const d = dist(z.x, z.y, e.x, e.y);
-      if (d < z.r + 0.5 && d > 0.2) { moveEntity(e, (z.x - e.x) / d * z.pull * dt, (z.y - e.y) / d * z.pull * dt, 0); }
+      if (d < z.r + 0.5 && d > 0.2) { moveEntity(e, (z.x - e.x) / d * z.pull * dt, (z.y - e.y) / d * z.pull * dt, tileH(G.map, e.x, e.y)); }
     }
     if (z.trap) {
       const e = nearestEnemy(z.x, z.y, z.r, null);
@@ -416,6 +417,7 @@ function spawnEnemy(type, x, y, spawnT = 0.9) {
 }
 function killEnemy(e) {
   e.dead = true; sfx('die');
+  G.kills[e.type] = (G.kills[e.type] || 0) + 1; G.kills.any = (G.kills.any || 0) + 1;
   burst(e.x, e.y, e.z + e.hgt * 0.5, e.boss ? 120 : 24, [e.blood, '#ffffff', '#ffb0e0'], e.boss ? 7 : 3.5);
   fx({ type: 'ring', x: e.x, y: e.y, r: e.boss ? 4 : 1.2, col: e.blood, life: 0.4 });
   // spirit motes drift up toward the player — a little healing
@@ -445,7 +447,7 @@ function updateEnemies(dt) {
     e.slowT -= dt;
     if (e.burnT > 0) { e.burnT -= dt; e.burnTick -= dt; if (e.burnTick <= 0) { e.burnTick = 0.5; damageEnemy(e, 14, { dot: true }); if (Math.random() < 0.5) burst(e.x, e.y, e.z + 1, 2, ['#ff9a4a', '#ffd27a'], 1); } if (e.dead) continue; }
     // knockback
-    if (Math.abs(e.kx) + Math.abs(e.ky) > 0.05) { moveEntity(e, e.kx * dt, e.ky * dt, 0); e.kx *= Math.pow(0.002, dt); e.ky *= Math.pow(0.002, dt); }
+    if (Math.abs(e.kx) + Math.abs(e.ky) > 0.05) { moveEntity(e, e.kx * dt, e.ky * dt, tileH(G.map, e.x, e.y)); e.kx *= Math.pow(0.002, dt); e.ky *= Math.pow(0.002, dt); }
     if (e.stunT > 0) { e.stunT -= dt; if (e.stunT <= 0) e.frozen = 0; continue; }
     e.cd -= edt; e.st -= edt;
     const d = dist(e.x, e.y, p.x, p.y), ang = Math.atan2(p.y - e.y, p.x - e.x);
@@ -470,7 +472,7 @@ function updateEnemies(dt) {
       let sp = def.speed;
       if (e.type === 'slime') sp *= Math.max(0, Math.sin(e.anim * 6)) * 1.8;
       const l = Math.hypot(mx, my) || 1;
-      if (!(e.type !== 'wisp' && d < def.range * 0.8 && !hidden)) moveEntity(e, mx / l * sp * edt, my / l * sp * edt, 0);
+      if (!(e.type !== 'wisp' && d < def.range * 0.8 && !hidden)) moveEntity(e, mx / l * sp * edt, my / l * sp * edt, tileH(G.map, e.x, e.y));
       if (!hidden && e.cd <= 0 && d < def.range) {
         e.state = 'wind'; e.st = def.wind; e.aimA = ang;
         if (e.type === 'slime') tele({ kind: 'circle', x: e.x, y: e.y, r: 1.15, life: def.wind, col: '#ff5aa0' });
@@ -487,11 +489,12 @@ function updateEnemies(dt) {
         e.cd = def.cd * rand(0.8, 1.3);
       }
     } else if (e.state === 'lunge') {
-      moveEntity(e, Math.cos(e.aimA) * 12 * edt, Math.sin(e.aimA) * 12 * edt, 0);
+      moveEntity(e, Math.cos(e.aimA) * 12 * edt, Math.sin(e.aimA) * 12 * edt, tileH(G.map, e.x, e.y));
       if (!e.hitP && dist(e.x, e.y, p.x, p.y) < e.r + p.r + 0.3) { e.hitP = true; hurtPlayer(def.dmg, e.x, e.y); }
       if (e.st <= 0) { e.state = 'rec'; e.st = 0.5; }
     } else if (e.state === 'rec') { if (e.st <= 0) e.state = 'chase'; }
     if (e.squash > 0) e.squash -= dt;
+    e.z = lerp(e.z, tileH(G.map, e.x, e.y), Math.min(1, dt * 12));
   }
   G.enemies = G.enemies.filter(e => !e.dead);
 }
@@ -504,12 +507,12 @@ function updateBoss(b, dt, d, ang, hidden) {
     b.phase2 = true; b.state = 'roar'; b.st = 1.6;
     say('The Warden calls upon the nightmare!'); sfx('roar'); shake(10);
     fx({ type: 'ring', x: b.x, y: b.y, r: 6, col: '#ff5aa0', life: 0.8 });
-    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + 0.4; spawnArenaEnemy(k % 2 ? 'wisp' : 'slime', b.x + Math.cos(a) * 3.5, b.y + Math.sin(a) * 3.5); }
+    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + 0.4; spawnAt(k % 2 ? 'wisp' : 'slime', b.x + Math.cos(a) * 3.5, b.y + Math.sin(a) * 3.5, 1); }
     return;
   }
   const spd = b.phase2 ? 1.35 : 1;
   if (b.state === 'chase') {
-    if (!hidden && d > 2.2) moveEntity(b, Math.cos(ang) * ENEMY.boss.speed * spd * dt, Math.sin(ang) * ENEMY.boss.speed * spd * dt, 0);
+    if (!hidden && d > 2.2) moveEntity(b, Math.cos(ang) * ENEMY.boss.speed * spd * dt, Math.sin(ang) * ENEMY.boss.speed * spd * dt, tileH(G.map, b.x, b.y));
     if (b.cd <= 0 && !hidden) {
       const opts = d < 3.6 ? ['cleave', 'cleave', 'slam', 'volley'] : ['charge', 'volley', 'charge'];
       if (b.phase2) opts.push('voidrain', 'voidrain');
@@ -551,7 +554,7 @@ function updateBoss(b, dt, d, ang, hidden) {
       if (b.step === 0) { b.aimA = ang; tele({ kind: 'line', x: b.x, y: b.y, ang, len: 8, w: 1.1, life: 0.75 * W, col: '#ff3a7a' }); b.step = 1; b.hitP = false; }
       if (b.step === 1 && b.st > 0.75 * W) { b.step = 2; sfx('dash'); }
       if (b.step === 2) {
-        moveEntity(b, Math.cos(b.aimA) * 15 * dt, Math.sin(b.aimA) * 15 * dt, 0);
+        moveEntity(b, Math.cos(b.aimA) * 15 * dt, Math.sin(b.aimA) * 15 * dt, tileH(G.map, b.x, b.y));
         if (Math.random() < 0.6) fx({ type: 'ghost', x: b.x, y: b.y, z: b.z, life: 0.3, spr: b.face < 0 ? ART.boss.f : ART.boss.n, col: '#ff5aa0' });
         if (!b.hitP && dist(b.x, b.y, p.x, p.y) < b.r + p.r + 0.3) { b.hitP = true; hurtPlayer(110, b.x, b.y); }
         if (b.st > 0.75 * W + 0.5) { b.step = 3; shake(5); }
@@ -578,45 +581,81 @@ function updateBoss(b, dt, d, ang, hidden) {
 }
 function endBossAtk(b, cd) { b.state = 'chase'; b.cd = cd * rand(0.8, 1.3) * (b.phase2 ? 0.75 : 1); }
 
-// ===== arena waves =====================================================================
-const WAVES = [
-  { slime: 6 },
-  { slime: 5, wisp: 4 },
-  { hound: 4, wisp: 3, slime: 4 },
-];
-function spawnArenaEnemy(type, x, y) {
-  const m = G.map;
-  for (let tries = 0; tries < 30; tries++) {
-    if (x != null && walkable(m, x, y, 0)) return spawnEnemy(type, x, y);
-    const a = Math.random() * 6.28, r = rand(4.5, 8);
-    const nx = m.cx + Math.cos(a) * r, ny = m.cy + Math.sin(a) * r;
-    if (walkable(m, nx, ny, 0) && dist(nx, ny, G.player.x, G.player.y) > 3.5) { x = nx; y = ny; return spawnEnemy(type, x, y); }
-    x = null;
+// ===== tuning (numbers editable in the editor's Tuning tab) ==============================
+G.tune = { player: { hp: 650, mp: 260, stamina: 100, speed: 3.7, regen: 2, mpRegen: 7, crit: 0.08, damage: 1 } };
+const TUNE_ENEMY_KEYS = ['hp', 'speed', 'dmg', 'range', 'cd'];
+function applyTuning(t) {
+  if (!t) return;
+  if (t.player) Object.assign(G.tune.player, t.player);
+  for (const k in t.enemies || {}) if (ENEMY[k]) for (const f of TUNE_ENEMY_KEYS) if (t.enemies[k][f] != null) ENEMY[k][f] = +t.enemies[k][f];
+  for (const k in t.skills || {}) if (SKILLS[k]) for (const f of ['cd', 'mp', 'st']) if (t.skills[k][f] != null) SKILLS[k][f] = +t.skills[k][f];
+}
+
+// ===== triggers: WHEN <condition> [requires other triggers] THEN <actions> =============
+// Edited in the editor's Logic tab; stored per map in js/world.js.
+function startTriggers() { G.trig = { fired: {}, at: {}, t: 0, inside: {} }; G.kills = {}; G.pendingSpawns = 0; G.objective = G.map.objective; }
+function updateTriggers(dt) {
+  const m = G.map, T = G.trig; if (!T) return;
+  T.t += dt;
+  for (const tr of m.triggers) {
+    if (tr.disabled) continue;
+    const once = tr.once !== false;
+    if (once && T.fired[tr.id]) continue;
+    if ((tr.requires || []).some(id => !T.fired[id])) continue;
+    if (!once && T.at[tr.id] != null && T.t - T.at[tr.id] < (tr.cooldown || 1)) continue;
+    if (triggerCondition(tr)) fireTrigger(tr);
   }
 }
-function startArena() { G.arena = { phase: 'intro', t: 2.6, wave: -1 }; }
-function updateArena(dt) {
-  const A = G.arena; if (!A) return;
-  A.t -= dt;
-  if (A.phase === 'intro' && A.t <= 0) nextWave();
-  else if (A.phase === 'wave' && G.enemies.length === 0) {
-    if (A.wave < WAVES.length - 1) { A.phase = 'break'; A.t = 3; healPlayer(G.player, G.player.maxHp * 0.25); G.banner = { s: 'Wave cleared', sub: 'Catch your breath…', t: 2.6 }; }
-    else { A.phase = 'bossIntro'; A.t = 3.2; G.banner = { s: 'The Gloam Warden', sub: 'Keeper of the Nightmare', t: 3.4, boss: true }; sfx('roar'); shake(6); }
-  } else if (A.phase === 'break' && A.t <= 0) nextWave();
-  else if (A.phase === 'bossIntro' && A.t <= 0) {
-    A.phase = 'boss';
-    G.boss = spawnEnemy('boss', G.map.cx + 1.5, G.map.cy - 1.5, 1.6);
-  } else if (A.phase === 'boss' && G.boss && G.boss.dead) {
-    A.phase = 'victory'; A.t = 99;
-    G.banner = { s: 'Victory', sub: 'The nightmare fades. A rift home opens to the west.', t: 5 };
-    for (const e of G.enemies) killEnemy(e);
-    G.map.portalOpen = true;
+function triggerCondition(tr) {
+  const w = tr.when || { type: 'map_enter' }, T = G.trig, p = G.player;
+  switch (w.type) {
+    case 'map_enter': return true;
+    case 'timer': { const base = w.after && w.after !== 'map' ? T.at[w.after] : 0; return base != null && T.t - base >= (+w.seconds || 0); }
+    case 'enter_area': { const inside = dist(p.x, p.y, +w.x, +w.y) < (+w.r || 1); const was = T.inside[tr.id]; T.inside[tr.id] = inside; return inside && !was; }
+    case 'all_enemies_dead': return !G.pendingSpawns && !G.enemies.some(e => !e.dummy);
+    case 'enemy_killed': return (G.kills[w.enemy || 'any'] || 0) >= (+w.count || 1);
+    case 'boss_hp_below': return !!(G.boss && !G.boss.dead && G.boss.hp / G.boss.maxHp * 100 < +w.pct);
+    case 'player_hp_below': return p.hp / p.maxHp * 100 < +w.pct;
+  }
+  return false;
+}
+function fireTrigger(tr) {
+  const T = G.trig; T.fired[tr.id] = true; T.at[tr.id] = T.t;
+  let d = 0;
+  for (const a of tr.actions || []) {
+    if (a.type === 'wait') { d += +a.seconds || 0; continue; }
+    if (d > 0) delay(d, () => runAction(a)); else runAction(a);
   }
 }
-function nextWave() {
-  const A = G.arena; A.wave++; A.phase = 'wave';
-  G.banner = { s: `Wave ${A.wave + 1} / ${WAVES.length}`, sub: ['Gloom slimes ooze from the cracks', 'Wisps join the swarm', 'Shade hounds on the hunt'][A.wave], t: 2.2 };
-  const w = WAVES[A.wave];
-  let k = 0;
-  for (const type in w) for (let i = 0; i < w[type]; i++) delay(0.15 * k++, () => spawnArenaEnemy(type));
+function runAction(a) {
+  const m = G.map, p = G.player;
+  switch (a.type) {
+    case 'spawn': {
+      const n = Math.max(1, +a.count || 1);
+      for (let i = 0; i < n; i++) { G.pendingSpawns++; delay(0.15 * i, () => { G.pendingSpawns--; spawnAt(a.enemy || 'slime', a.x === '' ? null : a.x, a.y === '' ? null : a.y, a.radius, a.instant); }); }
+      break;
+    }
+    case 'spawn_boss': G.boss = spawnEnemy('boss', a.x != null && a.x !== '' ? +a.x : m.cx + 1.5, a.y != null && a.y !== '' ? +a.y : m.cy - 1.5, 1.6); break;
+    case 'banner': G.banner = { s: a.title || '', sub: a.sub || '', t: a.boss ? 3.4 : 2.6, max: a.boss ? 3.4 : 2.6, boss: !!a.boss }; if (a.boss) { sfx('roar'); shake(6); } break;
+    case 'message': say(a.text || ''); break;
+    case 'objective': G.objective = a.text || ''; break;
+    case 'heal': healPlayer(p, p.maxHp * (+a.pct || 0) / 100); break;
+    case 'open_portal': case 'close_portal':
+      m.portals.forEach((pt, i) => { if (a.index == null || a.index === '' || +a.index === -1 || +a.index === i) pt.open = a.type === 'open_portal'; }); break;
+    case 'clear_enemies': for (const e of G.enemies.slice()) if (!e.dummy && !e.dead) killEnemy(e); break;
+    case 'shake': shake(+a.power || 6); break;
+    case 'sound': sfx(a.name || 'portal'); break;
+    case 'teleport': if (G.world.maps[a.map]) transition(a.map); break;
+  }
+}
+// x/y given: scatter around that point; otherwise somewhere on the island away from the player
+function spawnAt(type, x, y, radius, instant) {
+  const m = G.map; if (!ENEMY[type]) return;
+  const R = Math.max(2, Math.min(m.W, m.H) / 2 - 1.5);
+  for (let tries = 0; tries < 40; tries++) {
+    let nx, ny;
+    if (x != null) { const a = Math.random() * 6.28, r = Math.sqrt(Math.random()) * (radius != null && radius !== '' ? +radius : (tries ? 1.5 : 0)); nx = +x + Math.cos(a) * r; ny = +y + Math.sin(a) * r; }
+    else { const a = Math.random() * 6.28, r = rand(R * 0.55, R); nx = m.cx + Math.cos(a) * r; ny = m.cy + Math.sin(a) * r; }
+    if (walkable(m, nx, ny, tileH(m, nx, ny)) && (x != null || dist(nx, ny, G.player.x, G.player.y) > 3.5)) { const e = spawnEnemy(type, nx, ny, instant ? 0 : 0.9); e.z = 0; return e; }
+  }
 }

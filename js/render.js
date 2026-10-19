@@ -18,7 +18,7 @@ const sToView = (sx, sy) => [sx - camX + RW / 2, sy - camY + RH / 2];
 function prepTheme(m) {
   const th = m.theme;
   if (th._bg) return;
-  const jag = m.id === 'ruins';
+  const jag = m.themeId === 'ruins';
   th._bg = {
     sky: buildSky(th),
     far: buildMountains(th, th.seed, th.mtnFar[0], th.mtnFar[1], th.mtnFar[2], 110, jag),
@@ -67,10 +67,10 @@ function initPost() {
 function updateAmbient(dt) {
   const m = G.map, p = G.player;
   G.amb = G.amb || [];
-  const want = m.id === 'vale' ? 34 : 40;
+  const want = m.themeId === 'vale' ? 34 : 40;
   while (G.amb.length < want) {
     const a = Math.random() * 6.28, r = frand(1, 9);
-    if (m.id === 'vale') G.amb.push({ k: 'fly', x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r, z: frand(0.5, 3), ph: frand(0, 6.28), life: frand(6, 12), t: 0 });
+    if (m.themeId === 'vale') G.amb.push({ k: 'fly', x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r, z: frand(0.5, 3), ph: frand(0, 6.28), life: frand(6, 12), t: 0 });
     else G.amb.push({ k: 'ember', x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r, z: frand(0, 1), ph: frand(0, 6.28), life: frand(3, 7), t: 0 });
   }
   for (const f of G.amb) {
@@ -81,7 +81,7 @@ function updateAmbient(dt) {
   }
   G.amb = G.amb.filter(f => !f.dead);
   // petals from blossom trees
-  if (m.id === 'vale' && Math.random() < dt * 6) {
+  if (m.themeId === 'vale' && Math.random() < dt * 6) {
     const blossoms = m.objects.filter(o => o.img && ART.trees.blossom.includes(o.img));
     if (blossoms.length) { const b = pick2(blossoms); G.parts.push({ x: b.x + frand(-0.6, 0.6), y: b.y + frand(-0.6, 0.6), z: 5 + frand(0, 2), vx: frand(0.2, 0.6), vy: frand(-0.1, 0.3), vz: -0.5, life: 5, t: 0, col: pick2(['#ffd0e6', '#ffffff', '#f6a6c8']), grav: 0.05, size: 1, glow: false, petal: true }); }
   }
@@ -89,7 +89,7 @@ function updateAmbient(dt) {
   for (const f of m.falls) {
     if (Math.random() < dt * (f.edge ? 0 : 14)) G.parts.push({ x: f.wx + frand(-0.5, 0.5), y: f.wy + frand(0, 0.6), z: 0.2, vx: frand(-0.3, 0.3), vy: frand(0, 0.6), vz: frand(0.5, 1.6), life: frand(0.8, 1.6), t: 0, col: '#e8fbff', grav: 0.2, size: 2, glow: false, mist: true });
   }
-  if (m.chimney && Math.random() < dt * 4) G.parts.push({ x: m.chimney.x, y: m.chimney.y, z: m.chimney.z, vx: 0.15, vy: -0.1, vz: 0.6, life: 3, t: 0, col: '#e6dcf0', grav: -0.05, size: 2, glow: false, mist: true });
+  for (const ch of m.chimneys || []) if (Math.random() < dt * 4) G.parts.push({ x: ch.x, y: ch.y, z: ch.z, vx: 0.15, vy: -0.1, vz: 0.6, life: 3, t: 0, col: '#e6dcf0', grav: -0.05, size: 2, glow: false, mist: true });
 }
 
 // ===== frame ======================================================================
@@ -115,7 +115,7 @@ function drawScene() {
   mg.addColorStop(0, rgba(mo.glow, 0.45)); mg.addColorStop(1, rgba(mo.glow, 0));
   ctx.fillStyle = mg; ctx.fillRect(mx - mo.r * 4, my - mo.r * 4, mo.r * 8, mo.r * 8);
   drawMoon(ctx, mx, my, mo.r, mo.col);
-  if (m.id === 'vale') drawMoon(ctx, mx - 70, my + 22, 7, '#d6e6ff');
+  if (m.themeId === 'vale') drawMoon(ctx, mx - 70, my + 22, 7, '#d6e6ff');
   const farY = RH * 0.5 - 120 - camY * 0.04, nearY = RH * 0.55 - 100 - camY * 0.08;
   ctx.drawImage(bg.far, Math.round(-200 - camX * 0.05), Math.round(farY));
   // distant floating islets
@@ -129,7 +129,7 @@ function drawScene() {
     ctx.globalAlpha = 0.85; ctx.drawImage(c, Math.round(x), Math.round(y)); ctx.globalAlpha = 1;
   });
   // god rays
-  if (m.id === 'vale') {
+  if (m.themeId === 'vale') {
     ctx.globalCompositeOperation = 'lighter';
     for (let k = 0; k < 5; k++) {
       const a = 0.035 + 0.025 * Math.sin(G.t * 0.5 + k * 1.7), x0 = mx - 30 + k * 18;
@@ -152,7 +152,7 @@ function drawScene() {
   ctx.drawImage(m.ground, Math.round(m.gox - camX + RW / 2), Math.round(m.goy - camY + RH / 2));
   for (const f of m.falls) if (f.edge) drawFall(ctx, f, true);
   drawWater(ctx, m);
-  if (m.id === 'ruins') drawSigil(ctx, m, lights);
+  if (m.hasRunes) drawSigil(ctx, m, lights);
 
   // clouds drifting in front of the underside
   bg.sea.forEach((c, i) => {
@@ -190,8 +190,8 @@ function drawScene() {
   drawParticles(ctx, lights);
 
   // ---- fog & mist ----
-  drawFog(ctx, bg.fog, 256, 0.5, 7, 2.5, m.id === 'vale' ? 0.15 : 0.18);
-  drawFog(ctx, bg.fog2, 384, 0.8, -4, 1.2, m.id === 'vale' ? 0.07 : 0.1);
+  drawFog(ctx, bg.fog, 256, 0.5, 7, 2.5, m.themeId === 'vale' ? 0.15 : 0.18);
+  drawFog(ctx, bg.fog2, 384, 0.8, -4, 1.2, m.themeId === 'vale' ? 0.07 : 0.1);
 
   // ---- lighting ----
   for (const L of m.lights) lights.push(L);
@@ -201,7 +201,7 @@ function drawScene() {
 
   // ---- bloom + grade ----
   applyBloom(ctx, th.bloom);
-  ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.22; ctx.drawImage(GRADE[m.id], 0, 0);
+  ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.22; ctx.drawImage(GRADE[m.themeId], 0, 0);
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   if (p.buffs.dreamveil) { ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = 'rgba(255,140,220,0.25)'; ctx.fillRect(0, 0, RW, RH); ctx.globalCompositeOperation = 'source-over'; }
   ctx.drawImage(VIGNETTE, 0, 0);
@@ -256,7 +256,7 @@ function drawWater(ctx, m) {
 function drawSigil(ctx, m, lights) {
   const [vx, vy] = worldToView(m.cx, m.cy, 0);
   ctx.globalCompositeOperation = 'lighter';
-  const pulse = 0.35 + 0.25 * Math.sin(G.t * 2) + (G.arena && G.arena.phase === 'boss' ? 0.3 : 0);
+  const pulse = 0.35 + 0.25 * Math.sin(G.t * 2) + (G.boss && !G.boss.dead ? 0.3 : 0);
   ctx.strokeStyle = `rgba(182,140,255,${pulse})`; ctx.lineWidth = 1;
   for (const R of [1.2, 2.1, 2.8]) { ctx.beginPath(); ctx.ellipse(vx, vy, R * 22.6, R * 11.3, 0, 0, Math.PI * 2); ctx.stroke(); }
   for (let k = 0; k < 6; k++) {
@@ -370,9 +370,10 @@ function drawFlame(ctx, vx, vy, col, core) {
 
 function drawPortal(ctx, o, lights) {
   const m = G.map;
-  const active = !o.back || m.portalOpen;
+  const P = o.portal, back = (THEME_OF[P.to] || 'vale') === 'vale';
+  const active = P.open;
   const [vx, vy] = worldToView(o.x, o.y, o.z), cy = vy - 22;
-  const col = o.back ? '#9ef0ff' : '#c79bff';
+  const col = back ? '#9ef0ff' : '#c79bff';
   ctx.globalCompositeOperation = 'lighter';
   if (active) {
     for (let k = 0; k < 7; k++) {
@@ -396,7 +397,7 @@ function drawPortal(ctx, o, lights) {
     if (active) { ctx.fillStyle = rgba(col, 0.9); ctx.fillRect(x - 1, y, 2, 1); }
   }
   // quest marker "!"
-  if (active && !o.back) {
+  if (active && P.marker) {
     const by = Math.round(cy - 38 + Math.sin(G.t * 3) * 2), bx = Math.round(vx);
     ctx.fillStyle = '#1a1326'; ctx.fillRect(bx - 2, by - 1, 5, 10); ctx.fillRect(bx - 2, by + 10, 5, 4);
     ctx.fillStyle = '#ffd35a'; ctx.fillRect(bx - 1, by, 3, 8); ctx.fillRect(bx - 1, by + 11, 3, 2);
