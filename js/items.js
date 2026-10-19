@@ -364,14 +364,18 @@ function openChest(o) {
   sfx('chest'); shake(2);
   burst(o.x, o.y, o.z + 0.8, 30, ['#ffd35a', '#fff6d6', '#ffffff'], 3);
   fx({ type: 'ring', x: o.x, y: o.y, r: 1.2, col: '#ffd35a', life: 0.4 });
-  dropLoot(o.x, o.y, o.src.starter ? starterLoot() : rollLoot('chest', L));
+  // chest tier (generator: wood | silver | gold) raises the rarity floor; gold adds an item and a gem
+  const floor = { silver: 'uncommon', gold: 'rare' }[o.src.tier], list = o.src.starter ? starterLoot() : rollLoot('chest', L);
+  if (o.src.tier === 'gold') list.push({ kind: 'item', it: rollItem(L, rollRarity('elite', L)) }, { kind: 'gem', gem: rollGem(L + 5) });
+  if (floor) for (const d of list) if (d.kind === 'item' && !rarityAtLeast(d.it.rarity, floor)) d.it = rollItem(L, floor);
+  dropLoot(o.x, o.y, list);
   gainXp(p, Math.round(xpToNext(L) * (o.src.starter ? 0.8 : 0.5)));
 }
-function setCheckpoint(x, y, quiet) {
+function setCheckpoint(x, y, label) {
   const p = G.player;
   G.checkpoint = { map: G.map.id, x, y };
   p.potions = MAX_POTIONS;
-  if (!quiet) { say('Checkpoint — potions refilled'); sfx('heal'); fx({ type: 'ring', x, y, r: 1.4, col: '#9ef0ff', life: 0.5 }); saveGame(); }
+  say(`${label || 'Checkpoint'} — potions refilled`); sfx('heal'); fx({ type: 'ring', x, y, r: 1.4, col: '#9ef0ff', life: 0.5 }); saveGame();
 }
 function updateLoot(dt) {
   const p = G.player; if (!p || p.dead || G.state !== 'play') return;
@@ -385,7 +389,7 @@ function updateLoot(dt) {
   G.drops = G.drops.filter(d => !d.done);
   for (const o of G.map.objects) {
     if (o.chest && !o.opened && dist(p.x, p.y, o.x, o.y) < 1.0) openChest(o);
-    if (o.checkpoint && dist(p.x, p.y, o.x, o.y) < 1.3) { if (!o.cpOn) { o.cpOn = true; setCheckpoint(o.x + 0.8, o.y + 0.8); } } else if (o.checkpoint) o.cpOn = false;
+    if (o.checkpoint && dist(p.x, p.y, o.x, o.y) < 1.3) { if (!o.cpOn) { o.cpOn = true; setCheckpoint(p.x, p.y); } } else if (o.checkpoint) o.cpOn = false;
   }
 }
 

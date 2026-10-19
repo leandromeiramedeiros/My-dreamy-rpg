@@ -780,7 +780,7 @@ function runAction(a) {
     case 'shake': shake(+a.power || 6); break;
     case 'sound': sfx(a.name || 'portal'); break;
     case 'teleport': if (G.world.maps[a.map]) transition(a.map); break;
-    case 'checkpoint': { const has = v => v != null && v !== ''; setCheckpoint(has(a.x) ? +a.x : p.x, has(a.y) ? +a.y : p.y); break; }
+    case 'checkpoint': { const has = v => v != null && v !== ''; setCheckpoint(has(a.x) ? +a.x : p.x, has(a.y) ? +a.y : p.y, a.text); break; }
     case 'loot': lootAction(a); break;
   }
 }
