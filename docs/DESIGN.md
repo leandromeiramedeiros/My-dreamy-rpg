@@ -17,7 +17,7 @@ raise it in your report; do not silently invent a new schema.
 
 ## 1. Pitch
 
-*"The Dream is unravelling."* A short, complete action-RPG on floating islands. 60–80 minutes from title to credits.
+*"The Dream is unravelling."* A short, complete action-RPG on floating islands. **About 2 hours from title to credits on the main path** (first run, average player), plus ~45 min of optional content.
 Albion-style "you are what you wear" skills, Diablo-style loot with rarity, sockets and gems, and a hero whose
 gear visibly changes him — the better the gear, the more it glows.
 
@@ -45,9 +45,9 @@ Each zone ends with the guardian's last words revealing one piece of Morrow's st
 
 ## 3. Progression
 
-* **Level 1 → 30.** XP from kills, chests, room clears. Curve: `xpToNext(L) = round(60 * L^1.55)`, tuned so a level-up
+* **Level 1 → 40** (see §11 for bands). XP from kills, chests, room clears. Curve: `xpToNext(L) = round(60 * L^1.55)`, tuned so a level-up
   lands roughly every 2 minutes.
-  Target levels: Vale 1–2, Pinewood 2–8, Ruins 8–14, Grotto 14–20, Caldera 20–26, Spire 26–30.
+  Target levels: Vale 1–3, Pinewood 3–10, Ruins 10–17, Grotto 17–24, Caldera 24–31, Spire 31–38; 39–40 optional/NG+.
 * Per level: +4% base HP, +3% base damage. **No talent tree** (cut, see §5).
 * Death: respawn at the **last checkpoint shrine touched** with full HP, lose 10% of the current level's XP progress.
   Trigger state (fired triggers, cleared rooms, opened gates, opened chests) **persists** across death and in the save;
@@ -293,21 +293,110 @@ so the design rule is **15–25 s of walking between fights**. Targets (revised 
 | **Sonnet** | content: maps, triggers, story/dialogue, enemies, UI screens, sprites | `world.js`, `hud.js`, `maps.js`, `art.js` |
 | **Haiku** | smoke **and scripted play tests** (kill → drop → equip → save → reload → die → checkpoint; 60 s fps sample on the largest map), data tables, balance sheets, docs | `tools/`, `README.md`, tables |
 
-## 10. Milestone plan (each one ships live) — revised after senior director review
-* **M1 Foundation + Inventory & Loot** — item instances, rarity, level/XP, sockets & gems (3 grades), additive stats,
-  loot drops with rarity fanfare, **elemental plumbing** (every hit carries an element; `res` on player and
-  enemies; resistance affixes and armour-gem resists; coloured WEAK/RESIST damage numbers), inventory UI, save/load, checkpoint shrines + persisted trigger state, death/respawn,
-  smoke test harness.
-* **M2 Vertical slice: Act I** — Pinewood at target size (outer + boss map) from the generator, bigger Vale hub,
-  dialogue + camera-pan + loot + checkpoint + gate trigger actions, intro and Pip, the data-driven boss system with
-  Old Bramblehorn, elites, universal dodge, loot/XP tuned for L1–8, scripted play test. Proves the loop end to end.
-* **M3 The Hero & Icons** — detailed layered hero, gear overlays per tier, rarity glow & particles (1–2 px, high
-  contrast), paper-doll in inventory, new icon set, enemies rescaled to the hero, drop FX unified on one `rarityFx` table.
-* **M4 Acts II–III** — Ruins rebuilt to size with the Gloam Warden ported to the boss system, Sunken Grotto + Mirelle,
-  gem skill amplification complete, **the 5 status effects** (stagger, burn, chill/freeze, poison, shock), Dread, and zone resistance tables, skill modifier choices, gem-tinted skill visuals.
-* **M5 Act IV + Finale** — Emberfall Caldera + Kharzul, Sleepless Spire + Morrow (3 phases), Pip's sacrifice, ending,
-  credits, NG+.
-* **M6 Polish & balance** — pacing to ≥60 min (timed playthrough), music loops, minimap fog-of-war, README, screenshots.
+## 11. Expanded scope: the 2-hour game (supersedes conflicting numbers in §2, §3, §8, §8b, §8c)
+Rule: reach 2 hours through **fight density per zone, not walking** (keep 15–25 s between fights). Every zone is now
+**outer map → mandatory dungeon (the Shard lies below; the outer map's elite drops the key) → boss map**.
+
+| Segment | Maps (tiles) | Min | Fights |
+|---|---|---|---|
+| Intro + Vale tutorial + first chest | hub 40 | 7 | dummies + 1 scripted ambush |
+| Pinewood: outer → Root Hollow → Bramblehorn | 56 / 32 / 22 | 18 | 3 rooms + elite, 2 rooms + mini-boss, boss |
+| Ruins: outer → Warden Crypt → Gloam Warden | 56 / 36 / 22 | 18 | same shape |
+| Grotto: outer → Drowned Vault → Mirelle | 64 / 36 / 24 | 20 | same shape |
+| Caldera: outer → Forge Deep → Kharzul | 64 / 36 / 24 | 20 | same shape |
+| Spire: ascent → gauntlet → Morrow (3 phases) | 48 / 36 / 28 | 24 | 3 rooms, 3-wave gauntlet + elite pair, boss |
+| Hub returns (gems, re-socket, story, quests) | — | 13 | — |
+| **Total** | **16 maps + hub** | **120** | ~38 encounters, 5 mini-bosses, 5 bosses |
+
+**Optional (beyond the 120):** **Drifting Isles** (48 tiles, L34–40, mixed elements, key from Kharzul; sixth named
+legendary + Mythic chance), one **secret vault per zone** (12–16 tiles, reached from a map secret), the **hub arena**.
+
+### 11.1 Progression and cadence
+* Level 1→40, about one level every 3 minutes. Gear tiers at reqLvl **1 / 8 / 16 / 24 / 32**, Mythic at 36.
+* Drops: ~every 3rd kill; room clear ≥Uncommon; elite Rare+; **mini-boss guaranteed Epic with ≥2 sockets**;
+  boss = named Legendary; Morrow = Mythic.
+* Gems: 4–5 per zone (chest, mini-boss, secret, quest) → 22–25 socketed by the end; one Socket Rune per dungeon.
+* Character skills unlock at L1/5/10/15/20/25/30 (two new skills: one holy, one nature). Modifier picks at
+  L5/10/15/20/25/30. Second weapon-skill option at reqLvl ≥ 8.
+* Potions: 3 charges, refilled at shrines; every dungeon has a midpoint shrine.
+* **Per zone the player gets:** 1 gear tier-up, 1 Epic, 1 Legendary, 4–5 gems, 1 Rune, 2 choice moments, ~7 levels.
+
+### 11.2 Encounter grammar
+* **Outer map:** room 1 teaches the zone's new enemy; room 2 mixes it with an archetype that resists the player's
+  likely weapon; room 3 adds a caster or summoner; the elite guards the dungeon key.
+* **Dungeon:** room 1 = the elite modifier's element in numbers; room 2 = a lever/gate fight; mini-boss built strictly
+  from 3 `BOSS_MOVES` plus the zone's resist identity, 60–90 s.
+* **Boss:** as §7. Any zone measuring over 22 minutes gets a room cut, not a walk cut.
+
+### 11.3 Hidden treasure
+* **3 secrets per outer map, 1 per dungeon:** one signposted (cracked-wall texture, a lantern pointing at it, a Pip line
+  "the wall hums"), one environmental (a path visible on the minimap but not from the ground), one logic (a lever opens a
+  bridge seen earlier).
+* Rewards escalate gem → Socket Rune → gold chest with a guaranteed Rare+. Never a Legendary (those stay on bosses).
+* Every secret is a trigger area + `openGate`/`loot` action, so it stays editable in `editor.html`.
+
+### 11.4 Bestiary
+* A tab on the Tab screen: **Inventory | Skills | Bestiary | Quests**. Entries appear on first sight; unseen ones are "?"
+  silhouettes, grouped by zone.
+* Entry: animated sprite, name, archetype tag, one lore line in Pip's voice, kill count, the weak/resist row (each element
+  revealed by the first-hit discovery of §5b, unknown = "?"), drop hint. Bosses get a second lore line on kill.
+* Hunt milestones: 10 / 25 / 50 kills of a type give Dream Dust; 50 also gives a permanent +5% damage to that type
+  (`huntBonus`, additive into power).
+* The resist row uses the same icons as the enemy nameplate, so the lesson transfers.
+
+### 11.5 Status icons (12×12, `ICONS.status(id)`)
+* **On enemies** (over the health bar; stacks as a corner digit, time as a pie sweep): Burn, Chill/Freeze, Poison, Shock,
+  Slowed, Rooted, Stunned, plus a permanent elite-modifier badge (Burning, Frozen, Storm, Shielded, Fast). Stagger is a bar.
+* **On the hero** (one row above the skill bar, max 8, debuffs first and red-tinted, time as a sweep, never text):
+  every buff in `BUFFS` (Bulwark, Mana Surge, Shadow Veil, Mend, Sprint, Arcane Orbit, Dreamveil, Blessing, Focus) plus
+  Dread, Gloomed, Burning, Chilled, Poisoned, kill streak (digit), potion cooldown. Debuffs also tint the portrait.
+
+### 11.6 New systems (adopted)
+| System | Priority | Milestone |
+|---|---|---|
+| Dungeons with keys and doors (now mandatory, one per zone) | must | M2 onward |
+| Set bonuses: 2/3-piece per armour family (Plate 3: stagger +50%; Robe 3: arcane ignores 75% resist; Jacket 3: pierce crits poison) | must | M4 |
+| Side quests via triggers: 1–2 per zone, NPC gives them, rewards a choice of gem or Rune; `quest` action + 3-line HUD log + Quests tab | should | M2 (one), then each zone |
+| Hub arena: scaling waves, Dust, guaranteed Epic every 5 rounds (endgame + balance test bed) | should | M6 |
+| Pip companion: follows you, auto-picks up loot nearby, lights darkness, calls out a new enemy's first weakness | should | M7 |
+| Return-rift at each checkpoint shrine to the hub (fast travel) | should | M2 |
+| Weapon mastery: XP per weapon family, 5 ranks, +2% damage each, rank 5 cosmetic trail | nice | M8 |
+| Achievements (20) | nice | M8 |
+| NG+ modifiers: elites everywhere / no kill-heal / gloom everywhere, each raising drop rarity | nice | M7 |
+
+**Rejected:** potion/rune crafting and enchanting, gold and merchants (Dream Dust is the one currency; the Elder Stone is the
+shop), reputation, fishing and minigames, day/night, mounts, a separate hard mode (NG+ modifiers cover it).
+
+### 11.7 Generator and tech
+* Three stamps: `outer` (coast + 3 rooms + branches + 3 secrets), `dungeon` (cave/crypt palette, 2 rooms + mini-boss arena +
+  locked door + lever shortcut, 3–5 height levels), `boss` (arena + fence). The generator emits trigger cards
+  (`spawn`, `loot`, `openGate`, `checkpoint`, `dialogue`, `quest`), not just tiles; set dressing comes from generator
+  density and only rooms are hand-tuned.
+* New world objects: chest (wood/silver/gold), shrine, lore tablet, lever, gate, key door, fake wall (`hidden`).
+* Portals carry an arrival point (`to: {map, x, y}`) so you return where you left.
+* Save schema grows (bestiary, quests, secrets, mastery): keep key `dreamy.save.v1`, add a `version` field and a single
+  `migrate(save)` function from day one.
+
+## 10. Milestone plan (each one ships live) — sized to the 2-hour game
+* **M1 Foundation + Inventory & Loot** (in flight): item instances, rarity, levels (cap 40), sockets & gems (3 grades),
+  additive stats, damage types + resistances plumbing (§5b), loot drops with fanfare, inventory UI, save/load with
+  `version` + `migrate`, checkpoint shrines + persisted trigger state, death/respawn, discovery hooks (`G.seen`,
+  first-hit weakness reveal) and the `huntBonus` slot, smoke test harness.
+* **M2 Act I slice** (~25 min playable): Pinewood outer + Root Hollow dungeon + Bramblehorn, hub 40, the data-driven boss
+  system with a mini-boss, key/door, levers/gates, dialogue/camera/loot/checkpoint/quest actions, intro and Pip, elites,
+  universal dodge, one side quest, 3 secrets, return-rift, scripted play test.
+* **M3 The Hero & Icons:** layered hero, gear overlays, rarity glow & particles, paper-doll, the icon set, hero status-icon
+  row, enemies rescaled, unified `rarityFx`; prototype the 4-tab layout.
+* **M4 Act II** (~45 min): Ruins (3 maps), Gloam Warden ported, 5 status effects + enemy status icons, set bonuses,
+  Bestiary tab.
+* **M5 Act III** (~65 min): Grotto (3 maps), Mirelle, gem amplification complete, Drifting Isles if ahead of schedule.
+* **M6 Act IV** (~85 min): Caldera (3 maps), Kharzul, hub arena, two new character skills.
+* **M7 Finale** (~110–120 min): Spire (3 maps), Morrow, Pip companion and sacrifice, ending, credits, NG+ and modifiers.
+* **M8 Polish:** timed 2-hour playthrough, music loops, minimap fog-of-war, mastery, achievements, secret vaults, README.
+
+Team lanes: **Sonnet A** = maps + triggers (3 maps per milestone); **Sonnet B** = enemies, mini-boss data, UI, icons,
+quests; **Opus** = systems, rendering, boss move library, save schema, arena, Pip; **Haiku** = per-zone balance sheet,
+lore, resist/set/quest data, and a **timed scripted main-path run** reporting minutes per zone (the 2-hour ship gate).
 
 Review gates: every map ships a screenshot and a timed main-path walk; every boss ships one screenshot per telegraph.
 
