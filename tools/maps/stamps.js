@@ -191,13 +191,13 @@ function dungeon(S) {
       tr.push(T.allDead('r1_done', 'First cavern cleared', ['r1'], [T.message(E.r1.clear), T.heal(25), T.loot('uncommon', 1, r1.x, r1.y), T.objective('Rest at the shrine, then press on')]));
       tr.push(T.enter('r2', E.r2.name, r2.x, r2.y, r2.r - 1.5, waveActions(T, r2, E.r2.waves, E.r2.gap, E.r2.banner), ['r1_done']));
       tr.push(T.allDead('r2_done', 'Gallery cleared', ['r2'], [T.message(E.r2.clear), T.heal(25), T.loot('uncommon', 1, r2.x, r2.y), T.objective('Find the lever that raises the gate')]));
-      tr.push(T.enter('lever_r2', 'Pull the gate lever', R.lever.x, R.lever.y, 1.6, [T.message('The lever grinds. A gate rumbles open.'), T.openGate('gate_r2'), T.sound('portal'), T.objective('Descend to the Thornmother\'s den')], ['r2_done']));
+      tr.push(T.enter('lever_r2', 'Pull the gate lever', R.lever.x, R.lever.y, 1.6, [T.message('The lever grinds. A gate rumbles open.'), T.openGate('gate_r2'), T.sound('portal'), T.objective('Descend to the Mossjaw\'s den')], ['r2_done']));
       tr.push(T.enter('boss', E.arena.name, A.x, A.y, A.r - 1.5, [
         T.banner(E.arena.title, E.arena.sub, true), T.objective('Defeat ' + E.arena.title), T.shake(5), T.wait(1.2),
         T.spawn(E.arena.enemy, 1, A.x, A.y - 1.5, 0.5, { elite: true }), T.wait(15), T.spawn(E.arena.add, 2, A.x - 2, A.y + 2.5, 2), T.wait(15), T.spawn(E.arena.add, 2, A.x + 2, A.y + 2.5, 2),
       ], ['lever_r2']));
       tr.push(T.allDead('boss_done', E.arena.title + ' falls', ['boss'], [
-        { type: 'clear_enemies' }, T.banner('The Thornmother falls', 'A way out opens'), T.dialogue(E.arena.title, [X.bossLast]), T.heal(100),
+        { type: 'clear_enemies' }, T.banner('Mossjaw falls', 'A way out opens'), T.dialogue(E.arena.title, [X.bossLast]), T.heal(100),
         T.loot('epic', 1, A.x, A.y - 1, { sockets: 2, chest: 'gold' }), T.openGate('gate_short'), T.openPortal(g.portalIdx.exit), T.objective('Take the rift down to Old Bramblehorn'), T.sound('portal'),
       ]));
       tr.push(T.enter('short_lever', 'Shortcut lever', A.x + A.r * 0.55, A.y + A.r * 0.55, 1.6, [T.message('A second lever: the shortcut to the shrine is open.'), T.openGate('gate_short')], ['boss_done']));
