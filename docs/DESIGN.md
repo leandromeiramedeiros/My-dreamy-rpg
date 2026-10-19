@@ -366,7 +366,7 @@ Each reaction pops its name in its element colour with its own sound. Seven, no 
   E Arcane Barrage / Gravity Well · R Meteor / Starstorm.
 * **Bow** (basic pierce): Q Multishot / Piercing Shot · E Tumble / Snare Trap / ***Venom Volley*** (nature, sets up
   Wildfire) · R Rain of Arrows / Moonbeam.
-* **Chest:** Bulwark, Mana Surge, Shadow Veil (Thornmail cut, see §17.7).
+* **Chest:** Bulwark, Mana Surge, Shadow Veil, ***Thornmail*** (nature, reflects poison; restored for the Pacifist build, §18.5).
 * **Helm:** War Cry, Frost Nova, Mend (Stormcall cut, see §17.7).
 * **Boots:** Charge, Blink, Sprint (all with i-frames).
 * **Character pool (10):** Second Wind, Arcane Orbit, Chain Lightning, Dreamveil, Blessing of Dawn, Shooting Star,
@@ -537,12 +537,98 @@ shared with the sword).
 ### 17.7 Legendaries, skill cap, placement
 * Named legendaries: **Morrow's Regret** (daggers, from the Twin Vigils: Death Mark refunds the charge bar if it kills) and
   **Kharzul's Anvil** (two-hander, an alternative choice from Kharzul's chest: charged swings reach ×1.8 in 0.5 s).
-* Skill cap raised from 12 to **22 new casts**, paid for by cutting **Thornmail** and **Stormcall** (Shade Harness and Smoke
-  Bomb take their roles). Each new family ships with 2 options per slot; third options only if ahead of schedule.
+* Skill cap raised from 12 to **22 new casts**, paid for by cutting **Stormcall** (Smoke Bomb takes its role); Thornmail is kept (§18.5). Each new family ships with 2 options per slot; third options only if ahead of schedule.
 * Art: daggers (main + off-hand layers) and two-hander (large layer, shoulder-carry idle) ×5 tiers, stab and overhead
   attack poses, 25 icons, Shade overlays ×3 slots ×5 tiers — about a week for Sonnet B.
 * **M4:** daggers, Shade family, Origins at New Dream. **M5:** two-handers. Nothing on the 2-hour main path depends on them;
   from M4 the starting chest can roll any family.
+
+## 18. Combo layer: tags, triggers, Duos, rune-words, aspects (expert-reviewed; authoritative)
+Goal: the "I found a broken-in-a-good-way interaction" feeling, without per-combo code or tuning.
+
+### 18.1 Tags and the effect table
+* Every skill gets `tags` from {projectile, zone, dash, nova, cone, line, channel, summon, mark, charge, buff, heal,
+  ultimate, melee, ranged, spin} plus its element/type. The cast `ctx` also carries `shape`, `count`, `onHit[]`, `onEnd[]`,
+  `spawnAt`.
+* **One effect table** drives gems, sets, legendaries, Duos, rune-words, origins, pearls, food and trigger affixes:
+  `EFFECTS: [{ id, src, when, ifTags, ifState, do(ctx), icd, name, hint }]` with
+  `when ∈ cast | hit | kill | dodge | statusApplied | reaction | ultimate`. **No effect ever names a skill**, so a new
+  weapon family inherits every combo for free.
+* **Triggers:** the four event hooks (cast, dodge, kill, ultimate) are first-class combo inputs; "on dodge: recast your last
+  zone skill at your old position" is the richest effect type.
+
+### 18.2 Duos, rune-words, aspects
+* **Duos** — named cross-slot synergies (two tag conditions). 12 for 1.0.
+* **Rune-words** — ordered 3-gem socket patterns on one item that replace the gems' stats with a named power. 10 for 1.0,
+  hinted in the Codex and sold as recipes by the Elder Stone. The fishing rod's socket counts as a 4th socket for
+  rune-word patterns.
+* **Aspects** — legendaries transform a **tag**, not a skill ("projectile → spiral of 3", "dash → leaves a mirror image
+  that recasts your last skill once", "zone → follows you", "nova → fires twice, the second at your aim point").
+  7 for 1.0, on the existing named legendaries.
+* **Trigger affixes** on Epic+ items: e.g. "on dodge: Frost Nova (r1)", "on kill: 1 Mark on the nearest enemy".
+
+### 18.3 Combo Codex
+A tab beside the Bestiary: silhouettes of Duos and rune-words, revealed on first trigger with a pop ("FROST TORNADO —
+discovered") and a one-time reward (Dust + a Clear gem for the first 5, then cosmetics). Undiscovered entries show a
+hint ("a cold helm and a spinning blade…"); discovered ones show their ingredients so builds can be reproduced. Pip gives
+one hint per zone for an undiscovered entry the player's **current gear can already trigger** (computed from equipped tags).
+
+### 18.4 Examples (the 1.0 set is chosen from these)
+| Combo | Inputs → result |
+|---|---|
+| Frost Tornado | Frost Nova + a spin skill → each spin re-applies Chill in a ring; Shatter on the 3rd spin |
+| Afterimage Meteor | Blink + Meteor → lands where you blinked *from*, 0.5 s sooner |
+| Knives from the Dark | Smoke Bomb + Fan of Knives → knives fired from the smoke always backstab |
+| Orbit | Gravity Well + any projectile → projectiles circle the well for 2 s, hitting repeatedly |
+| Catapult | Snare Trap + Charge → dashing through your trap launches it ahead as a rolling net |
+| Thunderstorm | Static Field + Rain of Arrows → arrows landing in the field Shock; Conduct chains the zone |
+| Burning Halo | Arcane Orbit + Cinder Cleave → orbs turn to fire and Detonate when a charged swing passes through |
+| Battering Ram | Bulwark + Shoulder Charge → the shield rides the charge, reflecting projectiles |
+| Thorn Garden | Caltrops + Dreamveil → slowed enemies in caltrops are poisoned twice as fast |
+| Phantom Cut | Dash Strike + Shadow Veil → dashing while invisible leaves an image that repeats the cut |
+| Marked Circuit | Chain Lightning + Marks → prefers Marked targets, refunds 1 Mark per jump |
+| Faultline Arrow | Piercing Shot along an Earthbreaker crack → a line explosion |
+| Stormfire (rune-word) | Ruby·Topaz·Ruby → Burn stacks arc to Shocked enemies |
+| Glacier (rune-word) | Sapphire·Diamond·Sapphire → Freeze on bosses becomes 1 s Brittle (next Shatter +100 %) |
+| Dreamroot (rune-word) | Emerald·Emerald·Amethyst → your zones heal you 1 %/s while you stand in them |
+| Nautilus (aspect) | "projectile → spiral" on Multishot → 5 arrows spiral outward |
+| Walking Garden (aspect) | "zone → follows you" on Briar Field → a poison lawn that walks with you |
+| Dragging Well (aspect) | Cinderstride "dash → casts your last zone" + Gravity Well → every dodge drops a well |
+| Rally | Second Wind + kill streak → heal scales with the streak, +10 % per kill during the heal |
+| Zealot | Blessing + holy skills → holy Purifies on *any* status while Blessed |
+| Standard Bearer | Warbanner + Colossus Strike → a charged hit makes the banner explode in holy light |
+| Fireproof | Cinderkoi dish + Pyromancer → your own Detonates no longer knock you back |
+**Wild builds the engine must allow:** *Pacifist* (Thornmail + Walking Garden + Bloom + Mend: never press attack),
+*Dodge Healer* (decoy dodge + Moonmaw pearl: dodging through enemies heals 3 %), *Turret* (traps count as summons +
+"summon → fires your basic attack" + Arcane Orbit), *Glass Cannon* (charged Colossus Strike + Marked Circuit + Blessing +
+Brittle), *Chain Reaction* (Wildfire + Stormfire + Orbit: the room cooks itself).
+
+### 18.5 Remakes so every skill joins combos
+* Blessing of Dawn → **Zealot's Light**: +25 % damage and your next 3 skills gain the holy tag.
+* Mana Surge → **Overflow**: restores MP and your next zone skill is cast twice.
+* Sprint → **Afterimage**: speed + 3 taunting images (summon tag).
+* Second Wind → **Rally**; Mend → **Bloom** (heal ticks poison enemies touching you); Bulwark gains baseline projectile
+  reflect; War Cry adds 1 Mark to everything it hits and staggers.
+* **Thornmail is restored** (chest, nature: reflects poison) for the Pacifist build — the new-skill cap stays 22.
+* Set 3-piece bonuses become **tag rules**: Plate "melee skills gain poise", Robe "zone skills follow you",
+  Jacket "projectiles pierce once", Shade "dashes leave decoys".
+* Origin passives become **triggers** (e.g. Mystic: every 4th cast is free).
+* Affixes stay plain numbers (the noise floor), plus the trigger affixes above on Epic+.
+
+### 18.6 Teaching and guardrails (engine-side, global)
+* Tooltips show tags as icons and an auto-generated "Synergises with: zone, dash" line (reverse lookup of the effect
+  table); hovering a gem or legendary highlights every skill on the bar it would affect; first-trigger pop + Codex.
+* **Internal cooldown** per effect (default 0.5 s); **proc coefficient** per hit source (basic 1.0, projectile 0.6, zone
+  tick 0.3, reflected 0.3, summon 0.4) scales trigger chances and reaction damage; **chain depth 2** (an effect-triggered
+  hit cannot trigger further effects); **reaction damage cap 300 % weapon damage per second**; **live caps** (zones 2,
+  summons 3, images 1); boss **damage per hit capped at 25 % of its HP**; reflected/thorn damage capped at 40 % of power.
+* The event bus hooks `damageEnemy`, casts, dodges and kills — never per particle or fx.
+
+### 18.7 Placement
+* **M4:** engine (tags on ctx, event bus, ICD/proc/chain/caps, aspect hooks in `spawnProj` / `zone` / `dashPlayer`,
+  decoy/summon entity), Combo Codex tab, 6 Duos, 3 rune-words, the §18.5 remakes. Haiku tags all skills and authors data.
+* **M5:** aspects on the existing legendaries, more Duos. **M6:** the rest; the wild builds verified in the arena.
+* Budget for 1.0: 12 Duos / 10 rune-words / 7 aspects; the Codex can grow in NG+. Nothing on the 2-hour path depends on it.
 
 ## 13. Dreamfishing
 Fishing is a **second loot channel** that pays in the currencies the loop already wants (gems, Runes, keys, boss-prep
@@ -704,7 +790,7 @@ shop), reputation, minigames other than fishing (fishing is in, see §13), day/n
 * **M3 The Hero & Icons:** layered hero, gear overlays, rarity glow & particles, paper-doll in the new Tab screen, the
   icon set wired into the HUD, hero status-icon row, enemies rescaled, unified `rarityFx`.
 * **M4 Act II** (~45 min): Ruins (3 maps), Gloam Warden ported, 5 status effects + enemy status icons, set bonuses,
-  Bestiary tab, the 7 reactions, Skills tab with ranks and modifiers, **Thief: daggers + Shade leathers + Origins (§17)**.
+  Bestiary tab, the 7 reactions, Skills tab with ranks and modifiers, **combo layer engine + Combo Codex (§18)**, **Thief: daggers + Shade leathers + Origins (§17)**.
 * **M5 Act III** (~65 min): Grotto (3 maps), Mirelle, **Warrior: two-handers (§17)**, gem amplification complete, Drifting Isles if ahead of schedule.
 * **M6 Act IV** (~85 min): Caldera (3 maps), Kharzul, hub arena, two new character skills.
 * **M7 Finale** (~110–120 min): Spire (3 maps), Morrow, Pip companion and sacrifice, ending, credits, NG+ and modifiers.
