@@ -361,13 +361,13 @@ Each reaction pops its name in its element colour with its own sound. Seven, no 
 
 ### 15.5 Roster (existing + 9 new casts; hard cap 12 new, reuse fx types)
 * **Sword** (basic 3-hit slash): Q Sunslash / Heroic Strike · E Dash Strike / Whirling Blade · R Radiant Judgement /
-  Dawn Wave / ***Cinder Cleave*** (fire, sets up Detonate).
+  Dawn Wave (Cinder Cleave moved to the two-hander, §17.3).
 * **Staff** (basic arcane bolt): Q Firebolt / Frost Shards / ***Static Field*** (lightning zone, applies Shock) ·
   E Arcane Barrage / Gravity Well · R Meteor / Starstorm.
 * **Bow** (basic pierce): Q Multishot / Piercing Shot · E Tumble / Snare Trap / ***Venom Volley*** (nature, sets up
   Wildfire) · R Rain of Arrows / Moonbeam.
-* **Chest:** Bulwark, Mana Surge, Shadow Veil, ***Thornmail*** (nature, reflects poison).
-* **Helm:** War Cry, Frost Nova, Mend, ***Stormcall*** (lightning, Shock aura).
+* **Chest:** Bulwark, Mana Surge, Shadow Veil (Thornmail cut, see §17.7).
+* **Helm:** War Cry, Frost Nova, Mend (Stormcall cut, see §17.7).
 * **Boots:** Charge, Blink, Sprint (all with i-frames).
 * **Character pool (10):** Second Wind, Arcane Orbit, Chain Lightning, Dreamveil, Blessing of Dawn, Shooting Star,
   ***Dawn Lance*** (holy line, Purify), ***Briar Field*** (nature zone, Poison), ***Ember Mark*** (next 3 hits burn),
@@ -383,7 +383,7 @@ Each reaction pops its name in its element colour with its own sound. Seven, no 
 ### 15.7 Build archetypes the game must support
 1. **Shatter Knight** — sword, Knight set, Frost Nova, Sapphires in armour; Heroic Strike after Nova.
 2. **Pyromancer** — staff, Dreamweave robe, Rubies, Ember Mark + Firebolt + Meteor; Detonate with Thunderclap.
-3. **Stormcaller** — Static Field + Chain Lightning + Stormcall, Topaz; Conduct off Frost Shards.
+3. **Stormcaller** — Static Field + Chain Lightning + Smoke Bomb (Shade Mask), Topaz; Conduct off Frost Shards.
 4. **Venom Ranger** — Venom Volley + Snare + Briar Field, Stalker set, Emeralds; Wildfire with Shooting Star.
 5. **Breaker** — Piercing Shot + War Cry + Charge, Diamonds; Rupture on every break; best against golems and bosses.
 6. **Dawn Paladin** — holy sword R + Dawn Lance + Blessing, Mend, Diamonds; Purify sustain, gloom killer.
@@ -471,6 +471,78 @@ off-by-default setting.
 
 **Rules:** feature-detect OffscreenCanvas and workers; vibrate / fullscreen / gamepad only after a user gesture; every
 perf change is measured with Haiku's 60 s sample on the largest map logging **p95 frame time**, not the average.
+
+## 17. Thief and Warrior: two new weapon families + Origins (expert-reviewed)
+The game stays classless ("you are what you wear"). The class fantasy comes from **two new weapon families**, one new
+armour family, and an **Origin** chosen at New Dream.
+
+### 17.1 Origins
+A starting kit + one small additive passive + a title. Re-choosable once at the Elder Stone, so it is flavour, not a lock.
+Pip's first line and the portrait frame change per origin.
+| Origin | Starting kit | Passive |
+|---|---|---|
+| Knight | sword, Knight Plate | +10 % defence |
+| Mystic | staff, Dreamweave Robe | +10 % MP on hit |
+| Ranger | bow, Stalker Jacket | +10 % crit damage |
+| **Thief** | daggers, Shade leathers | +10 % damage from behind |
+| **Warrior** | two-hander, Knight Plate | +1 stagger on weapon skills |
+
+### 17.2 Dual Daggers — "Nightfang" family (Thief)
+Tiers: Shiv → Nightfang → Twin Eclipse → Widow's Kiss → Night Eternal.
+* **Basic:** 4-hit pierce combo (rate 0.28, 55 % of sword damage per hit; hit 4 adds 1 stagger); 6 MP per hit.
+* **Backstab:** any pierce hit from the target's rear 120° arc gets +30 % crit chance (works on every enemy).
+* **Marks (0–3):** each skill hit adds a Mark (pips over the enemy); finishers consume them (`ctx.marks`).
+* Q: **Fan of Knives** (pierce cone, +1 Mark per enemy) / **Venom Slash** (nature, 2 hits, Poison) / *Shadow Hook*
+  (pierce line, pulls one enemy; third option only if ahead of schedule).
+* E: **Flicker** (arcane, blink behind the aimed enemy; next hit is a backstab) / **Caltrops** (nature zone, Slow + Poison) /
+  *Smoke Veil* (third option).
+* R: **Death Mark** (consumes all Marks: 120 % weapon damage per Mark; guaranteed Rupture if staggered) /
+  **Thousand Cuts** (dash through enemies in a line 3×, pierce, Poison).
+* Drives Wildfire, Rupture and Overload. Weak into Amorphous enemies (resist pierce) by design.
+
+### 17.3 Two-handers — "Dawnbreaker" family (Warrior)
+Greatsword, greataxe and warhammer are its **tiers**: Splitting Axe → Dawnbreaker → Sunhammer → Aurora Maul → Dawn Colossus.
+* **Basic:** 2-hit slash combo (rate 0.62, 170 % of sword damage, stagger 2 per hit; hit 2 is a 180° sweep); 14 MP per hit.
+* **Poise (hyper-armour) while swinging:** hits taken deal 50 % and never interrupt; capped at 50 %, and disabled by
+  boss moves flagged `unblockable: true`.
+* **Charged swings:** holding a weapon skill up to 1 s scales damage ×1.0 → ×1.8 and stagger +1 (on touch: hold the button).
+* Q: **Cleave** (slash cone 160°, stagger 2) / **Earthbreaker** (slash line slam with 3 cracks, stagger 3) /
+  **Cinder Cleave** (fire; moved here from the sword).
+* E: **Shoulder Charge** (slash dash, knock-up, stagger 2, 0.2 s i-frames) / **Warbanner** (holy zone: +20 % damage and
+  poise, 6 s) / *Whirlwind* (third option: moving 4-spin).
+* R: **Colossus Strike** (hold ≥ 1 s, circle r3, 400 % weapon damage, stagger 6) / **Avalanche** (frost, 3 expanding
+  rings, Chill ×3).
+* Drives Shatter, Detonate and Rupture. Best into Armoured; weak into Ethereal.
+
+### 17.4 Shade leathers (new armour family, Thief)
+Resists: pierce +25, nature −25. Helm **Shade Mask** → C: *Smoke Bomb* (arcane, vanish 1 s + Shock aura).
+Chest **Shade Harness** → F: *Fade Step* (short blink behind the target). Boots **Shade Treads** → Shift: a dodge that leaves
+a decoy. Set: 2 pieces = backstab arc 180°; 3 pieces = Marks cap 4. The Warrior uses Knight Plate (its stagger set bonus is
+shared with the sword).
+
+### 17.5 Balance
+* On a dummy, all five families deal within ±8 % at equal tier (Haiku's DPS sheet). Two-hander +25 % vs Armoured,
+  daggers +25 % from behind, sword +0 % everywhere with the best reaction coverage (slash + holy).
+* The sword stays relevant: cancel-friendly mid-range, keeps the holy ultimates, poise only on Heroic Strike.
+* The two-hander pays with −35 % attack rate, −12 % move speed while swinging and no dodge-cancel during a charged swing.
+* Daggers pay with −45 % per-hit damage and the pierce weakness of slimes and jellies.
+* **Skill Runes drop for your equipped weapon family 70 % of the time.**
+
+### 17.6 New builds (added to §15.7)
+9. **Night Assassin** — daggers + Shade set + Flicker / Fan of Knives / Death Mark, Topaz + Emeralds; backstab crits, Rupture.
+10. **Plague Dancer** — daggers Venom Slash + Caltrops + Briar Field, Jacket set, Rubies for Wildfire.
+11. **Juggernaut** — two-hander + Plate 3 + War Cry + Avalanche, Diamonds; the boss stagger-break build.
+12. **Cinder Berserker** — two-hander Cinder Cleave + Earthbreaker + Ember Mark, Rubies; Detonate chains.
+
+### 17.7 Legendaries, skill cap, placement
+* Named legendaries: **Morrow's Regret** (daggers, from the Twin Vigils: Death Mark refunds the charge bar if it kills) and
+  **Kharzul's Anvil** (two-hander, an alternative choice from Kharzul's chest: charged swings reach ×1.8 in 0.5 s).
+* Skill cap raised from 12 to **22 new casts**, paid for by cutting **Thornmail** and **Stormcall** (Shade Harness and Smoke
+  Bomb take their roles). Each new family ships with 2 options per slot; third options only if ahead of schedule.
+* Art: daggers (main + off-hand layers) and two-hander (large layer, shoulder-carry idle) ×5 tiers, stab and overhead
+  attack poses, 25 icons, Shade overlays ×3 slots ×5 tiers — about a week for Sonnet B.
+* **M4:** daggers, Shade family, Origins at New Dream. **M5:** two-handers. Nothing on the 2-hour main path depends on them;
+  from M4 the starting chest can roll any family.
 
 ## 13. Dreamfishing
 Fishing is a **second loot channel** that pays in the currencies the loop already wants (gems, Runes, keys, boss-prep

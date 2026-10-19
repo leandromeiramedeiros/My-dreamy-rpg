@@ -66,6 +66,11 @@ for anything HUD/UI.
 * **Enemy nameplates (scene, 480 grid):** 20×3 bar 2 px above the sprite, shown only after damage or always for
   elites/bosses; elite name above in small text; after discovery, 8 px weakness/resist icons beside the bar; status
   icons 8 px in a row beneath.
+* **Marks (daggers):** up to 3–4 small diamond pips in the dagger family's colour above the enemy's bar, filling left
+  to right; they flash when a finisher consumes them.
+* **Charged swing (two-handers):** a thin arc around the held skill's icon fills over 1 s; at full charge it flashes gold
+  and the hero glows; releasing early shows the partial value.
+* **Origin:** the portrait frame variant per origin (Knight, Mystic, Ranger, Thief, Warrior).
 * **Damage numbers (scene):** small font ×2; crit ×3 gold; WEAK ×3 yellow; RESIST ×2 grey at 60 %; IMMUNE as text.
   Rise 20 px over 0.7 s with a 2-frame pop; hits on the same enemy within 80 ms merge.
 * **Loot toasts:** right edge, stacking upward from (944,392): 24 px icon in its rarity frame + name in rarity colour,
