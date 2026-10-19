@@ -372,17 +372,10 @@ function updatePlayer(p, dt) {
   p.mp = Math.min(p.maxMp, p.mp + p.mpRegen * dt);
   p.st = Math.min(p.maxSt, p.st + 22 * dt);
   if (p.swing) { p.swing.t += dt; if (p.swing.t > p.swing.dur) p.swing = null; }
+  if (p.cast) { p.cast.age += dt; if (p.cast.age >= p.cast.dur) p.cast = null; }
+  for (const k of ['slowT', 'rootT']) { if (p[k] > 0) { if (!(p.stMax[k] > 0) || p[k] > p.stMax[k]) p.stMax[k] = p[k]; } else p.stMax[k] = 0; }
 
-  // aim
-  const ps = worldToView(p.x, p.y, p.z);
-  if (G.touch) touchAim(p);
-  else {
-    const mwz = toWorld(G.mouse.x - RW / 2 + G.cam.x, G.mouse.y - RH / 2 + G.cam.y + p.z * ZS);
-    G.mouse.wx = mwz[0]; G.mouse.wy = mwz[1];
-  }
-  p.aim = Math.atan2(G.mouse.wy - p.y, G.mouse.wx - p.x);
-  p.face = G.mouse.x >= ps[0] ? 1 : -1;
-  p.back = G.mouse.y < ps[1] - 14;
+  resolveAim(p);
 
   const h0 = tileH(m, p.x, p.y);
   if (p.dash) {
@@ -396,14 +389,9 @@ function updatePlayer(p, dt) {
     }
     if (d.t <= 0) { p.dash = null; if (d.opt.onEnd) withCast(d.cast, d.opt.onEnd); }
   } else {
-    let sx = 0, sy = 0;
-    const K = G.keys;
-    if (K.w || K.arrowup) sy -= 1;
-    if (K.s || K.arrowdown) sy += 1;
-    if (K.a || K.arrowleft) sx -= 1;
-    if (K.d || K.arrowright) sx += 1;
-    let mag = 1;
-    if (G.touchMove) { sx = G.touchMove.x; sy = G.touchMove.y; mag = Math.min(1, Math.hypot(sx, sy) * 1.25); }
+    const mv = typeof IN !== 'undefined' ? IN.move : { x: 0, y: 0, mag: 0 };
+    let sx = mv.x, sy = mv.y;
+    const mag = mv.mag;
     p.moving = (sx || sy) && p.rootT <= 0 && !G.ui.open;
     if (p.moving) {
       let wx = sx + sy, wy = sy - sx;
@@ -411,12 +399,12 @@ function updatePlayer(p, dt) {
       const sp = mag * p.speed * (p.buffs.sprint ? 1.8 : 1) * (p.buffs.veil ? 1.4 : 1) * (p.slowT > 0 ? 0.6 : 1) * (p.castT > 0 ? 0.75 : 1) * (1 + 0.3 * Math.abs(sy) / Math.hypot(sx, sy));
       moveEntity(p, wx * sp * dt, wy * sp * dt, h0);
       p.walkT += dt;
-      if (Math.random() < dt * 6) G.parts.push({ x: p.x, y: p.y, z: p.z, vx: frand(-0.3, 0.3), vy: frand(-0.3, 0.3), vz: 0.6, life: 0.4, t: 0, col: '#e8e0f8', grav: 1, size: 1, glow: false });
+      if (Math.random() < dt * 6) addPart({ x: p.x, y: p.y, z: p.z, vx: frand(-0.3, 0.3), vy: frand(-0.3, 0.3), vz: 0.6, life: 0.4, t: 0, col: '#e8e0f8', grav: 1, size: 1, glow: false });
     }
   }
   const th = tileH(m, p.x, p.y);
   p.z = lerp(p.z, th, Math.min(1, dt * 14));
-  if (G.mouse.down && !G.ui.open) basicAttack(p);
+  playerActions(p, dt);
 
   // orbit orbs
   if (p.buffs.orbit) {
@@ -425,25 +413,114 @@ function updatePlayer(p, dt) {
       for (const e of G.enemies) {
         if (e.dead || e.spawnT > 0) continue;
         e.orbitCd = (e.orbitCd || 0) - dt / 3;
-        if (e.orbitCd <= 0 && dist(ox, oy, e.x, e.y) < 0.5 + e.r) { e.orbitCd = 0.4; damageEnemy(e, 30, { knock: 0.1, fx: ox, fy: oy, cast: ORBIT_CAST }); }
+        if (e.orbitCd <= 0 && dist(ox, oy, e.x, e.y) < 0.5 + e.r) { e.orbitCd = 0.4; damageEnemy(e, 30, { knock: 0.1, fx: ox, fy: oy, cast: p.orbitCast || ORBIT_CAST }); }
       }
     }
   }
 }
 
 const ORBIT_CAST = { skill: 'orbit', el: 'arcane' };
+
+// ===== HUD getters (read-only views the HUD draws from; docs/HUD.md) =========================================
+// ultCharge(p) 0..1 · ultReady(p) · skillSlotState(p, slot) · heroStatuses(p) · interactPrompt() · skillInfo(p, id)
+const ultCharge = (p = G.player) => clamp((p.ult || 0) / 100, 0, 1);
+const ultReady = (p = G.player) => (p.ult || 0) >= 100;
+// slot: 'lmb' q e r f c shift 1 2 3 'pot'
+function skillSlotState(p, slot) {
+  const action = SLOT_ACTION[slot], glyph = typeof IN !== 'undefined' ? IN.glyph(action) : '';
+  if (slot === 'pot') return { slot, action, glyph, potions: p.potions, max: MAX_POTIONS, cd: Math.max(0, (p.potT || 0) - G.t), unavailable: p.dead };
+  if (slot === 'lmb') { const w = item('weapon', p.gear.weapon); return { slot, action, glyph, id: null, name: w.basic.name, element: w.element, cd: Math.max(0, p.atkT), cdFrac: 0, unavailable: !!(p.dash || p.rootT > 0 || castActive(p)) }; }
+  const id = slotSkill(p, slot), s = id && SKILLS[id];
+  if (!s) return { slot, action, glyph, id: null };
+  const ult = slot === 'r', cd = Math.max(0, p.cds[id] || 0), max = p.cdm[id] || s.cd;
+  const rp = skillRankProgress(p, id);
+  return {
+    slot, action, glyph, id, name: s.name, element: s.element, color: s.color, ult,
+    cd: ult ? 0 : cd, cdMax: max, cdFrac: ult ? 0 : (cd > 0 ? cd / max : 0),
+    charge: ult ? ultCharge(p) : null, ready: ult ? ultReady(p) && cd <= 0 : cd <= 0,
+    mp: s.mp || 0, st: s.st || 0, mpShort: (s.mp || 0) > p.mp, stShort: (s.st || 0) > p.st,
+    unavailable: !!(p.dead || p.rootT > 0 || (p.dash && slot !== 'shift')),
+    rank: rp.rank, rankFrac: rp.frac, flash: G.lastCast && G.lastCast.slot === slot ? Math.max(0, G.lastCast.t) : 0,
+  };
+}
+function skillInfo(p, id) { return Object.assign({ id, skill: SKILLS[id], slots: skillModSlots(p, id) }, skillRankProgress(p, id)); }
+// hero buff row: debuffs first; frac = remaining time 0..1 (sweep), stacks for digit badges
+function heroStatuses(p = G.player) {
+  const out = [];
+  if (p.slowT > 0) out.push({ id: 'slowed', kind: 'debuff', t: p.slowT, max: p.stMax.slowT || p.slowT, frac: p.slowT / (p.stMax.slowT || p.slowT), stacks: 0 });
+  if (p.rootT > 0) out.push({ id: 'rooted', kind: 'debuff', t: p.rootT, max: p.stMax.rootT || p.rootT, frac: p.rootT / (p.stMax.rootT || p.rootT), stacks: 0 });
+  for (const id in p.buffs) { const b = p.buffs[id]; out.push({ id, kind: 'buff', t: b.t, max: b.max, frac: b.max ? b.t / b.max : 1, stacks: 0, color: BUFFS[id] && BUFFS[id].color }); }
+  if ((p.potT || 0) > G.t) out.push({ id: 'potion', kind: 'cooldown', t: p.potT - G.t, max: 1, frac: (p.potT - G.t) / 1, stacks: 0 });
+  return out.slice(0, 10);
+}
+const interactPrompt = () => G.prompt && G.state === 'play' && !G.ui.open ? Object.assign({ glyph: typeof IN !== 'undefined' ? IN.glyph('interact') : 'SPACE' }, G.prompt) : null;
+
+// ===== aim: mouse cursor, twin-stick (sticky) or auto, with aim assist on stick/touch only (CONTROLS.md) ======
+// Writes the canonical aim cursor G.mouse.{wx,wy} (world) + {x,y} (view) that skills, render and HUD read.
+function viewDirToWorld(sx, sy) { const [wx, wy] = toWorld(sx, sy), l = Math.hypot(wx, wy) || 1; return [wx / l, wy / l]; }
+// auto target: nearest living enemy in range, preferring elites/bosses and the one you hit last
+function autoTarget(p, range, dir, cone) {
+  let best = null, bs = 1e9;
+  for (const e of G.enemies) {
+    if (e.dead || e.spawnT > 0) continue;
+    const d = dist(p.x, p.y, e.x, e.y); if (d > range) continue;
+    let s = d / range;
+    if (dir) { const da = Math.abs(angDiff(Math.atan2(dir[1], dir[0]), Math.atan2(e.y - p.y, e.x - p.x))); if (da > cone + Math.atan2(e.r, Math.max(d, 0.1))) continue; s += da / Math.max(cone, 0.01); }
+    if (e === G.lastHit) s -= 0.35;
+    if (e.boss || enemyClass(e.type) === 'elite') s -= 0.2;
+    if (s < bs) { bs = s; best = e; }
+  }
+  return best;
+}
+function resolveAim(p) {
+  const A = typeof IN !== 'undefined' ? IN.aim : { mode: 'cursor' };
+  G.aimAssisted = false;
+  if (G.touch) touchAim(p);
+  else if (A.mode === 'cursor') {
+    const mwz = toWorld(G.mouse.x - RW / 2 + G.cam.x, G.mouse.y - RH / 2 + G.cam.y + p.z * ZS);
+    G.mouse.wx = mwz[0]; G.mouse.wy = mwz[1];
+  } else {
+    let dir = null, d = 4;
+    if (A.mode === 'stick') { dir = viewDirToWorld(A.x, A.y); d = clamp(A.mag * 7, 1.5, 7); }
+    const cone = typeof aimAssistCone === 'function' ? aimAssistCone() : 10 * Math.PI / 180;
+    const tgt = dir ? (cone > 0 ? autoTarget(p, 9, dir, cone) : null) : autoTarget(p, 8, null, 0);
+    if (tgt) { G.mouse.wx = tgt.x; G.mouse.wy = tgt.y; G.aimAssisted = true; }
+    else {
+      if (!dir && p.moving && IN.move.mag > 0) dir = viewDirToWorld(IN.move.x, IN.move.y);
+      if (!dir) dir = [Math.cos(p.aim), Math.sin(p.aim)];
+      G.mouse.wx = p.x + dir[0] * d; G.mouse.wy = p.y + dir[1] * d;
+    }
+    const [vx, vy] = worldToView(G.mouse.wx, G.mouse.wy, p.z);
+    G.mouse.x = vx; G.mouse.y = vy;
+  }
+  const ps = worldToView(p.x, p.y, p.z);
+  p.aim = Math.atan2(G.mouse.wy - p.y, G.mouse.wx - p.x);
+  p.face = G.mouse.x >= ps[0] ? 1 : -1;
+  p.back = G.mouse.y < ps[1] - 14;
+}
+// gameplay actions, read once per step after the aim is resolved (keyboard/mouse, pad and touch alike)
+const SKILL_ACTIONS = [['skillQ', 'q'], ['skillE', 'e'], ['skillR', 'r'], ['skillF', 'f'], ['skillC', 'c'], ['dodge', 'shift'], ['s1', '1'], ['s2', '2'], ['s3', '3']];
+function playerActions(p, dt) {
+  if (typeof IN === 'undefined' || G.ui.open || G.state !== 'play' || G.fadeDir > 0) return;
+  if (p.dodgeBuf > 0) { p.dodgeBuf -= dt; if (!castActive(p) || p.cast.age >= CANCEL_AFTER) { p.dodgeBuf = 0; useSkill(p, 'shift'); } }
+  for (const [a, slot] of SKILL_ACTIONS) if (IN.pressed(a)) useSkill(p, slot);
+  if (typeof attackToggle === 'function' && attackToggle()) { if (IN.pressed('attack')) p.autoAtk = !p.autoAtk; } else p.autoAtk = false;
+  if (IN.held('attack') || p.autoAtk) basicAttack(p);
+  if (IN.pressed('potion')) drinkPotion(p);
+  if (IN.pressed('interact')) interact(p);
+}
 // el = damage type of the hit (§5b); the hero's resist applies on top of defence (arcane ignores half of it)
 function hurtPlayer(dmg, srcX, srcY, el = 'slash') {
   const p = G.player;
   if (p.dead || p.invulnT > 0 || (p.dash && p.dash.opt.invuln) || G.state !== 'play') return;
   const r = (p.res && p.res[el]) || 0;
-  let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1);
+  let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1) * (typeof damageTakenMul === 'function' ? damageTakenMul() : 1);
   p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2;
   text(p.x, p.y, p.z + 3, Math.round(d), '#ff5a7a');
   shake(4); sfx('hurt');
   burst(p.x, p.y, p.z + 1.2, 8, ['#ff5a7a', '#ffffff'], 2);
   if (p.hp <= 0) {
-    p.hp = 0; p.dead = true; G.state = 'dead'; G.deadT = 0; sfx('die');
+    p.hp = 0; p.dead = true; G.state = 'dead'; G.deadT = 0; sfx('die'); G.stats.deaths++;
     burst(p.x, p.y, p.z + 1, 40, ['#ffb0e0', '#c7a8ff', '#ffffff'], 3);
   }
 }
@@ -455,7 +532,9 @@ function damageEnemy(e, base, o = {}) {
   // damage type: explicit > the skill's element > the weapon's (sword slash, staff arcane, bow pierce); burn ticks are fire
   const el = o.el || (o.dot ? 'fire' : c ? c.el : item('weapon', p.gear.weapon).element) || 'slash';
   // one additive sum: gear damage % (+ skill damage % and the element's gem amplification for skill hits)
-  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (c ? p.skillDmg + elementAmp(p, el) : 0)) * buffMul(p);
+  // skill rank (+6 %/rank above 1) joins the same additive sum; modifier ctx.dmg multiplies (numbers only)
+  const cx = c && c.ctx;
+  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (c ? p.skillDmg + elementAmp(p, el) + (c.skill ? skillRankBonus(p, c.skill) : 0) : 0)) * buffMul(p) * (cx ? cx.dmg : 1);
   const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
   dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
   const st = o.stagger != null ? o.stagger : c && SKILLS[c.skill] ? SKILLS[c.skill].stagger || 0 : 0;
@@ -467,19 +546,25 @@ function damageEnemy(e, base, o = {}) {
   if (e.dummy) { e.hp = e.maxHp; }
   else e.hp -= dmg;
   e.flash = 0.1;
+  if (!o.dot) G.lastHit = e;
+  // §15.3 resource rhythm: basic attacks (CAST null) build 8 MP per hit; all damage but the ultimate's own feeds the charge
+  if (!c && !o.dot) p.mp = Math.min(p.maxMp, p.mp + G.tune.player.mpOnHit);
+  if (eff < 1 && !(c && c.slot === 'r') && p.ult < 100) p.ult = Math.min(100, p.ult + ultGain(p, base * (1 - eff), o.reaction));
+  // skill ranks: a cast counts once, on its first hit on a real enemy (training dummies don't rank skills)
+  if (c && c.slot && !c.hit && !o.dot && !e.dummy) { c.hit = true; addSkillHit(p, c.skill); }
   // numbers coloured by damage type; WEAK big + yellow, RESIST grey, IMMUNE spelled out
   if (eff >= 1) text(e.x, e.y, e.z + e.hgt, 'IMMUNE', '#9a92b0');
-  else text(e.x, e.y, e.z + e.hgt, Math.round(dmg) + (crit ? '!' : ''), res < 0 ? '#ffe36a' : res > 0 ? '#9a92b0' : EL_COL[el] || '#ffffff', crit || res < 0);
+  else dmgText(e.x, e.y, e.z + e.hgt, Math.round(dmg) + (crit ? '!' : ''), res < 0 ? '#ffe36a' : res > 0 ? '#9a92b0' : EL_COL[el] || '#ffffff', crit || res < 0);
   if (res && !e.dummy) discoverRes(e, el, res);
   const fxx = o.fx != null ? o.fx : p.x, fyy = o.fy != null ? o.fy : p.y;
   if (o.knock && !e.boss && !e.dummy) {
     const d = dist(fxx, fyy, e.x, e.y) || 1;
     e.kx += (e.x - fxx) / d * o.knock * 9; e.ky += (e.y - fyy) / d * o.knock * 9;
   }
-  if (o.stun) e.stunT = Math.max(e.stunT, o.stun * (e.boss ? 0.25 : 1));
+  if (o.stun) e.stunT = Math.max(e.stunT, o.stun * (cx ? cx.stun : 1) * (e.boss ? 0.25 : 1));
   if (o.freeze) e.frozen = o.stun;
-  if (o.slow) e.slowT = Math.max(e.slowT, o.slow * 2);
-  if (o.burn) { e.burnT = o.burn; e.burnTick = 0.5; e.burnCast = c; }
+  if (o.slow) e.slowT = Math.max(e.slowT, o.slow * 2 * (cx ? cx.slow : 1));
+  if (o.burn) { e.burnT = o.burn * (cx ? cx.burn : 1); e.burnTick = 0.5; e.burnCast = c; }
   if (!o.dot) { burst(e.x, e.y, e.z + e.hgt * 0.6, 5, ['#ffffff', e.blood || '#c7a8ff'], 2.5); sfx('hit'); }
   if (e.hp <= 0) killEnemy(e);
   return true;
@@ -493,13 +578,14 @@ function discoverRes(e, el, res) {
   text(e.x, e.y, e.z + e.hgt + 1.2, `${res < 0 ? 'WEAK' : res >= 1 ? 'IMMUNE' : 'RESIST'}: ${el.toUpperCase()}`, res < 0 ? '#ffe36a' : '#c8c0e0', true, 1.5);
 }
 function hitArea(x, y, r, dmg, o = {}) {
-  let n = 0;
+  let n = 0; r *= castR();
   for (const e of G.enemies.slice()) if (!e.dead && dist(x, y, e.x, e.y) < r + e.r) { if (damageEnemy(e, dmg, Object.assign({ fx: x, fy: y }, o))) n++; }
   if (n) shake(1.5);
   return n;
 }
 function hitCone(x, y, a, arc, r, dmg, o = {}) {
-  let n = 0;
+  let n = 0; r *= castR();
+  if (typeof IN !== 'undefined' && IN.assist()) arc *= 1.15;   // melee cones widen 15 % on pad / touch
   for (const e of G.enemies.slice()) {
     if (e.dead) continue;
     const d = dist(x, y, e.x, e.y);
@@ -511,6 +597,7 @@ function hitCone(x, y, a, arc, r, dmg, o = {}) {
   return n;
 }
 function hitLine(x, y, a, len, w, dmg, o = {}) {
+  w *= castR();
   const ex = x + Math.cos(a) * len, ey = y + Math.sin(a) * len;
   for (const e of G.enemies.slice()) if (!e.dead && segDist(e.x, e.y, x, y, ex, ey) < w + e.r) damageEnemy(e, dmg, o);
 }
@@ -518,6 +605,11 @@ function hitLine(x, y, a, len, w, dmg, o = {}) {
 // ===== projectiles ===================================================================
 function spawnProj(o) {
   const p = Object.assign({ t: 0, hit: new Set(), pierce: 0, friendly: true, cast: CAST }, o);
+  // 6° projectile magnetism on pad / touch (never mouse)
+  if (p.friendly && typeof IN !== 'undefined' && IN.assist() && typeof aimAssistCone === 'function' && aimAssistCone() > 0) {
+    const tgt = autoTarget(G.player, (o.speed || 10) * (o.life || 1), [Math.cos(o.ang), Math.sin(o.ang)], 6 * Math.PI / 180);
+    if (tgt) p.ang = o.ang = Math.atan2(tgt.y - p.y, tgt.x - p.x);
+  }
   p.vx = Math.cos(o.ang) * o.speed; p.vy = Math.sin(o.ang) * o.speed;
   G.projs.push(p); return p;
 }
@@ -833,7 +925,9 @@ function updateCritters(dt) {
 }
 
 // ===== tuning (numbers editable in the editor's Tuning tab) ==============================
-G.tune = { player: { hp: 650, mp: 260, stamina: 100, speed: 3.7, regen: 2, mpRegen: 7, crit: 0.08, damage: 1 } };
+// mpRegen was 7/s before §15.3 (basic attacks now build mpOnHit per hit); ultRate = charge per point of
+// pre-multiplier damage (~0.016 -> one ultimate every ~40 s of steady fighting with a common sword)
+G.tune = { player: { hp: 650, mp: 260, stamina: 100, speed: 3.7, regen: 2, mpRegen: 2, crit: 0.08, damage: 1, mpOnHit: 8, ultRate: 0.016 } };
 const TUNE_ENEMY_KEYS = ['hp', 'speed', 'dmg', 'range', 'cd'];
 function applyTuning(t) {
   if (!t) return;
