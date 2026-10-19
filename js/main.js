@@ -30,6 +30,7 @@ function enterMap(id) {
   G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
   G.banner = { s: m.name, sub: m.sub, t: 3.2, max: 3.2 };
   startTriggers();
+  spawnCritters(m);
 }
 function transition(to) {
   if (G.fadeDir) return;
@@ -58,7 +59,7 @@ function update(dt, rdt) {
   }
   if (G.state === 'play' || G.state === 'dead') {
     if (G.fadeDir <= 0) updatePlayer(p, dt);
-    updateEnemies(dt); updateProjs(dt); updateZones(dt);
+    updateEnemies(dt); updateProjs(dt); updateZones(dt); updateCritters(dt);
     updateTriggers(dt);
     for (const d of G.delays.slice()) { d.t -= dt; if (d.t <= 0) { d.done = true; d.fn(); } }
     G.delays = G.delays.filter(d => !d.done);
@@ -166,7 +167,9 @@ async function boot() {
   buildArt(); initPost();
   G.world = loadWorld();
   for (const id in G.world.maps) THEME_OF[id] = G.world.maps[id].theme;
+  buildCustomSprites(G.world.sprites);
   applyTuning(G.world.tuning);
+  applyWorldEnemies(G.world.enemies);
   G.player = makePlayer();
   // ?map=<id> (play-test / showcase), ?scene=play|arena|boss|loadout|portal, &weapon=starfall|moonbow
   const w = PARAMS.get('weapon');

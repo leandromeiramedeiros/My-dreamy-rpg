@@ -402,15 +402,15 @@ function updateZones(dt) {
 
 // ===== enemies ========================================================================
 const ENEMY = {
-  slime: { hp: 170, r: 0.38, speed: 2.0, dmg: 32, range: 1.0, wind: 0.55, cd: 1.1, hgt: 1.8, blood: '#8b7cf6' },
-  wisp: { hp: 120, r: 0.32, speed: 1.9, dmg: 34, range: 6, wind: 0.6, cd: 2.1, hgt: 3.2, blood: '#9ef0ff' },
-  hound: { hp: 240, r: 0.42, speed: 3.2, dmg: 46, range: 3.2, wind: 0.48, cd: 1.6, hgt: 2.0, blood: '#ff6b9a' },
-  boss: { hp: 7200, r: 0.95, speed: 1.6, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 9, blood: '#c78bff' },
-  dummy: { hp: 9999, r: 0.35, speed: 0, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 3, blood: '#e7c9a0' },
+  slime: { name: 'Gloom slime', ai: 'hopper', hp: 170, r: 0.38, speed: 2.0, dmg: 32, range: 1.0, wind: 0.55, cd: 1.1, aoe: 1.15, hgt: 1.8, blood: '#8b7cf6' },
+  wisp: { name: 'Wisp', ai: 'shooter', hp: 120, r: 0.32, speed: 1.9, dmg: 34, range: 6, wind: 0.6, cd: 2.1, hgt: 3.2, blood: '#9ef0ff' },
+  hound: { name: 'Shade hound', ai: 'charger', hp: 240, r: 0.42, speed: 3.2, dmg: 46, range: 3.2, wind: 0.48, cd: 1.6, hgt: 2.0, blood: '#ff6b9a' },
+  boss: { name: 'The Gloam Warden', ai: 'boss', hp: 7200, r: 0.95, speed: 1.6, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 9, blood: '#c78bff' },
+  dummy: { name: 'Training dummy', ai: 'dummy', hp: 9999, r: 0.35, speed: 0, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 3, blood: '#e7c9a0' },
 };
 function spawnEnemy(type, x, y, spawnT = 0.9) {
   const d = ENEMY[type];
-  const e = { type, x, y, z: 0, r: d.r, hp: d.hp, maxHp: d.hp, hgt: d.hgt, blood: d.blood, kx: 0, ky: 0, flash: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss: type === 'boss', dummy: type === 'dummy' };
+  const e = { type, x, y, z: 0, r: d.r || 0.4, hp: d.hp, maxHp: d.hp, hgt: d.hgt || 3, blood: d.blood || '#c7a8ff', kx: 0, ky: 0, flash: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss: type === 'boss', dummy: type === 'dummy' };
   G.enemies.push(e);
   if (spawnT > 0) fx({ type: 'summon', x, y, life: spawnT, col: type === 'boss' ? '#ff5aa0' : '#b36bff', r: type === 'boss' ? 2.4 : 0.9 });
   return e;
@@ -458,7 +458,7 @@ function updateEnemies(dt) {
     if (e.state === 'chase') {
       let mx = 0, my = 0;
       if (hidden) { e.wander = (e.wander || Math.random() * 6) + edt * 0.5; mx = Math.cos(e.wander); my = Math.sin(e.wander); }
-      else if (e.type === 'wisp') {
+      else if (def.ai === 'shooter') {
         if (d < 3.6) { mx = -Math.cos(ang); my = -Math.sin(ang); }
         else if (d > 6) { mx = Math.cos(ang); my = Math.sin(ang); }
         else { mx = Math.cos(ang + Math.PI / 2) * 0.6; my = Math.sin(ang + Math.PI / 2) * 0.6; }
@@ -470,19 +470,31 @@ function updateEnemies(dt) {
         if (dd < e.r + o.r + 0.2 && dd > 0.001) { mx += (e.x - o.x) / dd * 1.2; my += (e.y - o.y) / dd * 1.2; }
       }
       let sp = def.speed;
-      if (e.type === 'slime') sp *= Math.max(0, Math.sin(e.anim * 6)) * 1.8;
+      if (def.ai === 'hopper') sp *= Math.max(0, Math.sin(e.anim * 6)) * 1.8;
       const l = Math.hypot(mx, my) || 1;
-      if (!(e.type !== 'wisp' && d < def.range * 0.8 && !hidden)) moveEntity(e, mx / l * sp * edt, my / l * sp * edt, tileH(G.map, e.x, e.y));
+      if (!(def.ai !== 'shooter' && d < def.range * (def.ai === 'brute' ? 0.65 : 0.8) && !hidden)) moveEntity(e, mx / l * sp * edt, my / l * sp * edt, tileH(G.map, e.x, e.y));
       if (!hidden && e.cd <= 0 && d < def.range) {
         e.state = 'wind'; e.st = def.wind; e.aimA = ang;
-        if (e.type === 'slime') tele({ kind: 'circle', x: e.x, y: e.y, r: 1.15, life: def.wind, col: '#ff5aa0' });
-        if (e.type === 'hound') tele({ kind: 'line', x: e.x, y: e.y, ang, len: 3.6, w: 0.5, life: def.wind, col: '#ff5aa0' });
+        if (def.ai === 'hopper') tele({ kind: 'circle', x: e.x, y: e.y, r: def.aoe || 1.15, life: def.wind, col: '#ff5aa0' });
+        if (def.ai === 'charger') tele({ kind: 'line', x: e.x, y: e.y, ang, len: def.range + 0.4, w: 0.5, life: def.wind, col: '#ff5aa0' });
+        if (def.ai === 'brute') {
+          e.hit = def.shape === 'circle' ? { kind: 'circle', x: e.x, y: e.y, r: def.aoe || 2 } : { kind: 'cone', x: e.x, y: e.y, ang, arc: 1.9, r: def.aoe || 1.8 };
+          tele(Object.assign({ life: def.wind, col: '#ff5a3a' }, e.hit));
+        }
       }
     } else if (e.state === 'wind') {
       if (e.st <= 0) {
-        if (e.type === 'slime') { if (playerIn({ kind: 'circle', x: e.x, y: e.y, r: 1.15 })) hurtPlayer(def.dmg, e.x, e.y); e.squash = 0.3; burst(e.x, e.y, 0.2, 8, ['#8b7cf6', '#e2dbff'], 2); e.state = 'rec'; e.st = 0.4; }
-        else if (e.type === 'hound') { e.state = 'lunge'; e.st = 0.3; e.hitP = false; }
-        else if (e.type === 'wisp') {
+        if (def.ai === 'hopper') { if (playerIn({ kind: 'circle', x: e.x, y: e.y, r: def.aoe || 1.15 })) hurtPlayer(def.dmg, e.x, e.y); e.squash = 0.3; burst(e.x, e.y, 0.2, 8, [e.blood, '#e2dbff'], 2); e.state = 'rec'; e.st = 0.4; }
+        else if (def.ai === 'charger') { e.state = 'lunge'; e.st = 0.3; e.hitP = false; }
+        else if (def.ai === 'brute') {
+          const H = e.hit;
+          if (H && playerIn(H)) hurtPlayer(def.dmg, e.x, e.y);
+          if (H && H.kind === 'circle') { fx({ type: 'ring', x: e.x, y: e.y, r: H.r, col: '#ffb070', life: 0.45 }); burst(e.x, e.y, 0.2, 30, ['#8a6a4a', '#c8b090', '#5a4a3a'], 5, { glow: false }); }
+          else if (H) fx({ type: 'slash', x: e.x, y: e.y, z: 0.6, ang: H.ang, arc: H.arc, r: H.r, col: '#ffcf9a', life: 0.25, w: 6 });
+          shake(def.aoe > 2 ? 9 : 4); sfx('heavy');
+          e.state = 'strike'; e.st = 0.15;
+        }
+        else if (def.ai === 'shooter') {
           spawnProj({ x: e.x, y: e.y, z: 2.2, ang: Math.atan2(p.y - e.y, p.x - e.x), speed: 5.5, r: 0.35, dmg: def.dmg, life: 2.5, kind: 'orb', col: '#9ef0ff', friendly: false });
           e.state = 'rec'; e.st = 0.3; sfx('arcane');
         }
@@ -492,7 +504,8 @@ function updateEnemies(dt) {
       moveEntity(e, Math.cos(e.aimA) * 12 * edt, Math.sin(e.aimA) * 12 * edt, tileH(G.map, e.x, e.y));
       if (!e.hitP && dist(e.x, e.y, p.x, p.y) < e.r + p.r + 0.3) { e.hitP = true; hurtPlayer(def.dmg, e.x, e.y); }
       if (e.st <= 0) { e.state = 'rec'; e.st = 0.5; }
-    } else if (e.state === 'rec') { if (e.st <= 0) e.state = 'chase'; }
+    } else if (e.state === 'strike') { if (e.st <= 0) { e.state = 'rec'; e.st = 0.6; } }
+    else if (e.state === 'rec') { if (e.st <= 0) e.state = 'chase'; }
     if (e.squash > 0) e.squash -= dt;
     e.z = lerp(e.z, tileH(G.map, e.x, e.y), Math.min(1, dt * 12));
   }
@@ -581,6 +594,54 @@ function updateBoss(b, dt, d, ang, hidden) {
 }
 function endBossAtk(b, cd) { b.state = 'chase'; b.cd = cd * rand(0.8, 1.3) * (b.phase2 ? 0.75 : 1); }
 
+// ===== enemies from world data (editor's Enemies tab) ==============================
+// world.enemies[type] = { name, ai: hopper|shooter|charger|brute, hp, speed, dmg, range, cd, wind, r, aoe, shape, sprite }
+const ENEMY_AI = { hopper: 'Hops in and splats around itself', shooter: 'Keeps its distance and shoots orbs', charger: 'Telegraphs a line, then lunges', brute: 'Winds up a heavy smash (cone or circle)' };
+function applyWorldEnemies(list) {
+  for (const k in list || {}) {
+    const src = list[k], base = ENEMY[k] || { name: k, ai: 'brute', hp: 300, r: 0.45, speed: 2, dmg: 30, range: 1.5, wind: 0.6, cd: 1.5, aoe: 1.8, shape: 'cone', hgt: 3, blood: '#c7a8ff' };
+    ENEMY[k] = Object.assign({}, base, src);
+    for (const f of ['hp', 'r', 'speed', 'dmg', 'range', 'wind', 'cd', 'aoe']) if (ENEMY[k][f] != null) ENEMY[k][f] = +ENEMY[k][f];
+    const img = ENEMY[k].sprite && ART.custom[ENEMY[k].sprite];
+    if (img) ENEMY[k].hgt = Math.max(1.5, img.height / ZS * 0.9);
+  }
+}
+
+// ===== animals: wander near home, bolt when the hero comes close ===================
+function spawnCritters(m) {
+  G.critters = (m.critterSpawns || []).map((c, i) => ({ type: c.type, x: c.x, y: c.y, hx: c.x, hy: c.y, z: tileH(m, c.x, c.y), r: 0.18, state: 'idle', t: rand(0.5, 3), face: rand() < 0.5 ? 1 : -1, hop: 0, seed: i * 1.7, tx: c.x, ty: c.y }));
+}
+function updateCritters(dt) {
+  const m = G.map, p = G.player;
+  for (const c of G.critters || []) {
+    const rabbit = c.type === 'rabbit', d = dist(c.x, c.y, p.x, p.y);
+    c.t -= dt;
+    let mvx = 0, mvy = 0, sp = 0;
+    if (d < 2.6 && !p.dead) { c.state = 'flee'; c.t = 1.4; }
+    if (c.state === 'flee') {
+      const a = Math.atan2(c.y - p.y, c.x - p.x) + Math.sin(c.seed + G.t * 2) * 0.4;
+      mvx = Math.cos(a); mvy = Math.sin(a); sp = rabbit ? 4.6 : 4;
+      if (c.t <= 0) { c.state = 'idle'; c.t = rand(1, 3); c.hx = c.x; c.hy = c.y; }
+    } else if (c.state === 'walk') {
+      const dd = dist(c.x, c.y, c.tx, c.ty);
+      if (dd < 0.15 || c.t <= 0) { c.state = 'idle'; c.t = rand(1.5, 4); }
+      else { mvx = (c.tx - c.x) / dd; mvy = (c.ty - c.y) / dd; sp = rabbit ? 1.6 : 1.1; }
+    } else if (c.t <= 0) {
+      const a = rand(0, 6.28), r = rand(0.6, 2.4);
+      c.tx = c.hx + Math.cos(a) * r; c.ty = c.hy + Math.sin(a) * r; c.state = 'walk'; c.t = 4;
+    }
+    if (sp) {
+      // rabbits move in hops; foxes trot
+      if (rabbit) { c.hop = (c.hop + dt * (c.state === 'flee' ? 3.2 : 2.2)) % 1; sp *= c.hop < 0.65 ? 1.5 : 0; } else c.hop = (c.hop + dt * 4) % 1;
+      const ox = c.x, oy = c.y;
+      moveEntity(c, mvx * sp * dt, mvy * sp * dt, tileH(m, c.x, c.y));
+      if (c.state === 'walk' && Math.hypot(c.x - ox, c.y - oy) < 1e-4) c.t = 0;
+      const sx = isoX(mvx, mvy); if (Math.abs(sx) > 0.05) c.face = sx > 0 ? 1 : -1;
+    } else c.hop = 0;
+    c.z = lerp(c.z, tileH(m, c.x, c.y), Math.min(1, dt * 12));
+  }
+}
+
 // ===== tuning (numbers editable in the editor's Tuning tab) ==============================
 G.tune = { player: { hp: 650, mp: 260, stamina: 100, speed: 3.7, regen: 2, mpRegen: 7, crit: 0.08, damage: 1 } };
 const TUNE_ENEMY_KEYS = ['hp', 'speed', 'dmg', 'range', 'cd'];
@@ -624,7 +685,7 @@ function fireTrigger(tr) {
   let d = 0;
   for (const a of tr.actions || []) {
     if (a.type === 'wait') { d += +a.seconds || 0; continue; }
-    if (d > 0) delay(d, () => runAction(a)); else runAction(a);
+    if (d > 0) { G.pendingSpawns++; delay(d, () => { G.pendingSpawns--; runAction(a); }); } else runAction(a);
   }
 }
 function runAction(a) {

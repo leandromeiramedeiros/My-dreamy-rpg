@@ -76,6 +76,22 @@
     #toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: var(--panel2); border: 1px solid var(--accent); border-radius: 8px; padding: 8px 14px; display: none; z-index: 10; max-width: 80vw; }
     #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); font: 12px "Press Start 2P", monospace; color: var(--pink); z-index: 20; }
     a { color: var(--accent); }
+    #tabs button { font-size: 8px; padding: 10px 4px; }
+    .elist { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .elist button { height: 74px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; font-size: 10px; padding: 4px; }
+    .elist canvas { image-rendering: pixelated; max-height: 50px; max-width: 56px; }
+    .stats td:first-child { color: var(--dim); }
+    .stats input[type=number] { width: 80px; }
+    .stats input[type=text] { width: 200px; }
+    dialog.wide { max-width: 980px; width: 96vw; }
+    .px { display: grid; grid-template-columns: auto 230px; gap: 16px; }
+    .px canvas.grid { image-rendering: pixelated; cursor: crosshair; touch-action: none; border: 1px solid var(--line); background: #0a0614; }
+    .pal { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+    .pal button { height: 28px; padding: 0; border-width: 2px; }
+    .pal button.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+    .pal button.clear { background: repeating-conic-gradient(#3a3050 0 25%, #1c1236 0 50%) 0 0 / 10px 10px; }
+    .prev { display: flex; gap: 10px; align-items: flex-end; background: repeating-conic-gradient(#2a2042 0 25%, #1c1236 0 50%) 0 0 / 12px 12px; padding: 8px; border-radius: 6px; min-height: 60px; }
+    .prev canvas { image-rendering: pixelated; }
   </style>
 </head>
 <body>
@@ -99,7 +115,7 @@
     <button id="bGh" title="GitHub token & repository">GitHub settings</button>
   </div>
   <div id="side">
-    <div id="tabs"><button data-tab="map" class="on">MAP</button><button data-tab="logic">LOGIC</button><button data-tab="tune">TUNING</button></div>
+    <div id="tabs"><button data-tab="map" class="on">MAP</button><button data-tab="logic">LOGIC</button><button data-tab="enemies">ENEMIES</button><button data-tab="tune">TUNING</button></div>
     <div id="panel"></div>
   </div>
   <div id="view"><canvas id="cv"></canvas></div>

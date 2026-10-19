@@ -8,11 +8,12 @@
 // commits js/world.js to GitHub (Pages then redeploys the live game).
 // It reuses the game's own art + map builder, so what you see is what you play.
 // ---------------------------------------------------------------------------
+window.EDITOR_MODE = true;   // keep animals/sunbeams visible as props while editing
 const $ = s => document.querySelector(s);
 const CV = $('#cv'), cx = CV.getContext('2d');
 const DRAFT_KEY = 'dreamy.world.draft', GH_KEY = 'dreamy.github';
 const TILE_COLORS = { g: '#4a9a63', f: '#7cc47a', p: '#cbc4e4', w: '#4a8fd0', b: '#a87a5c', s: '#9a92c0', x: '#4d4570', r: '#7a5ab0', d: '#2d5647', c: '#8a80b0', '.': '#0a0614' };
-const ENEMY_CHOICES = ['slime', 'wisp', 'hound', 'dummy'];
+const enemyChoices = () => Object.keys(ENEMY).filter(k => k !== 'boss');
 const SOUNDS = ['portal', 'roar', 'boom', 'heal', 'arcane', 'shield', 'zap', 'veil'];
 const MAX_H = 12;
 const ZOOMS = [0.5, 0.75, 1, 1.5, 2, 3, 4, 6];
@@ -99,7 +100,16 @@ function rebuild(full) {
   ED.stroke = null;
   draw();
 }
-function refreshAll(full) { fillMapSelect(); rebuild(full); renderPanel(); }
+function refreshAll(full) { syncWorldArt(); fillMapSelect(); rebuild(full); renderPanel(); }
+// re-derive sprites + enemy definitions from the world data (after edits, undo, import)
+function syncWorldArt() {
+  buildCustomSprites(ED.world.sprites);
+  for (const k of Object.keys(ENEMY)) if (!BASE_ENEMY[k]) delete ENEMY[k];
+  for (const k in BASE_ENEMY) ENEMY[k] = JSON.parse(JSON.stringify(BASE_ENEMY[k]));
+  const te = (ED.world.tuning || {}).enemies || {};
+  for (const k in te) if (ENEMY[k]) Object.assign(ENEMY[k], te[k]);
+  applyWorldEnemies(ED.world.enemies);
+}
 
 // ===== camera ===============================================================
 function fitView() {
@@ -345,6 +355,7 @@ function renderPanel() {
   const P = $('#panel'); P.innerHTML = '';
   if (ED.tab === 'map') renderMapPanel(P);
   else if (ED.tab === 'logic') renderLogicPanel(P);
+  else if (ED.tab === 'enemies') renderEnemyPanel(P);
   else renderTunePanel(P);
 }
 
@@ -442,8 +453,8 @@ function fieldEl(obj, key, kind, label, d, tr) {
     case 'num': return wrap(numIn(obj[key], set));
     case 'text': return wrap(h('input', { class: 'wide', type: 'text', value: obj[key] || '', onchange: e => set(e.target.value) }));
     case 'bool': return wrap(h('input', { type: 'checkbox', checked: !!obj[key], onchange: e => set(e.target.checked || '') }));
-    case 'enemy': return h('select', { onchange: e => set(e.target.value) }, ENEMY_CHOICES.map(k => h('option', { value: k, selected: (obj[key] || 'slime') === k }, k)));
-    case 'enemyAny': return h('select', { onchange: e => set(e.target.value === 'any' ? '' : e.target.value) }, ['any', ...ENEMY_CHOICES, 'boss'].map(k => h('option', { value: k, selected: (obj[key] || 'any') === k }, k)));
+    case 'enemy': return h('select', { onchange: e => set(e.target.value) }, enemyChoices().map(k => h('option', { value: k, selected: (obj[key] || 'slime') === k }, ENEMY[k].name || k)));
+    case 'enemyAny': return h('select', { onchange: e => set(e.target.value === 'any' ? '' : e.target.value) }, ['any', ...enemyChoices(), 'boss'].map(k => h('option', { value: k, selected: (obj[key] || 'any') === k }, k === 'any' ? 'any' : (ENEMY[k].name || k))));
     case 'sound': return h('select', { onchange: e => set(e.target.value) }, SOUNDS.map(k => h('option', { value: k, selected: (obj[key] || 'portal') === k }, k)));
     case 'map': return h('select', { onchange: e => set(e.target.value) }, Object.keys(ED.world.maps).map(k => h('option', { value: k, selected: obj[key] === k }, ED.world.maps[k].name)));
     case 'portal': return h('select', { onchange: e => set(+e.target.value) }, h('option', { value: -1, selected: obj[key] == null || +obj[key] === -1 }, 'all portals'),
@@ -527,10 +538,7 @@ function renderTunePanel(P) {
   P.append(h('h3', null, 'PLAYER'), h('table', null,
     Object.entries({ hp: 'Base HP', mp: 'Base mana', stamina: 'Stamina', speed: 'Move speed', regen: 'HP regen /s', mpRegen: 'Mana regen /s', crit: 'Crit chance (0-1)', damage: 'Damage multiplier' }).map(([k, label]) =>
       h('tr', null, h('td', null, label), h('td', null, numIn(tuneVal(['player', k], BASE_PLAYER[k]), v => setTune(['player', k], v, BASE_PLAYER[k])))))));
-  P.append(h('h3', null, 'ENEMIES'), h('table', null,
-    h('tr', null, h('th', null, ''), ['HP', 'speed', 'damage', 'range', 'cooldown'].map(s => h('th', null, s))),
-    ['slime', 'wisp', 'hound', 'boss'].map(k => h('tr', null, h('td', null, k),
-      ['hp', 'speed', 'dmg', 'range', 'cd'].map(f => h('td', null, (k === 'boss' && f !== 'hp' && f !== 'speed') ? '—' : numIn(tuneVal(['enemies', k, f], BASE_ENEMY[k][f]), v => setTune(['enemies', k, f], v, BASE_ENEMY[k][f]))))))));
+  P.append(h('div', { class: 'hint' }, 'Enemy stats, behaviour and looks are in the ENEMIES tab.'));
   const groups = [];
   for (const w of ITEMS.weapon) groups.push([w.name, [...w.q, ...w.e, ...w.r]]);
   groups.push(['Armour', ITEMS.chest.concat(ITEMS.head, ITEMS.boots).map(i => i.skill)]);
@@ -556,7 +564,7 @@ function newMapDialog() {
   const inp = (k, attrs) => h('input', Object.assign({ value: f[k], onchange: e => { f[k] = attrs.type === 'number' ? +e.target.value : e.target.value; } }, attrs));
   dialog('NEW MAP', [
     h('div', { class: 'row' }, h('label', null, 'Name'), inp('name', { type: 'text' })),
-    h('div', { class: 'row' }, h('label', null, 'Theme'), h('select', { onchange: e => { f.theme = e.target.value; } }, h('option', { value: 'vale' }, 'Dreamy vale (day, lanterns, fireflies)'), h('option', { value: 'ruins' }, 'Nightmare ruins (blood moon, embers)'))),
+    h('div', { class: 'row' }, h('label', null, 'Theme'), h('select', { onchange: e => { f.theme = e.target.value; } }, h('option', { value: 'vale' }, 'Dreamy vale (day, lanterns, fireflies)'), h('option', { value: 'ruins' }, 'Nightmare ruins (blood moon, embers)'), h('option', { value: 'forest' }, 'Misty pinewood (dawn, pines, mist)'))),
     h('div', { class: 'row' }, h('label', null, 'Size'), inp('W', { type: 'number', min: 8, max: 40 }), '×', inp('H', { type: 'number', min: 8, max: 40 })),
     h('div', { class: 'row' }, h('label', null, 'Island shape'), h('select', { onchange: e => { f.shape = e.target.value; } }, h('option', { value: 'round' }, 'Round'), h('option', { value: 'square' }, 'Square'))),
     h('div', { class: 'row' }, h('label', null, 'Ground'), h('select', { onchange: e => { f.fill = e.target.value; } }, Object.entries(TILE_TYPES).filter(([k]) => 'gfxd'.includes(k)).map(([k, v]) => h('option', { value: k }, v)))),
@@ -581,7 +589,7 @@ function settingsDialog() {
   dialog('MAP SETTINGS', [
     h('div', { class: 'row' }, h('label', null, 'Name'), inp('name', { type: 'text' })),
     h('div', { class: 'row' }, h('label', null, 'Subtitle'), inp('sub', { type: 'text' })),
-    h('div', { class: 'row' }, h('label', null, 'Theme'), h('select', { onchange: e => { f.theme = e.target.value; } }, ['vale', 'ruins'].map(t => h('option', { value: t, selected: t === d.theme }, t === 'vale' ? 'Dreamy vale' : 'Nightmare ruins')))),
+    h('div', { class: 'row' }, h('label', null, 'Theme'), h('select', { onchange: e => { f.theme = e.target.value; } }, ['vale', 'ruins', 'forest'].map(t => h('option', { value: t, selected: t === d.theme }, { vale: 'Dreamy vale', ruins: 'Nightmare ruins', forest: 'Misty pinewood' }[t])))),
     h('div', { class: 'row' }, h('label', null, 'Size'), inp('W', { type: 'number', min: 8, max: 40 }), '×', inp('H', { type: 'number', min: 8, max: 40 }), h('span', { class: 'hint' }, 'grows/crops from the bottom-right edges')),
     h('div', { class: 'row' }, h('label', null, 'Game starts here'), h('input', { type: 'checkbox', checked: ED.world.start === ED.mapId, onchange: e => { if (e.target.checked) ED.world.start = ED.mapId; } })),
     h('div', { class: 'row' }, h('span', { class: 'hint' }, `Map id: ${ED.mapId} (used by portals; can't be changed).`)),
@@ -697,6 +705,181 @@ async function publish() {
   } }, 'Publish')]);
 }
 
+// ===== enemies tab ====================================================================
+const BUILTIN_ART = () => ({ slime: ART.slime.n, hound: ART.hound.n[0], boss: ART.boss.n, wisp: wispArt() });
+let _wisp = null;
+function wispArt() {   // the wisp is drawn procedurally in game; give it a starter sprite for editing
+  if (_wisp) return _wisp;
+  const pb = new PixBuf(11, 14), c1 = hexToRgb('#7fd6ff'), c2 = hexToRgb('#f0feff'), k = hexToRgb('#1a1326');
+  for (let y = 0; y < 14; y++) for (let x = 0; x < 11; x++) { const d = Math.hypot(x - 5, (y - 5) * 1.1); if (d < 4.6) pb.set(x, y, d < 2.6 ? c2 : c1); else if (y > 7 && Math.abs(x - 5 + Math.sin(y) * 1.2) < (14 - y) * 0.35) pb.set(x, y, c1); }
+  pb.set(4, 5, k); pb.set(6, 5, k);
+  return (_wisp = pb.outline(0.4).toCanvas());
+}
+function enemyImg(k) { const d = ENEMY[k]; return (d && d.sprite && ART.custom[d.sprite]) || BUILTIN_ART()[k] || null; }
+function enemyEntry(k) { ED.world.enemies = ED.world.enemies || {}; return (ED.world.enemies[k] = ED.world.enemies[k] || {}); }
+function enemyUsage(k) {
+  const out = [];
+  for (const d of Object.values(ED.world.maps)) for (const tr of d.triggers || []) {
+    if ((tr.actions || []).some(a => a.type === 'spawn' && a.enemy === k) || (tr.when && tr.when.enemy === k)) out.push(`${d.name} › ${tr.name || tr.id}`);
+  }
+  return out;
+}
+function renderEnemyPanel(P) {
+  const list = Object.keys(ENEMY).filter(k => k !== 'dummy');
+  if (!ED.enemySel || !ENEMY[ED.enemySel]) ED.enemySel = list[0];
+  const k = ED.enemySel, def = ENEMY[k], builtin = !!BASE_ENEMY[k], isBoss = def.ai === 'boss';
+  P.append(h('h3', null, 'ENEMIES'),
+    h('div', { class: 'elist' }, list.map(id => { const im = enemyImg(id); return h('button', { class: id === k ? 'on' : '', onclick: () => { ED.enemySel = id; renderPanel(); } }, im ? thumb(im, 56, 50) : h('span', null, '?'), ENEMY[id].name || id); })),
+    h('div', { class: 'row' }, h('button', { onclick: newEnemy }, '+ New enemy'), h('span', { class: 'hint' }, 'copies the selected one')));
+  const E = () => enemyEntry(k);
+  const setF = (f, v) => { if (v === '' || v == null) delete E()[f]; else E()[f] = v; commit(false); syncWorldArt(); };
+  const num = (f, label, hint) => h('tr', null, h('td', null, label), h('td', null, numIn(def[f], v => { setF(f, v === '' ? '' : +v); renderPanel(); }), hint ? h('span', { class: 'hint' }, ' ' + hint) : null));
+  const im = enemyImg(k);
+  P.append(h('h3', null, (def.name || k).toUpperCase()),
+    h('div', { class: 'row' }, im ? h('div', { class: 'prev' }, thumb(im, 120, 120)) : null,
+      h('div', null,
+        h('button', { class: 'primary', onclick: () => editEnemySprite(k) }, '✎ Edit pixels'),
+        builtin && def.sprite && k !== 'troll' && k !== 'ogre' ? h('div', { style: 'margin-top:6px' }, h('button', { class: 'mini', onclick: () => { delete E().sprite; commit(false); syncWorldArt(); renderPanel(); } }, 'Use original art')) : null)),
+    h('table', { class: 'stats' },
+      h('tr', null, h('td', null, 'Name'), h('td', null, h('input', { type: 'text', value: def.name || k, onchange: e => { setF('name', e.target.value); renderPanel(); } }))),
+      isBoss ? h('tr', null, h('td', null, 'Behaviour'), h('td', null, 'Boss (special attack pattern)')) :
+        h('tr', null, h('td', null, 'Behaviour'), h('td', null, h('select', { onchange: e => { setF('ai', e.target.value); renderPanel(); } }, Object.entries(ENEMY_AI).map(([a, label]) => h('option', { value: a, selected: def.ai === a }, label))))),
+      num('hp', 'HP'), num('speed', 'Speed', 'tiles/s'),
+      isBoss ? null : num('dmg', 'Damage'),
+      isBoss ? null : num('range', 'Attack range', 'tiles'),
+      isBoss ? null : num('cd', 'Cooldown', 's'),
+      isBoss ? null : num('wind', 'Wind-up', 's warning'),
+      num('r', 'Body size', 'radius'),
+      def.ai === 'hopper' || def.ai === 'brute' ? num('aoe', 'Hit area', 'radius') : null,
+      def.ai === 'brute' ? h('tr', null, h('td', null, 'Smash shape'), h('td', null, h('select', { onchange: e => setF('shape', e.target.value) }, h('option', { value: 'cone', selected: def.shape !== 'circle' }, 'Cone in front'), h('option', { value: 'circle', selected: def.shape === 'circle' }, 'Circle around it')))) : null,
+      h('tr', null, h('td', null, 'Hit colour'), h('td', null, h('input', { type: 'color', value: def.blood || '#c7a8ff', onchange: e => setF('blood', e.target.value) })))),
+    h('div', { class: 'hint' }, 'Used by: ' + (enemyUsage(k).join(' · ') || 'nothing yet — add a Spawn action in the LOGIC tab.')),
+    builtin ? h('button', { class: 'mini', onclick: () => { if (!confirm('Reset this enemy to its default stats?')) return; const s = E().sprite; ED.world.enemies[k] = s ? { sprite: s } : {}; if ((ED.world.tuning || {}).enemies) delete ED.world.tuning.enemies[k]; commit(false); syncWorldArt(); renderPanel(); } }, 'Reset stats')
+      : h('button', { class: 'danger', onclick: () => {
+        const used = enemyUsage(k);
+        if (!confirm(`Delete “${def.name || k}”?` + (used.length ? `\nIt is still spawned by: ${used.join(', ')}` : ''))) return;
+        delete ED.world.enemies[k]; ED.enemySel = null; commit(false); syncWorldArt(); renderPanel();
+      } }, 'Delete enemy'));
+  // other editable sprites (animals …)
+  const used = new Set(Object.values(ED.world.enemies || {}).map(e => e.sprite));
+  const others = Object.keys(ED.world.sprites || {}).filter(id => !used.has(id));
+  if (others.length) P.append(h('h3', null, 'ANIMALS & OTHER SPRITES'), h('div', { class: 'elist' }, others.map(id =>
+    h('button', { title: 'Edit pixels', onclick: () => pixelEditor(id, id, () => { rebuild(false); renderPanel(); }) }, thumb(ART.custom[id], 56, 50), id))),
+    h('div', { class: 'hint' }, 'Click an animal to repaint it. Place animals on a map with the Place prop tool.'));
+}
+function editEnemySprite(k) {
+  const def = ENEMY[k], E = enemyEntry(k);
+  let id = def.sprite;
+  if (!id || !ED.world.sprites[id]) {          // first edit of built-in art: convert it to pixels
+    id = k; ED.world.sprites[id] = canvasToSprite(enemyImg(k));
+    E.sprite = id;
+  }
+  pixelEditor(id, def.name || k, () => { E.sprite = id; syncWorldArt(); renderPanel(); });
+}
+function newEnemy() {
+  const base = ED.enemySel && ENEMY[ED.enemySel] && ENEMY[ED.enemySel].ai !== 'boss' ? ED.enemySel : 'ogre';
+  const name = prompt('Name for the new enemy?', 'Forest goblin'); if (!name) return;
+  let id = slug(name); while (ENEMY[id] || ED.world.sprites[id]) id += '_2';
+  const b = ENEMY[base] || ENEMY.slime, img = enemyImg(base);
+  ED.world.sprites[id] = img ? canvasToSprite(img) : { w: 12, h: 12, pal: ['#1a1326', '#c7a8ff'], rows: Array(12).fill('............') };
+  ED.world.enemies[id] = { name, ai: b.ai === 'boss' ? 'brute' : b.ai, hp: b.hp, speed: b.speed, dmg: b.dmg, range: b.range, cd: b.cd, wind: b.wind, r: b.r, aoe: b.aoe || 1.8, shape: b.shape || 'cone', blood: b.blood, sprite: id };
+  ED.enemySel = id; commit(false); syncWorldArt(); renderPanel();
+  toast(`“${name}” created — repaint it with ✎ Edit pixels, then spawn it from the LOGIC tab.`, 4500);
+}
+
+// ===== pixel editor (deliberately simple) ===============================================
+function pixelEditor(spriteId, title, onSave) {
+  const src = ED.world.sprites[spriteId];
+  const S = { w: src.w, h: src.h, pal: src.pal.slice(), tool: 'pen', col: Math.min(1, src.pal.length - 1), mirror: false, hist: [], zoom: 0 };
+  S.px = Array.from({ length: S.h }, (_, y) => Array.from({ length: S.w }, (_, x) => { const ch = (src.rows[y] || '')[x]; return !ch || ch === '.' ? -1 : parseInt(ch, 36); }));
+  const dl = $('#dlg'); dl.innerHTML = ''; dl.classList.add('wide');
+  const grid = h('canvas', { class: 'grid' }), g = grid.getContext('2d');
+  const p1 = h('canvas'), p3 = h('canvas');
+  const cellSize = () => Math.max(4, Math.floor(Math.min(560 / S.w, 470 / S.h)));
+  const snap = () => { S.hist.push(JSON.stringify([S.w, S.h, S.px, S.pal])); if (S.hist.length > 60) S.hist.shift(); };
+  const render = () => {
+    const c = cellSize(); grid.width = S.w * c; grid.height = S.h * c;
+    for (let y = 0; y < S.h; y++) for (let x = 0; x < S.w; x++) {
+      const v = S.px[y][x];
+      g.fillStyle = v < 0 ? ((x + y) % 2 ? '#241a3c' : '#1c1430') : S.pal[v]; g.fillRect(x * c, y * c, c, c);
+    }
+    g.strokeStyle = 'rgba(255,255,255,0.08)'; g.lineWidth = 1;
+    for (let x = 0; x <= S.w; x++) { g.beginPath(); g.moveTo(x * c + 0.5, 0); g.lineTo(x * c + 0.5, S.h * c); g.stroke(); }
+    for (let y = 0; y <= S.h; y++) { g.beginPath(); g.moveTo(0, y * c + 0.5); g.lineTo(S.w * c, y * c + 0.5); g.stroke(); }
+    if (S.mirror) { g.strokeStyle = 'rgba(255,211,90,0.7)'; g.beginPath(); g.moveTo(S.w * c / 2, 0); g.lineTo(S.w * c / 2, S.h * c); g.stroke(); }
+    const img = spriteFromData(serialize());
+    for (const [cv, k] of [[p1, 1], [p3, 3]]) { cv.width = img.width * k; cv.height = img.height * k; const x = cv.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(img, 0, 0, cv.width, cv.height); }
+  };
+  const serialize = () => ({ w: S.w, h: S.h, pal: S.pal.slice(), rows: S.px.map(r => r.map(v => v < 0 ? '.' : v.toString(36)).join('')) });
+  const paint = (x, y, v) => { if (x < 0 || y < 0 || x >= S.w || y >= S.h) return; S.px[y][x] = v; if (S.mirror) S.px[y][S.w - 1 - x] = v; };
+  const flood = (x, y, v) => {
+    const t = S.px[y][x]; if (t === v) return;
+    const st = [[x, y]];
+    while (st.length) { const [a, b] = st.pop(); if (a < 0 || b < 0 || a >= S.w || b >= S.h || S.px[b][a] !== t) continue; S.px[b][a] = v; st.push([a + 1, b], [a - 1, b], [a, b + 1], [a, b - 1]); }
+  };
+  const at = ev => { const r = grid.getBoundingClientRect(), c = r.width / S.w; return [Math.floor((ev.clientX - r.left) / c), Math.floor((ev.clientY - r.top) / c)]; };
+  let down = false, erase = false;
+  const use = (ev, first) => {
+    const [x, y] = at(ev); if (x < 0 || y < 0 || x >= S.w || y >= S.h) return;
+    const tool = erase ? 'eraser' : S.tool;
+    if (tool === 'pen') paint(x, y, S.col);
+    else if (tool === 'eraser') paint(x, y, -1);
+    else if (first && tool === 'fill') flood(x, y, S.col);
+    else if (first && tool === 'pick') { const v = S.px[y][x]; if (v >= 0) { S.col = v; S.tool = 'pen'; buildSide(); } }
+    render();
+  };
+  grid.addEventListener('pointerdown', ev => { grid.setPointerCapture(ev.pointerId); down = true; erase = ev.button === 2; if (S.tool !== 'pick') snap(); use(ev, true); });
+  grid.addEventListener('pointermove', ev => { if (down && (S.tool === 'pen' || S.tool === 'eraser' || erase)) use(ev, false); });
+  grid.addEventListener('pointerup', () => { down = false; erase = false; });
+  grid.addEventListener('contextmenu', ev => ev.preventDefault());
+  const side = h('div');
+  const buildSide = () => {
+    side.innerHTML = '';
+    const tb = (id, label) => h('button', { class: S.tool === id ? 'on' : '', onclick: () => { S.tool = id; buildSide(); } }, label);
+    const colorIn = h('input', { type: 'color', value: S.pal[S.col] || '#ffffff', oninput: e => { S.pal[S.col] = e.target.value; render(); buildPal(); } });
+    const palBox = h('div', { class: 'pal' });
+    const buildPal = () => {
+      palBox.innerHTML = '';
+      S.pal.forEach((c, i) => palBox.append(h('button', { class: i === S.col ? 'sel' : '', style: 'background:' + c, title: c, onclick: () => { S.col = i; if (S.tool === 'eraser' || S.tool === 'pick') S.tool = 'pen'; buildSide(); } })));
+      if (S.pal.length < 36) palBox.append(h('button', { title: 'Add a colour', onclick: () => { S.pal.push(S.pal[S.col] || '#ffffff'); S.col = S.pal.length - 1; buildSide(); } }, '+'));
+    };
+    buildPal();
+    const wIn = numIn(S.w, () => {}, { min: 4, max: 96, step: 1 }), hIn = numIn(S.h, () => {}, { min: 4, max: 96, step: 1 });
+    side.append(
+      h('div', { class: 'tools' }, tb('pen', '✏ Pen'), tb('eraser', '⌫ Eraser'), tb('fill', '◧ Fill'), tb('pick', '⊙ Picker'),
+        h('button', { class: S.mirror ? 'on' : '', title: 'Paint both halves at once', onclick: () => { S.mirror = !S.mirror; buildSide(); render(); } }, '⇋ Mirror')),
+      h('h3', null, 'COLOURS'), palBox,
+      h('div', { class: 'row' }, h('label', null, 'Edit colour'), colorIn),
+      h('div', { class: 'hint' }, 'Left-click paints, right-click erases. Changing a colour recolours every pixel that uses it.'),
+      h('h3', null, 'PREVIEW'), h('div', { class: 'prev' }, p1, p3),
+      h('h3', null, 'SIZE'),
+      h('div', { class: 'row' }, wIn, '×', hIn, h('button', { class: 'mini', onclick: () => {
+        const W = clamp(+wIn.value, 4, 96) || S.w, H = clamp(+hIn.value, 4, 96) || S.h;
+        snap();
+        const ox = Math.floor((W - S.w) / 2), oy = H - S.h;            // keep feet on the ground, centred
+        const n = Array.from({ length: H }, (_, y) => Array.from({ length: W }, (_, x) => ((S.px[y - oy] || [])[x - ox] ?? -1)));
+        S.w = W; S.h = H; S.px = n; render();
+      } }, 'Resize')),
+      h('div', { class: 'row' },
+        h('button', { onclick: () => { const st = S.hist.pop(); if (st) { [S.w, S.h, S.px, S.pal] = JSON.parse(st); buildSide(); render(); } } }, '↶ Undo'),
+        h('button', { onclick: () => { snap(); S.px = S.px.map(r => r.slice().reverse()); render(); } }, '⇆ Flip'),
+        h('button', { class: 'danger', onclick: () => { snap(); S.px = S.px.map(r => r.map(() => -1)); render(); } }, 'Clear')));
+  };
+  buildSide();
+  dl.append(h('h2', null, 'PIXELS — ' + String(title).toUpperCase()),
+    h('div', { class: 'px' }, h('div', { style: 'overflow:auto;max-height:72vh' }, grid), side),
+    h('div', { class: 'row', style: 'justify-content:flex-end;margin-top:12px' },
+      h('button', { onclick: () => { dl.close(); } }, 'Cancel'),
+      h('button', { class: 'primary', onclick: () => {
+        ED.world.sprites[spriteId] = serialize();
+        dl.close(); commit(false); syncWorldArt(); if (onSave) onSave(); toast('Sprite saved.');
+      } }, 'Save sprite')));
+  dl.addEventListener('close', () => { dl.classList.remove('wide'); dl.onkeydown = null; }, { once: true });
+  dl.onkeydown = ev => { if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z' && document.activeElement.tagName !== 'INPUT') { ev.preventDefault(); const st = S.hist.pop(); if (st) { [S.w, S.h, S.px, S.pal] = JSON.parse(st); buildSide(); render(); } } };
+  render();
+  dl.showModal();
+}
+
 // ===== wiring ===========================================================================
 function fillMapSelect() {
   const sel = $('#mapSel'); sel.innerHTML = '';
@@ -760,6 +943,8 @@ async function bootEditor() {
     if (draft && draft !== JSON.stringify(WORLD_DATA)) { const dw = JSON.parse(draft); if (dw && dw.maps) { w = dw; fromDraft = true; } }
   } catch (e) { /* ignore broken draft */ }
   ED.world = w; ED.mapId = w.maps[w.start] ? w.start : Object.keys(w.maps)[0]; ED.cur = JSON.stringify(w);
+  ED.world.sprites = ED.world.sprites || {}; ED.world.enemies = ED.world.enemies || {};
+  syncWorldArt();
   wire(); resize(); fillMapSelect(); rebuild(true); fitView(); setTool('select'); renderPanel(); draw();
   $('#stSave').innerHTML = fromDraft ? '<span class="warn">●</span> Loaded your unpublished draft from this browser' : 'Showing the published world';
   $('#loading').style.display = 'none';

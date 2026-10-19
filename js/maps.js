@@ -36,6 +36,23 @@ const THEMES = {
     ambient: '#8a76b4', fog: '#9a6ac0', fog2: '#ff6a9a', underDepth: 130, bloom: 0.65,
     moon: { x: 140, y: 58, r: 30, col: '#ffb08a', glow: '#ff4a6a' },
   },
+  forest: {
+    seed: 37,
+    sky: ['#b9bccb', '#cfcacb', '#e2c4b0', '#efab7e', '#f39056', '#ee7a3e', '#dc6432', '#c4502e', '#a8462e'],
+    mtnFar: ['#6e7f9c', '#465676', '#c9b2b0'], mtnNear: ['#2c3c52', '#18222f', '#7f8ea8'], snow: null, pines: true,
+    cloud: ramp(['#7d88a0', '#a4afc2', '#c6cedb', '#e2e7ef', '#f8faff']),
+    grass: ramp(['#1b2716', '#28391c', '#3a5022', '#516a2a', '#6c8834', '#8fa846', '#b6c868']),
+    path: ramp(['#2e1c14', '#45291c', '#5c3a26', '#764c30', '#90623e']), gap: hexToRgb('#24160f'), dirtPath: true,
+    stone: ramp(['#363a46', '#4e5462', '#6a7282', '#88909f', '#aab2c0']),
+    water: ramp(['#14283e', '#1c3a56', '#28506e', '#386a86', '#5a90a6', '#94c4cc', '#e2f4f2']),
+    wood: ramp(['#2a1a12', '#432a1c', '#5e3c28', '#7a5034', '#946642']),
+    earth: ramp(['#22160f', '#342216', '#4a301e', '#624028', '#7a5232']),
+    under: ramp(['#1a1e2a', '#262c3e', '#323a52', '#404a66', '#4e5a7a']),
+    haze: hexToRgb('#a6b2c8'), root: hexToRgb('#34421f'),
+    ambient: '#d6c6c0', fog: '#e8eef8', fog2: '#ffd8b8', underDepth: 140, bloom: 0.6,
+    moon: { x: 360, y: 168, r: 30, col: '#ffe8bc', glow: '#ff9850', sun: true },
+    rays: { dir: 1, alpha: 0.075 },
+  },
 };
 
 function grid(W, H, v) { return Array.from({ length: H }, () => Array(W).fill(v)); }
@@ -65,6 +82,13 @@ function surfaceColor(m, t, wx, wy, px, py) {
       return hexToRgb(['#f6a6c8', '#fff1f7', '#ffe08a', '#9fd8ff'][k]);
     }
     return rampDither(th.grass, v, px, py);
+  }
+  if (t === 'p' && th.dirtPath) {   // packed forest dirt with pebbles and fallen needles
+    let v = 0.42 + (fbm(wx * 1.3, wy * 1.3, 3, 61) - 0.5) * 0.5 + (hash2(px, py, 62) - 0.5) * 0.12;
+    const hs = hash2(px, py, 63);
+    if (hs < 0.012) return th.stone[3];
+    if (hs < 0.03) return th.grass[2];
+    return rampDither(th.path, v, px, py);
   }
   if (t === 'p') {
     const s = 3.2, X = wx * s, Y = wy * s, gx = Math.floor(X), gy = Math.floor(Y);
@@ -290,6 +314,16 @@ const OBJ_TYPES = {
   shrine: { label: 'Shrine', img: () => [ART.shrine], r: 0.35, shadow: 7 },
   brazier: { label: 'Brazier', img: () => [ART.brazier], r: 0.3, shadow: 5, brazier: true, light: { r: 80, col: '#b36bff', a: 1, h: 12 } },
   house: { label: 'Cottage (2x2)', img: () => [ART.house.c], house: true },
+  pine_giant: { label: 'Giant pine', img: () => ART.pines.giant, r: 0.45, shadow: 16 },
+  pine: { label: 'Pine', img: () => ART.pines.tall, r: 0.32, shadow: 10 },
+  pine_young: { label: 'Young pine', img: () => ART.pines.young, r: 0.22, shadow: 6 },
+  mushroom_red: { label: 'Toadstool', img: () => [ART.mushroomRed] },
+  moss: { label: 'Moss mound', img: () => ART.moss, shadow: 7 },
+  log: { label: 'Fallen log', img: () => [ART.log], r: 0.45, shadow: 9 },
+  stump: { label: 'Stump', img: () => [ART.stump], r: 0.3, shadow: 6 },
+  sunbeam: { label: 'Sunbeam', img: () => [ART.sunIcon], beam: true, light: { r: 96, col: '#ffdca0', a: 0.85, h: 2 } },
+  fox: { label: 'Fox (animal)', img: () => [ART.custom.fox || ART.sunIcon], critter: 'fox' },
+  rabbit: { label: 'Rabbit (animal)', img: () => [ART.custom.rabbit || ART.sunIcon], critter: 'rabbit' },
 };
 // tile characters used in world data
 const TILE_TYPES = {
@@ -318,7 +352,7 @@ function buildMapFromData(id, d) {
 }
 // Props + portals from the data record (the editor re-runs this alone when only objects change).
 function placeObjects(m, d) {
-  m.objects = []; m.colliders = []; m.chimneys = [];
+  m.objects = []; m.colliders = []; m.chimneys = []; m.critterSpawns = [];
   seedRng(m.id.length * 131 + d.W * 7 + d.H);
   for (const o of d.objects || []) {
     const def = OBJ_TYPES[o.t]; if (!def) continue;
@@ -331,8 +365,9 @@ function placeObjects(m, d) {
       m.chimneys.push({ x: o.x + H.chimney.x, y: o.y + H.chimney.y, z: H.chimney.z + z });
       continue;
     }
+    if (def.critter) { m.critterSpawns.push({ type: def.critter, x: o.x, y: o.y }); if (!window.EDITOR_MODE) continue; }
     const imgs = def.img(), img = imgs[(o.v || 0) % imgs.length];
-    addProp(m, img, o.x, o.y, { r: def.r || 0, shadow: def.shadow || 0, flip: !!o.f, grass: !!def.grass, sway: rand(0, 6.28), brazier: !!def.brazier, light: def.light ? Object.assign({}, def.light) : undefined, src: o });
+    addProp(m, img, o.x, o.y, { r: def.r || 0, shadow: def.shadow || 0, flip: !!o.f, grass: !!def.grass, sway: rand(0, 6.28), brazier: !!def.brazier, beam: !!def.beam && !window.EDITOR_MODE, light: def.light ? Object.assign({}, def.light) : undefined, src: o });
   }
   for (const p of m.portals) m.objects.push({ kind: 'portal', x: p.x, y: p.y, z: p.z, key: p.x + p.y + p.z * 0.35, portal: p });
 }

@@ -132,7 +132,7 @@ function drawHUD(ctx) {
   // ---- portrait ----
   const PY = DH - 112;
   panel(ctx, 16, PY, 96, 96);
-  const g = ctx.createLinearGradient(0, PY, 0, PY + 96); g.addColorStop(0, m.themeId === 'vale' ? '#f6b2b0' : '#7a1f4f'); g.addColorStop(1, m.themeId === 'vale' ? '#5d3f98' : '#1f0c33');
+  const g = ctx.createLinearGradient(0, PY, 0, PY + 96); const pg = { vale: ['#f6b2b0', '#5d3f98'], ruins: ['#7a1f4f', '#1f0c33'], forest: ['#f39056', '#2c3c52'] }[m.themeId] || ['#f6b2b0', '#5d3f98']; g.addColorStop(0, pg[0]); g.addColorStop(1, pg[1]);
   ctx.fillStyle = g; ctx.fillRect(19, PY + 3, 90, 90);
   ctx.save(); ctx.beginPath(); ctx.rect(19, PY + 3, 90, 90); ctx.clip();
   ctx.drawImage(p.spr.portrait, p.spr.ox, p.spr.ox, 16, 18, 16, PY + (p.gear.head === 'arcanecowl' ? 4 : -6), 96, 108);

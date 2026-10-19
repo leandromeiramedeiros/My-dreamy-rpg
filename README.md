@@ -21,7 +21,8 @@ Open **`editor.html`** (online: https://leandromeiramedeiros.github.io/My-dreamy
 
 * **Map tab.** Paint tiles, raise and lower the ground, place props, set the start flag and add portals.
   * Tile types: grass, flowers, path, water, bridge, stairs, flagstones, runes, moss, pillars and void.
-  * Props: trees, bushes, rocks, lanterns, crystals, mushrooms, signs, braziers, shrines and the cottage.
+  * Props: trees, giant pines, bushes, moss, logs, stumps, rocks, lanterns, crystals, mushrooms,
+    toadstools, sunbeams, signs, braziers, shrines, the cottage, and the foxes and rabbits.
   * Portals link maps together and can begin closed.
   * **+ New map** makes a new island with either theme. **Map settings** renames, resizes or deletes a map.
 * **Logic tab.** Each map has a list of trigger cards in the form *WHEN … (ONLY AFTER …) THEN …*.
@@ -30,7 +31,14 @@ Open **`editor.html`** (online: https://leandromeiramedeiros.github.io/My-dreamy
   * THEN can: spawn enemies or the boss, show a banner or message, set the objective, heal, open or close
     portals, defeat all enemies, shake the screen, play a sound, send the player to another map, or wait.
   * The existing waves and boss fight are built this way, so you can edit them.
-* **Tuning tab.** Change the numbers for the player, the enemies and every skill.
+* **Enemies tab.** Every enemy is editable: name, behaviour, HP, speed, damage, range, cooldown, wind-up,
+  size and hit area. The behaviours are: hops and splats, keeps distance and shoots, telegraphs a lunge,
+  or winds up a heavy smash in a cone or circle.
+  * **✎ Edit pixels** opens a simple pixel editor with pen, eraser, fill, picker, mirror, palette, resize,
+    flip and undo. It also works on the built-in monsters.
+  * **+ New enemy** copies one into a new creature you can repaint and spawn from the Logic tab.
+  * Animals (fox and rabbit) are repainted the same way.
+* **Tuning tab.** Change the numbers for the player and every skill.
 * **▶ Play-test** opens the game on your draft in a new tab. Drafts autosave in your browser.
   **Export** and **Import** download or load the whole world as `world.json`.
 * **⬆ Publish** commits `js/world.js` to this repository through the GitHub API, and GitHub Pages then updates
@@ -66,6 +74,10 @@ the controls, FULL goes fullscreen.
 
 * **Map 1: Whispering Vale.** A peaceful floating island with no enemies. You can explore it and try your skills on the training
   dummies. A rift glows on the plateau to the **north-east**, marked with a "!" on the compass.
+* **Misty Pinewood.** A second rift in the Vale, south of the start, leads to a dawn pine forest with
+  giant pines, thick mist, sunbeams, toadstools and moss. Foxes and rabbits wander it and bolt when you
+  get close. Lesser **ogres** guard the sunlit clearing, and two giant **mountain trolls** wait in the
+  raised den to the north.
 * **Map 2: Gloomspire Ruins.** Stepping into the rift starts three waves of monsters (gloom slimes, ranged wisps and lunging
   shade hounds), followed by the boss, **the Gloam Warden**. The Warden telegraphs a cleave, a slam, projectile volleys and a
   charge. It enrages at 50% HP, calls adds and starts a void rain. Once it falls, a rift home opens.
@@ -123,3 +135,6 @@ Showcase URL parameters: `?scene=play`, `?scene=arena`, `?scene=boss`, `?scene=l
 ![Touch controls on a phone](docs/mobile.png)
 ![Editor: map](docs/editor-map.png)
 ![Editor: logic](docs/editor-logic.png)
+![Misty Pinewood](docs/pinewood.png)
+![Trolls and ogres](docs/trolls.png)
+![Pixel editor](docs/editor-pixels.png)

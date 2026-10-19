@@ -600,9 +600,25 @@ function buildMountains(theme, seed, colA, colB, haze, heightPx, jag) {
   const W = 900, H = 200, pb = new PixBuf(W, H);
   const pal = ramp([colA, colB]);
   const hz = hexToRgb(haze);
+  // pine-forest skyline: a rolling ridge covered in spiky conifer silhouettes
+  let pines = null;
+  if (jag === 'pines') {
+    seedRng(seed);
+    pines = new Float32Array(W);
+    for (let x = 0; x < W; x++) pines[x] = fbm(x * 0.004, 0.5, 3, seed) * 0.35;
+    for (let i = 0; i < W / 7; i++) {
+      const px = rand(0, W), hh = rand(0.3, 1), w = hh * rand(13, 19);
+      for (let x = Math.floor(px - w); x <= px + w; x++) {
+        if (x < 0 || x >= W) continue;
+        const t = 1 - Math.abs(x - px) / w, saw = ((Math.abs(x - px) * 1.3) % 4) * 0.025;   // branch tiers
+        pines[x] = Math.max(pines[x], 0.22 + hh * t * 0.62 - saw);
+      }
+    }
+  }
   for (let x = 0; x < W; x++) {
     let n = Math.pow(1 - Math.abs(fbm(x * 0.005, 0.5, 4, seed) * 2 - 1), 2.2) * 1.15;
-    if (jag) n = 1 - Math.abs(fbm(x * 0.01, 1.5, 3, seed) * 2 - 1) * 0.9;
+    if (jag === true) n = 1 - Math.abs(fbm(x * 0.01, 1.5, 3, seed) * 2 - 1) * 0.9;
+    if (pines) n = pines[x];
     const top = H - heightPx * (0.25 + n * 0.85);
     for (let y = Math.floor(top); y < H; y++) {
       const t = (y - top) / (H - top);
@@ -643,11 +659,109 @@ function buildFog(seed, hex) {
   return pb.toCanvas();
 }
 
+// ===== forest ===================================================================
+const PAL_PINE = ramp(['#0c1a16', '#132a22', '#1b3a2c', '#264c34', '#36623e', '#4f7c46']);
+const PAL_PINE_BARK = ramp(['#1e120c', '#33201a', '#4a2e22', '#64402e', '#80563c']);
+const RIM = hexToRgb('#d0904a');
+// A conifer like the reference: bare lower trunk, drooping tiers of needles with sky gaps,
+// warm sunset rim-light on the right edge.
+function pineTree(seed, W, H, bare, tierStep) {
+  seedRng(seed);
+  const pb = new PixBuf(W, H), cx = W / 2, top = 2, crownBottom = Math.floor(H * (1 - bare));
+  // trunk
+  for (let y = top; y < H; y++) {
+    const t = (y - top) / (H - top), w = Math.max(2, Math.round(1 + t * W * 0.16)) + (y > H - 4 ? (y - (H - 4)) * 2 : 0);
+    for (let x = Math.floor(cx - w / 2); x < Math.ceil(cx + w / 2); x++) {
+      const u = (x - (cx - w / 2)) / w;
+      let v = 0.25 + u * 0.55 + (vnoise(x * 0.9, y * 0.12, seed) - 0.5) * 0.45;
+      pb.set(x, y, rampDither(PAL_PINE_BARK, v, x, y));
+    }
+  }
+  // needle tiers from the top down
+  const tiers = Math.max(3, Math.floor((crownBottom - top) / tierStep));
+  for (let i = 0; i < tiers; i++) {
+    const y0 = top + i * tierStep + rand(-1, 1), k = (i + 1) / tiers;
+    const reach = (2 + k * (W / 2 - 3)) * rand(0.7, 1.05);
+    for (const s of [-1, 1]) {
+      const rx = reach * rand(0.75, 1), ry = tierStep * 0.7 + 1, ccx = cx + s * rx * 0.45, ccy = y0 + tierStep * 0.45;
+      for (let y = Math.floor(ccy - ry - 1); y <= ccy + ry + 2; y++) for (let x = Math.floor(ccx - rx); x <= ccx + rx; x++) {
+        const dx = (x - ccx) / rx, dy = (y - ccy - Math.abs(dx) * ry * 0.6) / ry;   // droop toward the tips
+        if (dx * dx + dy * dy > 1 - vnoise(x * 0.7, y * 0.7, seed + i) * 0.45) continue;
+        if (vnoise(x * 0.5, y * 0.9, seed + 7) > 0.78) continue;                     // gaps show the sky
+        const v = 0.55 - dy * 0.35 + (s > 0 ? 0.08 : -0.06) - k * 0.12 + (hash2(x, y, seed) - 0.5) * 0.2;
+        pb.set(x, y, rampDither(PAL_PINE, v, x, y));
+      }
+    }
+  }
+  // sunset rim light on right-facing edges
+  for (let y = 0; y < crownBottom + 4; y++) for (let x = Math.floor(cx); x < W; x++) if (pb.a(x, y) && !pb.a(x + 1, y) && hash2(x, y, seed + 3) < 0.55) pb.set(x, y, mixRgb(pb.get(x, y), RIM, 0.55));
+  pb.outline(0.4);
+  return pb.toCanvas();
+}
+function buildForest() {
+  ART.pines = { giant: [0, 1, 2].map(i => pineTree(900 + i, 58, 136, 0.42, 9)), tall: [0, 1, 2, 3].map(i => pineTree(910 + i, 36, 80, 0.2, 7)), young: [0, 1, 2].map(i => pineTree(920 + i, 20, 40, 0.08, 5)) };
+  ART.mushroomRed = asciiSprite([
+    '..KKKK..', '.KRRWRK.', 'KRWRRRRK', 'KRRRRWRK', '.KKSSKK.', '...SS...', '...SS...', '..KSSK..',
+  ], { K: '#3a1410', R: '#d23a2a', W: '#f4ece0', S: '#e8dcc8' });
+  const MOSS = ramp(['#1e2a14', '#2c3e1a', '#3e5622', '#57722c', '#7a9438', '#a6bc50']);
+  ART.moss = [0, 1, 2].map(i => blobTree(940 + i, { w: 20, h: 11, trunkTop: 99, trunkW: 0, cy: 7, blobs: 5, spread: 4, squash: 0.45, rmin: 3, rmax: 5, vstretch: 0.7, pal: MOSS, flecks: { n: 4, c: ['#c8d870', '#a6bc50'] } }));
+  // fallen log: a bark cylinder with a ring-cut end and moss on top
+  ART.log = (() => {
+    const W = 30, H = 12, pb = new PixBuf(W, H), bark = PAL_PINE_BARK, ringC = ramp(['#6a4a30', '#a07a4e', '#c8a06a']);
+    for (let y = 0; y < H; y++) for (let x = 4; x < W; x++) {
+      const dy = (y - 6) / 5; if (Math.abs(dy) > 1) continue;
+      let c = rampDither(bark, 0.7 - dy * 0.45 + (vnoise(x * 0.25, y * 1.2, 5) - 0.5) * 0.4, x, y);
+      if (dy < -0.55 && vnoise(x * 0.4, 2, 6) > 0.45) c = MOSS[3 + (x % 2)];
+      pb.set(x, y, c);
+    }
+    for (let y = 0; y < H; y++) for (let x = 0; x < 9; x++) {
+      const dx = (x - 4) / 3.2, dy = (y - 6) / 5, d = Math.hypot(dx, dy); if (d > 1) continue;
+      pb.set(x, y, d > 0.82 ? bark[1] : rampDither(ringC, 0.6 - (Math.floor(d * 4) % 2) * 0.35, x, y));
+    }
+    return pb.outline(0.4).toCanvas();
+  })();
+  ART.stump = (() => {
+    const W = 16, H = 13, pb = new PixBuf(W, H);
+    for (let y = 3; y < H; y++) for (let x = 1; x < W - 1; x++) { const u = (x - 1) / (W - 2); const flare = y > H - 3 ? 1 : 0; if (x < 2 - flare || x > W - 3 + flare) continue; pb.set(x, y, rampDither(PAL_PINE_BARK, 0.25 + u * 0.55 + (vnoise(x, y * 0.3, 8) - 0.5) * 0.3, x, y)); }
+    for (let y = 0; y < 7; y++) for (let x = 1; x < W - 1; x++) { const dx = (x - 7.5) / 6.5, dy = (y - 3.5) / 3; const d = Math.hypot(dx, dy); if (d > 1) continue; pb.set(x, y, hexToRgb(Math.floor(d * 5) % 2 ? '#a07a4e' : '#c8a06a')); }
+    return pb.outline(0.4).toCanvas();
+  })();
+  ART.sunIcon = asciiSprite(['...Y...', '.Y.Y.Y.', '..YWY..', 'YYWWWYY', '..YWY..', '.Y.Y.Y.', '...Y...'], { Y: '#ffc860', W: '#fff4d0' });
+}
+
+// ===== pixel-data sprites (world.sprites — editable in the editor's pixel editor) ====
+// { w, h, pal: ['#rrggbb', …], rows: ['..01..', …] }  '.' = transparent, '0'-'9','a'-'z' = palette index
+ART.custom = {}; ART.customF = {};
+function spriteFromData(s) {
+  const pb = new PixBuf(Math.max(1, s.w), Math.max(1, s.h));
+  for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
+    const ch = (s.rows[y] || '')[x]; if (!ch || ch === '.') continue;
+    const c = s.pal[parseInt(ch, 36)]; if (c) pb.set(x, y, hexToRgb(c));
+  }
+  return pb.toCanvas();
+}
+function buildCustomSprites(sprites) {
+  ART.custom = {}; ART.customF = {};
+  for (const id in sprites || {}) { try { ART.custom[id] = spriteFromData(sprites[id]); ART.customF[id] = flipH(ART.custom[id]); } catch (e) { /* skip broken sprite */ } }
+}
+// turn any canvas into editable pixel data (max 36 colours)
+function canvasToSprite(canvas) {
+  const w = canvas.width, h = canvas.height, d = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+  const count = new Map();
+  for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 100) { const k = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2]; count.set(k, (count.get(k) || 0) + 1); }
+  const pal = [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 36).map(e => e[0]);
+  const near = k => { let best = 0, bd = 1e9; pal.forEach((p, i) => { const dd = ((p >> 16) - (k >> 16)) ** 2 + (((p >> 8) & 255) - ((k >> 8) & 255)) ** 2 + ((p & 255) - (k & 255)) ** 2; if (dd < bd) { bd = dd; best = i; } }); return best; };
+  const rows = [];
+  for (let y = 0; y < h; y++) { let r = ''; for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; r += d[i + 3] > 100 ? near((d[i] << 16) | (d[i + 1] << 8) | d[i + 2]).toString(36) : '.'; } rows.push(r); }
+  return { w, h, pal: pal.map(k => '#' + k.toString(16).padStart(6, '0')), rows };
+}
+
 function buildArt() {
   buildWeapons();
   buildMonsters();
   buildFlora();
   buildProps();
+  buildForest();
   applySprites();
   ART.icons = {};
 }

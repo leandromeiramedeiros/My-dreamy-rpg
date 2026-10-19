@@ -18,7 +18,7 @@ const sToView = (sx, sy) => [sx - camX + RW / 2, sy - camY + RH / 2];
 function prepTheme(m) {
   const th = m.theme;
   if (th._bg) return;
-  const jag = m.themeId === 'ruins';
+  const jag = m.themeId === 'ruins' ? true : th.pines ? 'pines' : false;
   th._bg = {
     sky: buildSky(th),
     far: buildMountains(th, th.seed, th.mtnFar[0], th.mtnFar[1], th.mtnFar[2], 110, jag),
@@ -53,7 +53,7 @@ function initPost() {
   g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(10,4,24,0.55)');
   v.x.fillStyle = g; v.x.fillRect(0, 0, RW, RH);
   VIGNETTE = v.c;
-  for (const [k, top, bot] of [['vale', '#ff9ad0', '#6a8cff'], ['ruins', '#ff3a6a', '#3a1a8a']]) {
+  for (const [k, top, bot] of [['vale', '#ff9ad0', '#6a8cff'], ['ruins', '#ff3a6a', '#3a1a8a'], ['forest', '#ff9a58', '#4a6ab0']]) {
     const c = makeCanvas(RW, RH), gg = c.x.createLinearGradient(0, 0, 0, RH);
     gg.addColorStop(0, top); gg.addColorStop(1, bot);
     c.x.fillStyle = gg; c.x.fillRect(0, 0, RW, RH); GRADE[k] = c.c;
@@ -70,12 +70,14 @@ function updateAmbient(dt) {
   const want = m.themeId === 'vale' ? 34 : 40;
   while (G.amb.length < want) {
     const a = Math.random() * 6.28, r = frand(1, 9);
-    if (m.themeId === 'vale') G.amb.push({ k: 'fly', x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r, z: frand(0.5, 3), ph: frand(0, 6.28), life: frand(6, 12), t: 0 });
+    if (m.themeId === 'forest') G.amb.push({ k: 'mote', x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r, z: frand(0.3, 4), ph: frand(0, 6.28), life: frand(5, 10), t: 0 });
+    else if (m.themeId === 'vale') G.amb.push({ k: 'fly', x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r, z: frand(0.5, 3), ph: frand(0, 6.28), life: frand(6, 12), t: 0 });
     else G.amb.push({ k: 'ember', x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r, z: frand(0, 1), ph: frand(0, 6.28), life: frand(3, 7), t: 0 });
   }
   for (const f of G.amb) {
     f.t += dt;
     if (f.k === 'fly') { f.x += Math.cos(f.ph + G.t * 0.7) * dt * 0.4; f.y += Math.sin(f.ph * 1.3 + G.t * 0.5) * dt * 0.4; f.z += Math.sin(f.ph + G.t * 1.7) * dt * 0.3; }
+    else if (f.k === 'mote') { f.z += Math.sin(f.ph + G.t * 0.6) * dt * 0.15; f.x += dt * 0.12; f.y += Math.cos(f.ph + G.t * 0.4) * dt * 0.1; }
     else { f.z += dt * 0.9; f.x += Math.sin(f.ph + G.t) * dt * 0.3; }
     if (f.t > f.life || dist(f.x, f.y, p.x, p.y) > 12) f.dead = true;
   }
@@ -103,7 +105,7 @@ function drawScene() {
   // ---- sky & distant world ----
   const pxs = clamp(-80 - camX * 0.02, -160, 0), pys = clamp(-50 - camY * 0.02, -90, 0);
   ctx.drawImage(bg.sky.c, Math.round(pxs), Math.round(pys));
-  for (const s of bg.sky.stars) {
+  if (!th.moon.sun) for (const s of bg.sky.stars) {
     const a = 0.35 + 0.65 * Math.max(0, Math.sin(G.t * s.s * 2 + s.p));
     ctx.fillStyle = `rgba(255,248,255,${a * 0.9})`;
     const x = Math.round(s.x + pxs), y = Math.round(s.y + pys);
@@ -114,7 +116,8 @@ function drawScene() {
   const mg = ctx.createRadialGradient(mx, my, mo.r * 0.6, mx, my, mo.r * 3.2);
   mg.addColorStop(0, rgba(mo.glow, 0.45)); mg.addColorStop(1, rgba(mo.glow, 0));
   ctx.fillStyle = mg; ctx.fillRect(mx - mo.r * 4, my - mo.r * 4, mo.r * 8, mo.r * 8);
-  drawMoon(ctx, mx, my, mo.r, mo.col);
+  if (mo.sun) { ctx.fillStyle = mo.col; ctx.beginPath(); ctx.arc(Math.round(mx), Math.round(my), mo.r, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff6e0'; ctx.beginPath(); ctx.arc(Math.round(mx), Math.round(my), mo.r * 0.7, 0, Math.PI * 2); ctx.fill(); }
+  else drawMoon(ctx, mx, my, mo.r, mo.col);
   if (m.themeId === 'vale') drawMoon(ctx, mx - 70, my + 22, 7, '#d6e6ff');
   const farY = RH * 0.5 - 120 - camY * 0.04, nearY = RH * 0.55 - 100 - camY * 0.08;
   ctx.drawImage(bg.far, Math.round(-200 - camX * 0.05), Math.round(farY));
@@ -128,7 +131,17 @@ function drawScene() {
     const x = ((i * 170 - camX * 0.15 + G.t * (4 + i * 1.5)) % 760) - 140, y = 40 + i * 30 - camY * 0.1;
     ctx.globalAlpha = 0.85; ctx.drawImage(c, Math.round(x), Math.round(y)); ctx.globalAlpha = 1;
   });
-  // god rays
+  // god rays: dawn shafts from the low sun, slanting down to the right through the mist
+  if (th.rays) {
+    ctx.globalCompositeOperation = 'lighter';
+    for (let k = 0; k < 7; k++) {
+      const a = th.rays.alpha * (0.6 + 0.4 * Math.sin(G.t * 0.35 + k * 1.3)), x0 = mx - 90 + k * 28, w0 = 6 + (k % 3) * 5;
+      const g = ctx.createLinearGradient(x0, my, x0 + 220, RH);
+      g.addColorStop(0, `rgba(255,214,160,${a})`); g.addColorStop(1, 'rgba(255,214,160,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0, my); ctx.lineTo(x0 + w0, my); ctx.lineTo(x0 + 260 + w0 * 4, RH + 40); ctx.lineTo(x0 + 190, RH + 40); ctx.closePath(); ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
   if (m.themeId === 'vale') {
     ctx.globalCompositeOperation = 'lighter';
     for (let k = 0; k < 5; k++) {
@@ -178,6 +191,7 @@ function drawScene() {
   if (!p.dead || G.state === 'dead') list.push({ kind: 'player', key: p.x + p.y + p.z * 0.35 + 0.01 });
   for (const e of G.enemies) list.push({ kind: 'enemy', e, key: e.x + e.y + 0.01 });
   for (const pr of G.projs) list.push({ kind: 'proj', pr, key: pr.x + pr.y + 0.3 });
+  for (const c of G.critters || []) list.push({ kind: 'critter', c, key: c.x + c.y + c.z * 0.35 });
   for (const e of G.effects) if (e.type === 'ghost') list.push({ kind: 'ghost', e, key: e.x + e.y });
   if (p.buffs.orbit) for (let k = 0; k < 3; k++) { const a = G.t * 4 + k * Math.PI * 2 / 3; list.push({ kind: 'orb', x: p.x + Math.cos(a) * 1.4, y: p.y + Math.sin(a) * 1.4, z: p.z + 1.2, key: p.x + Math.cos(a) * 1.4 + p.y + Math.sin(a) * 1.4 + p.z * 0.35 }); }
   list.sort((a, b) => a.key - b.key);
@@ -190,8 +204,10 @@ function drawScene() {
   drawParticles(ctx, lights);
 
   // ---- fog & mist ----
-  drawFog(ctx, bg.fog, 256, 0.5, 7, 2.5, m.themeId === 'vale' ? 0.15 : 0.18);
-  drawFog(ctx, bg.fog2, 384, 0.8, -4, 1.2, m.themeId === 'vale' ? 0.07 : 0.1);
+  const forest = m.themeId === 'forest';
+  drawFog(ctx, bg.fog, 256, 0.5, 7, 2.5, forest ? 0.24 : m.themeId === 'vale' ? 0.15 : 0.18);
+  drawFog(ctx, bg.fog2, 384, 0.8, -4, 1.2, forest ? 0.09 : m.themeId === 'vale' ? 0.07 : 0.1);
+  if (forest) drawFog(ctx, bg.fog, 512, 1.1, 3, 0.6, 0.14);   // heavy low mist banks
 
   // ---- lighting ----
   for (const L of m.lights) lights.push(L);
@@ -328,6 +344,7 @@ function drawItem(ctx, it, lights) {
     const [vx, vy] = worldToView(it.x, it.y, it.z);
     let img = it.img;
     if (it.grass) img = ART.grass[Math.sin(G.t * 1.8 + it.sway) > 0 ? 1 : 0];
+    if (it.beam) { drawSunbeam(ctx, vx, vy, it); return; }
     if (it.flip) { ctx.save(); ctx.translate(Math.round(vx), 0); ctx.scale(-1, 1); ctx.drawImage(img, -Math.round(it.ax), Math.round(vy - it.ay)); ctx.restore(); }
     else ctx.drawImage(img, Math.round(vx - it.ax), Math.round(vy - it.ay));
     if (it.brazier) drawFlame(ctx, vx, vy - 9, '#c77bff', '#ffd6ff');
@@ -337,6 +354,7 @@ function drawItem(ctx, it, lights) {
   if (it.kind === 'fall') { drawFall(ctx, it.f, false); return; }
   if (it.kind === 'player') { drawPlayer(ctx, p, lights); return; }
   if (it.kind === 'enemy') { drawEnemy(ctx, it.e, lights); return; }
+  if (it.kind === 'critter') { drawCritter(ctx, it.c); return; }
   if (it.kind === 'proj') { drawProj(ctx, it.pr, lights); return; }
   if (it.kind === 'orb') {
     const [vx, vy] = worldToView(it.x, it.y, it.z);
@@ -352,6 +370,27 @@ function drawItem(ctx, it, lights) {
   }
 }
 
+function drawSunbeam(ctx, vx, vy, it) {
+  // a soft shaft of dawn light falling onto this spot
+  const a = 0.09 + 0.03 * Math.sin(G.t * 0.7 + it.x);
+  ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createLinearGradient(vx - 90, vy - 220, vx, vy);
+  g.addColorStop(0, 'rgba(255,220,170,0)'); g.addColorStop(0.7, `rgba(255,220,170,${a})`); g.addColorStop(1, `rgba(255,236,190,${a * 1.6})`);
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(vx - 110, vy - 240); ctx.lineTo(vx - 80, vy - 240); ctx.lineTo(vx + 14, vy + 4); ctx.lineTo(vx - 18, vy + 6); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = `rgba(255,226,170,${a * 0.9})`; ctx.beginPath(); ctx.ellipse(vx, vy, 22, 10, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+  if (Math.random() < 0.08) G.parts.push({ x: it.x + frand(-0.5, 0.5), y: it.y + frand(-0.5, 0.5), z: frand(0.5, 3), vx: 0.1, vy: 0, vz: 0.1, life: 2, t: 0, col: '#ffe6b0', grav: 0, size: 1, glow: true });
+}
+function drawCritter(ctx, c) {
+  const img = c.face < 0 ? ART.customF[c.type] : ART.custom[c.type];
+  if (!img) return;
+  const [vx, vy] = worldToView(c.x, c.y, c.z);
+  ctx.fillStyle = 'rgba(20,8,40,0.28)'; ctx.beginPath(); ctx.ellipse(Math.round(vx), Math.round(vy), img.width * 0.35, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+  const lift = c.hop > 0 ? Math.round(Math.sin(c.hop * Math.PI) * (c.type === 'rabbit' ? 5 : 2)) : 0;
+  const ear = c.state === 'idle' && Math.sin(G.t * 3 + c.seed) > 0.95 ? 1 : 0;   // a little twitch
+  ctx.drawImage(img, Math.round(vx - img.width / 2), Math.round(vy - img.height + 1 - lift - ear));
+}
 function glowDot(ctx, vx, vy, col, core, r) {
   ctx.globalCompositeOperation = 'lighter';
   ctx.fillStyle = rgba(col, 0.45); ctx.fillRect(Math.round(vx - r - 1), Math.round(vy - r), r * 2 + 3, r * 2 + 1); ctx.fillRect(Math.round(vx - r), Math.round(vy - r - 1), r * 2 + 1, r * 2 + 3);
@@ -463,7 +502,23 @@ function drawEnemy(ctx, e, lights) {
   if (spawnA <= 0.05) return;
   ctx.globalAlpha = spawnA;
   let img, white;
-  if (e.type === 'slime') {
+  const def = ENEMY[e.type] || {}, cs = def.sprite && ART.custom[def.sprite];
+  if (cs) {
+    // pixel-editor sprite (sprites face right) with behaviour-driven motion
+    const base = e.face < 0 ? ART.customF[def.sprite] : cs;
+    let ox = 0, oy = 0, sq = 0;
+    if (def.ai === 'hopper') { const hop = e.state === 'chase' ? Math.max(0, Math.sin(e.anim * 6)) : 0; sq = (e.squash > 0 ? e.squash : 0) + (e.state === 'wind' ? 0.15 : 0) - hop * 0.12; oy = -hop * 5; }
+    else if (def.ai === 'shooter') oy = -(10 + Math.sin(e.anim * 3) * 3);
+    else if (e.state === 'chase') oy = -(Math.floor(e.anim * 6) % 2);
+    else if (e.state === 'wind') { ox = -e.face * 1; oy = -1; }
+    else if (e.state === 'strike' || e.state === 'lunge') ox = e.face * 2;
+    img = base;
+    const w = Math.round(base.width * (1 + sq)), hh = Math.round(base.height * (1 - sq));
+    const dx = Math.round(vx - w / 2 + ox), dy = Math.round(vy - hh + 1 + oy);
+    ctx.drawImage(e.flash > 0 ? silOf(base, '#ffffff') : base, dx, dy, w, hh);
+    if (e.state === 'wind' && def.ai === 'brute') { ctx.globalAlpha = spawnA * (0.25 + 0.25 * Math.sin(e.anim * 30)); ctx.drawImage(silOf(base, '#ff5040'), dx, dy, w, hh); ctx.globalAlpha = spawnA; }
+    vy += oy;
+  } else if (e.type === 'slime') {
     const moving = e.state === 'chase', hop = moving ? Math.max(0, Math.sin(e.anim * 6)) : 0;
     const wind = e.state === 'wind' ? Math.sin(e.anim * 40) * 0.08 + 0.15 : 0;
     const sq = (e.squash > 0 ? e.squash : 0) + wind - hop * 0.12;
@@ -596,6 +651,8 @@ function drawParticles(ctx, lights) {
       ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(220,255,160,${a})`; ctx.fillRect(Math.round(vx), Math.round(vy), 1, 1);
       ctx.fillStyle = `rgba(200,255,140,${a * 0.35})`; ctx.fillRect(Math.round(vx) - 1, Math.round(vy), 3, 1); ctx.fillRect(Math.round(vx), Math.round(vy) - 1, 1, 3);
       if (a > 0.5) lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: 14, col: '#d8ff9a', a: a * 0.6 });
+    } else if (f.k === 'mote') {
+      ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,226,180,${fade * (0.35 + 0.3 * Math.sin(G.t * 2 + f.ph))})`; ctx.fillRect(Math.round(vx), Math.round(vy), 1, 1);
     } else {
       ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,120,170,${fade * 0.8})`; ctx.fillRect(Math.round(vx), Math.round(vy), 1, 1);
     }
