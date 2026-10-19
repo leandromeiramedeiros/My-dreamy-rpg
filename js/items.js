@@ -1,0 +1,388 @@
+'use strict';
+// ---------------------------------------------------------------------------
+// Items, loot, gems, XP and save (DESIGN §3–4). ITEMS (data.js) stay the gear
+// FAMILIES that decide skills + sprites; BASES are their tiers. An equipped or
+// dropped thing is an item INSTANCE:
+//   { uid, base, slot, rarity, ilvl, reqLvl, affixes: [{ stat, v }], sockets: [null, 'ruby_2'], unique? }
+// Loaded by index.html and editor.html right after data.js: no hud/render/main deps at load time.
+// ---------------------------------------------------------------------------
+const SLOTS = ['weapon', 'head', 'chest', 'boots'];
+const RARITY = {
+  common:    { i: 0, name: 'Common',    col: '#d8d8d8', mult: 1.00, affixes: 0, sockets: [0, 1] },
+  uncommon:  { i: 1, name: 'Uncommon',  col: '#6ee36e', mult: 1.15, affixes: 1, sockets: [1, 1] },
+  rare:      { i: 2, name: 'Rare',      col: '#5aa8ff', mult: 1.35, affixes: 2, sockets: [1, 2] },
+  epic:      { i: 3, name: 'Epic',      col: '#c070ff', mult: 1.60, affixes: 3, sockets: [2, 3] },
+  legendary: { i: 4, name: 'Legendary', col: '#ffb030', mult: 1.90, affixes: 3, sockets: [3, 3], unique: 1 },
+  mythic:    { i: 5, name: 'Mythic',    col: '#ff4f7a', mult: 2.30, affixes: 4, sockets: [3, 3], unique: 1.4 },
+};
+const RARITIES = Object.keys(RARITY);
+function mixHex(a, b, k) { const A = hexToRgb(a), B = hexToRgb(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * k).toString(16).padStart(2, '0')).join(''); }
+// mythic colour-cycles; everything else is its table colour
+const rarityCol = (r, t = G.t) => r === 'mythic' ? mixHex('#ff4f7a', '#ffb0f0', 0.5 + 0.5 * Math.sin(t * 3)) : RARITY[r].col;
+
+// ===== bases: 12 families x 5 tiers (tier 0..4). Existing family ids sit at tier 1 (L6). =====
+const TIER_REQ = [1, 6, 14, 22, 28], TIER_DMG = [0.7, 1, 1.5, 2.1, 2.8];
+const TIER_PCT = [0.6, 1, 1.25, 1.5, 1.8], TIER_FLAT = [0.5, 1, 2, 3.2, 4.5];
+const FAMILY_TIERS = {
+  dawnblade: ['rustyblade:Rusty Blade', 'dawnblade', 'sunforged:Sunforged Blade', 'auroraedge:Aurora Edge', 'dawneternal:Dawn Eternal'],
+  starfall: ['willowwand:Willow Wand', 'starfall', 'cometrod:Comet Rod', 'nebulasceptre:Nebula Sceptre', 'nighteternal:Night Eternal'],
+  moonbow: ['hunterbow:Hunter\'s Bow', 'moonbow', 'silverwing:Silverwing Bow', 'eclipsebow:Eclipse Longbow', 'mooneternal:Moon Eternal'],
+  knighthelm: ['ironcap:Iron Cap', 'knighthelm', 'sunguard:Sunguard Helm', 'auroravisor:Aurora Visor', 'crownofdawn:Crown of Dawn'],
+  arcanecowl: ['novicehood:Novice Hood', 'arcanecowl', 'starweave:Starweave Cowl', 'astralcirclet:Astral Circlet', 'crownofstars:Crown of Stars'],
+  wardenhood: ['rangercap:Ranger Cap', 'wardenhood', 'mossmantle:Mossmantle Hood', 'thornwarden:Thornwarden Hood', 'crownofroots:Crown of Roots'],
+  knightplate: ['ironmail:Iron Mail', 'knightplate', 'sunplate:Sunforged Plate', 'auroraplate:Aurora Plate', 'dawnaegis:Aegis of Dawn'],
+  dreamrobe: ['linenrobe:Linen Robe', 'dreamrobe', 'starwoven:Starwoven Robe', 'nebularobe:Nebula Vestments', 'dreamshroud:Eternal Dreamshroud'],
+  stalkerjacket: ['jerkin:Leather Jerkin', 'stalkerjacket', 'nightcoat:Nightstalker Coat', 'shadowweave:Shadowweave Jacket', 'eclipsegarb:Eclipse Garb'],
+  knightgreaves: ['ironboots:Iron Boots', 'knightgreaves', 'sungreaves:Sunforged Greaves', 'auroragreaves:Aurora Greaves', 'dawnstriders:Dawnstriders'],
+  clothsandals: ['ropesandals:Rope Sandals', 'clothsandals', 'mistwalkers:Mistwalkers', 'skystep:Skystep Sandals', 'cloudsteps:Eternal Cloudsteps'],
+  stalkershoes: ['softshoes:Soft Shoes', 'stalkershoes', 'quietstep:Quietstep Boots', 'shadowstep:Shadowstep Boots', 'eclipsetreads:Eclipse Treads'],
+};
+const BASES = {};
+for (const slot of SLOTS) for (const fam of ITEMS[slot]) FAMILY_TIERS[fam.id].forEach((s, tier) => {
+  const [id, name] = s.includes(':') ? s.split(':') : [s, fam.name];
+  BASES[id] = { id, name, slot, family: fam.id, tier, reqLvl: TIER_REQ[tier], icon: fam.icon, color: fam.color, kind: fam.kind };
+});
+const familyOf = base => (BASES[base] || {}).family;
+const PCT_STATS = { def: 1, power: 1, crit: 1, haste: 1, speed: 1, critDmg: 1, cdr: 1, skillDmg: 1, wdmg: 1 };
+function baseStats(b) {
+  const fam = item(b.slot, b.family);
+  if (b.slot === 'weapon') return { dmg: fam.basic.dmg * TIER_DMG[b.tier] };
+  const s = {};
+  for (const k in fam.stats) s[k] = fam.stats[k] * (PCT_STATS[k] ? TIER_PCT : TIER_FLAT)[b.tier];
+  return s;
+}
+
+// ===== affixes + uniques =========================================================
+// value at item level L = (a + b*L) * roll(0.6..1)
+const AFFIX = { hp: [25, 6], mp: [15, 3], def: [0.02, 0.002], power: [0.03, 0.004], crit: [0.02, 0.0015], haste: [0.03, 0.003],
+  regen: [1, 0.25], mpRegen: [0.8, 0.15], speed: [0.1, 0.01], critDmg: [0.08, 0.008], cdr: [0.02, 0.002], skillDmg: [0.04, 0.004] };
+const STAT_NAME = { dmg: 'Damage', hp: 'HP', mp: 'MP', def: 'Defence', power: 'Power', crit: 'Crit chance', haste: 'Attack speed', regen: 'HP/s',
+  mpRegen: 'MP/s', speed: 'Move speed', critDmg: 'Crit damage', cdr: 'Cooldowns', skillDmg: 'Skill damage', wdmg: 'Weapon damage' };
+const STAT_ORDER = ['dmg', 'wdmg', 'hp', 'mp', 'def', 'power', 'skillDmg', 'crit', 'critDmg', 'haste', 'cdr', 'regen', 'mpRegen', 'speed'];
+function fmtStat(k, v, sign = true) {
+  const sg = sign ? (v >= 0 ? '+' : '-') : '', a = Math.abs(v);
+  if (k === 'dmg') return `${sign && v < 0 ? '-' : ''}${Math.round(a)} ${STAT_NAME[k]}`;
+  if (k === 'speed') return `${sg}${Math.round(a / 3.7 * 100)}% ${STAT_NAME[k]}`;
+  if (k === 'cdr') return `${sign ? (v >= 0 ? '-' : '+') : ''}${Math.round(a * 100)}% ${STAT_NAME[k]}`;
+  if (PCT_STATS[k]) return `${sg}${Math.round(a * 100)}% ${STAT_NAME[k]}`;
+  return `${sg}${a < 10 ? +a.toFixed(1) : Math.round(a)} ${STAT_NAME[k]}`;
+}
+const UNIQUES = {
+  sunheart: { name: 'Sunheart', stats: { power: 0.12, crit: 0.05 } },
+  dreamwell: { name: 'Dreamwell', stats: { mp: 150, mpRegen: 4, cdr: 0.08 } },
+  starsoul: { name: 'Starsoul', stats: { critDmg: 0.5, skillDmg: 0.1 } },
+  wardensoath: { name: 'Warden\'s Oath', stats: { hp: 400, def: 0.06, regen: 6 } },
+  swiftwind: { name: 'Swiftwind', stats: { haste: 0.15, speed: 0.4 } },
+};
+
+// ===== gems (DESIGN §4.3) ==========================================================
+const GEM_GRADES = ['Chipped', 'Flawed', 'Clear', 'Brilliant', 'Radiant'];
+const G5 = a => g => a[g - 1];
+const GEMS = {
+  ruby: { name: 'Ruby', col: '#ff4a5a', el: 'fire', arm: g => ({ hp: G5([30, 60, 100, 160, 240])(g) }), wpn: g => ({ wdmg: G5([0.04, 0.07, 0.1, 0.14, 0.2])(g) }), amp: 'Fire skills' },
+  sapphire: { name: 'Sapphire', col: '#4a8cff', el: 'frost', arm: g => ({ mp: G5([20, 35, 55, 80, 110])(g), mpRegen: G5([0.5, 1, 1.5, 2.2, 3])(g) }), wpn: g => ({ cdr: G5([0.02, 0.035, 0.05, 0.07, 0.1])(g) }), amp: 'Frost skills' },
+  emerald: { name: 'Emerald', col: '#3ad67a', el: 'nature', arm: g => ({ regen: G5([1, 2, 3.5, 5, 7])(g) }), wpn: g => ({ haste: G5([0.03, 0.05, 0.08, 0.11, 0.15])(g) }), amp: 'Nature skills, heals' },
+  topaz: { name: 'Topaz', col: '#ffc83a', el: 'lightning', arm: g => ({ crit: G5([0.01, 0.02, 0.03, 0.045, 0.06])(g) }), wpn: g => ({ critDmg: G5([0.08, 0.14, 0.2, 0.3, 0.4])(g) }), amp: 'Lightning skills, +chain' },
+  amethyst: { name: 'Amethyst', col: '#b46aff', el: 'arcane', arm: g => ({ power: G5([0.02, 0.04, 0.06, 0.09, 0.12])(g) }), wpn: g => ({ skillDmg: G5([0.04, 0.07, 0.1, 0.14, 0.2])(g) }), amp: 'Arcane skills' },
+  diamond: { name: 'Diamond', col: '#e8f4ff', el: null, arm: g => ({ def: G5([0.01, 0.02, 0.03, 0.045, 0.06])(g) }),
+    wpn: g => { const v = G5([0.01, 0.015, 0.02, 0.03, 0.04])(g); return { power: v, def: v, crit: v / 2, haste: v }; }, amp: 'Ultimate cooldown' },
+};
+const GEM_TYPES = Object.keys(GEMS);
+const gemParse = id => { const [t, g] = String(id).split('_'); return GEMS[t] && +g >= 1 && +g <= 5 ? { type: t, grade: +g, def: GEMS[t] } : null; };
+const gemName = id => { const g = gemParse(id); return g ? `${GEM_GRADES[g.grade - 1]} ${g.def.name}` : '?'; };
+const gemStats = (id, slot) => { const g = gemParse(id); return g ? (slot === 'weapon' ? g.def.wpn : g.def.arm)(g.grade) : {}; };
+// skill amplification (any slot): grades summed per gem type across all equipped sockets
+const EL_GEM = { fire: 'ruby', frost: 'sapphire', nature: 'emerald', lightning: 'topaz', arcane: 'amethyst' };
+function gemAmp(p) {
+  const a = {}; for (const t of GEM_TYPES) a[t] = 0;
+  for (const s of SLOTS) for (const id of (p.equip[s] || { sockets: [] }).sockets) { const g = id && gemParse(id); if (g) a[g.type] += g.grade; }
+  return a;
+}
+// +3% per grade to that element's skills. M4 stubs: ruby burn on fireball/meteor, sapphire longer slows + nova radius,
+// emerald poison on hit, amethyst area radius — the hooks are elementMul / p.amp, wired at the call sites later.
+const elementMul = (p, el) => 1 + 0.03 * ((EL_GEM[el] && p.amp && p.amp[EL_GEM[el]]) || 0);
+const ultCdr = p => Math.min(0.4, 0.03 * ((p.amp && p.amp.diamond) || 0));
+const chainBonus = p => Math.floor(((p.amp && p.amp.topaz) || 0) / 2);
+const healMul = p => 1 + 0.04 * ((p.amp && p.amp.emerald) || 0);
+
+// ===== instances ====================================================================
+let UID = 0;
+const newUid = () => 'i_' + (++UID);
+const rarityAtLeast = (r, min) => RARITY[r].i >= RARITY[min].i;
+function makeItem(base, rarity = 'common', ilvl, o = {}) {
+  const b = BASES[base], R = RARITY[rarity];
+  ilvl = clamp(Math.round(ilvl || b.reqLvl), 1, 30);
+  const it = { uid: newUid(), base, slot: b.slot, rarity, ilvl, reqLvl: clamp(Math.max(b.reqLvl, ilvl - 2), 1, 30), affixes: [], sockets: [] };
+  const pool = Object.keys(AFFIX).filter(k => !(b.slot !== 'weapon' && k === 'skillDmg' && Math.random() < 0.5));
+  for (let n = 0; n < R.affixes && pool.length; n++) {
+    const k = pool.splice((Math.random() * pool.length) | 0, 1)[0], [a, pl] = AFFIX[k];
+    let v = (a + pl * ilvl) * (0.6 + Math.random() * 0.4) * (1 + 0.08 * R.i);
+    v = PCT_STATS[k] ? Math.round(v * 1000) / 1000 : (v < 10 ? Math.round(v * 10) / 10 : Math.round(v));
+    it.affixes.push({ stat: k, v });
+  }
+  if (R.unique) { const u = Object.keys(UNIQUES); it.unique = u[(Math.random() * u.length) | 0]; }
+  const [s0, s1] = R.sockets, ns = o.sockets != null ? o.sockets : (rarity === 'common' ? (Math.random() < 0.25 ? 1 : 0) : s0 + ((Math.random() * (s1 - s0 + 1)) | 0));
+  for (let i = 0; i < ns; i++) it.sockets.push(null);
+  return it;
+}
+// base + affix + unique + gem stats of one instance (summed)
+function itemParts(it) {
+  const b = BASES[it.base], R = RARITY[it.rarity], k = R.mult * (1 + 0.015 * Math.max(0, it.ilvl - b.reqLvl)), base = {};
+  const bs = baseStats(b); for (const st in bs) base[st] = st === 'dmg' ? Math.round(bs[st] * k) : bs[st] * k;
+  const uniq = {}; if (it.unique && UNIQUES[it.unique]) { const U = UNIQUES[it.unique].stats; for (const st in U) uniq[st] = U[st] * (R.unique || 1); }
+  return { base, uniq };
+}
+function itemStats(it) {
+  const s = {}, add = (k, v) => { s[k] = (s[k] || 0) + v; }, { base, uniq } = itemParts(it);
+  for (const k in base) add(k, base[k]);
+  for (const a of it.affixes) add(a.stat, a.v);
+  for (const k in uniq) add(k, uniq[k]);
+  for (const g of it.sockets) if (g) { const gs = gemStats(g, it.slot); for (const k in gs) add(k, gs[k]); }
+  return s;
+}
+const itemName = it => BASES[it.base].name;
+const salvageValue = it => Math.round([1, 3, 8, 20, 50, 120][RARITY[it.rarity].i] * (1 + it.ilvl / 10));
+// renderer hook for M2: what the hero visibly wears in a slot
+function equippedVisual(slot, p = G.player) {
+  const it = p && p.equip[slot]; if (!it) return null;
+  const b = BASES[it.base];
+  return { family: b.family, tier: b.tier, rarity: it.rarity, gems: it.sockets.filter(Boolean) };
+}
+
+// ===== icon routing: the ONE place to swap in js/icons.js (ICONS.*) later =============
+const itemIcon = it => icon(BASES[it.base].icon, BASES[it.base].color);
+const gemIcon = (type, grade) => icon('gem', GEMS[type].col);
+const miscIcon = name => icon(name, { potion: '#ff6a8a', dust: '#c7a8ff', chest: '#c08a5e', xp: '#b48aff' }[name] || '#ffffff');
+const skillIcon = id => icon(SKILLS[id].icon, SKILLS[id].color);
+function drawIcon(ctx, img, x, y, s) { ctx.imageSmoothingEnabled = false; ctx.drawImage(img, Math.round(x), Math.round(y), s, s); }
+function drawRarityFrame(ctx, x, y, s, rarity, t = G.t) {
+  const c = rarityCol(rarity, t), R = RARITY[rarity];
+  ctx.fillStyle = rgba(c, 0.10 + R.i * 0.03); ctx.fillRect(x, y, s, s);
+  ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, s - 2, s - 2);
+  if (R.i >= 4) { const k = (t * 0.6) % 1; ctx.fillStyle = rgba('#ffffff', 0.5); ctx.fillRect(x + 2 + Math.round((s - 6) * k), y + 2, 2, 2); ctx.fillRect(x + s - 4 - Math.round((s - 6) * k), y + s - 4, 2, 2); }
+}
+
+// ===== XP / levels (DESIGN §3) ===========================================================
+const MAX_LEVEL = 30;
+const xpToNext = L => Math.round(60 * Math.pow(L, 1.55));
+function gainXp(p, n) {
+  if (p.level >= MAX_LEVEL || n <= 0) return;
+  p.xp += n; text(p.x, p.y, p.z + 3.6, `+${n} XP`, '#c79bff');
+  let up = false;
+  while (p.level < MAX_LEVEL && p.xp >= xpToNext(p.level)) { p.xp -= xpToNext(p.level); p.level++; p.tp = (p.tp || 0) + 1; up = true; }
+  if (p.level >= MAX_LEVEL) p.xp = 0;
+  if (up) levelUpFx(p);
+}
+function levelUpFx(p) {
+  recalcStats(p, true);   // full heal
+  G.banner = { s: `LEVEL ${p.level}`, sub: '+4% HP  +3% damage  +1 talent point', t: 2.8, max: 2.8, lvl: true };
+  sfx('levelup'); shake(3);
+  fx({ type: 'pillar', x: p.x, y: p.y, col: '#ffe9a0', life: 0.8, r: 1.1 });
+  fx({ type: 'ring', x: p.x, y: p.y, r: 2.2, col: '#ffd35a', life: 0.6 });
+  burst(p.x, p.y, p.z + 1, 40, ['#fff6d6', '#ffd35a', '#c79bff', '#ffffff'], 3.5);
+}
+
+// ===== zone + enemy levels ===================================================================
+// world map records may carry "level": [min, max]; editor-made maps without it default to the full range
+const zoneLevel = (id = G.map && G.map.id) => { const l = G.world && G.world.maps[id] && G.world.maps[id].level; return Array.isArray(l) ? [+l[0] || 1, +l[1] || MAX_LEVEL] : [1, MAX_LEVEL]; };
+function enemyClass(type) { const d = ENEMY[type] || {}; return d.ai === 'boss' ? 'boss' : (d.elite || d.hp >= 1000) ? 'elite' : 'normal'; }
+// enemies track the hero inside the zone band; elites +2, bosses sit at the top of the band
+function enemyLevel(type) {
+  const [a, b] = zoneLevel(), c = enemyClass(type), L = G.player ? G.player.level : a;
+  return clamp(c === 'boss' ? b : L + (c === 'elite' ? 2 : 0), a, b);
+}
+const enemyHpMul = L => 0.6 * Math.pow(1.1, L - 1);
+const enemyDmgMul = L => 0.7 * Math.pow(1.06, L - 1);
+// kill XP as a fraction of the enemy level's bar: hp/1300 (capped), bosses two full levels
+function killXp(e) {
+  const d = ENEMY[e.type] || {}, c = enemyClass(e.type), k = c === 'boss' ? 2 : clamp((d.hp || 100) / 1300, 0.06, 1.2);
+  const gap = (G.player.level - e.lvl);   // grey-ish enemies give less
+  return Math.max(1, Math.round(xpToNext(e.lvl) * k * (gap > 2 ? Math.max(0.2, 1 - (gap - 2) * 0.2) : 1)));
+}
+
+// ===== loot rolls ===============================================================================
+const RARITY_W = { normal: [60, 28, 9, 2.5, 0.5, 0.05], elite: [18, 40, 29, 9.5, 3, 0.5], chest: [20, 42, 27, 8.5, 2.2, 0.3], boss: [0, 0, 62, 28, 8.5, 1.5] };
+function rollRarity(cls, lvl) {
+  const w = RARITY_W[cls].map((v, i) => v * Math.pow(1 + lvl * 0.04, i));
+  let r = Math.random() * w.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < w.length; i++) if ((r -= w[i]) < 0) return RARITIES[i];
+  return 'common';
+}
+function rollItem(lvl, rarity, slot) {
+  const p = G.player;
+  slot = slot || pick2(['weapon', 'weapon', 'head', 'chest', 'boots', 'head', 'chest', 'boots']);
+  // 40% of drops stay in the families you already wear
+  const fams = ITEMS[slot].map(f => f.id), fam = p && p.gear[slot] && Math.random() < 0.4 ? p.gear[slot] : pick2(fams);
+  let tier = 0; for (let t = 0; t < 5; t++) if (TIER_REQ[t] <= lvl + 1) tier = t;
+  if (tier > 0 && Math.random() < 0.25) tier--;
+  if (tier === 4 && !rarityAtLeast(rarity, 'legendary')) tier = 3;   // the Eternal tier is legendary+
+  const base = FAMILY_TIERS[fam][tier].split(':')[0];
+  return makeItem(base, rarity, lvl + (Math.random() < 0.3 ? 1 : 0));
+}
+const rollGem = lvl => `${pick2(GEM_TYPES)}_${clamp(1 + Math.floor((lvl + frand(-3, 4)) / 7), 1, 5)}`;
+// what an enemy leaves behind: [{ kind:'item'|'gem'|'potion', it?, gem? }]
+function rollLoot(cls, lvl, first) {
+  const out = [], itm = r => out.push({ kind: 'item', it: rollItem(lvl, r) });
+  if (cls === 'boss') {
+    itm(first ? 'legendary' : rollRarity('boss', lvl)); itm(rollRarity('boss', lvl)); itm(rollRarity('elite', lvl));
+    out.push({ kind: 'gem', gem: rollGem(lvl + 4) }, { kind: 'gem', gem: rollGem(lvl) }, { kind: 'potion' });
+  } else if (cls === 'elite') {
+    itm(rollRarity('elite', lvl)); if (Math.random() < 0.5) itm(rollRarity('elite', lvl));
+    if (Math.random() < 0.4) out.push({ kind: 'gem', gem: rollGem(lvl) });
+    if (Math.random() < 0.3) out.push({ kind: 'potion' });
+  } else if (cls === 'chest') {
+    itm(rollRarity('chest', lvl)); itm(rollRarity('chest', lvl));
+    if (Math.random() < 0.7) out.push({ kind: 'gem', gem: rollGem(lvl) });
+    out.push({ kind: 'potion' });
+  } else {
+    if (Math.random() < 0.24) itm(rollRarity('normal', lvl));
+    if (Math.random() < 0.08) out.push({ kind: 'gem', gem: rollGem(lvl) });
+    if (Math.random() < 0.06) out.push({ kind: 'potion' });
+  }
+  return out;
+}
+// the Vale's first chest: try another weapon family, an armour upgrade and a first gem
+function starterLoot() {
+  const fam = pick2(['starfall', 'moonbow']), arm = pick2(['head', 'chest', 'boots']);
+  return [{ kind: 'item', it: makeItem(FAMILY_TIERS[fam][0].split(':')[0], 'uncommon', 1, { sockets: 1 }) },
+    { kind: 'item', it: makeItem(FAMILY_TIERS[pick2(ITEMS[arm]).id][0].split(':')[0], 'uncommon', 2, { sockets: 1 }) },
+    { kind: 'gem', gem: 'ruby_1' }];
+}
+
+// ===== bag ==========================================================================================
+const BAG_SIZE = 30, MAX_POTIONS = 3;
+// bag entries: item instances, or gem stacks { gem: 'ruby_2', n }
+function bagAdd(p, e) {
+  if (e.gem) { const s = p.bag.find(b => b && b.gem === e.gem); if (s) { s.n += e.n || 1; return true; } }
+  const i = p.bag.findIndex(b => !b); if (i < 0) return false;
+  p.bag[i] = e.gem ? { gem: e.gem, n: e.n || 1 } : e; return true;
+}
+const bagFull = (p, gem) => !p.bag.some(b => !b) && !(gem && p.bag.some(b => b && b.gem === gem));
+function takeGem(p, i) { const s = p.bag[i]; if (!s || !s.gem) return null; const id = s.gem; if (--s.n <= 0) p.bag[i] = null; return id; }
+
+// ===== ground drops + chests + checkpoints (updated from main loop) ============================
+const MAX_DROPS = 40;
+function spawnDrop(x, y, d) {
+  const m = G.map; let tx = x, ty = y;
+  for (let k = 0; k < 10; k++) { const a = Math.random() * 6.28, r = 0.5 + Math.random() * 0.9, nx = x + Math.cos(a) * r, ny = y + Math.sin(a) * r; if (walkable(m, nx, ny, tileH(m, x, y))) { tx = nx; ty = ny; break; } }
+  const rar = d.kind === 'item' ? d.it.rarity : d.kind === 'gem' ? 'rare' : 'uncommon';
+  const name = d.kind === 'item' ? itemName(d.it) : d.kind === 'gem' ? gemName(d.gem) : 'Health Potion';
+  G.drops.push(Object.assign({ sx: x, sy: y, x: tx, y: ty, z: tileH(m, tx, ty), t: 0, rar, name }, d));
+  if (G.drops.length > MAX_DROPS) { const i = G.drops.findIndex(q => q.rar === 'common'); G.drops.splice(i >= 0 ? i : 0, 1); }
+}
+function dropLoot(x, y, list) { list.forEach((d, i) => delay(i * 0.08, () => spawnDrop(x, y, d))); }
+function onEnemyKilled(e) {
+  if (e.dummy || !G.player) return;
+  const p = G.player, c = enemyClass(e.type);
+  gainXp(p, killXp(e));
+  let first = false;
+  if (c === 'boss') { const k = G.map.id + ':' + e.type; first = !G.prog.firsts[k]; G.prog.firsts[k] = true; }
+  dropLoot(e.x, e.y, rollLoot(c, e.lvl, first));
+  if (c === 'boss') delay(1.5, saveGame);
+}
+function pickup(p, d) {
+  if (d.kind === 'potion') {
+    if (p.potions < MAX_POTIONS) { p.potions++; text(p.x, p.y, p.z + 3, '+1 Potion', '#ff8aa8'); } else healPlayer(p, p.maxHp * 0.15);
+  } else if (d.kind === 'gem') { if (!bagAdd(p, { gem: d.gem })) return false; text(p.x, p.y, p.z + 3, gemName(d.gem), gemParse(d.gem).def.col); }
+  else { if (!bagAdd(p, d.it)) return false; text(p.x, p.y, p.z + 3, itemName(d.it), RARITY[d.it.rarity].col, RARITY[d.it.rarity].i >= 3); }
+  sfx(RARITY[d.rar].i >= 3 ? 'loot' : 'pickup');
+  burst(d.x, d.y, d.z + 0.3, 8 + RARITY[d.rar].i * 4, [rarityCol(d.rar), '#ffffff'], 2);
+  return true;
+}
+const chestKey = o => `${G.map.id}:${o.x},${o.y}`;
+function syncChests(m) { for (const o of m.objects) if (o.chest) { o.opened = !!G.prog.chests[`${m.id}:${o.src.x},${o.src.y}`]; o.img = o.opened ? ART.chestOpen : ART.chest; } }
+function openChest(o) {
+  const p = G.player;
+  o.opened = true; o.img = ART.chestOpen; G.prog.chests[chestKey(o.src)] = true;
+  const [a, b] = zoneLevel(), L = clamp(p.level, a, b);
+  sfx('chest'); shake(2);
+  burst(o.x, o.y, o.z + 0.8, 30, ['#ffd35a', '#fff6d6', '#ffffff'], 3);
+  fx({ type: 'ring', x: o.x, y: o.y, r: 1.2, col: '#ffd35a', life: 0.4 });
+  dropLoot(o.x, o.y, o.src.starter ? starterLoot() : rollLoot('chest', L));
+  gainXp(p, Math.round(xpToNext(L) * (o.src.starter ? 0.8 : 0.5)));
+}
+function setCheckpoint(x, y, quiet) {
+  const p = G.player;
+  G.checkpoint = { map: G.map.id, x, y };
+  p.potions = MAX_POTIONS;
+  if (!quiet) { say('Checkpoint — potions refilled'); sfx('heal'); fx({ type: 'ring', x, y, r: 1.4, col: '#9ef0ff', life: 0.5 }); saveGame(); }
+}
+function updateLoot(dt) {
+  const p = G.player; if (!p || p.dead || G.state !== 'play') return;
+  for (const d of G.drops) {
+    d.t += dt;
+    if (d.t > 0.5 && dist(p.x, p.y, d.x, d.y) < 0.65) {
+      if (pickup(p, d)) d.done = true;
+      else if (!G.bagWarnT || G.t > G.bagWarnT) { say('Bag full — salvage something (TAB)'); G.bagWarnT = G.t + 2.5; }
+    }
+  }
+  G.drops = G.drops.filter(d => !d.done);
+  for (const o of G.map.objects) {
+    if (o.chest && !o.opened && dist(p.x, p.y, o.x, o.y) < 1.0) openChest(o);
+    if (o.checkpoint && dist(p.x, p.y, o.x, o.y) < 1.3) { if (!o.cpOn) { o.cpOn = true; setCheckpoint(o.x + 0.8, o.y + 0.8); } } else if (o.checkpoint) o.cpOn = false;
+  }
+}
+
+// ===== potions =========================================================================================
+function drinkPotion(p) {
+  if (p.dead || G.state !== 'play') return;
+  if ((p.potT || 0) > G.t) return;
+  if (p.potions <= 0) { say('No potions — they refill at checkpoints'); return; }
+  if (p.hp >= p.maxHp) { say('Already at full health'); return; }
+  p.potions--; p.potT = G.t + 1; healPlayer(p, p.maxHp * 0.4);
+  burst(p.x, p.y, p.z + 1, 16, ['#ff8aa8', '#ffffff', '#ffd6ec'], 2); sfx('heal');
+}
+
+// ===== save / load (localStorage 'dreamy.save.v1') ===========================================================
+const SAVE_KEY = 'dreamy.save.v1';
+// showcase / play-test / ?map= runs never touch the real save
+const SAVE_ON = (() => { try { const q = new URLSearchParams(location.search); return !q.get('scene') && !q.get('playtest') && !q.get('map'); } catch (e) { return false; } })();
+function saveGame() {
+  const p = G.player; if (!SAVE_ON || !p || !G.map || G.state === 'title') return false;
+  const s = { v: 1, t: Date.now(), level: p.level, xp: Math.floor(p.xp), tp: p.tp || 0, potions: p.potions, dust: p.dust, map: G.map.id,
+    equip: p.equip, bag: p.bag, wsk: p.wsk, csk: p.csk, prog: G.prog, cp: G.checkpoint, uid: UID };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); return true; } catch (e) { return false; }
+}
+function readSave() {
+  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); return s && s.v === 1 && s.equip ? s : null; } catch (e) { return null; }
+}
+function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
+const validItem = it => it && BASES[it.base] && RARITY[it.rarity] && Array.isArray(it.affixes) && Array.isArray(it.sockets);
+function applySave(p, s) {
+  p.level = clamp(+s.level || 1, 1, MAX_LEVEL); p.xp = Math.max(0, +s.xp || 0); p.tp = +s.tp || 0; p.dust = +s.dust || 0;
+  p.potions = clamp(s.potions != null ? +s.potions : MAX_POTIONS, 0, MAX_POTIONS);
+  for (const slot of SLOTS) { const it = s.equip[slot]; if (validItem(it) && BASES[it.base].slot === slot) { it.sockets = it.sockets.map(g => gemParse(g) ? g : null); p.equip[slot] = it; } }
+  p.bag = Array(BAG_SIZE).fill(null);
+  (s.bag || []).slice(0, BAG_SIZE).forEach((e, i) => { if (validItem(e)) p.bag[i] = e; else if (e && gemParse(e.gem) && e.n > 0) p.bag[i] = { gem: e.gem, n: e.n | 0 }; });
+  if (s.wsk) for (const f in p.wsk) for (const k of ['q', 'e', 'r']) if (s.wsk[f] && SKILLS[s.wsk[f][k]] && item('weapon', f)[k].includes(s.wsk[f][k])) p.wsk[f][k] = s.wsk[f][k];
+  if (Array.isArray(s.csk)) p.csk = s.csk.filter(id => CHAR_SKILLS.includes(id)).slice(0, 3);
+  G.prog = { chests: (s.prog && s.prog.chests) || {}, firsts: (s.prog && s.prog.firsts) || {} };
+  G.checkpoint = s.cp || null;
+  UID = Math.max(UID, +s.uid || 0);
+  recalcStats(p, true);
+}
+
+// ===== starter + showcase kits ====================================================================================
+function starterKit(p) {
+  p.equip = { weapon: makeItem('rustyblade', 'common', 1, { sockets: 0 }), head: makeItem('ironcap', 'common', 1, { sockets: 0 }),
+    chest: makeItem('ironmail', 'common', 1, { sockets: 1 }), boots: makeItem('ironboots', 'common', 1, { sockets: 0 }) };
+  p.bag = Array(BAG_SIZE).fill(null);
+}
+// ?scene=... showcases: a mid-level hero (L14) with rare/epic tier-2 gear of the chosen weapon family
+function showcaseKit(p, wfam = 'dawnblade') {
+  const set = { dawnblade: ['knighthelm', 'knightplate', 'knightgreaves'], starfall: ['arcanecowl', 'dreamrobe', 'clothsandals'], moonbow: ['wardenhood', 'stalkerjacket', 'stalkershoes'] }[wfam] || ['knighthelm', 'knightplate', 'knightgreaves'];
+  const t2 = f => FAMILY_TIERS[f][2].split(':')[0];
+  p.level = 14; p.xp = Math.round(xpToNext(14) * 0.4); p.tp = 13; p.dust = 140;
+  p.equip.weapon = makeItem(t2(wfam), 'epic', 14, { sockets: 2 }); p.equip.weapon.sockets[0] = 'ruby_3';
+  ['head', 'chest', 'boots'].forEach((s, i) => { p.equip[s] = makeItem(t2(set[i]), i === 1 ? 'epic' : 'rare', 14, { sockets: 1 }); });
+  p.equip.chest.sockets[0] = 'diamond_2'; p.equip.head.sockets[0] = 'topaz_2';
+  recalcStats(p, true);
+}
+function sampleBag(p) {
+  const L = p.level, put = e => bagAdd(p, e);
+  RARITIES.forEach((r, i) => put(rollItem(L + (i > 3 ? 2 : 0), r, SLOTS[i % 4])));
+  put(makeItem('auroraedge', 'legendary', 24));            // too high level: red requirement
+  for (let k = 0; k < 6; k++) put(rollItem(L - 4 + k, pick2(['common', 'uncommon', 'rare'])));
+  GEM_TYPES.forEach((t, i) => put({ gem: `${t}_${1 + (i % 4)}`, n: 1 + (i % 3) }));
+  put({ gem: 'amethyst_5', n: 1 });
+}
