@@ -99,15 +99,52 @@ const PAD_STUB = () => {
   const f3 = await ev(() => UI.focus.current().id);
   check('pad: d-pad moves focus through the bag grid', f0 && f1 !== f0 && f2 !== f1 && f3 !== f2, { f0, f1, f2, f3 });
   // walk focus into the bag and select an item with A (pad = select-then-select)
-  const sel = await ev(() => { const list = UI.focus.list; const r = list.find(q => q.x >= 316 && q.y >= 78); if (r) UI.focus.set(r.id, true); return r && r.id; });
+  const sel = await ev(() => { const list = UI.focus.list; const r = list.find(q => q.id === 'bag:0'); if (r) UI.focus.set(r.id, true); return r && r.id; });
   await tap(0); await wait(60);
   check('pad: A selects the focused bag item', await ev(() => G.ui.sel != null), sel);
   check('focus ring is drawn on pad', await ev(() => UI.focus.showing()));
   await tap(5); await wait(80);
   check('pad: RB switches tab', await ev(() => G.ui.tab === 'skills'));
+  // every Tab screen is reachable with RB / LB and registers focus targets (mouse, touch and pad share them)
+  const tabs = [];
+  for (let i = 0; i < 3; i++) { await tap(5); await wait(120); tabs.push(await ev(() => ({ tab: G.ui.tab, focusable: UI.focus.list.length }))); }
+  check('pad: RB cycles CHARACTER > BESTIARY > QUESTS > INVENTORY, each with focus targets', tabs.map(t => t.tab).join() === 'bestiary,quests,inv' && tabs.every(t => t.focusable > 3), tabs);
+  await tap(4); await wait(120);
+  check('pad: LB goes back a tab', await ev(() => G.ui.tab === 'quests'));
+  const fq = await ev(() => { const a = UI.focus.current(); return a && a.id; }); await tap(13); await wait(100);
+  check('pad: d-pad moves focus inside QUESTS', typeof await ev(() => UI.focus.current().id) === 'string', fq);
+  await page.keyboard.press('KeyB'); await wait(120);
+  check('keys: B jumps to BESTIARY, K to CHARACTER, J to QUESTS', await ev(() => G.ui.tab === 'bestiary'));
+  await page.keyboard.press('KeyK'); await wait(120); const kk = await ev(() => G.ui.tab);
+  await page.keyboard.press('KeyJ'); await wait(120); const jj = await ev(() => G.ui.tab);
+  check('keys: K = CHARACTER, J = QUESTS', kk === 'skills' && jj === 'quests', { kk, jj });
+  await page.keyboard.press('KeyI'); await wait(120); await page.keyboard.press('KeyI'); await wait(120);
+  await page.keyboard.press('KeyI'); await wait(150);
+  check('keys: I toggles the bag', await ev(() => G.ui.open === true));
   await tap(1);   // B
   await wait(120);
   check('pad: B closes the inventory', await ev(() => G.ui.open === false));
+  // ---------- 1b. pause / settings (Esc and pad Start) ----------
+  await wait(150);
+  await tap(9); await wait(250);
+  check('pad: Start opens the pause screen (not Help)', await ev(() => G.ui.pause === true && !G.ui.help));
+  const setN = await ev(() => UI.focus.list.filter(r => String(r.id).startsWith('set:')).length);
+  check('pause: rows are generated from SETTINGS_SCHEMA', setN === (await ev(() => SETTINGS_SCHEMA.length)), setN);
+  await ev(() => UI.focus.set('set:music', true)); await wait(60);
+  const m0 = await ev(() => SETTINGS.music); await tap(14); await wait(80);
+  const m1 = await ev(() => SETTINGS.music);
+  await ev(() => UI.focus.set('set:difficulty', true)); await wait(60); await tap(15); await wait(80);
+  const dd = await ev(() => SETTINGS.difficulty);
+  await tap(14); await wait(80);
+  check('pause: d-pad left / right change sliders and choices (Story / Normal)', m1 === m0 - 0.25 && dd === 'story' && await ev(() => SETTINGS.difficulty === 'normal'), { m0, m1, dd });
+  await ev(() => setSetting('music', 0.75));
+  await tap(9); await wait(200);
+  check('pad: Start closes pause', await ev(() => G.ui.pause === false));
+  await page.keyboard.press('Escape'); await wait(200);
+  const esc1 = await ev(() => G.ui.pause);
+  await page.keyboard.press('Escape'); await wait(200);
+  check('keys: Esc opens and closes pause', esc1 === true && await ev(() => G.ui.pause === false), esc1);
+  await tap(16); await wait(80);   // back to the pad as the active device
   // ---------- 2. device switch prompts ----------
   const gPad = await ev(() => ({ q: skillSlotState(G.player, 'q').glyph, dodge: IN.glyph('dodge'), interact: IN.glyph('interact'), attack: skillSlotState(G.player, 'lmb').glyph }));
   await page.keyboard.press('KeyW');

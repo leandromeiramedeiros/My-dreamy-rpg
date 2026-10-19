@@ -103,7 +103,7 @@ function titleControlsHint() {
 }
 function drawTitle(ctx) {
   const u = G.ui;
-  ctx.fillStyle = '#0b0716'; ctx.globalAlpha = 0.4; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
+  ctx.fillStyle = '#0b0716'; ctx.globalAlpha = 0.55; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
   const bob = Math.round(Math.sin(G.t * 1.2) * 2) * 2, logo = titleLogo();
   if (logo) { ctx.imageSmoothingEnabled = false; ctx.drawImage(logo, 480 - 340, 160 - 40 + bob, 680, 80); } else UI.text(ctx, 'MY DREAMY RPG', 480, 140 + bob, 'heading', UC.gold, 'center');
   UI.text(ctx, 'a high-fantasy dream above the clouds', 480, 216, 'small', UC.dim, 'center');
@@ -118,10 +118,11 @@ function drawTitle(ctx) {
     const y = 320 + i * 36, w = Math.max(200, UI.measure(it.label, 'body') + 40), x = 480 - w / 2;
     if (it.off) { UI.text(ctx, it.label, 480, y + 6, 'body', UC.bevel, 'center'); return; }
     const r = mnRegion(x, y, w, 32, 'title:' + it.id, () => { initAudio(); it.fn(); }, { def: s ? it.id === 'continue' : it.id === 'new' });
-    if (r.on) { UI.sprite(ctx, 'bullet', x - 8, y + 9, { scale: 2, tint: UC.gold, alpha: 0.7 + 0.3 * Math.sin(G.t * 6) }); }
+    if (r.on || UI.focus.is('title:' + it.id)) { UI.sprite(ctx, 'bullet', x - 8, y + 9, { scale: 2, tint: UC.gold, alpha: 0.7 + 0.3 * Math.sin(G.t * 6) }); }
     UI.text(ctx, it.label, 480, y + 6, 'body', r.on ? UC.gold : UC.text, 'center');
     if (it.sub) UI.text(ctx, it.sub, x + w + 12, y + 9, 'small', UC.dim);
   });
+  UI.focus.current();   // validate the default focus so the cursor shows on the first frame
   UI.text(ctx, titleControlsHint(), 480, 500, 'small', UC.dim, 'center');
   if (TOUCH_CAPABLE && window.innerHeight > window.innerWidth) UI.text(ctx, 'Turn your device sideways for the best view', 480, 460, 'small', UC.hpHi, 'center');
   if (u.settings) { ctx.fillStyle = '#05030c'; ctx.globalAlpha = 0.5; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1; drawSettingsPanel(ctx, 'title'); }

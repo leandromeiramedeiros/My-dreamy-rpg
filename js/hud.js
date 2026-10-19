@@ -13,8 +13,8 @@
 const HUD = { cache: {}, gray: new WeakMap(), uid: 0, trk: { key: '', t0: 0 }, ready: {}, lvl: { n: 0, t: -9 }, bossPhase: false, bossShakeT: -9,
   breakT: -9, fogTile: '' };
 const UC = UI.C;
-const SLOT_GROUPS = [{ x: 232, slots: ['lmb', 'q', 'e', 'r'] }, { x: 434, slots: ['f', 'c', 'shift'] }, { x: 588, slots: ['1', '2', '3'] }];
-const SLOT_PITCH = 48, SLOT_Y = 484, SLOT = 44, POTION_X = 740;
+const SLOT_GROUPS = [{ x: 350, slots: ['lmb', 'q', 'e', 'r'] }, { x: 552, slots: ['f', 'c', 'shift'] }, { x: 706, slots: ['1', '2', '3'] }];
+const SLOT_PITCH = 48, SLOT_Y = 484, SLOT = 44, POTION_X = 858;
 const SLOT_LABEL = { lmb: 'LMB', q: 'Q', e: 'E', r: 'R', f: 'F', c: 'C', shift: 'SHF', 1: '1', 2: '2', 3: '3', pot: '4' };
 const EL_ICON_COL = { slash: 'physical', pierce: 'physical' };
 const uiReady = () => !!(typeof UI_ART !== 'undefined' && UI.image(UI_ART.src));

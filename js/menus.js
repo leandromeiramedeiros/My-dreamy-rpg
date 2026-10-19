@@ -36,7 +36,7 @@ function mnHead(ctx, s, x, y, col = UC.dim) { UI.text(ctx, s, x, y, 'small', col
 function mnScroll(key, x, y, w, h, total) {
   const u = G.ui; u.scr = u.scr || {};
   let s = u.scr[key] || 0;
-  if (u.wheel && UI.mouseIn(x, y, w, h)) { s += Math.sign(u.wheel) * 36; u.wheel = 0; }
+  if (u.wheel && UI.mouseIn(x, y, w, h)) { s += clamp(u.wheel, -48, 48); u.wheel = 0; }
   u.scr[key] = clamp(s, 0, Math.max(0, total - h)); return u.scr[key];
 }
 function mnReveal(key, h, y0, rowY, rowH) {   // keep a focused row inside the viewport
@@ -90,12 +90,13 @@ function drawTabScreen(ctx) {
 // ===== INVENTORY ===================================================================================================================
 const EQ_POS = { weapon: [40, 92], head: [184, 92], chest: [40, 176], boots: [184, 176] };
 const EQ_LABEL = { weapon: 'Weapon', head: 'Helm', chest: 'Chest', boots: 'Boots' };
-function statRows(p) {
+function statRows(p, short) {
+  const S = short ? { 'Crit dmg': 'CDmg', 'Skill dmg': 'SkDmg', Potions: 'Pots', Speed: 'Spd' } : {};
   return [['Atk', Math.round(item('weapon', p.gear.weapon).basic.dmg * p.power)], ['HP', p.maxHp], ['MP', p.maxMp], ['Def', pctText(p.def)], ['Crit', pctText(p.crit)], ['Crit dmg', '+' + pctText(p.critDmg)],
-    ['Haste', '+' + pctText(p.haste)], ['CDR', '-' + pctText(p.cdr)], ['Skill dmg', '+' + pctText(p.skillDmg)], ['Regen', `${+p.regen.toFixed(1)}/s`], ['Potions', `${p.potions}/${MAX_POTIONS}`], ['Speed', `+${Math.round((p.speed / 3.7 - 1) * 100)}%`]];
+    ['Haste', '+' + pctText(p.haste)], ['CDR', '-' + pctText(p.cdr)], ['Skill dmg', '+' + pctText(p.skillDmg)], ['Regen', `${+p.regen.toFixed(1)}/s`], ['Potions', `${p.potions}/${MAX_POTIONS}`], ['Speed', `+${Math.round((p.speed / 3.7 - 1) * 100)}%`]].map(([k, v]) => [S[k] || k, v]);
 }
-function drawStats(ctx, p, x, y, colW, rowH) {
-  statRows(p).forEach(([k, v], i) => {
+function drawStats(ctx, p, x, y, colW, rowH, short) {
+  statRows(p, short).forEach(([k, v], i) => {
     const sx = x + (i % 2) * colW, sy = y + Math.floor(i / 2) * rowH;
     UI.text(ctx, k, sx, sy, 'small', UC.dim); UI.text(ctx, String(v), sx + colW - 12, sy, 'small', UC.text, 'right');
   });
@@ -148,7 +149,7 @@ function drawInventoryTab(ctx, p) {
   const need = xpToNext(p.level);
   UI.text(ctx, p.level >= MAX_LEVEL ? 'MAX' : `${Math.floor(p.xp)}/${need} XP`, COL1 + 208, 258, 'small', UC.dim, 'right');
   UI.bar(ctx, COL1 + 12, 284, 192, 8, p.level >= MAX_LEVEL ? 1 : p.xp / need, { id: 'tab-xp', col: UC.xp, hi: UC.xp, ghost: false, wipe: false });
-  drawStats(ctx, p, COL1 + 8, 308, 104, 20);
+  drawStats(ctx, p, COL1 + 4, 308, 108, 20, true);
   mnHead(ctx, 'RESIST', COL1 + 8, 428);
   drawResistRow(ctx, p, COL1 + 8, 448, 52);
   // ---- column 2: bag ----
@@ -295,7 +296,7 @@ function drawCharacterTab(ctx, p) {
     UI.text(ctx, k, COL1 + 30 + i * 52, 326, 'small', UC.dim, 'center');
     if (r.on) hoverId = id;
   });
-  mnHead(ctx, 'CHARACTER SKILLS: PICK 3', COL1 + 8, 344);
+  mnHead(ctx, 'SKILLS: PICK 3', COL1 + 8, 344);
   CHAR_SKILLS.forEach((id, i) => {
     const x = COL1 + 8 + (i % 3) * 52, y = 364 + Math.floor(i / 3) * 56, idx = p.csk.indexOf(id);
     const r = skillSlotBox(ctx, id, x, y, 'cs:' + id, () => { toggleCharSkill(id); u.skSel = id; }, { sel: idx >= 0, rim: idx >= 0 ? UC.xp : null });
