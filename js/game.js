@@ -86,7 +86,7 @@ function burst(x, y, z, n, cols, spd = 3, o = {}) {
   }
 }
 const pick2 = arr => arr[(Math.random() * arr.length) | 0];
-function text(x, y, z, s, col, big = false) { G.texts.push({ x, y, z, s, col, big, t: 0, vx: frand(-0.6, 0.6) }); }
+function text(x, y, z, s, col, big = false, life = 0.9) { G.texts.push({ x, y, z, s, col, big, t: 0, life, vx: frand(-0.6, 0.6) }); }
 
 // ===== player ==================================================================
 function makePlayer() {
@@ -107,8 +107,9 @@ function makePlayer() {
 // Base damage = tuning x level x (equipped weapon damage / its family's reference damage), so the basic
 // attack AND every skill scale with the weapon; p.bonus is the single additive damage % sum.
 function recalcStats(p, full) {
-  const s = { hp: 0, mp: 0, def: 0, power: 0, crit: 0, haste: 0, regen: 0, mpRegen: 0, speed: 0, critDmg: 0, cdr: 0, skillDmg: 0, dmg: 0 };
-  for (const slot of SLOTS) { const it = p.equip[slot]; if (!it) continue; p.gear[slot] = familyOf(it.base); const st = statsOf(it); for (const k in st) s[k] += st[k]; }
+  const s = { hp: 0, mp: 0, def: 0, power: 0, crit: 0, haste: 0, regen: 0, mpRegen: 0, speed: 0, critDmg: 0, cdr: 0, skillDmg: 0, dmg: 0, resAll: 0 };
+  for (const slot of SLOTS) { const it = p.equip[slot]; if (!it) continue; p.gear[slot] = familyOf(it.base); const st = statsOf(it); for (const k in st) s[k] = (s[k] || 0) + st[k]; }
+  p.res = {}; for (const el of RES_ELS) p.res[el] = clamp((s[resKey(el)] || 0) + s.resAll, -0.5, 0.6);   // §5b: additive, clamped
   p.amp = gemAmp(p);
   const hpR = full || !p.maxHp ? 1 : p.hp / p.maxHp, mpR = full || !p.maxMp ? 1 : p.mp / p.maxMp;
   const B = G.tune.player, L = p.level - 1, w = item('weapon', p.gear.weapon);
@@ -299,10 +300,12 @@ function updatePlayer(p, dt) {
 }
 
 const ORBIT_CAST = { skill: 'orbit', el: 'arcane' };
-function hurtPlayer(dmg, srcX, srcY) {
+// el = damage type of the hit (§5b); the hero's resist applies on top of defence (arcane ignores half of it)
+function hurtPlayer(dmg, srcX, srcY, el = 'slash') {
   const p = G.player;
   if (p.dead || p.invulnT > 0 || (p.dash && p.dash.opt.invuln) || G.state !== 'play') return;
-  let d = dmg * (1 - p.def) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1);
+  const r = (p.res && p.res[el]) || 0;
+  let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1);
   p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2;
   text(p.x, p.y, p.z + 3, Math.round(d), '#ff5a7a');
   shake(4); sfx('hurt');
@@ -317,8 +320,14 @@ function hurtPlayer(dmg, srcX, srcY) {
 function damageEnemy(e, base, o = {}) {
   if (e.dead || e.spawnT > 0) return false;
   const p = G.player, c = o.cast !== undefined ? o.cast : CAST;
+  // damage type: explicit > the skill's element > the weapon's (sword slash, staff arcane, bow pierce); burn ticks are fire
+  const el = o.el || (o.dot ? 'fire' : c ? c.el : item('weapon', p.gear.weapon).element) || 'slash';
   // one additive sum: gear damage % (+ skill damage % and the element's gem amplification for skill hits)
-  let dmg = base * p.dmgBase * (1 + p.bonus + (c ? p.skillDmg + elementAmp(p, c.el) : 0)) * buffMul(p);
+  let dmg = base * p.dmgBase * (1 + p.bonus + (c ? p.skillDmg + elementAmp(p, el) : 0)) * buffMul(p);
+  const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
+  dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
+  const st = o.stagger != null ? o.stagger : c && SKILLS[c.skill] ? SKILLS[c.skill].stagger || 0 : 0;
+  if (st) e.stagger = (e.stagger || 0) + st;   // stored for the M4 stagger bar
   let crit = Math.random() < p.crit;
   if (p.buffs.veil && !o.dot) { crit = true; delete p.buffs.veil; }
   if (crit) dmg *= 1 + p.critDmg;
@@ -326,7 +335,10 @@ function damageEnemy(e, base, o = {}) {
   if (e.dummy) { e.hp = e.maxHp; }
   else e.hp -= dmg;
   e.flash = 0.1;
-  text(e.x, e.y, e.z + e.hgt, Math.round(dmg) + (crit ? '!' : ''), crit ? '#ffe36a' : (o.dot ? '#ff9a5a' : '#ffffff'), crit);
+  // numbers coloured by damage type; WEAK big + yellow, RESIST grey, IMMUNE spelled out
+  if (eff >= 1) text(e.x, e.y, e.z + e.hgt, 'IMMUNE', '#9a92b0');
+  else text(e.x, e.y, e.z + e.hgt, Math.round(dmg) + (crit ? '!' : ''), res < 0 ? '#ffe36a' : res > 0 ? '#9a92b0' : EL_COL[el] || '#ffffff', crit || res < 0);
+  if (res && !e.dummy) discoverRes(e, el, res);
   const fxx = o.fx != null ? o.fx : p.x, fyy = o.fy != null ? o.fy : p.y;
   if (o.knock && !e.boss && !e.dummy) {
     const d = dist(fxx, fyy, e.x, e.y) || 1;
@@ -339,6 +351,13 @@ function damageEnemy(e, base, o = {}) {
   if (!o.dot) { burst(e.x, e.y, e.z + e.hgt * 0.6, 5, ['#ffffff', e.blood || '#c7a8ff'], 2.5); sfx('hit'); }
   if (e.hp <= 0) killEnemy(e);
   return true;
+}
+// the first weak/resist hit on an enemy type pops a nameplate; from then on its icons show by its HP bar (saved)
+function discoverRes(e, el, res) {
+  const seen = G.prog.seen || (G.prog.seen = {}), k = seen[e.type] || (seen[e.type] = {});
+  if (k[el] != null) return;
+  k[el] = res;
+  text(e.x, e.y, e.z + e.hgt + 1.2, `${res < 0 ? 'WEAK' : res >= 1 ? 'IMMUNE' : 'RESIST'}: ${el.toUpperCase()}`, res < 0 ? '#ffe36a' : '#c8c0e0', true, 1.5);
 }
 function hitArea(x, y, r, dmg, o = {}) {
   let n = 0;
@@ -393,7 +412,7 @@ function updateProjs(dt) {
       }
     } else {
       const pl = G.player;
-      if (!pl.dead && dist(p.x, p.y, pl.x, pl.y) < p.r + pl.r) { hurtPlayer(p.dmg, p.x, p.y); p.dead = true; burst(p.x, p.y, p.z, 8, [p.col, '#ffffff'], 2); }
+      if (!pl.dead && dist(p.x, p.y, pl.x, pl.y) < p.r + pl.r) { hurtPlayer(p.dmg, p.x, p.y, p.el); p.dead = true; burst(p.x, p.y, p.z, 8, [p.col, '#ffffff'], 2); }
     }
   }
   G.projs = G.projs.filter(p => !p.dead);
@@ -430,15 +449,20 @@ function updateZones(dt) {
 
 // ===== enemies ========================================================================
 const ENEMY = {
-  slime: { name: 'Gloom slime', ai: 'hopper', hp: 170, r: 0.38, speed: 2.0, dmg: 32, range: 1.0, wind: 0.55, cd: 1.1, aoe: 1.15, hgt: 1.8, blood: '#8b7cf6' },
-  wisp: { name: 'Wisp', ai: 'shooter', hp: 120, r: 0.32, speed: 1.9, dmg: 34, range: 6, wind: 0.6, cd: 2.1, hgt: 3.2, blood: '#9ef0ff' },
-  hound: { name: 'Shade hound', ai: 'charger', hp: 240, r: 0.42, speed: 3.2, dmg: 46, range: 3.2, wind: 0.48, cd: 1.6, hgt: 2.0, blood: '#ff6b9a' },
-  boss: { name: 'The Gloam Warden', ai: 'boss', hp: 7200, r: 0.95, speed: 1.6, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 9, blood: '#c78bff' },
+  // element = what its attacks deal; res = hand-authored tiers (-0.5 weak, 0.5 resist, 1 immune); tags: archetype (§5b)
+  slime: { name: 'Gloom slime', ai: 'hopper', hp: 170, r: 0.38, speed: 2.0, dmg: 32, range: 1.0, wind: 0.55, cd: 1.1, aoe: 1.15, hgt: 1.8, blood: '#8b7cf6',
+    element: 'gloom', res: { pierce: 0.5, slash: -0.5 }, tags: ['amorphous', 'gloom'] },
+  wisp: { name: 'Wisp', ai: 'shooter', hp: 120, r: 0.32, speed: 1.9, dmg: 34, range: 6, wind: 0.6, cd: 2.1, hgt: 3.2, blood: '#9ef0ff',
+    element: 'arcane', res: { slash: 0.5, pierce: 0.5, holy: -0.5, lightning: -0.5 }, tags: ['ethereal'] },
+  hound: { name: 'Shade hound', ai: 'charger', hp: 240, r: 0.42, speed: 3.2, dmg: 46, range: 3.2, wind: 0.48, cd: 1.6, hgt: 2.0, blood: '#ff6b9a',
+    element: 'slash', res: { fire: -0.5 }, tags: ['beast', 'gloom'] },
+  boss: { name: 'The Gloam Warden', ai: 'boss', hp: 7200, r: 0.95, speed: 1.6, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 9, blood: '#c78bff',
+    element: 'gloom', res: { arcane: 0.5, gloom: 0.5, holy: -0.5 }, tags: ['gloom'] },
   dummy: { name: 'Training dummy', ai: 'dummy', hp: 9999, r: 0.35, speed: 0, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 3, blood: '#e7c9a0' },
 };
 function spawnEnemy(type, x, y, spawnT = 0.9) {
   const d = ENEMY[type], dummy = type === 'dummy', lvl = dummy ? 1 : enemyLevel(type), hp = dummy ? d.hp : Math.round(d.hp * enemyHpMul(lvl));
-  const e = { type, x, y, z: 0, r: d.r || 0.4, hp, maxHp: hp, lvl, dm: dummy ? 1 : enemyDmgMul(lvl), hgt: d.hgt || 3, blood: d.blood || '#c7a8ff', kx: 0, ky: 0, flash: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss: type === 'boss', dummy: type === 'dummy' };
+  const e = { type, x, y, z: 0, r: d.r || 0.4, hp, maxHp: hp, lvl, dm: dummy ? 1 : enemyDmgMul(lvl), el: d.element || 'slash', res: d.res || {}, tags: d.tags || [], hgt: d.hgt || 3, blood: d.blood || '#c7a8ff', kx: 0, ky: 0, flash: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss: type === 'boss', dummy: type === 'dummy' };
   G.enemies.push(e);
   if (spawnT > 0) fx({ type: 'summon', x, y, life: spawnT, col: type === 'boss' ? '#ff5aa0' : '#b36bff', r: type === 'boss' ? 2.4 : 0.9 });
   return e;
@@ -514,25 +538,25 @@ function updateEnemies(dt) {
       }
     } else if (e.state === 'wind') {
       if (e.st <= 0) {
-        if (def.ai === 'hopper') { if (playerIn({ kind: 'circle', x: e.x, y: e.y, r: def.aoe || 1.15 })) hurtPlayer(def.dmg * e.dm, e.x, e.y); e.squash = 0.3; burst(e.x, e.y, 0.2, 8, [e.blood, '#e2dbff'], 2); e.state = 'rec'; e.st = 0.4; }
+        if (def.ai === 'hopper') { if (playerIn({ kind: 'circle', x: e.x, y: e.y, r: def.aoe || 1.15 })) hurtPlayer(def.dmg * e.dm, e.x, e.y, e.el); e.squash = 0.3; burst(e.x, e.y, 0.2, 8, [e.blood, '#e2dbff'], 2); e.state = 'rec'; e.st = 0.4; }
         else if (def.ai === 'charger') { e.state = 'lunge'; e.st = 0.3; e.hitP = false; }
         else if (def.ai === 'brute') {
           const H = e.hit;
-          if (H && playerIn(H)) hurtPlayer(def.dmg * e.dm, e.x, e.y);
+          if (H && playerIn(H)) hurtPlayer(def.dmg * e.dm, e.x, e.y, e.el);
           if (H && H.kind === 'circle') { fx({ type: 'ring', x: e.x, y: e.y, r: H.r, col: '#ffb070', life: 0.45 }); burst(e.x, e.y, 0.2, 30, ['#8a6a4a', '#c8b090', '#5a4a3a'], 5, { glow: false }); }
           else if (H) fx({ type: 'slash', x: e.x, y: e.y, z: 0.6, ang: H.ang, arc: H.arc, r: H.r, col: '#ffcf9a', life: 0.25, w: 6 });
           shake(def.aoe > 2 ? 9 : 4); sfx('heavy');
           e.state = 'strike'; e.st = 0.15;
         }
         else if (def.ai === 'shooter') {
-          spawnProj({ x: e.x, y: e.y, z: 2.2, ang: Math.atan2(p.y - e.y, p.x - e.x), speed: 5.5, r: 0.35, dmg: def.dmg * e.dm, life: 2.5, kind: 'orb', col: '#9ef0ff', friendly: false });
+          spawnProj({ x: e.x, y: e.y, z: 2.2, ang: Math.atan2(p.y - e.y, p.x - e.x), speed: 5.5, r: 0.35, dmg: def.dmg * e.dm, el: e.el, life: 2.5, kind: 'orb', col: '#9ef0ff', friendly: false });
           e.state = 'rec'; e.st = 0.3; sfx('arcane');
         }
         e.cd = def.cd * rand(0.8, 1.3);
       }
     } else if (e.state === 'lunge') {
       moveEntity(e, Math.cos(e.aimA) * 12 * edt, Math.sin(e.aimA) * 12 * edt, tileH(G.map, e.x, e.y));
-      if (!e.hitP && dist(e.x, e.y, p.x, p.y) < e.r + p.r + 0.3) { e.hitP = true; hurtPlayer(def.dmg * e.dm, e.x, e.y); }
+      if (!e.hitP && dist(e.x, e.y, p.x, p.y) < e.r + p.r + 0.3) { e.hitP = true; hurtPlayer(def.dmg * e.dm, e.x, e.y, e.el); }
       if (e.st <= 0) { e.state = 'rec'; e.st = 0.5; }
     } else if (e.state === 'strike') { if (e.st <= 0) { e.state = 'rec'; e.st = 0.6; } }
     else if (e.state === 'rec') { if (e.st <= 0) e.state = 'chase'; }
@@ -570,7 +594,7 @@ function updateBoss(b, dt, d, ang, hidden) {
     case 'cleave':
       if (b.step === 0) { b.aimA = ang; tele({ kind: 'cone', x: b.x, y: b.y, ang, arc: 2.0, r: 3.6, life: 0.85 * W, col: '#ff3a7a' }); b.step = 1; }
       if (b.step === 1 && b.st > 0.85 * W) {
-        if (playerIn({ kind: 'cone', x: b.x, y: b.y, ang: b.aimA, arc: 2.0, r: 3.6 })) hurtPlayer(120 * b.dm, b.x, b.y);
+        if (playerIn({ kind: 'cone', x: b.x, y: b.y, ang: b.aimA, arc: 2.0, r: 3.6 })) hurtPlayer(120 * b.dm, b.x, b.y, 'slash');
         fx({ type: 'slash', x: b.x, y: b.y, z: 1, ang: b.aimA, arc: 2.0, r: 3.6, col: '#ff7ae0', life: 0.3, w: 8 }); shake(6); sfx('heavy');
         b.step = 2;
       }
@@ -579,7 +603,7 @@ function updateBoss(b, dt, d, ang, hidden) {
     case 'slam':
       if (b.step === 0) { tele({ kind: 'circle', x: b.x, y: b.y, r: 3.4, life: 1.1 * W, col: '#ff3a7a' }); b.step = 1; }
       if (b.step === 1 && b.st > 1.1 * W) {
-        if (playerIn({ kind: 'circle', x: b.x, y: b.y, r: 3.4 })) hurtPlayer(150 * b.dm, b.x, b.y);
+        if (playerIn({ kind: 'circle', x: b.x, y: b.y, r: 3.4 })) hurtPlayer(150 * b.dm, b.x, b.y, 'gloom');
         fx({ type: 'ring', x: b.x, y: b.y, r: 3.6, col: '#ff7ae0', life: 0.5 }); burst(b.x, b.y, 0.2, 50, ['#c78bff', '#ff7ae0', '#2a1c38'], 6); shake(12); hitstop(0.08); sfx('boom');
         b.step = 2;
       }
@@ -588,7 +612,7 @@ function updateBoss(b, dt, d, ang, hidden) {
     case 'volley':
       if (b.step < 3 && b.st > 0.35 + b.step * 0.45) {
         const n = 16;
-        for (let k = 0; k < n; k++) spawnProj({ x: b.x, y: b.y, z: 3, ang: k / n * Math.PI * 2 + b.step * 0.2, speed: 4.6, r: 0.35, dmg: 38 * b.dm, life: 3.2, kind: 'orb', col: '#ff7ae0', friendly: false });
+        for (let k = 0; k < n; k++) spawnProj({ x: b.x, y: b.y, z: 3, ang: k / n * Math.PI * 2 + b.step * 0.2, speed: 4.6, r: 0.35, dmg: 38 * b.dm, el: 'arcane', life: 3.2, kind: 'orb', col: '#ff7ae0', friendly: false });
         sfx('arcane'); b.step++;
       }
       if (b.st > 1.8) endBossAtk(b, 1.0);
@@ -599,7 +623,7 @@ function updateBoss(b, dt, d, ang, hidden) {
       if (b.step === 2) {
         moveEntity(b, Math.cos(b.aimA) * 15 * dt, Math.sin(b.aimA) * 15 * dt, tileH(G.map, b.x, b.y));
         if (Math.random() < 0.6) fx({ type: 'ghost', x: b.x, y: b.y, z: b.z, life: 0.3, spr: b.face < 0 ? ART.boss.f : ART.boss.n, col: '#ff5aa0' });
-        if (!b.hitP && dist(b.x, b.y, p.x, p.y) < b.r + p.r + 0.3) { b.hitP = true; hurtPlayer(110 * b.dm, b.x, b.y); }
+        if (!b.hitP && dist(b.x, b.y, p.x, p.y) < b.r + p.r + 0.3) { b.hitP = true; hurtPlayer(110 * b.dm, b.x, b.y, 'slash'); }
         if (b.st > 0.75 * W + 0.5) { b.step = 3; shake(5); }
       }
       if (b.st > 0.75 * W + 1.1) endBossAtk(b, 0.8);
@@ -609,7 +633,7 @@ function updateBoss(b, dt, d, ang, hidden) {
         for (let k = 0; k < 6; k++) {
           const a = Math.random() * 6.28, r = k === 0 ? 0 : 1 + Math.random() * 3, x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r;
           tele({ kind: 'circle', x, y, r: 1.3, life: 1.0, col: '#ff3a7a', onDone: o => {
-            if (playerIn({ kind: 'circle', x: o.x, y: o.y, r: 1.3 })) hurtPlayer(85 * b.dm, o.x, o.y);
+            if (playerIn({ kind: 'circle', x: o.x, y: o.y, r: 1.3 })) hurtPlayer(85 * b.dm, o.x, o.y, 'gloom');
             fx({ type: 'pillar', x: o.x, y: o.y, col: '#ff5aa0', life: 0.4, r: 1.3 }); burst(o.x, o.y, 0, 12, ['#ff7ae0', '#2a1c38'], 3); shake(3);
           } });
         }
@@ -632,6 +656,7 @@ function applyWorldEnemies(list) {
     const src = list[k], base = ENEMY[k] || { name: k, ai: 'brute', hp: 300, r: 0.45, speed: 2, dmg: 30, range: 1.5, wind: 0.6, cd: 1.5, aoe: 1.8, shape: 'cone', hgt: 3, blood: '#c7a8ff' };
     ENEMY[k] = Object.assign({}, base, src);
     for (const f of ['hp', 'r', 'speed', 'dmg', 'range', 'wind', 'cd', 'aoe']) if (ENEMY[k][f] != null) ENEMY[k][f] = +ENEMY[k][f];
+  if (ENEMY[k].res) for (const el in ENEMY[k].res) ENEMY[k].res[el] = +ENEMY[k].res[el] || 0;
     const img = ENEMY[k].sprite && ART.custom[ENEMY[k].sprite];
     if (img) ENEMY[k].hgt = Math.max(1.5, img.height / ZS * 0.9);
   }

@@ -89,7 +89,7 @@ function update(dt, rdt) {
   G.parts = G.parts.filter(q => q.t < q.life);
   if (G.parts.length > 600) G.parts.splice(0, G.parts.length - 600);   // DESIGN §0 hard cap
   for (const t of G.texts) t.t += rdt;
-  G.texts = G.texts.filter(t => t.t < 0.9);
+  G.texts = G.texts.filter(t => t.t < (t.life || 0.9));
   G.shakeA = Math.max(0, G.shakeA - rdt * 30);
   updateCamera(rdt);
 }

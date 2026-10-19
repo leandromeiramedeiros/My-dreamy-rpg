@@ -43,12 +43,19 @@ for (const slot of SLOTS) for (const fam of ITEMS[slot]) FAMILY_TIERS[fam.id].fo
   BASES[id] = { id, name, slot, family: fam.id, tier, reqLvl: TIER_REQ[tier], icon: fam.icon, color: fam.color, kind: fam.kind };
 });
 const familyOf = base => (BASES[base] || {}).family;
-const PCT_STATS = { def: 1, power: 1, crit: 1, haste: 1, speed: 1, critDmg: 1, cdr: 1, skillDmg: 1 };
+// damage types (§5b): the hero resists these; enemies resist all of them + holy
+const RES_ELS = ['slash', 'pierce', 'fire', 'frost', 'nature', 'lightning', 'arcane', 'gloom'];
+const RES_SHORT = { slash: 'Sl', pierce: 'Pi', fire: 'Fi', frost: 'Fr', nature: 'Na', lightning: 'Li', arcane: 'Ar', gloom: 'Gl' };
+const EL_COL = { slash: '#ffffff', pierce: '#e7eeff', fire: '#ff9a4a', frost: '#9fe8ff', nature: '#8fe0a0', lightning: '#fff07a', arcane: '#d6b0ff', holy: '#fff2b0', gloom: '#c070ff' };
+const resKey = el => 'res' + el[0].toUpperCase() + el.slice(1);
+const PCT_STATS = { def: 1, power: 1, crit: 1, haste: 1, speed: 1, critDmg: 1, cdr: 1, skillDmg: 1, resAll: 1 };
+for (const el of RES_ELS) PCT_STATS[resKey(el)] = 1;
 function baseStats(b) {
   const fam = item(b.slot, b.family);
   if (b.slot === 'weapon') return { dmg: fam.basic.dmg * TIER_DMG[b.tier] };
   const s = {};
   for (const k in fam.stats) s[k] = fam.stats[k] * (PCT_STATS[k] ? TIER_PCT : TIER_FLAT)[b.tier];
+  for (const el in fam.res || {}) s[resKey(el)] = fam.res[el];   // chest family's built-in strength/weakness (±25%, flat)
   return s;
 }
 
@@ -56,13 +63,16 @@ function baseStats(b) {
 // value at item level L = (a + b*L) * roll(0.6..1)
 const AFFIX = { hp: [25, 6], mp: [15, 3], def: [0.02, 0.002], power: [0.03, 0.004], crit: [0.02, 0.0015], haste: [0.03, 0.003],
   regen: [1, 0.25], mpRegen: [0.8, 0.15], speed: [0.1, 0.01], critDmg: [0.08, 0.008], cdr: [0.02, 0.002], skillDmg: [0.04, 0.004] };
+for (const el of RES_ELS) AFFIX[resKey(el)] = 'res';   // resistance affixes roll 10-20%, not by level; resAll is legendary-only
 const STAT_NAME = { dmg: 'Damage', hp: 'HP', mp: 'MP', def: 'Defence', power: 'Damage', crit: 'Crit chance', haste: 'Attack speed', regen: 'HP/s',
-  mpRegen: 'MP/s', speed: 'Move speed', critDmg: 'Crit damage', cdr: 'Cooldowns', skillDmg: 'Skill damage' };
-const STAT_ORDER = ['dmg', 'hp', 'mp', 'def', 'power', 'skillDmg', 'crit', 'critDmg', 'haste', 'cdr', 'regen', 'mpRegen', 'speed'];
+  mpRegen: 'MP/s', speed: 'Move speed', critDmg: 'Crit damage', cdr: 'Cooldowns', skillDmg: 'Skill damage', resAll: 'All res' };
+for (const el of RES_ELS) STAT_NAME[resKey(el)] = el[0].toUpperCase() + el.slice(1) + ' res';
+const STAT_ORDER = ['dmg', 'hp', 'mp', 'def', 'power', 'skillDmg', 'crit', 'critDmg', 'haste', 'cdr', 'regen', 'mpRegen', 'speed', 'resAll', ...RES_ELS.map(resKey)];
 function fmtStat(k, v, sign = true) {
   const sg = sign ? (v >= 0 ? '+' : '-') : '', a = Math.abs(v);
   if (k === 'dmg') return `${sign && v < 0 ? '-' : ''}${Math.round(a)} ${STAT_NAME[k]}`;
   if (k === 'speed') return `${sg}${Math.round(a / 3.7 * 100)}% ${STAT_NAME[k]}`;
+  if (k.startsWith('res')) return `${sg}${Math.round(a * 100)}% ${STAT_NAME[k]}`;
   if (k === 'cdr') return `${sign ? (v >= 0 ? '-' : '+') : ''}${Math.round(a * 100)}% ${STAT_NAME[k]}`;
   if (PCT_STATS[k]) return `${sg}${Math.round(a * 100)}% ${STAT_NAME[k]}`;
   return `${sg}${a < 10 ? +a.toFixed(1) : Math.round(a)} ${STAT_NAME[k]}`;
@@ -80,19 +90,20 @@ const hasUnique = (p, id) => SLOTS.some(s => p.equip[s] && p.equip[s].unique ===
 const uniqueFor = key => Object.keys(UNIQUES).find(k => UNIQUES[k].boss === key);
 function makeUnique(id, ilvl) {
   const U = UNIQUES[id], it = makeItem(U.base, U.mythic ? 'mythic' : 'legendary', Math.max(ilvl, BASES[U.base].reqLvl));
-  it.unique = id; return it;
+  it.unique = id; it.affixes.push({ stat: 'resAll', v: 0.1 }); return it;
 }
 
 // ===== gems (DESIGN §4.3) ==========================================================
 const GEM_GRADES = ['Chipped', 'Clear', 'Radiant'], GEM_MAX = 3;
 const G5 = a => g => a[g - 1];   // per-grade value table (grade 1..3)
+const GR = g => [0.1, 0.2, 0.3][g - 1];   // armour gem resist (diamond: half, to everything)
 const GEMS = {
-  ruby: { name: 'Ruby', col: '#ff4a5a', el: 'fire', arm: g => ({ hp: G5([30, 100, 240])(g) }), wpn: g => ({ power: G5([0.04, 0.1, 0.2])(g) }), amp: 'Fire skills' },
-  sapphire: { name: 'Sapphire', col: '#4a8cff', el: 'frost', arm: g => ({ mp: G5([20, 55, 110])(g), mpRegen: G5([0.5, 1.5, 3])(g) }), wpn: g => ({ cdr: G5([0.02, 0.05, 0.1])(g) }), amp: 'Frost skills' },
-  emerald: { name: 'Emerald', col: '#3ad67a', el: 'nature', arm: g => ({ regen: G5([1, 3.5, 7])(g) }), wpn: g => ({ haste: G5([0.03, 0.08, 0.15])(g) }), amp: 'Nature skills, heals' },
-  topaz: { name: 'Topaz', col: '#ffc83a', el: 'lightning', arm: g => ({ crit: G5([0.01, 0.03, 0.06])(g) }), wpn: g => ({ critDmg: G5([0.08, 0.2, 0.4])(g) }), amp: 'Lightning skills, +chain' },
-  amethyst: { name: 'Amethyst', col: '#b46aff', el: 'arcane', arm: g => ({ power: G5([0.02, 0.06, 0.12])(g) }), wpn: g => ({ skillDmg: G5([0.04, 0.1, 0.2])(g) }), amp: 'Arcane skills' },
-  diamond: { name: 'Diamond', col: '#e8f4ff', el: null, arm: g => ({ def: G5([0.01, 0.03, 0.06])(g) }),
+  ruby: { name: 'Ruby', col: '#ff4a5a', el: 'fire', arm: g => ({ hp: G5([30, 100, 240])(g), resFire: GR(g) }), wpn: g => ({ power: G5([0.04, 0.1, 0.2])(g) }), amp: 'Fire skills' },
+  sapphire: { name: 'Sapphire', col: '#4a8cff', el: 'frost', arm: g => ({ mp: G5([20, 55, 110])(g), mpRegen: G5([0.5, 1.5, 3])(g), resFrost: GR(g) }), wpn: g => ({ cdr: G5([0.02, 0.05, 0.1])(g) }), amp: 'Frost skills' },
+  emerald: { name: 'Emerald', col: '#3ad67a', el: 'nature', arm: g => ({ regen: G5([1, 3.5, 7])(g), resNature: GR(g) }), wpn: g => ({ haste: G5([0.03, 0.08, 0.15])(g) }), amp: 'Nature skills, heals' },
+  topaz: { name: 'Topaz', col: '#ffc83a', el: 'lightning', arm: g => ({ crit: G5([0.01, 0.03, 0.06])(g), resLightning: GR(g) }), wpn: g => ({ critDmg: G5([0.08, 0.2, 0.4])(g) }), amp: 'Lightning skills, +chain' },
+  amethyst: { name: 'Amethyst', col: '#b46aff', el: 'arcane', arm: g => ({ power: G5([0.02, 0.06, 0.12])(g), resArcane: GR(g), resGloom: GR(g) }), wpn: g => ({ skillDmg: G5([0.04, 0.1, 0.2])(g) }), amp: 'Arcane skills' },
+  diamond: { name: 'Diamond', col: '#e8f4ff', el: null, arm: g => ({ def: G5([0.01, 0.03, 0.06])(g), resAll: GR(g) / 2 }),
     wpn: g => { const v = G5([0.01, 0.02, 0.04])(g); return { power: v, def: v, crit: v / 2, haste: v }; }, amp: 'Ultimate cooldown' },
 };
 const GEM_TYPES = Object.keys(GEMS);
@@ -121,9 +132,13 @@ function makeItem(base, rarity = 'common', ilvl, o = {}) {
   const b = BASES[base], R = RARITY[rarity];
   ilvl = clamp(Math.round(ilvl || b.reqLvl), 1, 30);
   const it = { uid: newUid(), base, slot: b.slot, rarity, ilvl, reqLvl: clamp(Math.max(b.reqLvl, ilvl - 2), 1, 30), affixes: [], sockets: [] };
-  const pool = Object.keys(AFFIX).filter(k => !(b.slot !== 'weapon' && k === 'skillDmg' && Math.random() < 0.5));
+  const pool = Object.keys(AFFIX).filter(k => AFFIX[k] !== 'res' && !(b.slot !== 'weapon' && k === 'skillDmg' && Math.random() < 0.5));
+  for (let n = 0; n < 2; n++) pool.push(resKey(pick2(RES_ELS)));   // two resist candidates per roll (dupes are skipped)
   for (let n = 0; n < R.affixes && pool.length; n++) {
-    const k = pool.splice((Math.random() * pool.length) | 0, 1)[0], [a, pl] = AFFIX[k];
+    const k = pool.splice((Math.random() * pool.length) | 0, 1)[0];
+    if (it.affixes.some(a => a.stat === k)) { n--; continue; }
+    if (AFFIX[k] === 'res') { it.affixes.push({ stat: k, v: Math.round(10 + Math.random() * 10) / 100 }); continue; }
+    const [a, pl] = AFFIX[k];
     let v = (a + pl * ilvl) * (0.6 + Math.random() * 0.4) * (1 + 0.08 * R.i);
     v = PCT_STATS[k] ? Math.round(v * 1000) / 1000 : (v < 10 ? Math.round(v * 10) / 10 : Math.round(v));
     it.affixes.push({ stat: k, v });
@@ -135,7 +150,7 @@ function makeItem(base, rarity = 'common', ilvl, o = {}) {
 // base + affix + unique + gem stats of one instance (summed)
 function itemBase(it) {
   const b = BASES[it.base], R = RARITY[it.rarity], k = R.mult * (1 + 0.015 * Math.max(0, it.ilvl - b.reqLvl)), base = {};
-  const bs = baseStats(b); for (const st in bs) base[st] = st === 'dmg' ? Math.round(bs[st] * k) : bs[st] * k;
+  const bs = baseStats(b); for (const st in bs) base[st] = st === 'dmg' ? Math.round(bs[st] * k) : st.startsWith('res') ? bs[st] : bs[st] * k;
   return base;
 }
 // one instance's stats: base + affixes + socketed gems, summed per stat (additive, §3 balance rule)
@@ -407,7 +422,7 @@ function applySave(p, s) {
   (s.bag || []).slice(0, BAG_SIZE).forEach((e, i) => { if (validItem(e)) p.bag[i] = e; else if (e && gemParse(e.gem) && e.n > 0) p.bag[i] = { gem: e.gem, n: e.n | 0 }; });
   if (s.wsk) for (const f in p.wsk) for (const k of ['q', 'e', 'r']) if (s.wsk[f] && SKILLS[s.wsk[f][k]] && item('weapon', f)[k].includes(s.wsk[f][k])) p.wsk[f][k] = s.wsk[f][k];
   if (Array.isArray(s.csk)) p.csk = s.csk.filter(id => CHAR_SKILLS.includes(id)).slice(0, 3);
-  G.prog = { chests: (s.prog && s.prog.chests) || {}, firsts: (s.prog && s.prog.firsts) || {} };
+  G.prog = { chests: (s.prog && s.prog.chests) || {}, firsts: (s.prog && s.prog.firsts) || {}, trig: (s.prog && s.prog.trig) || {}, seen: (s.prog && s.prog.seen) || {} };
   G.checkpoint = s.cp || null;
   UID = Math.max(UID, +s.uid || 0);
   recalcStats(p, true);
