@@ -184,7 +184,7 @@ function objective() {
   if (A.phase === 'intro') return 'Brace yourself...';
   if (A.phase === 'wave' || A.phase === 'break') return `Survive the waves (${A.wave + 1}/${WAVES.length})`;
   if (A.phase === 'bossIntro' || A.phase === 'boss') return 'Defeat the Gloam Warden';
-  return 'Return through the rift (SW)';
+  return 'Return through the rift (W)';
 }
 
 const SLOT_LABEL = { lmb: 'LMB', q: 'Q', e: 'E', r: 'R', f: 'F', c: 'C', shift: 'SHF', 1: '1', 2: '2', 3: '3' };

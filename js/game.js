@@ -603,7 +603,7 @@ function updateArena(dt) {
     G.boss = spawnEnemy('boss', G.map.cx + 1.5, G.map.cy - 1.5, 1.6);
   } else if (A.phase === 'boss' && G.boss && G.boss.dead) {
     A.phase = 'victory'; A.t = 99;
-    G.banner = { s: 'Victory', sub: 'The nightmare fades. A rift home opens to the southwest.', t: 5 };
+    G.banner = { s: 'Victory', sub: 'The nightmare fades. A rift home opens to the west.', t: 5 };
     for (const e of G.enemies) killEnemy(e);
     G.map.portalOpen = true;
   }
