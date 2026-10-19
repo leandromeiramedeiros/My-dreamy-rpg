@@ -20,27 +20,36 @@ function getMap(id) {
   if (!G.maps[id]) G.maps[id] = buildMapFromData(id, G.world.maps[id]);
   return G.maps[id];
 }
-function enterMap(id) {
+// `at` = { x, y } to arrive somewhere other than the map start (a checkpoint)
+function enterMap(id, at) {
   const m = getMap(id), p = G.player;
   G.map = m; prepTheme(m);
   for (const pt of m.portals) pt.open = (G.world.maps[id].portals.find(q => q.x === pt.x && q.y === pt.y) || pt).open !== false;
-  G.enemies = []; G.projs = []; G.effects = []; G.zones = []; G.parts = []; G.texts = []; G.delays = []; G.amb = [];
+  G.enemies = []; G.projs = []; G.effects = []; G.zones = []; G.parts = []; G.texts = []; G.delays = []; G.amb = []; G.drops = [];
   G.boss = null;
-  p.x = m.start.x; p.y = m.start.y; p.z = tileH(m, p.x, p.y); p.dash = null;
+  p.x = at ? at.x : m.start.x; p.y = at ? at.y : m.start.y; p.z = tileH(m, p.x, p.y); p.dash = null;
+  syncChests(m);
   G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
   G.banner = { s: m.name, sub: m.sub, t: 3.2, max: 3.2 };
   startTriggers();
   spawnCritters(m);
+  if (G.state === 'play') saveGame();   // autosave on zone entry
 }
 function transition(to) {
   if (G.fadeDir) return;
   G.fadeDir = 1; G.fadeTo = to; sfx('portal');
 }
+// death: lose 10% of this level's bar (never a level), wake at the last checkpoint (or this map's start) with
+// full HP and potions; settled triggers survive, so only the encounter you died in resets
+const deathXpLoss = p => Math.min(Math.floor(p.xp), Math.round(xpToNext(p.level) * 0.1));
 function respawn() {
   const p = G.player;
-  p.dead = false; p.buffs = {}; p.cds = {}; recalcStats(p, true);
+  p.xp -= deathXpLoss(p);
+  p.dead = false; p.buffs = {}; p.cds = {}; recalcStats(p, true); p.potions = MAX_POTIONS;
   G.state = 'play';
-  enterMap(G.map.id);
+  const cp = G.checkpoint && G.world.maps[G.checkpoint.map] ? G.checkpoint : null;
+  enterMap(cp ? cp.map : G.map.id, cp);
+  if (PARAMS.get('scene') === 'boss') skipToBoss();
 }
 
 // ===== update =========================================================================
@@ -61,12 +70,13 @@ function update(dt, rdt) {
     if (G.fadeDir <= 0) updatePlayer(p, dt);
     updateEnemies(dt); updateProjs(dt); updateZones(dt); updateCritters(dt);
     updateTriggers(dt);
-    for (const d of G.delays.slice()) { d.t -= dt; if (d.t <= 0) { d.done = true; d.fn(); } }
+    for (const d of G.delays.slice()) { d.t -= dt; if (d.t <= 0) { d.done = true; withCast(d.c || null, d.fn); } }
     G.delays = G.delays.filter(d => !d.done);
     if (G.state === 'play') {
       for (const pt of m.portals) if (pt.open && G.world.maps[pt.to] && dist(p.x, p.y, pt.x, pt.y) < 0.85 && Math.abs(p.z - pt.z) < 0.6) transition(pt.to);
     }
-    if (G.state === 'dead') G.deadT += rdt;
+    updateLoot(dt);
+    if (G.state === 'dead') { G.deadT += rdt; if (G.deadT > 4.5) respawn(); }
   }
   updateAmbient(rdt);
   for (const e of G.effects) { e.t += dt; if (e.t >= e.life) { e.done = true; if (e.onDone) e.onDone(e); } }
@@ -77,7 +87,7 @@ function update(dt, rdt) {
     if (q.petal) { q.x += Math.sin(G.t * 2 + q.y) * rdt * 0.3; if (q.z < tileH(m, q.x, q.y)) { q.vz = 0; q.vx = 0; q.vy = 0; } }
   }
   G.parts = G.parts.filter(q => q.t < q.life);
-  if (G.parts.length > 1600) G.parts.splice(0, G.parts.length - 1600);
+  if (G.parts.length > 600) G.parts.splice(0, G.parts.length - 600);   // DESIGN §0 hard cap
   for (const t of G.texts) t.t += rdt;
   G.texts = G.texts.filter(t => t.t < 0.9);
   G.shakeA = Math.max(0, G.shakeA - rdt * 30);
@@ -119,14 +129,15 @@ const SKILL_KEYS = { q: 'q', e: 'e', r: 'r', f: 'f', c: 'c', '1': '1', '2': '2',
 window.addEventListener('keydown', ev => {
   const k = ev.key.toLowerCase();
   if (k === 'tab' || k === ' ' || k.startsWith('arrow')) ev.preventDefault();
-  if (G.state === 'title') { if (k === 'enter' || k === ' ') startGame(); return; }
+  if (G.state === 'title') { if (k === 'enter' || k === ' ') titleDefault(); return; }
   if (ev.repeat && k !== 'w' && k !== 'a' && k !== 's' && k !== 'd') return;
   G.keys[k] = true;
-  if (k === 'tab' || k === 'i') { G.ui.open = !G.ui.open; G.ui.help = false; return; }
-  if (k === 'escape') { G.ui.open = false; G.ui.help = false; return; }
-  if (k === 'h') { G.ui.help = !G.ui.help; G.ui.open = false; return; }
+  if (k === 'tab' || k === 'i') { if (G.ui.open) closeInv(); else if (G.state === 'play') openInv(); G.ui.help = false; return; }
+  if (k === 'escape') { closeInv(); G.ui.help = false; return; }
+  if (k === 'h') { G.ui.help = !G.ui.help; closeInv(); return; }
   if (k === 'm') { G.muted = !G.muted; say(G.muted ? 'Sound off' : 'Sound on'); return; }
   if (G.ui.open || G.state !== 'play' || G.fadeDir) return;
+  if (k === '4') { drinkPotion(G.player); return; }
   if (SKILL_KEYS[k]) useSkill(G.player, SKILL_KEYS[k]);
 });
 window.addEventListener('keyup', ev => { G.keys[ev.key.toLowerCase()] = false; });
@@ -140,18 +151,34 @@ function mousePos(ev) {
 DISP.addEventListener('mousemove', mousePos);
 DISP.addEventListener('mousedown', ev => {
   mousePos(ev); initAudio();
-  if (G.state === 'title') { startGame(); return; }
+  if (G.state === 'title') { titleClick(G.mouse.dx, G.mouse.dy); return; }
   if (G.state === 'dead') { if (G.deadT > 1) respawn(); return; }
   if (G.ui.help) { G.ui.help = false; return; }
-  if (G.ui.open) {
-    for (const b of G.ui.btns) if (G.mouse.dx >= b.x && G.mouse.dx < b.x + b.w && G.mouse.dy >= b.y && G.mouse.dy < b.y + b.h) { b.fn(); return; }
-    return;
-  }
+  if (G.ui.open) { uiClick(G.mouse.dx, G.mouse.dy, ev.button === 2); return; }
   if (ev.button === 0) { G.mouse.down = true; basicAttack(G.player); }
 });
 window.addEventListener('mouseup', () => { G.mouse.down = false; });
 DISP.addEventListener('contextmenu', ev => ev.preventDefault());
-function startGame() { G.state = 'play'; initAudio(); G.banner = { s: G.map.name, sub: G.map.sub, t: 3.2, max: 3.2 }; }
+// ===== title: Continue (when a save exists) / New Game ===================================
+function uiClick(x, y, alt) {
+  for (const b of G.ui.btns) if (x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) { b.fn(alt); return true; }
+  return false;
+}
+function beginPlay() { G.state = 'play'; initAudio(); G.banner = { s: G.map.name, sub: G.map.sub, t: 3.2, max: 3.2 }; }
+function newGame() {
+  clearSave(); G.prog = { chests: {}, firsts: {}, trig: {} }; G.checkpoint = null;
+  G.player = makePlayer(); G.state = 'title'; enterMap(G.world.start); beginPlay(); saveGame();
+}
+function continueGame(s) {
+  G.player = makePlayer(); applySave(G.player, s);
+  const id = G.world.maps[s.map] ? s.map : G.world.start, cp = G.checkpoint && G.checkpoint.map === id ? G.checkpoint : null;
+  enterMap(id, cp); beginPlay();
+}
+G.save = SAVE_ON ? readSave() : null;
+function titleDefault() { if (G.save) continueGame(G.save); else newGame(); }
+// a click that misses the buttons does the default (Continue, else New Game)
+function titleClick(x, y) { initAudio(); if (!uiClick(x, y)) titleDefault(); }
+function startGame() { titleDefault(); }
 
 // ===== boot ==============================================================================
 // The world (maps, triggers, tuning) comes from js/world.js. Play-testing from the editor
@@ -171,21 +198,31 @@ async function boot() {
   applyTuning(G.world.tuning);
   applyWorldEnemies(G.world.enemies);
   G.player = makePlayer();
-  // ?map=<id> (play-test / showcase), ?scene=play|arena|boss|loadout|portal, &weapon=starfall|moonbow
-  const w = PARAMS.get('weapon');
-  if (w && ITEMS.weapon.some(i => i.id === w)) { G.player.gear.weapon = w; }
+  // ?map=<id> (play-test / showcase), ?scene=play|arena|boss|loadout|portal|inventory, &weapon=starfall|moonbow
+  // showcase scenes get a mid-level (L14) kit; they never read or write the real save
+  const w = PARAMS.get('weapon'), wf = w && ITEMS.weapon.some(i => i.id === w) ? w : null;
   const scene = PARAMS.get('scene');
+  if (scene) showcaseKit(G.player, wf || 'dawnblade');
+  else if (wf) { G.player.equip.weapon = makeItem(FAMILY_TIERS[wf][0].split(':')[0], 'common', 1, { sockets: 0 }); recalcStats(G.player, true); }
+  if (scene === 'inventory') sampleBag(G.player);
   let start = PARAMS.get('map') || G.world.start;
   if ((scene === 'arena' || scene === 'boss') && G.world.maps.ruins) start = 'ruins';
   if (!G.world.maps[start]) start = Object.keys(G.world.maps)[0];
   enterMap(start);
   if (scene || PARAMS.get('playtest') || PARAMS.get('map')) G.state = 'play';
-  if (scene === 'boss') { const tr = G.map.triggers.find(t => (t.actions || []).some(a => a.type === 'spawn_boss')); if (tr) { G.trig.fired[tr.id] = true; for (const t of G.map.triggers.slice(0, G.map.triggers.indexOf(tr))) G.trig.fired[t.id] = true; for (const a of tr.actions) if (a.type !== 'wait') runAction(a); } }
-  if (scene === 'loadout') G.ui.open = true;
+  if (scene === 'boss') skipToBoss();
+  if (scene === 'loadout') openInv('skills');
+  if (scene === 'inventory') openInv('inv');
   if (scene === 'portal') { const pt = G.map.portals.find(q => q.marker) || G.map.portals[0]; if (pt) { G.player.x = pt.x - 1; G.player.y = pt.y + 1.1; G.player.z = tileH(G.map, G.player.x, G.player.y); } }
   document.getElementById('loading').style.display = 'none';
   window.__ready = true;
   requestAnimationFrame(loop);
+}
+// ?scene=boss: mark everything before the boss trigger fired, then run it
+function skipToBoss() {
+  const tr = G.map.triggers.find(t => (t.actions || []).some(a => a.type === 'spawn_boss')); if (!tr) return;
+  G.trig.fired[tr.id] = true; for (const t of G.map.triggers.slice(0, G.map.triggers.indexOf(tr))) G.trig.fired[t.id] = true;
+  for (const a of tr.actions) if (a.type !== 'wait') runAction(a);
 }
 const startBoot = () => setTimeout(boot, 30);
 if (document.fonts && document.fonts.load) document.fonts.load('16px "Press Start 2P"').then(startBoot, startBoot); else startBoot();

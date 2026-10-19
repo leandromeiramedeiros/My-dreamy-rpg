@@ -312,6 +312,8 @@ const OBJ_TYPES = {
   crystal_violet: { label: 'Violet crystal', img: () => [ART.crystalViolet], r: 0.25, light: { r: 50, col: '#b36bff', a: 0.8, h: 10 } },
   sign: { label: 'Sign', img: () => [ART.sign], r: 0.15, shadow: 4 },
   shrine: { label: 'Shrine', img: () => [ART.shrine], r: 0.35, shadow: 7 },
+  checkpoint: { label: 'Checkpoint shrine', img: () => [ART.shrine], r: 0.35, shadow: 7, checkpoint: true, light: { r: 56, col: '#9ef0ff', a: 0.85, h: 16 } },
+  chest: { label: 'Treasure chest', img: () => [ART.chest], r: 0.3, shadow: 6, chest: true },
   brazier: { label: 'Brazier', img: () => [ART.brazier], r: 0.3, shadow: 5, brazier: true, light: { r: 80, col: '#b36bff', a: 1, h: 12 } },
   house: { label: 'Cottage (2x2)', img: () => [ART.house.c], house: true },
   pine_giant: { label: 'Giant pine', img: () => ART.pines.giant, r: 0.45, shadow: 16 },
@@ -367,7 +369,7 @@ function placeObjects(m, d) {
     }
     if (def.critter) { m.critterSpawns.push({ type: def.critter, x: o.x, y: o.y }); if (!window.EDITOR_MODE) continue; }
     const imgs = def.img(), img = imgs[(o.v || 0) % imgs.length];
-    addProp(m, img, o.x, o.y, { r: def.r || 0, shadow: def.shadow || 0, flip: !!o.f, grass: !!def.grass, sway: rand(0, 6.28), brazier: !!def.brazier, beam: !!def.beam && !window.EDITOR_MODE, light: def.light ? Object.assign({}, def.light) : undefined, src: o });
+    addProp(m, img, o.x, o.y, { r: def.r || 0, shadow: def.shadow || 0, flip: !!o.f, grass: !!def.grass, sway: rand(0, 6.28), brazier: !!def.brazier, beam: !!def.beam && !window.EDITOR_MODE, chest: !!def.chest, checkpoint: !!def.checkpoint, light: def.light ? Object.assign({}, def.light) : undefined, src: o });
   }
   for (const p of m.portals) m.objects.push({ kind: 'portal', x: p.x, y: p.y, z: p.z, key: p.x + p.y + p.z * 0.35, portal: p });
 }

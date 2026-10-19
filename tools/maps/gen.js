@@ -163,7 +163,10 @@ const T = {
   sound: name => ({ type: 'sound', name }),
   shake: power => ({ type: 'shake', power }),
   openPortal: index => ({ type: 'open_portal', index }),
-  spawn: (enemy, count, x, y, radius, extra) => Object.assign({ type: 'spawn', enemy, count, x: r2(x), y: r2(y) }, radius != null ? { radius } : {}, extra || {}),
+  spawn(enemy, count, x, y, radius, extra) {
+    const e = Object.assign({}, extra || {}); if (e.elite && T.mode !== 'future') delete e.elite;   // planned flag: spawn elite:true
+    return Object.assign({ type: 'spawn', enemy, count, x: r2(x), y: r2(y) }, radius != null ? { radius } : {}, e);
+  },
   enter: (id, name, x, y, r, actions, requires) => Object.assign({ id, name, when: { type: 'enter_area', x: r2(x), y: r2(y), r } }, requires && requires.length ? { requires } : {}, { actions }),
   mapEnter: (id, name, actions) => ({ id, name, when: { type: 'map_enter' }, actions }),
   allDead: (id, name, requires, actions) => ({ id, name, when: { type: 'all_enemies_dead' }, requires, actions }),
@@ -246,8 +249,13 @@ class MapGen {
     for (const p of this.paths) {
       const cps = [];
       if (p.from) {
-        const par = this.pathBy[p.from.path]; if (!par || !par.samples) throw new Error(`path ${p.name}: parent ${p.from.path} not built`);
-        const idx = clamp(Math.round(p.from.at * (par.samples.length - 1)), 0, par.samples.length - 1), sp = par.samples[idx];
+        const par = this.pathBy[p.from.path || 'main']; if (!par || !par.samples) throw new Error(`path ${p.name}: parent ${p.from.path} not built`);
+        let idx;
+        if (p.from.room || p.from.near) {
+          const [nx, ny] = p.from.room ? [this.roomBy[p.from.room].x, this.roomBy[p.from.room].y] : p.from.near;
+          idx = 0; let bd = 1e9; par.samples.forEach((q, k) => { const d = Math.hypot(q.x - nx, q.y - ny); if (d < bd) { bd = d; idx = k; } });
+        } else idx = clamp(Math.round(p.from.at * (par.samples.length - 1)), 0, par.samples.length - 1);
+        const sp = par.samples[idx];
         p.junction = { idx, x: sp.x, y: sp.y };
         cps.push({ x: sp.x + (p.from.dx || 0), y: sp.y + (p.from.dy || 0), lvl: Math.round(par.prof[idx]), hold: 0, orig: true, j: true });
       }
@@ -792,7 +800,12 @@ class MapGen {
     m.tiles.forEach((r, y) => { if (r.length !== this.W) errs.push(`tiles[${y}] length ${r.length}`); if (m.heights[y].length !== this.W) errs.push(`heights[${y}] length`); });
     if (!this.walkTile(m.start.x, m.start.y)) errs.push('start is not on walkable ground');
     const R = this.reach(m.start.x, m.start.y);
-    const chk = (what, x, y) => { if (!this.walkTile(x, y)) errs.push(`${what} (${x},${y}) not on walkable ground`); else if (!R.has(x, y)) errs.push(`${what} (${x},${y}) unreachable from start`); };
+    const chk = (what, x, y) => {
+      if (!this.walkTile(x, y)) { errs.push(`${what} (${x},${y}) not on walkable ground`); return; }
+      let ok = R.has(x, y);   // props with colliders block their own cell: accept any reachable cell within 1.1 tiles
+      for (let a = 0; a < 16 && !ok; a++) for (const rr of [0.6, 0.9, 1.1]) if (R.has(x + Math.cos(a / 16 * 6.283) * rr, y + Math.sin(a / 16 * 6.283) * rr)) { ok = true; break; }
+      if (!ok) errs.push(`${what} (${x},${y}) unreachable from start`);
+    };
     for (const p of this.portals) chk('portal ' + p.to, p.x, p.y);
     for (const mk of this.markers) { if (mk.secretOnly) continue; chk('marker ' + mk.t + (mk.label ? ':' + mk.label : ''), mk.x, mk.y); }
     for (const rm of this.rooms) { if (rm.kind === 'flat') continue; chk('room ' + rm.id, rm.x, rm.y); }

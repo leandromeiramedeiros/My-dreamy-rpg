@@ -91,7 +91,11 @@ const HEAD_OVERLAYS = {
   },
 };
 
-function buildPlayerSprites(gear) {
+// The sprite seam: takes the equipped gear INSTANCES ({ slot: { base, ... } }, items.js) or plain family ids.
+// M1 still draws by family; M3 swaps this body for HERO.build(equippedVisual(...)).
+function buildPlayerSprites(equip) {
+  const gear = {};
+  for (const s of ['weapon', 'head', 'chest', 'boots']) { const v = equip[s]; gear[s] = typeof v === 'string' ? v : (v && familyOf(v.base)) || ITEMS[s][0].id; }
   const head = ITEMS.head.find(i => i.id === gear.head);
   const chest = ITEMS.chest.find(i => i.id === gear.chest);
   const boots = ITEMS.boots.find(i => i.id === gear.boots);
@@ -573,6 +577,9 @@ function makeIcon(glyph, color) {
     case 'helm': A(8, 9, 5, Math.PI, 0); L(3, 9, 13, 9); L(8, 4, 8, 12); break;
     case 'chest': x.strokeRect(4, 3, 8, 10); L(4, 6, 12, 6); break;
     case 'boots': L(5, 2, 5, 12); L(5, 12, 12, 12); L(9, 2, 9, 9); break;
+    case 'gem': x.beginPath(); x.moveTo(8, 2); x.lineTo(13, 6); x.lineTo(8, 14); x.lineTo(3, 6); x.closePath(); x.fill(); x.strokeStyle = 'rgba(0,0,0,0.5)'; L(3, 6, 13, 6); L(8, 2, 6, 6); L(8, 2, 10, 6); L(6, 6, 8, 14); L(10, 6, 8, 14); break;
+    case 'potion': x.fillRect(7, 2, 2, 3); C(8, 10, 4.2, true); x.fillStyle = 'rgba(255,80,110,0.9)'; C(8, 10.8, 3, true); break;
+    case 'dust': for (const [sx, sy, r] of [[5, 6, 1.6], [10, 4, 1.2], [9, 10, 2], [4, 12, 1.2], [13, 9, 1]]) C(sx, sy, r, true); break;
     default: C(8, 8, 4, true);
   }
   // frame
@@ -763,7 +770,18 @@ function buildArt() {
   buildProps();
   buildForest();
   applySprites();
+  buildChests();
   ART.icons = {};
+}
+// treasure chest (closed / open) for the `chest` world object
+function buildChests() {
+  const pal = { K: '#1a1326', W: '#8a5a34', w: '#5e3a20', G: '#ffd35a', g: '#b8862a', I: '#2a1a10', L: '#fff2b0' };
+  ART.chest = asciiSprite([
+    '..KKKKKKKKKK..', '.KWWWWWWWWWWK.', 'KWwwwwwwwwwwWK', 'KGGGGGGGGGGGGK', 'KWWWWWGGWWWWWK', 'KWwwwwGLwwwwWK',
+    'KWwwwwGGwwwwWK', 'KWwwwwwwwwwwWK', 'KgWWWWWWWWWWgK', '.KKKKKKKKKKKK.'], pal);
+  ART.chestOpen = asciiSprite([
+    '.KKKKKKKKKKKK.', 'KWwwwwwwwwwwWK', 'KWWWWWWWWWWWWK', 'KGGGGGGGGGGGGK', 'KIIIIIIIIIIIIK', 'KGGGGGGGGGGGGK',
+    'KWWWWWGGWWWWWK', 'KWwwwwwwwwwwWK', 'KgWWWWWWWWWWgK', '.KKKKKKKKKKKK.'], pal);
 }
 function icon(glyph, color) {
   const k = glyph + color;

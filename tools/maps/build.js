@@ -67,6 +67,7 @@ if (require.main === module) {
     console.log(`${r.id}: ${i.W}x${i.H} land=${i.land} reach=${i.reachableTiles} levels=[${i.levels}] objects=${i.objects} triggers=${i.triggers} portals=${i.portals} rooms=${i.rooms}`);
     const main = r.meta.paths.find(p => p.kind === 'main');
     if (main) console.log(`  main path ${main.length.toFixed(0)} tiles = ${(main.length / 3.7).toFixed(0)} s walk @3.7 t/s` + r.meta.paths.filter(p => p.kind !== 'main').map(p => `; ${p.name}(${p.kind}) ${p.length.toFixed(0)}t/${(p.length / 3.7).toFixed(0)}s`).join(''));
+    if (main) { const g = r.gen, mp = g.pathBy.main; let prev = 0, prevName = 'start'; const legs = []; for (const c of mp.ctrl) if (c.room) { legs.push(`${prevName}->${c.room.id} ${(c.s - prev).toFixed(0)}t/${((c.s - prev) / 3.7).toFixed(0)}s`); prev = c.s; prevName = c.room.id; } console.log('  legs: ' + legs.join('; ')); }
     if (flag('verbose')) console.log('  ', JSON.stringify(i.objectCounts));
     for (const w of rep.warnings) console.log('  WARN', w);
     for (const e of rep.errors) { console.log('  ERROR', e); bad++; }

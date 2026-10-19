@@ -8,15 +8,16 @@ const G = {
   shakeA: 0, hitstopT: 0, state: 'title', cam: { x: 0, y: 0 },
   mouse: { x: RW / 2, y: RH / 2, dx: DW / 2, dy: DH / 2, wx: 0, wy: 0, down: false },
   keys: {}, ui: { open: false, help: false }, banner: null, msg: null, kills: {}, pendingSpawns: 0, objective: '',
-  arena: null, fade: 0, fadeDir: 0, fadeTo: null, boss: null, muted: false,
+  arena: null, fade: 0, fadeDir: 0, fadeTo: null, boss: null, muted: false, drops: [],
+  prog: { chests: {}, firsts: {}, trig: {} }, checkpoint: null,
 };
 
 // ===== audio (tiny synth) ======================================================
 let AC = null;
 function initAudio() { if (!AC) try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } }
-function tone(f0, f1, dur, type = 'sine', vol = 0.08, noise = false) {
+function tone(f0, f1, dur, type = 'sine', vol = 0.08, noise = false, at = 0) {
   if (!AC || G.muted) return;
-  const t = AC.currentTime, g = AC.createGain();
+  const t = AC.currentTime + at, g = AC.createGain();
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   let src;
   if (noise) {
@@ -56,15 +57,28 @@ function sfx(k) {
     case 'portal': tone(200, 800, 1.2, 'sine', 0.08); tone(300, 1200, 1.2, 'triangle', 0.04); break;
     case 'die': tone(400, 60, 0.4, 0, 0.08, true); break;
     case 'roar': tone(120, 40, 1.0, 'sawtooth', 0.1); tone(400, 80, 1.0, 0, 0.08, true); break;
+    case 'levelup': [523, 659, 784, 1047].forEach((f, i) => tone(f, f * 1.01, 0.32, 'triangle', 0.06, false, i * 0.09)); tone(1568, 2093, 0.6, 'sine', 0.03, false, 0.36); break;
+    case 'pickup': tone(880, 1320, 0.09, 'sine', 0.04); break;
+    case 'loot': tone(660, 1320, 0.25, 'triangle', 0.05); tone(990, 1980, 0.3, 'sine', 0.03, false, 0.06); break;
+    case 'chest': tone(180, 420, 0.22, 'square', 0.04); tone(2000, 600, 0.2, 0, 0.04, true); break;
+    default: if (/^drop\d$/.test(k)) {   // drop chime: one more, higher note per rarity step
+      const n = +k[4];
+      for (let i = 0; i < n; i++) tone(660 * Math.pow(1.26, i), 660 * Math.pow(1.26, i) * 1.01, 0.22 + n * 0.04, 'triangle', 0.035 + n * 0.006, false, i * 0.07);
+      if (n >= 3) tone(2640, 3520, 0.5, 'sine', 0.02, false, n * 0.07);
+    }
   }
 }
 
 // ===== generic helpers ==========================================================
-const delay = (t, fn) => G.delays.push({ t, fn });
+// CAST = the skill being resolved ({ skill, el }); delays/projectiles/zones/dashes capture it so gem
+// amplification and skill damage still apply when the hit lands later. Basic attacks run with CAST = null.
+let CAST = null;
+function withCast(c, fn) { const o = CAST; CAST = c; try { fn(); } finally { CAST = o; } }
+const delay = (t, fn) => G.delays.push({ t, fn, c: CAST });
 const shake = a => { G.shakeA = Math.max(G.shakeA, a); };
 const hitstop = t => { G.hitstopT = Math.max(G.hitstopT, t); };
 const fx = o => { o.t = 0; G.effects.push(o); return o; };
-const zone = o => { o.t = 0; o.tickT = 0; G.zones.push(o); return o; };
+const zone = o => { o.t = 0; o.tickT = 0; o.cast = CAST; G.zones.push(o); return o; };
 function burst(x, y, z, n, cols, spd = 3, o = {}) {
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2, s = Math.random() * spd;
@@ -78,24 +92,34 @@ function text(x, y, z, s, col, big = false) { G.texts.push({ x, y, z, s, col, bi
 function makePlayer() {
   const p = {
     x: 0, y: 0, z: 0, r: 0.28, aim: 0, face: 1, back: false, walkT: 0, moving: false,
-    gear: { weapon: 'dawnblade', head: 'knighthelm', chest: 'knightplate', boots: 'knightgreaves' },
+    gear: { weapon: 'dawnblade', head: 'knighthelm', chest: 'knightplate', boots: 'knightgreaves' },   // family ids, derived from p.equip
+    equip: {}, bag: [], dust: 0, potions: 3, xp: 0, cdm: {},
     wsk: { dawnblade: { q: 'sunslash', e: 'dashstrike', r: 'judgement' }, starfall: { q: 'firebolt', e: 'barrage', r: 'meteor' }, moonbow: { q: 'multishot', e: 'tumble', r: 'arrowrain' } },
     csk: ['secondwind', 'chain', 'shootingstar'],
     cds: {}, buffs: {}, atkT: 0, combo: 0, swing: null, dash: null, invulnT: 0, hurtT: 0, rootT: 0, slowT: 0, castT: 0, spin: 0,
-    name: 'Aerin', level: 24, dead: false,
+    name: 'Aerin', level: 1, dead: false,
   };
+  starterKit(p);
   recalcStats(p, true);
   return p;
 }
+// The stats seam (§3 balance rule): every gear/affix/gem bonus is summed per stat, then applied once.
+// Base damage = tuning x level x (equipped weapon damage / its family's reference damage), so the basic
+// attack AND every skill scale with the weapon; p.bonus is the single additive damage % sum.
 function recalcStats(p, full) {
-  const s = { hp: 0, mp: 0, def: 0, power: 0, crit: 0, haste: 0, regen: 0, mpRegen: 0, speed: 0 };
-  for (const slot of ['head', 'chest', 'boots']) { const it = item(slot, p.gear[slot]); for (const k in it.stats) s[k] += it.stats[k]; }
-  const hpR = full ? 1 : p.hp / p.maxHp, mpR = full ? 1 : p.mp / p.maxMp;
-  const B = G.tune.player;
-  p.maxHp = B.hp + s.hp; p.maxMp = B.mp + s.mp; p.maxSt = B.stamina;
-  p.def = s.def; p.power = (1 + s.power) * B.damage; p.crit = B.crit + s.crit; p.haste = s.haste; p.regen = B.regen + s.regen; p.mpRegen = B.mpRegen + s.mpRegen; p.speed = B.speed + s.speed;
+  const s = { hp: 0, mp: 0, def: 0, power: 0, crit: 0, haste: 0, regen: 0, mpRegen: 0, speed: 0, critDmg: 0, cdr: 0, skillDmg: 0, dmg: 0 };
+  for (const slot of SLOTS) { const it = p.equip[slot]; if (!it) continue; p.gear[slot] = familyOf(it.base); const st = statsOf(it); for (const k in st) s[k] += st[k]; }
+  p.amp = gemAmp(p);
+  const hpR = full || !p.maxHp ? 1 : p.hp / p.maxHp, mpR = full || !p.maxMp ? 1 : p.mp / p.maxMp;
+  const B = G.tune.player, L = p.level - 1, w = item('weapon', p.gear.weapon);
+  p.maxHp = Math.round(B.hp * (1 + 0.04 * L) + s.hp); p.maxMp = Math.round(B.mp + s.mp); p.maxSt = B.stamina;
+  p.wdmg = s.dmg || w.basic.dmg; p.dmgBase = B.damage * (1 + 0.03 * L) * p.wdmg / w.basic.dmg; p.bonus = s.power;
+  p.power = p.dmgBase * (1 + p.bonus);
+  p.def = Math.min(0.75, s.def); p.crit = Math.min(0.75, B.crit + s.crit); p.critDmg = 0.8 + s.critDmg; p.haste = Math.min(1, s.haste);
+  p.cdr = Math.min(0.4, s.cdr); p.skillDmg = s.skillDmg; p.regen = B.regen + s.regen; p.mpRegen = B.mpRegen + s.mpRegen; p.speed = B.speed + s.speed;
   p.hp = p.maxHp * hpR; p.mp = p.maxMp * mpR; if (full) p.st = p.maxSt;
-  p.spr = buildPlayerSprites(p.gear);
+  const key = SLOTS.map(k => p.gear[k]).join();
+  if (key !== p.sprKey) { p.sprKey = key; p.spr = buildPlayerSprites(p.equip); }
 }
 const SLOT_KEYS = ['q', 'e', 'r', 'f', 'c', 'shift', '1', '2', '3'];
 function slotSkill(p, slot) {
@@ -111,12 +135,14 @@ function useSkill(p, slot) {
   if ((p.cds[id] || 0) > 0 || p.dash || p.rootT > 0) return;
   if ((s.mp || 0) > p.mp) { say('Not enough mana'); return; }
   if ((s.st || 0) > p.st) { say('Not enough stamina'); return; }
-  p.mp -= s.mp || 0; p.st -= s.st || 0; p.cds[id] = s.cd;
-  s.cast(p, p.aim, G.mouse.wx, G.mouse.wy);
+  // cooldown reduction is additive too (affix/sapphire cdr + diamond on the ultimate), capped at 50%
+  p.mp -= s.mp || 0; p.st -= s.st || 0; p.cds[id] = p.cdm[id] = s.cd * (1 - Math.min(0.5, p.cdr + (slot === 'r' ? ultCdr(p) : 0)));
+  withCast({ skill: id, el: s.element }, () => s.cast(p, p.aim, G.mouse.wx, G.mouse.wy));
   G.lastCast = { slot, t: 0.25 };
 }
 function say(s) { G.msg = { s, t: 1.6 }; }
-const buffMul = p => (p.buffs.bless ? 1.4 : 1) * (p.buffs.surge ? 1.3 : 1) * (p.buffs.focus ? 1.3 : 1);
+// temporary buffs stay multiplicative but cap at 1.6x (bless x surge x focus was 2.37x)
+const buffMul = p => Math.min(1.6, (p.buffs.bless ? 1.4 : 1) * (p.buffs.surge ? 1.3 : 1) * (p.buffs.focus ? 1.3 : 1));
 function addBuff(p, id, t) { p.buffs[id] = { t, max: t }; }
 function healPlayer(p, n) { p.hp = Math.min(p.maxHp, p.hp + n); text(p.x, p.y, p.z + 3, '+' + Math.round(n), '#8fffa8'); }
 function swingWeapon(p, dur, arc, dir) { p.swing = { t: 0, dur, arc, dir: dir || (Math.random() < 0.5 ? 1 : -1) }; }
@@ -146,7 +172,7 @@ function basicAttack(p) {
 
 function dashPlayer(p, dx, dy, distance, dur, opt = {}) {
   const l = Math.hypot(dx, dy) || 1;
-  p.dash = { vx: dx / l * distance / dur, vy: dy / l * distance / dur, t: dur, opt, hit: new Set(), ghostT: 0 };
+  p.dash = { vx: dx / l * distance / dur, vy: dy / l * distance / dur, t: dur, opt, hit: new Set(), ghostT: 0, cast: CAST };
 }
 function blinkPlayer(p, a, d) {
   const ox = p.x, oy = p.y;
@@ -165,7 +191,7 @@ function chainLightning(p, tx, ty) {
   let cur = nearestEnemy(tx, ty, 3, null) || nearestEnemy(p.x, p.y, 7, null);
   const pts = [[p.x, p.y, p.z + 1.6]], hit = new Set();
   if (!cur) { const [ax, ay] = targetIn(p, tx, ty, 5); pts.push([ax, ay, 0.3]); fx({ type: 'lightning', pts, life: 0.25, col: '#bff0ff' }); return; }
-  for (let k = 0; k < 6 && cur; k++) {
+  for (let k = 0; k < 6 + chainBonus(p) && cur; k++) {   // topaz: +1 jump per 2 grades
     hit.add(cur); pts.push([cur.x, cur.y, cur.z + 1]);
     const tgt = cur;
     delay(k * 0.05, () => damageEnemy(tgt, 95, { stun: 0.2 }));
@@ -209,7 +235,7 @@ function updatePlayer(p, dt) {
   for (const k in p.buffs) { p.buffs[k].t -= dt; if (p.buffs[k].t <= 0) delete p.buffs[k]; }
   p.atkT -= dt; p.invulnT -= dt; p.hurtT -= dt; p.castT -= dt; p.rootT -= dt; p.slowT -= dt; p.spin -= dt;
   if (p.dead) return;
-  p.hp = Math.min(p.maxHp, p.hp + p.regen * dt + (p.buffs.mend ? p.maxHp * 0.25 / 4 * dt : 0));
+  p.hp = Math.min(p.maxHp, p.hp + p.regen * dt + (p.buffs.mend ? p.maxHp * 0.25 / 4 * dt * healMul(p) : 0));
   p.mp = Math.min(p.maxMp, p.mp + p.mpRegen * dt);
   p.st = Math.min(p.maxSt, p.st + 22 * dt);
   if (p.swing) { p.swing.t += dt; if (p.swing.t > p.swing.dur) p.swing = null; }
@@ -233,9 +259,9 @@ function updatePlayer(p, dt) {
     if (d.opt.roll && d.ghostT <= 0) { d.ghostT = 0.04; burst(p.x, p.y, p.z, 2, ['#e7e0ff'], 1, { glow: false }); }
     if (d.opt.hit) for (const e of G.enemies) {
       if (e.dead || d.hit.has(e) || e.spawnT > 0) continue;
-      if (dist(p.x, p.y, e.x, e.y) < d.opt.hit.r + e.r) { d.hit.add(e); damageEnemy(e, d.opt.hit.dmg, { knock: d.opt.hit.knock }); }
+      if (dist(p.x, p.y, e.x, e.y) < d.opt.hit.r + e.r) { d.hit.add(e); damageEnemy(e, d.opt.hit.dmg, { knock: d.opt.hit.knock, cast: d.cast }); }
     }
-    if (d.t <= 0) { p.dash = null; if (d.opt.onEnd) d.opt.onEnd(); }
+    if (d.t <= 0) { p.dash = null; if (d.opt.onEnd) withCast(d.cast, d.opt.onEnd); }
   } else {
     let sx = 0, sy = 0;
     const K = G.keys;
@@ -266,12 +292,13 @@ function updatePlayer(p, dt) {
       for (const e of G.enemies) {
         if (e.dead || e.spawnT > 0) continue;
         e.orbitCd = (e.orbitCd || 0) - dt / 3;
-        if (e.orbitCd <= 0 && dist(ox, oy, e.x, e.y) < 0.5 + e.r) { e.orbitCd = 0.4; damageEnemy(e, 30, { knock: 0.1, fx: ox, fy: oy }); }
+        if (e.orbitCd <= 0 && dist(ox, oy, e.x, e.y) < 0.5 + e.r) { e.orbitCd = 0.4; damageEnemy(e, 30, { knock: 0.1, fx: ox, fy: oy, cast: ORBIT_CAST }); }
       }
     }
   }
 }
 
+const ORBIT_CAST = { skill: 'orbit', el: 'arcane' };
 function hurtPlayer(dmg, srcX, srcY) {
   const p = G.player;
   if (p.dead || p.invulnT > 0 || (p.dash && p.dash.opt.invuln) || G.state !== 'play') return;
@@ -289,11 +316,12 @@ function hurtPlayer(dmg, srcX, srcY) {
 // ===== hit tests ===================================================================
 function damageEnemy(e, base, o = {}) {
   if (e.dead || e.spawnT > 0) return false;
-  const p = G.player;
-  let dmg = base * p.power * buffMul(p);
+  const p = G.player, c = o.cast !== undefined ? o.cast : CAST;
+  // one additive sum: gear damage % (+ skill damage % and the element's gem amplification for skill hits)
+  let dmg = base * p.dmgBase * (1 + p.bonus + (c ? p.skillDmg + elementAmp(p, c.el) : 0)) * buffMul(p);
   let crit = Math.random() < p.crit;
   if (p.buffs.veil && !o.dot) { crit = true; delete p.buffs.veil; }
-  if (crit) dmg *= 1.8;
+  if (crit) dmg *= 1 + p.critDmg;
   dmg *= frand(0.9, 1.1);
   if (e.dummy) { e.hp = e.maxHp; }
   else e.hp -= dmg;
@@ -307,7 +335,7 @@ function damageEnemy(e, base, o = {}) {
   if (o.stun) e.stunT = Math.max(e.stunT, o.stun * (e.boss ? 0.25 : 1));
   if (o.freeze) e.frozen = o.stun;
   if (o.slow) e.slowT = Math.max(e.slowT, o.slow * 2);
-  if (o.burn) { e.burnT = o.burn; e.burnTick = 0.5; }
+  if (o.burn) { e.burnT = o.burn; e.burnTick = 0.5; e.burnCast = c; }
   if (!o.dot) { burst(e.x, e.y, e.z + e.hgt * 0.6, 5, ['#ffffff', e.blood || '#c7a8ff'], 2.5); sfx('hit'); }
   if (e.hp <= 0) killEnemy(e);
   return true;
@@ -337,7 +365,7 @@ function hitLine(x, y, a, len, w, dmg, o = {}) {
 
 // ===== projectiles ===================================================================
 function spawnProj(o) {
-  const p = Object.assign({ t: 0, hit: new Set(), pierce: 0, friendly: true }, o);
+  const p = Object.assign({ t: 0, hit: new Set(), pierce: 0, friendly: true, cast: CAST }, o);
   p.vx = Math.cos(o.ang) * o.speed; p.vy = Math.sin(o.ang) * o.speed;
   G.projs.push(p); return p;
 }
@@ -359,7 +387,7 @@ function updateProjs(dt) {
         if (e.dead || e.spawnT > 0 || p.hit.has(e)) continue;
         if (dist(p.x, p.y, e.x, e.y) < p.r + e.r) {
           p.hit.add(e);
-          damageEnemy(e, p.dmg, { knock: p.knock || 0.12, slow: p.slow, burn: p.burn, fx: p.x - p.vx, fy: p.y - p.vy });
+          damageEnemy(e, p.dmg, { knock: p.knock || 0.12, slow: p.slow, burn: p.burn, fx: p.x - p.vx, fy: p.y - p.vy, cast: p.cast });
           if (p.pierce-- <= 0) { p.dead = true; if (p.explode) explodeProj(p); break; }
         }
       }
@@ -371,7 +399,7 @@ function updateProjs(dt) {
   G.projs = G.projs.filter(p => !p.dead);
 }
 function explodeProj(p) {
-  hitArea(p.x, p.y, p.explode.r, p.explode.dmg, { burn: p.burn });
+  hitArea(p.x, p.y, p.explode.r, p.explode.dmg, { burn: p.burn, cast: p.cast });
   fx({ type: 'ring', x: p.x, y: p.y, r: p.explode.r + 0.3, col: p.col, life: 0.3 });
   burst(p.x, p.y, p.z, 18, ['#ffd27a', '#ff8a4a', '#ffffff'], 4);
 }
@@ -388,12 +416,12 @@ function updateZones(dt) {
     }
     if (z.trap) {
       const e = nearestEnemy(z.x, z.y, z.r, null);
-      if (e) { hitArea(z.x, z.y, z.r, z.dmg, { stun: z.stun }); fx({ type: 'ring', x: z.x, y: z.y, r: z.r, col: z.col, life: 0.3 }); z.dead = true; sfx('trap'); }
+      if (e) { hitArea(z.x, z.y, z.r, z.dmg, { stun: z.stun, cast: z.cast }); fx({ type: 'ring', x: z.x, y: z.y, r: z.r, col: z.col, life: 0.3 }); z.dead = true; sfx('trap'); }
       continue;
     }
     if (z.tick && z.tickT <= 0) {
       z.tickT = z.tick;
-      hitArea(z.x, z.y, z.r, z.dmg, { slow: z.slow });
+      hitArea(z.x, z.y, z.r, z.dmg, { slow: z.slow, cast: z.cast });
       if (z.kind === 'rain') for (let k = 0; k < 4; k++) { const a = Math.random() * 6.28, r = Math.sqrt(Math.random()) * z.r; fx({ type: 'arrowfall', x: z.x + Math.cos(a) * r, y: z.y + Math.sin(a) * r, life: 0.18 }); }
     }
   }
@@ -409,14 +437,15 @@ const ENEMY = {
   dummy: { name: 'Training dummy', ai: 'dummy', hp: 9999, r: 0.35, speed: 0, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 3, blood: '#e7c9a0' },
 };
 function spawnEnemy(type, x, y, spawnT = 0.9) {
-  const d = ENEMY[type];
-  const e = { type, x, y, z: 0, r: d.r || 0.4, hp: d.hp, maxHp: d.hp, hgt: d.hgt || 3, blood: d.blood || '#c7a8ff', kx: 0, ky: 0, flash: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss: type === 'boss', dummy: type === 'dummy' };
+  const d = ENEMY[type], dummy = type === 'dummy', lvl = dummy ? 1 : enemyLevel(type), hp = dummy ? d.hp : Math.round(d.hp * enemyHpMul(lvl));
+  const e = { type, x, y, z: 0, r: d.r || 0.4, hp, maxHp: hp, lvl, dm: dummy ? 1 : enemyDmgMul(lvl), hgt: d.hgt || 3, blood: d.blood || '#c7a8ff', kx: 0, ky: 0, flash: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss: type === 'boss', dummy: type === 'dummy' };
   G.enemies.push(e);
   if (spawnT > 0) fx({ type: 'summon', x, y, life: spawnT, col: type === 'boss' ? '#ff5aa0' : '#b36bff', r: type === 'boss' ? 2.4 : 0.9 });
   return e;
 }
 function killEnemy(e) {
   e.dead = true; sfx('die');
+  onEnemyKilled(e);   // XP + loot (items.js)
   G.kills[e.type] = (G.kills[e.type] || 0) + 1; G.kills.any = (G.kills.any || 0) + 1;
   burst(e.x, e.y, e.z + e.hgt * 0.5, e.boss ? 120 : 24, [e.blood, '#ffffff', '#ffb0e0'], e.boss ? 7 : 3.5);
   fx({ type: 'ring', x: e.x, y: e.y, r: e.boss ? 4 : 1.2, col: e.blood, life: 0.4 });
@@ -445,7 +474,7 @@ function updateEnemies(dt) {
     if (e.dummy) continue;
     const edt = dt * ts * (e.slowT > 0 ? 0.55 : 1);
     e.slowT -= dt;
-    if (e.burnT > 0) { e.burnT -= dt; e.burnTick -= dt; if (e.burnTick <= 0) { e.burnTick = 0.5; damageEnemy(e, 14, { dot: true }); if (Math.random() < 0.5) burst(e.x, e.y, e.z + 1, 2, ['#ff9a4a', '#ffd27a'], 1); } if (e.dead) continue; }
+    if (e.burnT > 0) { e.burnT -= dt; e.burnTick -= dt; if (e.burnTick <= 0) { e.burnTick = 0.5; damageEnemy(e, 14, { dot: true, cast: e.burnCast || null }); if (Math.random() < 0.5) burst(e.x, e.y, e.z + 1, 2, ['#ff9a4a', '#ffd27a'], 1); } if (e.dead) continue; }
     // knockback
     if (Math.abs(e.kx) + Math.abs(e.ky) > 0.05) { moveEntity(e, e.kx * dt, e.ky * dt, tileH(G.map, e.x, e.y)); e.kx *= Math.pow(0.002, dt); e.ky *= Math.pow(0.002, dt); }
     if (e.stunT > 0) { e.stunT -= dt; if (e.stunT <= 0) e.frozen = 0; continue; }
@@ -485,25 +514,25 @@ function updateEnemies(dt) {
       }
     } else if (e.state === 'wind') {
       if (e.st <= 0) {
-        if (def.ai === 'hopper') { if (playerIn({ kind: 'circle', x: e.x, y: e.y, r: def.aoe || 1.15 })) hurtPlayer(def.dmg, e.x, e.y); e.squash = 0.3; burst(e.x, e.y, 0.2, 8, [e.blood, '#e2dbff'], 2); e.state = 'rec'; e.st = 0.4; }
+        if (def.ai === 'hopper') { if (playerIn({ kind: 'circle', x: e.x, y: e.y, r: def.aoe || 1.15 })) hurtPlayer(def.dmg * e.dm, e.x, e.y); e.squash = 0.3; burst(e.x, e.y, 0.2, 8, [e.blood, '#e2dbff'], 2); e.state = 'rec'; e.st = 0.4; }
         else if (def.ai === 'charger') { e.state = 'lunge'; e.st = 0.3; e.hitP = false; }
         else if (def.ai === 'brute') {
           const H = e.hit;
-          if (H && playerIn(H)) hurtPlayer(def.dmg, e.x, e.y);
+          if (H && playerIn(H)) hurtPlayer(def.dmg * e.dm, e.x, e.y);
           if (H && H.kind === 'circle') { fx({ type: 'ring', x: e.x, y: e.y, r: H.r, col: '#ffb070', life: 0.45 }); burst(e.x, e.y, 0.2, 30, ['#8a6a4a', '#c8b090', '#5a4a3a'], 5, { glow: false }); }
           else if (H) fx({ type: 'slash', x: e.x, y: e.y, z: 0.6, ang: H.ang, arc: H.arc, r: H.r, col: '#ffcf9a', life: 0.25, w: 6 });
           shake(def.aoe > 2 ? 9 : 4); sfx('heavy');
           e.state = 'strike'; e.st = 0.15;
         }
         else if (def.ai === 'shooter') {
-          spawnProj({ x: e.x, y: e.y, z: 2.2, ang: Math.atan2(p.y - e.y, p.x - e.x), speed: 5.5, r: 0.35, dmg: def.dmg, life: 2.5, kind: 'orb', col: '#9ef0ff', friendly: false });
+          spawnProj({ x: e.x, y: e.y, z: 2.2, ang: Math.atan2(p.y - e.y, p.x - e.x), speed: 5.5, r: 0.35, dmg: def.dmg * e.dm, life: 2.5, kind: 'orb', col: '#9ef0ff', friendly: false });
           e.state = 'rec'; e.st = 0.3; sfx('arcane');
         }
         e.cd = def.cd * rand(0.8, 1.3);
       }
     } else if (e.state === 'lunge') {
       moveEntity(e, Math.cos(e.aimA) * 12 * edt, Math.sin(e.aimA) * 12 * edt, tileH(G.map, e.x, e.y));
-      if (!e.hitP && dist(e.x, e.y, p.x, p.y) < e.r + p.r + 0.3) { e.hitP = true; hurtPlayer(def.dmg, e.x, e.y); }
+      if (!e.hitP && dist(e.x, e.y, p.x, p.y) < e.r + p.r + 0.3) { e.hitP = true; hurtPlayer(def.dmg * e.dm, e.x, e.y); }
       if (e.st <= 0) { e.state = 'rec'; e.st = 0.5; }
     } else if (e.state === 'strike') { if (e.st <= 0) { e.state = 'rec'; e.st = 0.6; } }
     else if (e.state === 'rec') { if (e.st <= 0) e.state = 'chase'; }
@@ -541,7 +570,7 @@ function updateBoss(b, dt, d, ang, hidden) {
     case 'cleave':
       if (b.step === 0) { b.aimA = ang; tele({ kind: 'cone', x: b.x, y: b.y, ang, arc: 2.0, r: 3.6, life: 0.85 * W, col: '#ff3a7a' }); b.step = 1; }
       if (b.step === 1 && b.st > 0.85 * W) {
-        if (playerIn({ kind: 'cone', x: b.x, y: b.y, ang: b.aimA, arc: 2.0, r: 3.6 })) hurtPlayer(120, b.x, b.y);
+        if (playerIn({ kind: 'cone', x: b.x, y: b.y, ang: b.aimA, arc: 2.0, r: 3.6 })) hurtPlayer(120 * b.dm, b.x, b.y);
         fx({ type: 'slash', x: b.x, y: b.y, z: 1, ang: b.aimA, arc: 2.0, r: 3.6, col: '#ff7ae0', life: 0.3, w: 8 }); shake(6); sfx('heavy');
         b.step = 2;
       }
@@ -550,7 +579,7 @@ function updateBoss(b, dt, d, ang, hidden) {
     case 'slam':
       if (b.step === 0) { tele({ kind: 'circle', x: b.x, y: b.y, r: 3.4, life: 1.1 * W, col: '#ff3a7a' }); b.step = 1; }
       if (b.step === 1 && b.st > 1.1 * W) {
-        if (playerIn({ kind: 'circle', x: b.x, y: b.y, r: 3.4 })) hurtPlayer(150, b.x, b.y);
+        if (playerIn({ kind: 'circle', x: b.x, y: b.y, r: 3.4 })) hurtPlayer(150 * b.dm, b.x, b.y);
         fx({ type: 'ring', x: b.x, y: b.y, r: 3.6, col: '#ff7ae0', life: 0.5 }); burst(b.x, b.y, 0.2, 50, ['#c78bff', '#ff7ae0', '#2a1c38'], 6); shake(12); hitstop(0.08); sfx('boom');
         b.step = 2;
       }
@@ -559,7 +588,7 @@ function updateBoss(b, dt, d, ang, hidden) {
     case 'volley':
       if (b.step < 3 && b.st > 0.35 + b.step * 0.45) {
         const n = 16;
-        for (let k = 0; k < n; k++) spawnProj({ x: b.x, y: b.y, z: 3, ang: k / n * Math.PI * 2 + b.step * 0.2, speed: 4.6, r: 0.35, dmg: 38, life: 3.2, kind: 'orb', col: '#ff7ae0', friendly: false });
+        for (let k = 0; k < n; k++) spawnProj({ x: b.x, y: b.y, z: 3, ang: k / n * Math.PI * 2 + b.step * 0.2, speed: 4.6, r: 0.35, dmg: 38 * b.dm, life: 3.2, kind: 'orb', col: '#ff7ae0', friendly: false });
         sfx('arcane'); b.step++;
       }
       if (b.st > 1.8) endBossAtk(b, 1.0);
@@ -570,7 +599,7 @@ function updateBoss(b, dt, d, ang, hidden) {
       if (b.step === 2) {
         moveEntity(b, Math.cos(b.aimA) * 15 * dt, Math.sin(b.aimA) * 15 * dt, tileH(G.map, b.x, b.y));
         if (Math.random() < 0.6) fx({ type: 'ghost', x: b.x, y: b.y, z: b.z, life: 0.3, spr: b.face < 0 ? ART.boss.f : ART.boss.n, col: '#ff5aa0' });
-        if (!b.hitP && dist(b.x, b.y, p.x, p.y) < b.r + p.r + 0.3) { b.hitP = true; hurtPlayer(110, b.x, b.y); }
+        if (!b.hitP && dist(b.x, b.y, p.x, p.y) < b.r + p.r + 0.3) { b.hitP = true; hurtPlayer(110 * b.dm, b.x, b.y); }
         if (b.st > 0.75 * W + 0.5) { b.step = 3; shake(5); }
       }
       if (b.st > 0.75 * W + 1.1) endBossAtk(b, 0.8);
@@ -580,7 +609,7 @@ function updateBoss(b, dt, d, ang, hidden) {
         for (let k = 0; k < 6; k++) {
           const a = Math.random() * 6.28, r = k === 0 ? 0 : 1 + Math.random() * 3, x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r;
           tele({ kind: 'circle', x, y, r: 1.3, life: 1.0, col: '#ff3a7a', onDone: o => {
-            if (playerIn({ kind: 'circle', x: o.x, y: o.y, r: 1.3 })) hurtPlayer(85, o.x, o.y);
+            if (playerIn({ kind: 'circle', x: o.x, y: o.y, r: 1.3 })) hurtPlayer(85 * b.dm, o.x, o.y);
             fx({ type: 'pillar', x: o.x, y: o.y, col: '#ff5aa0', life: 0.4, r: 1.3 }); burst(o.x, o.y, 0, 12, ['#ff7ae0', '#2a1c38'], 3); shake(3);
           } });
         }
@@ -655,7 +684,24 @@ function applyTuning(t) {
 
 // ===== triggers: WHEN <condition> [requires other triggers] THEN <actions> =============
 // Edited in the editor's Logic tab; stored per map in js/world.js.
-function startTriggers() { G.trig = { fired: {}, at: {}, t: 0, inside: {} }; G.kills = {}; G.pendingSpawns = 0; G.objective = G.map.objective; }
+// Trigger state persists (G.prog.trig[map], saved): whenever the map is calm (no live enemies, nothing pending)
+// every fired one-shot trigger is SETTLED. Re-entering or respawning restores settled triggers and replays only their
+// lasting effects (portals, objective), so just the encounter you died in resets. map_enter triggers re-run each entry.
+const LASTING_ACTIONS = { open_portal: 1, close_portal: 1, objective: 1 };
+function startTriggers() {
+  const m = G.map, settled = G.prog.trig[m.id] || [];
+  G.trig = { fired: {}, at: {}, t: 0, inside: {} }; G.kills = {}; G.pendingSpawns = 0; G.objective = m.objective;
+  for (const tr of m.triggers) if (settled.includes(tr.id)) {
+    G.trig.fired[tr.id] = true; G.trig.at[tr.id] = 0;
+    for (const a of tr.actions || []) if (LASTING_ACTIONS[a.type]) runAction(a);
+  }
+}
+function settleTriggers() {
+  const T = G.trig, m = G.map;
+  if (G.pendingSpawns || G.enemies.some(e => !e.dummy)) return;
+  const ids = m.triggers.filter(tr => T.fired[tr.id] && tr.once !== false && (tr.when || {}).type !== 'map_enter').map(tr => tr.id);
+  if (ids.length !== (G.prog.trig[m.id] || []).length) G.prog.trig[m.id] = ids;
+}
 function updateTriggers(dt) {
   const m = G.map, T = G.trig; if (!T) return;
   T.t += dt;
@@ -667,6 +713,7 @@ function updateTriggers(dt) {
     if (!once && T.at[tr.id] != null && T.t - T.at[tr.id] < (tr.cooldown || 1)) continue;
     if (triggerCondition(tr)) fireTrigger(tr);
   }
+  settleTriggers();
 }
 function triggerCondition(tr) {
   const w = tr.when || { type: 'map_enter' }, T = G.trig, p = G.player;
@@ -708,6 +755,8 @@ function runAction(a) {
     case 'shake': shake(+a.power || 6); break;
     case 'sound': sfx(a.name || 'portal'); break;
     case 'teleport': if (G.world.maps[a.map]) transition(a.map); break;
+    case 'checkpoint': { const has = v => v != null && v !== ''; setCheckpoint(has(a.x) ? +a.x : p.x, has(a.y) ? +a.y : p.y); break; }
+    case 'loot': lootAction(a); break;
   }
 }
 // x/y given: scatter around that point; otherwise somewhere on the island away from the player

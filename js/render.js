@@ -191,6 +191,7 @@ function drawScene() {
   if (!p.dead || G.state === 'dead') list.push({ kind: 'player', key: p.x + p.y + p.z * 0.35 + 0.01 });
   for (const e of G.enemies) list.push({ kind: 'enemy', e, key: e.x + e.y + 0.01 });
   for (const pr of G.projs) list.push({ kind: 'proj', pr, key: pr.x + pr.y + 0.3 });
+  for (const d of G.drops) if (inView(isoX(d.x, d.y), isoY(d.x, d.y, d.z))) list.push({ kind: 'drop', d, key: d.x + d.y + d.z * 0.35 + 0.02 });
   for (const c of G.critters || []) list.push({ kind: 'critter', c, key: c.x + c.y + c.z * 0.35 });
   for (const e of G.effects) if (e.type === 'ghost') list.push({ kind: 'ghost', e, key: e.x + e.y });
   if (p.buffs.orbit) for (let k = 0; k < 3; k++) { const a = G.t * 4 + k * Math.PI * 2 / 3; list.push({ kind: 'orb', x: p.x + Math.cos(a) * 1.4, y: p.y + Math.sin(a) * 1.4, z: p.z + 1.2, key: p.x + Math.cos(a) * 1.4 + p.y + Math.sin(a) * 1.4 + p.z * 0.35 }); }
@@ -348,6 +349,10 @@ function drawItem(ctx, it, lights) {
     if (it.flip) { ctx.save(); ctx.translate(Math.round(vx), 0); ctx.scale(-1, 1); ctx.drawImage(img, -Math.round(it.ax), Math.round(vy - it.ay)); ctx.restore(); }
     else ctx.drawImage(img, Math.round(vx - it.ax), Math.round(vy - it.ay));
     if (it.brazier) drawFlame(ctx, vx, vy - 9, '#c77bff', '#ffd6ff');
+    if (it.checkpoint && G.checkpoint && G.checkpoint.map === G.map.id && dist(G.checkpoint.x, G.checkpoint.y, it.x, it.y) < 2.5) {
+      glowDot(ctx, vx, vy - 22 + Math.sin(G.t * 3) * 1.5, '#9ef0ff', '#ffffff', 2);
+      if (Math.random() < 0.15) G.parts.push({ x: it.x + frand(-0.3, 0.3), y: it.y + frand(-0.3, 0.3), z: it.z + 1, vx: 0, vy: 0, vz: 1.2, life: 1, t: 0, col: '#9ef0ff', grav: 0, size: 1, glow: true });
+    }
     return;
   }
   if (it.kind === 'portal') { drawPortal(ctx, it, lights); return; }
@@ -356,6 +361,7 @@ function drawItem(ctx, it, lights) {
   if (it.kind === 'enemy') { drawEnemy(ctx, it.e, lights); return; }
   if (it.kind === 'critter') { drawCritter(ctx, it.c); return; }
   if (it.kind === 'proj') { drawProj(ctx, it.pr, lights); return; }
+  if (it.kind === 'drop') { drawDrop(ctx, it.d, lights); return; }
   if (it.kind === 'orb') {
     const [vx, vy] = worldToView(it.x, it.y, it.z);
     glowDot(ctx, vx, vy, '#e2c8ff', '#ffffff', 2);
@@ -370,6 +376,30 @@ function drawItem(ctx, it, lights) {
   }
 }
 
+// loot on the ground: a light beam whose height, width, alpha and light grow with rarity; the item hops out and bounces
+const DROP_FX = [{ h: 12, w: 1, a: 0.28, L: 0 }, { h: 20, w: 1, a: 0.42, L: 18 }, { h: 34, w: 2, a: 0.55, L: 30 }, { h: 52, w: 2, a: 0.7, L: 44 }, { h: 74, w: 3, a: 0.85, L: 60 }, { h: 96, w: 3, a: 1, L: 76 }];
+function drawDrop(ctx, d, lights) {
+  const R = RARITY[d.rar], F = DROP_FX[R.i], col = rarityCol(d.rar), k = Math.min(1, d.t / 0.45);
+  const x = lerp(d.sx, d.x, k), y = lerp(d.sy, d.y, k);
+  // arc out, then two small bounces
+  const hop = d.t < 0.45 ? Math.sin(k * Math.PI) * 1.6 : d.t < 0.7 ? Math.sin((d.t - 0.45) / 0.25 * Math.PI) * 0.35 : d.t < 0.85 ? Math.sin((d.t - 0.7) / 0.15 * Math.PI) * 0.1 : 0;
+  const [vx, vy] = worldToView(x, y, d.z + hop), [gx, gy] = worldToView(x, y, d.z);
+  const grow = Math.min(1, Math.max(0, d.t - 0.3) * 2.5), pulse = 0.8 + 0.2 * Math.sin(G.t * 4 + d.x);
+  ctx.globalCompositeOperation = 'lighter';
+  if (grow > 0) {
+    const h = F.h * grow, g = ctx.createLinearGradient(0, gy - h, 0, gy);
+    g.addColorStop(0, rgba(col, 0)); g.addColorStop(0.6, rgba(col, F.a * 0.45 * pulse)); g.addColorStop(1, rgba(col, F.a * pulse));
+    ctx.fillStyle = g; ctx.fillRect(Math.round(gx - F.w), Math.round(gy - h), F.w * 2 + 1, Math.round(h));
+    ctx.fillStyle = rgba(col, F.a * 0.35 * pulse); ctx.beginPath(); ctx.ellipse(Math.round(gx), Math.round(gy), 4 + R.i, 2 + R.i * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  const c = d.kind === 'item' ? '#ffffff' : d.kind === 'gem' ? gemParse(d.gem).def.col : '#ff6a8a';
+  ctx.fillStyle = '#1a1326'; ctx.fillRect(Math.round(vx) - 2, Math.round(vy) - 4, 5, 5);
+  ctx.fillStyle = d.kind === 'item' ? col : c; ctx.fillRect(Math.round(vx) - 1, Math.round(vy) - 3, 3, 3);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(vx) - 1, Math.round(vy) - 3, 1, 1);
+  if (F.L) lights.push({ sx: isoX(x, y), sy: isoY(x, y, d.z) - 6, r: F.L * (0.8 + 0.2 * pulse), col, a: 0.5 + R.i * 0.08 });
+  if (R.i >= 2 && grow >= 1 && Math.random() < 0.04 * R.i) G.parts.push({ x: x + frand(-0.15, 0.15), y: y + frand(-0.15, 0.15), z: d.z + frand(0.2, F.h / ZS), vx: 0, vy: 0, vz: 0.8, life: 0.8, t: 0, col, grav: 0, size: 1, glow: true });
+}
 function drawSunbeam(ctx, vx, vy, it) {
   // a soft shaft of dawn light falling onto this spot
   const a = 0.09 + 0.03 * Math.sin(G.t * 0.7 + it.x);
