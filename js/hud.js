@@ -406,8 +406,10 @@ function drawHelp(ctx) {
     if (G.touch) UI.text(ctx, k, x + 32, yy + 2, 'body', UC.stHi); else { const gw = hudGlyph(ctx, k, x + 32, yy - 2); if (!gw) UI.text(ctx, IN.glyph(k), x + 32, yy + 2, 'body', UC.stHi); }
     UI.text(ctx, v, x + 200, yy + 2, 'body', UC.text); yy += 28;
   }
-  UI.text(ctx, 'You are what you wear: gear decides Q E R F C SHIFT.', 480, y + h - 54, 'small', UC.dim, 'center');
-  UI.text(ctx, G.touch ? 'Tap to close' : `${IN.glyph('back')} to close`, 480, y + h - 32, 'small', UC.dim, 'center');
+  UI.text(ctx, 'You are what you wear: gear decides Q E R F C SHIFT.', 480, y + h - 84, 'small', UC.dim, 'center');
+  UI.button(ctx, 480 - 170, y + h - 52, 160, 36, 'SETTINGS', { id: 'btn:help-settings', size: 'small', fn: () => { G.ui.help = false; G.ui.pause = true; } });
+  UI.button(ctx, 480 + 10, y + h - 52, 160, 36, 'CLOSE', { id: 'btn:help-close', size: 'small', def: true, fn: () => { G.ui.help = false; } });
+  UI.focus.draw(ctx);
 }
 
 // ===== the HUD ====================================================================================================================================
