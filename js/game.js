@@ -11,6 +11,8 @@ const G = {
   arena: null, fade: 0, fadeDir: 0, fadeTo: null, boss: null, muted: false, drops: [],
   prog: { chests: {}, firsts: {}, trig: {} }, checkpoint: null,
   seen: {},   // bestiary hooks: seen[type] = { kills, res: { el: tier } } — set on first sight, saved
+  prompt: null,   // nearest interactable { kind: chest|shrine|tablet, obj, text } (items.js updateLoot); Interact acts on it
+  stats: { playtime: 0, deaths: 0 },
 
 };
 
@@ -19,6 +21,7 @@ let AC = null;
 function initAudio() { if (!AC) try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } }
 function tone(f0, f1, dur, type = 'sine', vol = 0.08, noise = false, at = 0) {
   if (!AC || G.muted) return;
+  vol *= typeof sfxVol === 'function' ? sfxVol() : 1; if (vol <= 0) return;
   const t = AC.currentTime + at, g = AC.createGain();
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   let src;
@@ -77,18 +80,53 @@ function sfx(k) {
 let CAST = null;
 function withCast(c, fn) { const o = CAST; CAST = c; try { fn(); } finally { CAST = o; } }
 const delay = (t, fn) => G.delays.push({ t, fn, c: CAST });
-const shake = a => { G.shakeA = Math.max(G.shakeA, a); };
-const hitstop = t => { G.hitstopT = Math.max(G.hitstopT, t); };
+const shake = a => { G.shakeA = Math.max(G.shakeA, a * (typeof shakeMul === 'function' ? shakeMul() : 1)); };
+const hitstop = t => { if (typeof hitstopOn !== 'function' || hitstopOn()) G.hitstopT = Math.max(G.hitstopT, t); };
 const fx = o => { o.t = 0; G.effects.push(o); return o; };
 const zone = o => { o.t = 0; o.tickT = 0; o.cast = CAST; G.zones.push(o); return o; };
-function burst(x, y, z, n, cols, spd = 3, o = {}) {
+// ===== particles: pooled, hard cap PART.cap (DESIGN §0 / §16.6.5) ===========================================
+// Combat bursts go through burst(); ambient motes (petals, mist, sparkles…) through addPart(o) and are the first
+// to go: they are skipped by budget and when the pool is full, while a full pool evicts ambient motes for combat.
+// PART.budget (0.35..1) scales with measured frame time (main.js), so a struggling device sheds particles first.
+const PART = { cap: 600, budget: 1, pool: [], amb: 0 };
+function addPart(o, amb = true) {
+  const L = G.parts;
+  if (amb) { if (L.length >= PART.cap * 0.75 || Math.random() > PART.budget) return null; }
+  else if (L.length >= PART.cap) {   // evict the oldest ambient mote, else drop this one
+    const i = L.findIndex(q => q.amb); if (i < 0) return null;
+    PART.pool.push(L[i]); L[i] = L[L.length - 1]; L.pop();
+  }
+  const q = PART.pool.pop() || {};
+  q.petal = q.mist = false;
+  Object.assign(q, o); q.amb = amb; q.t = q.t || 0;
+  L.push(q); return q;
+}
+// in-place update + compaction (no per-frame array garbage); dead particles return to the pool
+function updateParts(rdt, m) {
+  const L = G.parts; let j = 0;
+  for (let i = 0; i < L.length; i++) {
+    const q = L[i];
+    q.t += rdt; q.x += q.vx * rdt; q.y += q.vy * rdt; q.vz -= q.grav * rdt; q.z += q.vz * rdt;
+    if (q.z < 0 && !q.petal) { q.z = 0; q.vz *= -0.3; q.vx *= 0.6; q.vy *= 0.6; }
+    if (q.petal) { q.x += Math.sin(G.t * 2 + q.y) * rdt * 0.3; if (q.z < tileH(m, q.x, q.y)) { q.vz = 0; q.vx = 0; q.vy = 0; } }
+    if (q.t < q.life) L[j++] = q; else if (PART.pool.length < 800) PART.pool.push(q);
+  }
+  L.length = Math.min(j, PART.cap);
+}
+const BURST_O = {};
+function burst(x, y, z, n, cols, spd = 3, o = BURST_O) {
+  n = Math.ceil(n * PART.budget);
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2, s = Math.random() * spd;
-    G.parts.push(Object.assign({ x, y, z: z + Math.random() * 0.5, vx: Math.cos(a) * s, vy: Math.sin(a) * s, vz: 2 + Math.random() * 4, life: 0.4 + Math.random() * 0.6, t: 0, col: pick2(cols), grav: 9, size: Math.random() < 0.3 ? 2 : 1, glow: true }, o));
+    const q = addPart({ x, y, z: z + Math.random() * 0.5, vx: Math.cos(a) * s, vy: Math.sin(a) * s, vz: 2 + Math.random() * 4, life: 0.4 + Math.random() * 0.6, t: 0, col: pick2(cols), grav: 9, size: Math.random() < 0.3 ? 2 : 1, glow: true }, false);
+    if (!q) break;
+    if (o !== BURST_O) Object.assign(q, o);
   }
 }
 const pick2 = arr => arr[(Math.random() * arr.length) | 0];
 function text(x, y, z, s, col, big = false, life = 0.9) { G.texts.push({ x, y, z, s, col, big, t: 0, life, vx: frand(-0.6, 0.6) }); }
+// damage numbers respect the settings toggle (reveals like WEAK: FIRE always show)
+function dmgText(x, y, z, s, col, big) { if (typeof damageNumbersOn !== 'function' || damageNumbersOn()) text(x, y, z, s, col, big); }
 
 // ===== player ==================================================================
 function makePlayer() {
@@ -100,6 +138,11 @@ function makePlayer() {
     csk: ['secondwind', 'chain', 'shootingstar'],
     cds: {}, buffs: {}, atkT: 0, combo: 0, swing: null, dash: null, invulnT: 0, hurtT: 0, rootT: 0, slowT: 0, castT: 0, spin: 0,
     name: 'Aerin', level: 1, dead: false,
+    ult: 0,          // ultimate charge 0..100 (§15.3), not saved
+    ranks: {},       // skill id -> { hits } (casts that hit; rank = 1 + hits / RANK_HITS, max 5), saved
+    mods: {},        // skill id -> { 3: modId, 5: modId } chosen SKILL_MODS, saved
+    cast: null,      // the skill cast in progress { c, id, slot, age, dur, mp } (dodge-cancel window)
+    dodgeBuf: 0, autoAtk: false, stMax: {},
   };
   starterKit(p);
   recalcStats(p, true);
