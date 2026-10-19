@@ -7,7 +7,7 @@
 //   ICONS.skill(id)                      -> framed skill icon (element-coloured bevel frame)
 //   ICONS.item(base, tier, rarity, gems) -> slot icon: art + static rarity frame + gem dots
 //   ICONS.gem(type, grade)               -> gem (grade 0..4: chipped..radiant)
-//   ICONS.misc(name)                     -> potion dust rune chest xp key talent gold
+//   ICONS.misc(name)                     -> potion dust rune chest xp key choice shrine tablet gold
 //   ICONS.glyph(glyph, color)            -> OLD glyph names -> new art (drop-in for icon())
 //   ICONS.frame(ctx, x, y, size, rarity, t) -> animated rarity frame + glow, draw over a slot
 //   ICONS.elementOf[skillId]             -> 'fire'|'frost'|'nature'|'lightning'|'arcane'|'physical'|'holy'
@@ -186,14 +186,16 @@ const ICONS = (() => {
       top(() => { for (let x = 12; x < 20; x++) P(x, 11, R.st[3]); });
     },
     whirl() {
-      arc(11.5, 11.5, 7.5, 5, 20, 330, R.st, true); arrowHead(18.5, 7, 0.3, 3.6, R.st); arc(11.5, 11.5, 7.5, 2, 60, 280, R.wh, true);
-      swd(11.5, 17, 11.5, 6, 3); spk(4, 4, 1, '#fff', R.wh[1]);
+      arc(11.5, 11.5, 8.5, 5, -110, 190, R.st, true); arc(11.5, 11.5, 8.5, 1.6, -95, 170, R.wh, true);
+      arc(11.5, 11.5, 4.2, 3, 70, 290, R.st, true); arc(11.5, 11.5, 4.2, 1, 80, 270, R.wh, true);
+      top(() => dots([[20, 15], [19, 18], [3, 6]], R.wh[3])); spk(11, 11, 0, '#fff', '#fff'); spk(19, 4, 1, '#fff', R.wh[1]);
     },
     judgement() {
-      poly([[8, 17], [9, 2], [14, 2], [15, 17]], R.lt); bar(11.5, 2, 11.5, 17, 3, 3, R.wh);
-      ell(11.5, 18, 9, 3, R.gd, true); ell(11.5, 18, 5, 1.5, R.lt, true);
-      top(() => { bar(11, 3, 11, 16, 1, 1, ['#fff', '#fff', '#fff', '#fff']); dots([[5, 6], [18, 8], [4, 12], [19, 13]], R.lt[3]); P(11, 1, '#fff'); });
-      spk(6, 4, 2, '#fff', R.lt[2]); spk(18, 5, 1, '#fff', R.lt[2]);
+      top(() => { line(6, 2, 3, 12, R.lt[1]); line(17, 2, 20, 12, R.lt[1]); line(8, 1, 5, 9, R.lt[2]); line(15, 1, 18, 9, R.lt[2]); });
+      ell(11.5, 20.5, 9, 2.4, R.gd, true); ell(11.5, 20.5, 5, 1.2, R.lt, true);
+      swd(11.5, 1.5, 11.5, 20, 5, ['#b8944c', '#f0dc98', '#fff8d0', '#ffffff'], R.gd);
+      top(() => { bar(11, 9, 11, 19, 1, 1, ['#fff', '#fff', '#fff', '#fff']); dots([[4, 8], [19, 10], [3, 15], [20, 16]], R.lt[3]); });
+      spk(5, 4, 2, '#fff', R.lt[2]); spk(18, 5, 1, '#fff', R.lt[2]);
     },
     dawnwave() {
       arc(5, 12, 13, 6, -50, 50, R.gd, true); arc(5, 12, 13, 2, -42, 42, R.wh, true);
@@ -365,6 +367,12 @@ const ICONS = (() => {
   const HM = {
     knight(t) {
       const M = MET[t];
+      if (t === 0) {                          // dented iron cap
+        const I = ['#262a3c', '#4a5068', '#747c94', '#a0a8bc'];
+        poly([[11.5, 5], [8, 6], [6, 9.5], [5.5, 14], [11.5, 14]], I, true); bar(4, 14.5, 19, 14.5, 2, 2, I); bar(11.5, 14, 11.5, 18, 2, 2, I);
+        top(() => { dots([[8, 8], [9, 9], [8, 9], [14, 12], [15, 13]], '#1c1f2e'); dots([[10, 7], [11, 7]], '#c0c8d8'); dots([[7, 12], [16, 11]], '#8a5a3a'); dots([[6, 14], [17, 14]], '#c0c8d8'); });
+        return;
+      }
       poly([[11.5, 3], [7.5, 4.5], [5, 9], [5, 17], [6, 20], [11.5, 20]], M, true);
       poly([[11.5, 12], [6.5, 12], [6.5, 15], [11.5, 15]], R.dk, true); bar(11.5, 15, 11.5, 20, 1, 1, R.dk);
       if (t >= 1) bar(5.5, 8.5, 17.5, 8.5, 2, 2, trim(t, MET[t]));
@@ -403,23 +411,23 @@ const ICONS = (() => {
       if (t === 4) { poly([[11.5, 9], [9.5, 11.5], [11.5, 14.5], [13.5, 11.5]], R.rd); spk(4, 3, 1, '#fff', R.lt[2]); spk(19, 3, 1, '#fff', R.lt[2]); }
     },
     robe(t) {
-      const m = t >= 3 ? R.ar : rp(['#5a4a8a', '#6a4cb0', '#7a5cc4', '#7a5cc4', '#8a60e0'][t]);
-      poly([[11.5, 4], [8, 4.5], [5.5, 7], [4, 21], [11.5, 21]], m, true); poly([[11.5, 6], [8, 6], [11.5, 11]], R.dk, true);
-      bar(5.5, 14, 17.5, 14, 2, 2, t >= 2 ? R.gd : R.pk); bar(4, 7, 8, 14, 3, 3, m); bar(19, 7, 15, 14, 3, 3, m);
-      top(() => { if (t >= 1) dots([[8, 18], [15, 18]], R.ar[3]); });
-      if (t >= 2) { bar(4, 20.5, 19, 20.5, 1, 1, R.gd); bar(11.5, 11, 11.5, 14, 1, 1, R.gd); }
-      if (t >= 3) { dots([[7, 17], [16, 19], [11, 18]], R.mn[3]); }
-      if (t === 4) { disc(11.5, 14, 1.8, R.ic); spk(3, 4, 1, '#fff', R.ar[2]); spk(20, 8, 1, '#fff', R.ar[2]); }
+      const m = t >= 3 ? R.ar : rp(['#5a4a8a', '#6a4cb0', '#7a5cc4', '#7a5cc4', '#8a60e0'][t]), hw = [5, 5.5, 6.5, 7.5, 8.5][t];
+      poly([[11.5, 4], [8, 4.5], [5.5, 7], [11.5 - hw, 21], [11.5, 21]], m, true); poly([[11.5, 6], [8, 6], [11.5, 11]], R.dk, true);
+      if (t >= 1) { bar(5, 7, 4, 15, 3, 3, m); bar(18, 7, 19, 15, 3, 3, m); poly([[11.5, 3], [8, 3.5], [6.5, 6], [11.5, 8]], R.pk, true, 0.5); }
+      bar(6, 14, 17, 14, 2, 2, t >= 2 ? R.gd : t ? R.pk : R.br);
+      if (t >= 2) { bar(11.5 - hw, 20.5, 11.5 + hw, 20.5, 1, 1, R.gd); bar(11.5, 6, 11.5, 14, 1, 1, R.gd); disc(11.5, 14, 1.3, R.lt, true); }
+      if (t >= 3) { poly([[11.5, 3], [6.5, 3.5], [2.5, 8], [4, 11], [11.5, 10]], R.mn, true, 0.35); bar(3, 10.5, 20, 10.5, 1, 1, R.gd); top(() => dots([[8, 17], [15, 18], [11, 16], [6, 19], [17, 20]], R.mn[3])); }
+      if (t === 4) { disc(11.5, 11, 1.7, R.ic); disc(3, 9, 1, R.ic, true); disc(20, 9, 1, R.ic, true); bar(4, 15, 4, 15, 1, 1, R.gd); spk(3, 3, 1, '#fff', R.ar[2]); spk(20, 4, 1, '#fff', R.ar[2]); spk(11, 22, 0, '#fff', R.ar[3]); }
     },
     jacket(t) {
       const m = rp(['#6a4a34', '#8c5d3f', '#8c5d3f', '#9a6a46', '#9a6a46'][t]);
-      poly([[11.5, 5], [8, 4.5], [4.5, 7], [3.5, 14], [6, 19], [11.5, 19]], m, true); poly([[11.5, 5], [8, 4.5], [11.5, 11]], R.dk, true);
-      poly([[11.5, 5], [7.5, 4.5], [9.5, 10], [11.5, 11]], R.lf, true, 0.6);
-      bar(6, 15, 17, 15, 2, 2, R.dk); top(() => { P(11, 15, R.gd[2]); P(12, 15, R.gd[2]); if (t) dots([[8, 9], [15, 9]], R.br[3]); });
-      if (t === 0) top(() => dots([[7, 11], [16, 12]], R.br[0]));
-      if (t >= 2) { bar(11.5, 11, 11.5, 19, 1, 1, R.dk); dots([[11, 12], [11, 17]], R.gd[2]); }
-      if (t >= 3) { bar(4, 8, 6, 8, 2, 2, R.gd); bar(17, 8, 19, 8, 2, 2, R.gd); }
-      if (t === 4) { bar(5, 19, 18, 19, 1, 1, R.gd); disc(11.5, 13, 1.4, R.lf, true); spk(3, 3, 1, '#fff', R.lt[2]); }
+      poly([[11.5, 5], [8, 4.5], [5.5, 6], [5, 19], [11.5, 19]], m, true); poly([[11.5, 5], [8, 4.5], [11.5, 11]], R.dk, true);
+      if (t >= 1) { bar(5, 7, 3.5, 15, 3, 3, m); bar(18, 7, 19.5, 15, 3, 3, m); poly([[11.5, 4], [8, 3.5], [9, 7], [11.5, 9]], R.lf, true, 0.6); }
+      bar(6, 15, 17, 15, 2, 2, R.dk);
+      if (t === 0) { top(() => { dots([[7, 11], [16, 12], [8, 17]], R.br[0]); }); for (const x of [6, 8, 10, 13, 15, 17]) LB[19 * N + x] = null; }
+      if (t >= 2) { disc(11.5, 15, 1.6, R.lt, true); bar(5.5, 19, 17.5, 19, 1, 1, R.gd); bar(3.5, 15, 3.5, 15, 1, 1, R.gd); }
+      if (t >= 3) { disc(5, 6.5, 2.8, R.br); disc(18, 6.5, 2.8, R.br); poly([[8, 19], [15, 19], [14, 22], [9, 22]], m, false, 0.4); top(() => dots([[4, 6], [17, 6]], R.gd[2])); }
+      if (t === 4) { disc(11.5, 11, 1.5, R.lf, true); bar(8, 11, 8, 14, 1, 1, R.gd); bar(15, 11, 15, 14, 1, 1, R.gd); bar(9, 21.5, 14, 21.5, 1, 1, R.gd); spk(3, 3, 1, '#fff', R.lt[2]); spk(20, 3, 1, '#fff', R.lt[2]); }
     },
   };
   const BT = {
@@ -471,11 +479,11 @@ const ICONS = (() => {
     amethyst: { c: '#a050ff', p: [[0, -1], [0.78, -0.1], [0, 1], [-0.78, -0.1]] },
     diamond: { c: '#bfe8ff', p: [[-0.55, -0.7], [0.55, -0.7], [1, -0.15], [0, 1], [-1, -0.15]] },
   };
-  const GR = [5.2, 6.4, 7.4, 8.4, 9.4];
+  const GR = [5.2, 6.4, 7.4, 8.4, 8.8];
   function drawGem(type, g) {
     const d = GEM[type] || GEM.ruby, cx = 11.5, cy = 11.5, r = GR[g];
     const base = [mix(d.c, '#8c8c9c', 0.4), mix(d.c, '#8c8c9c', 0.15), d.c, mix(d.c, '#ffffff', 0.04), mix(d.c, '#ffffff', 0.08)][g];
-    const rm = [mix(base, '#10081c', 0.62), mix(base, '#10081c', 0.32), base, mix(base, '#ffffff', 0.45)];
+    const rm = g === 4 ? [mix(base, '#10081c', 0.5), mix(base, '#10081c', 0.2), base, mix(base, '#ffffff', 0.3)] : [mix(base, '#10081c', 0.62), mix(base, '#10081c', 0.32), base, mix(base, '#ffffff', 0.45)];
     let V = d.p.map((p) => [cx + p[0] * r * (type === 'amethyst' ? 0.9 : 1), cy + p[1] * r]);
     if (g === 0) V = V.map((p, i) => [p[0] + ((i * 7) % 3 - 1) * 0.8, p[1] + ((i * 5) % 3 - 1) * 0.8]);
     if (g >= 3) { const W = []; for (let i = 0; i < V.length; i++) { const a = V[i], b = V[(i + 1) % V.length]; W.push(a, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]); } V = W; }
@@ -489,11 +497,12 @@ const ICONS = (() => {
       const t1 = T ? T[i] : tc, t2 = T ? T[(i + 1) % V.length] : tc;
       poly(T ? [a, b, t2, t1] : [a, b, tc], rm, false, clamp(t, 0, 0.99));
     }
-    if (T) poly(T, rm, false, g === 1 ? 0.7 : 0.82);
+    if (T) poly(T, rm, false, g === 1 ? 0.7 : g === 4 ? 0.7 : 0.82);
     top(() => {
       if (T) { P(T[0][0] + 1, T[0][1] + 2, '#fff'); if (g >= 2) P(tc[0] - r * 0.12, tc[1] - r * 0.12, '#fff'); } else P(cx - 1, cy - 1, rm[3]);
       if (g === 4) { for (let i = 0; i < V.length; i += 2) { P(V[i][0], V[i][1], '#fff'); } }
     });
+    if (g === 4) top(() => { const hc = mix(d.c, '#ffffff', 0.25); for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { if (LB[y * N + x] || (x + y) & 1) continue; let md = 99; for (const q of V) md = Math.min(md, Math.hypot(q[0] - x, q[1] - y)); const dc = Math.hypot(x - cx, y - cy); if (dc > r * 0.98 && dc < r + 2.4 && md < 3) P(x, y, hc); } });
     if (g === 4) { spk(cx + r - 1, cy - r, 2, '#fff', mix(d.c, '#ffffff', 0.6)); spk(cx - r + 1, cy + r - 2, 1, '#fff', mix(d.c, '#ffffff', 0.6)); }
     if (g === 3) spk(cx + r - 1, cy - r + 1, 1, '#fff', mix(d.c, '#ffffff', 0.6));
   }
@@ -526,9 +535,21 @@ const ICONS = (() => {
       disc(8, 8, 5, R.gd); cut(8, 8, 1.7); bar(11, 11, 19, 19, 2.5, 2.5, R.gd); poly([[15, 17], [18, 14], [20, 16], [17, 19]], R.gd); poly([[17.5, 19.5], [19.5, 17.5], [21, 19], [19, 21]], R.gd);
       top(() => dots([[5, 5], [6, 4]], '#fff'));
     },
-    talent() {
-      poly(starPts(11.5, 11.5, 10, 5.5, 8, -Math.PI / 2), R.gd); disc(11.5, 11.5, 4.2, R.ar); top(() => { line(11, 9, 11, 14, '#fff'); line(9, 11, 14, 11, '#fff'); P(9, 8, '#fff'); });
-      spk(19, 3, 1, '#fff', R.lt[2]);
+    choice() {
+      bar(11.5, 21, 11.5, 12, 3, 3, R.gd); bar(11.5, 12, 5.5, 6, 3, 3, R.gd); bar(11.5, 12, 17.5, 6, 3, 3, R.gd);
+      arrowHead(4, 4.5, -2.36, 3.6, R.lt); arrowHead(19, 4.5, -0.78, 3.6, R.ar); disc(11.5, 12, 2.4, R.ar);
+      top(() => P(11, 11, '#fff')); spk(20, 14, 1, '#fff', R.ar[2]); spk(3, 15, 1, '#fff', R.lt[2]);
+    },
+    shrine() {
+      poly([[3, 21], [4, 17], [19, 17], [20, 21]], R.sn); poly([[6, 17], [7, 14], [16, 14], [17, 17]], R.sn, false, 0.6);
+      poly([[9, 14], [10, 8], [13, 8], [14, 14]], R.sn); bar(11.5, 9, 11.5, 13, 1, 1, R.ic);
+      poly([[11.5, 1.5], [14, 5], [11.5, 8.5], [9, 5]], R.ic); top(() => { dots([[11, 3], [11, 4]], '#fff'); dots([[7, 11], [16, 11]], R.ic[2]); });
+      spk(5, 5, 1, '#fff', R.ic[2]); spk(18, 4, 1, '#fff', R.ic[2]);
+    },
+    tablet() {
+      const S2 = rp('#a89878'); poly([[11.5, 2], [7, 3], [5, 6], [5, 20], [11.5, 21]], S2, true);
+      top(() => { poly([[11.5, 5], [10, 6.5], [11.5, 8], [13, 6.5]], R.lt); for (const y of [11, 13, 15, 17]) { line(8, y, 15, y, S2[0]); P(8, y + 1, S2[3]); } line(8, 11, 11, 11, R.gd[1]); });
+      dots([[6, 19], [7, 20], [16, 19]], R.lf[1]);
     },
     gold() {
       disc(11.5, 11.5, 8.3, R.gd); disc(11.5, 11.5, 6, R.lt, true); bar(11.5, 7, 11.5, 16, 2, 2, R.gd); bar(8, 11.5, 15, 11.5, 2, 2, R.gd); spk(18, 5, 1, '#fff', R.lt[2]);
@@ -592,10 +613,11 @@ const ICONS = (() => {
       });
     },
     gem(type, grade) {
-      grade = clamp(grade | 0, 0, 4); type = GEM[type] ? type : 'ruby';
-      return memo(`g:${type}:${grade}`, () => bake(paint(() => drawGem(type, grade))));
+      if (typeof type === 'string' && type.includes('_')) { const q = type.split('_'); type = q[0]; if (grade == null) grade = +q[1]; }
+      grade = clamp(grade | 0, 0, 2); type = GEM[type] ? type : 'ruby';        // 3 grades: chipped, clear, radiant
+      return memo(`g:${type}:${grade}`, () => bake(paint(() => drawGem(type, [0, 2, 4][grade]))));
     },
-    misc(name) { return memo('m:' + name, () => bake(paint(MISC[name] || MISC.xp))); },
+    misc(name) { if (name === 'talent') name = 'choice'; return memo('m:' + name, () => bake(paint(MISC[name] || MISC.xp))); },
     // old 16px glyph names -> new art. `color` (optional) disambiguates heart / helm / chest / boots variants.
     glyph(glyph, color) {
       const c = String(color || '').toLowerCase();

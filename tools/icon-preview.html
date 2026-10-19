@@ -29,10 +29,10 @@ const fam = [['sword', 'dawnblade'], ['staff', 'starfall'], ['bow', 'moonbow'], 
   ['chest', 'knightplate'], ['chest', 'dreamrobe'], ['chest', 'stalkerjacket'], ['boots', 'knightgreaves'], ['boots', 'clothsandals'], ['boots', 'stalkershoes']];
 const RAR = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
 for (const [k, b] of fam) { r = group('Items: ' + b + ' tiers 0-4 (rarity common/uncommon/rare/epic/legendary)'); for (let t = 0; t < 5; t++) cell(r, b + ' T' + t, ICONS.item(b, t, RAR[t], t > 1 ? ['ruby_1', 'sapphire_2', null].slice(0, t - 1) : [])); }
-r = group('Gems: 6 types x 5 grades');
-for (const g of ['ruby', 'sapphire', 'emerald', 'topaz', 'amethyst', 'diamond']) for (let k = 0; k < 5; k++) cell(r, g + ' ' + k, ICONS.gem(g, k));
+r = group('Gems: 6 types x 3 grades (chipped, clear, radiant)');
+for (const g of ['ruby', 'sapphire', 'emerald', 'topaz', 'amethyst', 'diamond']) for (let k = 0; k < 3; k++) cell(r, g + ' ' + k, ICONS.gem(g, k));
 r = group('Misc');
-for (const m of ['potion', 'dust', 'rune', 'chest', 'xp', 'key', 'talent', 'gold']) cell(r, m, ICONS.misc(m));
+for (const m of ['potion', 'dust', 'rune', 'chest', 'xp', 'key', 'choice', 'shrine', 'tablet', 'gold']) cell(r, m, ICONS.misc(m));
 r = group('Rarity frames (animated) over tier-4 sword');
 for (const q of RAR) cell(r, q, null, (x, t) => { x.drawImage(ICONS.item('dawnblade', 4, 'common'), 0, 0, W, W); ICONS.frame(x, 0, 0, W, q, t); });
 r = group('Old glyph names -> ICONS.glyph');
