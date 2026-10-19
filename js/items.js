@@ -65,7 +65,7 @@ function baseStats(b) {
 const AFFIX = { hp: [25, 6], mp: [15, 3], def: [0.02, 0.002], power: [0.03, 0.004], crit: [0.02, 0.0015], haste: [0.03, 0.003],
   regen: [1, 0.25], mpRegen: [0.8, 0.15], speed: [0.1, 0.01], critDmg: [0.08, 0.008], cdr: [0.02, 0.002], skillDmg: [0.04, 0.004] };
 for (const el of RES_ELS) AFFIX[resKey(el)] = 'res';   // resistance affixes roll 10-20%, not by level; resAll is legendary-only
-const STAT_NAME = { dmg: 'Damage', hp: 'HP', mp: 'MP', def: 'Defence', power: 'Damage', crit: 'Crit chance', haste: 'Attack speed', regen: 'HP/s',
+const STAT_NAME = { dmg: 'Damage', hp: 'HP', mp: 'MP', def: 'Armour', power: 'Damage', crit: 'Crit chance', haste: 'Attack speed', regen: 'HP/s',
   mpRegen: 'MP/s', speed: 'Move speed', critDmg: 'Crit damage', cdr: 'Cooldowns', skillDmg: 'Skill damage', resAll: 'All res' };
 for (const el of RES_ELS) STAT_NAME[resKey(el)] = el[0].toUpperCase() + el.slice(1) + ' res';
 const STAT_ORDER = ['dmg', 'hp', 'mp', 'def', 'power', 'skillDmg', 'crit', 'critDmg', 'haste', 'cdr', 'regen', 'mpRegen', 'speed', 'resAll', ...RES_ELS.map(resKey)];
@@ -73,6 +73,7 @@ function fmtStat(k, v, sign = true) {
   const sg = sign ? (v >= 0 ? '+' : '-') : '', a = Math.abs(v);
   if (k === 'dmg') return `${sign && v < 0 ? '-' : ''}${Math.round(a)} ${STAT_NAME[k]}`;
   if (k === 'speed') return `${sg}${Math.round(a / 3.7 * 100)}% ${STAT_NAME[k]}`;
+  if (k === 'def') return `${sg}${Math.round(a * 100)} ${STAT_NAME[k]}`;   // raw armour points; the sheet shows the resulting Defence %
   if (k.startsWith('res')) return `${sg}${Math.round(a * 100)}% ${STAT_NAME[k]}`;
   if (k === 'cdr') return `${sign ? (v >= 0 ? '-' : '+') : ''}${Math.round(a * 100)}% ${STAT_NAME[k]}`;
   if (PCT_STATS[k]) return `${sg}${Math.round(a * 100)}% ${STAT_NAME[k]}`;

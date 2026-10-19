@@ -28,8 +28,8 @@ function loadAll(ids, opts = {}) {
   const files = fs.readdirSync(RECIPES).filter(f => f.endsWith('.js') && !f.startsWith('_')).sort();
   const out = [];
   gen.T.mode = opts.actions === 'future' ? 'future' : 'compat';
-  for (const f of files) {
-    const rec = require(path.join(RECIPES, f));
+  const loaded = files.map(f => [f, require(path.join(RECIPES, f))]);   // load every spec first so portal anchors are registered
+  for (const [f, rec] of loaded) {
     for (const r of Array.isArray(rec) ? rec : [rec]) {
       if (ids && ids.length && !ids.includes(r.id)) continue;
       const res = gen.generate(r, { kinds: opts.kinds || 'compat' });
@@ -71,6 +71,13 @@ if (require.main === module) {
     if (flag('verbose')) console.log('  ', JSON.stringify(i.objectCounts));
     for (const w of rep.warnings) console.log('  WARN', w);
     for (const e of rep.errors) { console.log('  ERROR', e); bad++; }
+  }
+  // cross-map portal checks: arrival points must be walkable and reachable on the target map (when it is part of this run)
+  const byId = Object.fromEntries(res.map(r => [r.id, r]));
+  for (const r of res) for (const p of r.map.portals) if (p.arrive && byId[p.to]) {
+    const tg = byId[p.to].gen, R = tg.lastReach;
+    if (!tg.walkTile(p.arrive.x, p.arrive.y)) { console.log(`  ERROR ${r.id}: portal to ${p.to} arrives at (${p.arrive.x},${p.arrive.y}) which is not walkable`); bad++; }
+    else if (!R.has(p.arrive.x, p.arrive.y)) { console.log(`  ERROR ${r.id}: portal to ${p.to} arrival (${p.arrive.x},${p.arrive.y}) is unreachable from ${p.to}'s start`); bad++; }
   }
   fs.mkdirSync(OUT, { recursive: true });
   const outFile = path.join(OUT, 'maps.json');

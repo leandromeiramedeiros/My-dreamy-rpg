@@ -173,7 +173,7 @@ function drawHUD(ctx) {
     ctx.globalAlpha = 1;
   }
   if (G.tablet && G.tablet.src && G.state === 'play' && !G.ui.open) {   // lore tablet: read while standing beside it
-    const w = 520, x = (DW - w) / 2, y = 96;
+    const w = 520, x = (DW - w) / 2, y = 212;
     panel(ctx, x, y, w, 70, true); T(ctx, G.tablet.src.title || 'Lore tablet', x + 16, y + 12, 8, UI.gold);
     wrap(ctx, G.tablet.src.text || '...the words have worn away.', x + 16, y + 30, w - 32, 8, UI.text, 14);
   }

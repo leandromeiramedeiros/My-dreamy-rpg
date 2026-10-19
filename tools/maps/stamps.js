@@ -39,7 +39,14 @@ function waveActions(T, rm, waves, gap, banner) {
   });
   return acts;
 }
-const hint = (g, rm) => ({ x: rm.x, y: rm.y });
+// point on a path a given distance outside a room's edge (dir +1 = leaving the room, -1 = arriving at it)
+function nearRoomEdge(g, pathName, roomId, dir, gap) {
+  const p = g.pathBy[pathName], c = p.ctrl.find(q => q.room && q.room.id === roomId), rm = g.roomBy[roomId];
+  const target = c.s + dir * (rm.r + gap); let bi = 0, bd = 1e9;
+  p.samples.forEach((sm, i) => { const d = Math.abs(sm.s - target); if (d < bd) { bd = d; bi = i; } });
+  const t = bi / (p.samples.length - 1);
+  return Object.assign(g.pathPoint(pathName, t), { ang: g.pathAngle(pathName, t) });
+}
 
 // ============================================================================= outer
 function outer(S) {
@@ -112,7 +119,7 @@ function outer(S) {
       // -- triggers: encounter grammar (11.2)
       const e = (name) => name, rooms = ['r1', 'r2', 'r3'];
       tr.push(T.mapEnter('intro', 'Pip speaks', [T.dialogue('Pip', X.intro)]));
-      tr.push(T.enter('shrine', 'Rift shrine', shr.x, shr.y, 2.2, [T.checkpoint('Checkpoint: ' + st.label), T.heal(100)]));
+      tr.push(T.enter('shrine', 'Rift shrine', shr.x, shr.y, 2.2, [T.checkpoint('Checkpoint: ' + (X.startName || 'Glade')), T.heal(100)]));
       if (R.tablet) tr.push(T.enter('tablet', 'Lore tablet', R.tablet.x, R.tablet.y, 2.2, [T.message('Tablet: ' + X.tablet)]));
       let prev = null;
       rooms.forEach((k, i) => {
@@ -151,9 +158,9 @@ function dungeon(S) {
       g.setStart(R.start.x + (S.startOff ? S.startOff[0] : 0.8), R.start.y + (S.startOff ? S.startOff[1] : -0.8));
       placePortals(g, S);
       // gates / door: positions come from the paths so they always sit in a corridor
-      const door = g.pathPoint('main', S.doorAt || 0.2), doorAng = g.pathAngle('main', S.doorAt || 0.2);
+      const door = nearRoomEdge(g, 'main', 'start', 1, 1.0), doorAng = door.ang;
       g.addObj('keydoor', door.x, door.y, { id: 'door_key', key: S.key, ang: Math.round(doorAng * 100) / 100, len: S.w.main, force: true, sp: 0.1 });
-      const gp = g.pathPoint('main', S.gateAt || 0.78), gAng = g.pathAngle('main', S.gateAt || 0.78);
+      const gp = nearRoomEdge(g, 'main', 'arena', -1, 1.2), gAng = gp.ang;
       g.addObj('gate', gp.x, gp.y, { id: 'gate_r2', ang: Math.round(gAng * 100) / 100, len: S.w.main, force: true, sp: 0.1 });
       const sp = g.pathPoint('shortcut', 0.92), spA = g.pathAngle('shortcut', 0.92);
       g.addObj('gate', sp.x, sp.y, { id: 'gate_short', ang: Math.round(spA * 100) / 100, len: S.w.branch, force: true, sp: 0.1 });
@@ -234,4 +241,4 @@ function boss(S) {
   };
 }
 
-module.exports = { outer, dungeon, boss, ANCHORS, landing };
+module.exports = { outer, dungeon, boss, ANCHORS, landing, registerPortals, placePortals };
