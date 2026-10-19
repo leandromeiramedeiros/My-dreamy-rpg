@@ -15,6 +15,31 @@ Opening the file directly works. You can also serve the folder:
 python3 -m http.server 8000   # then open http://localhost:8000
 ```
 
+## Editor
+
+Open **`editor.html`** (online: https://leandromeiramedeiros.github.io/My-dreamy-rpg/editor.html) to edit the game.
+
+* **Map tab.** Paint tiles, raise and lower the ground, place props, set the start flag and add portals.
+  * Tile types: grass, flowers, path, water, bridge, stairs, flagstones, runes, moss, pillars and void.
+  * Props: trees, bushes, rocks, lanterns, crystals, mushrooms, signs, braziers, shrines and the cottage.
+  * Portals link maps together and can begin closed.
+  * **+ New map** makes a new island with either theme. **Map settings** renames, resizes or deletes a map.
+* **Logic tab.** Each map has a list of trigger cards in the form *WHEN … (ONLY AFTER …) THEN …*.
+  * WHEN can be: the map starts, a timer, the player enters an area, no enemies are left, enough enemies
+    defeated, or boss or player HP dropping below a percentage.
+  * THEN can: spawn enemies or the boss, show a banner or message, set the objective, heal, open or close
+    portals, defeat all enemies, shake the screen, play a sound, send the player to another map, or wait.
+  * The existing waves and boss fight are built this way, so you can edit them.
+* **Tuning tab.** Change the numbers for the player, the enemies and every skill.
+* **▶ Play-test** opens the game on your draft in a new tab. Drafts autosave in your browser.
+  **Export** and **Import** download or load the whole world as `world.json`.
+* **⬆ Publish** commits `js/world.js` to this repository through the GitHub API, and GitHub Pages then updates
+  the live game within about a minute. The first time, open **GitHub settings** and paste a fine-grained token
+  that has access to this repository with *Contents: Read and write*. The token is kept only in your browser.
+
+Shortcuts: V select · B tiles · H height · O props · E erase · S start · P portal · G grid · Ctrl+Z / Ctrl+Y ·
+Delete · right-drag or Space+drag to pan · mouse wheel to zoom.
+
 ## Controls
 
 **Touch (phones / tablets, best in landscape):** put your left thumb down anywhere on the left side
@@ -83,6 +108,8 @@ Plain HTML5 Canvas 2D with no runtime dependencies, written as classic scripts s
 | `js/hud.js` | HUD, loadout screen and minimap |
 | `js/touch.js` | Touch joystick, skill wheel and drag-to-aim |
 | `js/sprites.js` | Sprite images |
+| `js/world.js` | **The world data:** maps, triggers and tuning, written by the editor |
+| `editor.html`, `js/editor.js` | The map and logic editor |
 | `js/main.js` | Main loop, input and transitions |
 
 Showcase URL parameters: `?scene=play`, `?scene=arena`, `?scene=boss`, `?scene=loadout`, `?scene=portal`, `&weapon=starfall|moonbow`.
@@ -94,3 +121,5 @@ Showcase URL parameters: `?scene=play`, `?scene=arena`, `?scene=boss`, `?scene=l
 ![Boss fight](docs/boss.png)
 ![Loadout](docs/loadout.png)
 ![Touch controls on a phone](docs/mobile.png)
+![Editor: map](docs/editor-map.png)
+![Editor: logic](docs/editor-logic.png)

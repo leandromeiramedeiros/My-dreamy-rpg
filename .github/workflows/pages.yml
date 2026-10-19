@@ -15,7 +15,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p _site
-          cp -r index.html js _site/
+          cp -r *.html js _site/
           touch _site/.nojekyll
       - name: Push to gh-pages
         run: |
