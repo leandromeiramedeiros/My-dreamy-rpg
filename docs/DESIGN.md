@@ -829,8 +829,7 @@ Ship gate per milestone: smoke + play test green → director review → PR → 
 ### 19.2 Crafting at the Elder Stone (Dust only)
 * **Temper:** raise one affix by one tier, once per item; 20 / 60 / 150 Dust (Rare / Epic / Legendary+).
 * **Imbue:** add a socket for Dust; the Socket Rune drop remains the free route.
-* **Attune** (M5): replace an item's implicit with another base's implicit from the same family and tier. This consumes
-  the donor item, which gives salvaging another purpose.
+* ~~Attune~~ **cut** (§20 anti-bloat).
 
 ### 19.3 Detailed items
 * **Tooltip v2, top to bottom (≤ 12 lines; on touch, affixes collapse to icon + number):**
@@ -866,7 +865,7 @@ Ship gate per milestone: smoke + play test green → director review → PR → 
     director's placement: it ties the item to the story.
 * **Belt → consumables, sustain, and the gear it wraps.** S only, 1 socket; implicit +1 potion charge.
   * Example boons: potions also cleanse; kill-heal +50 %; cooking buffs last 15 min; salvage Dust ×1.5.
-  * **The wrap-around boon:** gems in chest and boots count +1 grade, clamped at Radiant.
+  * **The wrap-around boon:** the best gem in chest *or* boots counts +1 grade, clamped at Radiant (one socket only; §20 balance).
 * **Rings → elements and reactions.** P only, 0 sockets.
   * Example boons: +15 % fire damage and +10 % Burn chance; Shatter radius +1; Conduct +1 jump; backstab arc +30°;
     +1 Mark cap; charged swings 0.25 s faster; projectiles +1 pierce.
@@ -896,7 +895,7 @@ Ship gate per milestone: smoke + play test green → director review → PR → 
   pieces plus that family's weapon apply the family's tag rule to trinket boons too.
 
 ### 19.6 Guardrails
-* One `CAPS` table, applied in `recalcStats`: cdr 50 %, crit 60 %, haste 50 %, gear power 150 %, reaction bonus 50 %,
+* One `CAPS` table, applied in `recalcStats`: cdr 40 %, crit 60 %, haste 50 %, gear power 150 %, reaction bonus 50 %,
   Mark cap 5, potions 5.
 * Trinket resists: at most +10 % per resist line and +15 % resAll across all four trinkets. The hero clamp [−0.5, +0.6]
   still applies.
@@ -916,4 +915,136 @@ Ship gate per milestone: smoke + play test green → director review → PR → 
 * **Sonnet art:** trinket icons, belt and amulet overlays, the tempered highlight (M3).
 
 **Cut:** base-type variants, set items, affix reroll, a 5th trinket slot, sockets on rings, and skills on trinkets.
+
+## 20. Balance framework and scope budget (expert audit; director-approved; supersedes conflicting numbers anywhere above)
+
+### 20.1 Play-time target (decided with the client)
+**Dense, plus replay.** The main path runs **~95–110 min** and 100 % takes **~3–3.5 h**. The original 2 h / 4–5 h is
+reached through honest replay (NG+ modifiers, a second family or origin run), never through padding.
+
+### 20.2 Scope budget (hard caps)
+* **Maps: 17 max.** These are:
+  * the hub
+  * 5 outer zones
+  * 5 boss arenas
+  * **2 mandatory dungeons:** Root Hollow, the teaching dungeon, and Forge Deep, the Caldera showcase
+  * 3 optional vaults (the former Warden Crypt, Drowned Vault and Spire gauntlet; the Twin Vigils fold into the Spire
+    ascent's last room)
+  * Drifting Isles (Sorrel)
+  * a one-floor Gloaming Below with one boss
+* **Cut:** Starlit Shoals (the Moonmaw moves to the Vale moon pond) and Gloaming floor 2.
+* **Systems: 10.** Anything else must live inside one of these or be cut:
+  1. loot and affixes
+  2. gems
+  3. elements and reactions
+  4. skills and ranks
+  5. trinkets and aspects
+  6. bestiary and Codex (one book)
+  7. quests
+  8. fishing and cooking
+  9. crafting (temper, imbue)
+  10. NG+ modifiers
+* **Merges and cuts:**
+  * Dream Tomes merge into Skill Runes: one item that teaches a weapon option or a character skill.
+  * Rune-words are **cut**. Rules have two homes: aspects on legendaries, boons on trinkets.
+  * Attune is cut.
+  * Origin passives become the starter ring.
+  * NG+ is one modifiers screen and promises no NG+-only content.
+  * Mastery and achievements share one page.
+* **Trimmed:**
+  * arena to 5 tiers, as a balance test bed
+  * hunt milestones to 10 and 25 kills
+  * fishing to 18 fish (3 per zone) plus the legendaries, with 4 rods
+  * secrets to 1 *good* secret per map, preferring visible puzzles to hidden cracks
+* **Freshness:** 14–16 min per zone on the main path; a zone goes stale at 18 min.
+* **Pacing check:** at least one new idea every 10 min of the main path. Fishing moves from the Vale to Pinewood.
+* **Do not cut:** reactions, trinkets, the bestiary as a teacher, fishing core, the twist, the Codex.
+* **Enemy roster:** see §21 (expert enemy review). Rule: more types are welcome, but **every enemy in a zone has a
+  distinct verb**. No palette swaps.
+
+### 20.3 Power curves (the targets the sim enforces)
+The reference hero has the expected gear for each band (Rare → Epic, 2 gems per zone, 2 trinkets by Act II and 4 by
+Act IV, no tempering).
+
+| Band | L | Hero DPS | Hero eHP | TTK common | TTK elite | 3 enemies' DPS |
+|---|---|---|---|---|---|---|
+| Vale | 1–3 | 60 | 900 | 2 s | — | 25 |
+| Pinewood | 3–10 | 110→220 | 1.1k→1.9k | 2.5–3.5 s | 12 s | 45→90 |
+| Ruins | 10–17 | 220→420 | 1.9k→3.0k | 3–4 s | 14 s | 90→160 |
+| Grotto | 17–24 | 420→700 | 3.0k→4.4k | 3–4 s | 15 s | 160→250 |
+| Caldera | 24–31 | 700→1.1k | 4.4k→6.2k | 3.5–4.5 s | 16 s | 250→370 |
+| Spire | 31–38 | 1.1k→1.6k | 6.2k→8.5k | 4–5 s | 18 s | 370→520 |
+
+* **Common TTK** stays between 2.5 and 5 s across the whole game.
+* **Survival:** standing in 3 commons, the hero dies in 10–14 s.
+* **Boss length:**
+  * mini-boss: 60–90 s
+  * guardian: 150–240 s
+  * Morrow: about 300 s
+  * boss HP = length × ref DPS × uptime, where uptime is 0.7 for mini-bosses and 0.6 for guardians
+* **Boss damage:** a telegraphed big hit takes 35–45 % of ref eHP, chip damage 8–12 %. Three mistakes kill; one never does.
+* **Expected tuning:** `enemyHpMul` 1.10 → **~1.08 per level**, and gear tier steps of about 45 %. The sim decides.
+* **XP:** bosses give 1 level and mini-bosses 0.5. Each zone has an XP band ceiling: XP drops to 10 % once you are 3
+  levels above the band. A 2 h player meets Morrow at ~36 and a completionist at 38–40, about a 1.2× advantage.
+
+### 20.4 Item power points (1 pp = +1 % DPS or eHP)
+* tier upgrade: 40 pp on weapons, 25 on armour
+* rarity step: 15
+* affix tiers: T1 4, T2 8, T3 13; a temper adds 4–5
+* gems: Chipped 4, Clear 8, Radiant 14 (a Radiant gem never beats a T3 affix)
+* implicit: 5
+* unique rule: 15–25 within its build, ≤ 5 outside it
+* **Trinkets: ≤ 25 % of total gear power**, resonance included
+* **An optimal build beats a random one by 1.6× DPS and 1.4× eHP**, reactions included; the CI band is 1.3–2.2×.
+
+### 20.5 Skills, MP and the ultimate
+* **Reactions:** 20–30 % of DPS for a reaction build, never more than 40 %.
+* **Ultimate:** one cast per ~40 s baseline and ~25 s with reactions and the amulet; floor 18 s. Charge gain is capped at
+  5 % per hit and 10 % per reaction.
+* **MP:**
+  * The rhythm is a ~6 s builder/spender cycle.
+  * `mpOnHit` is **per family** (§17: daggers 6, sword 8, two-hander 14), basic attacks only, once per swing (not per
+    target).
+  * A hard cap of **40 MP/s** from hits. This fixes the uncapped M2a value.
+* **Skill gap:** damage per MP within a slot ≤ 1.3×; best vs worst skill in a role ≤ 1.5×.
+* **Caps:**
+  * cdr is **40 %**, which matches the code; §19.6 is corrected.
+  * Ring resonance counts **inside** the 50 % reaction-bonus cap.
+  * The real ceiling is the sim's final-damage check (optimal ≤ 2.2× reference); the 1.6× buff cap alone doesn't
+    guarantee it.
+
+### 20.6 Economy and difficulty
+* **Dust:**
+  * A main-path run earns ~900–1,200 Dust.
+  * Planned spend is ~700 Dust (6 tempers, 2 imbues, 3 Chipped gems, 2 runes). Income stays at ~1.3× spend.
+  * A completionist earns ~3,000, enough to temper every slot once.
+* **Potions:** about 1.2 per room on Normal and 0.6 on Story.
+* **Difficulty modes:**
+  * Story: damage taken ×0.6, telegraphs +0.2 s.
+  * Normal: the reference.
+  * NG+: ×1.6, absorbed by ilvl 40–44 and Mythic drops.
+  * No Hard mode on a first run.
+
+### 20.7 Tooling and CI
+* **Sheets:** Haiku generates CSV sheets from the game data with a node script, never by hand. They live in
+  `tools/balance/`:
+  * hero_curve, enemy_curve, boss_length
+  * item_pp, skill_table
+  * dust_flow, xp_path
+* **Sim:** `tools/balsim.js` (Opus).
+  * It runs the real `SKILLS` and damage math headless, with a scripted rotation of basic ×3 → skill → dodge.
+  * It runs against each zone's reference enemy and boss, for the reference, random and optimal builds, on Story,
+    Normal and NG+.
+* **CI red flags** (each fails `node tools/smoke.js`):
+  * common TTK below 1.5 s or above 7 s
+  * a mini-boss under 45 s or over 120 s
+  * a guardian under 100 s or over 300 s
+  * the optimal/random ratio outside 1.3–2.2×
+  * reaction share above 40 %
+  * an ultimate faster than every 15 s
+  * any stat sum over its cap
+  * Dust sinks larger than income
+  * more than 2 potions per room
+  * a hero level at Morrow outside 34–40 on either path
+* **When:** the sim and sheets land in **M2b**, and every later milestone ships only with the sim green.
 
