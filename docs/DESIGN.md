@@ -115,6 +115,17 @@ Each skill in `SKILLS` gets an `element` tag (fire/frost/nature/lightning/arcane
 * Socketed gems are visible as coloured pixels on the item.
 * Same renderer draws the paper-doll in the inventory screen at 3× scale.
 
+## 6b. Icons
+* All icons are hand-shaded pixel art at **24×24** (drawn crisp at 2×/3× in the HUD), built in `js/icons.js`.
+  They replace the old 16-px white line glyphs.
+* **Skill icons:** one per skill id, with a full-colour subject (flame, blade, arrow volley…), 3–4 tone shading, dark outline
+  and an element-coloured frame (fire orange, frost cyan, nature green, lightning yellow, arcane violet, physical steel, holy gold).
+  Cooldown sweep and "not enough MP" dim are drawn by the HUD on top.
+* **Item icons:** per family *and tier*, so a tier-4 sword looks ornate and a tier-0 rusty. Rarity is shown by the slot frame
+  (border colour + inner glow, animated shimmer for legendary/mythic), plus small gem dots for filled sockets.
+* **Gems:** 6 types × 5 grades. Higher grades get more facets and sparkle. **Misc:** potion, Dream Dust, Socket Rune, chest, XP, gold key.
+* API: `ICONS.skill(id)`, `ICONS.item(base, tier, rarity, gems)`, `ICONS.gem(type, grade)`, `ICONS.misc(name)`, `ICONS.frame(ctx, x, y, size, rarity, t)`.
+
 ## 7. Enemies and bosses
 * Each zone: 4–6 enemy types (reuse behaviours hopper/shooter/charger/brute + new: `caster` (AoE telegraphs),
   `summoner`, `elite` modifier (bigger, coloured aura, +HP, drops better)).
