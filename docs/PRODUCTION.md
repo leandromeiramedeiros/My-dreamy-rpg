@@ -66,3 +66,12 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * §22: 16 main-path maps (~110 min) + 11 optional (100 % ≈ 4–4.5 h). Moonmaw stays in Starlit Shoals (story).
   Max 4 agents at once; QA tester and level designer roles hired from M2a ship / M2b.
 
+
+## Balance backlog (from tools/balance/sheets.js, first run) — fix in M2b with balsim
+* Common enemies die too fast: wisp TTK 0.74–1.3 s, slime ~1.05 s (target 2.5–5 s). Raise wisp/slime HP or flatten enemyHp curve per §20.3.
+* Gloam Warden length 79–92 s (target guardian 150–240 s).
+* Dust income ~2,820 per main path vs 900–1,200 target → lower `salvageValue` ~2.4×.
+* Gems overpriced: Chipped Ruby 12.6 pp vs 4, Clear 28.7 vs 8 → cut gem resist/hp values.
+* Code still gives bosses 2 levels (§20.3: 1, mini 0.5) and 0.8× XP at +3 levels (§20.3: 10 %).
+* Hero DPS curve: 1.57× target at L1, 0.80× at L40 → flatter early, steeper tier steps.
+* Check: `ogre`/`troll` spawn ids vs ENEMY table (validate-ids).
