@@ -38,6 +38,7 @@ function loadAll(ids, opts = {}) {
         rooms: g.rooms.filter(x => x.kind !== 'flat').map(x => ({ id: x.id, label: x.label, x: x.x, y: x.y, r: x.r, kind: x.kind })),
         paths: g.paths.map(p => ({ name: p.name, kind: p.kind, pts: p.samples.map(s => [s.x, s.y]), length: p.samples.length ? p.samples[p.samples.length - 1].s : 0 })),
         notes: g.notes,
+        fish: g.objs.filter(o => o.t === 'fishspot' || o.t === 'gate' || o.t === 'hidden' || o.t === 'keydoor' || o.t === 'lever').map(o => ({ t: o.t, x: o.x, y: o.y, hidden: o.hidden })),
       };
       out.push({ id: r.id, map: res.map, report: res.report, meta, gen: g, file: f });
     }

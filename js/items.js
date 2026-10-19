@@ -507,7 +507,7 @@ function showcaseKit(p, wfam = 'dawnblade') {
 }
 function sampleBag(p) {
   const L = p.level, put = e => bagAdd(p, e);
-  RARITIES.slice(0, 5).forEach((r, i) => put(rollItem(L, r, SLOTS[i % 4])));
+  RARITIES.slice(0, 4).forEach((r, i) => put(rollItem(L, r, SLOTS[i % 4])));   // legendary = the named unique below
   put(makeUnique('lanternplate', L)); put(makeItem('auroraedge', 'epic', 26));   // a named legendary; too high level: red requirement
   for (let k = 0; k < 6; k++) put(rollItem(L - 4 + k, pick2(['common', 'uncommon', 'rare'])));
   GEM_TYPES.forEach((t, i) => put({ gem: `${t}_${1 + (i % 3)}`, n: 1 + (i % 3) }));

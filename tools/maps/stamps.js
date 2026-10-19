@@ -61,6 +61,7 @@ function outer(S) {
       g.path('main', { kind: 'main', w: S.w.main, meander: S.meander || 4.6, every: S.every, pts: S.main });
       for (const [k, b] of Object.entries(S.branches || {})) g.path(k, Object.assign({ kind: 'branch', w: S.w.branch, meander: 1.6, every: 6 }, b));
       for (const [k, r] of Object.entries(S.rivers || {})) g.river(k, r);
+      for (const [k, r] of Object.entries(S.ponds || {})) g.pond(k, r);
       for (const b of S.bridges || []) g.bridge(b);
     },
     populate(g, T) {
@@ -99,10 +100,13 @@ function outer(S) {
         secretTriggers.push(T.enter('crack_open', 'Cracked wall gives way', pp.x - Math.cos(ang) * 0.6, pp.y - Math.sin(ang) * 0.6, 1.5, [T.openGate(id), T.shake(3), T.sound('portal')], ['crack_hum']));
         secretTriggers.push(T.enter('crack_loot', 'Hidden gem cache', R.crack.x, R.crack.y, 2, [T.message('A hidden gem cache!'), T.loot('uncommon', 1, R.crack.x, R.crack.y, { gem: true })]));
       }
-      if (sec.env) {       // environmental: path visible on the minimap only -> Socket Rune
-        g.marker('rune_cache', R.env.x, R.env.y, { label: 'secret socket rune' });
-        secretTriggers.push(T.enter('env_loot', 'Hidden socket rune', R.env.x, R.env.y, 2, [T.message('A Socket Rune glints in the moss.'), T.loot('rare', 1, R.env.x, R.env.y, { item: 'socket_rune' })]));
+      if (sec.env) {       // environmental: path visible on the minimap only -> Socket Rune (+ hidden fishspot when the room has a pool)
+        g.marker('rune_cache', R.env.x + (sec.env.runeDx || 0), R.env.y + (sec.env.runeDy || 0), { label: 'secret socket rune' });
+        const acts = [T.message('A Socket Rune glints in the moss.'), T.loot('rare', 1, R.env.x, R.env.y, { item: 'socket_rune' })];
+        if (sec.env.pond) { const fp = g.waterEdge(R.env.x + 1, R.env.y + 1, 4); g.marker('fishspot', fp.x, fp.y, { pool: S.id + '_hidden', hidden: true }); acts.push(T.dialogue('Pip', ['The water here ripples with dream-fish, Aerin. A secret pool!'])); }
+        secretTriggers.push(T.enter('env_loot', 'Hidden socket rune', R.env.x, R.env.y, 2.2, acts));
       }
+      (S.fishspots || []).forEach((f, i) => { const q = g.waterEdge(f[0], f[1], 7); g.marker('fishspot', q.x, q.y, { pool: S.id + (i ? '_b' : '_a') }); });
       if (sec.logic) {     // logic: lever lowers the bridge seen earlier -> gold chest with guaranteed Rare+
         const b = g.bridges[0], isl = R[sec.logic.islet], lv = R[sec.logic.leverRoom];
         const e0 = b.axis === 'x' ? [[b.x + 0.4, b.y + b.w / 2], [b.x + b.len - 0.4, b.y + b.w / 2]] : [[b.x + b.w / 2, b.y + 0.4], [b.x + b.w / 2, b.y + b.len - 0.4]];

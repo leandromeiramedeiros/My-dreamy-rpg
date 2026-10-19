@@ -85,6 +85,7 @@ function render(id, m, meta, outDir) {
   // path centerlines
   if (meta && meta.paths) for (const p of meta.paths) { const col = p.kind === 'main' ? [255, 255, 255] : p.kind === 'secret' ? [255, 0, 200] : [120, 255, 255]; p.pts.forEach((q, i) => { if (i % 3 === 0) im.px(q[0] * T, top + q[1] * T, col); }); }
   if (meta && meta.rooms) for (const r of meta.rooms) { im.ring(Math.round(r.x * T), top + Math.round(r.y * T), Math.round(r.r * T), [255, 255, 255]); im.text(r.label, Math.round(r.x * T) - r.label.length * 2, top + Math.round(r.y * T) - 3, [255, 255, 255], 1); }
+  for (const f of (meta && meta.fish) || []) { const X = Math.round(f.x * T), Y = top + Math.round(f.y * T); const c = f.t === 'fishspot' ? (f.hidden ? [255, 0, 200] : [0, 230, 255]) : f.t === 'lever' ? [255, 255, 0] : [255, 120, 0]; im.rect(X - 4, Y - 4, 9, 9, [0, 0, 0]); im.rect(X - 3, Y - 3, 7, 7, c); im.text(f.t === 'fishspot' ? 'FISH' : f.t.toUpperCase(), X + 6, Y - 2, c, 1); }
   // header + legend
   im.rect(0, 0, im.w, top, [30, 28, 50]);
   im.text(`${id}  ${m.W}X${m.H}  OBJ ${m.objects.length}  TRG ${m.triggers.length}`, 6, 6, [255, 230, 160], 2);

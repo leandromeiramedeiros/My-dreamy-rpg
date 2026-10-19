@@ -14,7 +14,7 @@ module.exports = outer({
     tablet: { kind: 'nook', x: 22, y: 51, r: 2.8, lvl: 0 },
     elite: { kind: 'nook', x: 52, y: 47, r: 3.2, lvl: 2 },
     crack: { kind: 'nook', x: 20, y: 40, r: 2.4, lvl: 0 },
-    env: { kind: 'nook', x: 53, y: 23, r: 2.2, lvl: 4 },
+    env: { kind: 'nook', x: 52.5, y: 22.5, r: 3.4, lvl: 4 },
     islet: { kind: 'islet', x: 5, y: 4.5, r: 2.6, lvl: 4, isolated: true },
   },
   flats: [{ x: 23, y: 27, r: 4.5, lvl: 2 }, { x: 49.5, y: 31, r: 4, lvl: 2 }],
@@ -27,9 +27,11 @@ module.exports = outer({
     env: { kind: 'secret', type: 'd', w: 1.6, meander: 1.2, every: 6, from: { near: [47, 26] }, pts: [[50.5, 24, 3], 'env'] },    // environmental secret
     bridgeApproach: { from: { near: [14, 9] }, w: 1.8, type: 'd', pts: [[12.6, 5.2, 4]] },                // logic secret: approach to the raised bridge
   },
+  ponds: { hidden: { x: 52.2, y: 21.6, r: 1.9, lvl: 4 } },
+  fishspots: [[30, 28.6], [42, 29.6]],
   rivers: { creek: { w: 2.6, pts: [[0, 21], [12, 25], [23, 27], [36, 30], [49.5, 31], [55, 33]] } },
   bridges: [{ x: 7, y: 4, axis: 'x', len: 5, w: 2, lvl: 4 }],
-  secrets: { crack: { t: 0.62 }, env: {}, logic: { islet: 'islet', leverRoom: 'tablet' } },
+  secrets: { crack: { t: 0.62 }, env: { pond: true, runeDx: 1.4, runeDy: 1.8 }, logic: { islet: 'islet', leverRoom: 'tablet' } },
   landmark: [30, 41],
   portals: {
     home: { room: 'start', dx: -3, dy: 2.6, to: 'vale', arrive: 'vale.pine' },

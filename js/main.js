@@ -168,6 +168,7 @@ function beginPlay() { G.state = 'play'; initAudio(); G.banner = { s: G.map.name
 function newGame() {
   clearSave(); G.prog = { chests: {}, firsts: {}, trig: {} }; G.seen = {}; G.checkpoint = null;
   G.player = makePlayer(); G.state = 'title'; enterMap(G.world.start); beginPlay();
+  G.checkpoint = { map: G.map.id, x: G.map.start.x, y: G.map.start.y };   // wake in the hub until a shrine is touched
 }
 function continueGame(s) {
   G.player = makePlayer(); applySave(G.player, s);

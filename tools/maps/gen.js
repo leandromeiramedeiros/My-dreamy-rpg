@@ -143,7 +143,7 @@ const PROP = {
   house: { r: 0, sp: 3 }, pine_giant: { r: 0.45, sp: 2.8 }, pine: { r: 0.32, sp: 1.5 }, pine_young: { r: 0.22, sp: 0.9 },
   mushroom_red: { r: 0, sp: 0.5 }, moss: { r: 0, sp: 1.0 }, log: { r: 0.45, sp: 1.5 }, stump: { r: 0.3, sp: 0.9 }, sunbeam: { r: 0, sp: 3 },
   fox: { r: 0, sp: 3 }, rabbit: { r: 0, sp: 2 },
-  gate: { r: 0, sp: 1.5 }, hidden: { r: 0, sp: 1.5 }, keydoor: { r: 0, sp: 1.5 }, lever: { r: 0, sp: 1 },
+  fishspot: { r: 0, sp: 3 }, gate: { r: 0, sp: 1.5 }, hidden: { r: 0, sp: 1.5 }, keydoor: { r: 0, sp: 1.5 }, lever: { r: 0, sp: 1 },
 };
 // Object kinds the game does not know yet are written with a stand-in 't' and the intended kind in 'role'
 // (the engine drops unknown 't', so stand-ins keep the map playable).  --kinds=future writes the real names.
@@ -152,7 +152,7 @@ const STAND_IN = {
   tablet: { t: 'sign' }, rune_cache: { t: 'crystal_violet' }, gem_cache: { t: 'crystal_violet' }, elder_stone: { t: 'crystal_violet' },
   lever: { t: 'sign' }, tower: { t: 'pine_giant' },
   // interactive blockers: omitted in compat mode (the passage is simply open) -- engine must support them in future mode
-  gate: { omit: true }, hidden: { omit: true }, keydoor: { omit: true },
+  gate: { omit: true }, hidden: { omit: true }, keydoor: { omit: true }, fishspot: { omit: true },
 };
 const COMPAT_ENEMY = { shaman: 'ogre', thornmother: 'troll', bramblehorn: 'troll' };
 
@@ -199,7 +199,7 @@ class MapGen {
     this.kinds = o.kinds || 'compat';
     this.rng = makeRng(this.seed);
     this.n1 = makeNoise(this.seed * 31 + 7); this.n2 = makeNoise(this.seed * 17 + 3); this.n3 = makeNoise(this.seed * 13 + 11);
-    this.rooms = []; this.roomBy = {}; this.paths = []; this.pathBy = {}; this.rivers = []; this.bridges = []; this.lobes = [];
+    this.ponds = []; this.rooms = []; this.roomBy = {}; this.paths = []; this.pathBy = {}; this.rivers = []; this.bridges = []; this.lobes = [];
     this.objs = []; this.portals = []; this.triggers = []; this.markers = []; this.notes = [];
     this.startPos = null; this.sigil = null;
     this.type = grid(this.W, this.H, '.'); this.h = grid(this.W, this.H, 0);
@@ -215,6 +215,12 @@ class MapGen {
     if (r.kind === 'plaza' || r.kind === 'arena') r.shape = r.shape === 'blob' ? 'round' : r.shape;
     r.ph = this.rng.range(0, 100);
     this.rooms.push(r); this.roomBy[id] = r; return r;
+  }
+  // pond: open water disc (fishing). Makes its own land + flat terrace so banks are walkable.
+  pond(id, o) {
+    const p = Object.assign({ id, r: 4, lvl: 0 }, o); this.ponds.push(p);
+    this.lobe(p.x, p.y, p.r + 2.6, p.lvl); this.room('flat_pond_' + id, { kind: 'flat', x: p.x, y: p.y, r: p.r + 1.6, lvl: p.lvl });
+    return p;
   }
   lobe(x, y, r, lvl) { this.lobes.push({ x, y, r, lvl: lvl || 0 }); }
   // pts: 'roomId' | [x,y,lvl?] | {x,y,lvl,hold}. For branches: from:{path,at:0..1,dx,dy} and pts continue from there.
@@ -234,6 +240,7 @@ class MapGen {
     this._levels();
     this._tiles();
     this._rivers();
+    this._ponds();
     this._bridges();
     this._relax();
     this._stairs();
@@ -547,6 +554,27 @@ class MapGen {
     }
   }
 
+  _ponds() {
+    for (const p of this.ponds) {
+      for (let y = Math.floor(p.y - p.r - 2); y <= p.y + p.r + 2; y++) for (let x = Math.floor(p.x - p.r - 2); x <= p.x + p.r + 2; x++) {
+        if (x < 1 || y < 1 || x >= this.W - 1 || y >= this.H - 1 || !this.land[y][x]) continue;
+        const a = Math.atan2(y + 0.5 - p.y, x + 0.5 - p.x), rr = p.r * (1 + 0.14 * (this.n2.v(Math.cos(a) * 1.6 + p.x, Math.sin(a) * 1.6 + p.y) - 0.5) * 2);
+        if (Math.hypot(x + 0.5 - p.x, y + 0.5 - p.y) > rr || (this.zone[y][x] & (ZONE.path | ZONE.bridge)) || (this.cor[y][x])) continue;
+        this.type[y][x] = 'w'; this.h[y][x] = p.lvl; this.zone[y][x] |= ZONE.water;
+      }
+    }
+  }
+  // walkable bank tile beside water, nearest to (x,y); returns tile-centre position
+  waterEdge(x, y, rad = 6) {
+    let best = null, bd = 1e9;
+    for (let j = Math.floor(y - rad); j <= y + rad; j++) for (let i = Math.floor(x - rad); i <= x + rad; i++) {
+      if (i < 1 || j < 1 || i >= this.W - 1 || j >= this.H - 1 || !'gfd'.includes(this.type[j][i])) continue;
+      let wet = false; for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) if (this.type[j + dj][i + di] === 'w') wet = true;
+      if (!wet) continue;
+      const d = Math.hypot(i + 0.5 - x, j + 0.5 - y); if (d < bd) { bd = d; best = { x: i + 0.5, y: j + 0.5 }; }
+    }
+    return best || { x, y };
+  }
   _bridges() {
     for (const b of this.bridges) {
       const tiles = [];
