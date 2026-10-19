@@ -18,28 +18,28 @@ const DIALOGUE = {
   pinewood_tablet: { speaker: 'Tablet', lines: ['Bramblehorn kept the roots. He loved the roots too much.'] },
   pinewood_hollow: { speaker: 'Pip', lines: ["Under the wood, it's quieter. I hate it."] },
   boss_bramblehorn_intro: { speaker: 'Old Bramblehorn', lines: ['Little dream. You smell like him.'] },
-  boss_bramblehorn_death: { speaker: 'Old Bramblehorn', lines: ['Tell him… the roots held. Tell him I stayed.'], drops: 'root_crown' },
+  boss_bramblehorn_death: { speaker: 'Old Bramblehorn', lines: ['Tell him… the roots held. Tell him I stayed.'], drops: 'rootcrown' },
 
   // Gloomspire Ruins
   ruins_banner: { banner: 'Gloomspire Ruins', sub: 'where the Wardens swore' },
   ruins_tablet: { speaker: 'Tablet', lines: ['He sat at the head. He laughed the most.'] },
   ruins_pillars: { speaker: 'Pip', lines: ["Don't read the names on the pillars."] },
   boss_warden_intro: { speaker: 'The Gloam Warden', lines: ['I guarded his sleep. I do not guard it well.'] },
-  boss_warden_death: { speaker: 'The Gloam Warden', lines: ['He dreamed a girl. Did you meet her?'], drops: 'wardens_lantern_plate' },
+  boss_warden_death: { speaker: 'The Gloam Warden', lines: ['He dreamed a girl. Did you meet her?'], drops: 'lanternplate' },
 
   // Sunken Grotto
   grotto_banner: { banner: 'Sunken Grotto', sub: 'the tide forgot to leave' },
   grotto_lanterns: { speaker: 'Pip', lines: ["Still lit. Fishermen's. Someone keeps them."] },
   grotto_tablet: { speaker: 'Tablet', lines: ['Mirelle tried to wake him with the sea. The sea went under.'] },
   boss_mirelle_intro: { speaker: 'Lady Mirelle', lines: ['You again. You always come this far.'] },
-  boss_mirelle_death: { speaker: 'Lady Mirelle', lines: ['Third time… this time, reach him.'], drops: 'tide_edge' },
+  boss_mirelle_death: { speaker: 'Lady Mirelle', lines: ['Third time… this time, reach him.'], drops: 'tideedge' },
   grotto_after: { speaker: 'Pip', lines: ["She said 'again'. Don't ask me. Later."] },
 
   // Emberfall Caldera
   caldera_banner: { banner: 'Emberfall Caldera', sub: 'his anger, cooling' },
   caldera_tablet: { speaker: 'Tablet', lines: ['Kharzul forged the Shards. He forged the chains after.'] },
   boss_kharzul_intro: { speaker: 'Kharzul the Cinder Colossus', lines: ["Walk the fire, dream-girl. See if you're real."] },
-  boss_kharzul_death: { speaker: 'Kharzul the Cinder Colossus', lines: ['You burn. Real things burn. Go wake your father.'], drops: 'cinderstride_boots' },
+  boss_kharzul_death: { speaker: 'Kharzul the Cinder Colossus', lines: ['You burn. Real things burn. Go wake your father.'], drops: 'cinderstride' },
   caldera_after: { speaker: 'Pip', lines: ['…Yes. I was going to tell you at the top.'] },
 
   // Sleepless Spire
@@ -100,7 +100,7 @@ const QUESTS = [
     id: 'vale_lantern', zone: 'vale', giver: 'Elder Stone', title: "The Stone's Lost Lantern",
     text: 'The Stone misplaced a lantern. It will not say where.',
     steps: ['Find the Stone\'s lost lantern', 'Return the lantern to the Elder Stone'],
-    reward: { kind: 'choice', options: ['gem', 'socket_rune'] }, extra: 'dream_tome'
+    reward: { kind: 'choice', options: ['gem', 'socket_rune'] }, extra: { kind: 'rune' }
   },
   {
     id: 'pinewood_foxkit', zone: 'pinewood', giver: 'Fox kit', title: "A Fox Kit's Mother",

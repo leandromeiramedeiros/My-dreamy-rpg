@@ -98,8 +98,35 @@ function checkItemRef(file, kind, owner, ref, itemIds) {
   else fail(file, kind, owner, ref);
 }
 
+// Planned content from docs/DESIGN.md §21.1 (roster), §21.3 (vault bosses) and §22.1/22.2 (maps). A reference
+// to one of these ids is a warning, not an error, until the map or enemy definition lands.
+const PLANNED_MAPS = new Set([
+  'roothollow', 'bramblehorn_clearing', 'warden_crypt', 'wardens_hall', 'grotto', 'drowned_vault', 'mirelle_basin',
+  'caldera', 'forge_deep', 'the_anvil', 'spire', 'sleepless_court', 'morrows_throne', 'moon_pond', 'fox_warrens',
+  'oath_reliquary', 'glowfin_shallows', 'slag_chambers', 'vigil_walk', 'drifting_isles', 'starlit_shoals',
+  'gloaming_below', 'dream_arena', 'pips_lanterns',
+]);
+const PLANNED_ENEMIES = new Set([
+  // §21.1 commons
+  'dream_moth', 'bramble_shaman', 'thornback_boar', 'gloom_knight', 'grave_chanter', 'pillar_mimic',
+  'shadeling_swarm', 'frost_jelly', 'tide_crab', 'glowfin_shoal', 'deepsinger', 'lightning_eel', 'cinder_imp',
+  'slag_golem', 'ash_wraith', 'forge_priest', 'magma_hopper', 'void_bomber', 'vigil_knight', 'star_archer',
+  'dread_herald', 'unmade',
+  // §21.1 bosses, mini-bosses, optional and vault bosses
+  'bramblehorn', 'mirelle', 'kharzul', 'morrow', 'mossjaw', 'slagheart', 'sorrel_echo', 'unwaking_child',
+  'oathless', 'brinemother', 'vigils', 'shaman',
+]);
+
 // Trinket slots are fixed by the engine (rings, amulets and belts; see docs/DESIGN.md §19).
 const TRINKET_SLOTS = ['ring', 'amulet', 'belt'];
+
+// Resolve a reference to a map or enemy id. Defined ids pass; planned ids (DESIGN §21/§22) are warnings;
+// anything else is an error.
+function refOrPlanned(file, kind, owner, ref, defined, planned, what) {
+  if (defined.has(ref)) return;
+  if (planned.has(ref)) warn(file, kind, owner, `${ref} (planned ${what}, not defined yet)`);
+  else fail(file, kind, owner, ref);
+}
 
 function main() {
   const { get, loadErrors } = loadData();
@@ -195,12 +222,12 @@ function main() {
   if (!mapIds.has(WORLD_DATA.start)) fail(F.world, 'start', 'WORLD_DATA', WORLD_DATA.start);
   for (const [mapId, map] of Object.entries(WORLD_DATA.maps || {})) {
     (map.portals || []).forEach((p, i) => {
-      if (!mapIds.has(p.to)) fail(F.world, 'portal', `${mapId}#${i}`, p.to);
+      refOrPlanned(F.world, 'portal', `${mapId}#${i}`, p.to, mapIds, PLANNED_MAPS, 'map');
     });
     for (const tr of map.triggers || []) {
       for (const a of tr.actions || []) {
-        if (a.type === 'spawn' && a.enemy !== undefined && !enemyIds.has(a.enemy)) {
-          fail(F.world, 'enemy', `${mapId}:${tr.id}`, a.enemy);
+        if (a.type === 'spawn' && a.enemy !== undefined) {
+          refOrPlanned(F.world, 'enemy', `${mapId}:${tr.id}`, a.enemy, enemyIds, PLANNED_ENEMIES, 'enemy');
         }
       }
     }
@@ -215,11 +242,11 @@ function main() {
     const boss = key.match(/^boss_([a-z0-9]+)_/);
     if (boss) {
       if (!enemyIds.has(boss[1]) && !bestiaryKeys.has(boss[1])) {
-        warn(F.dialogue, 'dialogue', key, `enemy "${boss[1]}" (no definition)`);
+        warn(F.dialogue, 'dialogue', key, `enemy "${boss[1]}" (no definition${PLANNED_ENEMIES.has(boss[1]) ? ', planned' : ''})`);
       }
     } else {
       const prefix = key.split('_')[0];
-      if (key.includes('_') && !mapIds.has(prefix)) warn(F.dialogue, 'dialogue', key, `map "${prefix}" (no such map)`);
+      if (key.includes('_') && !mapIds.has(prefix)) warn(F.dialogue, 'dialogue', key, `map "${prefix}" (no such map${PLANNED_MAPS.has(prefix) ? ', planned' : ''})`);
     }
     if (entry.drops) checkItemRef(F.dialogue, 'drops', key, entry.drops, itemIds);
   }
@@ -227,8 +254,8 @@ function main() {
   for (const q of QUESTS || []) {
     if (questIds.has(q.id)) fail(F.dialogue, 'quest', q.id, 'unique quest id');
     questIds.add(q.id);
-    if (!mapIds.has(q.zone)) fail(F.dialogue, 'quest', q.id, `map "${q.zone}"`);
-    if (q.extra) checkItemRef(F.dialogue, 'extra', q.id, q.extra, itemIds);
+    refOrPlanned(F.dialogue, 'quest', q.id, q.zone, mapIds, PLANNED_MAPS, 'map');
+    if (q.extra && typeof q.extra === 'string') checkItemRef(F.dialogue, 'extra', q.id, q.extra, itemIds);
   }
 
   // ---- sound captions and warning cues versus sound recipes
@@ -257,7 +284,7 @@ function main() {
   for (const line of errors) console.log(line);
   for (const line of warnings) console.log('warning: ' + line);
   console.log(`${errors.length} error(s), ${warnings.length} warning(s)`);
-  if (errors.length === 0) console.log('all referenced ids resolve');
+  if (errors.length === 0) console.log('no unresolved ids (warnings are for planned or loose references)');
   process.exitCode = errors.length ? 1 : 0;
 }
 
