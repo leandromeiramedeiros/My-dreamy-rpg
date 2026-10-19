@@ -124,6 +124,41 @@ Each changes a skill's *rule*, not just numbers:
 * **Kill-heal** (existing +HP/+MP per kill) scales with a kill streak (`p.combo`).
 * Weapon skill options (two choices per slot) unlock with weapon tier: second option at weapon reqLvl ≥ 10.
 
+## 5b. Elemental system
+Seven damage types: **physical, fire, frost, nature, lightning, arcane, holy**, plus enemy-only **gloom** (Morrow's void).
+Every hit carries one element: weapon basics use the weapon's element (sword physical, staff arcane, bow physical
+unless converted by gems or legendaries), skills use their `element` tag, enemy attacks are tagged in enemy data.
+
+**Status effects** (one per element, short and readable, each with a coloured tint and a tiny icon over the target):
+| Element | Status | Effect |
+|---|---|---|
+| Physical | Stagger | builds up on heavy hits; when full, a brief stun (bosses: break bar → 2 s stun window) |
+| Fire | Burn | damage over time 3 s, stacks ×3 |
+| Frost | Chill → Freeze | slow 30%; 3 chill stacks = 1.2 s freeze (bosses: slow only) |
+| Nature | Poison | damage over time 5 s, −20% enemy healing / shields |
+| Lightning | Shock | next hit taken +20%; arcs to one nearby enemy |
+| Arcane | Sunder | −15% resistances for 4 s |
+| Holy | Radiance | +50% damage to gloom-touched enemies; hits heal you for 2% of damage |
+| Gloom (enemy) | Dread | your skills cost +25% MP for 3 s; cleansed by holy or Dreamveil |
+
+Status chance = skill base chance + gem bonuses (the gem matching the element raises it).
+
+**Resistances:** player and enemies have `res: { fire, frost, … }` from −50% (weak) to +75% (cap).
+* Damage taken = `dmg × (1 − res)`. Player resistances come from gear affixes (`resFire` etc., or `resAll` on
+  legendaries) and from gems socketed in **armour**: Ruby → fire, Sapphire → frost, Emerald → nature, Topaz → lightning,
+  Amethyst → arcane and gloom, Diamond → small all-resist.
+* Every zone has an elemental identity, so swapping gems in the hub before a zone is a real decision:
+  | Zone | Enemies deal | Enemies weak to | Enemies resist |
+  |---|---|---|---|
+  | Pinewood | physical, nature | fire | nature |
+  | Ruins | gloom, arcane | holy | arcane |
+  | Grotto | frost, lightning | lightning (water!), fire | frost |
+  | Caldera | fire, physical | frost | fire (immune to burn) |
+  | Spire | gloom, arcane, all | holy | gloom |
+* **Feedback:** damage numbers are coloured by element and show WEAK (bigger, yellow) or RESIST (smaller, grey);
+  hovering or locking on an enemy shows its weakness icon next to its name and health bar; the boss bar always shows it.
+* Elites can roll an elemental modifier (Burning, Frozen, Storm) that adds that element to their attacks and an aura.
+
 ## 6. Hero visuals ("you see what you wear")
 * Base hero redrawn at higher detail (≈24×32 px instead of 16×24): face, hair, cape, hands, shading, 4-dir-ish (front/back,
   mirrored sides), walk (4 frames), idle breathe, attack pose.
@@ -230,7 +265,8 @@ so the design rule is **15–25 s of walking between fights**. Targets (revised 
 
 ## 10. Milestone plan (each one ships live) — revised after senior director review
 * **M1 Foundation + Inventory & Loot** — item instances, rarity, level/XP, sockets & gems (3 grades), additive stats,
-  loot drops with rarity fanfare, inventory UI, save/load, checkpoint shrines + persisted trigger state, death/respawn,
+  loot drops with rarity fanfare, **elemental plumbing** (every hit carries an element; `res` on player and
+  enemies; resistance affixes and armour-gem resists; coloured WEAK/RESIST damage numbers), inventory UI, save/load, checkpoint shrines + persisted trigger state, death/respawn,
   smoke test harness.
 * **M2 Vertical slice: Act I** — Pinewood at target size (outer + boss map) from the generator, bigger Vale hub,
   dialogue + camera-pan + loot + checkpoint + gate trigger actions, intro and Pip, the data-driven boss system with
@@ -238,7 +274,7 @@ so the design rule is **15–25 s of walking between fights**. Targets (revised 
 * **M3 The Hero & Icons** — detailed layered hero, gear overlays per tier, rarity glow & particles (1–2 px, high
   contrast), paper-doll in inventory, new icon set, enemies rescaled to the hero, drop FX unified on one `rarityFx` table.
 * **M4 Acts II–III** — Ruins rebuilt to size with the Gloam Warden ported to the boss system, Sunken Grotto + Mirelle,
-  gem skill amplification complete, skill modifier choices, gem-tinted skill visuals.
+  gem skill amplification complete, **all 8 elemental status effects** and zone resist tables, skill modifier choices, gem-tinted skill visuals.
 * **M5 Act IV + Finale** — Emberfall Caldera + Kharzul, Sleepless Spire + Morrow (3 phases), Pip's sacrifice, ending,
   credits, NG+.
 * **M6 Polish & balance** — pacing to ≥60 min (timed playthrough), music loops, minimap fog-of-war, README, screenshots.
