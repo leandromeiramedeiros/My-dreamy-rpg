@@ -761,7 +761,7 @@ class MapGen {
   }
 
   // ---------------------------------- portals/start ----------------------------
-  house(x, y) { this.blockers = this.blockers || []; this.blockers.push({ x0: x, y0: y, x1: x + 2, y1: y + 2 }); return this.addObj('house', x, y, { force: true, sp: 3.5 }); }
+  house(x, y) { x = Math.round(x); y = Math.round(y); this.blockers = this.blockers || []; this.blockers.push({ x0: x, y0: y, x1: x + 2, y1: y + 2 }); return this.addObj('house', x, y, { force: true, sp: 3.5 }); }
   setStart(x, y) { this.startPos = { x: r2(x), y: r2(y) }; }
   portal(x, y, to, o = {}) { const p = Object.assign({ x: r2(x), y: r2(y), to, open: true, marker: false }, o); this.portals.push(p); return p; }
 
