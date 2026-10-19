@@ -449,7 +449,8 @@ function updateEnemies(dt) {
     // knockback
     if (Math.abs(e.kx) + Math.abs(e.ky) > 0.05) { moveEntity(e, e.kx * dt, e.ky * dt, tileH(G.map, e.x, e.y)); e.kx *= Math.pow(0.002, dt); e.ky *= Math.pow(0.002, dt); }
     if (e.stunT > 0) { e.stunT -= dt; if (e.stunT <= 0) e.frozen = 0; continue; }
-    e.cd -= edt; e.st -= edt;
+    e.cd -= edt;
+    if (!e.boss) e.st -= edt;   // the boss counts its attack timer up in updateBoss
     const d = dist(e.x, e.y, p.x, p.y), ang = Math.atan2(p.y - e.y, p.x - e.x);
     const hidden = !!p.buffs.veil || p.dead || G.state !== 'play';
     e.face = isoX(p.x, p.y) >= isoX(e.x, e.y) ? 1 : -1;
