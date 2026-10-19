@@ -1,0 +1,5635 @@
+{
+ "generated": "2026-10-19T22:56:14.299Z",
+ "maps": {
+  "pinewood": {
+   "name": "Misty Pinewood",
+   "sub": "The trees are leaning away from something",
+   "theme": "forest",
+   "W": 56,
+   "H": 56,
+   "tiles": [
+    "........................................................",
+    "...........gggg...........gg.gggfffffffg.ggggggfffff....",
+    "....ggg...gggggggg.gggggggggggggfffffffgggggggddgfff....",
+    "...dggg..gggggggggggggggggggggggppppppggggggddddddgff...",
+    "...ddggbbbbbddgffggfpppppppggggpppppppggggdddddddddggg..",
+    "...ddggbbbbbddddddfpppppppppgggppggpppgggdddddddddddggg.",
+    "...ddg...ggggggggggpppfggggpgggppggppgggdxxdddddddxdggg.",
+    "..........ggggppppppppppppgpgggppgppggggddddddddddxdggg.",
+    "..........ggggpxxxxddxxxxpgpgggppgppgggpddddddddxdddggg.",
+    "..........ggggpxxxxddxxxxppppgpppgppgggpdddddddxxdddggg.",
+    "..........gggfpxxxxdpxxxxppppppppgppggppddddddxxxxddggg.",
+    "..........ggffpxxxxxxxxxxpgpppppggpppgppddddddddddddggg.",
+    ".........ggffgpxxxxxxxxxxppggggggggpppppgdddxdddddxdggg.",
+    "........gggffgpxxxdxxxxxxppgggggggggppppggdddddddddgggg.",
+    ".......gggffsgpxxpdxxxddxpgpgg....gggppggggggddddgggggg.",
+    ".......gggfssgpxxpxxxxxxxpgpgg....gggggggggggddddgggggg.",
+    ".......gggppfgpxxxxxxxxxxpgpggg..gggpppppgggdggddgggggg.",
+    ".......ffppggfpxxxxxxxxxxpgpggg..gggppppppgddggdggggggg.",
+    ".......ffppgggppppppppppppgpgggggggpppgpppppddddggggggg.",
+    ".......ffppgggggggggggggggppgggggggppggggpppddddgggggggg",
+    ".......ffpffggggggggggggggppggggggpppggggdpppddggggwwwgg",
+    ".......ffppfffggggggggggggpppgggggppgg...ddpppdgggwwwwgg",
+    "......fffpffff.gggggggggggpppggggpppgg...ddpppdggggggwgg",
+    "....wwwwppfff...wwwggggggggspgpppppgg....ddsspgggggggggg",
+    "...wwwwwbbww....wwwggggggggsspppppgg.....ddssggddsgggggg",
+    "..gggwbbbwww....wwwgggggppgfsspgggg......gdppgssdgggggg.",
+    ".gggppppgggg....gfgggpppppppsgggggg......ggsssdgggggggg.",
+    ".ggpppggggggfffggggggpppppppppggg.......gggssddggggggg..",
+    ".ggppggggggfffggggggpppggggppppgg........wwwbbpppgggggg.",
+    ".gppgggggggffffggggpppgggggwbppgww........wwwbppppggggg.",
+    ".gssgggpppppppsspsspppggggwwwbbbww....w...gggwgppppgggg.",
+    ".gssggppppppppsspssppggggggwwbbbww...gggggggggggpppgggw.",
+    ".gppgpppggggfppfpssffffgggggggppgggggggggggggggggppggfw.",
+    ".gssgpppgggffpgggfffffffgg..ggppggggggppppgggggggppgfww.",
+    ".gssgpppggggppggffffff......ggpppggggggppppggggggppgfff.",
+    ".gppgpppgggggpppfffffg......ggpppgggggggggggpggggppgfff.",
+    ".ggpgpppggggggppppfffggg....ggpppggggggggggggppggppfff..",
+    ".ggppgppggggggggpppffgggg....ggpgggggggggggggppppppfff..",
+    ".ggppgpppggggggggpffffggg....ggpggggggggggggggpppppfff..",
+    ".gggpppppgggggggggggggggg....dddggggggggggggggggppfffg..",
+    ".gggppgpppggggggggggggggg....dddggggggfffggggggggggffgg.",
+    ".ggggppgpppgggggggggggggd....dddggffggffffffggggggggggg.",
+    "..ggggppgppgggggggggggdd....dddsgffffffffffffpggggggggg.",
+    "..gggggggppgggggggddddd.....dddsgffffffffffffppgggggggg.",
+    "..ggggggggpgggggggdddd......ddpsdffffffffffffpppggggggg.",
+    "..ggggggggggggg..gdddd.....dddppdffgggggggffddppppffgggg",
+    "..ggggggggggggg...ddddd....ddppdddgggggggddddddgpfffgggg",
+    ".gggggggggggggg...ddddddd..ddppddddddddddddf.fggfffffgg.",
+    ".gggggggggggggg...dddgggddddppddddddddddgg....fgfffffgg.",
+    ".ggggggggggggg...dddgggggddppddd..dddddgg.....fffffffgg.",
+    ".gggggggggggg....gddgggggpppddd...............fffffffgg.",
+    "..ggggggggggg.....gdgggggppddd.................fffffggg.",
+    "...fgggggg........ggggggddddd...................fffffgg.",
+    "...fffffg..........ggggddddd.....................ffffg..",
+    ".....fff...........ggggddd..........................g...",
+    "........................................................"
+   ],
+   "heights": [
+    "00000000000000000000000000000000000000000000000000000000",
+    "00000000000444400000000000440444444444440666666666660000",
+    "00004440004444444404444444444444444444466666644444660000",
+    "00044440044444444444444444444444444444666664444444466000",
+    "00044444444444444444444444444444444444666444444444446600",
+    "00044444444444444444444444444444444444664444444444446660",
+    "00044400044444444444444444444444444446664444444444446660",
+    "00000000004444444444444444444444444446664444444444446660",
+    "00000000004444444444444444444444444446644444444444446660",
+    "00000000004444444444444444444444444446644444444444444660",
+    "00000000002244444444444444444444444446444444444444444660",
+    "00000000002444444444444444444444444446444444444444444660",
+    "00000000022444444444444444444444444444444444444444444660",
+    "00000000222244444444444444444444444444446444444444446660",
+    "00000002222234444444444444444400004444466664444444666660",
+    "00000002222234444444444444444400004444466666666666666640",
+    "00000002222244444444444444444440044444444666666666666440",
+    "00000002222244444444444444444440044444444446666666444440",
+    "00000002222244444444444444444444444444444444444444444440",
+    "00000002222244444444444444444444444444444444444444444444",
+    "00000002222224444444444444444444444444444444444444444444",
+    "00000002222222444444222224444444444444000444444444444444",
+    "00000022222222044222222222444444444444000444444444444444",
+    "00000000222220000002222222444444444440000444442224444444",
+    "00000000220000000002222222234444444400000443342333444444",
+    "00222022200000000002222222223444444000000223322334444440",
+    "02222222220000002222222222222224444000000223322222444440",
+    "02222222220000002222222222222222200000002222222222222400",
+    "02222222220000002222222222222222200000000000222222222220",
+    "02222222000000000222222222202222000000000000022222222220",
+    "02222000000000011122222222000222000000000022202222222220",
+    "02112000000000011122222222200222000002222222222222222200",
+    "02112000000000001122222222222222222222222222222222222200",
+    "00110000000000000022222202002222222222222222222222222000",
+    "00000000000000000002220000002222222222222222222222222220",
+    "00000000000000000000000000002222222222222222222222222220",
+    "00000000000000000000000000002222222222222222222222222200",
+    "00000000000000000000000000000222222222222222222222222200",
+    "00000000000000000000000000000222222222222222222222222200",
+    "00000000000000000000000000000222222222222222222222222200",
+    "00000000000000000000000000000002222222222222222222222220",
+    "00000000000000000000000000000000222222222222222222222220",
+    "00000000000000000000000000000001222222222222222222222220",
+    "00000000000000000000000000000001222222222222222222222220",
+    "00000000000000000000000000000000022222222222222222222220",
+    "00000000000000000000000000000000222222222222222222222222",
+    "00000000000000000000000000000000222222222222222222222222",
+    "00000000000000000000000000000000022222222222022222222220",
+    "00000000000000000000000000000000022222222200002222222220",
+    "00000000000000000000000000000000002222222000002222222220",
+    "00000000000000000000000000000000000000000000002222222220",
+    "00000000000000000000000000000000000000000000000222222220",
+    "00000000000000000000000000000000000000000000000022222220",
+    "00000000000000000000000000000000000000000000000002222200",
+    "00000000000000000000000000000000000000000000000000002000",
+    "00000000000000000000000000000000000000000000000000000000"
+   ],
+   "start": {
+    "x": 6.5,
+    "y": 48.8
+   },
+   "portals": [
+    {
+     "x": 4,
+     "y": 50.6,
+     "to": "vale",
+     "open": true,
+     "marker": false,
+     "arrive": {
+      "x": 26.41,
+      "y": 37.21
+     },
+     "id": "home"
+    },
+    {
+     "x": 47.5,
+     "y": 8.5,
+     "to": "roothollow",
+     "open": false,
+     "marker": true,
+     "id": "down"
+    }
+   ],
+   "objects": [
+    {
+     "t": "shrine",
+     "x": 8.8,
+     "y": 46.8,
+     "label": "checkpoint"
+    },
+    {
+     "t": "lantern",
+     "x": 7.2,
+     "y": 45.4
+    },
+    {
+     "t": "sign",
+     "x": 10.2,
+     "y": 44.6,
+     "label": "sign",
+     "text": "North: Troll Hollow. Mind the creek."
+    },
+    {
+     "t": "sign",
+     "x": 33.5,
+     "y": 34.5,
+     "label": "sign",
+     "text": "Danger: ogres in the clearing"
+    },
+    {
+     "t": "sign",
+     "x": 22,
+     "y": 50.2,
+     "role": "tablet",
+     "label": "lore",
+     "text": "The Wardens planted the first pines to hold the Gloam back. Now the roots are black."
+    },
+    {
+     "t": "crystal",
+     "x": 23.3,
+     "y": 51.6,
+     "role": "chest",
+     "tier": "wood",
+     "label": "tablet-chest"
+    },
+    {
+     "t": "crystal",
+     "x": 52,
+     "y": 46.6,
+     "role": "chest_silver",
+     "tier": "silver",
+     "label": "elite-chest"
+    },
+    {
+     "t": "lantern",
+     "x": 44.04,
+     "y": 39.94
+    },
+    {
+     "t": "lantern",
+     "x": 35.16,
+     "y": 45.43
+    },
+    {
+     "t": "lantern",
+     "x": 34.99,
+     "y": 34.99
+    },
+    {
+     "t": "lantern",
+     "x": 20,
+     "y": 18.9
+    },
+    {
+     "t": "lantern",
+     "x": 51.62,
+     "y": 9.4
+    },
+    {
+     "t": "lantern",
+     "x": 43.4,
+     "y": 14
+    },
+    {
+     "t": "lantern",
+     "x": 43.51,
+     "y": 4.11
+    },
+    {
+     "t": "rock_dark",
+     "x": 24.3,
+     "y": 17.85
+    },
+    {
+     "t": "rock_dark",
+     "x": 20.07,
+     "y": 19.5,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 15.66,
+     "y": 17.88,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 15.38,
+     "y": 8.55
+    },
+    {
+     "t": "stump",
+     "x": 39.85,
+     "y": 45.61
+    },
+    {
+     "t": "pine_giant",
+     "x": 28,
+     "y": 39,
+     "v": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 32.2,
+     "y": 39.6,
+     "v": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 30.3,
+     "y": 43.4,
+     "v": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 48.41,
+     "y": 22.74,
+     "v": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 46.76,
+     "y": 49.53,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 53.75,
+     "y": 52.38,
+     "v": 2
+    },
+    {
+     "t": "pine_giant",
+     "x": 31.74,
+     "y": 19.9,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 21.16,
+     "y": 44.91,
+     "v": 2
+    },
+    {
+     "t": "pine_giant",
+     "x": 54.68,
+     "y": 14.86,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 27.78,
+     "y": 2.5,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 19.01,
+     "y": 25.7,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 18.45,
+     "y": 47.91,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 16.11,
+     "y": 21.14,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 54.97,
+     "y": 30.49,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 51.61,
+     "y": 3.4,
+     "v": 2
+    },
+    {
+     "t": "pine_giant",
+     "x": 54.18,
+     "y": 26.64
+    },
+    {
+     "t": "pine_giant",
+     "x": 1.04,
+     "y": 26.16
+    },
+    {
+     "t": "pine_giant",
+     "x": 42.27,
+     "y": 46.5,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 12.54,
+     "y": 7.15,
+     "v": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 21.93,
+     "y": 54.83,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 14.51,
+     "y": 39.52,
+     "v": 1
+    },
+    {
+     "t": "pine",
+     "x": 32.58,
+     "y": 1.48,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 53.64,
+     "y": 12.2,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 53.89,
+     "y": 43.4,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 16.82,
+     "y": 26.65,
+     "v": 1
+    },
+    {
+     "t": "pine",
+     "x": 22.58,
+     "y": 32.74
+    },
+    {
+     "t": "pine",
+     "x": 49.53,
+     "y": 42.28,
+     "v": 2
+    },
+    {
+     "t": "pine",
+     "x": 15.29,
+     "y": 44.38,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 2.84,
+     "y": 46.28,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 14.84,
+     "y": 27.97,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 13.64,
+     "y": 48.19,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 53.7,
+     "y": 39.34,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 20.4,
+     "y": 34.41,
+     "v": 2
+    },
+    {
+     "t": "pine",
+     "x": 10.11,
+     "y": 10.49,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 48.31,
+     "y": 52.63,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 43.41,
+     "y": 2.8,
+     "v": 1
+    },
+    {
+     "t": "pine",
+     "x": 38.15,
+     "y": 31.08,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 51.19,
+     "y": 26.97,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 36.07,
+     "y": 32.23,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 8.46,
+     "y": 53.72,
+     "v": 3
+    },
+    {
+     "t": "pine",
+     "x": 24.12,
+     "y": 47.77,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 40.15,
+     "y": 2.67,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 50.02,
+     "y": 18.09
+    },
+    {
+     "t": "pine",
+     "x": 12.29,
+     "y": 3.06,
+     "v": 2
+    },
+    {
+     "t": "pine",
+     "x": 40.7,
+     "y": 31.29,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 26.85,
+     "y": 31.6,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 52.15,
+     "y": 39.25,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 52.06,
+     "y": 16.51
+    },
+    {
+     "t": "pine",
+     "x": 3.49,
+     "y": 43.26,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 2.09,
+     "y": 41.55,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 30.07,
+     "y": 13.71,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 54.97,
+     "y": 8.55,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 33.02,
+     "y": 26.26,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 30.64,
+     "y": 1.41,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 52.38,
+     "y": 42.43,
+     "v": 1
+    },
+    {
+     "t": "pine",
+     "x": 18.96,
+     "y": 21.8,
+     "v": 1
+    },
+    {
+     "t": "pine",
+     "x": 44.22,
+     "y": 32.04,
+     "v": 3
+    },
+    {
+     "t": "pine",
+     "x": 12.68,
+     "y": 10.16,
+     "v": 1
+    },
+    {
+     "t": "pine",
+     "x": 31.57,
+     "y": 26.75,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 53.84,
+     "y": 18,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 12.07,
+     "y": 50.67,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 24.77,
+     "y": 29.5,
+     "v": 2
+    },
+    {
+     "t": "pine",
+     "x": 20.83,
+     "y": 22.7,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 3.21,
+     "y": 52.35,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 41.38,
+     "y": 14.26,
+     "v": 2
+    },
+    {
+     "t": "pine",
+     "x": 32.6,
+     "y": 13.01,
+     "v": 1
+    },
+    {
+     "t": "pine",
+     "x": 17.47,
+     "y": 44.57,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 23,
+     "y": 36.86,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 54.09,
+     "y": 35.26,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 19.33,
+     "y": 53.13,
+     "v": 1
+    },
+    {
+     "t": "pine",
+     "x": 22.99,
+     "y": 38.52,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 52.84,
+     "y": 37.65
+    },
+    {
+     "t": "pine",
+     "x": 16.42,
+     "y": 43.19,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 13.33,
+     "y": 45.82,
+     "v": 3
+    },
+    {
+     "t": "pine",
+     "x": 13.54,
+     "y": 21.92,
+     "v": 2
+    },
+    {
+     "t": "pine",
+     "x": 41.33,
+     "y": 25.66,
+     "v": 2
+    },
+    {
+     "t": "pine",
+     "x": 12.97,
+     "y": 23.97,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 14.88,
+     "y": 46.58,
+     "v": 3
+    },
+    {
+     "t": "pine",
+     "x": 53.67,
+     "y": 6.87,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 27.61,
+     "y": 53.55,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 34.35,
+     "y": 17.13,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 41.86,
+     "y": 3.56,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 24.13,
+     "y": 40.08,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 7.12,
+     "y": 19.76
+    },
+    {
+     "t": "pine",
+     "x": 11.7,
+     "y": 27.33,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 28.88,
+     "y": 15.83,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 53.98,
+     "y": 4.42,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 52.57,
+     "y": 33.87,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 11.31,
+     "y": 48.74,
+     "v": 2
+    },
+    {
+     "t": "pine_young",
+     "x": 35.29,
+     "y": 33.62
+    },
+    {
+     "t": "pine_young",
+     "x": 8.85,
+     "y": 14.31,
+     "v": 2
+    },
+    {
+     "t": "pine_young",
+     "x": 8.33,
+     "y": 13.28
+    },
+    {
+     "t": "pine_young",
+     "x": 9.63,
+     "y": 15.11,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 39.61,
+     "y": 47.99,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 51.76,
+     "y": 13.05,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 52.68,
+     "y": 13.39,
+     "v": 2
+    },
+    {
+     "t": "pine_young",
+     "x": 51.75,
+     "y": 14.06,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 52.73,
+     "y": 40.35,
+     "v": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 48.81,
+     "y": 15.45
+    },
+    {
+     "t": "pine_young",
+     "x": 49.84,
+     "y": 15.65,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 53.38,
+     "y": 16.7
+    },
+    {
+     "t": "pine_young",
+     "x": 18.32,
+     "y": 51.95,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 50.22,
+     "y": 52.87,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 51.2,
+     "y": 53.37
+    },
+    {
+     "t": "pine_young",
+     "x": 25.01,
+     "y": 31.57,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 43.65,
+     "y": 15.5,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 48.54,
+     "y": 14.37,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 14.75,
+     "y": 19.2,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 13.71,
+     "y": 17.58,
+     "v": 2
+    },
+    {
+     "t": "pine_young",
+     "x": 51.85,
+     "y": 15.03
+    },
+    {
+     "t": "pine_young",
+     "x": 53.06,
+     "y": 5.52,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 50.36,
+     "y": 16.74,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 15.02,
+     "y": 42.68,
+     "v": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 15.52,
+     "y": 41.87,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 39.99,
+     "y": 4.23,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 54.2,
+     "y": 40.82,
+     "v": 2
+    },
+    {
+     "t": "pine_young",
+     "x": 12.13,
+     "y": 51.97,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 11.18,
+     "y": 51.89,
+     "v": 2
+    },
+    {
+     "t": "pine_young",
+     "x": 13.41,
+     "y": 27.54,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 13.1,
+     "y": 28.8,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 48.26,
+     "y": 51.27,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 53.49,
+     "y": 8.19,
+     "v": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 21.67,
+     "y": 46.97,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 47.05,
+     "y": 15.38,
+     "v": 1
+    },
+    {
+     "t": "rock",
+     "x": 33.07,
+     "y": 47.75
+    },
+    {
+     "t": "rock",
+     "x": 50.56,
+     "y": 50.37,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 52.42,
+     "y": 7.58,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 12.54,
+     "y": 19.61,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 39.42,
+     "y": 6.64,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 16.81,
+     "y": 3.27,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 54.1,
+     "y": 49.51,
+     "v": 1
+    },
+    {
+     "t": "rock",
+     "x": 38.8,
+     "y": 49.75,
+     "v": 1
+    },
+    {
+     "t": "rock",
+     "x": 29.28,
+     "y": 8.62,
+     "v": 1
+    },
+    {
+     "t": "rock",
+     "x": 54.12,
+     "y": 10.25,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 23.47,
+     "y": 20.78,
+     "v": 2
+    },
+    {
+     "t": "rock",
+     "x": 22.3,
+     "y": 21.35,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 28.74,
+     "y": 35.3,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 8.58,
+     "y": 28.16,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 17.88,
+     "y": 42.81,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "log",
+     "x": 1.16,
+     "y": 49.86
+    },
+    {
+     "t": "log",
+     "x": 5.53,
+     "y": 53.27
+    },
+    {
+     "t": "log",
+     "x": 35.77,
+     "y": 47.83
+    },
+    {
+     "t": "stump",
+     "x": 47.67,
+     "y": 34.04
+    },
+    {
+     "t": "stump",
+     "x": 9.22,
+     "y": 3.55
+    },
+    {
+     "t": "stump",
+     "x": 17.89,
+     "y": 4.68
+    },
+    {
+     "t": "stump",
+     "x": 9.09,
+     "y": 37.49
+    },
+    {
+     "t": "stump",
+     "x": 31.47,
+     "y": 49.25
+    },
+    {
+     "t": "stump",
+     "x": 28.81,
+     "y": 33.69
+    },
+    {
+     "t": "stump",
+     "x": 37,
+     "y": 9.22
+    },
+    {
+     "t": "stump",
+     "x": 7.31,
+     "y": 15.43
+    },
+    {
+     "t": "moss",
+     "x": 43.72,
+     "y": 41.84,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "moss",
+     "x": 44.2,
+     "y": 7.35,
+     "v": 1
+    },
+    {
+     "t": "moss",
+     "x": 38.01,
+     "y": 39.07,
+     "v": 2
+    },
+    {
+     "t": "moss",
+     "x": 45.23,
+     "y": 38.77
+    },
+    {
+     "t": "moss",
+     "x": 15.98,
+     "y": 6.79,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "moss",
+     "x": 39.86,
+     "y": 16.75,
+     "v": 2
+    },
+    {
+     "t": "moss",
+     "x": 3.2,
+     "y": 39.81,
+     "v": 1
+    },
+    {
+     "t": "moss",
+     "x": 30.5,
+     "y": 32.2,
+     "f": 1
+    },
+    {
+     "t": "moss",
+     "x": 32.37,
+     "y": 10.13
+    },
+    {
+     "t": "mushroom_red",
+     "x": 44.2,
+     "y": 16.94
+    },
+    {
+     "t": "mushroom_red",
+     "x": 44.77,
+     "y": 16.33
+    },
+    {
+     "t": "mushroom_red",
+     "x": 51.51,
+     "y": 44.01
+    },
+    {
+     "t": "mushroom_red",
+     "x": 51.55,
+     "y": 44.68
+    },
+    {
+     "t": "mushroom_red",
+     "x": 52.28,
+     "y": 43.56
+    },
+    {
+     "t": "mushroom_red",
+     "x": 19.11,
+     "y": 23.53
+    },
+    {
+     "t": "mushroom_red",
+     "x": 19.35,
+     "y": 23.08
+    },
+    {
+     "t": "mushroom_red",
+     "x": 17.52,
+     "y": 2.01
+    },
+    {
+     "t": "mushroom_red",
+     "x": 48.17,
+     "y": 2.66
+    },
+    {
+     "t": "mushroom_red",
+     "x": 47.96,
+     "y": 1.88
+    },
+    {
+     "t": "mushroom_red",
+     "x": 48.78,
+     "y": 2.07
+    },
+    {
+     "t": "mushroom_red",
+     "x": 47.42,
+     "y": 3.34
+    },
+    {
+     "t": "mushroom_red",
+     "x": 47.4,
+     "y": 4.02
+    },
+    {
+     "t": "mushroom_red",
+     "x": 47.24,
+     "y": 2.85
+    },
+    {
+     "t": "mushroom_red",
+     "x": 53.4,
+     "y": 44.79
+    },
+    {
+     "t": "mushroom_red",
+     "x": 54.07,
+     "y": 44.4
+    },
+    {
+     "t": "mushroom_red",
+     "x": 53.84,
+     "y": 45.51
+    },
+    {
+     "t": "mushroom_red",
+     "x": 41.7,
+     "y": 15.28
+    },
+    {
+     "t": "mushroom_red",
+     "x": 42.7,
+     "y": 14.96
+    },
+    {
+     "t": "mushroom_red",
+     "x": 24.14,
+     "y": 8.21
+    },
+    {
+     "t": "grass",
+     "x": 19.93,
+     "y": 15.3,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 20.82,
+     "y": 14.66,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 18.99,
+     "y": 15.57
+    },
+    {
+     "t": "grass",
+     "x": 26.25,
+     "y": 18.55,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 25.75,
+     "y": 18.84,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 27.27,
+     "y": 18.98,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 26.56,
+     "y": 4.42,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 26.4,
+     "y": 5.28,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 27.21,
+     "y": 4.51,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 18.12,
+     "y": 35.15,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 18.24,
+     "y": 34.2,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 48.25,
+     "y": 46.91,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 48.06,
+     "y": 46.17,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 18.03,
+     "y": 15.83,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 18.24,
+     "y": 15.33,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 17.41,
+     "y": 16.31
+    },
+    {
+     "t": "grass",
+     "x": 18.57,
+     "y": 16.11,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 48.94,
+     "y": 2.89
+    },
+    {
+     "t": "grass",
+     "x": 49.07,
+     "y": 3.42
+    },
+    {
+     "t": "grass",
+     "x": 49.86,
+     "y": 2.6,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 26.54,
+     "y": 23.93
+    },
+    {
+     "t": "grass",
+     "x": 2.14,
+     "y": 28.15
+    },
+    {
+     "t": "grass",
+     "x": 1.07,
+     "y": 28.1,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 1.33,
+     "y": 28.53
+    },
+    {
+     "t": "grass",
+     "x": 10.78,
+     "y": 9.72
+    },
+    {
+     "t": "grass",
+     "x": 10.48,
+     "y": 8.61,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 7.57,
+     "y": 35.83,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 8.3,
+     "y": 35.38,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 7.79,
+     "y": 36.51,
+     "v": 1
+    },
+    {
+     "t": "fox",
+     "x": 13,
+     "y": 44
+    },
+    {
+     "t": "fox",
+     "x": 30,
+     "y": 46
+    },
+    {
+     "t": "fox",
+     "x": 28,
+     "y": 28
+    },
+    {
+     "t": "fox",
+     "x": 10,
+     "y": 33
+    },
+    {
+     "t": "rabbit",
+     "x": 9,
+     "y": 45
+    },
+    {
+     "t": "rabbit",
+     "x": 16,
+     "y": 36
+    },
+    {
+     "t": "rabbit",
+     "x": 33,
+     "y": 38
+    },
+    {
+     "t": "rabbit",
+     "x": 25,
+     "y": 30
+    },
+    {
+     "t": "rabbit",
+     "x": 6,
+     "y": 30
+    },
+    {
+     "t": "rabbit",
+     "x": 41.42,
+     "y": 22.6
+    },
+    {
+     "t": "sunbeam",
+     "x": 40.2,
+     "y": 41.4
+    },
+    {
+     "t": "sunbeam",
+     "x": 9.2,
+     "y": 49.4
+    },
+    {
+     "t": "lantern",
+     "x": 15.5,
+     "y": 34.26,
+     "label": "crack-lantern",
+     "pointsAt": "wall_crack"
+    },
+    {
+     "t": "crystal_violet",
+     "x": 20,
+     "y": 40,
+     "role": "gem_cache",
+     "label": "secret gem cache"
+    },
+    {
+     "t": "crystal_violet",
+     "x": 53.9,
+     "y": 24.3,
+     "role": "rune_cache",
+     "label": "secret socket rune"
+    },
+    {
+     "t": "sign",
+     "x": 22.6,
+     "y": 52.2,
+     "role": "lever",
+     "label": "bridge-lever",
+     "id": "lever_bridge"
+    },
+    {
+     "t": "crystal_violet",
+     "x": 5,
+     "y": 4.5,
+     "role": "chest_gold",
+     "tier": "gold",
+     "label": "secret-gold-chest"
+    }
+   ],
+   "objective": "Follow the dirt road north. The animals are fleeing.",
+   "triggers": [
+    {
+     "id": "intro",
+     "name": "Pip speaks",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Pip: The animals are running. Something big has woken in the pinewood."
+      }
+     ]
+    },
+    {
+     "id": "shrine",
+     "name": "Rift shrine",
+     "when": {
+      "type": "enter_area",
+      "x": 8.8,
+      "y": 46.8,
+      "r": 2.2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Checkpoint: Glade of Arrival"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      }
+     ]
+    },
+    {
+     "id": "tablet",
+     "name": "Lore tablet",
+     "when": {
+      "type": "enter_area",
+      "x": 22,
+      "y": 51,
+      "r": 2.2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Tablet: The Wardens planted the first pines to hold the Gloam back. Now the roots are black."
+      }
+     ]
+    },
+    {
+     "id": "r1",
+     "name": "Ogres in the clearing",
+     "when": {
+      "type": "enter_area",
+      "x": 38,
+      "y": 40,
+      "r": 5
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Ogres!",
+       "sub": "Lesser brutes guard the sunlit clearing"
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 2,
+       "x": 40.09,
+       "y": 41.76,
+       "radius": 2
+      },
+      {
+       "type": "wait",
+       "seconds": 9
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 2,
+       "x": 35.43,
+       "y": 40.91,
+       "radius": 2
+      }
+     ]
+    },
+    {
+     "id": "r1_done",
+     "name": "Ogres in the clearing cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "r1"
+     ],
+     "actions": [
+      {
+       "type": "message",
+       "text": "Heavy footsteps echo to the north..."
+      },
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      },
+      {
+       "type": "objective",
+       "text": "Follow the road north to the stone plaza"
+      }
+     ]
+    },
+    {
+     "id": "r2",
+     "name": "Ogres and trolls at the plaza",
+     "when": {
+      "type": "enter_area",
+      "x": 20,
+      "y": 13,
+      "r": 5
+     },
+     "requires": [
+      "r1_done"
+     ],
+     "actions": [
+      {
+       "type": "banner",
+       "title": "The Stone Plaza",
+       "sub": "Trolls shrug off arrows (resist pierce)"
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 3,
+       "x": 22.09,
+       "y": 14.76,
+       "radius": 2
+      },
+      {
+       "type": "wait",
+       "seconds": 10
+      },
+      {
+       "type": "spawn",
+       "enemy": "troll",
+       "count": 1,
+       "x": 17.43,
+       "y": 13.91,
+       "radius": 2
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 1,
+       "x": 21.28,
+       "y": 10.59,
+       "radius": 2
+      }
+     ]
+    },
+    {
+     "id": "r2_done",
+     "name": "Ogres and trolls at the plaza cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "r2"
+     ],
+     "actions": [
+      {
+       "type": "message",
+       "text": "The way to the hollow is clear."
+      },
+      {
+       "type": "heal",
+       "pct": 30
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      },
+      {
+       "type": "objective",
+       "text": "Enter Troll Hollow (north-east)"
+      }
+     ]
+    },
+    {
+     "id": "r3",
+     "name": "Troll Hollow",
+     "when": {
+      "type": "enter_area",
+      "x": 46,
+      "y": 9,
+      "r": 4.5
+     },
+     "requires": [
+      "r2_done"
+     ],
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Troll Hollow",
+       "sub": "A shaman chants in the dark",
+       "boss": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 2,
+       "x": 47.93,
+       "y": 10.62,
+       "radius": 2
+      },
+      {
+       "type": "wait",
+       "seconds": 9
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 1,
+       "x": 43.63,
+       "y": 9.84,
+       "radius": 2
+      },
+      {
+       "type": "spawn",
+       "enemy": "troll",
+       "count": 1,
+       "x": 47.18,
+       "y": 6.77,
+       "radius": 2
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 1,
+       "x": 46.63,
+       "y": 11.44,
+       "radius": 2
+      }
+     ]
+    },
+    {
+     "id": "r3_done",
+     "name": "Troll Hollow cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "r3"
+     ],
+     "actions": [
+      {
+       "type": "banner",
+       "title": "The rift opens",
+       "sub": "The Root Hollow lies below"
+      },
+      {
+       "type": "open_portal",
+       "index": 1
+      },
+      {
+       "type": "sound",
+       "name": "portal"
+      },
+      {
+       "type": "message",
+       "text": "The shaman falls silent."
+      },
+      {
+       "type": "heal",
+       "pct": 40
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      },
+      {
+       "type": "objective",
+       "text": "Take the rift down into the Root Hollow (key from the elite troll)"
+      }
+     ]
+    },
+    {
+     "id": "elite",
+     "name": "Elite guarding the key",
+     "when": {
+      "type": "enter_area",
+      "x": 52,
+      "y": 47,
+      "r": 3.4000000000000004
+     },
+     "requires": [
+      "r1_done"
+     ],
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Mountain Troll",
+       "sub": "Guardian of the Root Hollow key",
+       "boss": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "troll",
+       "count": 1,
+       "x": 51,
+       "y": 47,
+       "radius": 1.2
+      }
+     ]
+    },
+    {
+     "id": "elite_done",
+     "name": "Elite defeated",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "elite"
+     ],
+     "actions": [
+      {
+       "type": "message",
+       "text": "The troll drops a gnarled root key."
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      },
+      {
+       "type": "message",
+       "text": "Pip: That key smells of roots and earth. It must open the Root Hollow below Troll Hollow."
+      }
+     ]
+    },
+    {
+     "id": "crack_hum",
+     "name": "The wall hums",
+     "when": {
+      "type": "enter_area",
+      "x": 14.88,
+      "y": 35.75,
+      "r": 3.2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Pip: The wall hums, Aerin. Something is hidden behind it."
+      }
+     ]
+    },
+    {
+     "id": "crack_open",
+     "name": "Cracked wall gives way",
+     "when": {
+      "type": "enter_area",
+      "x": 16.09,
+      "y": 36.45,
+      "r": 1.5
+     },
+     "requires": [
+      "crack_hum"
+     ],
+     "actions": [
+      {
+       "type": "sound",
+       "name": "portal"
+      },
+      {
+       "type": "shake",
+       "power": 3
+      },
+      {
+       "type": "sound",
+       "name": "portal"
+      }
+     ]
+    },
+    {
+     "id": "crack_loot",
+     "name": "Hidden gem cache",
+     "when": {
+      "type": "enter_area",
+      "x": 20,
+      "y": 40,
+      "r": 2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "A hidden gem cache!"
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      }
+     ]
+    },
+    {
+     "id": "env_loot",
+     "name": "Hidden socket rune",
+     "when": {
+      "type": "enter_area",
+      "x": 52.5,
+      "y": 22.5,
+      "r": 2.2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "A Socket Rune glints in the moss."
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      },
+      {
+       "type": "message",
+       "text": "Pip: The water here ripples with dream-fish, Aerin. A secret pool!"
+      }
+     ]
+    },
+    {
+     "id": "bridge_pip",
+     "name": "The raised bridge",
+     "when": {
+      "type": "enter_area",
+      "x": 11.6,
+      "y": 5,
+      "r": 3.2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Pip: The bridge is raised. There must be a lever somewhere."
+      }
+     ]
+    },
+    {
+     "id": "bridge_lever",
+     "name": "Pull the lever",
+     "when": {
+      "type": "enter_area",
+      "x": 22.6,
+      "y": 52.2,
+      "r": 1.6
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "A lever clunks. Far away, a bridge lowers."
+      },
+      {
+       "type": "sound",
+       "name": "portal"
+      },
+      {
+       "type": "sound",
+       "name": "portal"
+      }
+     ]
+    },
+    {
+     "id": "bridge_loot",
+     "name": "Gold chest on the islet",
+     "when": {
+      "type": "enter_area",
+      "x": 5,
+      "y": 4.5,
+      "r": 2.2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "A gold chest!"
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      }
+     ]
+    }
+   ]
+  },
+  "pinewood_boss": {
+   "name": "Bramblehorn's Court",
+   "sub": "Where the old troll king holds his root-throne",
+   "theme": "forest",
+   "W": 24,
+   "H": 24,
+   "tiles": [
+    "........................",
+    ".........gddddppdggg....",
+    ".......fffdppxcxppggg...",
+    "......fffpcxxxxxxxpggg..",
+    "......ffppxxxxxxxxcpgg..",
+    "......ffpxxxxxxxxxxpgg..",
+    ".....ffpxxxxrrrrxxxxpgg.",
+    ".....ffpcxxxrrrrxxxxpgg.",
+    ".....ffpxxxrrrrrrxxxpgg.",
+    ".....ffpxxxxrrrrxxxcpgg.",
+    ".....ffpxxxxrrrrxxxxpgg.",
+    ".....fffpxxxxxxxxxxpggg.",
+    "......ffpcxxxxxxxxxpgg..",
+    "......fffppxxxxxxxpff...",
+    "......ffgggppxxxppff....",
+    ".ggffffffgsspppggffff...",
+    ".gfffffffpsspppppgfffff.",
+    ".ggggggggpsggggppppggff.",
+    ".fgggggggssggggggpgggff.",
+    ".gggggggpspgg.gggggggff.",
+    ".ggggggppppg...gfgggfff.",
+    ".ggggggppppgg..ffffffff.",
+    ".ggggggggggg....fffffff.",
+    "........................"
+   ],
+   "heights": [
+    "000000000000000000000000",
+    "000000000444222222440000",
+    "000000044422222222244000",
+    "000000444222222222224400",
+    "000000442222222222224400",
+    "000000422222222222222400",
+    "000004222222222222222440",
+    "000004222222222222222440",
+    "000004222222222222222440",
+    "000004222222222222222440",
+    "000004222222222222222440",
+    "000004422222222222222440",
+    "000000442222222222222400",
+    "000000442222222222224000",
+    "000000444422222222240000",
+    "000000044412222222444000",
+    "000000004112222224442220",
+    "000000000114444222222220",
+    "000000000100002222222220",
+    "000000000000002222222220",
+    "000000000000000222222220",
+    "000000000000000222222220",
+    "000000000000000022222220",
+    "000000000000000000000000"
+   ],
+   "start": {
+    "x": 3.7,
+    "y": 20.3
+   },
+   "portals": [
+    {
+     "x": 5.3,
+     "y": 21.8,
+     "to": "roothollow",
+     "open": true,
+     "marker": false,
+     "arrive": {
+      "x": 8,
+      "y": 7
+     },
+     "id": "back"
+    },
+    {
+     "x": 12.5,
+     "y": 5,
+     "to": "ruins",
+     "open": false,
+     "marker": true,
+     "id": "next"
+    },
+    {
+     "x": 16.5,
+     "y": 5,
+     "to": "vale",
+     "open": false,
+     "marker": false,
+     "arrive": {
+      "x": 26.41,
+      "y": 37.21
+     },
+     "id": "home"
+    }
+   ],
+   "objects": [
+    {
+     "t": "shrine",
+     "x": 6.3,
+     "y": 18.2,
+     "label": "checkpoint"
+    },
+    {
+     "t": "crystal_violet",
+     "x": 19.5,
+     "y": 20,
+     "role": "chest_gold",
+     "tier": "gold",
+     "label": "boss-ledge-chest"
+    },
+    {
+     "t": "brazier",
+     "x": 11.02,
+     "y": 11.61
+    },
+    {
+     "t": "brazier",
+     "x": 10.91,
+     "y": 5.66
+    },
+    {
+     "t": "brazier",
+     "x": 17.06,
+     "y": 5.25
+    },
+    {
+     "t": "pine_giant",
+     "x": 21.81,
+     "y": 5.57,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 20.2,
+     "y": 12.07,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 22.11,
+     "y": 17.37,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 10.48,
+     "y": 2.74,
+     "v": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 1.6,
+     "y": 15.34,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 22.39,
+     "y": 8.98,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 17.15,
+     "y": 22.95,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 19.96,
+     "y": 16.07,
+     "v": 3
+    },
+    {
+     "t": "pine",
+     "x": 8.04,
+     "y": 3.8,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 18.97,
+     "y": 14.73,
+     "v": 3
+    },
+    {
+     "t": "pine",
+     "x": 6.1,
+     "y": 9.15,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 7.22,
+     "y": 15.49,
+     "v": 3
+    },
+    {
+     "t": "pine",
+     "x": 7.35,
+     "y": 13.06,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 6.2,
+     "y": 5.77,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 18.49,
+     "y": 1.39,
+     "v": 1
+    },
+    {
+     "t": "pine",
+     "x": 22.42,
+     "y": 21.46,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 21.88,
+     "y": 3.13,
+     "v": 1
+    },
+    {
+     "t": "pine",
+     "x": 1.66,
+     "y": 22.17,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 13.35,
+     "y": 1.03,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 20.48,
+     "y": 2.02,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 4.42,
+     "y": 15.05,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 22.16,
+     "y": 22.99,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 7.38,
+     "y": 2.24,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 5.33,
+     "y": 7.25,
+     "v": 3
+    },
+    {
+     "t": "pine",
+     "x": 6.33,
+     "y": 10.92,
+     "v": 2
+    },
+    {
+     "t": "pine",
+     "x": 1.09,
+     "y": 18.97,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 14.58,
+     "y": 18.51
+    },
+    {
+     "t": "pine",
+     "x": 15.02,
+     "y": 21.63,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 12.84,
+     "y": 21.79,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 8.91,
+     "y": 14.09,
+     "v": 3
+    },
+    {
+     "t": "pine",
+     "x": 6.26,
+     "y": 4.09,
+     "f": 1
+    },
+    {
+     "t": "pine",
+     "x": 20.06,
+     "y": 22.91,
+     "v": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 1.86,
+     "y": 17.7,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 6.09,
+     "y": 12.31,
+     "v": 2
+    },
+    {
+     "t": "pine_young",
+     "x": 6.06,
+     "y": 14.14,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 5.05,
+     "y": 10.26,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 22.69,
+     "y": 11.97,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 15.65,
+     "y": 19.84,
+     "v": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 22.06,
+     "y": 11.04
+    },
+    {
+     "t": "pine_young",
+     "x": 7.69,
+     "y": 11.62,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 1.14,
+     "y": 20.69,
+     "v": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 16.49,
+     "y": 20.7
+    },
+    {
+     "t": "pine_young",
+     "x": 12.95,
+     "y": 19.35,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 20.46,
+     "y": 3.28,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "pine_young",
+     "x": 7.48,
+     "y": 5.41
+    },
+    {
+     "t": "pine_young",
+     "x": 12.47,
+     "y": 18.18
+    },
+    {
+     "t": "rock",
+     "x": 16.9,
+     "y": 1.53
+    },
+    {
+     "t": "rock",
+     "x": 17.76,
+     "y": 15.69
+    },
+    {
+     "t": "rock",
+     "x": 6.26,
+     "y": 22.89,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 8.15,
+     "y": 17.66,
+     "v": 2
+    },
+    {
+     "t": "rock",
+     "x": 22.23,
+     "y": 20,
+     "v": 1
+    },
+    {
+     "t": "rock",
+     "x": 6.82,
+     "y": 7.64,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "moss",
+     "x": 13.97,
+     "y": 10.88,
+     "v": 2
+    },
+    {
+     "t": "moss",
+     "x": 3.92,
+     "y": 20.1,
+     "f": 1
+    },
+    {
+     "t": "moss",
+     "x": 13.72,
+     "y": 16.09,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "mushroom_red",
+     "x": 19.06,
+     "y": 10.61
+    },
+    {
+     "t": "mushroom_red",
+     "x": 17.63,
+     "y": 4.29
+    },
+    {
+     "t": "mushroom_red",
+     "x": 18.14,
+     "y": 3.9
+    },
+    {
+     "t": "mushroom_red",
+     "x": 4.3,
+     "y": 16.76
+    },
+    {
+     "t": "mushroom_red",
+     "x": 5.17,
+     "y": 16.81
+    },
+    {
+     "t": "mushroom_red",
+     "x": 19.61,
+     "y": 13.87
+    },
+    {
+     "t": "mushroom_red",
+     "x": 15.46,
+     "y": 19.13
+    },
+    {
+     "t": "mushroom_red",
+     "x": 16,
+     "y": 18.97
+    },
+    {
+     "t": "grass",
+     "x": 12.37,
+     "y": 2.15,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 12.48,
+     "y": 1.63,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 3.39,
+     "y": 17.38,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 3.41,
+     "y": 18.03,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 16.24,
+     "y": 7.41,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 15.75,
+     "y": 6.33,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 19.98,
+     "y": 21.26,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 13.66,
+     "y": 5.66,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 13.56,
+     "y": 4.57,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 6.63,
+     "y": 19.87,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 6.39,
+     "y": 20.47
+    },
+    {
+     "t": "pine_giant",
+     "x": 5.75,
+     "y": 14.9,
+     "v": 1
+    },
+    {
+     "t": "pine_giant",
+     "x": 21.9,
+     "y": 2.2,
+     "v": 1
+    }
+   ],
+   "objective": "Climb to the root-throne.",
+   "sigil": {
+    "x": 14,
+    "y": 8.5
+   },
+   "triggers": [
+    {
+     "id": "intro",
+     "name": "Pip warns",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Pip: Aerin... the ground is shaking. That is the troll king."
+      }
+     ]
+    },
+    {
+     "id": "shrine",
+     "name": "Rift shrine",
+     "when": {
+      "type": "enter_area",
+      "x": 6.3,
+      "y": 18.2,
+      "r": 2.2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Checkpoint: Bramblehorn's Court"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      }
+     ]
+    },
+    {
+     "id": "boss",
+     "name": "Old Bramblehorn",
+     "when": {
+      "type": "enter_area",
+      "x": 14,
+      "y": 8.5,
+      "r": 4.8
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Old Bramblehorn",
+       "sub": "The Troll King - Shard of Root",
+       "boss": true
+      },
+      {
+       "type": "objective",
+       "text": "Defeat Old Bramblehorn"
+      },
+      {
+       "type": "shake",
+       "power": 6
+      },
+      {
+       "type": "wait",
+       "seconds": 1.5
+      },
+      {
+       "type": "spawn",
+       "enemy": "troll",
+       "count": 1,
+       "x": 14,
+       "y": 7,
+       "radius": 0.5
+      },
+      {
+       "type": "wait",
+       "seconds": 14
+      },
+      {
+       "type": "banner",
+       "title": "He calls his kin!",
+       "sub": "Ogres storm the court"
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 2,
+       "x": 12,
+       "y": 11.5,
+       "radius": 2
+      },
+      {
+       "type": "wait",
+       "seconds": 14
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 2,
+       "x": 16,
+       "y": 11.5,
+       "radius": 2
+      }
+     ]
+    },
+    {
+     "id": "victory",
+     "name": "Old Bramblehorn falls",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "boss"
+     ],
+     "actions": [
+      {
+       "type": "clear_enemies"
+      },
+      {
+       "type": "banner",
+       "title": "Victory",
+       "sub": "The Shard of Root is relit"
+      },
+      {
+       "type": "message",
+       "text": "Old Bramblehorn: I only wished to keep the roots from rotting... Morrow is no king. He is a sleeper who will not wake."
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      },
+      {
+       "type": "message",
+       "text": "The Shard of Root: The Shard of Root is relit."
+      },
+      {
+       "type": "open_portal",
+       "index": 1
+      },
+      {
+       "type": "open_portal",
+       "index": 2
+      },
+      {
+       "type": "objective",
+       "text": "Take the rift to the Gloomspire Ruins, or return home"
+      },
+      {
+       "type": "sound",
+       "name": "portal"
+      }
+     ]
+    }
+   ]
+  },
+  "vale": {
+   "name": "Whispering Vale",
+   "sub": "A dream drifting above the clouds",
+   "theme": "vale",
+   "W": 40,
+   "H": 40,
+   "tiles": [
+    "........................................",
+    ".gggggg......................ffffgff....",
+    ".ggggggggggg.....g...........fffggggf...",
+    ".gggggggggggg...ggg.........fgggpppggg..",
+    ".ggggggggggggggggggg.......fggpppdpppgg.",
+    ".gggpgggggggggggffggg......fgpxppdpppgg.",
+    ".gggpggggfgggggffffggg....ffpxdpxxxxxpg.",
+    ".gggggggffggggffffffggg..gggpxxxxxxxxpg.",
+    ".gggggffffggggffffffggg...ggpxxxxxxxxpg.",
+    ".ggggffffffgggffffffggg...gggxxxxxxxpgg.",
+    ".gggggfffffgggffffffggg..ffpppxxxxddpgg.",
+    ".gggggggfffgggpgffgggg..ggsspgpxdpdpgfg.",
+    "..gggggggfgggpppggggg..fgppsgggppppgfff.",
+    "...ggggggggggppgggggg..ffsspgggggffffff.",
+    "....ggggggggpppggggggfffpssgggggggfffff.",
+    "......gggggggpppggggffffssssppppppfffff.",
+    "........gggggpppgggggffpssspppggfpfffff.",
+    "...........ggpppppxxppgsssggggggfffffff.",
+    "...........gggppxxxxxxpgsgggggggfffffff.",
+    "............gggpxxxxxxxpsgggfffffffffff.",
+    "............fffpxxxxxxxpggggffwwwwwwggff",
+    "............fffpxxxxxxxpggggwwwwwwwwwgff",
+    "............fffpxxxxxxxpggggwwwwwwwwwwgg",
+    "............fffgpxxxxxpgggggwwwwwwwwwwgg",
+    ".............ggfppxxxpggggggwwwwwwwwwwgf",
+    "...ggggggg....ggfgppgppgggggwwwwwwwwwwgf",
+    "..ggggggggg...gggggffppgggggwwwwwwwwwwgg",
+    ".ggggggggggg.ggggggffppfgggggwwwwwwwwwgg",
+    ".ggggggggggggggggggfpppggggggwwwwwwwwwfg",
+    ".gggggggggggggggppppppggggggggwwwwwwwffg",
+    ".ggggggggggggggggpppppgggggggggggggffff.",
+    ".ggggggggggggggggpggpppgggggggggggggfgg.",
+    ".ggggggggggggggggggggpppggggggggggggggg.",
+    "..gggggggpggggggggpggppppxpggggggpppggg.",
+    "..ggggggppggggggggpppppxxxxpggggpxxxpgg.",
+    "...ggggggggggggfggpppppppxxpggggpxxxpgg.",
+    "....ggggg.gggggffg.ggpppddxppppppxxxpgg.",
+    "...........gggggg....ggppppgppppgpppggg.",
+    "............ggggg....gggggggggggggggggg.",
+    "........................................"
+   ],
+   "heights": [
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000044444440000",
+    "0000000000000000000000000000044444444000",
+    "0000000000000000000000000000444444444400",
+    "0000000000000000000000000004444444444440",
+    "0000000000000000000000000004444444444440",
+    "0000000000000000000000000044444444444440",
+    "0000000000000000000000000444444444444440",
+    "0000000000000000000000000044444444444440",
+    "0000000000000000000000000044444444444440",
+    "0000000000000000000000000244444444444440",
+    "0000000000000000000000002234444444444440",
+    "0000000000000000000000022333444444444440",
+    "0000000000000000000000022333404444404000",
+    "0000000000000000000000222220000000000000",
+    "0000000000000000000000222110000000000000",
+    "0000000000000000000000011100000000000000",
+    "0000000000000000000000012200000000000000",
+    "0000000000000000000000001200000000000000",
+    "0000000000000000000000001200000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000"
+   ],
+   "start": {
+    "x": 5.3,
+    "y": 32.2
+   },
+   "portals": [
+    {
+     "x": 30.8,
+     "y": 6.8,
+     "to": "ruins",
+     "open": true,
+     "marker": true,
+     "id": "ruins"
+    },
+    {
+     "x": 35.4,
+     "y": 6.4,
+     "to": "grotto",
+     "open": false,
+     "marker": false,
+     "id": "grotto"
+    },
+    {
+     "x": 31.4,
+     "y": 10.4,
+     "to": "caldera",
+     "open": false,
+     "marker": false,
+     "id": "caldera"
+    },
+    {
+     "x": 35.4,
+     "y": 10.2,
+     "to": "spire",
+     "open": false,
+     "marker": false,
+     "id": "spire"
+    },
+    {
+     "x": 25,
+     "y": 35.8,
+     "to": "pinewood",
+     "open": true,
+     "marker": false,
+     "id": "pine"
+    },
+    {
+     "x": 34.5,
+     "y": 35.5,
+     "to": "hub_arena",
+     "open": false,
+     "marker": false,
+     "id": "arena"
+    }
+   ],
+   "objects": [
+    {
+     "t": "house",
+     "x": 7,
+     "y": 7
+    },
+    {
+     "t": "crystal_violet",
+     "x": 19.5,
+     "y": 21,
+     "role": "elder_stone",
+     "label": "elder stone"
+    },
+    {
+     "t": "lantern",
+     "x": 17.16,
+     "y": 25.12
+    },
+    {
+     "t": "lantern",
+     "x": 14.77,
+     "y": 21.1
+    },
+    {
+     "t": "shrine",
+     "x": 8.5,
+     "y": 29.2,
+     "label": "checkpoint"
+    },
+    {
+     "t": "sign",
+     "x": 9.3,
+     "y": 32,
+     "label": "sign",
+     "text": "Training yard east. Elder Stone north-east."
+    },
+    {
+     "t": "crystal",
+     "x": 36.5,
+     "y": 16.5,
+     "role": "chest",
+     "tier": "wood",
+     "label": "tutorial-chest"
+    },
+    {
+     "t": "crystal_violet",
+     "x": 3.2,
+     "y": 3.4,
+     "role": "gem_cache",
+     "label": "secret gem cache"
+    },
+    {
+     "t": "sign",
+     "x": 11.7,
+     "y": 11.9,
+     "role": "tablet",
+     "label": "lore",
+     "text": "Aerin's lantern burns low. Wake the Shards and the Vale will bloom again."
+    },
+    {
+     "t": "lantern",
+     "x": 12.71,
+     "y": 30.53
+    },
+    {
+     "t": "lantern",
+     "x": 6.27,
+     "y": 13.65
+    },
+    {
+     "t": "lantern_blue",
+     "x": 37.89,
+     "y": 8.19
+    },
+    {
+     "t": "lantern_blue",
+     "x": 34.27,
+     "y": 12.68
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.03,
+     "y": 5.02
+    },
+    {
+     "t": "lantern_blue",
+     "x": 34.33,
+     "y": 3.28
+    },
+    {
+     "t": "lantern",
+     "x": 23.68,
+     "y": 38.14
+    },
+    {
+     "t": "lantern_blue",
+     "x": 37.03,
+     "y": 35.62
+    },
+    {
+     "t": "lantern_blue",
+     "x": 33.11,
+     "y": 33.46
+    },
+    {
+     "t": "tree_poplar",
+     "x": 32.69,
+     "y": 2.42,
+     "v": 2
+    },
+    {
+     "t": "tree_poplar",
+     "x": 1.65,
+     "y": 10.83,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 9.2,
+     "y": 15.86,
+     "v": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 12.2,
+     "y": 20.12,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 21.8,
+     "y": 37.97,
+     "v": 2
+    },
+    {
+     "t": "tree_poplar",
+     "x": 38.88,
+     "y": 37.88,
+     "v": 2
+    },
+    {
+     "t": "tree_poplar",
+     "x": 38,
+     "y": 11.94,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 3.87,
+     "y": 26.27,
+     "v": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 22.49,
+     "y": 7.14,
+     "v": 2
+    },
+    {
+     "t": "tree_poplar",
+     "x": 18.35,
+     "y": 4.43,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 29.98,
+     "y": 31.52,
+     "v": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 38.92,
+     "y": 28.3,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 32.12,
+     "y": 31.58,
+     "v": 2
+    },
+    {
+     "t": "tree_poplar",
+     "x": 8.27,
+     "y": 2.38
+    },
+    {
+     "t": "tree_poplar",
+     "x": 24.18,
+     "y": 11.29
+    },
+    {
+     "t": "tree_poplar",
+     "x": 21.71,
+     "y": 10.49,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 7.98,
+     "y": 4.07,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 14.25,
+     "y": 26.82,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 27.74,
+     "y": 30.96,
+     "v": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 5.71,
+     "y": 35.07
+    },
+    {
+     "t": "tree_poplar",
+     "x": 7.31,
+     "y": 36.16
+    },
+    {
+     "t": "tree_poplar",
+     "x": 31.08,
+     "y": 1.21,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 1.95,
+     "y": 30.63,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 37.42,
+     "y": 21.31,
+     "v": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 38.01,
+     "y": 4.99
+    },
+    {
+     "t": "tree_teal",
+     "x": 26.81,
+     "y": 28.61,
+     "v": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 14.84,
+     "y": 4.15,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 12.19,
+     "y": 3.36,
+     "v": 2
+    },
+    {
+     "t": "tree_teal",
+     "x": 10.34,
+     "y": 28.03,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 38.34,
+     "y": 31.46,
+     "v": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 37.52,
+     "y": 38.82,
+     "v": 2
+    },
+    {
+     "t": "tree_teal",
+     "x": 9.82,
+     "y": 2.32,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 16.13,
+     "y": 37.47,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 9.47,
+     "y": 25.47,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 15.08,
+     "y": 24.43,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 26.17,
+     "y": 25,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 5.65,
+     "y": 1.82,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 1.67,
+     "y": 6.29
+    },
+    {
+     "t": "tree_teal",
+     "x": 2.36,
+     "y": 34.37
+    },
+    {
+     "t": "tree_teal",
+     "x": 27.6,
+     "y": 22.32,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 7.15,
+     "y": 25.04,
+     "v": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 2.3,
+     "y": 12.67,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 19.36,
+     "y": 12.23,
+     "v": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 4.92,
+     "y": 14.23,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 35.94,
+     "y": 2.03,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 13.04,
+     "y": 38.2,
+     "v": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 38.69,
+     "y": 22.77,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 34.23,
+     "y": 31.84,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 38.58,
+     "y": 9.93,
+     "v": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 38.93,
+     "y": 14.65
+    },
+    {
+     "t": "tree_round",
+     "x": 1.56,
+     "y": 27.84,
+     "v": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 2.33,
+     "y": 8.48
+    },
+    {
+     "t": "tree_round",
+     "x": 38.75,
+     "y": 34.38,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 6.73,
+     "y": 15.36,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 20.48,
+     "y": 14.5,
+     "v": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 29.14,
+     "y": 2.72,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 25.89,
+     "y": 7.25,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_blossom",
+     "x": 32.53,
+     "y": 17.54,
+     "f": 1
+    },
+    {
+     "t": "tree_blossom",
+     "x": 25.21,
+     "y": 23.02,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_blossom",
+     "x": 25.63,
+     "y": 30.45,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_blossom",
+     "x": 4.14,
+     "y": 36.81,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "tree_blossom",
+     "x": 16.47,
+     "y": 13.21,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 36.22,
+     "y": 3.77,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 19.26,
+     "y": 5.26,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 32.88,
+     "y": 38.34,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 5.68,
+     "y": 25.69,
+     "v": 2
+    },
+    {
+     "t": "bush",
+     "x": 28.97,
+     "y": 29.5,
+     "v": 2
+    },
+    {
+     "t": "bush",
+     "x": 28.03,
+     "y": 29.53,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 12.85,
+     "y": 18.85,
+     "v": 1
+    },
+    {
+     "t": "bush",
+     "x": 37.68,
+     "y": 29.07
+    },
+    {
+     "t": "bush",
+     "x": 36.54,
+     "y": 31.55,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 21.26,
+     "y": 7.78,
+     "v": 1
+    },
+    {
+     "t": "bush",
+     "x": 13.23,
+     "y": 23.26,
+     "v": 2
+    },
+    {
+     "t": "bush",
+     "x": 34.52,
+     "y": 1.92,
+     "v": 2
+    },
+    {
+     "t": "bush",
+     "x": 26.98,
+     "y": 8.53,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 14.09,
+     "y": 28.55,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 35.41,
+     "y": 18.65,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 38.63,
+     "y": 24.57,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 1.88,
+     "y": 1.67,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 32.96,
+     "y": 13.44,
+     "v": 2
+    },
+    {
+     "t": "rock",
+     "x": 10.97,
+     "y": 16.65,
+     "v": 1
+    },
+    {
+     "t": "rock",
+     "x": 38.28,
+     "y": 17.27,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 28,
+     "y": 4.53,
+     "v": 2
+    },
+    {
+     "t": "rock",
+     "x": 22.34,
+     "y": 15.34
+    },
+    {
+     "t": "rock",
+     "x": 13.31,
+     "y": 24.7,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 36.6,
+     "y": 14.37
+    },
+    {
+     "t": "mushroom",
+     "x": 11.1,
+     "y": 11.14
+    },
+    {
+     "t": "mushroom",
+     "x": 10.52,
+     "y": 11.3
+    },
+    {
+     "t": "mushroom",
+     "x": 21.04,
+     "y": 31.9
+    },
+    {
+     "t": "mushroom",
+     "x": 37.14,
+     "y": 4.15
+    },
+    {
+     "t": "mushroom",
+     "x": 17.53,
+     "y": 16.57
+    },
+    {
+     "t": "mushroom",
+     "x": 18.17,
+     "y": 16.7
+    },
+    {
+     "t": "mushroom",
+     "x": 21.52,
+     "y": 9.27
+    },
+    {
+     "t": "mushroom",
+     "x": 22.26,
+     "y": 9.02
+    },
+    {
+     "t": "mushroom",
+     "x": 20.79,
+     "y": 9.02
+    },
+    {
+     "t": "mushroom",
+     "x": 32.76,
+     "y": 8.87
+    },
+    {
+     "t": "mushroom",
+     "x": 33.49,
+     "y": 9.38
+    },
+    {
+     "t": "mushroom",
+     "x": 31.67,
+     "y": 2.1
+    },
+    {
+     "t": "mushroom",
+     "x": 32.26,
+     "y": 12.38
+    },
+    {
+     "t": "grass",
+     "x": 13.85,
+     "y": 21.5,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 13.32,
+     "y": 21.66,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 13.45,
+     "y": 20.32
+    },
+    {
+     "t": "grass",
+     "x": 13.74,
+     "y": 22.72,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 7.34,
+     "y": 30.81,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 8.18,
+     "y": 31.25,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 7.41,
+     "y": 31.92,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 12.79,
+     "y": 17.87
+    },
+    {
+     "t": "grass",
+     "x": 11.99,
+     "y": 18.62,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 34.5,
+     "y": 10.54
+    },
+    {
+     "t": "grass",
+     "x": 35.21,
+     "y": 10.22,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 8.56,
+     "y": 30.44,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 31.84,
+     "y": 35,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 32.85,
+     "y": 34.29,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 30.8,
+     "y": 35.09,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 17.28,
+     "y": 15.2
+    },
+    {
+     "t": "grass",
+     "x": 18.29,
+     "y": 15.05,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 16.52,
+     "y": 15.97,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 17.78,
+     "y": 15.08,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 36.99,
+     "y": 8.06,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 35.93,
+     "y": 7.48,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 21.55,
+     "y": 31.55,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 22.22,
+     "y": 31.19,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 21.8,
+     "y": 30.73,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 25.7,
+     "y": 10.82,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 25.49,
+     "y": 10.15,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 26.95,
+     "y": 10.67,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 17.91,
+     "y": 26.91,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 18.13,
+     "y": 26.09
+    },
+    {
+     "t": "grass",
+     "x": 8.77,
+     "y": 31.23,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 17.48,
+     "y": 36.22
+    },
+    {
+     "t": "grass",
+     "x": 17.54,
+     "y": 34.97,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 16.21,
+     "y": 35.99,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 17.08,
+     "y": 36.96,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 14.77,
+     "y": 31.05,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 14.54,
+     "y": 29.8
+    },
+    {
+     "t": "grass",
+     "x": 15.44,
+     "y": 30.76,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 23.64,
+     "y": 33.71
+    },
+    {
+     "t": "grass",
+     "x": 24.36,
+     "y": 34.16,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 30.71,
+     "y": 7.26
+    },
+    {
+     "t": "grass",
+     "x": 31.24,
+     "y": 7
+    },
+    {
+     "t": "grass",
+     "x": 31.48,
+     "y": 8.16,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 14.76,
+     "y": 14.12
+    },
+    {
+     "t": "grass",
+     "x": 13.8,
+     "y": 14.92,
+     "f": 1
+    },
+    {
+     "t": "crystal",
+     "x": 30.36,
+     "y": 13.69
+    },
+    {
+     "t": "crystal",
+     "x": 26.59,
+     "y": 18.33
+    }
+   ],
+   "objective": "Explore. Rifts hum to the north-east and the south.",
+   "triggers": [
+    {
+     "id": "dummies",
+     "name": "Training dummies",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 13.7,
+       "y": 32.9,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 15.3,
+       "y": 34.3,
+       "instant": true
+      }
+     ]
+    },
+    {
+     "id": "intro",
+     "name": "Pip wakes Aerin",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Pip: You are awake! I am Pip, your lantern spirit. Hit a training dummy with your blade to warm up."
+      }
+     ]
+    },
+    {
+     "id": "shrine",
+     "name": "Rift shrine",
+     "when": {
+      "type": "enter_area",
+      "x": 8.5,
+      "y": 29.2,
+      "r": 2.2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Checkpoint: Whispering Vale"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      }
+     ]
+    },
+    {
+     "id": "chest",
+     "name": "Tutorial chest",
+     "when": {
+      "type": "enter_area",
+      "x": 36.5,
+      "y": 16.5,
+      "r": 2.4
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      },
+      {
+       "type": "message",
+       "text": "Pip: A weapon and a gem! Press I to open your bag and equip them."
+      }
+     ]
+    },
+    {
+     "id": "elder",
+     "name": "The Elder Stone",
+     "when": {
+      "type": "enter_area",
+      "x": 19.5,
+      "y": 21,
+      "r": 3
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Elder Stone: Dreamwarden... the Gloam seeps from the Unwaking King. Relight the four Dawn Shards. The rift south leads to the Misty Pinewood."
+      },
+      {
+       "type": "message",
+       "text": "The Shard of Root: Enter the Misty Pinewood and defeat Old Bramblehorn."
+      }
+     ]
+    },
+    {
+     "id": "gems",
+     "name": "Hidden gem cache",
+     "when": {
+      "type": "enter_area",
+      "x": 3.2,
+      "y": 3.4,
+      "r": 2.2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "A hidden gem cache!"
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      }
+     ]
+    }
+   ]
+  },
+  "roothollow": {
+   "name": "Root Hollow",
+   "sub": "Where the old roots drink the dark",
+   "theme": "forest",
+   "W": 32,
+   "H": 32,
+   "tiles": [
+    "................................",
+    "....dddddd......................",
+    "...ddddddddd...........gggg.....",
+    "..ddppcxpppdgg.......ggggggg....",
+    ".ddppxxxxxxpddg....gggggggggg...",
+    ".ddpxxxxxxxxppdg..ggggddddgggg..",
+    ".ddcxxxrrxxxxppdggggdddddddgggg.",
+    ".ddxxxrrrrxxxpssdggdddddddddgg..",
+    ".ddpxxrrrrxxxpssddddddxxxxxdggg.",
+    ".ddpxxxrrxxxcdppddddddxxxxxdggg.",
+    ".ddpxxxxxxxxpdppdddddxxxxxxddgg.",
+    ".dddcxxxxxxpddpppddgdxxddddddgg.",
+    ".ddddpxxxppddddppppgdxxddddddgg.",
+    ".dddddpppppdddddppssdddddddssgg.",
+    ".dgggdddppdddddddpsspddddgpssgg.",
+    ".gggggddppddddddddddggggggpgggd.",
+    ".ggggddddppddddpppdgggggpppgggd.",
+    ".dggppdddppppppppppggggssppgggd.",
+    ".dddpppdddpppppdddppggppsddggdd.",
+    ".ddddppppdddddddddpppdpppdddddd.",
+    ".dddddppppdddddddddpppgggdddddd.",
+    "..ddddddppddddddxddddggggddd....",
+    "..dddddddpddddddxddddggggddd....",
+    ".ddddddppdddddddddddddgggdd.....",
+    ".dddggpppddddddddddddsppddd.....",
+    ".dgggggpdddddddddddddssddd......",
+    ".ggggggdddxdddxdddpsspsdd.......",
+    ".ggggggdddddddddddpsspddd.......",
+    ".dgggggddgddddddddpssddd........",
+    ".dggggdddggggdddddddddd.........",
+    ".ddddddd..gggddddddddd..........",
+    "................................"
+   ],
+   "heights": [
+    "00000000000000000000000000000000",
+    "00004444440000000000000000000000",
+    "00044222224400000000000666600000",
+    "00442222222244000000066666660000",
+    "04422222222224400006666646666000",
+    "04222222222222440066644444466600",
+    "04222222222222246664444444446660",
+    "04222222222222226644444444446600",
+    "04222222222222336644444444444660",
+    "04222222222224336644444444444660",
+    "04422222222224336644444444444460",
+    "04422222222224333664444444444460",
+    "04442222222244433334444444444460",
+    "00444222222444223334444444444660",
+    "00000444224442222334444444333660",
+    "00000044224222222666644466333640",
+    "00000002222222222266666633333340",
+    "00000000222222222226666233333340",
+    "00000000022222222222262224433440",
+    "00000000022222002222222222244440",
+    "00000000002000000022222222222440",
+    "00000022000000000002222222220000",
+    "00000022200000000002222222220000",
+    "00000220000000000002222222200000",
+    "00000000000000000002222222200000",
+    "00000000000000000022212222000000",
+    "00000002000000000000111220000000",
+    "00000002200000000000112220000000",
+    "00000002220000000000102200000000",
+    "00000002222000002222202000000000",
+    "00000000002222222222000000000000",
+    "00000000000000000000000000000000"
+   ],
+   "start": {
+    "x": 5.7,
+    "y": 26.8
+   },
+   "portals": [
+    {
+     "x": 3.3,
+     "y": 29,
+     "to": "pinewood",
+     "open": true,
+     "marker": false,
+     "arrive": {
+      "x": 45.6,
+      "y": 9.13
+     },
+     "id": "up"
+    },
+    {
+     "x": 8,
+     "y": 5,
+     "to": "pinewood_boss",
+     "open": false,
+     "marker": true,
+     "id": "exit"
+    }
+   ],
+   "objects": [
+    {
+     "t": "shrine",
+     "x": 23.5,
+     "y": 22,
+     "label": "midpoint checkpoint"
+    },
+    {
+     "t": "sign",
+     "x": 28.5,
+     "y": 17,
+     "role": "lever",
+     "label": "gate-lever",
+     "id": "lever_r2"
+    },
+    {
+     "t": "sign",
+     "x": 11.03,
+     "y": 11.03,
+     "role": "lever",
+     "label": "shortcut-lever",
+     "id": "lever_short"
+    },
+    {
+     "t": "crystal_violet",
+     "x": 8,
+     "y": 7,
+     "role": "chest_gold",
+     "tier": "gold",
+     "label": "mini-boss-chest",
+     "guaranteed": "epic"
+    },
+    {
+     "t": "crystal_violet",
+     "x": 3.5,
+     "y": 16,
+     "role": "rune_cache",
+     "label": "secret socket rune"
+    },
+    {
+     "t": "lantern",
+     "x": 7.31,
+     "y": 21.83,
+     "label": "crack-lantern",
+     "pointsAt": "wall_crack"
+    },
+    {
+     "t": "sign",
+     "x": 15.5,
+     "y": 21.64,
+     "role": "tablet",
+     "label": "lore",
+     "text": "The first Warden sealed the Thornmother here to keep the Gloam from the pines."
+    },
+    {
+     "t": "crystal",
+     "x": 18.52,
+     "y": 24.7
+    },
+    {
+     "t": "crystal",
+     "x": 11.9,
+     "y": 28.99
+    },
+    {
+     "t": "crystal",
+     "x": 11.64,
+     "y": 21.06
+    },
+    {
+     "t": "crystal",
+     "x": 21.54,
+     "y": 5.92
+    },
+    {
+     "t": "crystal",
+     "x": 2.82,
+     "y": 7.99
+    },
+    {
+     "t": "crystal",
+     "x": 8.24,
+     "y": 2.86
+    },
+    {
+     "t": "tree_dead",
+     "x": 4.05,
+     "y": 1.46,
+     "v": 3
+    },
+    {
+     "t": "tree_dead",
+     "x": 1.46,
+     "y": 17.98,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 15.13,
+     "y": 30.01,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 4.75,
+     "y": 30.96,
+     "v": 3
+    },
+    {
+     "t": "tree_dead",
+     "x": 24.79,
+     "y": 24.28,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 23.13,
+     "y": 4.08
+    },
+    {
+     "t": "tree_dead",
+     "x": 11.04,
+     "y": 2.75
+    },
+    {
+     "t": "tree_dead",
+     "x": 29.39,
+     "y": 9.28
+    },
+    {
+     "t": "tree_dead",
+     "x": 9.45,
+     "y": 28.59,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 19.14,
+     "y": 4.56,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 16.89,
+     "y": 6.88,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 1.58,
+     "y": 30.48
+    },
+    {
+     "t": "tree_dead",
+     "x": 30.11,
+     "y": 20.73,
+     "v": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 6.44,
+     "y": 1.52,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 29.51,
+     "y": 5.06
+    },
+    {
+     "t": "tree_dead",
+     "x": 2.99,
+     "y": 13.07,
+     "v": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 27.22,
+     "y": 22.85,
+     "v": 3
+    },
+    {
+     "t": "tree_dead",
+     "x": 30.49,
+     "y": 15.76,
+     "v": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 1.34,
+     "y": 6.52
+    },
+    {
+     "t": "tree_dead",
+     "x": 1.81,
+     "y": 24.7,
+     "v": 2
+    },
+    {
+     "t": "tree_dead",
+     "x": 18.05,
+     "y": 29.86,
+     "v": 2
+    },
+    {
+     "t": "tree_dead",
+     "x": 1.15,
+     "y": 20.53,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 24.06,
+     "y": 2.06,
+     "v": 2
+    },
+    {
+     "t": "tree_dead",
+     "x": 29.32,
+     "y": 7.62,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 23.67,
+     "y": 27.53,
+     "v": 2
+    },
+    {
+     "t": "tree_dead",
+     "x": 1.35,
+     "y": 4.9,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 2.81,
+     "y": 3.51,
+     "v": 2
+    },
+    {
+     "t": "tree_dead",
+     "x": 26.89,
+     "y": 2.31,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 26.56,
+     "y": 3.94,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 7.72,
+     "y": 29.74,
+     "v": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 1.3,
+     "y": 10.62
+    },
+    {
+     "t": "tree_dead",
+     "x": 28.37,
+     "y": 20.14,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 3.02,
+     "y": 21.73,
+     "v": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 13.23,
+     "y": 13.93,
+     "v": 3
+    },
+    {
+     "t": "tree_dead",
+     "x": 1.39,
+     "y": 12.48,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 21.29,
+     "y": 4.14,
+     "v": 2
+    },
+    {
+     "t": "tree_dead",
+     "x": 19.94,
+     "y": 30.11,
+     "v": 3
+    },
+    {
+     "t": "tree_dead",
+     "x": 10.58,
+     "y": 29.9,
+     "v": 3
+    },
+    {
+     "t": "tree_dead",
+     "x": 1.34,
+     "y": 14.43,
+     "v": 2
+    },
+    {
+     "t": "tree_dead",
+     "x": 18.7,
+     "y": 6.57,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 30.13,
+     "y": 13.6,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 6.06,
+     "y": 14.49,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 21.6,
+     "y": 30.27,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 13.25,
+     "y": 3.07,
+     "v": 3
+    },
+    {
+     "t": "tree_dead",
+     "x": 13.63,
+     "y": 30.86,
+     "v": 3
+    },
+    {
+     "t": "tree_dead",
+     "x": 30.24,
+     "y": 11.26
+    },
+    {
+     "t": "tree_dead",
+     "x": 1.7,
+     "y": 8.5
+    },
+    {
+     "t": "tree_dead",
+     "x": 30.96,
+     "y": 6.16,
+     "v": 3,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 6.23,
+     "y": 30.28,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_dead",
+     "x": 24.58,
+     "y": 25.88,
+     "v": 3
+    },
+    {
+     "t": "tree_dead",
+     "x": 16.46,
+     "y": 30.87,
+     "v": 3
+    },
+    {
+     "t": "rock_dark",
+     "x": 11.36,
+     "y": 19.9,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 30.12,
+     "y": 18.52,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 17.58,
+     "y": 20.76,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 3.71,
+     "y": 24.54,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 26.61,
+     "y": 24.58
+    },
+    {
+     "t": "rock_dark",
+     "x": 14.29,
+     "y": 4.19,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 13.13,
+     "y": 11.11,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 12.19,
+     "y": 3.77,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 26.56,
+     "y": 5.66,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 11.96,
+     "y": 12.61,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 25.16,
+     "y": 4.6,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 28.14,
+     "y": 5.01,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 24.75,
+     "y": 15.07,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 17.76,
+     "y": 10.71,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 11.91,
+     "y": 15.36,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 30.82,
+     "y": 9.91,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 2.85,
+     "y": 6.41,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 5.03,
+     "y": 20.93,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 12.97,
+     "y": 29.49,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 13.7,
+     "y": 19.66,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 4.2,
+     "y": 23.1
+    },
+    {
+     "t": "rock_dark",
+     "x": 2.01,
+     "y": 23.02,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 3.68,
+     "y": 11.55,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 11.41,
+     "y": 14.23
+    },
+    {
+     "t": "rock_dark",
+     "x": 27.34,
+     "y": 19.14,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 1.81,
+     "y": 19.19,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 27.42,
+     "y": 6.77,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 7.71,
+     "y": 1.41,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 2.68,
+     "y": 5.18,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 19.79,
+     "y": 22.52,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 17.56,
+     "y": 8.61,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 22.49,
+     "y": 16.07
+    },
+    {
+     "t": "rock_dark",
+     "x": 19.01,
+     "y": 23.19
+    },
+    {
+     "t": "rock_dark",
+     "x": 5.72,
+     "y": 2.83,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 17.01,
+     "y": 19.92,
+     "v": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 19.28,
+     "y": 11.43,
+     "f": 1
+    },
+    {
+     "t": "rock_dark",
+     "x": 4.47,
+     "y": 13.66,
+     "v": 1
+    },
+    {
+     "t": "mushroom",
+     "x": 1.73,
+     "y": 15.65
+    },
+    {
+     "t": "mushroom",
+     "x": 19.76,
+     "y": 7.92
+    },
+    {
+     "t": "mushroom",
+     "x": 22.74,
+     "y": 14.66
+    },
+    {
+     "t": "mushroom",
+     "x": 23.07,
+     "y": 14.1
+    },
+    {
+     "t": "mushroom",
+     "x": 26.69,
+     "y": 10.9
+    },
+    {
+     "t": "mushroom",
+     "x": 26.4,
+     "y": 11.61
+    },
+    {
+     "t": "mushroom",
+     "x": 27.27,
+     "y": 10.72
+    },
+    {
+     "t": "mushroom",
+     "x": 7.44,
+     "y": 4.31
+    },
+    {
+     "t": "mushroom",
+     "x": 7.32,
+     "y": 3.58
+    },
+    {
+     "t": "mushroom",
+     "x": 6.47,
+     "y": 25.8
+    },
+    {
+     "t": "mushroom",
+     "x": 5.71,
+     "y": 26.16
+    },
+    {
+     "t": "mushroom",
+     "x": 12.83,
+     "y": 17.42
+    },
+    {
+     "t": "mushroom",
+     "x": 13.55,
+     "y": 17.61
+    },
+    {
+     "t": "mushroom",
+     "x": 5.85,
+     "y": 17.45
+    },
+    {
+     "t": "mushroom",
+     "x": 5.01,
+     "y": 17.74
+    },
+    {
+     "t": "mushroom",
+     "x": 5.63,
+     "y": 24.94
+    },
+    {
+     "t": "mushroom",
+     "x": 5.33,
+     "y": 24.2
+    },
+    {
+     "t": "mushroom",
+     "x": 8.2,
+     "y": 28.34
+    },
+    {
+     "t": "mushroom",
+     "x": 7.5,
+     "y": 28.17
+    },
+    {
+     "t": "mushroom",
+     "x": 18.57,
+     "y": 28.43
+    },
+    {
+     "t": "mushroom",
+     "x": 6.42,
+     "y": 10.33
+    },
+    {
+     "t": "mushroom",
+     "x": 6.41,
+     "y": 9.61
+    },
+    {
+     "t": "mushroom",
+     "x": 4.57,
+     "y": 16.79
+    },
+    {
+     "t": "mushroom",
+     "x": 2.23,
+     "y": 20.84
+    },
+    {
+     "t": "mushroom",
+     "x": 9.96,
+     "y": 27.64
+    },
+    {
+     "t": "mushroom",
+     "x": 23.32,
+     "y": 5.24
+    },
+    {
+     "t": "mushroom",
+     "x": 22.71,
+     "y": 5.29
+    },
+    {
+     "t": "mushroom",
+     "x": 7.37,
+     "y": 17.84
+    },
+    {
+     "t": "mushroom",
+     "x": 7.42,
+     "y": 18.71
+    },
+    {
+     "t": "crystal",
+     "x": 16.15,
+     "y": 15.19
+    },
+    {
+     "t": "moss",
+     "x": 17.47,
+     "y": 23.44,
+     "v": 2
+    },
+    {
+     "t": "moss",
+     "x": 13.98,
+     "y": 25.84,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "moss",
+     "x": 11.37,
+     "y": 24.11
+    },
+    {
+     "t": "moss",
+     "x": 9.29,
+     "y": 3.33,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "moss",
+     "x": 21.55,
+     "y": 15.16,
+     "v": 2
+    },
+    {
+     "t": "moss",
+     "x": 9.05,
+     "y": 26.19,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "moss",
+     "x": 8,
+     "y": 16.47,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "moss",
+     "x": 9.72,
+     "y": 5.84,
+     "v": 1
+    },
+    {
+     "t": "moss",
+     "x": 22.51,
+     "y": 9.69,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "moss",
+     "x": 20.15,
+     "y": 17.83
+    },
+    {
+     "t": "moss",
+     "x": 6.35,
+     "y": 16.43,
+     "v": 2
+    },
+    {
+     "t": "moss",
+     "x": 6.34,
+     "y": 4.62,
+     "v": 1
+    },
+    {
+     "t": "moss",
+     "x": 14.96,
+     "y": 9.56
+    },
+    {
+     "t": "moss",
+     "x": 25.47,
+     "y": 13.49,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "moss",
+     "x": 6.26,
+     "y": 20.26,
+     "f": 1
+    },
+    {
+     "t": "stump",
+     "x": 24.97,
+     "y": 3.34
+    },
+    {
+     "t": "stump",
+     "x": 13.38,
+     "y": 15.78
+    },
+    {
+     "t": "stump",
+     "x": 9.01,
+     "y": 1.38
+    },
+    {
+     "t": "stump",
+     "x": 15.03,
+     "y": 19.86
+    },
+    {
+     "t": "bush",
+     "x": 1.54,
+     "y": 28.58,
+     "v": 2
+    },
+    {
+     "t": "bush",
+     "x": 7.84,
+     "y": 27.25,
+     "v": 1
+    },
+    {
+     "t": "bush",
+     "x": 20.91,
+     "y": 16.33,
+     "v": 1
+    },
+    {
+     "t": "bush",
+     "x": 26.73,
+     "y": 21.37,
+     "v": 2
+    },
+    {
+     "t": "bush",
+     "x": 16.34,
+     "y": 29.12,
+     "v": 1
+    },
+    {
+     "t": "bush",
+     "x": 2.81,
+     "y": 10.65,
+     "v": 1
+    },
+    {
+     "t": "bush",
+     "x": 2.91,
+     "y": 9.52
+    },
+    {
+     "t": "bush",
+     "x": 11.63,
+     "y": 30.86,
+     "v": 2
+    },
+    {
+     "t": "grass",
+     "x": 22.12,
+     "y": 18.56
+    },
+    {
+     "t": "grass",
+     "x": 22.53,
+     "y": 17.23,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 22.41,
+     "y": 19.2,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 18.36,
+     "y": 27.52
+    },
+    {
+     "t": "grass",
+     "x": 17.44,
+     "y": 28.48,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 13.18,
+     "y": 12.2,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 24.98,
+     "y": 10.2,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 24.79,
+     "y": 9.53,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 9.11,
+     "y": 9.81,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 8.9,
+     "y": 9.11,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 8.92,
+     "y": 24.99,
+     "f": 1
+    }
+   ],
+   "objective": "Open the root door and descend.",
+   "sigil": {
+    "x": 8,
+    "y": 8
+   },
+   "triggers": [
+    {
+     "id": "intro",
+     "name": "Pip in the dark",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Pip: Roots everywhere... they are moving. Stay close to me."
+      }
+     ]
+    },
+    {
+     "id": "door_locked",
+     "name": "Locked root door",
+     "when": {
+      "type": "enter_area",
+      "x": 7.99,
+      "y": 24.6,
+      "r": 2.4
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "A door of knotted roots. It needs the Root Hollow key."
+      }
+     ]
+    },
+    {
+     "id": "shrine",
+     "name": "Midpoint shrine",
+     "when": {
+      "type": "enter_area",
+      "x": 23.5,
+      "y": 22,
+      "r": 2.2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Checkpoint: Root Hollow midpoint"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      }
+     ]
+    },
+    {
+     "id": "r1",
+     "name": "First cavern",
+     "when": {
+      "type": "enter_area",
+      "x": 14,
+      "y": 25,
+      "r": 3.3
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Root Cavern",
+       "sub": "Thorn-touched brutes in numbers"
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 3,
+       "x": 15.54,
+       "y": 26.3,
+       "radius": 2
+      },
+      {
+       "type": "wait",
+       "seconds": 8
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 3,
+       "x": 12.1,
+       "y": 25.68,
+       "radius": 2
+      }
+     ]
+    },
+    {
+     "id": "r1_done",
+     "name": "First cavern cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "r1"
+     ],
+     "actions": [
+      {
+       "type": "message",
+       "text": "The roots go still."
+      },
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      },
+      {
+       "type": "objective",
+       "text": "Rest at the shrine, then press on"
+      }
+     ]
+    },
+    {
+     "id": "r2",
+     "name": "Gate gallery",
+     "when": {
+      "type": "enter_area",
+      "x": 24,
+      "y": 10,
+      "r": 3.5
+     },
+     "requires": [
+      "r1_done"
+     ],
+     "actions": [
+      {
+       "type": "banner",
+       "title": "The Gallery",
+       "sub": "Fight to the lever"
+      },
+      {
+       "type": "spawn",
+       "enemy": "troll",
+       "count": 1,
+       "x": 25.61,
+       "y": 11.35,
+       "radius": 2
+      },
+      {
+       "type": "wait",
+       "seconds": 9
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 2,
+       "x": 22.02,
+       "y": 10.7,
+       "radius": 2
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 1,
+       "x": 24.98,
+       "y": 8.14,
+       "radius": 2
+      }
+     ]
+    },
+    {
+     "id": "r2_done",
+     "name": "Gallery cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "r2"
+     ],
+     "actions": [
+      {
+       "type": "message",
+       "text": "Silence. A lever waits nearby."
+      },
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      },
+      {
+       "type": "objective",
+       "text": "Find the lever that raises the gate"
+      }
+     ]
+    },
+    {
+     "id": "lever_r2",
+     "name": "Pull the gate lever",
+     "when": {
+      "type": "enter_area",
+      "x": 28.5,
+      "y": 17,
+      "r": 1.6
+     },
+     "requires": [
+      "r2_done"
+     ],
+     "actions": [
+      {
+       "type": "message",
+       "text": "The lever grinds. A gate rumbles open."
+      },
+      {
+       "type": "sound",
+       "name": "portal"
+      },
+      {
+       "type": "sound",
+       "name": "portal"
+      },
+      {
+       "type": "objective",
+       "text": "Descend to the Thornmother's den"
+      }
+     ]
+    },
+    {
+     "id": "boss",
+     "name": "Thornmother's den",
+     "when": {
+      "type": "enter_area",
+      "x": 8,
+      "y": 8,
+      "r": 4
+     },
+     "requires": [
+      "lever_r2"
+     ],
+     "actions": [
+      {
+       "type": "banner",
+       "title": "The Thornmother",
+       "sub": "Rootbound mother of the pines - mini-boss",
+       "boss": true
+      },
+      {
+       "type": "objective",
+       "text": "Defeat The Thornmother"
+      },
+      {
+       "type": "shake",
+       "power": 5
+      },
+      {
+       "type": "wait",
+       "seconds": 1.2
+      },
+      {
+       "type": "spawn",
+       "enemy": "troll",
+       "count": 1,
+       "x": 8,
+       "y": 6.5,
+       "radius": 0.5
+      },
+      {
+       "type": "wait",
+       "seconds": 15
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 2,
+       "x": 6,
+       "y": 10.5,
+       "radius": 2
+      },
+      {
+       "type": "wait",
+       "seconds": 15
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 2,
+       "x": 10,
+       "y": 10.5,
+       "radius": 2
+      }
+     ]
+    },
+    {
+     "id": "boss_done",
+     "name": "The Thornmother falls",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "boss"
+     ],
+     "actions": [
+      {
+       "type": "clear_enemies"
+      },
+      {
+       "type": "banner",
+       "title": "The Thornmother falls",
+       "sub": "A way out opens"
+      },
+      {
+       "type": "message",
+       "text": "The Thornmother: The roots remember the first Warden... he did not wake, and neither shall I."
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      },
+      {
+       "type": "sound",
+       "name": "portal"
+      },
+      {
+       "type": "open_portal",
+       "index": 1
+      },
+      {
+       "type": "objective",
+       "text": "Take the rift down to Old Bramblehorn"
+      },
+      {
+       "type": "sound",
+       "name": "portal"
+      }
+     ]
+    },
+    {
+     "id": "short_lever",
+     "name": "Shortcut lever",
+     "when": {
+      "type": "enter_area",
+      "x": 11.03,
+      "y": 11.03,
+      "r": 1.6
+     },
+     "requires": [
+      "boss_done"
+     ],
+     "actions": [
+      {
+       "type": "message",
+       "text": "A second lever: the shortcut to the shrine is open."
+      },
+      {
+       "type": "sound",
+       "name": "portal"
+      }
+     ]
+    },
+    {
+     "id": "crack_hum",
+     "name": "The wall hums",
+     "when": {
+      "type": "enter_area",
+      "x": 8.03,
+      "y": 20.49,
+      "r": 3.2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "Pip: The wall hums, Aerin. Something is hidden behind it."
+      }
+     ]
+    },
+    {
+     "id": "crack_open",
+     "name": "Cracked wall gives way",
+     "when": {
+      "type": "enter_area",
+      "x": 6.89,
+      "y": 19.68,
+      "r": 1.5
+     },
+     "requires": [
+      "crack_hum"
+     ],
+     "actions": [
+      {
+       "type": "sound",
+       "name": "portal"
+      },
+      {
+       "type": "shake",
+       "power": 3
+      },
+      {
+       "type": "sound",
+       "name": "portal"
+      }
+     ]
+    },
+    {
+     "id": "crack_loot",
+     "name": "Hidden Socket Rune",
+     "when": {
+      "type": "enter_area",
+      "x": 3.5,
+      "y": 16,
+      "r": 2
+     },
+     "actions": [
+      {
+       "type": "message",
+       "text": "A Socket Rune!"
+      },
+      {
+       "type": "message",
+       "text": "Treasure gleams nearby..."
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -14,6 +14,7 @@ function touchButtons() {
   const B = [{ slot: 'atk', x: TC.cx, y: TC.cy, r: 42 }];
   ['q', 'e', 'r'].forEach((s, i) => { const a = (190 + i * 35) * Math.PI / 180; B.push({ slot: s, x: TC.cx + Math.cos(a) * 100, y: TC.cy + Math.sin(a) * 100, r: 27 }); });
   ['f', 'c', 'shift', '1', '2', '3'].forEach((s, i) => { const a = (180 + i * 19) * Math.PI / 180; B.push({ slot: s, x: TC.cx + Math.cos(a) * 168, y: TC.cy + Math.sin(a) * 168, r: 24 }); });
+  B.push({ slot: 'pot', x: TC.cx + 46, y: TC.cy - 96, r: 22 });   // health potion (key 4)
   return B;
 }
 const TOUCH_MENU = [
@@ -54,15 +55,12 @@ function onTouchDown(ev) {
   try { DISP.setPointerCapture(ev.pointerId); } catch (e) { /* ignore */ }
   const [x, y] = toDisplay(ev);
   G.mouse.dx = x; G.mouse.dy = y;
-  if (G.state === 'title') { tryFullscreen(); startGame(); return; }
+  if (G.state === 'title') { tryFullscreen(); titleClick(x, y); return; }
   if (G.state === 'dead') { if (G.deadT > 1) respawn(); return; }
   if (G.ui.help) { G.ui.help = false; return; }
-  if (G.ui.open) {
-    for (const b of G.ui.btns) if (x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) { b.fn(); return; }
-    return;
-  }
+  if (G.ui.open) { uiClick(x, y); return; }
   for (const m of TOUCH_MENU) if (x >= m.x && x < m.x + m.w && y >= m.y && y < m.y + m.h) {
-    if (m.id === 'gear') G.ui.open = true;
+    if (m.id === 'gear') { if (G.state === 'play') openInv(); }
     else if (m.id === 'help') G.ui.help = true;
     else tryFullscreen();
     return;
@@ -71,6 +69,7 @@ function onTouchDown(ev) {
     if (Math.hypot(x - b.x, y - b.y) < b.r + 8) {
       TOUCH.ptrs[ev.pointerId] = { kind: 'btn', b, sx: x, sy: y, x, y };
       if (b.slot === 'atk') { G.mouse.down = true; basicAttack(G.player); }
+      if (b.slot === 'pot') { delete TOUCH.ptrs[ev.pointerId]; drinkPotion(G.player); }
       return;
     }
   }
@@ -100,7 +99,7 @@ function onTouchUp(ev) {
   useSkill(p, t.b.slot);
 }
 const dragging = t => t && t.kind === 'btn' && Math.hypot(t.x - t.sx, t.y - t.sy) > 16;
-function activeAimPtr() { return Object.values(TOUCH.ptrs).find(t => t.kind === 'btn' && t.b.slot !== 'atk'); }
+function activeAimPtr() { return Object.values(TOUCH.ptrs).find(t => t.kind === 'btn' && t.b.slot !== 'atk' && t.b.slot !== 'pot'); }
 
 // Sets the virtual cursor: dragged skill > dragged attack > nearest enemy > movement direction.
 function touchAim(p, forced) {
@@ -140,20 +139,27 @@ function drawTouchControls(ctx) {
     ctx.beginPath(); ctx.ellipse(G.mouse.x * 2, G.mouse.y * 2, 22, 11, 0, 0, Math.PI * 2); ctx.stroke();
   }
   // buttons
-  const w = item('weapon', p.gear.weapon);
   for (const b of touchButtons()) {
     const held = Object.values(TOUCH.ptrs).some(t => t.kind === 'btn' && t.b.slot === b.slot);
+    if (b.slot === 'pot') {
+      ctx.fillStyle = 'rgba(18,10,36,0.6)'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+      drawIcon(ctx, miscIcon('potion'), b.x - 14, b.y - 14, 28);
+      if (!p.potions) { ctx.fillStyle = 'rgba(10,4,20,0.6)'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill(); }
+      ctx.strokeStyle = '#ff8aa8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke();
+      T(ctx, String(p.potions), b.x + b.r - 6, b.y + b.r - 10, 8, '#ffffff');
+      continue;
+    }
     const id = b.slot === 'atk' ? null : slotSkill(p, b.slot), sk = id ? SKILLS[id] : null;
     ctx.fillStyle = held ? 'rgba(255,214,236,0.35)' : 'rgba(18,10,36,0.6)';
     ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
     const s = Math.round(b.r * 1.15);
-    if (b.slot === 'atk') iconAt(ctx, w.icon, w.color, b.x - 24, b.y - 24, 48);
-    else if (sk) iconAt(ctx, sk.icon, sk.color, b.x - s / 2, b.y - s / 2, s);
+    if (b.slot === 'atk') drawIcon(ctx, itemIcon(p.equip.weapon), b.x - 24, b.y - 24, 48);
+    else if (sk) drawIcon(ctx, skillIcon(id), b.x - s / 2, b.y - s / 2, s);
     if (sk) {
       const cd = p.cds[id] || 0;
       if (cd > 0) {
         ctx.fillStyle = 'rgba(10,4,20,0.7)'; ctx.beginPath(); ctx.moveTo(b.x, b.y);
-        ctx.arc(b.x, b.y, b.r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * cd / sk.cd); ctx.closePath(); ctx.fill();
+        ctx.arc(b.x, b.y, b.r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * cd / (p.cdm[id] || sk.cd)); ctx.closePath(); ctx.fill();
         T(ctx, cd >= 1 ? Math.ceil(cd) + '' : cd.toFixed(1), b.x, b.y - 4, 8, '#ffffff', 'center');
       } else if ((sk.mp || 0) > p.mp || (sk.st || 0) > p.st) { ctx.fillStyle = 'rgba(40,60,160,0.55)'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill(); }
     }

@@ -1236,6 +1236,17 @@ const WORLD_DATA = {
      "t": "crystal",
      "x": 18.2,
      "y": 6.3
+    },
+    {
+     "t": "chest",
+     "x": 4.5,
+     "y": 17.2,
+     "starter": true
+    },
+    {
+     "t": "shrine",
+     "x": 2.6,
+     "y": 21.2
     }
    ],
    "objective": "Explore. A rift hums to the NE.",
@@ -1265,6 +1276,10 @@ const WORLD_DATA = {
       }
      ]
     }
+   ],
+   "level": [
+    1,
+    3
    ]
   },
   "ruins": {
@@ -1462,6 +1477,11 @@ const WORLD_DATA = {
       {
        "type": "heal",
        "pct": 25
+      },
+      {
+       "type": "loot",
+       "rarity": "uncommon",
+       "count": 1
       }
      ]
     },
@@ -1513,6 +1533,11 @@ const WORLD_DATA = {
       {
        "type": "heal",
        "pct": 25
+      },
+      {
+       "type": "loot",
+       "rarity": "uncommon",
+       "count": 1
       }
      ]
     },
@@ -1570,6 +1595,10 @@ const WORLD_DATA = {
       {
        "type": "objective",
        "text": "Defeat the Gloam Warden"
+      },
+      {
+       "type": "checkpoint",
+       "text": "Checkpoint: before the Warden"
       }
      ]
     },
@@ -1615,6 +1644,10 @@ const WORLD_DATA = {
       }
      ]
     }
+   ],
+   "level": [
+    10,
+    17
    ]
   },
   "pinewood": {
@@ -2340,6 +2373,24 @@ const WORLD_DATA = {
      "t": "rabbit",
      "x": 6.8,
      "y": 16.8
+    },
+    {
+     "t": "chest",
+     "x": 13.2,
+     "y": 3,
+     "tier": "silver"
+    },
+    {
+     "t": "shrine",
+     "x": 6.8,
+     "y": 19.2
+    },
+    {
+     "t": "tablet",
+     "x": 4.6,
+     "y": 17.2,
+     "title": "Warden stone",
+     "text": "The Wardens planted the first pines to hold the Gloam back. Now the roots are black."
     }
    ],
    "objective": "Explore the pinewood. Something big lives to the north.",
@@ -2394,6 +2445,11 @@ const WORLD_DATA = {
       {
        "type": "heal",
        "pct": 25
+      },
+      {
+       "type": "loot",
+       "rarity": "uncommon",
+       "count": 1
       }
      ]
     },
@@ -2468,9 +2524,18 @@ const WORLD_DATA = {
       {
        "type": "sound",
        "name": "heal"
+      },
+      {
+       "type": "loot",
+       "rarity": "rare",
+       "count": 1
       }
      ]
     }
+   ],
+   "level": [
+    3,
+    10
    ]
   }
  },
@@ -2489,7 +2554,14 @@ const WORLD_DATA = {
    "aoe": 1.9,
    "shape": "cone",
    "blood": "#c8a060",
-   "sprite": "ogre"
+   "sprite": "ogre",
+   "element": "slash",
+   "res": {
+    "fire": -0.5
+   },
+   "tags": [
+    "beast"
+   ]
   },
   "troll": {
    "name": "Mountain troll",
@@ -2504,7 +2576,15 @@ const WORLD_DATA = {
    "aoe": 2.4,
    "shape": "circle",
    "blood": "#9ab06a",
-   "sprite": "troll"
+   "sprite": "troll",
+   "element": "slash",
+   "res": {
+    "fire": -0.5,
+    "pierce": 0.5
+   },
+   "tags": [
+    "beast"
+   ]
   }
  },
  "sprites": {

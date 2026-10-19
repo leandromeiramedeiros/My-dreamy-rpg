@@ -443,6 +443,8 @@ const ACTIONS = {
   shake: { label: 'Shake the screen', f: [['power', 'num', 'power']] },
   sound: { label: 'Play sound', f: [['name', 'sound']] },
   teleport: { label: 'Send player to map', f: [['map', 'map']] },
+  checkpoint: { label: 'Set checkpoint (respawn here)', f: [['x', 'num', 'x'], ['y', 'num', 'y'], ['pick', 'pick']] },
+  loot: { label: 'Drop loot (room reward)', f: [['count', 'num', '×'], ['rarity', 'rarity', 'at least'], ['x', 'num', 'x'], ['y', 'num', 'y'], ['pick', 'pick']] },
   wait: { label: 'Wait before the next action', f: [['seconds', 'num', 'seconds']] },
 };
 function uid(d, base) { let i = 1, id = base; while ((d.triggers || []).some(t => t.id === id)) id = base + (++i); return id; }
@@ -455,6 +457,7 @@ function fieldEl(obj, key, kind, label, d, tr) {
     case 'bool': return wrap(h('input', { type: 'checkbox', checked: !!obj[key], onchange: e => set(e.target.checked || '') }));
     case 'enemy': return h('select', { onchange: e => set(e.target.value) }, enemyChoices().map(k => h('option', { value: k, selected: (obj[key] || 'slime') === k }, ENEMY[k].name || k)));
     case 'enemyAny': return h('select', { onchange: e => set(e.target.value === 'any' ? '' : e.target.value) }, ['any', ...enemyChoices(), 'boss'].map(k => h('option', { value: k, selected: (obj[key] || 'any') === k }, k === 'any' ? 'any' : (ENEMY[k].name || k))));
+    case 'rarity': return h('select', { onchange: e => set(e.target.value) }, RARITIES.map(k => h('option', { value: k, selected: (obj[key] || 'uncommon') === k }, RARITY[k].name)));
     case 'sound': return h('select', { onchange: e => set(e.target.value) }, SOUNDS.map(k => h('option', { value: k, selected: (obj[key] || 'portal') === k }, k)));
     case 'map': return h('select', { onchange: e => set(e.target.value) }, Object.keys(ED.world.maps).map(k => h('option', { value: k, selected: obj[key] === k }, ED.world.maps[k].name)));
     case 'portal': return h('select', { onchange: e => set(+e.target.value) }, h('option', { value: -1, selected: obj[key] == null || +obj[key] === -1 }, 'all portals'),
