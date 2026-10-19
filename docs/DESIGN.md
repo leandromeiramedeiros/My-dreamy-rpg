@@ -146,6 +146,26 @@ Each skill in `SKILLS` gets an `element` tag (fire/frost/nature/lightning/arcane
 
 Each zone: ~3 encounter areas, 1 optional elite + chest, 1 lore tablet, 1 checkpoint, boss arena.
 
+## 8b. Map scale and intricacy
+Current maps are 22–26 tiles square, about one screen of open ground. That is too small. Targets:
+* **Zones are 2 connected maps** (outer area → inner area/boss arena), each **56–80 tiles** on the long side, irregular
+  island shapes (not squares), plus small floating islets reached by bridges or rift-hops.
+* **Layout grammar per map:** a winding main path with 3 encounter "rooms" (clearings, plazas, cave chambers) linked by
+  corridors; 2+ side branches (dead-ends hide a chest, a lore tablet or an elite); **verticality** using 3–5 height
+  levels with stairs and ramps, cliffs as walls; at least one shortcut that opens back to the checkpoint; landmarks
+  visible from afar (giant tree, tower, waterfall, lava fall) so the player can navigate.
+* **Set dressing density:** dense props along edges and in clusters (≥250 objects on a large map), open space only where
+  fights happen. Each zone gets its own tile palette, props and ambient particles.
+* **Secrets:** each map has 1 hidden path (an illusory wall or a cracked bridge) leading to a Socket Rune or a gem cache.
+* **Interactables:** chests (wood / silver / gold by tier), checkpoint shrines, lore tablets, switch-gated portals,
+  levers that lower bridges or open gates (implemented as triggers in `world.js`).
+* **Tech:** maps are authored with node generator scripts in `tools/maps/` (noise-shaped coast, path carving, room
+  stamps, prop scattering with seeded RNG), output in the `world.js` format and then fine-tuned in `editor.html`.
+  The renderer must cull to the view so large maps stay at 60 fps, and the ground raster must be chunked if a single
+  canvas would exceed ~4096 px. The minimap gets fog-of-war revealed as you explore.
+* The Vale hub grows too (~48 tiles): cottage, Elder Stone, a garden, the dummies, and visible rifts to every zone,
+  which open as Shards are relit.
+
 ## 9. Studio roles and file ownership
 | Who | Strengths used for | Default files |
 |---|---|---|
