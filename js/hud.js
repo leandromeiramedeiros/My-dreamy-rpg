@@ -398,7 +398,8 @@ function drawDetails(ctx, x, y, w, h, what) {
     line(g.type === 'diamond' ? `-${Math.round(g.grade * 5)}% ultimate cooldown` : g.type === 'topaz' ? `+${g.grade * 5}% lightning dmg, chains +1 per 2 grades` : `+${g.grade * 5}% ${g.def.el} skill damage`, UI.text);
     line(''); line(what.sock ? 'Click the socket to remove it' : 'Pick it, then click a socket', UI.dim);
   } else {
-    const it = what.it, b = BASES[it.base], R = RARITY[it.rarity], fam = item(b.slot, b.family);
+    const it = what.it; if (!it || !BASES[it.base]) return;   // stale focus (gem used up, item salvaged)
+    const b = BASES[it.base], R = RARITY[it.rarity], fam = item(b.slot, b.family);
     line(itemName(it), rarityCol(it.rarity), it.unique ? 8 : 16);
     line(`${R.name} ${SLOT_TITLE[b.slot]}  T${b.tier + 1}`, UI.dim);
     L.push({ s: `Item Lv ${it.ilvl}   Requires Lv ${it.reqLvl}`, col: it.reqLvl > p.level ? '#ff5a7a' : UI.dim, size: 8 });

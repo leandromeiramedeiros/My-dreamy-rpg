@@ -339,12 +339,12 @@ function invNote(s, col = '#ffb0c8') { G.ui.note = { s, col, t: G.t + 2.6 }; if 
 const secondTap = key => { if (!G.touch || G.ui.sel === key) return true; G.ui.sel = key; return false; };
 function clickItem(it) {
   const p = G.player;
-  if (G.ui.gem != null) { const r = socketGem(p, it, null, G.ui.gem); if (r) invNote(r); else { sfx('shield'); G.ui.gem = null; G.ui.sel = it; } return; }
+  if (G.ui.gem != null) { const r = socketGem(p, it, null, G.ui.gem); if (r) invNote(r); else { sfx('shield'); G.ui.gem = null; } G.ui.sel = it; return; }
   G.ui.sel = it;
 }
 function clickSocket(it, k) {
   const p = G.player;
-  if (G.ui.gem != null) { const r = socketGem(p, it, k, G.ui.gem); if (r) invNote(r); else { sfx('shield'); G.ui.gem = null; } return; }
+  if (G.ui.gem != null) { const r = socketGem(p, it, k, G.ui.gem); if (r) invNote(r); else { sfx('shield'); G.ui.gem = null; } G.ui.sel = it; return; }
   if (it.sockets[k]) { const r = unsocketGem(p, it, k); if (r) invNote(r); else { invNote('Gem returned to the bag', '#9ef0ff'); sfx('blink'); } }
   else invNote('Pick a gem from the bag first', '#a99cc8');
 }
