@@ -221,6 +221,7 @@ function drawScene() {
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false;
 
   // ---- sky & distant world ----
+  const groundBot = (m.W + m.H) * 8 + 12;
   const pxs = clamp(-80 - camX * 0.02, -160, 0), pys = clamp(-50 - camY * 0.02, -90, 0);
   ctx.drawImage(bg.sky.c, Math.round(pxs), Math.round(pys));
   if (!th.moon.sun) drawStars(ctx, bg.sky.stars, pxs, pys);
@@ -248,7 +249,6 @@ function drawScene() {
   if (QUALITY.cfg.rays && (th.rays || m.themeId === 'vale')) drawRays(ctx, m, th, mx, my);
   perfMark('sky');
   // cloud sea far below
-  const groundBot = (m.W + m.H) * 8 + 12;
   if (typeof drawCloudSea === 'function') drawCloudSea(ctx, m, camX, camY, G.t);   // §29: 2-layer cloud sea + island shadow (maps.js, cached)
   bg.sea.forEach((c, i) => {
     for (let r = 0; r < 2; r++) {
@@ -483,9 +483,9 @@ function drawMoon(ctx, x, y, r, col) {
 // perf (§26.4 step 5): a fall was 16 x len/2 fillRects a frame, each with a new rgba() string (an edge fall: ~1600). The flow
 // pattern repeats every 16 px of travel (90 px/s), so each fall is rastered once per whole-pixel flow phase (FALL_PH frames,
 // the same colours, alphas and the same whole-pixel rows as the old per-rect loop, with the slant baked in) and blitted. An edge
-// fall's sway (a per-row offset that drifts with G.t) is applied by blitting its frame in FALL_BAND-row slices, each shifted by
-// the sway at its middle row (<= 1 px from the old per-row sway). Caches: per fall, at most FALL_MAX falls (oldest dropped).
-const FALL_PH = 16, FALL_BAND = 4, FALL_MAX = 48, FALL_CACHE = new Map();
+// fall's sway (a per-row offset that drifts with G.t) is applied by blitting its frame in 2-row slices (the old rects were 2 rows
+// tall every 2 rows), each shifted by the sway of its row: ~len/2 blits instead of ~8 x len rects (<= 1 px from the old sway). Caches: per fall, at most FALL_MAX falls (oldest dropped).
+const FALL_PH = 16, FALL_BAND = 2, FALL_MAX = 48, FALL_CACHE = new Map();
 function fallFrame(f, edge, ph) {
   let C = FALL_CACHE.get(f);
   if (!C) {
@@ -513,10 +513,15 @@ function drawFall(ctx, f, edge) {
   if (vx > RW + 2 || vx + 16 < -2) return;
   const ph = ((Math.floor(G.t * 90) % FALL_PH) + FALL_PH) % FALL_PH, img = fallFrame(f, edge, ph), x = Math.round(vx), y0 = Math.floor(vy);
   if (!edge) { if (y0 + img.height >= 0 && y0 < RH) ctx.drawImage(img, x, y0); }
-  else for (let r = 0; r < f.len + 8; r += FALL_BAND) {
-    const ym = Math.min(f.len, r + FALL_BAND / 2), sway = Math.round(Math.sin(ym * 0.05 + G.t) * (ym / f.len) * 3), dy = y0 + r + sway;
-    if (dy + FALL_BAND < 0 || dy >= RH) continue;
-    ctx.drawImage(img, 0, r, 16, FALL_BAND, x, dy, 16, FALL_BAND);
+  else {
+    // each slice is stretched (nearest) to reach the next slice's top, so a sway step never opens a 1 px gap across the fall
+    const swayAt = r => { const ym = Math.min(f.len, r); return Math.round(Math.sin(ym * 0.05 + G.t) * (ym / f.len) * 3); };
+    let dy = y0 + swayAt(0);
+    for (let r = 0; r < f.len + 8; r += FALL_BAND) {
+      const ny = y0 + r + FALL_BAND + swayAt(r + FALL_BAND), h = ny - dy;
+      if (h > 0 && dy + h > 0 && dy < RH) ctx.drawImage(img, 0, r, 16, FALL_BAND, x, dy, 16, h);
+      dy = Math.max(dy, ny);
+    }
   }
   if (!edge) { // foam at base
     const [bx, by] = sToView(f.x0 + 8, f.y0 + 4 + f.len);

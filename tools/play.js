@@ -919,9 +919,9 @@ const PAD_STUB = () => {
       // the chest contract: loot 'ring' -> one extra ring >= Uncommon; 'amulet' -> a Rare amulet (and the trinket-drop gate opens)
       const chest = loot => ({ x: p.x + 2, y: p.y, z: 0, chest: true, src: { x: 900 + G.drops.length, y: 900, tier: 'wood', loot } });
       G.drops.length = 0; G.prog.secrets = {}; openChest(chest('ring')); await w(900);
-      const ring = G.drops.find(d => d.kind === 'item' && d.it.slot === 'ring');
+      const ring = G.drops.filter(d => d.kind === 'item' && d.it.slot === 'ring').pop();   // the marker's trinket is pushed last (a random L14 trinket drop may come first)
       G.drops.length = 0; openChest(chest('amulet')); await w(900);
-      const amu = G.drops.find(d => d.kind === 'item' && d.it.slot === 'amulet');
+      const amu = G.drops.filter(d => d.kind === 'item' && d.it.slot === 'amulet').pop();
       out.chest = { ring: ring && ring.it.rarity, ringBoon: !!(ring && ring.it.boon), amulet: amu && amu.it.rarity, gate: trinketDropsOn(p) };
       // trinkets are ~15 % of item drops once the gate is open
       let n = 0; for (let k = 0; k < 2000; k++) if (isTrinket(rollItem(20, 'rare'))) n++; out.share = n / 2000;
@@ -951,6 +951,23 @@ const PAD_STUB = () => {
   ft.splice(0, 5); ft.sort((a, b) => a - b);
   const avg = ft.reduce((a, b) => a + b, 0) / ft.length, p95 = ft[Math.floor(ft.length * 0.95)];
   check('perf: 60 fps (avg frame <= 17.5 ms)', avg <= 17.5, { avg: +avg.toFixed(2), p95: +p95.toFixed(2), frames: ft.length });
+  // DESIGN §26.4 step 2: the frame split by phase (?perf=flush: each phase's deferred raster forced into it), with loose per-phase
+  // budgets that catch an algorithmic regression (an O(n) pass, an uncached per-pixel draw), not load noise. Off = nothing installed.
+  {
+    const off = await ev(() => ({ on: PERF.on, native: /\[native code\]/.test(CanvasRenderingContext2D.prototype.drawImage.toString()), tier: QUALITY.tier }));
+    const pp = await br.newPage({ viewport: { width: 960, height: 540 } }); pp.on('pageerror', e => errs.push('pageerror(perf split): ' + e.message));
+    await pp.goto(`${base}/index.html?scene=play&perf=flush`, { waitUntil: 'load' });
+    await pp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    await wait(500); await pp.evaluate(() => __perf(true, true)); await wait(4000);
+    const pf = await pp.evaluate(() => __perf(true)), ph = pf.ph, sum = (...k) => +k.reduce((a, q) => a + (ph[q] || 0), 0).toFixed(2);
+    const split = { ground: sum('chunks', 'ground', 'falls', 'sea'), sky: sum('sky.base', 'sky.moon', 'sky.mtn', 'sky'), entities: sum('decals', 'entities', 'fx'), fog: sum('fog.1', 'fog'), lights: sum('lights.lm', 'lights.mul', 'lights'), bloom: sum('bloom', 'grade.soft', 'grade'), hud: sum('blit', 'hud'), update: sum('update') };
+    const BUDGET = { ground: 4, sky: 4, entities: 5, fog: 2.5, lights: 4.5, bloom: 4.5, hud: 7, update: 3 };
+    const over = Object.keys(BUDGET).filter(k => split[k] > BUDGET[k]);
+    check('perf: phase split under budget (ms/frame, ?perf=flush)', over.length === 0 && pf.draws > 0, { split, over, draws: pf.draws, parts: pf.parts });
+    const ov = await pp.evaluate(() => { const c = DISP.getContext('2d').getImageData(330 * HUD_K, 10 * HUD_K, 1, 1).data; return { txt: !!PERF_RING.txt, px: [c[0], c[1], c[2]] }; });
+    check('perf: ?perf overlay draws its readout; with ?perf unset nothing is wrapped (native drawImage, PERF.on false), desktop tier high', ov.txt && !off.on && off.native && off.tier === 'high', { ov, off });
+    await pp.close();
+  }
   // ---------- 6. HUD at min(DPR, 2) ----------
   const ctx2 = await br.newContext({ viewport: { width: 960, height: 540 }, deviceScaleFactor: 2 });
   const p2 = await ctx2.newPage(); p2.on('pageerror', e => errs.push('pageerror(dpr2): ' + e.message));
@@ -1016,8 +1033,9 @@ const PAD_STUB = () => {
     for (const s of m.sections.filter(q => q.tiles)) { p.x = s.cx; p.y = s.cy; p.z = tileH(m, p.x, p.y); G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12; for (let k = 0; k < 50; k++) { await w(30); maxRes = Math.max(maxRes, CHUNK.cache.size); } }
     for (let k = 0; k < 200 && (GROUND_STATS.visMissing || CHUNK.jobs.size); k++) await w(25);
     const e0 = CHUNK.thrash; await w(2500);
-    return { size: CHUNK.size, max: CHUNK.max, cap: SLEEP.cap, coarse: COARSE_POINTER, maxRes, evicted: CHUNK.evicted, thrash: CHUNK.thrash - e0, tourThrash: CHUNK.thrash };
+    return { size: CHUNK.size, max: CHUNK.max, cap: SLEEP.cap, coarse: COARSE_POINTER, maxRes, evicted: CHUNK.evicted, thrash: CHUNK.thrash - e0, tourThrash: CHUNK.thrash, tier: QUALITY.tier, partCap: PART.cap, hudK: HUD_K, kMax: HUD_K_MAX };
   }, SYN);
+  check('phone: §26.4 caps - quality tier phone (or low), particle cap 300, HUD backing store capped at 1x', ['phone', 'low'].includes(ph.tier) && ph.partCap === 300 && ph.kMax === 1 && ph.hudK === 1, { tier: ph.tier, partCap: ph.partCap, hudK: ph.hudK, kMax: ph.kMax });
   check('phone: ?phone=1 -> 256 px chunks, <= 12 resident while touring (LRU evicts, no thrash), 16 awake, one fog layer', ph.size === 256 && ph.max === 12 && ph.cap === 16 && ph.coarse && ph.maxRes <= 12 && ph.evicted > 0 && ph.thrash === 0, ph);
   await p3.close();
   // ======================= M3 UI lane (tooltip v2, paper doll, ring rule, ICONS routing) — owned by the UI agent =======================

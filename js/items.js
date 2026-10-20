@@ -627,7 +627,8 @@ function sortBag(p) {
   const list = p.bag.filter(Boolean).sort((a, b) => rank(a) - rank(b) || slotI(a) - slotI(b) || (a.gem ? String(a.gem).localeCompare(b.gem) : 0));
   p.bag = list.concat(new Array(BAG_SIZE - list.length).fill(null));
 }
-// trigger action `loot`: N items of at least `rarity` at x,y (default: beside the hero) — room-clear rewards
+// trigger action `loot`: N items of at least `rarity` at x,y (default: beside the hero) — room-clear rewards; `slot` fixes the
+// item slot (§28 ~9:00: the Gnarlroot elite's Rare is a WEAPON, so the stat jump is felt on LMB)
 // item: '<gear base>' (§28, the garden ambush's Iron Boots): that fixed piece (Common unless `rarity`), no random roll (count 0
 // by default); it is put on if its slot is empty. A hero who already wears that slot (a save from before §28) gets the old
 // room-clear roll instead: one item of `fallback` (default Uncommon).
@@ -637,7 +638,7 @@ function lootAction(a) {
   const min = RARITY[a.rarity] ? a.rarity : 'uncommon', rmin = gearBase && !gearFree ? (RARITY[a.fallback] ? a.fallback : 'uncommon') : min;
   const n = gearBase ? (gearFree ? (+a.count || 0) : Math.max(1, +a.count || 0)) : clamp(+a.count || 1, 1, 12);
   if (gearFree) list.push({ kind: 'item', it: makeItem(gearBase, RARITY[a.rarity] ? a.rarity : 'common', 1, { sockets: 0, affixes: [] }), equip: true });
-  for (let i = 0; i < clamp(n, 0, 12); i++) { let r = rollRarity('elite', L); if (!rarityAtLeast(r, rmin)) r = rmin; const it = rollItem(L, r); if (+a.sockets > 0) it.sockets = Array(Math.min(3, +a.sockets)).fill(null); list.push({ kind: 'item', it }); }
+  for (let i = 0; i < clamp(n, 0, 12); i++) { let r = rollRarity('elite', L); if (!rarityAtLeast(r, rmin)) r = rmin; const it = rollItem(L, r, SLOTS.includes(a.slot) || TRINKET_KINDS.includes(a.slot) ? a.slot : undefined); if (+a.sockets > 0) it.sockets = Array(Math.min(3, +a.sockets)).fill(null); list.push({ kind: 'item', it }); }
   // generator extras: gem: true · chest: 'gold' | 'silver' (one more item, a better gem) · item: key_* | socket_rune | unique id
   if (a.gem) list.push({ kind: 'gem', gem: rollGem(L) });
   if (a.chest === 'gold' || a.chest === 'silver') { list.push({ kind: 'item', it: rollItem(L, a.chest === 'gold' ? 'epic' : 'rare') }); if (a.chest === 'gold') list.push({ kind: 'gem', gem: rollGem(L + 5) }); }
@@ -882,10 +883,17 @@ function updateLoot(dt) {
   if (G.tablet && (!best || best.obj !== G.tablet)) G.tablet = null;   // walking away closes the tablet
   if (best) {
     const o = best.obj, cpHere = G.checkpoint && G.checkpoint.map === G.map.id && dist(G.checkpoint.x, G.checkpoint.y, o.x, o.y) < 2.5;
-    best.text = best.kind === 'fishspot' && firstCastOpen(o) ? 'Fish' : o.use && best.kind === o.use.kind ? o.use.text(o) : best.kind === 'chest' ? 'Open' : best.kind === 'tablet' ? (G.tablet === o ? 'Close' : 'Read') : cpHere ? 'Rest (refill potions)' : 'Rest (set checkpoint)';
+    best.text = best.kind === 'fishspot' && firstCastOpen(o) ? 'Fish' : o.use && best.kind === o.use.kind ? o.use.text(o) + doorRecText(o) : best.kind === 'chest' ? 'Open' : best.kind === 'tablet' ? (G.tablet === o ? 'Close' : 'Read') : cpHere ? 'Rest (refill potions)' : 'Rest (set checkpoint)';
     best.x = o.x; best.y = o.y; best.z = o.z || 0;
   }
   G.prompt = best;
+}
+// §26.2 / §28 10:00: a boss door (warp door marker `boss: '<enemy id>'`) shows "Recommended ilvl N · yours M" in its prompt.
+// N = the boss's level, M = the mean item level of the four gear slots worn (an empty slot counts 0). Information, never a lock.
+const gearIlvl = (p = G.player) => Math.round(SLOTS.reduce((a, k) => a + (p.equip[k] ? p.equip[k].ilvl : 0), 0) / SLOTS.length);
+function doorRecText(o) {
+  const id = o && o.warpdoor && o.src && o.src.boss, e = id && ENEMY[id]; if (!e) return '';
+  return `  ·  Recommended ilvl ${e.level || enemyLevel(id)}  ·  yours ${gearIlvl()}`;
 }
 function interact(p) {
   const q = G.prompt; if (!q || p.dead) return false;

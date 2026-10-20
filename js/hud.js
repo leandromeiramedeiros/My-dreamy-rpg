@@ -550,18 +550,19 @@ function drawPip(ctx) {
   if (x < -60 || x > DW + 60 || y < -60 || y > DH + 60) return;
   const fl = 0.86 + 0.14 * Math.sin(G.t * 7.3) * Math.sin(G.t * 2.9);
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  const g = ctx.createRadialGradient(x, y, 0, x, y, 30);
-  g.addColorStop(0, `rgba(255,224,170,${0.55 * fl})`); g.addColorStop(0.35, `rgba(255,196,120,${0.22 * fl})`); g.addColorStop(1, 'rgba(255,180,110,0)');
-  ctx.fillStyle = g; ctx.fillRect(x - 30, y - 30, 60, 60);
-  ctx.globalAlpha = fl; ctx.fillStyle = '#ffd9a0'; ctx.fillRect(x - 3, y - 3, 6, 6);
-  ctx.fillStyle = '#fff6e6'; ctx.fillRect(x - 1, y - 2, 2, 4); ctx.fillRect(x - 2, y - 1, 4, 2);
+  const g = ctx.createRadialGradient(x, y, 0, x, y, 44);   // warm amber, so it never reads as one of the Vale's green fireflies
+  g.addColorStop(0, `rgba(255,200,120,${0.8 * fl})`); g.addColorStop(0.3, `rgba(255,160,80,${0.32 * fl})`); g.addColorStop(1, 'rgba(255,140,60,0)');
+  ctx.fillStyle = g; ctx.fillRect(x - 44, y - 44, 88, 88);
+  ctx.globalAlpha = fl; ctx.fillStyle = '#ffb860'; ctx.fillRect(x - 4, y - 2, 8, 4); ctx.fillRect(x - 2, y - 4, 4, 8);
+  ctx.fillStyle = '#fff1d0'; ctx.fillRect(x - 2, y - 2, 4, 4);
   ctx.restore();
 }
 function drawInteractPrompt(ctx) {
   const ip = interactPrompt(); if (!ip || G.touch) return;
-  const gw = hudGlyphW('interact'), tw = UI.measure(ip.text, 'body'), w = gw + 8 + tw, x = 480 - w / 2;
-  hudGlyph(ctx, 'interact', x, 432);
-  UI.text(ctx, ip.text, x + gw + 8, 434, 'body', UC.gold);
+  const gw = hudGlyphW('interact'), tw = UI.measure(ip.text, 'body'), w = gw + 8 + tw, tab = !!(G.tablet && G.tablet.src && G.state === 'play');
+  const x = tab ? 824 - w : 480 - w / 2, y = tab ? 384 : 432;   // an open tablet panel (372-484): the prompt moves to its top-right corner (QA kbm-004)
+  hudGlyph(ctx, 'interact', x, y);
+  UI.text(ctx, ip.text, x + gw + 8, y + 2, 'body', UC.gold);
 }
 function drawTablet(ctx) {
   if (!(G.tablet && G.tablet.src && G.state === 'play' && !G.ui.open)) return;
@@ -612,6 +613,7 @@ function drawPlayHud(ctx, p, inert) {
   if (mirror) ctx.restore();
   hudFaded(ctx, hudA('bars'), c => drawStatusRow(c, p, touch ? DW - 24 : 100, touch ? 148 : 428, touch));
   if (!touch) drawSkillBar(ctx, p, inert);
+  if (!(hudA('map') > 0)) { const m = G.map; if (!m.mini || m.mini.prog !== G.prog) miniBuild(m); miniReveal(m, p); }   // hidden (§28): the fog still records the walk
   hudFaded(ctx, hudA('map'), c => drawMinimap(c, p, touch ? DW - 24 - 112 : 832, touch ? 24 : 16));
   hudFaded(ctx, hudA('tracker'), c => drawTracker(c, touch ? 24 : 16, touch ? 24 : 16));
   drawBossBar(ctx);

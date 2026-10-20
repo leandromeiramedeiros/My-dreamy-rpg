@@ -1461,7 +1461,7 @@ const HUD_FADE = 0.6, HUD_T = {};
 function hudNoun(noun) {
   if (!openingActive()) return;
   const S = G.prog.secrets, list = HUD_NOUNS[noun] || [];
-  for (const k of list) if (!S['hud:' + k]) { S['hud:' + k] = 1; HUD_T[k] = G.t; }
+  for (const k of list) if (!S['hud:' + k]) { S['hud:' + k] = 1; if (noun !== 'all') HUD_T[k] = G.t; }   // 'all' (leaving the Vale, L3) is instant
 }
 // 0..1: the piece's fade-in (a piece shown in an earlier session is simply on)
 function hudShown(piece) {

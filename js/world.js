@@ -10398,7 +10398,8 @@ const WORLD_DATA = {
       "y": 9.7
      },
      "key": "key_roothollow",
-     "label": "Root Hollow"
+     "label": "Root Hollow",
+     "boss": "mossjaw"
     },
     {
      "t": "warpdoor",
@@ -10942,7 +10943,8 @@ const WORLD_DATA = {
        "count": 1,
        "x": 96,
        "y": 84,
-       "item": "key_roothollow"
+       "item": "key_roothollow",
+       "slot": "weapon"
       },
       {
        "type": "dialogue",

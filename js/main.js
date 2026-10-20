@@ -199,7 +199,7 @@ function loop(now) {
 }
 
 // ===== ?perf=1: the on-screen frame readout (DESIGN §26.4 step 1: measure on the real device) =============================
-// Top-left box, refreshed 4x a second from a 240-frame ring: fps, frame avg / p95 (the rAF delta), work avg / p95 (CPU inside
+// Top-centre box, refreshed 4x a second from a 240-frame ring (~4 s): fps, frame avg / p95 (the rAF delta), work avg / p95 (CPU inside
 // loop(): update + render + preload), draw calls (2D context calls this frame, counted by wrappers installed only when ?perf
 // is set), particles (pooled + ambient), and the per-phase split (render.js perfMark). Off: `PERF.on` is false, nothing is
 // wrapped, the loop pays two boolean tests. window.__perf() returns the same numbers for tools.
@@ -248,8 +248,9 @@ function drawPerfOverlay(ctx) {
   if (!R.txt) return;
   ctx.save(); ctx.setTransform(HUD_K, 0, 0, HUD_K, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   ctx.font = '11px monospace'; ctx.textBaseline = 'top'; ctx.textAlign = 'left';
-  ctx.fillStyle = 'rgba(5,3,12,0.72)'; ctx.fillRect(4, 4, 318, 6 + R.txt.length * 13);
-  ctx.fillStyle = '#c8ffd8'; R.txt.forEach((l, i) => ctx.fillText(l, 9, 8 + i * 13));
+  const X = 320, W = 320;   // top centre: clear of the zone name / tracker (left) and the minimap (right)
+  ctx.fillStyle = 'rgba(5,3,12,0.72)'; ctx.fillRect(X, 4, W, 6 + R.txt.length * 13);
+  ctx.fillStyle = '#c8ffd8'; R.txt.forEach((l, i) => ctx.fillText(l, X + 5, 8 + i * 13));
   ctx.restore();
 }
 if (PERF.on) {   // count 2D draw calls (only with ?perf: the wrappers cost a little)

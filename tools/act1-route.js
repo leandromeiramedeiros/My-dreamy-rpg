@@ -239,7 +239,11 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('pinewood: elite ogre guards the key', await goto('elite')); await wf(() => window.__live().length >= 1, null, 5000);
   const el = await ev(() => G.enemies.filter(e => !e.dummy).map(e => ({ t: e.type, elite: !!e.elite, mods: e.mods || [] })));
   await shot('pinewood_elite');
+  await ev(() => { window.__loot.length = 0; });
   await fight('elite_done');
+  await wait(400);
+  const eliteLoot = await ev(() => window.__loot.slice());
+  check('pinewood (§28 ~9:00): the elite drops a Rare+ WEAPON with the key (loot slot: weapon)', await ranAction("a.type === 'loot' && a.slot === 'weapon' && a.item === 'key_roothollow'") && eliteLoot.some(k => /^item:weapon\/(rare|epic|legendary|mythic)/.test(k)), eliteLoot);
   check('pinewood: the elite is a Shielded ogre and drops the root key', pre.length === 0 && el.length === 1 && el[0].t === 'ogre' && el[0].elite && el[0].mods.includes('shielded') && await ev(() => hasKey('key_roothollow')) && (await quest('shard_root')) === 1, { pre, el });
   // landmarks + waysides: a point of interest every <=15 tiles of road, shown by the object counts
   const dens = await ev(() => ({ giants: G.map.objects.filter(o => o.src && o.src.t === 'pine_giant').length, beams: G.map.objects.filter(o => o.beam).length, signs: G.map.objects.filter(o => o.src && o.src.t === 'sign').length }));
@@ -285,7 +289,9 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   await goto('hdoor_hint');
   const hd0 = await ev(() => { const o = G.map.objects.find(q => (q.warpdoor || q.barrier === 'keydoor') && (q.gid === 'hollow_door' || q.gid === 'door_key') && (q.use)); window.__tp(o.x, o.y + 0.9); o.use.fn(o); return { warp: !!G.warp, text: o.use.text(o), kind: o.warpdoor ? 'warpdoor' : 'keydoor' }; });
   await wait(600);
+  const rec = await ev(() => ({ prompt: G.prompt && G.prompt.text, boss: ENEMY.mossjaw.level, mine: gearIlvl() }));
   check('pinewood: the Hollow door stays locked without the key (' + hd0.kind + ')', !hd0.warp && hd0.text === 'Locked' && (await secOf()) === 'forest', hd0);
+  check('pinewood (§28 10:00, §26.2): the Hollow door shows "Recommended ilvl N · yours M" (information, never a lock)', !!rec.prompt && rec.prompt.includes(`Recommended ilvl ${rec.boss}`) && rec.prompt.includes(`yours ${rec.mine}`), rec);
   await giveKey('key_roothollow');
   const hmode = await ev(() => { const o = G.map.objects.find(q => q.warpdoor && q.gid === 'hollow_door'); return o ? 'door' : 'portal'; });
   if (hmode === 'portal') await ev(() => { const o = G.map.objects.find(q => q.barrier === 'keydoor' && q.use); o.use.fn(o); });
