@@ -329,7 +329,9 @@ class Bot {
       if (g.stuckN === 3 || g.stuckN === 8) { const f = await this.shot('stuck'); this.out.stuck.push({ at: +this.el(), map: s.map, pos: [p.x, p.y], goal: g.name, shot: f, n: g.stuckN }); this.log('bot stuck', { pos: [p.x, p.y], goal: g.name, n: g.stuckN }); }
       this.pathCache = null;
       // wiggle sideways
-      const ang = Math.random() * 6.28; const [sx, sy] = Bot.scr(Math.cos(ang), Math.sin(ang)); await this.setMove(sx, sy); await sleep(500); return;
+      const ang = Math.random() * 6.28; const [sx, sy] = Bot.scr(Math.cos(ang), Math.sin(ang)); await this.setMove(sx, sy); await sleep(300);
+      if (g.stuckN >= 2) { await this.drv.dodge(sx, sy); this.log('unstick: dodge', { n: g.stuckN, pos: [p.x, p.y] }); }   // what a stuck human tries next
+      await sleep(500); return;
     }
     if (!this.pathCache || now - this.pathCache.t > 450 || this.pathCache.tx !== tx || this.pathCache.ty !== ty || this.pathCache.map !== s.map || this.pathCache.col !== s.col) {
       const r = await this.page.evaluate(([x, y]) => window.__qa.path(x, y), [tx, ty]);
