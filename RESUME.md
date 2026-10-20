@@ -85,10 +85,7 @@ Two checks are known to flake: the play.js warp-fade check, and the perf check w
 4. **Documentation meeting** (Fable expert game director). How to tidy the docs and organise the project. It must also fold meetings a–c into spells and the whole game, so spells cast light and wind, statuses glow, and so on. Then apply its ruling.
 5. **Brief the client** with the decisions and choices, then plan M4a/M4b (`docs/PRODUCTION.md`).
 
-**Open offers the client hasn't answered:**
-- "port-ready rules" for a possible later Godot rewrite;
-- a jade tint for the nature-element Echo;
-- a real-phone `?perf=1` reading (phone p95 is about 19.5–20 ms in the emulator).
+**Dropped by the client (don't offer again):** Godot "port-ready rules", the jade tint for the nature Echo, and real-phone `?perf=1` readings.
 
 **Known misses (not blockers):**
 - §29 speck and cluster metrics;
