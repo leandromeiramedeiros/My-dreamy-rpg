@@ -209,7 +209,7 @@ function populate(S, g, T) {
   tr.push(repeat(T.enter('h_shrine', 'Midpoint shrine', hs.x, hs.y, 2.2, [T.checkpoint('Checkpoint: ' + X.hollowShrineName), T.heal(100)])));
   fightIn(T, g, tr, 'h_r1', E.h_r1, null);
   tr.push(T.enter('h_r2', E.h_r2.name, h2.x, h2.y, h2.r - 1.5, waveActions(T, g, h2, E.h_r2.waves, E.h_r2.gap, E.h_r2.banner), ['h_r1_done', 'h_shrine']));
-  tr.push(T.allDead('h_r2_done', 'Gallery cleared', ['h_r2'], [T.message(E.h_r2.clear), T.heal(25), T.loot('uncommon', 1, h2.x, h2.y), T.objective('Find the lever that raises the gate')]));
+  tr.push(T.allDead('h_r2_done', 'Gallery cleared', ['h_r2'], [T.message(E.h_r2.clear), T.heal(25), T.loot('uncommon', 1, h2.x, h2.y), T.objective('Pull the lever to raise the gate')]));
   // cross-section secret, Hollow end: the ceiling above the second chamber drops the cache key
   tr.push(T.enter('h_ceiling', 'The ceiling gives way', h2.x - 1, h2.y - h2.r * 0.55, 2.4, [T.shake(4), T.sound('boom'), T.message('The ceiling cracks. Something falls: a root key.'), T.dialogue('Pip', ['That is the plaza above us. A key for a cache up there?']), T.loot('uncommon', 1, h2.x, h2.y, { item: 'key_rootcache' })], ['h_r2_done']));
   g.marker('crystal_violet', h2.x - 1, h2.y - h2.r * 0.55 - 0.6, { label: 'ceiling-tell' }); g.poi('secret', h2.x, h2.y);

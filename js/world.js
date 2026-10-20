@@ -2861,7 +2861,7 @@ const WORLD_DATA = {
      "y": 29.1
     }
    ],
-   "objective": "Wake up. Training dummies wait in the yard.",
+   "objective": "Hit the training dummies",
    "sigil": {
     "x": 74,
     "y": 41
@@ -3090,7 +3090,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Hit the training dummies in the yard."
+       "text": "Hit the training dummies"
       }
      ]
     },
@@ -3156,7 +3156,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Follow the path north to the Elder Plaza."
+       "text": "Follow the path to the Elder Stone"
       }
      ]
     },
@@ -3188,7 +3188,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Open the chest west of the glade. Then find the Stone's lantern."
+       "text": "Open the chest, then find the lantern"
       }
      ]
     },
@@ -3378,7 +3378,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Take the rift south into the Misty Pinewood."
+       "text": "Take the rift to the Pinewood"
       }
      ]
     },
@@ -3406,7 +3406,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Return the lantern to the Elder Stone."
+       "text": "Return the lantern to the Stone"
       }
      ]
     },
@@ -10336,7 +10336,7 @@ const WORLD_DATA = {
      "open": false
     }
    ],
-   "objective": "Follow the animals north along the dirt road.",
+   "objective": "Follow the animals up the road",
    "sigil": {
     "x": 45,
     "y": 10.5
@@ -10474,7 +10474,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Follow the animals north along the dirt road."
+       "text": "Follow the animals up the road"
       }
      ]
     },
@@ -10592,7 +10592,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "The Gnarlroot Ogre (south-east, by the loop road) holds the Hollow key. The road north leads to the plaza"
+       "text": "Take the key to the root door"
       }
      ]
     },
@@ -10739,7 +10739,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Enter the Warden's Grove (east). The root door waits north of the road"
+       "text": "Enter the Warden's Grove"
       }
      ]
     },
@@ -10811,7 +10811,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Take the root key to the root door north of the road (the Root Hollow)"
+       "text": "Take the key to the root door"
       }
      ]
     },
@@ -10881,7 +10881,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Follow the road north. The root door of the Hollow waits north of it"
+       "text": "Find the root door of the Hollow"
       }
      ]
     },
@@ -11131,7 +11131,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Descend through the Root Hollow and defeat Mossjaw"
+       "text": "Defeat Mossjaw in the Root Hollow"
       }
      ]
     },
@@ -11280,7 +11280,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Find the lever that raises the gate"
+       "text": "Pull the lever to raise the gate"
       }
      ]
     },
@@ -11471,7 +11471,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Take the root-stair up to the Clearing shrine, then face Bramblehorn"
+       "text": "Climb the root-stair to the Clearing"
       },
       {
        "type": "sound",
@@ -11573,7 +11573,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Sneak past the sleepers to the vault (or wake them one by one)"
+       "text": "Sneak past the sleepers to the vault"
       }
      ]
     },
@@ -11846,7 +11846,7 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Take the rift home, or on to the Gloomspire Ruins"
+       "text": "Take a rift: home or the Ruins"
       },
       {
        "type": "sound",

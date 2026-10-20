@@ -33,7 +33,7 @@ registerPortals(S);
 
 module.exports = {
   id: 'vale',
-  opts: { W: 80, H: 80, seed: 2024, name: 'Whispering Vale', sub: 'A dream drifting above the clouds', theme: 'vale', objective: 'Wake up. Training dummies wait in the yard.', pad: 3.6, amp: 1.2, level: [1, 3] },
+  opts: { W: 80, H: 80, seed: 2024, name: 'Whispering Vale', sub: 'A dream drifting above the clouds', theme: 'vale', objective: 'Hit the training dummies', pad: 3.6, amp: 1.2, level: [1, 3] },
   patch: { f: 0.62, d: -1 },
   layout(g, T) {
     g.section('hub', { name: 'Whispering Vale', kind: 'outer', bounds: [0, 0, 80, 80] });
@@ -125,12 +125,12 @@ module.exports = {
     const Y = R.yard, P = R.plaza, C = R.nookChest, GD = R.garden, S0 = R.start, pineIdx = g.portalIdx.pine;
     tr.push(T.mapEnter('banner', 'Zone banner', [T.say('vale_banner')]));
     tr.push(T.mapEnter('dummies', 'Training dummies', [T.spawn('dummy', 1, Y.x - 0.8, Y.y - 0.6, null, { instant: true }), T.spawn('dummy', 1, Y.x + 0.8, Y.y + 0.8, null, { instant: true })]));
-    tr.push(T.enter('wake', 'Pip wakes Aerin', S0.x, S0.y, 7, [T.say('vale_wake'), T.dialogue('Pip', ['Training dummies are south-east. Hit one.']), T.objective('Hit the training dummies in the yard.')]));
+    tr.push(T.enter('wake', 'Pip wakes Aerin', S0.x, S0.y, 7, [T.say('vale_wake'), T.dialogue('Pip', ['Training dummies are south-east. Hit one.']), T.objective('Hit the training dummies')]));
     const rep = t => { t.once = false; return t; };
     tr.push(rep(T.enter('shrine', 'Dreamer\'s bed', shrA.x, shrA.y, 2.2, [T.checkpoint('Checkpoint: Whispering Vale'), T.heal(100)])));
     tr.push(rep(T.enter('shrine_terrace', 'Rift terrace shrine', sb.x, sb.y, 2.2, [T.checkpoint('Checkpoint: Rift terrace'), T.heal(100)])));
-    tr.push(T.enter('yard_teach', 'Dummy yard lesson', Y.x, Y.y, 3.6, [T.dialogue('Pip', ['Swing. Then dodge. Then try your Q skill.', 'The dummy never hits back. Lucky thing.']), T.objective('Follow the path north to the Elder Plaza.')]));
-    tr.push(T.enter('elder', 'The Elder Stone', P.x, P.y, 3, [T.say('vale_elder'), T.dialogue('Elder Stone', ['The Stone lost a light. Past the cottage, a path ends.']), T.step('vale_lantern', 0), T.objective('Open the chest west of the glade. Then find the Stone\'s lantern.')]));
+    tr.push(T.enter('yard_teach', 'Dummy yard lesson', Y.x, Y.y, 3.6, [T.dialogue('Pip', ['Swing. Then dodge. Then try your Q skill.', 'The dummy never hits back. Lucky thing.']), T.objective('Follow the path to the Elder Stone')]));
+    tr.push(T.enter('elder', 'The Elder Stone', P.x, P.y, 3, [T.say('vale_elder'), T.dialogue('Elder Stone', ['The Stone lost a light. Past the cottage, a path ends.']), T.step('vale_lantern', 0), T.objective('Open the chest, then find the lantern')]));
     tr.push(T.enter('chest', 'Tutorial chest', C.x, C.y, 2.6, [T.dialogue('Pip', ['A chest! Interact to open it.']), T.wait(4), T.say('vale_chest'), T.dialogue('Pip', ['Open your bag and equip it.'])]));
     tr.push(T.enter('fish_hint', 'Fishing spot', fa.x, fa.y, 3.4, [T.dialogue('Pip', ['Ripples. Fishing waits in the Pinewood.'])]));
     tr.push(T.enter('gems', 'Hidden gem cache', R.gemNook.x, R.gemNook.y, 2.2, [T.message('A hidden gem cache!'), T.loot('uncommon', 1, R.gemNook.x, R.gemNook.y, { gem: true })]));
@@ -141,9 +141,9 @@ module.exports = {
     tr.push(T.allDead('garden_done', 'Garden cleared', ['garden_ambush'], [
       T.message('The garden is quiet. Something hums in the south.'), T.heal(40), T.loot('uncommon', 1, GD.x, GD.y),
       T.openPortal(pineIdx), T.sound('portal'), T.banner('The Pinewood rift opens', 'South of the yard'), T.say('vale_rift'),
-      T.step('shard_root', 0), T.objective('Take the rift south into the Misty Pinewood.'),
+      T.step('shard_root', 0), T.objective('Take the rift to the Pinewood'),
     ]));
-    tr.push(T.enter('lantern_found', 'The lost lantern', LAN.x, LAN.y, 2.2, [T.message('The Stone\'s lantern, still warm.'), T.step('vale_lantern', 1), T.objective('Return the lantern to the Elder Stone.')], ['elder']));
+    tr.push(T.enter('lantern_found', 'The lost lantern', LAN.x, LAN.y, 2.2, [T.message('The Stone\'s lantern, still warm.'), T.step('vale_lantern', 1), T.objective('Return the lantern to the Stone')], ['elder']));
     tr.push(T.enter('lantern_return', 'Lantern returned', P.x, P.y, 3, [
       T.dialogue('Elder Stone', ['The Stone is lit. The Stone remembers kindness.']), T.done('vale_lantern'),
       T.loot('rare', 1, P.x, P.y, { gem: true, item: 'socket_rune' }), T.message('Reward: a gem and a Socket Rune.'),
