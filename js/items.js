@@ -228,7 +228,9 @@ function enemyLevel(type) {
 }
 // §20.3 (M2b balsim): ~1.09 per level tracks the measured reference-hero DPS (L1 -> L38 x23); was 0.6 x 1.1^(L-1)
 const enemyHpMul = L => Math.pow(1.09, L - 1);
-const enemyDmgMul = L => 0.7 * Math.pow(1.06, L - 1);
+// §20.3 survival (M2b balsim): standing in 3 commons on Normal kills the reference hero in 10-14 s -> x ENEMY_DMG_K
+const ENEMY_DMG_K = 1;
+const enemyDmgMul = L => ENEMY_DMG_K * 0.7 * Math.pow(1.06, L - 1);
 // kill XP (§20.3): a common gives row.xp (default hp/1300, capped) of its level's bar, an elite spawn x ELITE_XP;
 // a guardian gives one full level of the HERO's bar and a mini-boss half (row xp overrides). Band ceiling: once the
 // hero is 3+ levels above the zone band's top, commons give 10 %.

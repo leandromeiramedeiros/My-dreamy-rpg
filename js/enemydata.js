@@ -25,8 +25,8 @@ var ENEMY_DATA = {
   // ---- Vale (L1-3, mid L2) ----------------------------------------------------------------
   // hp is the WHOLE swarm (4 moths share it); XP once for the swarm
   dreammoth: {
-    name: 'Dream Moth', sprite: 'moth', look: 'wisp', hp: 860, speed: 3.0, dmg: 20, el: 'arcane', dmgType: 'arcane', stagger: 1,
-    res: { slash: 0, pierce: 0, fire: 0, frost: 0, nature: 0, lightning: 0, arcane: 0.5, holy: -0.5 },
+    name: 'Dream Moth', sprite: 'moth', look: 'wisp', hp: 450, speed: 3.0, dmg: 20, el: 'arcane', dmgType: 'arcane', stagger: 1,
+    res: { slash: 0, pierce: 0, fire: 0, frost: 0, nature: 0, lightning: 0, arcane: 0.25, holy: -0.5 },
     tags: ['flying', 'swarm'],
     parts: ['orbit', 'shoot', 'swarm'],
     params: { orbit: { r: 2.6 }, shoot: { range: 4.5, wind: 0.6, cd: 2.8, speed: 4.5, r: 0.25, col: '#e8d0ff' }, swarm: { n: 4, spread: 1.6, source: 'moth_nest' } },
