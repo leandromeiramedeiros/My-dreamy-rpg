@@ -121,7 +121,7 @@ function audit(r, log) {
     log(`  timing, required route: ${tiles} tiles walked (${fmtMin(tiles / SPEED)} min) + fights; ${lines.join(' | ')}`);
     if (opt.length) log('  optional: ' + opt.join(', '));
     log(`  TOTAL ${fmtMin(total)} min (hard cap ${tm.cap} min)${total / 60 > tm.cap ? '  OVER THE CAP: cut a room, not a corridor' : '  ok'}`);
-    log('  fight gaps (walk + pauses between fights): ' + gp.map(x => `${x.to} ${x.s.toFixed(0)}s`).join(', ') + '   (target 15-25 s)');
+    if (gp.length) log('  fight gaps (walk + pauses between fights): ' + gp.map(x => `${x.to} ${x.s.toFixed(0)}s`).join(', ') + '   (target 15-25 s)');
     const bad = gp.filter(x => x.s < 8 || x.s > 32); if (bad.length) warn.push(`fight gap(s) far outside 15-25 s: ${bad.map(x => x.to + ' ' + x.s.toFixed(0) + 's').join(', ')}`);
     if (total / 60 > tm.cap) warn.push(`required route ${fmtMin(total)} min > ${tm.cap} min cap`);
     r.timingTotal = total;
