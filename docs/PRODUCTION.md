@@ -20,8 +20,8 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 |---|---|
 | M1 Foundation + inventory & loot | **LIVE** (PR #1 merged, deploy green) |
 | M2a HUD rework, input/gamepad, combat feel, settings, perf items | **LIVE** (PR #2) |
-| M2b Act I slice (Pinewood 56 + Root Hollow + Bramblehorn, Vale 40, boss system, dialogue, quests, audio engine, music, 3 save slots, first 10 minutes) | next |
-| M3 Hero (`js/hero.js`) + icons (`js/icons.js`) wired in, enemies rescaled, **items v2 + trinkets core (DESIGN §19)** | planned |
+| M2b Act I slice (Vale 80 + Pinewood 112 with sections, Mossjaw + Bramblehorn, boss system, dialogue, quests, audio engine, music, 3 save slots, first 10 minutes) | **LIVE** (PR #3) |
+| M3 Hero (`js/hero.js`) + icons (`js/icons.js`) wired in, enemies rescaled, **items v2 + trinkets core (DESIGN §19)**, weapon/armour variant structure + parts kit (§23/§24), save v4, phone perf | **in progress** |
 | M4 Act II Ruins + statuses/reactions + bestiary + combo layer + Thief/Origins | planned |
 | M5 Act III Grotto + Warrior + aspects | planned |
 | M6 Act IV Caldera + arena | planned |
@@ -82,7 +82,18 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * Bag/gear still use the old 16 px icons until M3 wires `js/icons.js`.
 * Boss bar shows 2 phase pips (engine has one phase flag) until the boss system lands in M2b.
 
-## Status snapshot (M2b in progress)
+## M3 plan (director, after expert review)
+* Step 1 — Opus engine A: variant data structure (`WEAPONS[class].variants`, FAMILY_TIERS by variant, runes `variant:slot`),
+  id migrations, save v4 + `migrate()`, **real v3 save fixture round-trip test**, published v2 item shape. Haiku: Mythic naming pass (docs only).
+* Step 2 (parallel) — Opus engine B: makeItem v2, trinkets + equip, CAPS, temper/imbue engine, starter ring, balsim reference gear v2,
+  validate-ids for boons/implicits · Sonnet UI: tooltip v2, 4 paper-doll slots, drop names, ICONS in bag/gear ·
+  Sonnet art: wire hero.js + icons.js, enemy rescale, parts-kit system proven on existing 5 weapons / 4 suits (no new variants) ·
+  Sonnet level: Act I trinket sources (Vale chest ring, Bramblehorn chest amulet, first vault belt).
+* Step 3 — Opus perf pass on phone after art lands. Non-goals: Elder Stone panel (M5), new variants (M4+), Pip's Lantern (M7).
+* M2b note: Opus lowered boss HP (Mossjaw 8560→6000, Bramblehorn 21470→17200) so an under-geared melee hero wins;
+  reference-gear fights now run short (Mossjaw ~50 s vs 60–90 target). Revisit after items v2 changes the power curve.
+
+## Status snapshot (M2b shipped)
 * Done on branch `claude/m2b-act1`: enemy behaviour parts (js/parts.js), boss move library + Mossjaw/Bramblehorn/Warden
   port (js/bosses.js), map objects + trigger actions, tools/balsim.js, 3 save slots, Pinewood enemy data + art
   (js/enemydata.js, js/enemyart.js), Touch v2 circular wheel + skill `aim` blocks.
