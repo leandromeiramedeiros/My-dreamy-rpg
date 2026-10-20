@@ -336,6 +336,7 @@ function drawScene() {
   // the hero's light (a lantern in dark sections) is always kept by the light budget
   const heroL = p.dead ? null : { sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 10, r: 54 + 46 * look.dark, col: '#ffe6d0', a: 0.28 + 0.55 * look.dark, keep: true };
   if (heroL) lights.push(heroL);
+  const pl = typeof pipLight === 'function' && pipLight(); if (pl) lights.push(pl);   // §28 Pip's floating amber light (game.js)
   applyLighting(ctx, lights, th, look.css);
 
   perfMark('lights');

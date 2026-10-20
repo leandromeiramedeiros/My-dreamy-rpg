@@ -120,10 +120,10 @@ module.exports = zone({
     r1: { name: 'Ogres in the clearing', banner: ['Ogre!', 'A brute guards the sunlit clearing'], gap: 9, waves: [[{ pack: 'pw_ogre_run' }]], clear: { text: 'Heavy footsteps echo to the north...', objective: 'Take the key to the root door' } },
     r2: { name: 'The Stone Plaza', banner: ['The Stone Plaza', 'Kill the shaman first: it keeps the boar standing'], gap: 12, waves: [[{ pack: 'pw_boar_shaman' }], [{ pack: 'pw_ogre_slimes' }]], clear: { text: 'The way to the grove is clear.', heal: 30, objective: 'Enter the Warden\'s Grove' } },
     r3: { name: 'The Warden\'s Grove', banner: ['The Warden\'s Grove', 'A shaman chants in the dark', true], gap: 12, waves: [[{ pack: 'pw_ogre_grove', press: 2 }], [{ pack: 'pw_boar_last' }]], clear: { text: 'The shaman falls silent.', heal: 40, rarity: 'rare', objective: 'Take the key to the root door' } },
-    elite: { title: 'Gnarlroot Ogre', sub: 'Guardian of the Root Hollow key', enemy: 'ogre' },
+    elite: { title: 'Gnarlroot Ogre', sub: 'Guardian of the Root Hollow key', enemy: 'ogre', lootSlot: 'weapon' },   // §28 ~9:00: the elite's Rare is a WEAPON
     h_r1: { name: 'First cavern', banner: ['Root Cavern', 'Thorn-touched brutes in numbers'], gap: 8, waves: [[{ pack: 'rh_ogre_pack' }]], clear: 'The roots go still.' },
     h_r2: { name: 'Gate gallery', banner: ['The Gallery', 'Something large is sleeping at the far end'], gap: 14, waves: [[{ pack: 'rh_boar_wrong' }], [{ pack: 'rh_troll_sleeper', toward: 'h_den', dist: 0.7 }]], clear: 'Silence. A lever waits nearby.' },
-    den: { name: 'Mossjaw\'s den', title: 'Mossjaw', sub: 'Moss-gorged root wolf — mini-boss', enemy: 'mossjaw', add: 'ogre' },
+    den: { name: 'Mossjaw\'s den', title: 'Mossjaw', sub: 'Moss-gorged root wolf — mini-boss', enemy: 'mossjaw', add: 'ogre', doorBoss: 'mossjaw' },   // doorBoss: the Hollow door shows "Recommended ilvl" for Mossjaw (§26.2)
     warrens: {
       title: 'The Fox Warrens', sub: 'Do not wake what sleeps here', enemy: 'mountaintroll', pip: ['Quiet, Aerin. Big things sleep in the tunnels.'], objective: 'Sneak past the sleepers to the vault',
       hall: [[0, -3.5], [0, 3.5]], vault: [[2.6, -2.4]],   // >= 3.4 tiles from the trigger centre: a sleeper's wake radius is 3, so the middle of each room is the quiet way through

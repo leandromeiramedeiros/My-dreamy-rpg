@@ -169,7 +169,10 @@ const COMPAT_ENEMY = { shaman: 'ogre', mossjaw: 'troll', bramblehorn: 'troll' };
 // Builders producing exactly the card format used in js/world.js
 const T = {
   banner: (title, sub, boss) => Object.assign({ type: 'banner', title, sub: sub || '' }, boss ? { boss: true } : {}),
-  objective: text => ({ type: 'objective', text }),
+  // x, y: where Pip points (§28; game.js pipPoint), emitted only when given
+  objective: (text, x, y) => Object.assign({ type: 'objective', text }, x != null ? { x: r2(x), y: r2(y) } : {}),
+  noun: noun => ({ type: 'noun', noun }),   // §28 a HUD piece fades in (game.js hudNoun)
+  gear: (item, x, y, extra) => Object.assign({ type: 'gear', item, x: r2(x), y: r2(y) }, extra || {}),   // §28 a first-kit piece lying in the world (items.js gearAction)
   message: text => ({ type: 'message', text }),
   heal: pct => ({ type: 'heal', pct }),
   wait: seconds => ({ type: 'wait', seconds }),
@@ -960,7 +963,7 @@ class MapGen {
   toMap() {
     const portals = this.portals.map(p => Object.assign({}, p)), objects = this.objs.map(o => this._emitObj(o)).filter(Boolean);
     for (const w of this.warps) {
-      if (T.warpMode === 'door') objects.push(Object.assign({ t: 'warpdoor', id: w.id, x: r2(w.x), y: r2(w.y), to: { x: r2(w.to.x), y: r2(w.to.y) } }, w.key ? { key: w.key } : {}, w.label ? { label: w.label } : {}, w.open === false ? { open: false } : {}));   // open:false = sealed until a trigger openGate { id }
+      if (T.warpMode === 'door') objects.push(Object.assign({ t: 'warpdoor', id: w.id, x: r2(w.x), y: r2(w.y), to: { x: r2(w.to.x), y: r2(w.to.y) } }, w.key ? { key: w.key } : {}, w.label ? { label: w.label } : {}, w.open === false ? { open: false } : {}, w.boss ? { boss: w.boss } : {}));   // boss: the door's prompt shows "Recommended ilvl" (items.js); open:false = sealed until a trigger openGate { id }
       else portals.push(Object.assign({ x: r2(w.x), y: r2(w.y), to: this.id, open: w.open !== false, marker: !!w.marker, id: w.id, arrive: { x: r2(w.to.x), y: r2(w.to.y) } }, w.label ? { label: w.label } : {}));
     }
     const m = {

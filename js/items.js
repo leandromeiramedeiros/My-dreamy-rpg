@@ -632,13 +632,32 @@ function sortBag(p) {
 // item: '<gear base>' (§28, the garden ambush's Iron Boots): that fixed piece (Common unless `rarity`), no random roll (count 0
 // by default); it is put on if its slot is empty. A hero who already wears that slot (a save from before §28) gets the old
 // room-clear roll instead: one item of `fallback` (default Uncommon).
+// §26.2 elite pockets (the first-clear guarantee): `ilvl` floors the item level (boss ilvl - 2) and `slot: 'upgrade'` picks a
+// gear slot the hero can use: the weakest worn gear slot (empty first, then lowest rarity, then lowest ilvl) among those no
+// earlier pocket guarantee filled (G.prog.secrets['pocket:slots'], reset once all four have had one), rolled in the family
+// the hero wears there (gear slots grant the skills), so successive pockets rotate weapon / chest / head / boots.
+function upgradeSlot(p) {
+  const S = G.prog.secrets || (G.prog.secrets = {}), done = (S['pocket:slots'] || '').split(',').filter(Boolean);
+  let free = SLOTS.filter(k => !done.includes(k)); if (!free.length) { free = SLOTS.slice(); done.length = 0; }
+  const score = k => { const it = p.equip[k]; return it ? RARITY[it.rarity].i * 1000 + (it.ilvl || 0) : -1; };
+  const slot = free.slice().sort((a, b) => score(a) - score(b))[0];
+  done.push(slot); S['pocket:slots'] = done.join(',');
+  return slot;
+}
+function rollUpgrade(p, L, r, slot) {
+  const fam = p.gear && FAMILY_TIERS[p.gear[slot]] ? p.gear[slot] : null;
+  if (!fam) return rollItem(L, r, slot);
+  let tier = 0; for (let t = 0; t < 5; t++) if (TIER_REQ[t] <= L + 1) tier = t;
+  if (tier === 4 && !rarityAtLeast(r, 'legendary')) tier = 3;
+  return makeItem(FAMILY_TIERS[fam][tier].split(':')[0], r, L);
+}
 function lootAction(a) {
-  const p = G.player, [lo, hi] = zoneLevel(), L = clamp(p.level, lo, hi), list = [];
+  const p = G.player, [lo, hi] = zoneLevel(), L = Math.max(clamp(p.level, lo, hi), +a.ilvl || 0), list = [];
   const gearBase = a.item && BASES[a.item] ? a.item : null, gearFree = gearBase && !p.equip[BASES[gearBase].slot];
   const min = RARITY[a.rarity] ? a.rarity : 'uncommon', rmin = gearBase && !gearFree ? (RARITY[a.fallback] ? a.fallback : 'uncommon') : min;
   const n = gearBase ? (gearFree ? (+a.count || 0) : Math.max(1, +a.count || 0)) : clamp(+a.count || 1, 1, 12);
   if (gearFree) list.push({ kind: 'item', it: makeItem(gearBase, RARITY[a.rarity] ? a.rarity : 'common', 1, { sockets: 0, affixes: [] }), equip: true });
-  for (let i = 0; i < clamp(n, 0, 12); i++) { let r = rollRarity('elite', L); if (!rarityAtLeast(r, rmin)) r = rmin; const it = rollItem(L, r, SLOTS.includes(a.slot) || TRINKET_KINDS.includes(a.slot) ? a.slot : undefined); if (+a.sockets > 0) it.sockets = Array(Math.min(3, +a.sockets)).fill(null); list.push({ kind: 'item', it }); }
+  for (let i = 0; i < clamp(n, 0, 12); i++) { let r = rollRarity('elite', L); if (!rarityAtLeast(r, rmin)) r = rmin; const it = a.slot === 'upgrade' ? rollUpgrade(p, L, r, upgradeSlot(p)) : rollItem(L, r, SLOTS.includes(a.slot) || TRINKET_KINDS.includes(a.slot) ? a.slot : undefined); if (+a.sockets > 0) it.sockets = Array(Math.min(3, +a.sockets)).fill(null); list.push({ kind: 'item', it }); }
   // generator extras: gem: true · chest: 'gold' | 'silver' (one more item, a better gem) · item: key_* | socket_rune | unique id
   if (a.gem) list.push({ kind: 'gem', gem: rollGem(L) });
   if (a.chest === 'gold' || a.chest === 'silver') { list.push({ kind: 'item', it: rollItem(L, a.chest === 'gold' ? 'epic' : 'rare') }); if (a.chest === 'gold') list.push({ kind: 'gem', gem: rollGem(L + 5) }); }

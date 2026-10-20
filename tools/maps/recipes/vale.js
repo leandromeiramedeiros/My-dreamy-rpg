@@ -75,15 +75,14 @@ module.exports = {
     g.house(R.cottage.x - 2, R.cottage.y - 3);
     placePortals(g, S);
     // ---- beats, objects
-    g.marker('elder_stone', R.plaza.x, R.plaza.y, { label: 'elder stone', text: DIALOGUE.vale_elder.lines.join(' ') + ' Past the cottage, where the path ends, a light waits.' }); g.poi('elder', R.plaza.x, R.plaza.y);
+    g.marker('elder_stone', R.plaza.x, R.plaza.y, { label: 'elder stone', text: 'Past the cottage, where the path ends, a light waits.' }); g.poi('elder', R.plaza.x, R.plaza.y);
     g.ring('plaza', 'crystal', 5, 0.55, { rot: 0.3 }); g.ring('plaza', 'lantern', 6, 0.95);
     const shrA = { x: R.start.x + 2, y: R.start.y - 1.8 }, shrB = { x: R.terrace.x - 6, y: R.terrace.y + 4.6 };
     g.marker('shrine', shrA.x, shrA.y, { id: 'shrine_start', name: 'The Dreamer\'s bed', label: 'checkpoint', warp: true }); g.poi('shrine', shrA.x, shrA.y);
     const sb = g.nearWalkable(shrB.x, shrB.y, 1.5); g.marker('shrine', sb.x, sb.y, { id: 'shrine_terrace', name: 'Rift terrace', label: 'checkpoint', warp: true }); g.poi('shrine', sb.x, sb.y);
-    g.marker('sign', R.start.x + 2.8, R.start.y + 1, { label: 'sign', text: 'Training yard south-east. Elder Stone north-east.' }); g.poi('sign', R.start.x + 2.8, R.start.y + 1);
-    g.marker('chest', C0.x, C0.y, { label: 'tutorial-chest', tier: 'wood', starter: true }); g.poi('chest', C0.x, C0.y);   // starter: true -> items.js starterLoot() (weapon, armour, gem)
+    g.marker('chest', C0.x, C0.y, { label: 'tutorial-chest', tier: 'wood', starter: true, loot: 'ring' }); g.poi('chest', C0.x, C0.y);   // starter: true -> items.js starterLoot() (weapon, armour, gem); loot: 'ring' -> the Origin ring (§28)
     g.marker('gem_cache', R.gemNook.x, R.gemNook.y, { label: 'secret gem cache' }); g.poi('secret', R.gemNook.x, R.gemNook.y);
-    g.marker('chest_silver', R.ledge.x, R.ledge.y, { label: 'ledge-chest', loot: 'ring' }); g.poi('chest', R.ledge.x, R.ledge.y);
+    g.marker('chest_silver', R.ledge.x, R.ledge.y, { label: 'ledge-chest' }); g.poi('chest', R.ledge.x, R.ledge.y);
     const fa = g.waterEdge(C0.x - 1, C0.y + 3.5, 7), fb = g.waterEdge(R.plaza.x + 13, R.plaza.y + 2, 9), fm = g.waterEdge(70, 69, 6);
     g.marker('fishspot', fa.x, fa.y, { pool: 'vale_a' }); g.marker('fishspot', fb.x, fb.y, { pool: 'vale_b' }); g.marker('fishspot', fm.x, fm.y, { pool: 'vale_moon' });
     g.poi('fish', fa.x, fa.y); g.poi('fish', fb.x, fb.y); g.poi('fish', fm.x, fm.y);
@@ -125,21 +124,27 @@ module.exports = {
     const Y = R.yard, P = R.plaza, C = R.nookChest, GD = R.garden, S0 = R.start, pineIdx = g.portalIdx.pine;
     tr.push(T.mapEnter('banner', 'Zone banner', [T.say('vale_banner')]));
     tr.push(T.mapEnter('dummies', 'Training dummies', [T.spawn('dummy', 1, Y.x - 0.8, Y.y - 0.6, null, { instant: true }), T.spawn('dummy', 1, Y.x + 0.8, Y.y + 0.8, null, { instant: true })]));
-    tr.push(T.enter('wake', 'Pip wakes Aerin', S0.x, S0.y, 7, [T.say('vale_wake'), T.dialogue('Pip', ['Training dummies are south-east. Hit one.']), T.objective('Hit the training dummies')]));
+    // §28 the opening: the hero wakes bare; the HUD shows one noun at a time; the first kit lies in the world (sword in the grass, cap on the bed)
+    const SW = { x: Y.x - 1.5, y: Y.y - 4 }, CAP = { x: R.cottage.x - 0.8, y: R.cottage.y - 0.6 };
+    tr.push(T.enter('wake', 'Pip wakes Aerin', S0.x, S0.y, 7, [T.wait(3), T.noun('move'), T.say('vale_wake'), T.dialogue('Pip', ['Training dummies are south-east. Hit one.']), T.objective('Hit the training dummies', SW.x, SW.y)]));
+    // opening: true -> a bare-start beat only (game.js updateTriggers skips it for a save from before §28)
+    tr.push({ id: 'days', name: 'Pip: three days', opening: true, when: { type: 'timer', after: 'wake', seconds: 20 }, requires: ['wake'], actions: [T.dialogue('Pip', ['Three days. You\'ve been asleep three days.']), T.noun('vale')] });
+    tr.push(T.mapEnter('sword', 'The sword in the grass', [T.gear('rustyblade', SW.x, SW.y)]));
+    tr.push(T.mapEnter('cottage_cap', 'The cap on the child\'s bed', [T.gear('ironcap', CAP.x, CAP.y)]));
     const rep = t => { t.once = false; return t; };
     tr.push(rep(T.enter('shrine', 'Dreamer\'s bed', shrA.x, shrA.y, 2.2, [T.checkpoint('Checkpoint: Whispering Vale'), T.heal(100)])));
     tr.push(rep(T.enter('shrine_terrace', 'Rift terrace shrine', sb.x, sb.y, 2.2, [T.checkpoint('Checkpoint: Rift terrace'), T.heal(100)])));
-    tr.push(T.enter('yard_teach', 'Dummy yard lesson', Y.x, Y.y, 3.6, [T.dialogue('Pip', ['Swing. Then dodge. Then try your Q skill.', 'The dummy never hits back. Lucky thing.']), T.objective('Follow the path to the Elder Stone')]));
-    tr.push(T.enter('elder', 'The Elder Stone', P.x, P.y, 3, [T.say('vale_elder'), T.dialogue('Elder Stone', ['The Stone lost a light. Past the cottage, a path ends.']), T.step('vale_lantern', 0), T.objective('Open the chest, then find the lantern')]));
-    tr.push(T.enter('chest', 'Tutorial chest', C.x, C.y, 2.6, [T.dialogue('Pip', ['A chest! Interact to open it.']), T.wait(4), T.say('vale_chest'), T.dialogue('Pip', ['Open your bag and equip it.'])]));
-    tr.push(T.enter('fish_hint', 'Fishing spot', fa.x, fa.y, 3.4, [T.dialogue('Pip', ['Ripples. Fishing waits in the Pinewood.'])]));
+    tr.push(T.enter('yard_teach', 'Dummy yard lesson', Y.x, Y.y, 3.6, [T.noun('dodge'), T.dialogue('Pip', ['Swing. Then dodge. Then try your Q skill.', 'The dummy never hits back. Lucky thing.']), T.objective('Open the chest west of the bed', C.x, C.y)]));
+    tr.push(T.enter('elder', 'The Elder Stone', P.x, P.y, 3, [T.say('vale_elder'), T.dialogue('Elder Stone', ['The Stone lost a light. Past the cottage, a path ends.']), T.step('vale_lantern', 0), T.objective('Find the lost lantern past the cottage', R.cottage.x, R.cottage.y)]));
+    tr.push(T.enter('chest', 'Tutorial chest', C.x, C.y, 2.6, [T.dialogue('Pip', ['A chest! Interact to open it.']), T.wait(4), T.say('vale_chest'), T.dialogue('Pip', ['Open your bag and equip it.']), T.objective('Follow the path to the Elder Stone', P.x, P.y)]));
+    tr.push(T.enter('fish_hint', 'Fishing spot', fa.x, fa.y, 3.4, [T.message('Ripples in the water. Interact to cast.')]));
     tr.push(T.enter('gems', 'Hidden gem cache', R.gemNook.x, R.gemNook.y, 2.2, [T.message('A hidden gem cache!'), T.loot('uncommon', 1, R.gemNook.x, R.gemNook.y, { gem: true })]));
     tr.push(T.enter('tablet', 'Cottage tablet', tabP.x, tabP.y, 2.4, [T.say('vale_tablet')]));
     tr.push(T.enter('garden_ambush', 'Gloom in the garden', GD.x, GD.y, 3.6, [
-      T.banner('Gloom in the garden', 'Slimes ooze out of the flowers'), T.spawn('gloomslime', 1, GD.x - 1.6, GD.y - 0.6, 1.2), T.spawn('gloomslime', 1, GD.x + 1.8, GD.y + 0.4, 1.2), T.spawn('gloomslime', 1, GD.x, GD.y + 1.8, 1.2),
+      T.noun('potion'), T.banner('Gloom in the garden', 'Slimes ooze out of the flowers'), T.spawn('gloomslime', 1, GD.x - 1.6, GD.y - 0.6, 1.2), T.spawn('gloomslime', 1, GD.x + 1.8, GD.y + 0.4, 1.2), T.spawn('gloomslime', 1, GD.x, GD.y + 1.8, 1.2),
     ], ['elder']));
     tr.push(T.allDead('garden_done', 'Garden cleared', ['garden_ambush'], [
-      T.message('The garden is quiet. Something hums in the south.'), T.heal(40), T.loot('uncommon', 1, GD.x, GD.y),
+      T.message('The garden is quiet. Something hums in the south.'), T.heal(40), { type: 'loot', item: 'ironboots', rarity: 'common', x: GD.x, y: GD.y },   // §28 the Iron Boots (items.js lootAction: put on if the slot is empty)
       T.openPortal(pineIdx), T.sound('portal'), T.banner('The Pinewood rift opens', 'South of the yard'), T.say('vale_rift'),
       T.step('shard_root', 0), T.objective('Take the rift to the Pinewood'),
     ]));

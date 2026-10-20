@@ -123,7 +123,7 @@ function populate(S, g, T) {
   // the elite guards the Hollow key
   const el = R.elite;
   tr.push(T.enter('elite', 'Elite guarding the key', el.x, el.y, el.r + 0.2, [T.banner(E.elite.title, E.elite.sub, true), T.spawn(E.elite.enemy, 1, el.x - 1, el.y, 1.2, { elite: 'shielded' })], ['r1_done']));
-  tr.push(T.allDead('elite_done', 'Elite defeated', ['elite'], [T.message(X.eliteDone), T.loot('rare', 1, el.x, el.y, { item: S.key }), T.dialogue('Pip', [X.keyLine]), T.step(S.quest, 1), T.objective(X.keyObjective)]));
+  tr.push(T.allDead('elite_done', 'Elite defeated', ['elite'], [T.message(X.eliteDone), T.loot('rare', 1, el.x, el.y, Object.assign({ item: S.key }, E.elite.lootSlot ? { slot: E.elite.lootSlot } : {})), T.dialogue('Pip', [X.keyLine]), T.step(S.quest, 1), T.objective(X.keyObjective)]));
 
   // ============================================================== FOREST: secrets (crack, bridge lever, env pond, cross-section cache)
   const secretTriggers = [];
@@ -179,7 +179,7 @@ function populate(S, g, T) {
   {   // keyed door into the Hollow
     const kd = nearRoomEdge(g, 'hdoor', 'hdoor', -1, 1.0);
     if (!doorMode) g.addObj('keydoor', kd.x, kd.y, { id: 'door_key', key: S.key, ang: r2(kd.ang), len: S.w.branch, force: true, sp: 0.1 });
-    g.warp('hollow_door', { x: hd.x, y: hd.y - 0.2, to: { x: hst.x + 1.4, y: hst.y - 0.3 }, key: S.key, label: 'Root Hollow', marker: true });
+    g.warp('hollow_door', { x: hd.x, y: hd.y - 0.2, to: { x: hst.x + 1.4, y: hst.y - 0.3 }, key: S.key, label: 'Root Hollow', marker: true, boss: E.den.doorBoss });
     g.anchor('hollow_in', hst.x + 1.4, hst.y - 0.3); g.poi('door', hd.x, hd.y);
     tr.push(T.enter('hdoor_hint', 'The root door', kd.x, kd.y, 3.2, [T.message(X.locked)]));
   }
