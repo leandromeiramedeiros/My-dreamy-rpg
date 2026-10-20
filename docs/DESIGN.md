@@ -1983,3 +1983,5 @@ on wet tiles. Ice tiles and walls use the frost ramp with ≤ 1 glint light per 
   with Drift; an ice patch over 24 tiles; two grass fires on one map.
 * **Cut order if M4b slips:** raft → windmill frames → fog bank → Opal (Wind amplifies through rings only) → the Ruins'
   shortcut puzzle. Never cut: Pip's charge, the torch room, brambles, the creek freeze, Gale, Drift.
+* **Client approval (2026-10-20):** the FX board in tools/shots/m3-fxboard (3 atlas effects, 11 particle sets, statuses,
+  HUD mock) is **APPROVED** as the look. The full rollout (P2–P6, S1–S5) is scheduled in M4a/M5, gated on no net phone cost.

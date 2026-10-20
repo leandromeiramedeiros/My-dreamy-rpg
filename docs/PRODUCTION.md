@@ -114,7 +114,7 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
   * world art group 2: trees/density (density waits for the pockets lane)
 * Queue:
   1. world art group 3 (tall set pieces)
-  2. pixel FX prototype: 3 effects + element particles, for client approval
+  2. pixel FX prototype: DONE and APPROVED by the client (tools/fx-board.html; js/elfx.js)
   3. QA full bot run
   4. ship M3 (PR #4)
   5. docs/organisation meeting with the expert game director; apply its ruling
