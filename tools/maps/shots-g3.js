@@ -80,6 +80,7 @@ const PLAN = {
     // the vantage reveal, desktop: the full display (scene + HUD + cinematic)
     await place(page, P.vantage.at, null); await settle(page);
     await page.evaluate(() => { G.noCamBias = false; G.camHold = null; });
+    await page.waitForFunction(() => !G.vantage, null, { timeout: 8000 });   // the summit's own trigger may have just played it
     await page.evaluate(a => startVantage(a), P.vantage.a);
     const t0 = Date.now();
     for (const [k, ms] of [[1, 350], [2, 950], [3, 1500], [4, 2200], [5, 3000]]) { await wait(Math.max(0, ms - (Date.now() - t0))); await page.screenshot({ path: path.join(OUT, `${mapId}_vantage_${k}.png`) }); }
@@ -100,7 +101,8 @@ const PLAN = {
     const page = await open('vale', '&phone=1'), P = PLAN.vale;
     await place(page, P.vantage.at, null); await settle(page);
     await page.evaluate(() => { G.noCamBias = false; });
-    await page.evaluate(a => startVantage(a), P.vantage.a); await wait(1700);
+    await page.waitForFunction(() => !G.vantage, null, { timeout: 8000 });
+    await page.evaluate(a => startVantage(a), P.vantage.a); await wait(1900);
     await page.screenshot({ path: path.join(OUT, 'vale_vantage_phone.png') });
     const snap = await page.evaluate(() => !!(G.vantage && G.vantage.snap));
     console.log('phone vantage: half-scale snapshot built = ' + snap + ' (must be false)'); if (snap) bad++;

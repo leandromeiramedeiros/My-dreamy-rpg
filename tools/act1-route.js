@@ -210,6 +210,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   const fog0 = await ev(() => G.map.mini ? G.map.mini.vis.reduce((a, b) => a + b, 0) : 0);
   check('vale (§29 G3): the Stone\'s Crown starts the vantage reveal', await goto('crown') && await ev(() => !!G.vantage && G.vantage.id === 'crown')); await wait(1700); await shot('vale_crown_vantage');
   await vantageDone();
+  check('vale (§29 G3): Pip speaks on the Crown after the reveal, not under it', await wf(() => !G.vantage && ((G.msg && /whole dream/.test(G.msg.s)) || (G.talk || []).some(l => /whole dream/.test(l))), null, 6000));   // showing, or queued behind earlier lines
   const fog1 = await ev(() => G.map.mini ? G.map.mini.vis.reduce((a, b) => a + b, 0) : 0);
   check('vale (§29 G3): the reveal lifts the fog of war over the Vale (>= 600 new tiles) and ends by itself', fog1 - fog0 >= 600 && await ev(() => !G.vantage), { fog0, fog1 });
   const down = await climbLadder('cairn_roots_top');
@@ -408,6 +409,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   // ---- §29 G3 Hawk's Rest: shrine 3 and the vantage on the summit (the root-stair lands there), the drop from the 10 onto the gate road
   check('pinewood (§29 G3): shrine 3 stands on Hawk\'s Rest summit (h 16) and the vantage ran on arrival', await ev(() => { const o = G.map.objects.find(q => q.shrineId === 'shrine3'); return tileH(G.map, o.x, o.y) === 16; }) && await fired('hawks_rest'));
   await vantageDone();
+  check('pinewood (§29 G3): Pip\'s line on Hawk\'s Rest shows once the reveal is over ("From up here it\'s small. It isn\'t.")', await wf(() => !G.vantage && G.msg && /small\. It isn't/.test(G.msg.s), null, 6000));
   check('pinewood (§29 G3): Pip on the 10 ledge above the gate road', await goto('hawk_ledge'));
   const hdrop = await walkKeys(['d', 's'], 900);
   check('pinewood (§29 G3): walking off the 10 ledge drops onto the gate road (lands at 4)', hdrop.h === 4 && !hdrop.fall && Math.abs(hdrop.z - 4) < 0.1 && hdrop.x > 75, hdrop); await shot('pinewood_hawk_drop');

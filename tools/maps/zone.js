@@ -287,7 +287,7 @@ function populate(S, g, T) {
     g.ring('arena', 'brazier', 4, 0.62, { rot: 0.8 });
     g.marker('chest_gold', A.x + A.r * 0.55, A.y - A.r * 0.55, Object.assign({ label: 'boss-chest' }, lootOf('boss')));
     shrineTrig('shrine3');
-    tr.push(T.enter('arena_hint', 'The rooted arena gate', ag.x, ag.y, 3.4, [T.message(X.arenaSealed)], ['shrine3']));
+    tr.push(T.enter('arena_hint', 'The rooted arena gate', ag.x, ag.y, 3.4, [T.message(X.arenaSealed)], ['r3_done']));   // §29 G3: shrine 3 is up on Hawk's Rest now
     const B = E.boss;
     tr.push(T.enter('boss', B.title, A.x, A.y, A.r - 2, [
       ...T.arena('bramble_arena', 'arena_gate', A.x, A.y, A.r),
@@ -307,7 +307,7 @@ function populate(S, g, T) {
   for (const [k, d] of Object.entries(S.drops || {})) g.drop(k, d);
   if (S.vantage) {
     const V = S.vantage, [vx, vy] = V.at;
-    tr.push(T.enter(V.id, V.title, vx, vy, V.r || 2, [T.vantage(V.id, V.reveal || 30, { title: V.title, sub: V.sub || '' }), ...(V.pip ? [T.dialogue('Pip', V.pip)] : [])]));
+    tr.push(T.enter(V.id, V.title, vx, vy, V.r || 2, [T.vantage(V.id, V.reveal || 30, { title: V.title, sub: V.sub || '' }), ...(V.pip ? [T.wait(3.7), T.dialogue('Pip', V.pip)] : [])]));   // Pip speaks once the cinematic (3.5 s) is over
     g.poi('landmark', vx, vy);
   }
   for (const sp of Object.values(S.setPiece || {})) {   // the summit's lone giant pine (the hawk's perch) and boulders at the foot

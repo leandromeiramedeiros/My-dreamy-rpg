@@ -105,7 +105,7 @@ module.exports = zone({
     // level rhythm (minutes §3.1.1): two granite knolls, walls at step 3-4 -- the arrival glade's and the Hollow door's foothill
     knollStart: { land: true, levels: [4], r: [2.3], centres: [[10.2, 99.6]], rough: 0.24, sparse: { 0: 0.5 } },
     knollDoor: { land: true, levels: [7], r: [1.9], centres: [[55.2, 35.2]], rough: 0.24, sparse: { 0: 0 } },
-    hawk: { land: true, levels: [4, 16, 13, 10], r: [5.9, 4.4, 1.7, 2.3], centres: [[70, 37], [68.8, 37.2], [73.1, 36.6], [73.6, 39.6]], over: [1, 2, 3], rough: 0.2, bare: [1], sparse: { 2: 0, 3: 0 } },
+    hawk: { land: true, levels: [4, 16, 13, 10], r: [5.9, 4.4, 1.7, 2.3], centres: [[70, 37], [68.8, 37.2], [73.1, 36.6], [73.6, 39.6]], over: [1, 2, 3], rough: 0.3, bare: [1], sparse: { 2: 0, 3: 0 } },
   },
   switchbacks: {
     hawkApproach: { from: { path: 'main', near: [56, 46] }, w: 2, pts: [[58, 41.6, 4], [59.2, 38.6, 5.4]] },
@@ -113,7 +113,7 @@ module.exports = zone({
   },
   bridges: [{ x: 9, y: 32, axis: 'y', len: 5, w: 2, lvl: 4 }, { x: 60, y: 37, axis: 'x', len: 4, w: 3, lvl: 6, span: true }],
   drops: { hawk_drop: { rect: [75, 37, 78, 42] } },
-  setPiece: { hawk: { pine: [67.4, 34.6], boulders: [[64.6, 41.6], [74.8, 42.2], [76.4, 40.8]] } },
+  setPiece: { hawk: { pine: [66.8, 35.6], boulders: [[64.6, 41.6], [74.8, 42.2], [76.4, 40.8]] } },
   vantage: { id: 'hawks_rest', at: [68.3, 34.6], r: 1.9, reveal: 34, title: 'Hawk\'s Rest', sub: 'The Clearing road, and something big asleep at its end', pip: ['From up here it\'s small. It isn\'t.'] },
   ledgeHints: [{ id: 'hawk_ledge', name: 'The gate road below', at: [75, 38.2], pip: ['The road to the Clearing is right below. Jump, Aerin.'] }],
   portals: {

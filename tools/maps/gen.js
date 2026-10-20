@@ -326,7 +326,11 @@ class MapGen {
   climb(id, o) { const c = Object.assign({ id }, o); this.climbs.push(c); return c; }
   // drop(id, o): a drop-down ledge (minutes §3.1.5): the landing tiles [x0, y0, x1, y1) accept a step DOWN of any height from a neighbour
   //   (maps.js walkable, one-way). Emitted as map.drops [[x, y, w, h], ...].
-  drop(id, o) { const d = Object.assign({ id }, o); this.drops.push(d); return d; }
+  drop(id, o) {
+    const d = Object.assign({ id }, o); this.drops.push(d);
+    if (this.built) { const [a, b, c, e] = d.rect; for (let y = Math.max(0, b - 1); y < Math.min(this.H, e + 1); y++) for (let x = Math.max(0, a - 1); x < Math.min(this.W, c + 1); x++) this.zone[y][x] |= ZONE.drop; }   // the landing + a 1-tile margin
+    return d;
+  }
   inDrop(x, y) { for (const d of this.drops) { const [a, b, c, e] = d.rect; if (x >= a && x < c && y >= b && y < e) return true; } return false; }
 
   // ------------------------------- build ---------------------------------------
@@ -881,7 +885,7 @@ class MapGen {
       const pc = ctx ? ctx.dPath : this.pathClear(x, y);
       if (pc < def.r + (def.r <= 0.22 ? 0.15 : 0.55)) return false;   // §29 G2: small props (r <= 0.22) may stand in the corridor verge
       const z = this.zoneAt(x, y);
-      if (z & (ZONE.fight | ZONE.bare)) return false;
+      if (z & (ZONE.fight | ZONE.bare | ZONE.drop)) return false;   // §29 G3: a drop's landing stays clear
       // §29 G3: no collider (tree / rock) on a plateau with a higher ring within 3 tiles in front (+x / +y): it would sort over that wall;
       // a stack's upper rings are thinned (o.sparse[k] = the share kept, hashed per spot) so the silhouette reads over the trees
       if (z & ZONE.stack) {
@@ -1137,7 +1141,7 @@ class MapGen {
       if (!seen[k0]) { seen[k0] = 1; q.push(k0); }
     }
     const hOf = k => this.h[((k / W) | 0) / S | 0][((k % W) / S) | 0];
-    const dropOf = k => this.drops.length && (this.zone[((k / W) | 0) / S | 0][((k % W) / S) | 0] & ZONE.drop);
+    const dropOf = k => this.drops.length && this.inDrop(((k % W) / S) | 0, ((k / W) | 0) / S | 0);   // the landing rects exactly (maps.js dropIn)
     const climbAt = []; for (const c of this.climbs) for (const [a, b] of [[c, c.to], [c.to, c]]) climbAt.push({ k: Math.floor(a.y * S) * W + Math.floor(a.x * S), x: a.x, y: a.y, to: b });
     for (let qi = 0; qi < q.length; qi++) {
       const k = q[qi], cx = k % W, cy = (k / W) | 0, h0 = hOf(k);

@@ -344,14 +344,15 @@ function drawVantage(ctx) {
     ctx.save(); ctx.imageSmoothingEnabled = false;
     // the pull-back (desktop): the snapshot zooms from 1:1 with the live frame (display scale 4) to half scale (2)
     const pull = !PHONE ? clamp(u / 0.36, 0, 1) : 1, mapA = clamp((u - (PHONE ? 0 : 0.3)) / 0.14, 0, 1);
+    // the backdrop: the zone's sky over its cloud sea (the island floats in it); under the pull-back too, so the HUD never shows through
+    const th = m.theme, bgk = V.bgk || (V.bgk = (() => { const gr = ctx.createLinearGradient(0, 0, 0, DH); gr.addColorStop(0, th.sky[1] || '#140c28'); gr.addColorStop(0.55, th.sky[Math.min(th.sky.length - 1, 4)] || '#3a2e7a'); gr.addColorStop(1, rgbCss(th.cloud[2] || [200, 190, 230])); return gr; })());
+    ctx.globalAlpha = fade * (PHONE ? mapA : 1); ctx.fillStyle = bgk; ctx.fillRect(0, 0, DW, DH);
     if (!PHONE && mapA < 1) {
       if (!V.snap) V.snap = vantageSnapshot(m);
       const e2 = pull * pull * (3 - 2 * pull), s = 4 - 2.8 * e2, w = RW * s, h = RH * s;   // display scale 4 (1:1 with the live frame) -> 1.2 (the map's 0.3)
       ctx.globalAlpha = fade; ctx.drawImage(V.snap, Math.round(DW / 2 - w / 2), Math.round(DH / 2 - h / 2), Math.round(w), Math.round(h));
     }
     if (mapA > 0) {
-      // the backdrop: the zone's sky over its cloud sea (the island floats in it)
-      const th = m.theme, bgk = V.bgk || (V.bgk = (() => { const gr = ctx.createLinearGradient(0, 0, 0, DH); gr.addColorStop(0, th.sky[1] || '#140c28'); gr.addColorStop(0.55, th.sky[Math.min(th.sky.length - 1, 4)] || '#3a2e7a'); gr.addColorStop(1, rgbCss(th.cloud[2] || [200, 190, 230])); return gr; })());
       ctx.globalAlpha = fade * mapA; ctx.fillStyle = bgk; ctx.fillRect(0, 0, DW, DH);
       const g = m.gp, pv = groundPreview(m), ws = 0.3 - 0.1 * clamp(u, 0, 1), ps = 8 * ws;   // world scale 0.3 -> 0.2 (~60 x 60 tiles in view); a preview px = 4 world px
       const hx = (isoX(V.x, V.y) - g.minSX) / 4, hy = isoY(V.x, V.y, 0) / 4, ox = DW / 2 - hx * ps, oy = DH / 2 + 20 - hy * ps;
@@ -360,16 +361,24 @@ function drawVantage(ctx) {
       ctx.save(); ctx.beginPath(); ctx.ellipse(cx, cy, R * 1.41, R * 0.71, 0, 0, Math.PI * 2); ctx.clip();
       ctx.globalAlpha = fade * mapA; ctx.drawImage(pv, Math.round(ox), Math.round(oy), Math.round(pv.width * ps), Math.round(pv.height * ps));
       ctx.restore();
+      // the sections a summit cannot see (underground, vaults) and their void gutters go back under the cloud sea
+      const at0 = (x, y) => [ox + (isoX(x, y) - g.minSX) / 4 * ps, oy + isoY(x, y, 0) / 4 * ps];
+      ctx.globalAlpha = fade * mapA; ctx.fillStyle = bgk;
+      for (const sc of m.sections || []) if (sc.under || sc.kind === 'vault') for (const [rx, ry, rw, rh] of sc.rects || []) {
+        const P = [[rx - 2.5, ry - 0.5], [rx + rw + 2.5, ry - 0.5], [rx + rw + 2.5, ry + rh + 2], [rx - 2.5, ry + rh + 2]].map(([x, y]) => at0(x, y));
+        ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]); for (let k = 1; k < 4; k++) ctx.lineTo(P[k][0], P[k][1]); ctx.closePath(); ctx.fill();
+      }
       ctx.globalAlpha = fade * mapA * 0.85; ctx.strokeStyle = '#e8dcff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(cx, cy, R * 1.41, R * 0.71, 0, 0, Math.PI * 2); ctx.stroke();
       const at = (x, y) => [ox + (isoX(x, y) - g.minSX) / 4 * ps, oy + isoY(x, y, 0) / 4 * ps];
       ctx.globalAlpha = fade * mapA;
-      for (const o of (typeof shrinesOf === 'function' ? shrinesOf(m) : [])) { const [sx, sy] = at(o.x, o.y); ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(sx) - 5, UI.snap(sy) - 5, 10, 10); ctx.fillStyle = '#9ef0ff'; ctx.fillRect(UI.snap(sx) - 3, UI.snap(sy) - 3, 6, 6); }
-      for (const pt of m.portals) { const [qx, qy] = at(pt.x, pt.y); ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(qx) - 4, UI.snap(qy) - 4, 8, 8); ctx.fillStyle = pt.open ? UC.gold : '#8a7aa8'; ctx.fillRect(UI.snap(qx) - 2, UI.snap(qy) - 2, 4, 4); }
+      const unseen = (x, y) => { const sc = sectionAt(m, x, y); return !!(sc && (sc.under || sc.kind === 'vault')); };
+      for (const o of (typeof shrinesOf === 'function' ? shrinesOf(m) : [])) if (!unseen(o.x, o.y)) { const [sx, sy] = at(o.x, o.y); ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(sx) - 5, UI.snap(sy) - 5, 10, 10); ctx.fillStyle = '#9ef0ff'; ctx.fillRect(UI.snap(sx) - 3, UI.snap(sy) - 3, 6, 6); }
+      for (const pt of m.portals) if (!unseen(pt.x, pt.y)) { const [qx, qy] = at(pt.x, pt.y); ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(qx) - 4, UI.snap(qy) - 4, 8, 8); ctx.fillStyle = pt.open ? UC.gold : '#8a7aa8'; ctx.fillRect(UI.snap(qx) - 2, UI.snap(qy) - 2, 4, 4); }
       const [hx2, hy2] = at(V.x, V.y); ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(hx2) - 5, UI.snap(hy2) - 5, 10, 10); ctx.fillStyle = '#ffffff'; ctx.fillRect(UI.snap(hx2) - 3, UI.snap(hy2) - 3, 6, 6);
       // the section insets (the full map's), right column
       if (m.mini) {
         const secs = (m.sections || []).filter(sc => sc.id !== 'main' || m.sections.length === 1), found = (G.prog.sections && G.prog.sections[m.id]) || [], full = fullMapCanvas(m), cur = sectionAt(m, V.x, V.y);
-        const IH = Math.min(52, Math.floor(300 / Math.max(1, secs.length)) - 6), slide = 1 - clamp((u - 0.3) / 0.2, 0, 1);
+        const IH = Math.min(52, Math.floor(300 / Math.max(1, secs.length)) - 6), slide = 1 - clamp((u - (PHONE ? 0.04 : 0.32)) / 0.1, 0, 1);
         secs.forEach((sc, i) => sectionInset(ctx, m, sc, DW - 236 + Math.round(slide * 260), 92 + i * (IH + 6), 212, IH, sc === cur, found.includes(sc.id) || sc === cur, full));
       }
     }

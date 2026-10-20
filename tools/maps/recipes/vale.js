@@ -109,7 +109,7 @@ module.exports = {
       g.drop('cairn_drop', { rect: [47, 21, 52, 23] });
       g.addObj('brazier', CR.x - 0.6, CR.y - 0.9, { force: true, sp: 1 }); g.addObj('crystal_violet', CR.x + 0.9, CR.y - 0.5, { force: true, sp: 0.6 }); g.addObj('crystal', CR.x - 1.3, CR.y + 0.4, { force: true, sp: 0.6 });
       g.marker('tablet', CR.x + 0.4, CR.y + 0.9, { label: 'lore', title: 'The Stone\'s Crown', text: 'The first light was set here, where the dream could see itself.' }); g.poi('landmark', CR.x, CR.y);
-      tr.push(T.enter('crown', 'The Stone\'s Crown', CR.x, CR.y, 1.9, [T.vantage('crown', 40, { title: 'The Stone\'s Crown', sub: 'Three rifts, two islets, and the cloud sea' }), T.dialogue('Pip', ['So that is the whole dream. It looked bigger from the bed.'])]));
+      tr.push(T.enter('crown', 'The Stone\'s Crown', CR.x, CR.y, 1.9, [T.vantage('crown', 40, { title: 'The Stone\'s Crown', sub: 'Three rifts, two islets, and the cloud sea' }), T.wait(3.7), T.dialogue('Pip', ['So that is the whole dream. It looked bigger from the bed.'])]));
       tr.push(T.enter('cairn_ledge', 'The garden ledge', 49.6, 20.4, 1.6, [T.dialogue('Pip', ['Straight down is the garden. A short way home, if you trust your knees.'])]));
     }
     // ---- sections: Pip's Lanterns islet (NW), Dream Arena islet (E), Moon Pond (SE)
