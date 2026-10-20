@@ -453,7 +453,7 @@ function updatePlayer(p, dt) {
       unstickPlayer(p, Math.abs(p.x - bx) + Math.abs(p.y - by), dt, h0);
       p.walkT += dt;
       if (Math.random() < dt * 6) addPart({ x: p.x, y: p.y, z: p.z, vx: frand(-0.3, 0.3), vy: frand(-0.3, 0.3), vz: 0.6, life: 0.4, t: 0, col: '#e8e0f8', grav: 1, size: 1, glow: false });
-    }
+    } else p.stuckT = 0;
   }
   const th = tileH(m, p.x, p.y);
   p.z = lerp(p.z, th, Math.min(1, dt * 14));

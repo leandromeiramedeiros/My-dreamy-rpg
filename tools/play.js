@@ -699,6 +699,40 @@ const PAD_STUB = () => {
   await ev(() => closeFullMap());
   check('minimap: HUD shows a 24-tile window; the full-map screen opens (game paused), undiscovered underground stays dark', mm.win === 24 && mm.N === 112 + 112 + 60 && mm.open && mm.frozen && mm.darkFrac > 0.9, mm);
   await ev(() => { G.enemies.length = 0; G.boss = null; enterMap('vale'); G.state = 'play'; G.player.invulnT = 0; delete G.maps.synth112; });
+  // B1 regression (QA REPORT): the two Pinewood stair wedges. Each spot: all 8 stick directions from the exact wedge
+  // position; the hero must leave in most of them, and must never climb the 2-high bank (no 2-step).
+  await ev(() => { G.enemies.length = 0; G.boss = null; enterMap('pinewood'); G.state = 'play'; G.banner = null; G.player.invulnT = 999; G.enemies.length = 0; });
+  const DIRS8 = [[0, -1], [-1, 0], [0, 1], [1, 0], [-0.7, -0.7], [0.7, 0.7], [0.7, -0.7], [-0.7, 0.7]];
+  for (const [X, Y] of [[32.96, 93.97], [14.98, 89.92]]) {
+    const res = [];
+    for (const [ax, ay] of DIRS8) {
+      await ev(([X, Y]) => { const p = G.player; G.enemies.length = 0; p.x = X; p.y = Y; p.z = tileH(G.map, X, Y); p.dash = null; p.rootT = 0; p.stuckT = 0; p.unstuck = 0; }, [X, Y]);
+      await ev(a => window.__axes([a[0], a[1], 0, 0]), [ax, ay]);
+      let maxDH = 0;
+      for (let k = 0; k < 6; k++) { await wait(100); maxDH = Math.max(maxDH, await ev(h0 => Math.abs(tileH(G.map, G.player.x, G.player.y) - h0), await ev(([X, Y]) => tileH(G.map, X, Y), [X, Y]))); }
+      await ev(() => window.__axes([0, 0, 0, 0])); await wait(80);
+      const q = await ev(([X, Y]) => ({ d: +Math.hypot(G.player.x - X, G.player.y - Y).toFixed(2), un: G.player.unstuck || 0 }), [X, Y]);
+      res.push({ d: q.d, maxDH, un: q.un });
+    }
+    const out = res.filter(r => r.d > 0.3).length;
+    check(`B1 wedge (${X}, ${Y}) Pinewood stairs: the hero walks out (>= 5 of 8 directions), no direction climbs 2 heights`, out >= 5 && res.every(r => r.maxDH <= 1), res.map(r => r.d));
+  }
+  // unstick safety: a hero shut inside a blocked tile (nothing can move it) is nudged to the nearest free tile after ~1.5 s of input
+  const uns = await ev(async () => {
+    const w = ms => new Promise(r => setTimeout(r, ms));
+    const m = G.map, p = G.player; p.x = 44.5; p.y = 88.5; p.z = tileH(m, p.x, p.y); p.stuckT = 0; p.unstuck = 0;
+    const i = Math.floor(p.x), j = Math.floor(p.y), was = m.block[j][i]; m.block[j][i] = true;
+    window.__axes([1, 0, 0, 0]); await w(900); const mid = p.unstuck; await w(1300); window.__axes([0, 0, 0, 0]); await w(80);
+    const r = { mid, un: p.unstuck, x: +p.x.toFixed(2), y: +p.y.toFixed(2), free: !m.block[Math.floor(p.y)][Math.floor(p.x)] };
+    m.block[j][i] = was; return r;
+  });
+  check('unstick: zero displacement under input for 1.5 s with no free direction -> nudged to the nearest walkable tile (not before)', uns.mid === 0 && uns.un === 1 && uns.free, uns);
+  const wall = await ev(async () => {   // pushing into a plain wall (other directions open) never teleports
+    const w = ms => new Promise(r => setTimeout(r, ms)); const p = G.player; p.x = 32.96; p.y = 93.97; p.z = tileH(G.map, p.x, p.y); p.unstuck = 0; p.stuckT = 0;
+    window.__axes([0.7, 0.7, 0, 0]); await w(2200); window.__axes([0, 0, 0, 0]); await w(80); return { un: p.unstuck, x: +p.x.toFixed(2) };
+  });
+  check('unstick: holding into a wall for 2 s does not teleport the hero', wall.un === 0 && wall.x < 33, wall);
+  await ev(() => { G.enemies.length = 0; G.boss = null; enterMap('vale'); G.state = 'play'; G.player.invulnT = 0; });
   // save slots: slot 1 = the legacy key, slots 2-3 beside it, an index for the title
   const slots = await ev(() => {
     const keep = [1, 2, 3].map(i => localStorage.getItem(saveKey(i)));
