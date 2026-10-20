@@ -1630,3 +1630,66 @@ Morrow keeps his own map.
 * **Switch criterion:** only if, after steps 1–5, a mid-range Android still shows p95 > 25 ms *and* the profile is
   draw-call bound. Even then, swap only render.js's sprite path to a thin WebGL batcher behind the same draw API.
   That is a renderer swap, never a game-engine switch.
+
+## 27. Hit feel: power-scaled hitlag, death fling and tumble (expert meeting 2026-10-20; director-approved)
+Full minutes: `docs/meetings/2026-10-20-feel-ui.md` (R1, R2). Summary:
+* **Hitlag**
+  * **Formula:**
+    * Computed in one place, `damageEnemy`, using `r = dmg / e.maxHp` (the phase bar's max once §26.1 lands) and the skill
+      weight `w` (basic 1.0, heavy 1.5, ultimate 2.0).
+    * **Target-only freeze** on every hit, projectiles included: `clamp(round((2 + 6r) * w), 2, 8)` steps. It adds zero
+      input latency.
+    * **Global freeze** (largest applicable row, in steps):
+
+      | Trigger | Steps |
+      |---|---|
+      | crit | 3 |
+      | kill | 3 |
+      | r ≥ 0.25 | 4 |
+      | r ≥ 0.5, or an ultimate | 6 |
+      | boss BREAK | 8 |
+
+      A budget of 12 steps per rolling 0.5 s applies. Any request over budget becomes target-only.
+  * **AoE:** one global freeze per cast, taken from the highest r. Damage-over-time ticks never hitlag.
+  * **Loop fix:** count freeze in unscaled steps, before slowmo is applied. This fixes the boss-death freeze stretching to 0.7 s.
+  * **Setting:** Off / Light / Full. The companion signals below stay on even when it is Off.
+  * **Companion signals** (all scale with r):
+    * damage-number size
+    * enemy flash
+    * knockback × (0.7 + 0.6r)
+    * hit particles 5 + 8r
+    * the hit sound pitches lower on heavier hits
+* **"Ragdoll" means a death fling, not physics.**
+  * Corpse records are pooled: 8 on phone, 12 on desktop.
+  * The body arcs away from the hit, bounces once, squashes and dissolves into motes. Speed and height scale with r.
+  * Pixel sprites are never rotated.
+  * Loot, XP and triggers stay immediate.
+  * **Exceptions:**
+    * Damage-over-time kills slump in place.
+    * Swarm members squash-pop.
+    * Bosses hold a death pose and dissolve in stages. They never fling.
+* **Tumble:** a non-boss hit with r ≥ 0.3 adds knockback ×1.5, a 0.3 s stun and a visual hop. The hop is a draw offset only;
+  it never writes `e.z`.
+* **Cut:** verlet bodies, gibs, sprite rotation, boss fling, camera zoom punch, slowmo on ordinary kills, additive hitstop.
+
+## 28. The opening: the hero starts bare (story & pacing expert 2026-10-20; director-approved; supersedes §16.2 timings and §17.1 "starting kit")
+Full feedback: `docs/meetings/2026-10-20-opening.md`.
+* **Start:** the hero wakes in the Dreamer's bed in a nightshirt, empty-handed. Pip is a small warm light. The HUD fades in
+  one piece per new noun.
+* **When each slot fills:**
+
+  | Time | What fills |
+  |---|---|
+  | 0:45 | the weapon, a sword standing in the grass |
+  | ~2:00 | the first chest: Common Iron Mail + the Origin ring + a Chipped gem; the bag opens on the mail |
+  | 2:20 | a fishing gem goes into the mail's socket |
+  | 3:50 | the Iron Cap, lying on a child's bed in the cottage (a silent twist seed) |
+  | 4:50 | the boots, dropped by the slime ambush |
+  | ~7:00 | the first Uncommon, from Pinewood room 1 |
+  | ~9:00 | the elite's Rare weapon, dropped with the key |
+  | 10:00 | the Hollow door shows "Recommended ilvl", which introduces the §26.2 loop |
+
+* **The Origin ring is found, never pre-equipped.** The ledge chest's `loot:'ring'` is removed.
+* **The twist is seeded by placement and silence.** The only new line is Pip's "Three days. You've been asleep three days."
+  Every STORY.md line stays.
+* **Pip gets a body now:** a light parented to the hero that drifts toward each objective. The full companion stays M7.
