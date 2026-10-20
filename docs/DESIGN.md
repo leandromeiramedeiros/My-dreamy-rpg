@@ -1386,3 +1386,80 @@ without making the hero wield it.
   they carry the new mechanics.
 * **Risk:** the art collides with the 27 maps and 28 enemies in M4–M7. The parts kit must land in M3, or one of the three
   slips.
+
+## 24. Armour classes × 3 suits (client request; expert-designed; director-approved; supersedes §15.5's armour option lists and §17.4)
+
+**Structure:** 4 armour classes, each with 3 **suits**. A suit is a variant that spans chest, helm and boots. Pieces mix
+freely.
+* **The class owns:**
+  * the ±25 % chest resist profile
+  * the stat shape
+  * the class 3-piece tag rule:
+    * Heavy: melee skills gain poise
+    * Caster: zones follow you
+    * Medium: projectiles pierce once
+    * Shadow: dashes leave decoys
+* **The suit owns:**
+  * its F/C/Shift skills
+  * the status it reinforces
+  * its implicits
+  * its look
+  * a **suit twist** that applies when you wear all 3 matching pieces
+* **Skill Runes:** for armour these exist on the chest only, as F alternates. Helms and boots get none (the anti-bloat
+  line).
+* **Boots:** every boots skill keeps i-frames, but each moves differently: dash, leap, blink, slide, sidestep, carry,
+  roll, pass-through.
+* **Origins:** each Origin gives the T1 chest of its suit (Knight → Warden, Mystic → Dreamweave, Ranger → Stalker,
+  Thief → Shade, Warrior → Juggernaut).
+* **Merged:**
+  * Thornmail becomes the Thornwarden chest.
+  * The Shade set becomes the Shade suit twist.
+  * Sprint is cut.
+  * Dreamveil moves to the Mirage helm.
+  * The belt's gem-wrap now reads "chest and boots of the same class".
+
+| Class (profile) | Suit — F / C / Shift · reinforces · decision |
+|---|---|
+| **Heavy** (HP/def; slash/pierce +25, lightning −25) | **Warden**: Bulwark (projectile reflect is baseline at T3+) / War Cry / Charge · Stagger, Rupture · face the volley. **Crusader**: Consecrated Guard (holy zone) / Judgement Bell / Vault · Purify, holy · zone or chase. **Juggernaut**: Brace (poise, then shove) / Ground Slam (cracks) / Bull Rush (carries an enemy, 0.25 s of i-frames) · Stagger, Shatter, Detonate · tank the hit on purpose |
+| **Caster** (MP/power; arcane +25, physical −25) | **Dreamweave**: Mana Surge / Arcane Ward (a shield that pops into a nova) / Blink · Overload · shield or nova. **Frostweave**: Winter's Veil / Frost Nova / Glide (leaves a frost trail) · Chill → Shatter · where you leave ice. **Stormweave**: Static Cloak / Stormcall / Flash Step (leaves a lightning line) · Shock, Conduct · take hits to charge |
+| **Medium** (crit/haste; pierce +25, fire −25) | **Stalker**: Shadow Veil / Hunter's Mark / Tumble · Rupture, Focus · open from stealth. **Thornwarden**: Briar Mantle / Mend (Bloom) / Root Vault (leaves a snare) · Poison → Wildfire · kite through snares. **Duelist**: En Garde (parry; shares an ICD with the Rapier's Riposte) / Taunt / Side-step (cd 3) · Rupture, Shock · parry or dodge |
+| **Shadow** (speed/crit; pierce +25, nature −25) | **Shade**: Fade Step / Smoke Bomb / Shadowstep (leaves a decoy) · Marks, Overload · where the decoy stands. **Nightshade**: Venom Coat / Toxin Flask / Slink (backstab from any angle) · Poison → Wildfire · spread or stack. **Mirage**: Mirror Image / Dreamveil / Phase (pass through enemies) · control, summons · images as decoys or damage |
+
+Tier names and per-tier visuals follow the expert's table, kept in the production log.
+* Examples:
+  * Warden: Iron Mail → Knight Plate → Sunforged Plate → Aurora Plate → Aegis of Dawn
+  * Duelist: Swordsman's Coat → … → Blade Eternal, Mythic *Aerin's Coat*
+* **Director ruling on Mythic names:** there are too many "Sorrel's" and "Pip's" items, and "Warden's Lantern" collides
+  with the Lantern Plate. All Mythic names get one naming pass across §23 and §24 before M7, so each story name is used
+  once.
+* **Combos** use tags, never slot checks. Examples:
+  * Rapier + Duelist: two parries sharing one ICD
+  * Hammer + Juggernaut: the "Faultline" Duo; their cracks share a tag
+  * Chakram + Stormweave: Conduct both ways
+  * Crossbow + Stalker: crits while reloading
+  * Spellbook + Dreamweave: double glyphs
+  * Fans + Mirage: images that throw fans
+  * Mace + Crusader: the "Sanctuary" Duo, with one zone and no stacking
+* **Suit twists:** for example, Juggernaut: poise never breaks below 25 % HP; Stormweave: Conduct +1 jump. All of them are
+  `EFFECTS src:'suit'`.
+* **Balance (balsim armour loop):**
+  * eHP within ±10 % inside a class.
+  * Utility within 0.8–1.2× of the slot mean.
+  * No slot variant above a 60 % pick rate in the optimal-build search.
+  * Total i-frame uptime ≤ 50 %.
+  * Poise capped at 75 %.
+  * One summon cap of 3 covering images, decoys and summons.
+  * Suit resists shift at most ±10 % toward the suit's element, and the hero clamp still applies.
+* **Cost:**
+  * 216 overlays + 216 icons ≈ 13 Sonnet-weeks with the parts kit (36 silhouettes, tiers made of palette + part swaps).
+  * At most 5 new mechanics: parry-for-all, glide trail, phase, carry-dash, mirror images.
+  * At most 36 new casts.
+  * Save v4 migration: knightplate→warden, dreamrobe→dreamweave, stalkerjacket→stalker.
+* **Schedule (to be confirmed by the scope decision below):**
+  * M4: the structure and the 4 Origin suits, plus the Juggernaut chest.
+  * M5: Frostweave, Thornwarden.
+  * M6: Crusader, Duelist, Nightshade.
+  * M7: Stormweave, Mirage and the Mythics.
+* **Cut order:** Mirage → Stormweave → Crusader → Nightshade → Duelist.
+* **Scope warning:** §23 and §24 together do not fit M4–M7 alongside the 27 maps and 28 enemies. The client chooses
+  (§24.1).
