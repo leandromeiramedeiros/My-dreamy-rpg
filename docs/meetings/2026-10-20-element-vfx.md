@@ -289,6 +289,13 @@ Not taken: `FxQuads.js` (instanced mesh), the GLSL motion, the 2 600-drop rain, 
 
 # Part B. Elemental statuses: the ladder, the body read, the data
 
+**Scope note (director, after this meeting):** a long elements design meeting (client, expert game director, a team of
+experts) follows and will own the status *mechanics*: each element's gameplay role, the ladders, thresholds, durations,
+combos, possibly new elements (Wind and other classics), and elements in puzzles and the world. **B2 and B3 are the VFX
+director's proposal, for the elements meeting to rule on.** They exist so the visual language (B4) and the data shape (B5)
+are designed against a concrete ladder; the elements meeting may change any number or row. B1, B4, B5 and the visual
+template in A9 stand on their own and are built to take new elements and new statuses without redesign.
+
 ## B1. What exists today (F10, F11)
 Burn (timer + 0.5 s tick of 14, refresh = max), Slow (×0.55 speed, timer), Stun (timer, boss ×0.25, tumble 0.3 s),
 Frozen (a flag riding on Stun), boss Stagger / BREAK; hero Slowed, Rooted, Dread, hurt flicker, buffs. Procs: `fireBurn`
@@ -297,7 +304,7 @@ Shock / Marks. `statusChance` is summed, unused. Seven reactions are specified i
 "best reaction" line, all M4. Resonance (+25 % reaction bonus per matched ring pair) is computed and waits for reactions.
 So the ladder below is the M4 reaction system's missing half: the statuses the reactions consume.
 
-## B2. Build-up rules (one mechanism for every element)
+## B2. Build-up rules (one mechanism for every element) — VFX director's proposal, for the elements meeting to rule on
 * Every elemental hit (not DoT ticks, not Echo hits beyond half) adds **build** to the target in that element:
   `build = 25 · w · (1 + statusChance) · (gem grade bonus: +5 % per grade of that element's gem, i.e. elementAmp ×1)`,
   `w` = the §27 skill weight (basic 1, heavy 1.5, ultimate 2). A weak target (`res < 0`) takes build ×1.5, a resisting one
@@ -312,7 +319,7 @@ So the ladder below is the M4 reaction system's missing half: the statuses the r
 * **Stacking:** only Poison (×3 ticks) and Marks (×`markCap`, 5) stack; everything else refreshes.
 * Statuses never hitlag (§27: DoT ticks never freeze); the applying hit does.
 
-## B3. The ladder per element
+## B3. The ladder per element — VFX director's proposal, for the elements meeting to rule on
 
 | Element | Tier 1 (50) | Tier 2 (100) | Tier 3 (150) | Reaction it feeds (§15.4) | Boss |
 |---|---|---|---|---|---|
