@@ -290,7 +290,7 @@ for (const id of BOSS_IDS) {
 // Bramblehorn's saplings) spawn on the card's schedule, relative to the boss. It stays inside a shrinking
 // root ring. Turret shots (saplings) are not dodged; boss and ogre / hound telegraphs are. Potions: 2, drunk below 50 % HP (one heals 40 %). Target priority: an add within 6 tiles (hounds, saplings) first, then the boss.
 // RED (§26.2): the -1 tier row outside LIVE_UNDER (3-4) of 6 wins, the reference row under 6 / 6, the Story -2 row at 0 / 6, a
-// single boss hit above bossHitCap() of max HP. A trial is lost when the hero dies or the fight runs past 1.5x the red length.
+// single boss hit above bossHitCap() of max HP. XP is frozen during the fight (a level-up heals fully). A trial is lost when the hero dies or the fight runs past 1.5x the red length.
 // Lengths: the reference row's median over the §20.7 red band (mini 120 / guardian 300 s) is red, over the §20.3 target a
 // note; the -1 tier median is a note (losses are expected there). The fight lengths themselves are enforced on the frozen table above.
 const LIVE = { mossjaw: { L: 7, max: 90, red: 120 }, bramblehorn: { L: 9, max: 240, red: 300 } };   // L: lowest arrival level (REPORT: 7-9 / 9-11)
@@ -305,7 +305,7 @@ function simBossFight(id, L, maxT, react, mistakes, potions, card, every) {
   const adds = card.adds;
   const seq = ['b', 'b', 'b', 's'], seen = new Map(), out = { won: false, t: 0, potions: 0, hits: 0, bossHits: 0, maxHit: 0, maxBossHit: 0, tele: 0, mistakes: 0, taken: 0 };
   let i = 0, alt = 0, t = 0, n = 0;
-  const hp0 = hurtPlayer;
+  const hp0 = hurtPlayer, xp0 = gainXp; gainXp = () => {};   // no XP inside the fight: a level-up (adds' XP, the kill) fully heals and was the largest source of trial-to-trial noise
   hurtPlayer = function (dmg, x, y, el, o) { const before = p.hp, r = hp0.apply(this, arguments); if (r) { const f = (before - p.hp) / p.maxHp; out.hits++; out.taken += before - p.hp; out.maxHit = Math.max(out.maxHit, f); if (o && o.boss) { out.bossHits++; out.maxBossHit = Math.max(out.maxBossHit, f); } const near = G.enemies.filter(q => !q.dead && q !== b).sort((q, r) => dist(p.x, p.y, q.x, q.y) - dist(p.x, p.y, r.x, r.y))[0], ring = G.shrink && x === G.shrink.x && y === G.shrink.y; const k = (o && o.boss ? b.state : ring ? 'rootRing' : near ? near.type : 'other') + (p.rootT > 0 ? '(rooted)' : ''); (out.by || (out.by = {}))[k] = +(((out.by || {})[k] || 0) + f).toFixed(2); } return r; };
   const inShape = (e, m) => {
     if (e.kind === 'circle') return dist(p.x, p.y, e.x, e.y) < e.r + p.r + m;
@@ -372,7 +372,7 @@ function simBossFight(id, L, maxT, react, mistakes, potions, card, every) {
     simStep(dt); t += dt;
     if (++n % 600 === 0) for (const [e] of seen) if (!G.effects.includes(e)) seen.delete(e);
   }
-  hurtPlayer = hp0;
+  hurtPlayer = hp0; gainXp = xp0;
   out.addsLeft = G.enemies.filter(e => !e.dead && e !== b).length;
   out.bars = b.bk ? b.bk.phase + 1 : 1; out.won = b.dead && !p.dead; out.t = t; out.hpLeft = p.dead ? 0 : p.hp / p.maxHp; out.bossLeft = b.dead ? 0 : b.hp / b.maxHp; out.maxHp = p.maxHp;
   return out;
