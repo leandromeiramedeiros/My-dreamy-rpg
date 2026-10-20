@@ -36,7 +36,7 @@ const vm = require('vm');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const OUT = __dirname;
-const LOAD = ['js/util.js', 'js/data.js', 'js/items.js', 'js/itemdata.js', 'js/world.js', 'js/game.js'];
+const LOAD = ['js/util.js', 'js/data.js', 'js/items.js', 'js/itemdata.js', 'js/world.js', 'js/enemydata.js', 'js/parts.js', 'js/bosses.js', 'js/game.js'];   // M2b: ENEMY lives in parts.js
 
 // ---------- load the game into a vm context with browser stubs ----------
 function makeContext() {

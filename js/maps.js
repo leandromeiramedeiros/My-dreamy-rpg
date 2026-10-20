@@ -406,7 +406,7 @@ function placeBarrier(m, o, kind) {
   const id = o.id || `${kind}_${(+o.x).toFixed(1)}_${(+o.y).toFixed(1)}`;
   for (let i = 0; i < n; i++) {
     const t = n === 1 ? 0 : i / (n - 1) - 0.5, x = +o.x + Math.cos(a) * len * t, y = +o.y + Math.sin(a) * len * t;
-    const img = L.img(), ob = addProp(m, img, x, y, { r: L.r, shadow: 5, src: o, light: L.light && i === (n >> 1) ? Object.assign({}, L.light) : undefined });
+    const im = L.img(), img = Array.isArray(im) ? im[i % im.length] : im, ob = addProp(m, img, x, y, { r: L.r, shadow: 5, src: o, light: L.light && i === (n >> 1) ? Object.assign({}, L.light) : undefined });
     ob.barrier = kind; ob.gid = id; ob.doorKey = o.key || null;
     if (kind === 'keydoor' && i === (n >> 1)) ob.use = KEYDOOR_USE;
   }

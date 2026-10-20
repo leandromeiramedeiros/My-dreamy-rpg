@@ -6,6 +6,8 @@
 //  2. device switching: prompt glyphs on the skill bar + the interact prompt change kbm -> pad (Xbox, PS) -> touch
 //  3. combat feel (§15.3): MP on basic hits, ultimate charge gate, dodge-cancel refund, skill ranks
 //  4. rebinding round-trip through the save, and a v2 -> v3 save migration with no data loss
+//  4d. M2b engine: one behaviour part per category, elites, the Bramblehorn telegraph + phase 2, the Warden port,
+//      gate / lever / keydoor / hidden / fishspot on an inline test map, trigger actions, 3 save slots (shots: tools/shots/m2b)
 //  5. frame-time sample (avg / p95)
 // Usage: node tools/play.js     (exit 1 on any failed check or page error)
 const http = require('http'), fs = require('fs'), path = require('path');
@@ -255,6 +257,229 @@ const PAD_STUB = () => {
   const shot = await ev(() => window.__primShot);
   fs.mkdirSync(path.join(__dirname, 'shots'), { recursive: true });
   fs.writeFileSync(path.join(__dirname, 'shots', 'ui-primitives.png'), Buffer.from(shot.split(',')[1], 'base64'));
+  // ---------- 4d. touch v2: circular wheel, tap = quick-cast, drag = aimed cast, cancel zones, pages, left-handed, multi-touch ----------
+  await ev(() => {
+    window.__tp = (type, id, x, y) => { const c = document.getElementById('game'), r = c.getBoundingClientRect(); c.dispatchEvent(new PointerEvent(type, { pointerType: 'touch', pointerId: id, bubbles: true, clientX: r.left + x * r.width / DW, clientY: r.top + y * r.height / DH })); };
+    window.__bt = slot => touchButtons().find(b => b.slot === slot);
+    window.__vib = []; Object.defineProperty(navigator, 'vibrate', { configurable: true, value: ms => { window.__vib.push(ms); return true; } });
+    window.__reset = () => { const p = G.player; G.enemies.length = 0; p.cds = {}; p.mp = p.maxMp; p.st = p.maxSt; p.ult = 0; p.hp = p.maxHp; p.dash = null; p.cast = null; p.atkT = 0; p.rootT = 0; p.potT = 0; G.prompt = null; window.__vib.length = 0; if (window.__casts) window.__casts.length = 0; };
+    { const u = useSkill; window.__casts = []; window.useSkill = function (p, slot) { const ok = u(p, slot); if (ok) window.__casts.push({ slot, wx: G.mouse.wx, wy: G.mouse.wy }); return ok; }; }   // records the aim at each cast
+    __tp('pointerdown', 9, 5, 5); __tp('pointerup', 9, 5, 5);   // the first touch flips the HUD to touch
+  });
+  await wait(150);
+  const tap2 = async slot => { await ev(s => { const b = __bt(s); __tp('pointerdown', 20, b.x, b.y); __tp('pointerup', 20, b.x, b.y); }, slot); await wait(260); };
+  // layout: exact angles and radii (clockwise-from-+x screen angles), safe area, nothing above y 240
+  const lay = await ev(() => { const o = {}; for (const b of touchButtons()) o[b.slot] = [b.x, b.y, b.s]; return o; });
+  const want = (r, a) => [860 + r * Math.cos(a * Math.PI / 180), 436 + r * Math.sin(a * Math.PI / 180)];
+  const near = (b, w) => b && Math.abs(b[0] - w[0]) <= 2 && Math.abs(b[1] - w[1]) <= 2;
+  const specOk = near(lay.q, want(124, 200)) && near(lay.e, want(124, 235)) && near(lay.r, want(124, 270)) && near(lay.f, want(196, 190)) && near(lay.c, want(196, 215)) &&
+    near(lay.shift, want(196, 240)) && near(lay.pot, want(196, 265)) && near(lay.toggle, want(196, 160)) && lay.atk[0] === 860 && lay.atk[1] === 436 && lay.atk[2] === 96 &&
+    lay.q[2] === 60 && lay.f[2] === 52 && lay.toggle[2] === 40 && Object.values(lay).every(b => b[1] >= 240 && b[0] - b[2] / 2 >= 0 && b[0] + b[2] / 2 <= 936);
+  check('touch: circular layout at the spec angles / radii / diameters, nothing above y 240', specOk, lay);
+  // tap = quick-cast (auto-target, aim assist), lands on the enemy
+  await ev(() => { __reset(); const p = G.player, e = spawnEnemy('slime', p.x + 1.3, p.y + 0.5, 0); e.hp = e.maxHp = 1e6; });
+  await tap2('q');
+  const tq = await ev(() => ({ hp: G.enemies[0] ? G.enemies[0].hp : 0, cd: G.player.cds.sunslash || 0, vib: window.__vib.slice() }));
+  check('touch: tap Q quick-casts at the enemy (hit, cooldown, 15 ms haptic)', tq.hp < 1e6 && tq.cd > 0 && tq.vib.includes(15), tq);
+  // drag past range clamps; 40 px drag = 60 % of range; the cast uses the indicator's target
+  await ev(() => { __reset(); G.player.ult = 100; const b = __bt('r'); __tp('pointerdown', 21, b.x, b.y); __tp('pointermove', 21, b.x - 40, b.y); });
+  const d40 = await ev(() => { const a = TOUCH_AIM; return a && { range: a.aim.range, d: Math.hypot(a.to.x - a.from.x, a.to.y - a.from.y), clamped: a.clamped, cancel: a.cancel, shape: a.aim.shape }; });
+  await ev(() => { const b = __bt('r'); __tp('pointermove', 21, b.x - 170, b.y - 60); });
+  const dfar = await ev(() => { const a = TOUCH_AIM; return a && { range: a.aim.range, d: Math.hypot(a.to.x - a.from.x, a.to.y - a.from.y), clamped: a.clamped, cancel: a.cancel, slot: a.slot, skill: a.skill, tx: a.to.x, ty: a.to.y }; });
+  check('touch: drag 40 px maps to ~60 % of range (ease-out)', !!d40 && (d40.shape === 'self' || Math.abs(d40.d / d40.range - 0.6) < 0.03), d40);
+  check('touch: drag past 96 px clamps to the range and sets TOUCH_AIM.clamped', dfar && dfar.clamped && !dfar.cancel && (dfar.d === 0 || Math.abs(dfar.d - dfar.range) < 1e-6) && dfar.slot === 'r', dfar);
+  await ev(() => { const b = __bt('r'); __tp('pointerup', 21, b.x - 170, b.y - 60); });
+  await wait(300);
+  const rel = await ev(() => { const c = window.__casts.find(q => q.slot === 'r') || {}; return { ult: G.player.ult, aim: TOUCH_AIM, mx: c.wx, my: c.wy, vib: window.__vib.slice() }; });
+  check('touch: release casts through the aimed path at the clamped target (ult spent, TOUCH_AIM cleared, 8 + 15 ms haptics)', dfar && rel.ult === 0 && rel.aim === null && Math.abs(rel.mx - dfar.tx) < 1e-6 && Math.abs(rel.my - dfar.ty) < 1e-6 && rel.vib.includes(8) && rel.vib.includes(15), { rel, dfar });
+  // cancel: the X zone, and back over the button; costs nothing, starts no cooldown
+  await ev(() => { __reset(); G.player.ult = 100; const b = __bt('r'); __tp('pointerdown', 22, b.x, b.y); __tp('pointermove', 22, b.x - 60, b.y - 30); __tp('pointermove', 22, 480, 500); });
+  const cx = await ev(() => TOUCH_AIM && { cancel: TOUCH_AIM.cancel, d: TOUCH_AIM.d });
+  await ev(() => { __tp('pointerup', 22, 480, 500); });
+  await wait(300);
+  const cr = await ev(() => { const p = G.player; return { ult: p.ult, mp: p.mp, max: p.maxMp, cd: p.cds.judgement || 0, aim: TOUCH_AIM, vib: window.__vib.slice() }; });
+  check('touch: release on the cancel X costs nothing (no ult / MP / cooldown), 25 ms haptic', cx && cx.cancel && cr.ult === 100 && cr.mp === cr.max && cr.cd <= 0.5 && cr.aim === null && cr.vib.includes(25), { cx, cr });
+  await ev(() => { __reset(); G.player.ult = 100; const b = __bt('r'); __tp('pointerdown', 23, b.x, b.y); __tp('pointermove', 23, b.x - 70, b.y); __tp('pointermove', 23, b.x + 2, b.y + 2); });
+  const cb = await ev(() => TOUCH_AIM && TOUCH_AIM.cancel);
+  await ev(() => { const b = __bt('r'); __tp('pointerup', 23, b.x + 2, b.y + 2); });
+  await wait(300);
+  check('touch: release back over the button cancels', cb === true && await ev(() => G.player.ult === 100));
+  // page toggle -> cast 1 / 2 / 3, hidden skills keep ticking
+  await ev(() => __reset());
+  await tap2('toggle'); await wait(150);
+  const pg = await ev(() => ({ page: TOUCH.page, slots: touchButtons().map(b => b.slot).join() }));
+  check('touch: page toggle swaps [Q E R] for [1 2 3]', pg.page === 1 && /(^|,)1,2,3(,|$)/.test(pg.slots) && !/(^|,)q(,|$)/.test(pg.slots), pg);
+  const casts = [];
+  for (const sl of ['1', '2', '3']) {
+    await ev(() => { const p = G.player; p.cds = {}; p.mp = p.maxMp; p.st = p.maxSt; p.dash = null; p.cast = null; p.rootT = 0; });
+    await tap2(sl);
+    casts.push(await ev(s => { const p = G.player, id = slotSkill(p, s); return { s, id, cd: p.cds[id] || 0 }; }, sl));
+  }
+  check('touch: page 2 taps cast skills 1 / 2 / 3', casts.every(c => c.id && c.cd > 0), casts);
+  await tap2('toggle'); await wait(150);
+  check('touch: toggling back restores Q E R', await ev(() => TOUCH.page === 0 && touchButtons().some(b => b.slot === 'q')));
+  // dodge + potion + interact
+  await ev(() => { __reset(); G.player.hp = G.player.maxHp / 2; G.player.potions = 3; });
+  await tap2('pot');
+  check('touch: potion button drinks a potion', await ev(() => G.player.potions === 2));
+  await ev(() => { __reset(); });
+  await tap2('shift');
+  const dg = await ev(() => { const p = G.player, id = slotSkill(p, 'shift'); return { id, cd: p.cds[id] || 0, vib: window.__vib.slice() }; });
+  check('touch: dodge button dodges (cooldown, 40 ms haptic)', dg.id && dg.cd > 0 && dg.vib.includes(40), dg);
+  const ch2 = await ev(() => { __reset(); const o = G.map.objects.find(q => q.chest && !q.opened); if (!o) return null; G.player.x = o.x + 0.6; G.player.y = o.y + 0.3; return true; });
+  if (ch2) {
+    await wait(250);
+    const hasI = await ev(() => touchButtons().some(b => b.slot === 'interact'));
+    await tap2('interact');
+    check('touch: interact slot appears near a chest and opens it', hasI && await ev(() => G.map.objects.some(q => q.chest && q.opened)), hasI);
+  }
+  // show-all-9 puts 1 2 3 on a third arc and drops the toggle
+  const a9 = await ev(() => { TOUCH.forceAll9 = true; setSetting('showAll9', true); const s = touchButtons().map(b => b.slot); setSetting('showAll9', false); TOUCH.forceAll9 = false; return s.join(); });
+  check('touch: show-all-9 shows 1 2 3 beside Q E R, no toggle', ['q', 'e', 'r', '1', '2', '3'].every(k => a9.split(',').includes(k)) && !/toggle/.test(a9), a9);
+  // charge hook: one haptic click when full
+  const chg = await ev(() => { const p = G.player; window.__vib.length = 0; TOUCH.chargeFull = false; p.holdCharge = 0.4; const a = touchChargeFrac(p); p.holdCharge = 1; touchChargeFrac(p); touchChargeFrac(p); const n = window.__vib.filter(v => v === 25).length; p.holdCharge = 0; touchChargeFrac(p); return { a, n }; });
+  check('touch: charge hook reads p.holdCharge and clicks once at full', chg.a === 0.4 && chg.n === 1, chg);
+  // left-handed hit-test: everything mirrors about x = 480; the old right-hand spots stop being buttons
+  await ev(() => { __reset(); setSetting('leftHanded', true); });
+  const lh = await ev(() => { const a = __bt('atk'), q = __bt('q'); return { ax: a.x, qx: q.x, hitMirror: (touchHit(a.x, a.y) || {}).slot, hitOld: touchHit(DW - a.x, a.y) }; });
+  await ev(() => { const a = __bt('atk'); __tp('pointerdown', 24, a.x, a.y); });
+  await wait(200);
+  const lhHeld = await ev(() => IN.held('attack'));
+  await ev(() => { const a = __bt('atk'); __tp('pointerup', 24, a.x, a.y); });
+  await ev(() => { __tp('pointerdown', 25, 860, 436); });
+  const lhOld = await ev(() => Object.values(TOUCH.ptrs).map(t => t.kind));
+  await ev(() => { __tp('pointerup', 25, 860, 436); });
+  await wait(100);
+  check('touch: left-handed mirrors the wheel about x = 480', lh.ax === 100 && Math.abs(lh.qx - (960 - lay.q[0])) <= 2, { lh, qRight: lay.q[0] });
+  check('touch: left-handed hold at the mirrored attack button attacks; the old right-hand spot is just the stick', lh.hitMirror === 'atk' && lh.hitOld === null && lhHeld === true && lhOld.join() === 'stick', { lh, lhHeld, lhOld });
+  await ev(() => { setSetting('leftHanded', false); });
+  // two pointers at once: stick + held attack + a drag-aimed skill
+  await ev(() => { __reset(); });
+  const p0m = await ev(() => ({ x: G.player.x, y: G.player.y }));
+  await ev(() => { __tp('pointerdown', 30, 200, 400); __tp('pointermove', 30, 280, 400); const a = __bt('atk'); __tp('pointerdown', 31, a.x, a.y); const e = __bt('e'); __tp('pointerdown', 32, e.x, e.y); __tp('pointermove', 32, e.x - 80, e.y - 30); });
+  await wait(300);
+  const two = await ev(() => ({ move: IN.move.mag, atk: IN.held('attack'), aim: TOUCH_AIM && TOUCH_AIM.slot, x: G.player.x, y: G.player.y }));
+  await ev(() => { const a = __bt('atk'), e = __bt('e'); __tp('pointercancel', 32, e.x, e.y); __tp('pointerup', 31, a.x, a.y); __tp('pointerup', 30, 280, 400); });
+  await wait(150);
+  const two2 = await ev(() => ({ move: IN.move.mag, atk: IN.held('attack'), aim: TOUCH_AIM, n: Object.keys(TOUCH.ptrs).length }));
+  check('touch: two+ pointers at once (stick moves, attack held, skill drag-aims), all released cleanly', two.move > 0 && two.atk && two.aim === 'e' && Math.hypot(two.x - p0m.x, two.y - p0m.y) > 0.1 && two2.move === 0 && !two2.atk && two2.aim === null && two2.n === 0, { two, two2 });
+  await ev(() => { __reset(); });
+  await page.keyboard.press('KeyS'); await wait(100);   // back to kbm for the later sections
+
+  // ---------- 4d. M2b engine: behaviour parts, bosses, map objects, trigger actions, save slots ----------
+  const M2B = path.join(__dirname, 'shots', 'm2b'); fs.mkdirSync(M2B, { recursive: true });
+  const shotM2b = async (name) => { await wait(120); await page.screenshot({ path: path.join(M2B, name + '.png') }); };
+  await ev(() => { G.enemies.length = 0; G.projs.length = 0; G.zones.length = 0; G.ui.open = false; G.ui.pause = false; const p = G.player; p.invulnT = 0; p.hp = p.maxHp; p.dead = false; G.state = 'play'; });
+  const rows = await ev(() => ({ n: Object.keys(ENEMY).length, data: typeof ENEMY_DATA !== 'undefined', ported: ['slime', 'wisp', 'hound', 'ogre', 'troll'].map(k => ENEMY[k] && defParts(ENEMY[k]).parts.join('+')).join(' '), elites: ELITE_IDS.length }));
+  check('parts: enemies are rows (ENEMY_DATA loaded), the M2a five keep their parts, 8 elite mods', rows.data && rows.ported === 'chase+brute kite+shoot charge chase+brute chase+brute' && rows.elites === 8, rows);
+  // movement: sleep — dormant until the hero comes close
+  const sleep = await ev(async () => {
+    const p = G.player, e = spawnEnemy('mountaintroll', p.x + 5, p.y, 0), w = ms => new Promise(r => setTimeout(r, ms));
+    const x0 = e.x; await w(500); const slept = e.asleep && Math.abs(e.x - x0) < 0.01;
+    e.x = p.x + 2; await w(900); const woke = !e.asleep; G.enemies.length = 0; return { slept, woke };
+  });
+  check('parts: movement "sleep" stays dormant, wakes when the hero is near', sleep.slept && sleep.woke, sleep);
+  // attack: brute — a telegraphed circle, tagged with its enemy, that hurts a hero standing in it
+  const brute = await ev(async () => {
+    const p = G.player, w = ms => new Promise(r => setTimeout(r, ms)); p.hp = p.maxHp; p.invulnT = 0;
+    const e = spawnEnemy('troll', p.x + 0.9, p.y, 0); e.pcd.brute = 0; await w(250);
+    const tel = G.effects.find(f => f.type === 'tele' && f.src === e), hp0 = p.hp; await w(1400);
+    const r = { tele: !!tel, kind: tel && tel.kind, wind: +(e.windMax || 0).toFixed(2), hurt: p.hp < hp0 }; G.enemies.length = 0; p.hp = p.maxHp; return r;
+  });
+  check('parts: attack "brute" telegraphs (tagged circle) then hurts the hero inside', brute.tele && brute.kind === 'circle' && brute.wind >= 0.6 && brute.hurt, brute);
+  // support: healer — a 4 s telegraphed heal of a damaged ally, capped at 30 %
+  const heal = await ev(async () => {
+    const p = G.player, w = ms => new Promise(r => setTimeout(r, ms)); p.buffs.veil = { t: 0, max: 0 }; delete p.buffs.veil;
+    const ally = spawnEnemy('ogre', p.x + 7, p.y + 1, 0); ally.stunT = 99; ally.hp = ally.maxHp * 0.3;
+    const sh = spawnEnemy('brambleshaman', p.x + 6.5, p.y - 0.5, 0); sh.pcd.healer = 0; sh.pcd['zone-caster'] = 99;
+    const hp0 = ally.hp; await w(1500); const mid = ally.hp, winding = sh.state === 'wind' && sh.act === 'healer';
+    await w(3300); const r = { winding, early: mid === hp0, healed: +((ally.hp - hp0) / ally.maxHp).toFixed(2) }; G.enemies.length = 0; return r;
+  });
+  check('parts: support "healer" winds up 4 s, then heals <= 30 % of the ally', heal.winding && heal.early && heal.healed > 0.2 && heal.healed <= 0.3, heal);
+  // death and group: split — two children, which give no XP
+  const split = await ev(() => {
+    const p = G.player; G.enemies.length = 0; const xp0 = p.xp, lv0 = p.level, e = spawnEnemy('gloomslime', p.x + 3, p.y, 0); killEnemy(e);
+    const kids = G.enemies.filter(o => o.type === 'gloomslime_small' && !o.dead); const xpParent = p.xp !== xp0 || p.level !== lv0;
+    const xp1 = p.xp; kids.forEach(k => killEnemy(k)); const r = { kids: kids.length, parentXp: xpParent, kidXp: p.xp !== xp1 }; G.enemies.length = 0; return r;
+  });
+  check('parts: death "split" spawns 2 children that give no XP', split.kids === 2 && split.parentXp && !split.kidXp, split);
+  const swarm = await ev(() => {
+    const p = G.player; G.enemies.length = 0; G.kills = {}; spawnEnemy('dreammoth', p.x + 3, p.y, 0);
+    const n = G.enemies.length; for (const e of G.enemies.slice()) killEnemy(e); const r = { members: n, kills: G.kills.dreammoth || 0 }; G.enemies.length = 0; return r;
+  });
+  check('parts: a swarm spawns its members and counts as one kill', swarm.members === 4 && swarm.kills === 1, swarm);
+  const elite = await ev(async () => {
+    const p = G.player, w = ms => new Promise(r => setTimeout(r, ms)), base = spawnEnemy('ogre', p.x + 9, p.y, 0).maxHp; G.enemies.length = 0;
+    const e = spawnEnemy('ogre', p.x + 2.2, p.y + 0.4, 0, { elite: 'storm' }), t = spawnEnemy('slime', p.x - 2, p.y + 1.5, 0, { elite: 'twin' });
+    await w(300); return { mods: e.mods.join(), hpMul: +(e.maxHp / base).toFixed(2), twins: G.enemies.filter(o => o.type === 'slime').length, cls: enemyClassOf(e) };
+  });
+  check('parts: elite spawns (ELITE_MODS) — x3.2 HP, Storm aura, Twin linked copy', elite.mods === 'storm' && elite.hpMul === 3.2 && elite.twins === 2 && elite.cls === 'elite', elite);
+  await ev(() => { const p = G.player; for (const [t, dx, dy] of [['shadehound', 3, -2], ['brambleshaman', 4, 1.5], ['thornbackboar', -3, -2.5], ['dreammoth', -4, 2]]) spawnEnemy(t, p.x + dx, p.y + dy, 0); p.invulnT = 99; });
+  await wait(900); await shotM2b('parts_roster_elites');
+  await ev(() => { G.enemies.length = 0; G.effects.length = 0; G.player.invulnT = 0; });
+  // Bramblehorn: data-driven boss, the stomp telegraph (fair wind / open, warnSfx hook, tagged circle)
+  const bh = await ev(async () => {
+    const p = G.player, w = ms => new Promise(r => setTimeout(r, ms)); p.hp = p.maxHp; p.invulnT = 0;
+    window.WARN_SFX = window.WARN_SFX || { circle: 'warn_circle' };   // js/sfxdata.js is not in index.html yet
+    const b = spawnEnemy('bramblehorn', p.x + 1.5, p.y, 0); b.cd = 99; startMove(b, 'stomp');
+    const warn = Object.assign({}, G.lastWarn), tel = G.effects.find(f => f.type === 'tele' && f.src === b && f.kind === 'circle');
+    const hp0 = p.hp; await w(450); window.__bhShot = true;
+    return { boss: G.boss === b, name: ENEMY.boss.name, type: warn.type, move: warn.move, wind: warn.wind, open: warn.open, sfx: warn.sfx, r: tel && tel.r, phases: b.bk.def.phases.length, hp0 };
+  });
+  await shotM2b('bramblehorn_stomp_telegraph');
+  const bh2 = await ev(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); await w(700); const p = G.player, b = G.boss; const r = { hurt: p.hp < p.maxHp, fair: bossFairness('bramblehorn').length === 0 && bossFairness('mossjaw').length === 0 }; return r; });
+  check('boss: Bramblehorn stomp telegraph (circle r3, wind 0.9 >= 0.6, open 1.5 >= 1.2, warnSfx hook) and its hit lands', bh.boss && bh.name === 'Old Bramblehorn' && bh.type === 'circle' && bh.move === 'stomp' && bh.wind >= 0.6 && bh.open >= 1.2 && bh.sfx === 'warn_circle' && bh.r === 3 && bh.phases === 2 && bh2.hurt && bh2.fair, Object.assign(bh, bh2));
+  const bhp2 = await ev(async () => { const w = ms => new Promise(r => setTimeout(r, ms)), b = G.boss; G.player.invulnT = 99; b.bk.mv = null; b.hp = b.maxHp * 0.45; await w(400); const q = b.bk.phase; await w(2600); return { phase: q, shrink: !!G.shrink }; });
+  check('boss: Bramblehorn phase 2 at 50 % (onEnter: root wall shrinks the arena)', bhp2.phase === 1 && bhp2.shrink, bhp2);
+  await ev(() => { G.enemies.length = 0; G.boss = null; G.shrink = null; G.effects.length = 0; G.player.invulnT = 0; G.player.hp = G.player.maxHp; });
+  const ward = await ev(() => { const D = BOSSES.boss; return { moves: Object.keys(D.moveDefs).join(), p2: D.phases[1].hpBelow, adds: D.phases[1].onEnter[0].adds.length, hp: ENEMY.boss.hp, moss: Object.keys(BOSSES.mossjaw.moveDefs).join() }; });
+  check('boss: Gloam Warden ported to BOSS_MOVES (cleave slam volley charge voidrain, 50 % roar + 4 adds); Mossjaw is data', ward.moves === 'cleave,slam,volley,charge,voidrain' && ward.p2 === 0.5 && ward.adds === 4 && ward.moss === 'lunge,rootSpit,burrow,howl', ward);
+  // map objects on an inline test map: gate + lever, keydoor + key, hidden wall, fishspot, arrive portal, fractional house
+  const flow = await ev(async () => {
+    const w = ms => new Promise(r => setTimeout(r, ms)), W = 14, row = 'g'.repeat(W);
+    G.world.maps.m2b_test = { name: 'Test Glade', sub: 'gates', theme: 'forest', W, H: W, tiles: Array(W).fill(row), heights: Array(W).fill('0'.repeat(W)), start: { x: 3, y: 7 },
+      portals: [{ x: 12, y: 12, to: 'vale', open: true, id: 'home', arrive: { x: 5.5, y: 6.5 } }],
+      objects: [{ t: 'gate', x: 7, y: 7, id: 'gate_g1', ang: 0, len: 3 }, { t: 'lever', x: 4, y: 4, id: 'lever_g1' }, { t: 'keydoor', x: 10, y: 4, id: 'door_d1', key: 'key_test', ang: 0, len: 2 },
+        { t: 'hidden', x: 10, y: 10, id: 'wall_w1', ang: 1.57, len: 2 }, { t: 'fishspot', x: 2, y: 11, pool: 'test_a' }, { t: 'house', x: 1.4, y: 1.6 }],
+      triggers: [], objective: 'Test the gates', level: [3, 10] };
+    THEME_OF.m2b_test = 'forest'; delete G.maps.m2b_test; G.prog.gates = {}; G.prog.secrets = {};
+    enterMap('m2b_test'); G.state = 'play';
+    const p = G.player, m = G.map; p.invulnT = 99;
+    const gateCols = m.colliders.filter(c => c.barrier === 'gate').length;
+    p.x = 6; p.y = 7; for (let i = 0; i < 40; i++) moveEntity(p, 0.05, 0, 0); const blocked = p.x < 6.9;
+    p.x = 4.6; p.y = 4.4; await w(150); const leverPrompt = G.prompt && G.prompt.kind; interact(p);
+    const opened = G.prog.gates['m2b_test:gate_g1'] === true && !m.colliders.some(c => c.barrier === 'gate'), pulled = m.objects.find(o => o.lever).pulled;
+    p.x = 10.5; p.y = 5.2; await w(150); const locked = G.prompt && G.prompt.text; interact(p); const stillShut = m.colliders.some(c => c.barrier === 'keydoor');
+    runAction({ type: 'loot', rarity: 'uncommon', count: 1, item: 'key_test' }); await w(150); const unlockTxt = G.prompt && G.prompt.text; interact(p);
+    const doorOpen = !m.colliders.some(c => c.barrier === 'keydoor');
+    runAction({ type: 'openGate', id: 'wall_w1' }); const hiddenOpen = !m.colliders.some(c => c.barrier === 'hidden');
+    p.x = 2.6; p.y = 11.3; await w(150); const fish = G.prompt && G.prompt.kind;
+    runAction({ type: 'quest', id: 'pinewood_foxkit' }); const q0 = JSON.stringify(G.prog.quests.pinewood_foxkit); runAction({ type: 'quest', id: 'pinewood_foxkit' }); const q1 = JSON.stringify(G.prog.quests.pinewood_foxkit);
+    runAction({ type: 'quest', id: 'pinewood_foxkit', done: true }); const q2 = G.prog.quests.pinewood_foxkit;
+    runAction({ type: 'dialogue', id: 'pinewood_fox' }); const talk = G.msg && G.msg.s;
+    runAction({ type: 'checkpoint', text: 'Test shrine' }); const cp = G.checkpoint && G.checkpoint.map;
+    runAction({ type: 'spawn', enemy: 'shaman', count: 1, x: 7, y: 10, radius: 0.5, elite: true }); runAction({ type: 'spawn', enemy: 'mossjaw', count: 1, x: 8, y: 3, radius: 0.3 }); await w(1300);
+    const spawned = { shaman: G.enemies.some(e => e.type === 'brambleshaman' && e.elite), boss: !!(G.boss && G.boss.type === 'mossjaw' && !G.boss.elite) };
+    G.enemies.length = 0; G.boss = null;
+    const pt = m.portals.find(q => q.id === 'home'); runAction({ type: 'close_portal', id: 'home' }); const closed = !pt.open; runAction({ type: 'open_portal', id: 'home' });
+    p.x = 7; p.y = 9; p.invulnT = 99;
+    return { gateCols, blocked, leverPrompt, opened, pulled, locked, stillShut, unlockTxt, doorOpen, hiddenOpen, fish, q0, q1, q2, talk, cp, spawned, closed, arrive: pt.arrive && pt.arrive.x === 5.5, house: m.objects.some(o => o.src && o.src.t === 'house') };
+  });
+  await shotM2b('gate_lever_keydoor_testmap');
+  check('map: gate blocks, lever (Interact) opens it and flips, saved in G.prog.gates', flow.gateCols >= 3 && flow.blocked && flow.leverPrompt === 'lever' && flow.opened && flow.pulled, flow);
+  check('map: keydoor stays locked without its key, a loot card item:key_* unlocks it', flow.locked === 'Locked' && flow.stillShut && flow.unlockTxt === 'Unlock' && flow.doorOpen);
+  check('map: openGate reveals a hidden wall; fishspot stub prompt; fractional house coords; portal arrive + id', flow.hiddenOpen && flow.fish === 'fishspot' && flow.house && flow.arrive && flow.closed);
+  check('triggers: quest {step} -> {step+1} -> done, dialogue by DIALOGUE id, checkpoint, elite spawn, boss start by row', flow.q0 === '{"step":0}' && flow.q1 === '{"step":1}' && flow.q2 === 'done' && /^Pip: /.test(flow.talk || '') && flow.cp === 'm2b_test' && flow.spawned.shaman && flow.spawned.boss, { q: [flow.q0, flow.q1, flow.q2], talk: flow.talk, spawned: flow.spawned });
+  // save slots: slot 1 = the legacy key, slots 2-3 beside it, an index for the title
+  const slots = await ev(() => {
+    const keep = [1, 2, 3].map(i => localStorage.getItem(saveKey(i)));
+    const d = saveData(); d.slot = 2; localStorage.setItem(saveKey(2), JSON.stringify(Object.assign(d, { player: Object.assign({}, d.player, { level: 9 }) })));
+    const list = saveSlots(), r = { k1: saveKey(1), k3: saveKey(3), s2: list[1] && list[1].level, n: list.length, read: readSave(2) && readSave(2).slot }; selectSlot(2); r.cur = G.saveSlot;
+    [1, 2, 3].forEach((i, j) => { if (keep[j] == null) localStorage.removeItem(saveKey(i)); else localStorage.setItem(saveKey(i), keep[j]); }); selectSlot(1);
+    return r;
+  });
+  check('save: 3 slots (slot 1 = dreamy.save.v1), v3 shape kept, title slot picker reads them', slots.k1 === 'dreamy.save.v1' && slots.k3 === 'dreamy.save.v1.s3' && slots.s2 === 9 && slots.n === 3 && slots.read === 2 && slots.cur === 2, slots);
+  await ev(() => { G.enemies.length = 0; G.boss = null; enterMap('vale'); G.state = 'play'; G.player.invulnT = 0; });
   // ---------- 5. frame time ----------
   await page.reload({ waitUntil: 'load' });
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });

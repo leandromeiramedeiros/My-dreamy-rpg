@@ -43,11 +43,11 @@ function REF_EHP(L) {
   let row = REF_EHP_TABLE[0]; for (const r of REF_EHP_TABLE) if (L >= r[0]) row = r;
   return row[2] + (row[3] - row[2]) * clamp((L - row[0]) / (row[1] - row[0]), 0, 1);
 }
-const HIT_FRAC = { big: 0.4, chip: 0.1 };
+const HIT_FRAC = { big: 0.45, chip: 0.1 };   // of REF_EHP; the real reference hero takes ~36 % / 8 % of its HP (balsim)
 
 const BUILTIN_BOSSES = {
   // the M2a fight, ported number for number (acceptance test). Phase 3 (pillars, spiral) is M4.
-  boss: { name: 'The Gloam Warden', kind: 'guardian', hp: 7200, speed: 1.6, keep: 2.2, staggerMax: 4.8, breakOpen: 0, xp: 1, bob: true, nearR: 3.6,
+  boss: { name: 'The Gloam Warden', kind: 'guardian', level: 17, hp: 27660, speed: 1.6, keep: 2.2, staggerMax: 4.8, breakOpen: 0, xp: 1, bob: true, nearR: 3.6,
     moveDefs: {
       cleave: { type: 'cone', arc: 2.0, r: 3.6, wind: 0.85, open: 0.55, dmg: 120, el: 'slash', cd: 0.9, range: 'near', legacy: true },
       slam: { type: 'circle', at: 'self', r: 3.4, wind: 1.1, open: 0.6, dmg: 150, el: 'gloom', cd: 0.8, range: 'near', hitstop: 0.08, legacy: true },
@@ -85,7 +85,7 @@ const BOSSES = {};
     const b = BOSSES[k];
     b.phases = (b.phases || [{ hpBelow: 1, moves: Object.fromEntries(Object.keys(b.moveDefs).map(n => [n, 1])) }])
       .map(ph => Object.assign({}, ph, { hpBelow: ph.hpBelow > 1 ? ph.hpBelow / 100 : ph.hpBelow }));
-    if (k === 'boss') { Object.assign(ENEMY.boss, { hp: b.hp, boss: k }); continue; }
+    if (k === 'boss') { Object.assign(ENEMY.boss, { hp: b.hp, boss: k, level: b.level, kind: b.kind }); continue; }
     ENEMY[k] = { name: b.name, ai: 'boss', boss: k, sprite: b.sprite, look: b.look, scale: b.scale, hp: b.hp, r: b.r || 0.9, speed: b.speed || 1.6, dmg: 0, range: 0, wind: 0, cd: 0,
       hgt: b.hgt || 5, blood: b.blood || '#c7a8ff', element: b.el || 'slash', dmgType: b.el || 'slash', el: b.el, res: Object.assign({}, b.res || {}), tags: b.tags || [], parts: [],
       level: b.level, kind: b.kind, xp: b.xp };

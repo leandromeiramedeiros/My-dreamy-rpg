@@ -63,7 +63,7 @@ function baseStats(b) {
 // ===== affixes + uniques =========================================================
 // value at item level L = (a + b*L) * roll(0.6..1)
 const AFFIX = { hp: [25, 6], mp: [15, 3], def: [0.02, 0.002], power: [0.03, 0.004], crit: [0.02, 0.0015], haste: [0.03, 0.003],
-  regen: [1, 0.25], mpRegen: [0.8, 0.15], speed: [0.1, 0.01], critDmg: [0.08, 0.008], cdr: [0.02, 0.002], skillDmg: [0.04, 0.004] };
+  regen: [1, 0.25], mpRegen: [0.8, 0.15], speed: [0.1, 0.01], critDmg: [0.08, 0.007], cdr: [0.02, 0.002], skillDmg: [0.04, 0.004] };
 for (const el of RES_ELS) AFFIX[resKey(el)] = 'res';   // resistance affixes roll 10-20%, not by level; resAll is legendary-only
 const STAT_NAME = { dmg: 'Damage', hp: 'HP', mp: 'MP', def: 'Armour', power: 'Damage', crit: 'Crit chance', haste: 'Attack speed', regen: 'HP/s',
   mpRegen: 'MP/s', speed: 'Move speed', critDmg: 'Crit damage', cdr: 'Cooldowns', skillDmg: 'Skill damage', resAll: 'All res' };
@@ -168,8 +168,9 @@ function statsOf(it) {
   return s;
 }
 const itemName = it => it.unique && UNIQUES[it.unique] ? UNIQUES[it.unique].name : BASES[it.base].name;
-// §20.6: main-path Dust ~900-1,200 (was ~2,820) -> the old table / 2.4 (balsim checks income vs sinks)
-const SALVAGE_DIV = 2.4;
+// §20.6: main-path Dust ~900-1,200. sheets.js modelled ~2,820 (50 drops/zone) and suggested / 2.4; balsim's main path
+// (40 kills + 3 chests + 2 elites per band + bosses, 80 % salvaged) gives ~1,620 at / 1, so / 1.5 lands on ~1,080
+const SALVAGE_DIV = 1.5;
 const salvageValue = it => Math.max(1, Math.round([1, 3, 8, 20, 50, 120][RARITY[it.rarity].i] * (1 + it.ilvl / 10) / SALVAGE_DIV));
 // renderer hook for M2: what the hero visibly wears in a slot
 function equippedVisual(slot, p = G.player) {
@@ -224,7 +225,8 @@ function enemyLevel(type) {
   if (c === 'boss' && d.level) return clamp(+d.level, 1, MAX_LEVEL);   // bosses.js rows carry their story level
   return clamp(c === 'boss' ? b : L + (c === 'elite' ? 2 : 0), a, b);
 }
-const enemyHpMul = L => 0.6 * Math.pow(1.1, L - 1);
+// §20.3 (M2b balsim): ~1.09 per level tracks the measured reference-hero DPS (L1 -> L38 x23); was 0.6 x 1.1^(L-1)
+const enemyHpMul = L => Math.pow(1.09, L - 1);
 const enemyDmgMul = L => 0.7 * Math.pow(1.06, L - 1);
 // kill XP (§20.3): a common gives row.xp (default hp/1300, capped) of its level's bar, an elite spawn x ELITE_XP;
 // a guardian gives one full level of the HERO's bar and a mini-boss half (row xp overrides). Band ceiling: once the

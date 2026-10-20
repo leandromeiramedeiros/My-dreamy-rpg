@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 // Takes the HUD review screenshots into tools/shots/hud/ (docs/HUD.md): play HUD (normal, low HP + statuses, boss),
-// every Tab screen, title, death, pause / settings, the touch layout (844x390, hasTouch) and gamepad focus on the bag.
+// every Tab screen, title, death, pause / settings, the touch v2 wheel, aiming, cancel, page 1-2-3 and left-handed shots (844x390, hasTouch) and gamepad focus on the bag.
 // Usage: node tools/shots-hud.js     (exit 1 on any page error)
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
@@ -105,13 +105,34 @@ const shot = async (page, name) => { await page.screenshot({ path: path.join(OUT
   await shot(page, 'gamepad-focus-bag');
   await ctx.close();
 
-  // ---- touch layout ----
+  // ---- touch v2: circular wheel, ground aiming (844x390, hasTouch) ----
   ({ page, ctx } = await open(br, base, '?scene=play', { viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true }));
-  await page.evaluate(() => { const c = document.getElementById('game'); const r = c.getBoundingClientRect(); const o = { pointerType: 'touch', pointerId: 5, bubbles: true, clientX: r.left + 5, clientY: r.top + 5 }; c.dispatchEvent(new PointerEvent('pointerdown', o)); c.dispatchEvent(new PointerEvent('pointerup', o)); G.player.mp = 40; G.player.cds.sunslash = 3; G.player.cdm.sunslash = 5; const p = G.player; spawnEnemy('slime', p.x + 3, p.y + 1, 0); });
+  await page.evaluate(() => {   // synthetic touch pointers in display (960x540) coordinates, scaled to the CSS size of the canvas
+    window.__tp = (type, id, x, y) => { const c = document.getElementById('game'), r = c.getBoundingClientRect(); c.dispatchEvent(new PointerEvent(type, { pointerType: 'touch', pointerId: id, bubbles: true, clientX: r.left + x * r.width / DW, clientY: r.top + y * r.height / DH })); };
+    window.__btnAt = slot => touchButtons().find(b => b.slot === slot);
+    __tp('pointerdown', 5, 5, 5); __tp('pointerup', 5, 5, 5);   // a touch flips the HUD to the touch layout
+    const p = G.player; G.enemies.length = 0; spawnEnemy('slime', p.x + 2.5, p.y + 1.5, 0); spawnEnemy('hound', p.x + 4, p.y - 1, 0);
+    p.mp = p.maxMp * 0.7; p.ult = 62; p.hp = p.maxHp * 0.8; p.cds.sunslash = 3; p.cdm.sunslash = 5; p.potions = 2;
+    const o = G.map.objects.find(q => q.chest && !q.opened); if (o) { p.x = o.x + 0.6; p.y = o.y + 0.3; }   // stand at a chest so the Interact slot shows
+  });
   await wait(500);
-  await shot(page, 'touch-layout');
-  await page.evaluate(() => { G.settings = 1; setSetting('leftHanded', true); }); await wait(300);
-  await shot(page, 'touch-layout-lefthanded');
+  await shot(page, 'touch-layout-circular');
+  // aimed cast: drag the ultimate past its range (clamped), then onto the cancel zone
+  await page.evaluate(() => { G.prompt = null; G.player.ult = 100; G.player.cds = {}; const b = __btnAt('r'); __tp('pointerdown', 7, b.x, b.y); __tp('pointermove', 7, b.x - 20, b.y - 12); __tp('pointermove', 7, b.x - 70, b.y - 40); __tp('pointermove', 7, b.x - 150, b.y - 85); });
+  await wait(350);
+  await shot(page, 'touch-aim-circle-clamped');
+  await page.evaluate(() => { __tp('pointermove', 7, 480, 480); __tp('pointermove', 7, 480, 500); });
+  await wait(300);
+  await shot(page, 'touch-cancel');
+  await page.evaluate(() => { __tp('pointerup', 7, 480, 500); });
+  await wait(150);
+  // page 1 2 3 (the dot shows a ready skill on the hidden Q E R page)
+  await page.evaluate(() => { const t = __btnAt('toggle'); __tp('pointerdown', 8, t.x, t.y); __tp('pointerup', 8, t.x, t.y); });
+  await wait(400);
+  await shot(page, 'touch-page-123');
+  await page.evaluate(() => { const t = __btnAt('toggle'); __tp('pointerdown', 8, t.x, t.y); __tp('pointerup', 8, t.x, t.y); setSetting('leftHanded', true); });
+  await wait(400);
+  await shot(page, 'left-handed');
   await page.evaluate(() => { setSetting('leftHanded', false); });
   await ctx.close();
 

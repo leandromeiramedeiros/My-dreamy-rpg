@@ -1,7 +1,8 @@
 'use strict';
 // ---------------------------------------------------------------------------
 // screens.js — title, death and pause / settings (docs/HUD.md "Screens"). Drawing + focus registration only:
-//   title:  CONTINUE / NEW DREAM / SETTINGS with a diamond cursor (focus ids 'title:continue|new|settings')
+//   title:  a row of 3 save slots (focus ids 'title:slot1..3'; selectSlot in items.js), then CONTINUE / NEW DREAM /
+//           SETTINGS for the chosen slot with a diamond cursor (focus ids 'title:continue|new|settings')
 //   death:  one button "Wake at shrine" (focus id 'btn:wake')
 //   pause:  G.ui.pause (Esc / pad Start). From the title the same panel opens as G.ui.settings (Back instead of
 //           Resume / Return to hub). The rows are GENERATED from SETTINGS_SCHEMA (sliders, toggles, choices) and
@@ -109,6 +110,18 @@ function drawTitle(ctx) {
   UI.text(ctx, 'a high-fantasy dream above the clouds', 480, 216, 'small', UC.dim, 'center');
   const s = G.save && G.save.player ? { level: G.save.player.level, map: G.save.world && G.save.world.map } : null;
   const sure = u.confirmNew > G.t;
+  // save slots (M2b): pick one, then Continue / New Dream act on it
+  if (!u.settings && typeof saveSlots === 'function' && SAVE_ON) {
+    if (!u.slotInfo || G.t > u.slotInfoT) { u.slotInfo = saveSlots(); u.slotInfoT = G.t + 1; }
+    u.slotInfo.forEach((info, i) => {
+      const n = i + 1, w = 196, x = 480 - (w * 3 + 16) / 2 + i * (w + 8), y = 258, cur = (G.saveSlot || 1) === n;
+      const r = mnRegion(x, y, w, 40, 'title:slot' + n, () => { initAudio(); selectSlot(n); u.confirmNew = 0; u.slotInfo = null; });
+      ctx.fillStyle = cur ? 'rgba(255,211,90,0.16)' : 'rgba(255,255,255,0.05)'; ctx.fillRect(x, y, w, 40);
+      ctx.fillStyle = cur ? UC.gold : r.on ? UC.text : UC.bevel; ctx.fillRect(x, y + 39, w, 1);
+      UI.text(ctx, `SLOT ${n}`, x + 8, y + 5, 'small', cur ? UC.gold : UC.text);
+      UI.text(ctx, info ? fitText(`Lv ${info.level}  ${(G.world.maps[info.map] || {}).name || ''}`, w - 16) : 'empty', x + 8, y + 22, 'small', UC.dim);
+    });
+  }
   const items = [
     { id: 'continue', label: 'CONTINUE', sub: s ? `Lv ${s.level}  ${(G.world.maps[s.map] || {}).name || ''}` : '', off: !s, fn: () => continueGame(G.save) },
     { id: 'new', label: sure ? 'ERASE SAVE? PRESS AGAIN' : 'NEW DREAM', fn: () => { if (s && !sure) u.confirmNew = G.t + 3; else newGame(); } },

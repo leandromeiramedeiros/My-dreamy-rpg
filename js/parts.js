@@ -73,23 +73,23 @@
 
 // ---------------------------------------------------------------- built-in rows (ported 1:1 from M2a game.js)
 const BUILTIN_ROWS = {
-  slime: { name: 'Gloom slime', ai: 'hopper', hp: 170, r: 0.38, speed: 2.0, dmg: 32, hgt: 1.8, blood: '#8b7cf6', xp: 0.13,
+  slime: { name: 'Gloom slime', ai: 'hopper', hp: 450, r: 0.38, speed: 2.0, dmg: 32, hgt: 1.8, blood: '#8b7cf6', xp: 0.13,
     el: 'gloom', dmgType: 'gloom', stagger: 0, res: { pierce: 0.5, slash: -0.5 }, tags: ['amorphous', 'gloom'],
     parts: ['chase', 'brute'], params: { chase: { hop: 1.8 }, brute: { shape: 'circle', r: 1.15, range: 1.0, wind: 0.55, cd: 1.1, rec: 0.4, splat: true, stopK: 0.8 } } },
-  wisp: { name: 'Wisp', ai: 'shooter', hp: 120, r: 0.32, speed: 1.9, dmg: 34, hgt: 3.2, blood: '#9ef0ff', xp: 0.092,
+  wisp: { name: 'Wisp', ai: 'shooter', hp: 235, r: 0.32, speed: 1.9, dmg: 34, hgt: 3.2, blood: '#9ef0ff', xp: 0.092,
     el: 'arcane', dmgType: 'arcane', stagger: 0, res: { slash: 0.5, pierce: 0.5, holy: -0.5, lightning: -0.5 }, tags: ['ethereal', 'flying'],
     parts: ['kite', 'shoot'], params: { shoot: { range: 6, wind: 0.6, cd: 2.1 } } },
-  hound: { name: 'Shade hound', ai: 'charger', hp: 240, r: 0.42, speed: 3.2, dmg: 46, hgt: 2.0, blood: '#ff6b9a', xp: 0.185,
+  hound: { name: 'Shade hound', ai: 'charger', hp: 570, r: 0.42, speed: 3.2, dmg: 46, hgt: 2.0, blood: '#ff6b9a', xp: 0.185,
     el: 'gloom', dmgType: 'slash', stagger: 0, res: { fire: -0.5 }, tags: ['beast', 'gloom'],
     parts: ['charge'], params: { charge: { range: 3.2, wind: 0.48, cd: 1.6 } } },
-  ogre: { name: 'Ogre', ai: 'brute', sprite: 'ogre', hp: 420, r: 0.5, speed: 2, dmg: 42, hgt: 3, blood: '#c8a060', xp: 0.32,
+  ogre: { name: 'Ogre', ai: 'brute', sprite: 'ogre', hp: 515, r: 0.5, speed: 2, dmg: 42, hgt: 3, blood: '#c8a060', xp: 0.32,
     el: 'nature', dmgType: 'slash', stagger: 0, res: { fire: -0.5 }, tags: ['beast'],
     parts: ['chase', 'brute'], params: { brute: { shape: 'cone', r: 1.9, range: 1.6, wind: 0.6, cd: 1.7 } } },
-  troll: { name: 'Mountain troll', ai: 'brute', sprite: 'troll', hp: 1500, r: 0.75, speed: 1.3, dmg: 95, hgt: 4, blood: '#9ab06a', xp: 1.15,
+  troll: { name: 'Mountain troll', ai: 'brute', sprite: 'troll', hp: 1245, r: 0.75, speed: 1.3, dmg: 95, hgt: 4, blood: '#9ab06a', xp: 1.15,
     el: 'nature', dmgType: 'slash', stagger: 0, res: { fire: -0.5, pierce: 0.5 }, tags: ['beast'],
     parts: ['chase', 'brute'], params: { brute: { shape: 'circle', r: 2.4, range: 2, wind: 1, cd: 2.4 } } },
   // Bramblehorn's phase-2 add (STORY.md): a rooted thorn turret; Wildfire is the counter
-  sapling: { name: 'Sapling', look: 'ogre', scale: 0.55, hp: 140, r: 0.3, speed: 0, dmg: 22, hgt: 1.6, blood: '#7ac060', xp: 0.03,
+  sapling: { name: 'Sapling', look: 'ogre', scale: 0.55, hp: 225, r: 0.3, speed: 0, dmg: 22, hgt: 1.6, blood: '#7ac060', xp: 0.03,
     el: 'nature', dmgType: 'pierce', stagger: 1, res: { fire: -0.5, nature: 0.5 }, tags: ['plant', 'child'],
     parts: ['stationary', 'shoot'], params: { shoot: { range: 7, wind: 0.8, cd: 2.6, speed: 6, col: '#a6f08a' } } },
   dummy: { name: 'Training dummy', ai: 'dummy', hp: 9999, r: 0.35, speed: 0, dmg: 0, hgt: 3, blood: '#e7c9a0', parts: [] },
@@ -143,7 +143,7 @@ const ENEMY = {};
     ENEMY[k] = compileRow(k, row, BUILTIN_ROWS[k]);
   }
   // the Gloam Warden (bosses.js owns its moves); kept as ENEMY.boss for the HUD, bestiary and spawn_boss
-  ENEMY.boss = { name: 'The Gloam Warden', ai: 'boss', boss: 'warden', hp: 7200, r: 0.95, speed: 1.6, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 9, blood: '#c78bff',
+  ENEMY.boss = { name: 'The Gloam Warden', ai: 'boss', boss: 'boss', hp: 27660, r: 0.95, speed: 1.6, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 9, blood: '#c78bff',
     element: 'gloom', dmgType: 'gloom', el: 'gloom', res: { arcane: 0.5, gloom: 0.5, holy: -0.5 }, tags: ['gloom', 'ethereal'], parts: [] };
 })();
 // parts + params of a def (explicit parts, else derived from the legacy ai)

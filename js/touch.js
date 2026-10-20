@@ -1,16 +1,19 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// Touch controls, mobile-ARPG style:
+// Touch controls (docs/HUD.md "Touch v2"):
 //  * left side: a floating joystick wherever the thumb lands;
-//  * right side: a big attack button (hold) ringed by the skill buttons.
-//    Tap a skill to auto-target the nearest enemy, or drag from it to aim and release to cast.
+//  * right side: a circular wheel around the attack button (hold): inner arc Q E R (or 1 2 3 via the page toggle), outer arc
+//    F C Dodge Potion, Interact when a prompt is near. Tap a skill = quick-cast at the auto-target; drag past 12 px = aimed cast
+//    (ease-out distance -> range, clamped), release over the button or on the X = cancel. TOUCH_AIM carries the live aim.
 // Touch feeds the same ACTIONS as keyboard and pad (input.js): IN.touchMove / touchHold('attack') / touchTap(skill).
-// The touch aim drives the virtual cursor (G.mouse) that game.js resolveAim() hands to the cast.
-// Double-tap attack = dodge toward the movement direction; a context Interact button takes the potion's place
-// (the potion moves up a row) while a chest / shrine / tablet is in reach.
+// The touch aim drives the virtual cursor (G.mouse) that game.js resolveAim() hands to the cast. Drawing lives in hud.js.
 // ---------------------------------------------------------------------------
 const TOUCH_CAPABLE = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window;
-const TOUCH = { ptrs: {}, lastDir: [1, 0], pendingAim: null, lastAtkT: -9, menu: null };
+const TOUCH = { ptrs: {}, lastDir: [1, 0], pendingAim: null, lastAtkT: -9, menu: null, page: 0, pageAt: -9, chargeFull: false };
+// Ground-indicator contract (render.js reads this by name): non-null only while a skill is being drag-aimed.
+// { skill:id, slot, aim:SKILLS[id].aim, from:{x,y} hero, to:{x,y} clamped world target, clamped:bool, cancel:bool }
+let TOUCH_AIM = null;
+const touchNow = () => performance.now() / 1000;
 const leftHanded = () => typeof SETTINGS !== 'undefined' && SETTINGS.leftHanded;
 
 // ---- layout (docs/HUD.md "Touch"): safe area 24 px on every edge (plus the device's env(safe-area-inset-*)) ------------
@@ -27,19 +30,38 @@ function readSafeArea() {
   G.safe = ins;
 }
 const TSAFE = () => { const s = G.safe || { l: 0, r: 0, t: 0, b: 0 }; return { l: 24 + UI.snap(s.l), r: 24 + UI.snap(s.r), t: 24 + UI.snap(s.t), b: 24 + UI.snap(s.b) }; };
-// right cluster: attack 88 at (848,428); potion 48 at (848,352); skills as 48 px squares in two arcs around the attack
-// centre: [Q E R] at radius 112, [F C SHF 1 2 3] at radius 176. Left-handed play mirrors everything across the screen.
+// ---- circular wheel (docs/HUD.md "Touch v2") ------------------------------------------------------------------------
+// C = attack centre (860,436). Angles are measured clockwise from +x in screen space (so 270 deg = straight up; the spec's
+// "y up" wording cannot be literal: 235 deg would land at y 538). x = Cx + r cos a, y = Cy + r sin a; left-handed play
+// mirrors x about 480. Inner arc r124 O60: Q 200, E 235, R 270 (page 2: 1 2 3 at the same spots). Outer arc r196 O52:
+// F 190, C 215, Dodge 240, Potion 265; page toggle O40 at 160 deg. Interact O56 at 150 deg on the inner arc (prompt only).
+const TDEG = Math.PI / 180;
+const TOUCH_SKILL_SLOTS = ['q', 'e', 'r', 'f', 'c', 'shift', '1', '2', '3'];
+const TOUCH_INNER = { q: 200, e: 235, r: 270, 1: 200, 2: 235, 3: 270 };
+const TOUCH_PAGES = [['q', 'e', 'r'], ['1', '2', '3']];
+const touchOrigin = () => { const sf = TSAFE(); return { x: Math.min(860, DW - sf.r - 52), y: Math.min(436, DH - sf.b - 80) }; };
+// tablets >= 1024 px can put 1/2/3 on a third arc instead of the page toggle
+const touchShowAll9 = () => typeof SETTINGS !== 'undefined' && !!SETTINGS.showAll9 && (window.innerWidth >= 1024 || !!TOUCH.forceAll9);
+function touchPolar(slot, r, deg, d, extra) {
+  const o = touchOrigin(), mx = x => leftHanded() ? DW - x : x, a = deg * TDEG;
+  return Object.assign({ slot, x: mx(UI.snap(o.x + Math.cos(a) * r)), y: UI.snap(o.y + Math.sin(a) * r), s: d, r: d / 2 }, extra);
+}
+// an inner-arc skill button, optionally rotated off its home angle (page-swap animation)
+const touchInner = (slot, off = 0) => touchPolar(slot, 124, TOUCH_INNER[slot] + off, 60);
 function touchButtons() {
-  const L = leftHanded(), sf = TSAFE(), cx0 = Math.min(848, DW - sf.r - 44), cy = Math.min(428, DH - sf.b - 44);
-  const mx = x => L ? DW - x : x, cx = cx0, deg = Math.PI / 180;
-  const B = [{ slot: 'atk', x: mx(cx), y: cy, s: 88, r: 44 }];
-  const arc = (ids, r, a0, step) => ids.forEach((id, i) => { const a = (a0 + i * step) * deg; B.push({ slot: id, x: mx(UI.snap(cx + Math.cos(a) * r)), y: UI.snap(cy + Math.sin(a) * r), s: 48, r: 24 }); });
-  arc(['q', 'e', 'r'], 112, 175, 30);
-  arc(['f', 'c', 'shift', '1', '2', '3'], 176, 172, 18);
-  const near = typeof G !== 'undefined' && G.prompt;
-  if (near) B.push({ slot: 'interact', x: mx(cx), y: cy - 76, s: 48, r: 24 });
-  B.push({ slot: 'pot', x: mx(cx), y: cy - 76 - (near ? 56 : 0), s: 48, r: 24 });   // health potion
+  const o = touchOrigin(), L = leftHanded(), all9 = touchShowAll9();
+  const B = [{ slot: 'atk', x: L ? DW - o.x : o.x, y: o.y, s: 96, r: 48 }];
+  for (const id of all9 ? TOUCH_PAGES[0] : TOUCH_PAGES[TOUCH.page]) B.push(touchInner(id));
+  B.push(touchPolar('f', 196, 190, 52), touchPolar('c', 196, 215, 52), touchPolar('shift', 196, 240, 52), touchPolar('pot', 196, 265, 52));
+  if (all9) TOUCH_PAGES[1].forEach((id, i) => B.push(touchPolar(id, 260, 185 + i * 20, 52)));
+  else B.push(touchPolar('toggle', 196, 160, 40));
+  if (G.prompt && G.state === 'play') B.push(touchPolar('interact', 124, 150, 56));
   return B;
+}
+function touchHit(x, y) {
+  let best = null, bd = 1e9;
+  for (const b of touchButtons()) { const d = Math.hypot(x - b.x, y - b.y); if (d < b.r + 6 && d / b.r < bd) { bd = d / b.r; best = b; } }
+  return best;
 }
 // three 40x40 icon buttons under the tracker: bag, help, fullscreen
 function touchMenu() {
@@ -88,25 +110,23 @@ function onTouchDown(ev) {
     else tryFullscreen();
     return;
   }
-  for (const b of touchButtons()) {
-    if (Math.max(Math.abs(x - b.x), Math.abs(y - b.y)) < b.s / 2 + 8) {
-      TOUCH.ptrs[ev.pointerId] = { kind: 'btn', b, sx: x, sy: y, x, y };
-      if (b.slot !== 'atk' && b.slot !== 'pot' && b.slot !== 'interact') {   // long-press the skill bar to open the bag
-        const t = TOUCH.ptrs[ev.pointerId];
-        t.timer = setTimeout(() => { if (TOUCH.ptrs[ev.pointerId] === t && !dragging(t)) { t.long = true; IN.touchTap('inventory'); } }, 520);
-      }
-      if (b.slot === 'atk') {
-        IN.touchHold('attack', true);
-        // double-tap attack = dodge toward the movement direction
-        if (G.t - TOUCH.lastAtkT < 0.3 && (typeof SETTINGS === 'undefined' || SETTINGS.doubleTapDodge)) {
-          const p = G.player, mv = IN.move, w = mv.mag > 0 ? viewDirToWorld(mv.x, mv.y) : [Math.cos(p.aim), Math.sin(p.aim)];
-          TOUCH.pendingAim = { wx: p.x + w[0] * 3, wy: p.y + w[1] * 3 }; IN.touchTap('dodge'); TOUCH.lastAtkT = -9;
-        } else TOUCH.lastAtkT = G.t;
-      }
-      if (b.slot === 'pot') { delete TOUCH.ptrs[ev.pointerId]; IN.touchTap('potion'); }
-      if (b.slot === 'interact') { delete TOUCH.ptrs[ev.pointerId]; IN.touchTap('interact'); }
-      return;
+  const b = touchHit(x, y);
+  if (b) {
+    if (b.slot === 'toggle') { TOUCH.page ^= 1; TOUCH.pageAt = touchNow(); return; }
+    if (b.slot === 'pot') { IN.touchTap('potion'); return; }
+    if (b.slot === 'interact') { IN.touchTap('interact'); return; }
+    const t = TOUCH.ptrs[ev.pointerId] = { kind: 'btn', b, sx: x, sy: y, x, y, aiming: false };
+    if (b.slot !== 'atk' && b.slot !== 'shift') {   // long-press a skill button to open the bag
+      t.timer = setTimeout(() => { if (TOUCH.ptrs[ev.pointerId] === t && !t.aiming) { t.long = true; IN.touchTap('inventory'); } }, 520);
     }
+    if (b.slot === 'atk') {
+      IN.touchHold('attack', true);
+      // double-tap attack = dodge toward the movement direction
+      if (G.t - TOUCH.lastAtkT < 0.3 && (typeof SETTINGS === 'undefined' || SETTINGS.doubleTapDodge)) {
+        touchDodge(); TOUCH.lastAtkT = -9;
+      } else TOUCH.lastAtkT = G.t;
+    }
+    return;
   }
   if (leftHanded() ? x > DW * 0.4 : x < DW * 0.6) TOUCH.ptrs[ev.pointerId] = { kind: 'stick', sx: x, sy: y, x, y };
 }
@@ -133,7 +153,7 @@ function onTouchMove(ev) {
       t.sx += (t.x - t.sx) * (1 - 1 / l); t.sy += (t.y - t.sy) * (1 - 1 / l); vx /= l; vy /= l;
     }
     IN.touchMove(l < 0.15 ? null : { x: vx, y: vy });
-  }
+  } else if (t.kind === 'btn') updateTouchAim();
 }
 function onTouchUp(ev) {
   const m = TOUCH.menu;
@@ -144,94 +164,100 @@ function onTouchUp(ev) {
     return;
   }
   const t = TOUCH.ptrs[ev.pointerId]; if (!t) return;
+  if (ev.type !== 'pointercancel' && ev.clientX !== undefined) [t.x, t.y] = toDisplay(ev);
+  if (t.kind === 'btn' && t.aiming) updateTouchAim();   // final position decides clamp / cancel
+  const ta = t.aiming ? TOUCH_AIM : null;
   delete TOUCH.ptrs[ev.pointerId];
   if (t.timer) clearTimeout(t.timer);
+  if (t.kind === 'btn' && t.aiming) updateTouchAim();   // clears TOUCH_AIM when this was the aiming pointer
   if (t.long) return;
   if (t.kind === 'stick') { IN.touchMove(null); return; }
   if (t.b.slot === 'atk') { IN.touchHold('attack', Object.values(TOUCH.ptrs).some(p => p.kind === 'btn' && p.b.slot === 'atk')); return; }
   if (G.state !== 'play' || G.fadeDir) return;
-  const p = G.player;
-  touchAim(p, t);               // resolve the final aim for this cast; resolveAim() uses it on the next step
-  TOUCH.pendingAim = { wx: G.mouse.wx, wy: G.mouse.wy };
+  if (ev.type === 'pointercancel' || (ta && ta.cancel)) { if (ta) touchHaptic(25); return; }   // a cancelled cast costs nothing
+  if (ta) { TOUCH.pendingAim = { wx: ta.to.x, wy: ta.to.y }; touchHaptic(t.b.slot === 'shift' ? 40 : 15); }   // aimed cast: where the indicator was
+  else if (t.b.slot === 'shift') { touchDodge(); return; }
+  else {
+    touchAim(G.player, t);      // tap = quick-cast: auto-target (CONTROLS chain, assist cone) or the movement direction
+    TOUCH.pendingAim = { wx: G.mouse.wx, wy: G.mouse.wy }; touchHaptic(15);
+  }
   IN.touchTap(SLOT_ACTION[t.b.slot]);
 }
-const dragging = t => t && t.kind === 'btn' && Math.hypot(t.x - t.sx, t.y - t.sy) > 16;
-function activeAimPtr() { return Object.values(TOUCH.ptrs).find(t => t.kind === 'btn' && t.b.slot !== 'atk' && t.b.slot !== 'pot' && t.b.slot !== 'interact'); }
+// dodge toward the movement direction (button tap or double-tap attack)
+function touchDodge() {
+  const p = G.player, mv = IN.move, w = mv.mag > 0 ? viewDirToWorld(mv.x, mv.y) : [Math.cos(p.aim), Math.sin(p.aim)];
+  TOUCH.pendingAim = { wx: p.x + w[0] * 3, wy: p.y + w[1] * 3 }; IN.touchTap('dodge'); touchHaptic(40);
+}
+// haptics ride IN.rumble: navigator.vibrate, guarded, behind SETTINGS.vibration
+function touchHaptic(ms) { try { if (typeof IN !== 'undefined') IN.rumble(ms); } catch (e) { /* no vibration */ } }
 
-// Sets the virtual cursor: dragged skill > dragged attack > nearest enemy > movement direction.
+// ---- aimed casts -----------------------------------------------------------------------------------------------------
+// Drag past 12 px = aimed cast. 12..96 px maps onto 0..100 % of the skill's range with an ease-out (40 px = 60 %).
+const AIM_DEAD = 12, AIM_FULL = 96, AIM_CANCEL_X = 40, AIM_X = { x: 480, y: 500, r: 32 };
+const aimEase = d => 1 - Math.pow(1 - clamp((d - AIM_DEAD) / (AIM_FULL - AIM_DEAD), 0, 1), 2.25);
+// SKILLS[id].aim = { shape:'cone'|'circle'|'line'|'proj'|'self'|'dash', range, r, arc, len, w } (data.js). Until a skill has
+// one: skills whose cast() takes a target point are circles of range 6, the dodge is a short dash, the rest are projectiles.
+function skillAimOf(id, slot) {
+  const s = SKILLS[id]; if (!s) return null;
+  if (s.aim) return s.aim;
+  if (slot === 'shift') return { shape: 'dash', range: 4, w: 1 };
+  return s.cast && s.cast.length >= 4 ? { shape: 'circle', range: 6, r: 2 } : { shape: 'proj', range: 6, w: 0.6 };
+}
+const isSkillSlot = slot => TOUCH_SKILL_SLOTS.includes(slot);
+function aimingPtr() { return Object.values(TOUCH.ptrs).find(t => t.kind === 'btn' && t.aiming); }
+const activeAimPtr = () => Object.values(TOUCH.ptrs).find(t => t.kind === 'btn' && isSkillSlot(t.b.slot));
+// Recomputes TOUCH_AIM from the pointers (called on every move, on release and once a frame by the HUD).
+function updateTouchAim() {
+  const p = G.player;
+  for (const t of Object.values(TOUCH.ptrs)) {
+    if (t.kind !== 'btn' || t.aiming || !isSkillSlot(t.b.slot) || G.state !== 'play') continue;
+    if (Math.hypot(t.x - t.sx, t.y - t.sy) > AIM_DEAD) {
+      const id = slotSkill(p, t.b.slot);
+      if (id && SKILLS[id]) { t.aiming = true; clearTimeout(t.timer); touchHaptic(8); }
+    }
+  }
+  const t = aimingPtr();
+  if (!t || G.state !== 'play' || G.ui.open || G.ui.pause || G.ui.help) { TOUCH_AIM = null; return null; }
+  const id = slotSkill(p, t.b.slot), aim = skillAimOf(id, t.b.slot);
+  if (!aim) { TOUCH_AIM = null; return null; }
+  const dx = t.x - t.sx, dy = t.y - t.sy, d = Math.hypot(dx, dy), range = aim.range || aim.len || 6;
+  let dir = viewDirToWorld(dx, dy);
+  if (aim.shape === 'proj' || aim.shape === 'line') {   // 10 degree snap onto an enemy near the line; circles and cones never snap
+    const e = autoTarget(p, range, dir, 10 * Math.PI / 180);
+    if (e) { const l = dist(p.x, p.y, e.x, e.y) || 1; dir = [(e.x - p.x) / l, (e.y - p.y) / l]; }
+  }
+  const k = aim.shape === 'self' ? 0 : aimEase(d) * range;
+  const cancel = Math.hypot(t.x - t.b.x, t.y - t.b.y) < t.b.r || (d > AIM_CANCEL_X && Math.hypot(t.x - AIM_X.x, t.y - AIM_X.y) < AIM_X.r);
+  TOUCH_AIM = { skill: id, slot: t.b.slot, aim, from: { x: p.x, y: p.y }, to: { x: p.x + dir[0] * k, y: p.y + dir[1] * k }, clamped: d >= AIM_FULL, cancel, d };
+  TOUCH.lastDir = dir;
+  return TOUCH_AIM;
+}
+
+// Sets the virtual cursor: a release in flight > the live drag target > nearest enemy > movement direction.
 function touchAim(p, forced) {
-  if (!forced && TOUCH.pendingAim) {   // a released skill / double-tap dodge: aim exactly where it was released
+  if (!forced && TOUCH.pendingAim) {   // a released skill / dodge: aim exactly where it was released
     G.mouse.wx = TOUCH.pendingAim.wx; G.mouse.wy = TOUCH.pendingAim.wy; TOUCH.pendingAim = null;
     const [vx, vy] = worldToView(G.mouse.wx, G.mouse.wy, p.z); G.mouse.x = vx; G.mouse.y = vy; return;
   }
-  const t = forced || activeAimPtr() || Object.values(TOUCH.ptrs).find(q => q.kind === 'btn');
-  let dir = null, d = 3;
-  if (dragging(t)) {
-    const w = toWorld((t.x - t.sx) / 2, (t.y - t.sy) / 2), l = Math.hypot(w[0], w[1]) || 1;
-    dir = [w[0] / l, w[1] / l]; d = clamp(Math.hypot(t.x - t.sx, t.y - t.sy) / 80 * 7, 1.5, 7);
-  } else {
-    const e = typeof aimAssistCone === 'function' && aimAssistCone() === 0 ? null : autoTarget(p, 9, null, 0);   // prefers elites/bosses + last hit
-    if (e) { const l = dist(p.x, p.y, e.x, e.y) || 1; dir = [(e.x - p.x) / l, (e.y - p.y) / l]; d = l; }
-    else if (IN.move.mag > 0) { const m = IN.move, wx = m.x + m.y, wy = m.y - m.x, l = Math.hypot(wx, wy) || 1; dir = [wx / l, wy / l]; }
+  if (!forced && TOUCH_AIM) {          // while dragging, the hero faces the target
+    G.mouse.wx = TOUCH_AIM.to.x; G.mouse.wy = TOUCH_AIM.to.y;
+    const [vx, vy] = worldToView(G.mouse.wx, G.mouse.wy, p.z); G.mouse.x = vx; G.mouse.y = vy; return;
   }
+  let dir = null, d = 3;
+  const e = typeof aimAssistCone === 'function' && aimAssistCone() === 0 ? null : autoTarget(p, 9, null, 0);   // prefers elites/bosses + last hit
+  if (e) { const l = dist(p.x, p.y, e.x, e.y) || 1; dir = [(e.x - p.x) / l, (e.y - p.y) / l]; d = l; }
+  else if (IN.move.mag > 0) { const m = IN.move, wx = m.x + m.y, wy = m.y - m.x, l = Math.hypot(wx, wy) || 1; dir = [wx / l, wy / l]; }
   if (dir) TOUCH.lastDir = dir; else dir = TOUCH.lastDir;
   G.mouse.wx = p.x + dir[0] * d; G.mouse.wy = p.y + dir[1] * d;
   const [vx, vy] = worldToView(G.mouse.wx, G.mouse.wy, p.z);
   G.mouse.x = vx; G.mouse.y = vy;
 }
 
-function drawTouchControls(ctx) {
-  const p = G.player;
-  // floating joystick: frames on the 2x grid, no thin lines
-  for (const t of Object.values(TOUCH.ptrs)) if (t.kind === 'stick') {
-    UI.frame(ctx, UI.snap(t.sx) - 56, UI.snap(t.sy) - 56, 112, 112, 'plain', { alpha: 0.4 });
-    const l = Math.hypot(t.x - t.sx, t.y - t.sy), k = l > 56 ? 56 / l : 1;
-    UI.frame(ctx, UI.snap(t.sx + (t.x - t.sx) * k) - 24, UI.snap(t.sy + (t.y - t.sy) * k) - 24, 48, 48, 'slot', { alpha: 0.85 });
-  }
-  // aim preview while holding a skill: a row of 4 px pips and a pip reticle
-  const a = activeAimPtr();
-  if (a && G.state === 'play') {
-    const sk = SKILLS[slotSkill(p, a.b.slot)], col = sk ? sk.color : '#ffffff';
-    const [px, py] = worldToView(p.x, p.y, p.z + 1), x0 = px * 2, y0 = py * 2, x1 = G.mouse.x * 2, y1 = G.mouse.y * 2, n = Math.max(1, Math.floor(Math.hypot(x1 - x0, y1 - y0) / 16));
-    ctx.fillStyle = col; ctx.globalAlpha = 0.85;
-    for (let i = 1; i <= n; i++) ctx.fillRect(UI.snap(x0 + (x1 - x0) * i / n) - 2, UI.snap(y0 + (y1 - y0) * i / n) - 2, 4, 4);
-    for (const [dx, dy] of [[-16, 0], [16, 0], [0, -8], [0, 8]]) ctx.fillRect(UI.snap(x1 + dx) - 2, UI.snap(y1 + dy) - 2, 4, 4);
-    ctx.globalAlpha = 1;
-  }
-  for (const b of touchButtons()) {
-    const held = Object.values(TOUCH.ptrs).some(t => t.kind === 'btn' && t.b.slot === b.slot), x = b.x - b.s / 2, y = b.y - b.s / 2;
-    if (b.slot === 'pot') {
-      const st = skillSlotState(p, 'pot');
-      hudSlot(ctx, x, y, 48, UC.hp, miscIcon('potion'), { gray: !p.potions });
-      UI.text(ctx, p.potions, x + 44, y + 30, 'small', UC.text, 'right');
-      if (st.cd > 0) UI.sweep(ctx, x + 4, y + 4, 40, 40, st.cd, {});
-      continue;
-    }
-    if (b.slot === 'interact') {
-      hudSlot(ctx, x, y, 48, UC.gold, null);
-      UI.text(ctx, G.prompt ? G.prompt.text.split(' ')[0].toUpperCase() : 'USE', b.x, b.y - 8, 'small', UC.gold, 'center');
-      continue;
-    }
-    if (b.slot === 'atk') {
-      hudSlot(ctx, x, y, 88, UC.line, null);
-      ctx.drawImage(itemIcon(p.equip.weapon), x + 20, y + 20, 48, 48);
-      if (held) { ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.25; ctx.fillRect(x + 4, y + 4, 80, 80); ctx.globalAlpha = 1; }
-      continue;
-    }
-    const st = skillSlotState(p, b.slot), ult = b.slot === 'r';
-    hudSlot(ctx, x, y, 48, !st.id ? UC.bevel : ult ? UC.gold : elColor(st.element), st.id ? skillIcon(st.id) : null, { gray: !!st.mpShort || !!st.stShort });
-    if (st.id) {
-      if (ult && st.charge < 1) UI.sweep(ctx, x + 4, y + 4, 40, 40, 1 - st.charge, { label: Math.floor(st.charge * 100) + '' });
-      else if (st.cdFrac > 0) UI.sweep(ctx, x + 4, y + 4, 40, 40, st.cdFrac, { label: st.cd >= 1 ? Math.ceil(st.cd) + '' : st.cd.toFixed(1) });
-      if (st.unavailable) { ctx.fillStyle = UC.edge; ctx.globalAlpha = 0.5; ctx.fillRect(x + 4, y + 4, 40, 40); ctx.globalAlpha = 1; }
-      if (held) { ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.25; ctx.fillRect(x + 4, y + 4, 40, 40); ctx.globalAlpha = 1; }
-    }
-  }
-  // bag / help / fullscreen
-  for (const m of touchMenu()) {
-    UI.frame(ctx, m.x, m.y, 40, 40, 'plain');
-    if (m.id === 'gear') ctx.drawImage(miscIcon('chest'), m.x + 4, m.y + 4, 32, 32);
-    else if (m.id === 'help') UI.sprite(ctx, 'help', m.x + 8, m.y + 8, { scale: 2 });
-    else { ctx.fillStyle = UC.text; for (const [cx, cy, dx, dy] of [[10, 10, 1, 1], [30, 10, -1, 1], [10, 30, 1, -1], [30, 30, -1, -1]]) { ctx.fillRect(m.x + cx - (dx < 0 ? 6 : 0), m.y + cy - (dy < 0 ? 2 : 0), 6, 2); ctx.fillRect(m.x + cx - (dx < 0 ? 2 : 0), m.y + cy - (dy < 0 ? 6 : 0), 2, 6); } }
-  }
+// ---- charge hook ---------------------------------------------------------------------------------------------------------
+// The game has no held-skill / two-hander charge state yet. When it does, set p.holdCharge (0..1) while a skill button is held;
+// the HUD ring (hud.js) then shows it and this fires the haptic click once when it fills.
+function touchChargeFrac(p) {
+  const f = clamp(+p.holdCharge || 0, 0, 1);
+  if (f >= 1 && !TOUCH.chargeFull) { TOUCH.chargeFull = true; touchHaptic(25); } else if (f < 1) TOUCH.chargeFull = false;
+  return f;
 }

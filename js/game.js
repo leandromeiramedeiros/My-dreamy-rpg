@@ -860,7 +860,7 @@ function updateCritters(dt) {
 // ===== tuning (numbers editable in the editor's Tuning tab) ==============================
 // mpRegen was 7/s before §15.3 (basic attacks now build mpOnHit per hit); ultRate = charge per point of
 // pre-multiplier damage (0.01 -> ~50 s of basic hits on one target, ~30-40 s with skills; reactions x2 in M4)
-G.tune = { player: { hp: 650, mp: 260, stamina: 100, speed: 3.7, regen: 2, mpRegen: 2, crit: 0.08, damage: 1, mpOnHit: 8, ultRate: 0.01 } };
+G.tune = { player: { hp: 650, mp: 260, stamina: 100, speed: 3.7, regen: 2, mpRegen: 2, crit: 0.08, damage: 1, mpOnHit: 8, ultRate: 0.019 } };   // ultRate 0.019 (M2b balsim): one ultimate per ~40 s in the reference rotation (0.01 measured ~77 s)
 const TUNE_ENEMY_KEYS = ['hp', 'speed', 'dmg', 'range', 'cd'];
 function applyTuning(t) {
   if (!t) return;

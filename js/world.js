@@ -2544,7 +2544,7 @@ const WORLD_DATA = {
   "ogre": {
    "name": "Ogre",
    "ai": "brute",
-   "hp": 420,
+   "hp": 515,
    "speed": 2,
    "dmg": 42,
    "range": 1.6,
@@ -2566,7 +2566,7 @@ const WORLD_DATA = {
   "troll": {
    "name": "Mountain troll",
    "ai": "brute",
-   "hp": 1500,
+   "hp": 1245,
    "speed": 1.3,
    "dmg": 95,
    "range": 2,

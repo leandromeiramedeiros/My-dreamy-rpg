@@ -420,7 +420,10 @@ function hudHelpButton(ctx, x, y, inert) {
 }
 function drawPlayHud(ctx, p, inert) {
   const touch = G.touch;
+  const mirror = touch && leftHanded();   // the thumb cluster sits bottom-left, so the portrait + bars move to the other corner
+  if (mirror) { ctx.save(); ctx.translate(DW - 24 - 340, 0); }
   drawPortrait(ctx, p);
+  if (mirror) ctx.restore();
   drawStatusRow(ctx, p, touch ? DW - 24 : 100, touch ? 148 : 428, touch);
   if (!touch) drawSkillBar(ctx, p, inert);
   drawMinimap(ctx, p, touch ? DW - 24 - 112 : 832, touch ? 24 : 16);
@@ -447,9 +450,156 @@ function drawHUD(ctx) {
     return;
   }
   const modal = u.help || u.pause || G.state === 'dead';
+  if (TOUCH_AIM) updateTouchAim();   // drops a stale drag when a menu opens or the hero dies
   drawPlayHud(ctx, p, modal);
   if (G.touch && G.state === 'play' && !modal) drawTouchControls(ctx);
   if (u.pause) drawPause(ctx);
   if (u.help) drawHelp(ctx);
   if (G.state === 'dead') drawDeath(ctx);
+}
+
+
+// ===== touch v2: circular wheel (docs/HUD.md "Touch v2"; layout + input in touch.js) ===========================================
+// ring(ctx,x,y,r,frac,col[,w]): a clockwise arc from 12 o'clock covering frac of the circle. Opus moves this into UI.ring.
+function ring(ctx, x, y, r, frac, col, w = 2) {
+  frac = clamp(frac, 0, 1); if (frac <= 0) return;
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'butt';
+  ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2); ctx.stroke(); ctx.restore();
+}
+const TB = { flash: {}, wasCd: {} };
+// one round button: 2 px dark outline + 2 px rim in `col` + #15102a at 80 %, icon, cooldown wipe, seconds
+function touchBtn(ctx, x, y, r, col, o = {}) {
+  ctx.save(); ctx.globalAlpha *= o.alpha == null ? 1 : o.alpha;
+  if (o.lift) { ctx.fillStyle = '#05030c'; ctx.globalAlpha *= 0.4; ctx.beginPath(); ctx.arc(x, y + 2, r, 0, 7); ctx.fill(); ctx.globalAlpha /= 0.4; y -= o.lift; }
+  ctx.fillStyle = '#15102a'; ctx.globalAlpha *= 0.8; ctx.beginPath(); ctx.arc(x, y, r - 2, 0, 7); ctx.fill(); ctx.globalAlpha /= 0.8;
+  ctx.lineWidth = 2; ctx.strokeStyle = '#0b0716'; ctx.beginPath(); ctx.arc(x, y, r - 1, 0, 7); ctx.stroke();
+  if (o.icon) hudIcon(ctx, o.icon, x - 16, y - 16, { gray: o.gray, size: o.iconSize || 32 });
+  if (o.cdFrac > 0) {   // clockwise radial wipe at 70 % dark
+    ctx.save(); ctx.beginPath(); ctx.arc(x, y, r - 4, 0, 7); ctx.clip();
+    ctx.fillStyle = '#0b0716'; ctx.globalAlpha *= 0.7; ctx.beginPath(); ctx.moveTo(x, y);
+    ctx.arc(x, y, r, -Math.PI / 2 + (1 - o.cdFrac) * Math.PI * 2, Math.PI * 1.5); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  if (o.held) { ctx.fillStyle = '#ffffff'; ctx.globalAlpha *= 0.2; ctx.beginPath(); ctx.arc(x, y, r - 4, 0, 7); ctx.fill(); ctx.globalAlpha /= 0.2; }
+  ctx.lineWidth = 2; ctx.strokeStyle = o.lift || o.held ? mixHex(col, '#ffffff', 0.55) : col; ctx.beginPath(); ctx.arc(x, y, r - 3, 0, 7); ctx.stroke();
+  if (o.flash > 0) { ctx.globalAlpha *= o.flash; ctx.strokeStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x, y, r + 1, 0, 7); ctx.stroke(); }
+  ctx.restore();
+  if (o.label) UI.text(ctx, o.label, x, y - 7, 'small', UC.text, 'center');
+}
+// a skill slot button; returns nothing. `b` from touchButtons()/touchInner(), `a` = alpha for the page swap
+function touchSkillBtn(ctx, p, b, held, aiming, a = 1) {
+  const st = skillSlotState(p, b.slot), ult = b.slot === 'r', now = touchNow();
+  const cd = st.id ? (ult ? 0 : st.cd) : 0;
+  if (TB.wasCd[b.slot] > 0 && cd === 0 && st.id) TB.flash[b.slot] = now;
+  TB.wasCd[b.slot] = cd;
+  const fl = Math.max(0, 1 - (now - (TB.flash[b.slot] || -9)) / 0.25);
+  const short = !!(st.mpShort || st.stShort), rim = !st.id ? UC.bevel : short ? UC.mp : ult ? UC.gold : elColor(st.element);
+  let icon = st.id ? skillIcon(st.id) : (b.slot === 'shift' ? miscIcon('dust') : null);
+  const lock = st.unavailable ? 0.5 : 1;
+  touchBtn(ctx, b.x, b.y, b.r, rim, { icon, gray: short, cdFrac: ult ? (st.charge < 1 ? 1 - st.charge : 0) : st.cdFrac, held, lift: aiming ? 4 : 0, flash: fl, alpha: a * lock });
+  if (st.id && a > 0.5) {
+    const y = b.y - (aiming ? 4 : 0);
+    if (ult && st.charge < 1) UI.text(ctx, Math.floor(st.charge * 100) + '', b.x, y - 7, 'small', UC.text, 'center');
+    else if (cd > 0) UI.text(ctx, cd >= 1 ? Math.ceil(cd) + '' : cd.toFixed(1), b.x, y - 7, 'small', UC.text, 'center');
+  }
+}
+function drawTouchToggle(ctx, p, b, u) {
+  const hidden = TOUCH.page ? TOUCH_PAGES[0] : TOUCH_PAGES[1];
+  const ready = hidden.some(sl => { const st = skillSlotState(p, sl); return st.id && st.ready && !st.mpShort && !st.stShort && !st.unavailable; });
+  touchBtn(ctx, b.x, b.y, b.r, UC.line, {});
+  ctx.save(); ctx.translate(b.x, b.y); ctx.rotate((TOUCH.page + u - 1) * Math.PI);   // "◐" turns half a turn per swap
+  ctx.fillStyle = UC.bright; ctx.beginPath(); ctx.arc(0, 0, b.r - 8, Math.PI / 2, Math.PI * 1.5); ctx.fill();
+  ctx.strokeStyle = UC.bright; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, b.r - 8, 0, 7); ctx.stroke(); ctx.restore();
+  if (ready) {   // a skill on the other page is ready
+    const k = 4 + Math.sin(touchNow() * 8) * 0.8, dx = b.x + b.r * 0.72, dy = b.y - b.r * 0.72;
+    ctx.fillStyle = '#0b0716'; ctx.beginPath(); ctx.arc(dx, dy, k + 2, 0, 7); ctx.fill();
+    ctx.fillStyle = UC.gold; ctx.beginPath(); ctx.arc(dx, dy, k, 0, 7); ctx.fill();
+  }
+}
+function drawTouchControls(ctx) {
+  const p = G.player, now = touchNow();
+  updateTouchAim();
+  // floating joystick: frames on the 2x grid, no thin lines
+  for (const t of Object.values(TOUCH.ptrs)) if (t.kind === 'stick') {
+    UI.frame(ctx, UI.snap(t.sx) - 56, UI.snap(t.sy) - 56, 112, 112, 'plain', { alpha: 0.4 });
+    const l = Math.hypot(t.x - t.sx, t.y - t.sy), k = l > 56 ? 56 / l : 1;
+    UI.frame(ctx, UI.snap(t.sx + (t.x - t.sx) * k) - 24, UI.snap(t.sy + (t.y - t.sy) * k) - 24, 48, 48, 'slot', { alpha: 0.85 });
+  }
+  drawTouchAimTemp(ctx, p);
+  const heldSlots = new Set(), aimSlot = TOUCH_AIM && TOUCH_AIM.slot;
+  for (const t of Object.values(TOUCH.ptrs)) if (t.kind === 'btn') heldSlots.add(t.b.slot);
+  const u = clamp((now - TOUCH.pageAt) / 0.12, 0, 1), anim = u < 1 && !touchShowAll9();
+  let toggle = null;
+  for (const b of touchButtons()) {
+    const held = heldSlots.has(b.slot), aiming = aimSlot === b.slot;
+    if (b.slot === 'toggle') { toggle = b; continue; }
+    if (b.slot === 'pot') {
+      const st = skillSlotState(p, 'pot'), n = p.potions || 0;
+      touchBtn(ctx, b.x, b.y, b.r, UC.hp, { icon: miscIcon('potion'), gray: !n, cdFrac: st.cd > 0 ? st.cd / 1 : 0, held });
+      for (let i = 0; i < MAX_POTIONS; i++) {   // one pip per potion on the rim
+        const a = (270 + (i - (MAX_POTIONS - 1) / 2) * 24) * TDEG, px = b.x + Math.cos(a) * (b.r - 3), py = b.y + Math.sin(a) * (b.r - 3);
+        ctx.fillStyle = '#0b0716'; ctx.beginPath(); ctx.arc(px, py, 4, 0, 7); ctx.fill();
+        ctx.fillStyle = i < n ? UC.hpHi : UC.bevel; ctx.beginPath(); ctx.arc(px, py, 2.5, 0, 7); ctx.fill();
+      }
+      continue;
+    }
+    if (b.slot === 'interact') { touchBtn(ctx, b.x, b.y, b.r, UC.gold, { held, label: G.prompt ? G.prompt.text.split(' ')[0].toUpperCase() : 'USE' }); continue; }
+    if (b.slot === 'atk') {
+      touchBtn(ctx, b.x, b.y, b.r, UC.line, { held, icon: itemIcon(p.equip.weapon), iconSize: 48 });
+      const ch = ultCharge(p);
+      ring(ctx, b.x, b.y, b.r - 2, 1, UC.edge, 3);   // the rim doubles as the ultimate charge ring
+      ring(ctx, b.x, b.y, b.r - 2, ch, UC.gold, 3);
+      if (ch >= 1) { ctx.save(); ctx.globalAlpha = 0.35 + 0.35 * Math.sin(now * 8); ring(ctx, b.x, b.y, b.r + 1, 1, UC.gold, 3); ctx.restore(); }
+      continue;
+    }
+    if (anim && TOUCH_INNER[b.slot] != null) continue;   // drawn rotating below
+    touchSkillBtn(ctx, p, b, held, aiming);
+  }
+  if (anim) {   // 120 ms swap: the old page swings out one way, the new one in from the other
+    const ease = easeOut(u), dir = leftHanded() ? -1 : 1;
+    TOUCH_PAGES[TOUCH.page ^ 1].forEach(id => { const b = touchInner(id, dir * ease * 35); touchSkillBtn(ctx, p, b, false, false, 1 - ease); });
+    TOUCH_PAGES[TOUCH.page].forEach(id => { const b = touchInner(id, -dir * (1 - ease) * 35); touchSkillBtn(ctx, p, b, heldSlots.has(id), aimSlot === id, ease); });
+  }
+  if (toggle) drawTouchToggle(ctx, p, toggle, u);
+  // two-hander charge ring inside the rim of the held skill button: white -> gold over 1 s (hook: p.holdCharge)
+  const cf = touchChargeFrac(p), hb = activeAimPtr();
+  if (cf > 0 && hb) ring(ctx, hb.b.x, hb.b.y - (TOUCH_AIM ? 4 : 0), hb.b.r - 7, cf, mixHex('#ffffff', UC.gold, cf), 3);
+  drawTouchCancel(ctx);
+  // bag / help / fullscreen
+  for (const m of touchMenu()) {
+    UI.frame(ctx, m.x, m.y, 40, 40, 'plain');
+    if (m.id === 'gear') ctx.drawImage(miscIcon('chest'), m.x + 4, m.y + 4, 32, 32);
+    else if (m.id === 'help') UI.sprite(ctx, 'help', m.x + 8, m.y + 8, { scale: 2 });
+    else { ctx.fillStyle = UC.text; for (const [cx, cy, dx, dy] of [[10, 10, 1, 1], [30, 10, -1, 1], [10, 30, 1, -1], [30, 30, -1, -1]]) { ctx.fillRect(m.x + cx - (dx < 0 ? 6 : 0), m.y + cy - (dy < 0 ? 2 : 0), 6, 2); ctx.fillRect(m.x + cx - (dx < 0 ? 2 : 0), m.y + cy - (dy < 0 ? 6 : 0), 2, 6); } }
+  }
+}
+// the Ø64 cancel zone at (480,500): fades in after a 40 px drag, lights up under the finger
+function drawTouchCancel(ctx) {
+  const a = TOUCH_AIM; if (!a) return;
+  const k = clamp((a.d - 40) / 24, 0, 1); if (k <= 0) return;
+  const on = a.cancel, x = 480, y = 500;
+  ctx.save(); ctx.globalAlpha = k;
+  ctx.fillStyle = on ? '#6a1c34' : '#15102a'; ctx.globalAlpha = k * 0.85; ctx.beginPath(); ctx.arc(x, y, 32, 0, 7); ctx.fill(); ctx.globalAlpha = k;
+  ctx.strokeStyle = on ? UC.hpHi : UC.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 31, 0, 7); ctx.stroke();
+  ctx.strokeStyle = on ? '#ffffff' : UC.text; ctx.lineWidth = 4; ctx.lineCap = 'square'; ctx.beginPath();
+  ctx.moveTo(x - 10, y - 10); ctx.lineTo(x + 10, y + 10); ctx.moveTo(x + 10, y - 10); ctx.lineTo(x - 10, y + 10); ctx.stroke();
+  ctx.restore();
+}
+// TEMPORARY ground indicator in HUD space until render.js gets drawAimIndicator(aim, from, to): a dashed range circle around
+// the hero (an iso ellipse) and a target dot. Skipped as soon as the real one exists.
+function drawTouchAimTemp(ctx, p) {
+  const a = TOUCH_AIM;
+  if (!a || typeof drawAimIndicator !== 'undefined' || (typeof SETTINGS !== 'undefined' && SETTINGS.groundIndicators === 'off')) return;
+  const sk = SKILLS[a.skill], col = (sk && sk.color) || '#ffffff', range = a.aim.range || 6, wv = (x, y) => { const v = worldToView(x, y, p.z); return [v[0] * 2, v[1] * 2]; };
+  const poly = (cx, cy, R, n = 40) => { ctx.beginPath(); for (let i = 0; i <= n; i++) { const t = i / n * Math.PI * 2, v = wv(cx + Math.cos(t) * R, cy + Math.sin(t) * R); i ? ctx.lineTo(v[0], v[1]) : ctx.moveTo(v[0], v[1]); } };
+  ctx.save(); ctx.globalAlpha = a.cancel ? 0.3 : 1; ctx.lineWidth = 2;
+  if (a.aim.shape !== 'self') {
+    ctx.strokeStyle = col; ctx.globalAlpha *= 0.55; ctx.setLineDash([8, 6]); ctx.lineDashOffset = -Math.floor(touchNow() * 10) * 2; poly(a.from.x, a.from.y, range); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha /= 0.55;
+    const f = wv(a.from.x, a.from.y), t = wv(a.to.x, a.to.y);
+    ctx.globalAlpha *= 0.5; ctx.beginPath(); ctx.moveTo(f[0], f[1]); ctx.lineTo(t[0], t[1]); ctx.stroke(); ctx.globalAlpha /= 0.5;
+    if (a.aim.shape === 'circle' && a.aim.r) { ctx.strokeStyle = col; poly(a.to.x, a.to.y, a.aim.r, 24); ctx.stroke(); }
+    ctx.fillStyle = a.clamped ? '#ffffff' : col; ctx.strokeStyle = '#0b0716';
+    ctx.beginPath(); ctx.arc(t[0], t[1], 6, 0, 7); ctx.fill(); ctx.stroke();
+  } else { ctx.strokeStyle = col; const f = wv(a.from.x, a.from.y); poly(a.from.x, a.from.y, a.aim.r || 2); ctx.stroke(); }
+  ctx.restore();
 }

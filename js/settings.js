@@ -33,7 +33,9 @@ const SETTINGS_SCHEMA = [
   { key: 'deadzone', label: 'Stick deadzone', group: 'controls', type: 'slider', min: 0.1, max: 0.4, step: 0.02, def: 0.22 },
   { key: 'doubleTapDodge', label: 'Double-tap dodge (touch)', group: 'controls', type: 'toggle', def: true },
   { key: 'leftHanded', label: 'Left-handed touch', group: 'controls', type: 'toggle', def: false },
-  { key: 'vibration', label: 'Vibration', group: 'controls', type: 'toggle', def: true },
+  { key: 'vibration', label: 'Vibration (haptics)', group: 'controls', type: 'toggle', def: true },
+  { key: 'groundIndicators', label: 'Ground indicators', group: 'controls', type: 'choice', def: 'hold', options: [{ v: 'off', label: 'Off' }, { v: 'hold', label: 'On hold' }, { v: 'always', label: 'Always' }] },
+  { key: 'showAll9', label: 'Show all 9 skills (tablets)', group: 'controls', type: 'toggle', def: false },
 ];
 const SETTINGS = {};
 const SETTINGS_KEY = 'dreamy.settings.v1';
