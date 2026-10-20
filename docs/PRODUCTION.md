@@ -22,10 +22,11 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 | M2a HUD rework, input/gamepad, combat feel, settings, perf items | **LIVE** (PR #2) |
 | M2b Act I slice (Vale 80 + Pinewood 112 with sections, Mossjaw + Bramblehorn, boss system, dialogue, quests, audio engine, music, 3 save slots, first 10 minutes) | **LIVE** (PR #3) |
 | M3 Hero (`js/hero.js`) + icons (`js/icons.js`) wired in, enemies rescaled, **items v2 + trinkets core (DESIGN §19)**, weapon/armour variant structure + parts kit (§23/§24), save v4, phone perf | **in progress** |
-| M4 Act II Ruins + statuses/reactions + bestiary + combo layer + Thief/Origins | planned |
-| M5 Act III Grotto + Warrior + aspects | planned |
-| M6 Act IV Caldera + arena | planned |
-| M7 Finale Spire + Morrow + endings + NG+ | planned |
+| M4a Act II Ruins + statuses/reactions (8, incl. Drift) + Wind (Gale) + element particles + bestiary + combo layer + Thief/Origins | planned |
+| M4b Elements in the world: receivers, object states, ice tiles, grass fire, Pip's charge, Dream Oil, Opal, generator/editor verbs, Vale+Pinewood+Ruins puzzles (DESIGN §33) | planned (new; client-authorised scope) |
+| M5 Act III Grotto + Warrior + aspects + Wet / icefall / crystal / tide verbs + Grotto puzzles + full pixel-FX atlas swap | planned |
+| M6 Act IV Caldera + arena + wind verbs (windmill, vent, frozen lava) + Caldera puzzles | planned |
+| M7 Finale Spire + Morrow + endings + NG+ + fog / raft verbs + Spire & Isles puzzles | planned |
 | M8 Polish, timed 2 h / 100 % runs | planned |
 
 ## M2a work items
@@ -49,6 +50,7 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * `js/hero.js` (layered 24×34 hero, rarityFx), `js/icons.js` (24×24 icons, ICONS API) — not wired in yet.
 
 ## Director decisions log (non-obvious)
+* Elements (§33, client 2026-10-20): 9 hero elements (+Wind "Breath"), Opal gem, shatter demoted to a reaction type, Wet as a surface, 8 named reactions (ceiling 8, incl. Drift), world keys (Pip's charge / Dream Oil) on the main path and skill-only secrets, M4 split into M4a/M4b. Element particles: §32.
 * Interact on Space; dodge on Shift/RMB. Origins named Knight/Mystic/Ranger/**Thief/Warrior**.
 * Thornmail restored (Pacifist build); Stormcall cut; new-cast cap 22.
 * Audio: no sample files; hard timbres rendered at boot via OfflineAudioContext.

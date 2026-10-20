@@ -228,7 +228,7 @@ function applySprites() {
   const b = sprOne('boss');
   ART.boss = { n: b, f: flipH(b), w: silhouette(b), wf: silhouette(flipH(b)) };
   { const dead = sprFamily('tree_dead_'); if (dead.length) ART.trees.dead = dead; }   // trees v2 come from frozenTrees (buildTreesV2), not this loop
-  ART.bush = sprFamily('bush_');
+  ART.bush = ART.bushV2 || sprFamily('bush_');   // §29 G2: cluster bushes (no full outline) replace the frozen blob bushes
   ART.grass = sprFamily('grass_');
   ART.rock = sprFamily('rock_') .filter(c => !sprFamily('rock_dark_').includes(c));
   ART.rockDark = sprFamily('rock_dark_');
@@ -590,9 +590,9 @@ function canopyTree(seed, S) {
   const cyc = 1 + ((0 - by0) * scy), botY = 1 + (by1 - by0) * scy;
   // ---- trunk (into the crown), roots, AO, 2-3 branches toward low clusters
   treeAO(T, cx, yb, S.trunkW[0]);
-  const xc = treeTrunk(T, S, cx, yb, Math.round(cyc), rand(-1.2, 1.2), seed);
-  treeRoots(T, S, xc, yb);
-  const low = cl.filter(c => !c.inner).sort((a, b) => b.sy - a.sy), nb = randi(2, 3);
+  const xc = S.bush ? null : treeTrunk(T, S, cx, yb, Math.round(cyc), rand(-1.2, 1.2), seed);
+  if (xc) treeRoots(T, S, xc, yb);
+  const low = cl.filter(c => !c.inner).sort((a, b) => b.sy - a.sy), nb = xc ? randi(2, 3) : 0;
   for (let i = 0; i < nb && i < low.length; i++) {
     const tg = low[(i * 2) % low.length], sy = Math.round(lerp(cyc, botY, rand(0.55, 0.9)));
     treeLine(T, xc(sy), sy, lerp(xc(sy), tg.sx, 0.8), lerp(sy, tg.sy, 0.7), 2, 1, S.bark[0], S.bark[tg.sx > xc(sy) ? 3 : 1]);
@@ -708,10 +708,14 @@ function frozenTrees(prefix) {
   if (!keys.length || keys.some(k => ART.img[k].length < 2)) return null;
   return keys.map(k => treeFromParts(ART.img[k][0], ART.img[k][1]));
 }
+// bushes v2: the same cluster crown with no trunk (the crown sits on its AO), no full outline; frozen as 'bush2_NN' (2 frames)
+const BUSH_SPECIES = { w: 18, h: 13, trunk: 0.02, asp: 0.62, clusters: [5, 6], card: [0.5, 0.64], inner: 2, pal: LEAF2, bark: BARK2, trunkW: [5, 2], rim: RIM_VALE, rimMix: 0.5, bush: true, flecks: { n: 2, c: ['#ffb3d1'] } };
+function buildBushes() { return [0, 1, 2, 3].map(v => canopyTree(1700 + v, Object.assign({}, BUSH_SPECIES, { W: BUSH_SPECIES.w + (v % 2) * 2, H: BUSH_SPECIES.h }))); }
 function buildTreesV2() {
   for (const k of Object.keys(TREE_SPECIES)) ART.trees[k] = frozenTrees('tree_' + k + '_') || buildTreeSpecies(k);
   ART.pines = {};
   for (const k of Object.keys(PINE_SPECIES)) ART.pines[k] = frozenTrees('pine_' + k + '_') || buildPineSpecies(k);
+  ART.bushV2 = frozenTrees('bush2_') || buildBushes();
 }
 
 // ===== ground decals (DESIGN §29 G2; world-art minutes §2.3) ========================================================

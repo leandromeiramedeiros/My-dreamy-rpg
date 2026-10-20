@@ -5,6 +5,7 @@
 // sheets), takes each sheet's two parts and writes them as one 2-frame PNG strip [trunk | canopy] via canvas.toDataURL:
 //   tree_<species>_NN   (ART.trees.<species>: round poplar blossom teal oak birch, 12 each = 6 variants x 2 sizes)
 //   pine_<kind>_NN      (ART.pines.<kind>: giant 3, tall 6, young 6)
+//   bush2_NN            (ART.bushV2 -> ART.bush: 4 cluster bushes, no trunk)
 // art.js frozenTrees() rebuilds the composite and the 3 sway frames from the two parts at load. The old one-ellipse lollipop
 // sheets (tree_round_0 .. tree_teal_3) are removed; tree_dead_* and every other sprite are kept as they are.
 // Usage: node tools/freeze-trees.js [--check]   (--check: report sizes and whether js/sprites.js is up to date, write nothing)
@@ -29,6 +30,7 @@ const srv = http.createServer((q, r) => {
     const strip = c => { const { c: k, x } = makeCanvas(c.width * 2, c.height); x.drawImage(c.trunk, 0, 0); x.drawImage(c.canopy, c.width, 0); return k.toDataURL('image/png'); };
     for (const s of Object.keys(TREE_SPECIES)) ART.trees[s].forEach((c, i) => { out[`tree_${s}_${pad(i)}`] = { frames: 2, src: strip(c) }; });
     for (const s of Object.keys(PINE_SPECIES)) ART.pines[s].forEach((c, i) => { out[`pine_${s}_${pad(i)}`] = { frames: 2, src: strip(c) }; });
+    ART.bushV2.forEach((c, i) => { out[`bush2_${pad(i)}`] = { frames: 2, src: strip(c) }; });
     return out;
   });
   await br.close(); srv.close();
@@ -38,7 +40,7 @@ const srv = http.createServer((q, r) => {
   const old = ctx.SPRITE_ART, next = {};
   const dropped = [];
   for (const [k, v] of Object.entries(old)) {
-    if (/^tree_(round|poplar|blossom|teal)_\d$/.test(k) || /^(tree|pine)_[a-z]+_\d\d$/.test(k)) { dropped.push(k); continue; }
+    if (/^tree_(round|poplar|blossom|teal)_\d$/.test(k) || /^(tree|pine)_[a-z]+_\d\d$/.test(k) || /^bush2_\d\d$/.test(k)) { dropped.push(k); continue; }
     next[k] = v;
   }
   Object.assign(next, sheets);

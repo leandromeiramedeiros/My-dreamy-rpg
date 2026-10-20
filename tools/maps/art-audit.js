@@ -7,6 +7,8 @@
 //             re-rendered with every prop and critter hidden (ground, cliffs, skirt, sky: what group 1 owns)
 //   clusters  luminance clusters (value bands): peaks of the smoothed 32-bin luma histogram holding >= 1 % of the frame per bin,
 //             split by a valley >= 15 % below the smaller peak (target >= 5); plus the 5/50/95 % luma percentiles
+//   density   §29.4: trees and clutter (small props + baked ground decals) anchored in the frame, tree species, identical adjacent
+//             (type, variant) tree pairs within 1.5 tiles (targets >= 10 / >= 20 / >= 3 / 0)
 //   flatBackEdge  "top surface touching the sky without thickness": frame columns where the island's back (north / west) edge meets the
 //             sky on a tile with no wall facing the camera within 4 tiles in front of it (no raised rim, no drop); also how many of those
 //             edge columns show a lit lip. Target 0.
@@ -109,7 +111,17 @@ function pageMetrics() {
     if (!rim) skyTop++;
   }
   let groundSpecks = 0; for (const [x, y] of allSp) if (own[x] >= 0 && y >= Math.round(best[x]) - 1) groundSpecks++;
-  return { specks, groundSpecks, speckAt: at, clusters: merged.length, clusterPeaks: merged.map(b => b * 8), luma: [pct(0.05), pct(0.5), pct(0.95)], h64: Array.from(h64, v => +(v / (W * H) * 100).toFixed(2)), sil, skyTop, edgeCols, lipped };
+  // §29.4 density: trees (o.tree) and clutter (small props + baked ground decals) whose anchor is inside the frame; species = distinct
+  // tree types; sameAdj = pairs of identical (type, variant) trees within 1.5 tiles of each other (target 0)
+  const inF = (x, y, z) => { const vx = isoX(x, y) - camX + RW / 2, vy = isoY(x, y, z) - camY + RH / 2; return vx >= 0 && vx < W && vy >= 0 && vy < H; };
+  const CLUT = /^(grass|bush|rock|rock_dark|mushroom|mushroom_red|moss|log|stump|crystal|crystal_violet)$/;
+  const vis = m.objects.filter(o => !o.gone && o.src && inF(o.x, o.y, o.z)), trees = vis.filter(o => o.tree);
+  let decals = 0;
+  if (typeof decalsAt === 'function') for (let j = Math.max(0, ty0); j <= Math.min(m.H - 1, ty1); j++) for (let i = Math.max(0, tx0); i <= Math.min(m.W - 1, tx1); i++) if (m.type[j][i]) for (const d of decalsAt(m, i, j)) if (inF(d.x, d.y, m.h[j][i])) decals++;
+  let sameAdj = 0; for (let a = 0; a < trees.length; a++) for (let b = a + 1; b < trees.length; b++) { const A = trees[a], B = trees[b]; if (A.src.t === B.src.t && A.img === B.img && Math.hypot(A.x - B.x, A.y - B.y) < 1.5) sameAdj++; }
+  const density = { trees: trees.length, clutterProps: vis.filter(o => CLUT.test(o.src.t)).length, decals, species: new Set(trees.map(o => o.src.t)).size, sameAdj };
+  density.clutter = density.clutterProps + density.decals;
+  return { density, specks, groundSpecks, speckAt: at, clusters: merged.length, clusterPeaks: merged.map(b => b * 8), luma: [pct(0.05), pct(0.5), pct(0.95)], h64: Array.from(h64, v => +(v / (W * H) * 100).toFixed(2)), sil, skyTop, edgeCols, lipped };
 }
 function pageChunkCost() {
   const m = G.map, cg = chunkGrid(m), out = [];
@@ -192,7 +204,7 @@ async function savePng(page, file, kind, sil) {
       }));
       delete met.sil; if (!flags.includes('--speck-xy')) delete met.speckAt; else met.terrainAt = await page.evaluate(() => window.__tsAt);
       R.shots.push(Object.assign({ name, x, y, file: file + '.png' }, met));
-      console.log(`${mapId.padEnd(9)} ${String(n)} ${name.padEnd(16)} specks ${String(met.specks).padStart(5)} (ground ${String(met.groundSpecks).padStart(4)}, terrain ${String(met.terrainSpecks).padStart(4)})  clusters ${met.clusters}  flatBackEdge ${met.skyTop}/${met.edgeCols} lipped ${met.lipped}  luma5/50/95 ${met.luma.join('/')}`);
+      console.log(`${mapId.padEnd(9)} ${String(n)} ${name.padEnd(16)} specks ${String(met.specks).padStart(5)} (ground ${String(met.groundSpecks).padStart(4)}, terrain ${String(met.terrainSpecks).padStart(4)})  clusters ${met.clusters}  trees ${met.density.trees} clutter ${met.density.clutter} (decals ${met.density.decals}) species ${met.density.species} sameAdj ${met.density.sameAdj}  flatBackEdge ${met.skyTop}/${met.edgeCols} lipped ${met.lipped}  luma5/50/95 ${met.luma.join('/')}`);
     }
     R.specksMax = Math.max(...R.shots.map(s => s.specks)); R.groundSpecksMax = Math.max(...R.shots.map(s => s.groundSpecks)); R.terrainSpecksMax = Math.max(...R.shots.map(s => s.terrainSpecks)); R.specksMean = Math.round(R.shots.reduce((a, s) => a + s.specks, 0) / R.shots.length);
     R.clustersMin = Math.min(...R.shots.map(s => s.clusters));

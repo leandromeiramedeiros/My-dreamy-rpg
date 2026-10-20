@@ -518,7 +518,7 @@ function decalsAt(m, i, j) {
   if (grassy) {
     const nT = (clump > 0.55 ? 2 : 1) - (r() < 0.3 ? 1 : 0);
     for (let q = 0; q < nT; q++) add(r() < 0.25 ? DK.tuftPale : DK.tuft, ...spot());
-    const nF = t === 'f' ? 2 : clump > 0.6 ? 1 : r() < (forest ? 0.06 : 0.12) ? 1 : 0;
+    const nF = t === 'f' ? 1 + (clump > 0.5 ? 1 : 0) : clump > 0.65 ? 1 : r() < (forest ? 0.04 : 0.06) ? 1 : 0;
     for (let q = 0; q < nF; q++) add(DK.flowers, ...spot());
     if (r() < (shade ? 0.55 : 0.05)) add(DK.fern, ...spot());
     if (r() < (t === 'd' ? 0.35 : shade ? 0.12 : 0.03)) add(DK.moss, ...spot());
