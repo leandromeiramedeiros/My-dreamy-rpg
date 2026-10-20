@@ -714,6 +714,44 @@ function buildTreesV2() {
   for (const k of Object.keys(PINE_SPECIES)) ART.pines[k] = frozenTrees('pine_' + k + '_') || buildPineSpecies(k);
 }
 
+// ===== ground decals (DESIGN §29 G2; world-art minutes §2.3) ========================================================
+// 16 flat kinds per zone, coloured from the theme's own ramps, baked into the ground chunks / column tops by maps.js (never in
+// the y-sort, no collider). Each kind has 2-3 shape variants. Every mark is >= 2 px in some direction and sits 1-2 ramp steps from
+// the ground it lies on, so a decal never reads as a speck. DECAL_KINDS order = the kind index maps.js stores.
+const DECAL_KINDS = ['tuft', 'tuftPale', 'flowers', 'litterA', 'litterB', 'litterC', 'needles', 'pebbles', 'rootA', 'rootB', 'rootC', 'rootD', 'moss', 'puddle', 'cobble', 'fern'];
+function buildDecalSet(th, seed) {
+  if (th._decals) return th._decals;
+  const keepRng = _rng; seedRng(seed * 977 + 5);   // built lazily (first chunk): never disturb the shared seeded stream
+  const G = th.grass, E = th.earth, S = th.stone, P = th.path, Wt = th.water, Wd = th.wood || E;
+  const warm = th.flowers.map(hexToRgb), set = {};
+  const mk = (w, h, draw) => { const pb = new PixBuf(w, h); draw(pb, w, h); const c = pb.toCanvas(); c.ax = w >> 1; c.ay = h - 1; return c; };
+  const blade = (pb, x, h, lean, cols, y0) => { for (let y = 0; y < h; y++) pb.set(Math.round(x + lean * y), y0 - y, cols[Math.min(cols.length - 1, Math.floor(y / h * cols.length))]); };
+  set.tuft = [0, 1, 2].map(v => mk(7, 6, (pb) => { const n = 3 + (v % 2); for (let b = 0; b < n; b++) blade(pb, 1 + b * 1.6, 3 + ((b + v) % 3), (b % 2 ? 0.2 : -0.15), [G[2], G[3], G[4]], 5); }));
+  set.tuftPale = [0, 1].map(v => mk(7, 6, (pb) => { for (let b = 0; b < 4; b++) blade(pb, 1 + b * 1.5, 3 + ((b + v) % 2) * 1.5, (b % 2 ? 0.18 : -0.12), [G[3], G[4], G[5]], 5); }));
+  set.flowers = [0, 1, 2].map(v => mk(8, 5, (pb) => {
+    for (let k = 0; k < 3; k++) { const x = 1 + k * 2.4 + (v === 1 && k === 1 ? 0.6 : 0), y = 1 + ((k + v) % 2), c = warm[(k + v) % warm.length]; blade(pb, x + 0.5, 4 - y, 0, [G[2], G[3]], 4); pb.set(Math.round(x), y, c); pb.set(Math.round(x) + 1, y, c); }
+  }));
+  const leafy = (cols, n) => mk(9, 5, (pb) => { for (let k = 0; k < n; k++) { const x = Math.floor(rand(0, 7)), y = Math.floor(rand(0, 4)), c = cols[Math.floor(rand() * cols.length)]; pb.set(x, y, c); pb.set(x + 1, y, c); if (rand() < 0.4) pb.set(x + 1, y + 1, cols[0]); } });
+  set.litterA = [0, 1].map(() => leafy([E[3], E[4], Wd[2]], 5));
+  set.litterB = [0, 1].map(() => leafy([E[4], E[5], warm[0]], 4));
+  set.litterC = [0, 1].map(() => leafy([G[2], E[3], Wd[3]], 6));
+  set.needles = [0, 1].map(() => mk(10, 4, (pb) => { for (let k = 0; k < 7; k++) { const x = Math.floor(rand(0, 8)), y = Math.floor(rand(0, 4)), c = [E[2], E[3], Wd[1]][k % 3]; pb.set(x, y, c); pb.set(x + 1, y, c); pb.set(x + 2, y, c); } }));
+  set.pebbles = [0, 1, 2].map(v => mk(8, 4, (pb) => { for (let k = 0; k < 2 + v % 2; k++) { const x = 1 + k * 3, y = 1 + ((k + v) % 2); pb.set(x, y, S[4]); pb.set(x + 1, y, S[3]); pb.set(x, y + 1, S[2]); pb.set(x + 1, y + 1, S[1]); } }));
+  // roots: from the trunk foot (the anchor, top-centre of the decal) out and down, 2 px thick for the first half
+  const root = (dir, len, drop) => { const w = len + 3, pb = new PixBuf(w * 2, drop + 3); const cx = w; for (let q = 0; q < len; q++) { const x = cx + dir * q, y = Math.round(q / len * drop); pb.set(x, y, Wd[q < len / 2 ? 2 : 1]); if (q < len / 2) pb.set(x, y + 1, Wd[0]); } const c = pb.toCanvas(); c.ax = cx; c.ay = 0; return c; };
+  set.rootA = [root(-1, 6, 2), root(1, 6, 2)]; set.rootB = [root(-1, 8, 3), root(1, 8, 3)];
+  set.rootC = [root(-1, 5, 3), root(1, 5, 3)]; set.rootD = [root(-1, 9, 2), root(1, 9, 2)];
+  set.moss = [0, 1].map(v => mk(11, 5, (pb, w, h) => { for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const d = ((x + 0.5 - w / 2) / (w / 2)) ** 2 + ((y + 0.5 - h / 2) / (h / 2)) ** 2; if (d < 1 - 0.3 * vnoise(x * 0.6, y * 0.6, seed + v)) pb.set(x, y, ramp2([G[1], G[2], G[3]], 0.75 - d * 0.6, x, y)); } }));
+  set.puddle = [0, 1].map(v => mk(11 + v * 2, 5, (pb, w, h) => { for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const d = ((x + 0.5 - w / 2) / (w / 2)) ** 2 + ((y + 0.5 - h / 2) / (h / 2)) ** 2; if (d < 1) pb.set(x, y, d > 0.6 ? E[1] : y === 1 && x > 2 && x < w - 3 ? Wt[4] : Wt[2]); } }));
+  set.cobble = [0, 1, 2].map(v => mk(10, 4, (pb) => { for (let k = 0; k < 3; k++) { const x = k * 3 + (v % 2), y = (k + v) % 2; for (let q = 0; q < 3; q++) pb.set(x + q, y, q === 2 ? P[1] : P[3]); for (let q = 0; q < 3; q++) pb.set(x + q, y + 1, P[1]); } }));
+  set.fern = [0, 1].map(v => mk(11, 7, (pb) => {
+    for (const s of [-1, 1]) for (let q = 0; q < 5; q++) { const x = 5 + s * q, y = 6 - Math.round(q * 0.9 + (q > 2 ? -(q - 2) * 0.6 : 0)) - (v && s > 0 ? 1 : 0); pb.set(x, y, G[q < 2 ? 2 : 3]); if (q % 2) pb.set(x, y - 1, G[4]); }
+    pb.set(5, 6, G[1]); pb.set(5, 5, G[2]);
+  }));
+  _rng = keepRng;
+  return (th._decals = DECAL_KINDS.map(k => set[k]));
+}
+
 // ===== Props ===================================================================
 function buildProps() {
   ART.lantern = asciiSprite([

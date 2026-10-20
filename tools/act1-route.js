@@ -183,7 +183,8 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   await wait(600);
   const bootLoot = await ev(() => window.__loot.slice());
   await ev(() => { const d = G.drops.find(q => q.kind === 'item' && q.it.base === 'ironboots'); if (d) window.__tp(d.x, d.y); });
-  const booted = await wf(() => G.player.equip.boots && G.player.equip.boots.base === 'ironboots', null, 4000);
+  // re-step onto the boots while they settle (a drop still arcing to the ground is not picked up yet)
+  const booted = await wf(() => { if (G.player.equip.boots && G.player.equip.boots.base === 'ironboots') return true; const d = G.drops.find(q => q.kind === 'item' && q.it.base === 'ironboots'); if (d) window.__tp(d.x, d.y); return false; }, null, 6000);
   check('vale (§28 4:50): the garden ambush drops the Common Iron Boots (no random roll) and they go on (SHIFT = Charge); the potion chip is in', bootLoot.includes('item:boots/common') && await ranAction("a.type === 'loot' && a.item === 'ironboots' && !a.count") && booted && await ev(() => slotSkill(G.player, 'shift') === 'charge' && hudShown('pot') > 0), { bootLoot, booted, why: await ev(() => ({ shift: slotSkill(G.player, 'shift'), pot: hudShown('pot'), boots: G.player.equip.boots && G.player.equip.boots.base, drop: G.drops.filter(q => q.kind === 'item').map(q => q.it.base) })) });
   check('vale: lantern returned -> quest done + reward', await goto('lantern_return') && (await quest('vale_lantern')) === 'done' && await ranAction("a.type === 'loot' && a.item === 'socket_rune'"));
   check('vale: hidden gem cache', await goto('gems'));

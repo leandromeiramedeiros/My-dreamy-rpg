@@ -483,12 +483,86 @@ function drawCrystals(m, ctx, x0, y0, w, h) {
     ctx.save(); ctx.translate(s.px - x0, s.py - y0); ctx.scale(1, -1); ctx.drawImage(img, -8, -22); ctx.restore();
   }
 }
+// ===== ground decals (DESIGN §29 G2; world-art minutes §2.3) ===================================================================
+// 16 flat kinds per zone (art.js buildDecalSet, DECAL_KINDS), scattered per tile by a deterministic grammar and BAKED: h = 0 tiles
+// onto their ground chunk (drawDecals, after putImageData like drawCrystals), raised tiles onto their own column top (rasterColumn,
+// source-atop). 0 ms a frame; a few ms per chunk build. The grammar is Lumina's ground-detail scatter (src/game/GroundDetail.js
+// groundDetailSteps; docs/CREDITS.md) remapped to our tiles: an fBm clump mask at 0.23 / tile drives tufts (more in clumps, 25 %
+// pale) and flowers (dense on 'f'); ferns 55 % at the forest border (a tree within 1.6 tiles) / 5 % in the open; moss on dark moss
+// and in shade; puddles in low moss hollows; cobble edges and sparse tufts on path borders; pebbles elsewhere and at cliff feet;
+// leaf litter (needle mats under pines) round trunks; roots at trunk bases (p 0.5 a tree); ferns / tufts ring the roots. Nothing
+// under a collider. decalsAt(m, i, j) -> [{ k, v, x, y }] (k = DECAL_KINDS index), cached per tile.
+const DK = {}; if (typeof DECAL_KINDS !== 'undefined') DECAL_KINDS.forEach((k, i) => { DK[k] = i; });
+function decalTrees(m) {   // trees by tile (decal accents) + a coarse "a tree within 1.6 tiles" mask
+  if (m._dTrees && m._dTrees.ref === m.objects) return m._dTrees;
+  const at = new Map(), near = new Uint8Array(m.W * m.H);
+  for (const o of m.objects) if (o.tree && !o.gone) {
+    const i = Math.floor(o.x), j = Math.floor(o.y), k = j * m.W + i; (at.get(k) || at.set(k, []).get(k)).push(o);
+    for (let dj = -2; dj <= 2; dj++) for (let di = -2; di <= 2; di++) { const a = i + di, b = j + dj; if (a >= 0 && b >= 0 && a < m.W && b < m.H && Math.hypot(a + 0.5 - o.x, b + 0.5 - o.y) < 1.6) near[b * m.W + a] = Math.min(255, near[b * m.W + a] + 1); }
+  }
+  return (m._dTrees = { ref: m.objects, at, near });
+}
+const DECAL_NO = new Set(['w', 'b', 's', 'x', 'r', 'pillar']);
+function decalsAt(m, i, j) {
+  const C = m._dec || (m._dec = new Map()), key = j * m.W + i;
+  let out = C.get(key); if (out) return out;
+  out = []; C.set(key, out);
+  const t = m.type[j] && m.type[j][i]; if (!t || DECAL_NO.has(t)) return out;
+  const T = decalTrees(m), h = m.h[j][i], sd = (m.theme.seed | 0) * 131, forest = m.themeId === 'forest';
+  let n = 0; const r = () => hash2(i * 61 + n, j * 37 + (n++) * 13, sd + 7);
+  const free = (x, y) => !nearColliders(m, x, y, 0.5).some(c => !c.gone && Math.hypot(c.x - x, c.y - y) < c.r + 0.12);
+  const same = (x, y) => Math.floor(x) === i && Math.floor(y) === j || (h === 0 && hAt(m, Math.floor(x), Math.floor(y)) === 0 && typeAt(m, Math.floor(x), Math.floor(y)));
+  const add = (k, x, y, chk = true) => { if (k == null || !same(x, y) || (chk && !free(x, y))) return; const set = DECALS_OF(m)[k]; out.push({ k, v: Math.floor(r() * set.length) % set.length, x, y }); };
+  const spot = () => [i + 0.18 + 0.64 * r(), j + 0.18 + 0.64 * r()];
+  const clump = fbm(i * 0.23, j * 0.23, 3, sd + 101), shade = T.near[key], grassy = t === 'g' || t === 'f' || t === 'd';
+  if (grassy) {
+    const nT = (clump > 0.55 ? 2 : 1) - (r() < 0.3 ? 1 : 0);
+    for (let q = 0; q < nT; q++) add(r() < 0.25 ? DK.tuftPale : DK.tuft, ...spot());
+    const nF = t === 'f' ? 2 : clump > 0.6 ? 1 : r() < (forest ? 0.06 : 0.12) ? 1 : 0;
+    for (let q = 0; q < nF; q++) add(DK.flowers, ...spot());
+    if (r() < (shade ? 0.55 : 0.05)) add(DK.fern, ...spot());
+    if (r() < (t === 'd' ? 0.35 : shade ? 0.12 : 0.03)) add(DK.moss, ...spot());
+    if (t === 'd' && clump < 0.32 && r() < 0.08) add(DK.puddle, ...spot());
+    if (r() < 0.04) add(DK.pebbles, ...spot());
+  } else if (t === 'p') {
+    const edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => { const u = typeAt(m, i + a, j + b); return u && u !== 'p'; });
+    if (edge && r() < 0.35) add(DK.cobble, ...spot());
+    if (edge && r() < 0.12) add(DK.tuft, ...spot());
+    if (r() < 0.12) add(DK.pebbles, ...spot());
+  }
+  if (h === 0 && (hAt(m, i, j - 1) > 0 || hAt(m, i - 1, j) > 0) && r() < 0.33) add(DK.pebbles, i + 0.2 + 0.3 * r(), j + 0.2 + 0.3 * r());   // cliff feet
+  for (const o of T.at.get(key) || []) {   // accents of the trees standing on this tile
+    const pine = /pine/.test(o.src && o.src.t || ''), lit = o.r || 0.3;
+    if (r() < 0.5) out.push({ k: [DK.rootA, DK.rootB, DK.rootC, DK.rootD][Math.floor(r() * 4)], v: r() < 0.5 ? 0 : 1, x: o.x, y: o.y, root: true });
+    if (r() < 0.6) { const a = r() * 6.283, d = lit + 0.3 + 0.5 * r(); add(pine || forest && r() < 0.5 ? DK.needles : [DK.litterA, DK.litterB, DK.litterC][Math.floor(r() * 3)], o.x + Math.cos(a) * d, o.y + Math.sin(a) * d * 0.7); }
+    const ring = 1 + Math.floor(r() * 3);
+    for (let q = 0; q < ring; q++) { const a = r() * 6.283, d = lit + 0.35 + 0.45 * r(); add(r() < 0.6 ? DK.fern : DK.tuft, o.x + Math.cos(a) * d, o.y + Math.sin(a) * d); }
+  }
+  return out;
+}
+const DECALS_OF = m => buildDecalSet(m.theme, m.theme.seed | 0);
+// draw the decals that land in raster rect (x0, y0, w, h) of the h = 0 ground onto ctx (a chunk canvas, or the editor raster)
+function drawDecals(m, ctx, x0, y0, w, h) {
+  if (typeof buildDecalSet !== 'function') return 0;
+  const g = m.gp, set = DECALS_OF(m), sx0 = x0 + g.minSX, pad = 16;
+  const cs = [[sx0 - pad, y0 - pad], [sx0 + w + pad, y0 - pad], [sx0 - pad, y0 + h + pad], [sx0 + w + pad, y0 + h + pad]].map(([a, b]) => toWorld(a, b));
+  const i0 = Math.max(0, Math.floor(Math.min(...cs.map(c => c[0]))) - 1), i1 = Math.min(m.W - 1, Math.ceil(Math.max(...cs.map(c => c[0]))) + 1);
+  const j0 = Math.max(0, Math.floor(Math.min(...cs.map(c => c[1]))) - 1), j1 = Math.min(m.H - 1, Math.ceil(Math.max(...cs.map(c => c[1]))) + 1);
+  let n = 0;
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+    if (!m.type[j][i] || m.h[j][i] !== 0) continue;
+    const X = isoX(i + 0.5, j + 0.5) - g.minSX, Y = isoY(i + 0.5, j + 0.5, 0);
+    if (X < x0 - 40 || X > x0 + w + 40 || Y < y0 - 30 || Y > y0 + h + 30) continue;
+    for (const d of decalsAt(m, i, j)) { const im = set[d.k][d.v]; ctx.drawImage(im, Math.round(isoX(d.x, d.y) - g.minSX - x0 - im.ax), Math.round(isoY(d.x, d.y, 0) - y0 - im.ay)); n++; }
+  }
+  return n;
+}
 // the editor's (and tests') full raster: m.ground at (m.gox, m.goy)
 function rasterGround(m) {
   const g = groundPrep(m), img = new ImageData(g.W, g.H);
   rasterRect(m, img, 0, 0, 0, 0, g.W, g.H);
   const { c, x } = makeCanvas(g.W, g.H); x.putImageData(img, 0, 0);
-  drawCrystals(m, x, 0, 0, g.W, g.H);
+  drawCrystals(m, x, 0, 0, g.W, g.H); drawDecals(m, x, 0, 0, g.W, g.H);
   m.ground = c;
 }
 
@@ -577,7 +651,7 @@ function buildChunkStep(m, idx, ms) {
     if (performance.now() - t0 > ms) return false;
   }
   if (!job.c) {
-    const { c, x } = makeCanvas(S, S); x.putImageData(job.img, 0, 0); drawCrystals(m, x, ci * S, cj * S, S, S);
+    const { c, x } = makeCanvas(S, S); x.putImageData(job.img, 0, 0); drawCrystals(m, x, ci * S, cj * S, S, S); drawDecals(m, x, ci * S, cj * S, S, S);
     job.c = c; job.img = null;
   }
   const cols = cg.cols[idx];
@@ -708,7 +782,12 @@ function rasterColumn(m, i, j) {
     if (fog > 0) c = mixRgb(c, th.haze, fog);
     pb.set(cx, cy, c);
   }
-  return { kind: 'column', img: pb.toCanvas(), sx: ox, sy: oy, key: i + j + 1, x: i + 0.5, y: j + 0.5 };
+  const img = pb.toCanvas();
+  if (typeof buildDecalSet === 'function' && !pillar) {   // §29 G2: this raised tile's decals on its own top (clipped to the column's pixels)
+    const ds = decalsAt(m, i, j);
+    if (ds.length) { const set = DECALS_OF(m), x = img.getContext('2d'); x.globalCompositeOperation = 'source-atop'; for (const d of ds) { const im = set[d.k][d.v]; x.drawImage(im, Math.round(isoX(d.x, d.y) - ox - im.ax), Math.round(isoY(d.x, d.y, h) - oy - im.ay)); } x.globalCompositeOperation = 'source-over'; }
+  }
+  return { kind: 'column', img, sx: ox, sy: oy, key: i + j + 1, x: i + 0.5, y: j + 0.5 };
 }
 
 function finalizeMap(m) {
