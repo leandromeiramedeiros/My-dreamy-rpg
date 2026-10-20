@@ -2,12 +2,12 @@
  "name": "kbm",
  "maps": {
   "vale": {
-   "enters": 1,
-   "ms": 115607,
+   "enters": 2,
+   "ms": 328612,
    "deaths": 0,
    "potions": 0,
    "kills": 0,
-   "lvlIn": 1,
+   "lvlIn": 13,
    "dmgTaken": 0,
    "stuck": 0
   },
@@ -4157,6 +4157,124 @@
   {
    "at": 1212.2,
    "msg": "goal: boss chest"
+  },
+  {
+   "at": 1214.3,
+   "msg": "enter map vale",
+   "lvl": 13,
+   "hp": 1124
+  },
+  {
+   "at": 1216,
+   "msg": "FINDING[info] No walkable path to goal \"boss chest\"",
+   "detail": {
+    "from": [
+     51.67,
+     69.45
+    ],
+    "to": [
+     104.68,
+     26.33
+    ],
+    "map": "vale"
+   }
+  },
+  {
+   "at": 1274.7,
+   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     69.74,
+     50.25
+    ],
+    "obj": "Take the rift to the Pinewood",
+    "sinceMs": 60177
+   }
+  },
+  {
+   "at": 1334.8,
+   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     69.74,
+     50.25
+    ],
+    "obj": "Take the rift to the Pinewood",
+    "sinceMs": 60131
+   }
+  },
+  {
+   "at": 1394.8,
+   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     69.74,
+     50.25
+    ],
+    "obj": "Take the rift to the Pinewood",
+    "sinceMs": 60018
+   }
+  },
+  {
+   "at": 1412.4,
+   "msg": "goal boss chest: timeout",
+   "sec": "200.3"
+  },
+  {
+   "at": 1412.6,
+   "msg": "FINDING[major] Goal timed out: boss chest",
+   "detail": {
+    "after_s": 200,
+    "pos": [
+     69.74,
+     50.25
+    ],
+    "obj": "Take the rift to the Pinewood",
+    "noPath": 411,
+    "stuckN": 0
+   }
+  },
+  {
+   "at": 1414.3,
+   "msg": "FINDING[blocker] Portal home_arena missing",
+   "detail": {}
+  },
+  {
+   "at": 1414.3,
+   "msg": "MARK vale-return",
+   "lvl": 13,
+   "deaths": 2
+  },
+  {
+   "at": 1417,
+   "msg": "vale return",
+   "obj": "Take the rift to the Pinewood",
+   "pos": [
+    69.74,
+    50.25
+   ],
+   "quests": {
+    "vale_lantern": "done",
+    "shard_root": "done"
+   }
+  },
+  {
+   "at": 1417,
+   "msg": "goal: elder after boss"
+  },
+  {
+   "at": 1424.1,
+   "msg": "goal elder after boss: ok",
+   "sec": "7.2"
+  },
+  {
+   "at": 1426.8,
+   "msg": "vale final",
+   "obj": "Take the rift to the Pinewood",
+   "lvl": 13
   }
  ],
  "findings": [
@@ -4277,6 +4395,97 @@
    },
    "shot": "tools/qa/shots/kbm-034-goal-timeout-r2_clear.png",
    "map": "pinewood"
+  },
+  {
+   "at": 1216,
+   "sev": "info",
+   "title": "No walkable path to goal \"boss chest\"",
+   "detail": {
+    "from": [
+     51.67,
+     69.45
+    ],
+    "to": [
+     104.68,
+     26.33
+    ],
+    "map": "vale"
+   },
+   "shot": "tools/qa/shots/kbm-064-nopath.png",
+   "map": "vale"
+  },
+  {
+   "at": 1274.7,
+   "sev": "minor",
+   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     69.74,
+     50.25
+    ],
+    "obj": "Take the rift to the Pinewood",
+    "sinceMs": 60177
+   },
+   "shot": "tools/qa/shots/kbm-065-deadtime.png",
+   "map": "vale"
+  },
+  {
+   "at": 1334.8,
+   "sev": "minor",
+   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     69.74,
+     50.25
+    ],
+    "obj": "Take the rift to the Pinewood",
+    "sinceMs": 60131
+   },
+   "shot": "tools/qa/shots/kbm-066-deadtime.png",
+   "map": "vale"
+  },
+  {
+   "at": 1394.8,
+   "sev": "minor",
+   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     69.74,
+     50.25
+    ],
+    "obj": "Take the rift to the Pinewood",
+    "sinceMs": 60018
+   },
+   "shot": "tools/qa/shots/kbm-067-deadtime.png",
+   "map": "vale"
+  },
+  {
+   "at": 1412.6,
+   "sev": "major",
+   "title": "Goal timed out: boss chest",
+   "detail": {
+    "after_s": 200,
+    "pos": [
+     69.74,
+     50.25
+    ],
+    "obj": "Take the rift to the Pinewood",
+    "noPath": 411,
+    "stuckN": 0
+   },
+   "shot": "tools/qa/shots/kbm-068-goal-timeout-boss_chest.png",
+   "map": "vale"
+  },
+  {
+   "at": 1414.3,
+   "sev": "blocker",
+   "title": "Portal home_arena missing",
+   "detail": {},
+   "shot": null,
+   "map": "vale"
   }
  ],
  "errors": [],
@@ -4661,18 +4870,64 @@
    "tag": "bramblehorn-end",
    "file": "tools/qa/shots/kbm-063-bramblehorn-end.png",
    "map": "pinewood"
+  },
+  {
+   "at": 1216,
+   "tag": "nopath",
+   "file": "tools/qa/shots/kbm-064-nopath.png",
+   "map": "vale"
+  },
+  {
+   "at": 1274.7,
+   "tag": "deadtime",
+   "file": "tools/qa/shots/kbm-065-deadtime.png",
+   "map": "vale"
+  },
+  {
+   "at": 1334.8,
+   "tag": "deadtime",
+   "file": "tools/qa/shots/kbm-066-deadtime.png",
+   "map": "vale"
+  },
+  {
+   "at": 1394.8,
+   "tag": "deadtime",
+   "file": "tools/qa/shots/kbm-067-deadtime.png",
+   "map": "vale"
+  },
+  {
+   "at": 1412.6,
+   "tag": "goal-timeout-boss chest",
+   "file": "tools/qa/shots/kbm-068-goal-timeout-boss_chest.png",
+   "map": "vale"
+  },
+  {
+   "at": 1416.9,
+   "tag": "vale-return",
+   "file": "tools/qa/shots/kbm-069-vale-return.png",
+   "map": "vale"
+  },
+  {
+   "at": 1426.8,
+   "tag": "vale-elder-after",
+   "file": "tools/qa/shots/kbm-070-vale-elder-after.png",
+   "map": "vale"
   }
  ],
  "dead": [],
  "stuck": [],
  "fps": {
   "vale": {
-   "frames": 6472,
-   "sumMs": 115633.90000000036,
+   "frames": 11050,
+   "sumMs": 328642.1000000003,
    "p95s": [
     {
      "p95": 33.30000000000291,
      "max": 166.69999999999982
+    },
+    {
+     "p95": 333.30000000004657,
+     "max": 483.30000000004657
     }
    ]
   },
@@ -11076,6 +11331,77 @@
    "gt": 1196.41,
    "map": "pinewood",
    "type": "sound"
+  },
+  {
+   "at": 1214.4,
+   "k": "action",
+   "gt": 1204.33,
+   "map": "vale",
+   "type": "objective",
+   "text": "Hit the training dummies"
+  },
+  {
+   "at": 1214.4,
+   "k": "action",
+   "gt": 1204.33,
+   "map": "vale",
+   "type": "objective",
+   "text": "Follow the path to the Elder Stone"
+  },
+  {
+   "at": 1214.4,
+   "k": "action",
+   "gt": 1204.33,
+   "map": "vale",
+   "type": "objective",
+   "text": "Open the chest, then find the lantern"
+  },
+  {
+   "at": 1214.4,
+   "k": "action",
+   "gt": 1204.33,
+   "map": "vale",
+   "type": "open_portal"
+  },
+  {
+   "at": 1214.4,
+   "k": "action",
+   "gt": 1204.33,
+   "map": "vale",
+   "type": "objective",
+   "text": "Take the rift to the Pinewood"
+  },
+  {
+   "at": 1214.4,
+   "k": "action",
+   "gt": 1204.33,
+   "map": "vale",
+   "type": "objective",
+   "text": "Return the lantern to the Stone"
+  },
+  {
+   "at": 1214.4,
+   "k": "action",
+   "gt": 1204.33,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_banner"
+  },
+  {
+   "at": 1214.4,
+   "k": "action",
+   "gt": 1204.33,
+   "map": "vale",
+   "type": "spawn",
+   "id": "dummy"
+  },
+  {
+   "at": 1214.4,
+   "k": "action",
+   "gt": 1204.33,
+   "map": "vale",
+   "type": "spawn",
+   "id": "dummy"
   }
  ],
  "marks": [
@@ -11222,6 +11548,15 @@
    "lvl": 13,
    "hp": 1124,
    "deaths": 2
+  },
+  {
+   "at": 1414.3,
+   "name": "vale-return",
+   "map": "vale",
+   "sec": "hub",
+   "lvl": 13,
+   "hp": 1124,
+   "deaths": 2
   }
  ],
  "warps": [
@@ -11240,5 +11575,320 @@
    "ms": 1638
   }
  ],
- "dodgeOnWarn": 76
+ "dodgeOnWarn": 76,
+ "finished": "2026-10-20T07:34:03.155Z",
+ "totalSec": 1426.9,
+ "seenTalk": {
+  "vale:vale_banner": [
+   1.4
+  ],
+  "vale:vale_wake": [
+   1.4
+  ],
+  "vale:Training dummies are south-east. Hit one.": [
+   1.4
+  ],
+  "vale:Swing. Then dodge. Then try your Q skill.": [
+   6.3
+  ],
+  "vale:vale_elder": [
+   23.5
+  ],
+  "vale:The Stone lost a light. Past the cottage, a path ends.": [
+   23.5
+  ],
+  "vale:A chest! Interact to open it.": [
+   28.4
+  ],
+  "vale:vale_chest": [
+   37
+  ],
+  "vale:vale_tablet": [
+   61.9
+  ],
+  "vale:The Stone is lit. The Stone remembers kindness.": [
+   68.1
+  ],
+  "vale:vale_rift": [
+   84.7
+  ],
+  "pinewood:pinewood_banner": [
+   118.9
+  ],
+  "pinewood:The animals are running.": [
+   118.9
+  ],
+  "pinewood:pinewood_fox": [
+   121.4
+  ],
+  "pinewood:The wall hums, Aerin. Something is hidden behind it.": [
+   127.8,
+   745.3
+  ],
+  "pinewood:That key smells of roots and earth. It opens the Root Hollow.": [
+   213.6
+  ],
+  "pinewood:The bridge is raised. There must be a lever somewhere.": [
+   587
+  ],
+  "pinewood:A light off the road, Aerin. Worth the detour.": [
+   661.1
+  ],
+  "pinewood:The reflection has a door in it. Look behind you.": [
+   661.1
+  ],
+  "pinewood:Quiet, Aerin. Big things sleep in the tunnels.": [
+   665.1
+  ],
+  "pinewood:pinewood_hollow": [
+   737.9
+  ],
+  "pinewood:The gate is knotted shut. Find a lever.": [
+   798.7
+  ],
+  "pinewood:That is the plaza above us. A key for a cache up there?": [
+   801.1
+  ],
+  "pinewood:The roots remember the first Warden... he did not wake, and neither shall I.": [
+   866.6
+  ],
+  "pinewood:boss_bramblehorn_intro": [
+   885.2
+  ],
+  "pinewood:boss_bramblehorn_death": [
+   1205.4
+  ]
+ },
+ "finalSnap": {
+  "t": 1306.46,
+  "st": "play",
+  "ui": {
+   "map": false,
+   "open": false,
+   "help": false,
+   "pause": false,
+   "settings": false
+  },
+  "fadeDir": 0,
+  "fade": 0,
+  "dev": "kbm",
+  "map": "vale",
+  "W": 80,
+  "warp": false,
+  "sec": "hub",
+  "p": {
+   "x": 41.05,
+   "y": 46.5,
+   "z": 0,
+   "hp": 1124,
+   "maxHp": 1124,
+   "mp": 286,
+   "maxMp": 286,
+   "pot": 1,
+   "lvl": 13,
+   "xp": 1673,
+   "dead": false,
+   "ult": 100,
+   "dash": false,
+   "rootT": -123.57249999999425,
+   "slowT": -1254.278333332526,
+   "invul": false,
+   "aim": 1.8212393826755886,
+   "wk": "sword",
+   "wid": "dawnblade",
+   "st": 100,
+   "castT": -179.88916666670178,
+   "casting": false,
+   "bag": 30,
+   "dust": 0
+  },
+  "sk": {
+   "1": {
+    "id": "secondwind",
+    "cd": -0.01,
+    "mp": 30,
+    "st": 0
+   },
+   "2": {
+    "id": "chain",
+    "cd": 0,
+    "mp": 30,
+    "st": 0
+   },
+   "3": {
+    "id": "shootingstar",
+    "cd": -0.01,
+    "mp": 22,
+    "st": 0
+   },
+   "q": {
+    "id": "sunslash",
+    "cd": -0.02,
+    "mp": 18,
+    "st": 0
+   },
+   "e": {
+    "id": "dashstrike",
+    "cd": 0,
+    "mp": 25,
+    "st": 0
+   },
+   "r": {
+    "id": "judgement",
+    "cd": -0.02,
+    "mp": 60,
+    "st": 0
+   },
+   "f": {
+    "id": "bulwark",
+    "cd": -0.01,
+    "mp": 20,
+    "st": 0
+   },
+   "c": {
+    "id": "frostnova",
+    "cd": -0.01,
+    "mp": 25,
+    "st": 0
+   },
+   "shift": {
+    "id": "charge",
+    "cd": -0.01,
+    "mp": 0,
+    "st": 35
+   }
+  },
+  "en": [
+   {
+    "type": "dummy",
+    "x": 38.2,
+    "y": 63.4,
+    "hp": 9999,
+    "max": 9999,
+    "boss": false,
+    "dummy": true,
+    "asleep": false,
+    "spawnT": 0,
+    "r": 0.35,
+    "elite": false,
+    "state": "chase",
+    "lvl": 1,
+    "stun": false,
+    "still": false
+   },
+   {
+    "type": "dummy",
+    "x": 39.8,
+    "y": 64.8,
+    "hp": 9999,
+    "max": 9999,
+    "boss": false,
+    "dummy": true,
+    "asleep": false,
+    "spawnT": 0,
+    "r": 0.35,
+    "elite": false,
+    "state": "chase",
+    "lvl": 1,
+    "stun": false,
+    "still": false
+   }
+  ],
+  "boss": null,
+  "warn": {
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5,
+   "t": 1194.1733333325808
+  },
+  "tele": [],
+  "covered": false,
+  "zones": 0,
+  "prompt": null,
+  "obj": "Take the rift to the Pinewood",
+  "msg": null,
+  "pend": 0,
+  "banner": null,
+  "fired": [
+   "wake",
+   "yard_teach",
+   "elder",
+   "chest",
+   "gems",
+   "tablet",
+   "garden_ambush",
+   "garden_done",
+   "lantern_found",
+   "lantern_return",
+   "banner",
+   "dummies"
+  ],
+  "drops": [],
+  "portals": [
+   {
+    "id": "ruins",
+    "to": "ruins",
+    "x": 56.5,
+    "y": 20,
+    "open": true,
+    "ok": true
+   },
+   {
+    "id": "grotto",
+    "to": "grotto",
+    "x": 63.8,
+    "y": 19.4,
+    "open": false,
+    "ok": false
+   },
+   {
+    "id": "caldera",
+    "to": "caldera",
+    "x": 57.4,
+    "y": 25.8,
+    "open": false,
+    "ok": false
+   },
+   {
+    "id": "spire",
+    "to": "spire",
+    "x": 63.8,
+    "y": 25.4,
+    "open": false,
+    "ok": false
+   },
+   {
+    "id": "pine",
+    "to": "pinewood",
+    "x": 49,
+    "y": 69.3,
+    "open": true,
+    "ok": true
+   }
+  ],
+  "quests": {
+   "vale_lantern": "done",
+   "shard_root": "done"
+  },
+  "keys": [
+   "key:key_roothollow",
+   "key:key_rootcache",
+   "key:key_dream"
+  ],
+  "deaths": 2,
+  "col": 300,
+  "checkpoint": {
+   "map": "pinewood",
+   "x": 85.18982245737385,
+   "y": 36.38982245737391
+  },
+  "deadT": 1.4499999999999997,
+  "talkQ": 0,
+  "tablet": false,
+  "touch": false,
+  "tpage": 0,
+  "hudh": 1
+ }
 }
