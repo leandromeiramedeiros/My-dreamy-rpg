@@ -939,11 +939,11 @@ const WEAPON_POSE = { sword: 'swing', staff: 'cast', bow: 'aim' };   // how each
 // body at ~0.55 alpha + a light additive pass, the weapon; a materialise shimmer (width grows, a light column) on spawn and a
 // rising dissolve (narrowing, motes) on fade. Cached blits only; colours are a hue-offset element set + the mythic cycle.
 const ECHO_TINT = new WeakMap(), ECHO_STEPS = 6, ECHO_CYCLE = ['#ff5ac8', '#a060ff', '#40e8ff'], ECHO_PAL = {}, ECHO_GLOW = {};
-const ECHO_ELCOL = { fire: '#ff5a1e', frost: '#2aa8ff', nature: '#28d860', lightning: '#ffd010', arcane: '#9a44ff', holy: '#ffbe2a' };
+const ECHO_ELCOL = { fire: '#ff5a1e', frost: '#2aa8ff', nature: '#28d860', lightning: '#ffe630', arcane: '#9a44ff', holy: '#fff2c4' };   // holy is pale white-gold so it never reads as lightning yellow
 function echoPalette(el) {
   return ECHO_PAL[el] || (ECHO_PAL[el] = Array.from({ length: ECHO_STEPS }, (_, s) => {
     const a = ECHO_CYCLE[Math.floor(s / 2) % 3], b = ECHO_CYCLE[(Math.floor(s / 2) + 1) % 3];
-    return mixHex(ECHO_ELCOL[el] || ECHO_ELCOL.arcane, mixHex(a, b, (s % 2) * 0.5), 0.22);
+    return mixHex(ECHO_ELCOL[el] || ECHO_ELCOL.arcane, mixHex(a, b, (s % 2) * 0.5), 0.08);   // a faint mythic shimmer; the element colour dominates
   }));
 }
 function echoTint(img, col) {   // (w + 2) x (h + 2): the rim, then the tinted body at (1, 1)
