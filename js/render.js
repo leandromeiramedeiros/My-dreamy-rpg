@@ -344,11 +344,13 @@ function drawItem(ctx, it, lights) {
   const p = G.player;
   if (it.kind === 'column') { ctx.drawImage(it.img, Math.round(it.sx - camX + RW / 2), Math.round(it.sy - camY + RH / 2)); return; }
   if (it.kind === 'sprite') {
+    if (it.gone) return;   // an opened gate / keydoor / hidden wall (maps.js openGate)
     const [vx, vy] = worldToView(it.x, it.y, it.z);
+    if (it.fish) { drawFishSpot(ctx, it, vx, vy, lights); return; }
     let img = it.img;
     if (it.grass) img = ART.grass[Math.sin(G.t * 1.8 + it.sway) > 0 ? 1 : 0];
     if (it.beam) { drawSunbeam(ctx, vx, vy, it); return; }
-    if (it.flip) { ctx.save(); ctx.translate(Math.round(vx), 0); ctx.scale(-1, 1); ctx.drawImage(img, -Math.round(it.ax), Math.round(vy - it.ay)); ctx.restore(); }
+    if (it.flip !== !!it.pulled) { ctx.save(); ctx.translate(Math.round(vx), 0); ctx.scale(-1, 1); ctx.drawImage(img, -Math.round(it.ax), Math.round(vy - it.ay)); ctx.restore(); }
     else ctx.drawImage(img, Math.round(vx - it.ax), Math.round(vy - it.ay));
     if (it.brazier) drawFlame(ctx, vx, vy - 9, '#c77bff', '#ffd6ff');
     if (it.checkpoint && G.checkpoint && G.checkpoint.map === G.map.id && dist(G.checkpoint.x, G.checkpoint.y, it.x, it.y) < 2.5) {
@@ -532,43 +534,49 @@ function drawEnemy(ctx, e, lights) {
   let vy = vy0;
   const spawnA = e.spawnT > 0 ? 1 - e.spawnT / (e.boss ? 1.6 : 0.9) : 1;
   if (spawnA <= 0.05) return;
-  ctx.globalAlpha = spawnA;
+  if (e.under) { drawBurrowed(ctx, e, vx, vy); return; }
+  if (e.mimic) { const ci = ART.chest; ctx.drawImage(e.flash > 0 ? silOf(ci, '#ffffff') : ci, Math.round(vx - ci.width / 2), Math.round(vy - ci.height + 1)); return; }
+  ctx.globalAlpha = spawnA * (e.fadeT > 0 ? 0.35 : 1);
+  if (e.elite) drawEliteAura(ctx, e);
   let img, white;
-  const def = ENEMY[e.type] || {}, cs = def.sprite && ART.custom[def.sprite];
+  const def = ENEMY[e.type] || {}, look = enemyLook(def, e.type), cs = look.img, lk = look.kind;
+  const sc = def.scale || 1, scaled = sc !== 1 && !cs;
+  if (scaled) { ctx.save(); ctx.translate(Math.round(vx), Math.round(vy)); ctx.scale(sc, sc); ctx.translate(-Math.round(vx), -Math.round(vy)); }
   if (cs) {
     // pixel-editor sprite (sprites face right) with behaviour-driven motion
-    const base = e.face < 0 ? ART.customF[def.sprite] : cs;
+    const base = enemyFrame(look, e);
     let ox = 0, oy = 0, sq = 0;
-    if (def.ai === 'hopper') { const hop = e.state === 'chase' ? Math.max(0, Math.sin(e.anim * 6)) : 0; sq = (e.squash > 0 ? e.squash : 0) + (e.state === 'wind' ? 0.15 : 0) - hop * 0.12; oy = -hop * 5; }
-    else if (def.ai === 'shooter') oy = -(10 + Math.sin(e.anim * 3) * 3);
+    if (def.ai === 'hopper' || (e.pp && e.pp.chase && e.pp.chase.hop)) { const hop = e.state === 'chase' ? Math.max(0, Math.sin(e.anim * 6)) : 0; sq = (e.squash > 0 ? e.squash : 0) + (e.state === 'wind' ? 0.15 : 0) - hop * 0.12; oy = -hop * 5; }
+    else if (def.ai === 'shooter' || (def.tags || []).includes('flying')) oy = -(10 + Math.sin(e.anim * 3) * 3);
     else if (e.state === 'chase') oy = -(Math.floor(e.anim * 6) % 2);
     else if (e.state === 'wind') { ox = -e.face * 1; oy = -1; }
     else if (e.state === 'strike' || e.state === 'lunge') ox = e.face * 2;
     img = base;
-    const w = Math.round(base.width * (1 + sq)), hh = Math.round(base.height * (1 - sq));
+    const w = Math.round(base.width * (1 + sq) * sc), hh = Math.round(base.height * (1 - sq) * sc);
     const dx = Math.round(vx - w / 2 + ox), dy = Math.round(vy - hh + 1 + oy);
     ctx.drawImage(e.flash > 0 ? silOf(base, '#ffffff') : base, dx, dy, w, hh);
-    if (e.state === 'wind' && def.ai === 'brute') { ctx.globalAlpha = spawnA * (0.25 + 0.25 * Math.sin(e.anim * 30)); ctx.drawImage(silOf(base, '#ff5040'), dx, dy, w, hh); ctx.globalAlpha = spawnA; }
+    if (look.tint) { ctx.globalAlpha = spawnA * 0.3; ctx.drawImage(silOf(base, look.tint), dx, dy, w, hh); ctx.globalAlpha = spawnA; }
+    if (e.state === 'wind' && (def.ai === 'brute' || e.boss)) { ctx.globalAlpha = spawnA * (0.25 + 0.25 * Math.sin(e.anim * 30)); ctx.drawImage(silOf(base, '#ff5040'), dx, dy, w, hh); ctx.globalAlpha = spawnA; }
     vy += oy;
-  } else if (e.type === 'slime') {
+  } else if (lk === 'slime') {
     const moving = e.state === 'chase', hop = moving ? Math.max(0, Math.sin(e.anim * 6)) : 0;
     const wind = e.state === 'wind' ? Math.sin(e.anim * 40) * 0.08 + 0.15 : 0;
     const sq = (e.squash > 0 ? e.squash : 0) + wind - hop * 0.12;
     img = e.flash > 0 ? ART.slime.w : ART.slime.n;
     ctx.drawImage(img, Math.round(vx - img.width * (1 + sq) / 2), Math.round(vy - img.height * (1 - sq) - hop * 5), Math.round(img.width * (1 + sq)), Math.round(img.height * (1 - sq)));
-  } else if (e.type === 'hound') {
+  } else if (lk === 'hound') {
     const f = Math.floor(e.anim * (e.state === 'lunge' ? 16 : 8)) % 2;
     img = e.flash > 0 ? (e.face < 0 ? ART.hound.wf : ART.hound.w) : (e.face < 0 ? ART.hound.f[f] : ART.hound.n[f]);
     ctx.drawImage(img, Math.round(vx - img.width / 2), Math.round(vy - img.height));
     lights.push({ sx: vx + camX - RW / 2 + e.face * 5, sy: vy + camY - RH / 2 - 8, r: 14, col: '#ff6b9a', a: 0.7 });
-  } else if (e.type === 'wisp') {
+  } else if (lk === 'wisp') {
     vy -= 14 + Math.sin(e.anim * 3) * 3;
     const charge = e.state === 'wind' ? 1 + Math.sin(e.anim * 30) * 0.3 : 0;
     for (let k = 0; k < 4; k++) { ctx.fillStyle = rgba('#7fd6ff', 0.5 - k * 0.1); ctx.fillRect(Math.round(vx - 1 + Math.sin(e.anim * 5 + k) * 1.5), Math.round(vy + 3 + k * 2), 2, 2); }
     glowDot(ctx, vx, vy, e.flash > 0 ? '#ffffff' : '#7fd6ff', '#f0feff', 2 + Math.round(charge));
     ctx.fillStyle = '#1a1326'; ctx.fillRect(Math.round(vx - 2), Math.round(vy - 1), 1, 2); ctx.fillRect(Math.round(vx + 1), Math.round(vy - 1), 1, 2);
     lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: 36 + charge * 20, col: '#7fd6ff', a: 0.9 });
-  } else if (e.type === 'boss') {
+  } else if (lk === 'boss') {
     const B = ART.boss;
     img = e.flash > 0 ? (e.face < 0 ? B.wf : B.w) : (e.face < 0 ? B.f : B.n);
     ctx.drawImage(img, Math.round(vx - img.width / 2), Math.round(vy - img.height + 2));
@@ -576,15 +584,76 @@ function drawEnemy(ctx, e, lights) {
     lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2 - 40, r: 60, col: '#ff7ae0', a: glow });
     lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2 - 26, r: 40, col: '#c78bff', a: 0.8 });
     if (Math.random() < 0.5) addPart({ x: e.x + frand(-0.7, 0.7), y: e.y + frand(-0.7, 0.7), z: 0.3, vx: 0, vy: 0, vz: frand(0.5, 1.5), life: 1, t: 0, col: pick2(['#2a1c38', '#5f4690', '#ff7ae0']), grav: 0, size: 2, glow: false });
-  } else if (e.type === 'dummy') {
+  } else if (lk === 'dummy') {
     img = ART.dummy;
     const wob = e.flash > 0 ? Math.round(Math.sin(G.t * 60) * 1) : 0;
     ctx.drawImage(e.flash > 0 ? silOf(img, '#ffffff') : img, Math.round(vx - img.width / 2 + wob), Math.round(vy - img.height + 1));
   }
+  if (scaled) ctx.restore();
+  if (e.asleep && Math.random() < 0.03) text(e.x, e.y, e.z + e.hgt + 0.3, 'z', '#c8c0e0', false, 1.2);
+  if (e.eShield > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = rgba('#cfe6ff', 0.4 + 0.4 * e.eShield / e.eShieldMax); projRing(ctx, e.x, e.y, 0.2, e.r + 0.45); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
   if (e.frozen) { ctx.globalAlpha = 0.5 * spawnA; if (img) ctx.drawImage(silOf(img, '#bff4ff'), Math.round(vx - img.width / 2), Math.round(vy - img.height)); }
   ctx.globalAlpha = 1;
   if (e.stunT > 0 && !e.frozen) for (let k = 0; k < 3; k++) { const a = G.t * 6 + k * 2.1; ctx.fillStyle = '#ffe36a'; ctx.fillRect(Math.round(vx + Math.cos(a) * 6), Math.round(vy - e.hgt * ZS - 4 + Math.sin(a) * 2), 1, 1); }
   // nameplates (bar, icons, statuses) are drawn by hud.js drawNameplates on the 2x grid
+}
+
+// what an enemy looks like: its own sprite (ART.custom or a 12-frame ENEMY_SPRITES set), else the row's `look`
+// (another enemy's art, tinted by this row's blood colour), else its legacy built-in drawing by type
+const LOOK_CACHE = {};
+function enemyLook(def, type) {
+  const key = type + '|' + def.sprite + '|' + def.look, hit = LOOK_CACHE[key];
+  if (hit && (hit.img || !def.sprite || !ART.custom[def.sprite])) return hit;
+  let out = { kind: null, img: null, tint: null, id: def.sprite };
+  const ES = typeof ENEMY_SPRITES !== 'undefined' ? ENEMY_SPRITES : null;
+  if (def.sprite && ES && ES[def.sprite] && !ART.custom[def.sprite]) {
+    try { const S = ES[def.sprite]; ART.custom[def.sprite] = spriteFromData(S.rows ? S : Object.assign({ rows: (S.frames.idle || S.frames.move)[0] }, S)); ART.customF[def.sprite] = flipH(ART.custom[def.sprite]); } catch (err) { /* broken sprite: fall back */ }
+  }
+  if (def.sprite && ART.custom[def.sprite]) out.img = ART.custom[def.sprite];
+  else if (def.look && ENEMY[def.look]) {
+    const L = ENEMY[def.look];
+    if (L.sprite && ART.custom[L.sprite]) { out.img = ART.custom[L.sprite]; out.id = L.sprite; } else out.kind = def.look;
+    out.tint = def.blood || null;
+  } else out.kind = null;
+  if (!out.img && !out.kind) {
+    out.kind = ['slime', 'hound', 'wisp', 'boss', 'dummy'].includes(type) ? type : def.ai === 'boss' ? 'boss' : def.ai === 'dummy' ? 'dummy' : null;
+    if (!out.kind) { const og = ART.custom.ogre; if (og) { out.img = og; out.id = 'ogre'; out.tint = def.blood || '#c7a8ff'; } else out.kind = 'slime'; }   // no art yet
+  }
+  return (LOOK_CACHE[key] = out);
+}
+// 12-frame sets (ENEMY_SPRITES[id].frames: idle 2, move 4, wind 2, attack 2, hurt 1, die 1), built once per id
+const FRAME_CACHE = {};
+function enemyFrame(look, e) {
+  const ES = typeof ENEMY_SPRITES !== 'undefined' ? ENEMY_SPRITES : null, S = ES && ES[look.id];
+  if (S && S.frames) {
+    let F = FRAME_CACHE[look.id];
+    if (!F) { F = FRAME_CACHE[look.id] = {}; for (const k in S.frames) F[k] = S.frames[k].map(rows => { const c = spriteFromData({ w: S.w, h: S.h, pal: S.pal, rows }); return { n: c, f: flipH(c) }; }); }
+    const st = e.flash > 0 && F.hurt ? 'hurt' : e.state === 'wind' && F.wind ? 'wind' : e.state !== 'chase' && e.state !== 'rec' && F.attack ? 'attack' : e.state === 'chase' && !e.asleep && F.move ? 'move' : 'idle';
+    const L = F[st] || F.idle || F.move, fr = L[Math.floor(e.anim * (st === 'move' ? 8 : 4)) % L.length];
+    return e.face < 0 ? fr.f : fr.n;
+  }
+  return e.face < 0 ? ART.customF[look.id] : look.img;
+}
+function drawBurrowed(ctx, e, vx, vy) {
+  ctx.fillStyle = rgba('#3a2c20', 0.85); ctx.beginPath(); ctx.ellipse(Math.round(vx), Math.round(vy), 6 + Math.sin(G.t * 12) * 1, 3, 0, 0, Math.PI * 2); ctx.fill();
+  if (Math.random() < 0.4) addPart({ x: e.x + frand(-0.3, 0.3), y: e.y + frand(-0.3, 0.3), z: 0.1, vx: frand(-0.5, 0.5), vy: frand(-0.5, 0.5), vz: frand(1, 2), life: 0.4, t: 0, col: pick2(['#6a5a3a', '#a08860']), grav: 6, size: 1, glow: false });
+}
+function drawEliteAura(ctx, e) {
+  const mods = e.mods || [], col = (mods[0] && ELITE_MODS[mods[0]] && ELITE_MODS[mods[0]].col) || '#ffd35a';
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = rgba(col, 0.55 + 0.25 * Math.sin(G.t * 4)); ctx.lineWidth = 1;
+  projRing(ctx, e.x, e.y, 0.05, e.r + 0.35); ctx.stroke();
+  if (mods.includes('storm') || mods.includes('gloomed') || mods.includes('frozen')) { ctx.strokeStyle = rgba(col, 0.2); projRing(ctx, e.x, e.y, 0.05, mods.includes('gloomed') ? 3 : mods.includes('frozen') ? 2.4 : 1.8); ctx.stroke(); }
+  ctx.globalCompositeOperation = 'source-over';
+  if (Math.random() < 0.2) addPart({ x: e.x + frand(-0.4, 0.4), y: e.y + frand(-0.4, 0.4), z: e.z + frand(0.5, e.hgt), vx: 0, vy: 0, vz: 1, life: 0.6, t: 0, col, grav: 0, size: 1, glow: true });
+}
+// fishing spot stub: rings on the water and a glint
+function drawFishSpot(ctx, it, vx, vy, lights) {
+  ctx.globalCompositeOperation = 'lighter';
+  for (let k = 0; k < 2; k++) { const f = (G.t * 0.6 + k * 0.5 + it.x) % 1; ctx.strokeStyle = rgba('#bff4ff', 0.5 * (1 - f)); ctx.lineWidth = 1; projRing(ctx, it.x, it.y, it.z, 0.2 + f * 0.6); ctx.stroke(); }
+  ctx.globalCompositeOperation = 'source-over';
+  if (Math.sin(G.t * 2 + it.y) > 0.9) glowDot(ctx, vx + 2, vy - 1, '#bff4ff', '#ffffff', 1);
+  lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: 16, col: '#9fe8ff', a: 0.4 });
 }
 
 function drawProj(ctx, pr, lights) {
