@@ -1,9 +1,9 @@
 # RESUME — how to pick up this project
 
-> DRAFT (2026-10-20). The final version is written at the M3 close-out, after the docs/organisation meeting.
+> Paused 2026-10-20 at the client's request. Development resumes Friday.
 
 ## 1. How to resume (client)
-Open a new Claude Code session on this repo (branch `claude/m3-items`, or the default branch once M3 is merged) and say:
+Open a new Claude Code session on this repo (branch `claude/m3-items`; M3 is NOT merged yet) and say:
 
 > **"Resume from RESUME.md. You are the game director."**
 
@@ -22,6 +22,8 @@ That is all. The session reads this file, takes the director role and restarts t
 | **Sonnet** | Medium, well-specified lanes: data tables, UI polish, test additions, ports from specs | items/UI fixes, port jobs |
 | **Haiku** | Mechanical work: renames, migrations, lint-like sweeps, screenshot runs | ID renames, fixtures |
 | **Fable** | Expert consults and meetings (design only, no code) | Lumina ruling, element VFX, elements meeting, world art, opening |
+
+On resume I deploy these models myself. The client never has to ask for agents, name models or explain the workflow. Heavy lanes go to Opus, the medium ones to Sonnet, mechanical sweeps to Haiku, and every design question or meeting to a Fable expert. Several lanes run in parallel whenever their files don't overlap.
 
 **Rules every brief must state:**
 - Never `git commit`, `git stash`, `reset` or `checkout`; the director commits.
@@ -48,5 +50,40 @@ Two checks are known to flake: the play.js warp-fade check, and the perf check w
 - `docs/CREDITS.md` credits Lumina.
 - Build: plain JS, no build step; open `index.html`. Pages deploys from the default branch.
 
-## 5. State at pause, and the lanes to restart
-(Filled in at the M3 close-out: each lane, its model, its brief, its files and its status.)
+## 5. State at pause (2026-10-20), and what happens on Friday
+**Shipped on `claude/m3-items` (PR #4, draft, not merged):**
+- all of M3: items, hit feel, boss phases, Echo, the opening, elite pockets, phone perf, world art G1–G3 (G3: Hawk's Rest, the Dreamer's Cairn, ladders, drop-downs, vantage reveal, occlusion cutaway);
+- the pixel-FX prototype (`js/elfx.js`, `tools/fx-board.js`), approved by the client and not yet wired into the game.
+
+**The one open M3 item is a QA blocker.**
+- In the full bot run (`node tools/qa/run-big.js kbm all`), Act I was clean up to Mossjaw (level 10, 0 deaths).
+- After that, the Hollow root-stair landed the hero on the new Hawk's Rest summit and the run stalled. The objective stayed on "Climb the root-stair to the Clearing", and the shrine 3, Bramblehorn and return goals timed out.
+- An Opus lane (world art G3) was fixing it at the pause. It touched world.js, the pinewood recipe, zone.js and tools/qa/*. Its handoff note is `docs/meetings/2026-10-20-g3-qa-handoff.md`; if that file is missing, start from the bot log by re-running the bot.
+
+**Friday order (do these in sequence):**
+1. **Finish the M3 blocker.** Deploy an Opus lane with the handoff note. Acceptance:
+   - `run-big.js kbm all` reaches the end of Act I with no blockers;
+   - smoke, play.js and act1-route pass.
+2. **Ship M3.** Mark PR #4 ready, merge it into `claude/dreamy-rpg-concept` (the default branch, "main"), and check that Pages deploys.
+3. **Three Fable expert meetings, in parallel** (minutes go to `docs/meetings/`):
+   - **a. Environmental and gameplay systems designer: wind as a force.** Ambient wind pushes and pulls trees and small objects, and wind spells (Gale, §33) push and pull them harder. Build on the canopy gust sway, `tilePatch` and the §33 Wind/Drift rules.
+   - **b. Lighting director: a cohesive lighting pass.** Cover:
+     - dynamic lights, shadows and rim light;
+     - bloom and additive light that don't wash the image out;
+     - whether today's godrays and volumetrics stay, get better or go;
+     - lit statuses on hero and enemies: a burning enemy blooms and emits light, frozen/shocked/etc. likewise;
+     - the Hollow's black darkness band that shows from the Hawk's Rest summit.
+     Start from the QUALITY tiers, emitter-only bloom, `lightPool`, the fog clear zone, ELFX and the §32 particle language.
+   - **c. Senior artist: hero redesign.** The client said the current hero is "too ugly". **The client must re-attach the two reference images on Friday**: the chibi 3-view trio with goggles, and the 4-direction isometric red adventurer. The session that received them is gone. Use them as style references only and don't copy them. Deliver a concept sheet for client approval before any sprite work.
+4. **Documentation meeting** (Fable expert game director). How to tidy the docs and organise the project. It must also fold meetings a–c into spells and the whole game, so spells cast light and wind, statuses glow, and so on. Then apply its ruling.
+5. **Brief the client** with the decisions and choices, then plan M4a/M4b (`docs/PRODUCTION.md`).
+
+**Open offers the client hasn't answered:**
+- "port-ready rules" for a possible later Godot rewrite;
+- a jade tint for the nature-element Echo;
+- a real-phone `?perf=1` reading (phone p95 is about 19.5–20 ms in the emulator).
+
+**Known misses (not blockers):**
+- §29 speck and cluster metrics;
+- the Bramblehorn fight gap is 30 s against a 15–25 s target;
+- the ELFX phone cost risk.

@@ -217,7 +217,7 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
 
     // ============================ 4. BRAMBLEHORN'S CLEARING
     await mark('clearing-arrive'); await bot.shot('clearing-arrival');
-    await shrine(84, 36, 'clearing shrine3');
+    { const o = (await objs()).find(q => q.shrineId === 'shrine3'); await shrine(o ? o.x : 84, o ? o.y : 36, 'clearing shrine3'); }   // §29 G3: shrine 3 is on Hawk's Rest
     if (!LITE) { await bot.goal({ name: 'arena hint', x: 95.06, y: 37.51, r: 3.4, until: q => has(q, 'arena_hint'), timeout: 60000, noFinding: true }); }
     await bot.goal({ name: 'bramblehorn', x: 100, y: 31, r: 6.5, until: q => has(q, 'boss'), timeout: 300000, softlock: true }); await bot.shot('clearing-boss-start');
     await bossFight('bramblehorn', 600000);

@@ -314,6 +314,7 @@ function populate(S, g, T) {
     if (sp.pine) g.addObj('pine_giant', sp.pine[0], sp.pine[1], { v: 1, force: true, sp: 2.5 });
     for (const [x, y] of sp.boulders || []) if (g.walkTile(x, y)) g.addObj('rock_dark', x, y, { v: 0, force: true, sp: 0.9 });
   }
+  if (S.summitObjective) { const O = S.summitObjective; tr.push(T.enter(O.id, O.text, O.at[0], O.at[1], O.r || 2, [T.objective(O.text, O.to[0], O.to[1])], O.requires)); }
   for (const L of S.ledgeHints || []) tr.push(T.enter(L.id, L.name, L.at[0], L.at[1], L.r || 1.6, [T.dialogue('Pip', L.pip)]));
 
   // ============================================================== scatter (per section) + density fill

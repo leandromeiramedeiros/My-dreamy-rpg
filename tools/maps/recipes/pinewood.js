@@ -113,8 +113,10 @@ module.exports = zone({
   },
   bridges: [{ x: 9, y: 32, axis: 'y', len: 5, w: 2, lvl: 4 }, { x: 60, y: 37, axis: 'x', len: 4, w: 3, lvl: 6, span: true }],
   drops: { hawk_drop: { rect: [75, 37, 78, 42] } },
-  setPiece: { hawk: { pine: [66.8, 35.6], boulders: [[64.6, 41.6], [74.8, 42.2], [76.4, 40.8]] } },
+  setPiece: { hawk: { pine: [70.6, 33.4], boulders: [[64.6, 41.6], [74.8, 42.2], [76.4, 40.8]] } },
   vantage: { id: 'hawks_rest', at: [68.3, 34.6], r: 1.9, reveal: 34, title: 'Hawk\'s Rest', sub: 'The Clearing road, and something big asleep at its end', pip: ['From up here it\'s small. It isn\'t.'] },
+  // after Mossjaw the root-stair lands here: point the way down (the objective + Pip's light at the drop lip)
+  summitObjective: { id: 'hawk_way_down', at: [69.3, 34.9], r: 2.4, requires: ['h_boss_done'], text: 'Drop from Hawk\'s Rest onto the Clearing road', to: [75, 38.2] },
   ledgeHints: [{ id: 'hawk_ledge', name: 'The gate road below', at: [75, 38.2], pip: ['The road to the Clearing is right below. Jump, Aerin.'] }],
   portals: {
     home: { room: 'start', dx: -3, dy: 2.6, to: 'vale', arrive: 'vale.pine' },

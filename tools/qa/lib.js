@@ -46,7 +46,7 @@ function installHooks() {
   const RES = 0.5;
   let grid = null; Q.avoid = [];
   function buildGrid(margin) {
-    const m = G.map, W = Math.ceil(m.W / RES), H = Math.ceil(m.H / RES), pass = new Uint8Array(W * H), hh = new Float32Array(W * H);
+    const m = G.map, W = Math.ceil(m.W / RES), H = Math.ceil(m.H / RES), pass = new Uint8Array(W * H), hh = new Float32Array(W * H), drop = new Uint8Array(W * H);
     const cols = m.colliders.filter(c => c.r > 0);
     for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
       const x = (i + 0.5) * RES, y = (j + 0.5) * RES, h = tileH(m, x, y); hh[j * W + i] = h;
@@ -55,20 +55,21 @@ function installHooks() {
       if (ok) for (const c of cols) { if (Math.abs(c.z - h) > 1.5) continue; if (Math.hypot(x - c.x, y - c.y) < c.r + 0.28 + margin) { ok = false; break; } }
       if (ok) for (const a of Q.avoid) if (a.map === m.id && Math.hypot(x - a.x, y - a.y) < 0.9) { ok = false; break; }
       pass[j * W + i] = ok ? 1 : 0;
+      if (m.dropIn && m.dropIn[Math.floor(y) * m.W + Math.floor(x)]) drop[j * W + i] = 1;   // §29 G3 drop-down landing: any step DOWN into it
     }
-    return { W, H, pass, hh, key: m.id + '|' + m.colliders.length + '|' + margin + '|' + Q.avoid.length, margin };
+    return { W, H, pass, hh, drop, key: m.id + '|' + m.colliders.length + '|' + margin + '|' + Q.avoid.length, margin };
   }
   function getGrid(margin) { const k = G.map.id + '|' + G.map.colliders.length + '|' + margin + '|' + Q.avoid.length; if (!grid || grid.key !== k) grid = buildGrid(margin); return grid; }
   function stepOK(g, i, j, ni, nj) {
     if (ni < 0 || nj < 0 || ni >= g.W || nj >= g.H || !g.pass[nj * g.W + ni]) return false;
-    if (Math.abs(g.hh[nj * g.W + ni] - g.hh[j * g.W + i]) > 1.0) return false;
+    const dh = g.hh[nj * g.W + ni] - g.hh[j * g.W + i]; if (Math.abs(dh) > 1.0 && !(dh < 0 && g.drop[nj * g.W + ni])) return false;
     if (ni !== i && nj !== j && (!g.pass[j * g.W + ni] || !g.pass[nj * g.W + i])) return false;
     return true;
   }
   function los(g, ax, ay, bx, by) {
     const d = Math.hypot(bx - ax, by - ay), n = Math.ceil(d / 0.25);
     let pi = Math.floor(ax / RES), pj = Math.floor(ay / RES);
-    for (let k = 1; k <= n; k++) { const x = ax + (bx - ax) * k / n, y = ay + (by - ay) * k / n, i = Math.floor(x / RES), j = Math.floor(y / RES); if (i === pi && j === pj) continue; if (!g.pass[j * g.W + i] || Math.abs(g.hh[j * g.W + i] - g.hh[pj * g.W + pi]) > 1.0) return false; pi = i; pj = j; }
+    for (let k = 1; k <= n; k++) { const x = ax + (bx - ax) * k / n, y = ay + (by - ay) * k / n, i = Math.floor(x / RES), j = Math.floor(y / RES); if (i === pi && j === pj) continue; const dh = g.hh[j * g.W + i] - g.hh[pj * g.W + pi]; if (!g.pass[j * g.W + i] || (Math.abs(dh) > 1.0 && !(dh < 0 && g.drop[j * g.W + i]))) return false; pi = i; pj = j; }
     return true;
   }
   Q.path = (tx, ty, margin = 0.12) => {

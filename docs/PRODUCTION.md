@@ -117,6 +117,7 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
   2. pixel FX prototype: DONE and APPROVED by the client (tools/fx-board.html; js/elfx.js)
   3. QA full bot run
   4. ship M3 (PR #4)
+  PAUSED 2026-10-20 until Friday; see RESUME.md §5 for the resume order.
   5. Wind-as-a-force meeting (expert environmental & gameplay systems designer): ambient wind pushes/pulls trees and small objects; wind spells push/pull them harder
   6. Lighting meeting (expert lighting director): dynamic lights, shadows, rim light; bloom and additive light that stays cohesive and not washed out; keep/improve/remove godrays and volumetrics; lit status effects on enemies and hero (burning blooms and emits light)
   6b. Hero art meeting (expert senior artist), held at the same time as 5 and 6: redesign the hero sprite using the client's two reference images (chibi 3-view trio; isometric red adventurer); client verdict: current hero is too ugly
