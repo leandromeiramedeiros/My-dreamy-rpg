@@ -92,6 +92,15 @@ const pad = (s, n) => String(s).padEnd(n);
   console.log(pad('   music state', 36) + pad('kind', 9) + pad('sec', 7) + pad('RMS dB', 9) + pad('peak', 8) + pad('notes', 7) + 'status');
   for (const r of rows) console.log('   ' + pad(r.label, 33) + pad(r.kind, 9) + pad((r.seconds || 0).toFixed(1), 7) + pad((r.rmsDb || 0).toFixed(1), 9) + pad((r.peak || 0).toFixed(3), 8) + pad(r.notes || 0, 7) + (r.ok ? 'ok' : 'FAIL ' + (r.err || '')));
   check(`music: all ${rows.length} music states render (engine tick, offline) with no NaN, none silent, none clipping`, rows.every((r) => r.ok), { states: rows.length, seconds: ((Date.now() - t0) / 1000).toFixed(1) });
+  // phone profile: 12 music voices (voice stealing runs constantly), 1 convolver, no extra layer, 200 ms lookahead
+  const mob = await ev(async (sr) => {
+    const cfg = { musicVoices: 12, convolvers: 1, extraLayer: false, impulse: 1.5, lookahead: 0.2 };
+    const b = await AUDIO.renderMusic('boss_bramblehorn', { sampleRate: sr, phase: 3, cfg }), s = AUDIO.bufferStats(b, 0.05, b.bodySeconds);
+    const full = await AUDIO.renderMusic('boss_bramblehorn', { sampleRate: sr, phase: 3, cfg: { extraLayer: false } });
+    return { rmsDb: +s.rmsDb.toFixed(1), rms: s.rms, peak: +s.peak.toFixed(3), bad: s.bad, notes: b.engineStats.notes, notes24: full.engineStats.notes };
+  }, SR);
+  check('mobile profile: boss phase 4 on 12 voices (stealing), 1 convolver, no extra: no NaN, not silent, no clipping, no notes dropped',
+    mob.bad === 0 && mob.rms > MIN_RMS.song && mob.peak < MAX_PEAK && mob.notes === mob.notes24 && mob.notes > 0, mob);
   const phaseRms = rows.filter((r) => /^boss_bramblehorn_phase/.test(r.label)).map((r) => +r.rmsDb.toFixed(1));
   check('music: boss stems add up phase by phase (RMS rises A -> AB -> ABC -> ABCD)', phaseRms.length === 4 && phaseRms.every((v, i) => i === 0 || v >= phaseRms[i - 1] - 0.3), phaseRms);
   fs.writeFileSync(path.join(OUT, 'engine-stats.json'), JSON.stringify({ sfx: sfxRows, music: rows }, null, 1));

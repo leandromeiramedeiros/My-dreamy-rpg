@@ -613,6 +613,7 @@ const AUDIO = (() => {
       if (AC.state !== 'running' && AC.resume && !(typeof document !== 'undefined' && document.hidden === true)) { const p = AC.resume(); if (p && p.catch) p.catch(() => {}); }
     } catch (e) { AC = null; E = null; return false; }
     if (AC.state === 'running') removeGestures();
+    D.scanT = 0; const g = gG(); if (g) D.want = desiredSong(g);   // a title click may already have started play
     return true;
   }
   const GESTURES = ['pointerdown', 'keydown', 'touchend', 'mousedown'];
@@ -683,7 +684,7 @@ const AUDIO = (() => {
           E.stopTrack(Z, tb, tb + 0.03);
           E.setVerb(SONG_VERB[want] || 'bright', E.verbSlot = (E.verbSlot + 1) % E.verbs.length);
           E.startTrack(want, { at: tb, phase: D.phase });
-          playStinger('phase', tb);
+          if (bossAlive(gG())) playStinger('phase', tb);   // arriving in the court before the boss: just the cut
         } else {             // fade over 1 bar; the new song starts on its bar 1 at the next bar line
           const tb = E.nextBar(Z, 0.05);
           E.stopTrack(Z, cur, Math.max(tb, cur + Z.barDur * 0.5));
@@ -744,6 +745,7 @@ const AUDIO = (() => {
         }
       }
     }
+    if (AC && AC.state !== 'running' && !gestureOn && !(typeof document !== 'undefined' && document.hidden === true)) addGestures();   // iOS 'interrupted'
     const st = E ? E.stats : null;
     if (st) { const ms = now() - t0; st.frameMs += (ms - st.frameMs) * 0.05; }
     for (let i = captions.length - 1; i >= 0; i--) { captions[i].t -= dt; if (captions[i].t <= 0) captions.splice(i, 1); }
@@ -753,7 +755,8 @@ const AUDIO = (() => {
     const want = g.state === 'dead' ? 'death' : g.fishing ? 'fishing' : null;
     if (want === D.overlayId) return;
     const cur = E.ctx.currentTime;
-    if (D.overlay && E.tracks.includes(D.overlay)) E.stopTrack(D.overlay, cur, cur + 1.2);
+    // the death motif (one voice, loop:false) rings out with its reverb tail under the returning zone song
+    if (D.overlay && E.tracks.includes(D.overlay) && D.overlayId !== 'death') E.stopTrack(D.overlay, cur, cur + 1.2);
     D.overlay = null; D.overlayId = want;
     if (want && MUSIC[want]) D.overlay = E.startTrack(want, { dest: 'music', at: cur + 0.08, loop: want !== 'death' });
     if (D.overlay && E.zone === D.overlay) E.zone = null;
@@ -783,7 +786,10 @@ const AUDIO = (() => {
     if (!SFX_RECIPES[rid]) return false;
     const g = gG(), warn = /^warn_/.test(rid);
     if (warn && g && g.lastWarn && g.lastWarn.sfx === id) D.warnHandled = g.lastWarn;
-    if (!pos) pos = warn ? bossAlive(g) : (typeof PART_SRC !== 'undefined' && PART_SRC) || null;
+    // no position given: telegraphs sit on the boss, enemy actions on the acting enemy (PART_SRC); the hero's own
+    // feedback (hurt, death) stays centred at full level even when an enemy part caused it
+    const own = rid === 'hurt' || (rid === 'die' && g && g.player && g.player.dead);
+    if (!pos && !own) pos = warn ? bossAlive(g) : (typeof PART_SRC !== 'undefined' && PART_SRC !== (g && g.player) && PART_SRC) || null;
     if (typeof SFX_CAPTIONS !== 'undefined') caption(SFX_CAPTIONS[rid]);
     // musical extras: level-up / legendary / mythic / discovery stingers
     if (rid === 'levelup') playStinger('levelup');
