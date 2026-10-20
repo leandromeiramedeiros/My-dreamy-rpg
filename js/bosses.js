@@ -22,7 +22,8 @@
 //   e.maxHp is the total over all bars and e.hp the total left (hud.js / triggers read those). Each bar is its own pool:
 //   bossClampDmg (game.js damageEnemy hook) clamps a hit at the end of the bar, so one burst never skips a phase; the hit
 //   that empties a bar starts the transition (bossBarBreak). Writing e.hp directly (tests, debug) jumps phases without one.
-//   bossBars(e) -> { n, i (0-based bar), frac (of bar i left), max (bar i's pool in HP: §27 hitlag r = dmg / max), transition (s left) }
+//   bossBars(e) -> { n, i (0-based bar), frac (of bar i left), max (bar i's pool in HP: §27 hitlag r = dmg / max), transition (s left,
+//   0 = none), tmax (the transition's full length) }; a boss without bars: n 1
 // ===== CUNNING FORMS (phases[].forms; checked by bossFairness) ===============================================
 //   feint: s   a fake wind-up: the telegraph shows, is cut at s seconds, the boss re-aims and the real wind-up starts
 //   then: name a delayed second hit: the move's own (short) open, then the named follow-up with its own wind-up
@@ -172,7 +173,7 @@ function bossBars(e) {
   const K = e && e.bk; if (!K) return null;
   const D = K.def, on = barsOn(D), i = on ? K.phase : 0;
   const top = on ? D.phases[i].hpBelow : 1, bot = on ? barBot(D, i) : 0, max = Math.max(1e-6, (top - bot) * e.maxHp);
-  return { n: on ? D.phases.length : 1, i, frac: clamp((e.hp - bot * e.maxHp) / max, 0, 1), max, transition: Math.max(0, K.transT || 0) };
+  return { n: on ? D.phases.length : 1, i, frac: clamp((e.hp - bot * e.maxHp) / max, 0, 1), max, transition: Math.max(0, K.transT || 0), tmax: D.transition != null ? D.transition : BAR_TRANS };
 }
 function bossUpdate(b, dt, d, ang, hidden) {
   const K = b.bk; if (!K) return;
