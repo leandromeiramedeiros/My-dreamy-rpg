@@ -146,7 +146,7 @@ function outer(S) {
         g.marker('lever', lv.x + 0.6, lv.y + 1.2, { label: 'bridge-lever', id: 'lever_bridge', gate: 'bridge_gate' });
         g.marker('chest_gold', isl.x, isl.y, { label: 'secret-gold-chest' });
         secretTriggers.push(T.enter('bridge_pip', 'The raised bridge', ge[0], ge[1], 3.2, [T.dialogue('Pip', ['The bridge is raised. There must be a lever somewhere.'])]));
-        secretTriggers.push(T.enter('bridge_lever', 'Pull the lever', lv.x + 0.6, lv.y + 1.2, 1.6, [T.message('A lever clunks. Far away, a bridge lowers.'), T.openGate('bridge_gate'), T.sound('portal')]));
+        // (no proximity trigger for the lever: pulling it is an Interact on the lever object itself -> openGate('bridge_gate'))
         secretTriggers.push(T.enter('bridge_loot', 'Gold chest on the islet', isl.x, isl.y, 2.2, [T.message('A gold chest!')]));
       }
 
@@ -233,16 +233,16 @@ function dungeon(S) {
       // the sleeper (troll) only wakes into the map after the shrine was touched (DESIGN 21.4): r2 requires it
       tr.push(T.enter('r2', E.r2.name, r2.x, r2.y, r2.r - 1.5, waveActions(T, g, r2, E.r2.waves, E.r2.gap, E.r2.banner), ['r1_done', 'shrine']));
       tr.push(T.allDead('r2_done', 'Gallery cleared', ['r2'], [T.message(E.r2.clear), T.heal(25), T.loot('uncommon', 1, r2.x, r2.y), T.objective('Find the lever that raises the gate')]));
-      tr.push(T.enter('lever_r2', 'Pull the gate lever', R.lever.x, R.lever.y, 1.6, [T.message('The lever grinds. A gate rumbles open.'), T.openGate('gate_r2'), T.sound('portal'), T.objective('Descend to the Mossjaw\'s den')], ['r2_done']));
+      // the gate lever and the shortcut lever are real lever objects (Interact -> openGate); only a hint trigger sits by the gate
+      tr.push(T.enter('gate_hint', 'The rooted gate', gp.x, gp.y, 3, [T.dialogue('Pip', ['The gate is knotted shut. Find a lever.'])], ['r2_done']));
       tr.push(T.enter('boss', E.arena.name, A.x, A.y, A.r - 1.5, [
         T.banner(E.arena.title, E.arena.sub, true), T.objective('Defeat ' + E.arena.title), T.shake(5), T.wait(1.2),
         T.spawn(E.arena.enemy, 1, A.x, A.y - 1.5, 0.5, { elite: true }), T.wait(15), T.spawn(E.arena.add, 2, A.x - 2, A.y + 2.5, 2), T.wait(15), T.spawn(E.arena.add, 2, A.x + 2, A.y + 2.5, 2),
-      ], ['lever_r2']));
+      ], ['r2_done']));
       tr.push(T.allDead('boss_done', E.arena.title + ' falls', ['boss'], [
         { type: 'clear_enemies' }, T.banner('Mossjaw falls', 'A way out opens'), T.dialogue(E.arena.title, [X.bossLast]), T.heal(100),
         T.loot('epic', 1, A.x, A.y - 1, { sockets: 2, chest: 'gold' }), T.openGate('gate_short'), T.openPortal(g.portalIdx.exit), T.step(S.quest, 3), T.objective('Take the rift down to Old Bramblehorn'), T.sound('portal'),
       ]));
-      tr.push(T.enter('short_lever', 'Shortcut lever', A.x + A.r * 0.55, A.y + A.r * 0.55, 1.6, [T.message('A second lever: the shortcut to the shrine is open.'), T.openGate('gate_short')], ['boss_done']));
       tr.push(T.enter('crack_hum', 'The wall hums', wp.x - Math.cos(wa) * 2, wp.y - Math.sin(wa) * 2, 3.2, [T.dialogue('Pip', ['The wall hums, Aerin. Something is hidden behind it.'])]));
       tr.push(T.enter('crack_open', 'Cracked wall gives way', wp.x - Math.cos(wa) * 0.6, wp.y - Math.sin(wa) * 0.6, 1.5, [T.openGate('wall_crack'), T.shake(3), T.sound('portal')], ['crack_hum']));
       tr.push(T.enter('crack_loot', 'Hidden Socket Rune', R.crack.x, R.crack.y, 2, [T.message('A Socket Rune!'), T.loot('rare', 1, R.crack.x, R.crack.y, { item: 'socket_rune' })]));

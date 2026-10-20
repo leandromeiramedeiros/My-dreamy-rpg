@@ -82,3 +82,14 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * Bag/gear still use the old 16 px icons until M3 wires `js/icons.js`.
 * Boss bar shows 2 phase pips (engine has one phase flag) until the boss system lands in M2b.
 
+## Status snapshot (M2b in progress)
+* Done on branch `claude/m2b-act1`: enemy behaviour parts (js/parts.js), boss move library + Mossjaw/Bramblehorn/Warden
+  port (js/bosses.js), map objects + trigger actions, tools/balsim.js, 3 save slots, Pinewood enemy data + art
+  (js/enemydata.js, js/enemyart.js), Touch v2 circular wheel + skill `aim` blocks.
+* In progress: art wiring + ground aim indicators + balance parity (Opus); Act I maps, first 10 minutes, lantern quest,
+  3 secrets (Sonnet level designer).
+* Next: audio engine + Act I music/SFX; QA play-test; ship M2b.
+* Pending design consult: 3 weapon variants per weapon class (e.g. sword/rapier/mace, axe/hammer/halberd,
+  staff/spellbook/orb) with unique skills, statuses and per-tier looks.
+* Client preference: status reports without commit/PR chatter.
+

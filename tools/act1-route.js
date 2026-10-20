@@ -52,6 +52,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
     window.__loot = [];
     const dl = dropLoot; window.dropLoot = (x, y, list) => { window.__loot.push(...list.map(d => d.kind === 'item' ? 'item:' + d.it.slot + '/' + d.it.rarity + (d.it.unique ? '/unique:' + d.it.unique : '') + (d.it.uid ? '' : '') : d.kind === 'gem' ? 'gem' : d.kind)); return dl(x, y, list); };
     window.__hero();
+    G.prog.trig = {};   // fresh profile (the first load already settled `wake`)
     enterMap('vale');   // re-enter so the map_enter beats (banner) run under the recorder
   });
   const wf = async (fn, arg, ms = 12000) => { try { await page.waitForFunction(fn, arg, { timeout: ms }); return true; } catch (e) { return false; } };
@@ -181,6 +182,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   const all2 = [...new Set([...g1, ...h2])];
   check('hollow: gallery = boar + shaman (slash wrong), and exactly one mountain troll (the sleeper)', all2.includes('thornbackboar') && all2.includes('brambleshaman') && all2.includes('mountaintroll') && await fired('r2_done'), all2);
   const lever = await ev(() => { const o = G.map.objects.find(q => q.lever && q.src.id === 'lever_r2'); const before = G.map.colliders.length; window.__tp(o.x, o.y + 0.7); o.use.fn(o); return { pulled: o.pulled, d: before - G.map.colliders.length }; });
+  check('hollow: gate hint by the rooted gate', await goto('gate_hint'));
   check('hollow: lever opens the gate (barrier colliders removed)', lever.pulled && lever.d > 0 && await ev(() => gateOpen(G.map, 'gate_r2')), lever); await shot('hollow_lever_gate');
   // secret 3
   check('hollow: secret 3 - cracked wall: hum, then opens, socket rune', await (async () => {
@@ -188,7 +190,6 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
     return a && b && (await colliders()) < before && await goto('crack_loot') && await ranAction("a.type === 'loot' && a.item === 'socket_rune'");
   })());
   // Mossjaw
-  await goto('lever_r2'); // (trigger version, requires r2_done)
   check('hollow: Mossjaw den: boss spawns (G.boss set, mossjaw)', await goto('boss') && await wf(() => G.boss && G.boss.type === 'mossjaw', null, 9000)); await shot('hollow_mossjaw');
   const bossHp = await ev(() => G.boss ? { hp: G.boss.hp, lvl: G.boss.lvl } : null);
   await fight('boss_done', 8);

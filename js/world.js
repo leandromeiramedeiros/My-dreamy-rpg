@@ -4230,30 +4230,6 @@ const WORLD_DATA = {
      ]
     },
     {
-     "id": "bridge_lever",
-     "name": "Pull the lever",
-     "when": {
-      "type": "enter_area",
-      "x": 22.6,
-      "y": 52.2,
-      "r": 1.6
-     },
-     "actions": [
-      {
-       "type": "message",
-       "text": "A lever clunks. Far away, a bridge lowers."
-      },
-      {
-       "type": "openGate",
-       "id": "bridge_gate"
-      },
-      {
-       "type": "sound",
-       "name": "portal"
-      }
-     ]
-    },
-    {
      "id": "bridge_loot",
      "name": "Gold chest on the islet",
      "when": {
@@ -6405,33 +6381,24 @@ const WORLD_DATA = {
      ]
     },
     {
-     "id": "lever_r2",
-     "name": "Pull the gate lever",
+     "id": "gate_hint",
+     "name": "The rooted gate",
      "when": {
       "type": "enter_area",
-      "x": 28.5,
-      "y": 17,
-      "r": 1.6
+      "x": 14.25,
+      "y": 7.14,
+      "r": 3
      },
      "requires": [
       "r2_done"
      ],
      "actions": [
       {
-       "type": "message",
-       "text": "The lever grinds. A gate rumbles open."
-      },
-      {
-       "type": "openGate",
-       "id": "gate_r2"
-      },
-      {
-       "type": "sound",
-       "name": "portal"
-      },
-      {
-       "type": "objective",
-       "text": "Descend to the Mossjaw's den"
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "The gate is knotted shut. Find a lever."
+       ]
       }
      ]
     },
@@ -6445,7 +6412,7 @@ const WORLD_DATA = {
       "r": 4
      },
      "requires": [
-      "lever_r2"
+      "r2_done"
      ],
      "actions": [
       {
@@ -6559,29 +6526,6 @@ const WORLD_DATA = {
       {
        "type": "sound",
        "name": "portal"
-      }
-     ]
-    },
-    {
-     "id": "short_lever",
-     "name": "Shortcut lever",
-     "when": {
-      "type": "enter_area",
-      "x": 11.03,
-      "y": 11.03,
-      "r": 1.6
-     },
-     "requires": [
-      "boss_done"
-     ],
-     "actions": [
-      {
-       "type": "message",
-       "text": "A second lever: the shortcut to the shrine is open."
-      },
-      {
-       "type": "openGate",
-       "id": "gate_short"
       }
      ]
     },
