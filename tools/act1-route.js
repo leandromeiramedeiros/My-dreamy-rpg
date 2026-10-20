@@ -116,9 +116,23 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('vale: 80x80, level band [1,3]', await ev(() => G.map.id === 'vale' && G.map.W === 80 && G.map.H === 80 && JSON.stringify(G.world.maps.vale.level) === '[1,3]'));
   const secs = await ev(() => G.world.maps.vale.sections.map(s => s.id + ':' + s.kind).join());
   check('vale: sections hub, Moon Pond, Pip\'s Lanterns, Dream Arena', secs === 'hub:outer,moon:outer,lanterns:outer,arena:arena', secs);
-  const wakeInfo = { wake: await wf(() => G.trig.fired.wake), talks: await ev(() => window.__log.talks.map(t => t.id)), line: await ev(() => DIALOGUE.vale_wake.lines[0]) };
+  // §28: the hero wakes BARE (every gear + trinket slot empty, empty bag), the game is marked as a bare opening, Pip's light is up
+  const bare = await ev(() => ({ slots: EQUIP_SLOTS.filter(k => G.player.equip[k]), bag: G.player.bag.filter(Boolean).length, opening: G.prog.secrets.opening, pip: !!G.pip && Math.hypot(G.pip.x - G.player.x, G.pip.y - G.player.y) < 3,
+    q: slotSkill(G.player, 'q'), f: slotSkill(G.player, 'f'), shift: slotSkill(G.player, 'shift'), lmb: skillSlotState(G.player, 'lmb').name, wdmg: G.player.wdmg, sign: G.map.objects.some(o => o.src && o.src.t === 'sign') }));
+  check('vale (§28): the hero starts bare (no gear, no ring, empty bag); LMB is a 1-damage Shove, no Q / F, a barefoot Roll on SHIFT; Pip\'s light rides along; the arrival sign is gone', !bare.slots.length && !bare.bag && bare.opening === 'bare' && bare.pip && !bare.q && !bare.f && bare.shift === 'roll' && bare.lmb === 'Shove' && bare.wdmg === 1 && !bare.sign, bare);
+  const wakeInfo = { wake: await wf(() => G.trig.fired.wake), said: await wf(() => window.__log.talks.some(t => t.id === 'vale_wake'), null, 8000), talks: await ev(() => window.__log.talks.map(t => t.id)), line: await ev(() => DIALOGUE.vale_wake.lines[0]) };
   check('vale: banner + Pip wakes you ("Up. You were sleeping like you meant it.")', wakeInfo.wake && wakeInfo.talks.includes('vale_wake') && wakeInfo.talks.includes('vale_banner') && wakeInfo.line === 'Up. You were sleeping like you meant it.', wakeInfo);
+  const hud0 = await ev(() => ({ bars: hudShown('bars'), lmb: hudShown('lmb'), map: hudShown('map'), q: hudShown('q'), pot: hudShown('pot') }));
+  check('vale (§28): the HUD fades in per noun: after the wake, bars + tracker + LMB only (no minimap, Q or potion yet)', hud0.bars > 0 && hud0.lmb > 0 && hud0.map === 0 && hud0.q === 0 && hud0.pot === 0, hud0);
+  await ev(() => { G.trig.t += 20; });
+  check('vale (§28): Pip\'s one new line fires ("Three days. You\'ve been asleep three days.") and the minimap fades in', await wf(() => G.trig.fired.days, null, 6000) && await ev(() => window.__log.talks.some(t => t.first === "Three days. You've been asleep three days.")) && await wf(() => hudShown('map') > 0, null, 3000));
   check('vale: two training dummies stand in the yard', await ev(() => G.enemies.filter(e => e.dummy).length === 2));
+  // §28 0:45: the sword stands in the grass beside the yard; walking onto it puts it on (Q fades in)
+  const sw = await ev(() => { const d = G.drops.find(q => q.found === 'rustyblade'); if (!d) return null; const at = { x: d.x, y: d.y, dStart: +Math.hypot(d.x - G.map.start.x, d.y - G.map.start.y).toFixed(1) }; window.__tp(d.x, d.y); return at; });
+  check('vale (§28 0:45): the Rusty Blade lies in the grass ~10 tiles from the bed, beside the yard', !!sw && sw.dStart >= 8 && sw.dStart <= 11, sw);
+  const armed = await wf(() => G.player.equip.weapon && G.player.equip.weapon.base === 'rustyblade', null, 4000);
+  const ar = await ev(() => ({ q: slotSkill(G.player, 'q'), wdmg: G.player.wdmg, lmb: skillSlotState(G.player, 'lmb').name, found: !!G.prog.secrets['found:rustyblade'], hudQ: hudShown('q') >= 0, gone: !G.drops.some(q => q.found === 'rustyblade') }));
+  check('vale (§28): picking the sword up equips it (Q skill live, sword damage, recorded so it is never placed again)', armed && ar.q === 'sunslash' && ar.wdmg > 1 && ar.lmb !== 'Shove' && ar.found && ar.gone, ar);
   check('vale: the Pinewood rift starts CLOSED', (await portalOpen('pinewood')) === false);
   const geo = await ev(() => { const s = [G.world.maps.vale.start.x, G.world.maps.vale.start.y], at = id => window.__at(id), o = G.map.objects, ch = o.find(q => q.chest && q.src.starter); return { s, yard: at('yard_teach'), stone: at('elder'), chest: ch && [ch.x, ch.y], dummies: G.enemies.filter(e => e.dummy).map(e => [e.x, e.y]) }; });
   check('vale: the dummies and the Elder Stone are within 15 tiles of the start, the first chest at 10', geo.dummies.every(d => dist2(d, geo.s) <= 15) && dist2(geo.stone, geo.s) <= 15 && Math.abs(dist2(geo.chest, geo.s) - 10) <= 1, { dummies: geo.dummies.map(d => +dist2(d, geo.s).toFixed(1)), stone: +dist2(geo.stone, geo.s).toFixed(1), chest: +dist2(geo.chest, geo.s).toFixed(1) });
@@ -129,19 +143,47 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('vale: shrine checkpoint (start)', await goto('shrine') && await ev(() => !!G.checkpoint));
   check('vale: Elder Stone speaks (vale_elder) and starts "Stone\'s lost lantern" (step 0)', await goto('elder') && await said('vale_elder') && (await quest('vale_lantern')) === 0);
   check('vale: Elder Stone is a visible tablet object', await objectsOf("o.tablet && o.src && o.src.title === 'Elder Stone'") === 1); await shot('vale_elder_stone');
+  // the Elder Stone double render (QA kbm-004): the tablet no longer repeats the trigger's vale_elder line, and an open tablet
+  // panel hides the say line beneath it
+  const dbl = await ev(() => { const o = G.map.objects.find(q => q.tablet && q.src.title === 'Elder Stone'); return { text: o.src.text, repeats: DIALOGUE.vale_elder.lines.some(l => o.src.text.includes(l)) }; });
+  check('vale: the Elder Stone renders once (tablet text is not the trigger dialogue)', !dbl.repeats, dbl);
   check('vale: first chest trigger fires, Pip says "That glow? Keep it. Gear remembers you."', await goto('chest') && await wf(() => window.__log.talks.some(t => t.id === 'vale_chest'), null, 9000));
-  const ch = await ev(() => { const o = G.map.objects.find(q => q.chest && q.src.starter); if (!o) return null; window.__loot.length = 0; openChest(o); return { tier: o.src.tier, opened: o.opened }; });
+  const ch = await ev(() => { const o = G.map.objects.find(q => q.chest && q.src.starter); if (!o) return null; window.__loot.length = 0; openChest(o); return { tier: o.src.tier, opened: o.opened, loot: o.src.loot }; });
   await wait(900);
   const kit = await ev(() => window.__loot.slice());
-  check('vale: starter chest exists, opens, drops weapon + armour + gem', !!ch && ch.opened && kit.length >= 3 && kit.some(k => k.startsWith('gem')), kit); await shot('vale_first_chest');
+  check('vale (§28 ~2:00): the first chest (loot: ring) drops exactly Common Iron Mail + the Origin ring + a gem', !!ch && ch.opened && ch.loot === 'ring' && kit.join() === 'item:chest/common,item:ring/uncommon,gem', kit); await shot('vale_first_chest');
+  // the kit flies to the hero: the ring goes on, the bag opens on the mail with EQUIP focused
+  const taught = await wf(() => G.ui.open && G.ui.sel && G.ui.sel.base === 'ironmail', null, 6000); await wait(300);
+  const tk = await ev(() => ({ ring: G.player.equip.ring1 && G.player.equip.ring1.base, boon: !!(G.player.boons && G.player.boons.originKnight), focus: UI.focus.id, gem: G.player.bag.some(e => e && e.gem === 'ruby_1') }));
+  await shot('vale_bag_on_mail');
+  check('vale (§28): the Origin ring is put on (boon live), the gem is in the bag, and the bag opens on the mail with EQUIP focused', taught && tk.ring === 'origin_knight' && tk.boon && tk.gem && tk.focus === 'btn:equip', tk);
+  const worn = await ev(() => { const p = G.player, m = p.bag.find(e => e && e.base === 'ironmail'); const r = equipItem(p, m); closeInv(); return { r, chest: p.equip.chest && p.equip.chest.base, f: slotSkill(p, 'f') }; });
+  check('vale: EQUIP puts the mail on (the torso changes; F = Bulwark)', worn.r === '' && worn.chest === 'ironmail' && worn.f === 'bulwark', worn);
   check('vale: fishing stub beside the chest (visible, interactable)', await objectsOf('o.fish') >= 3 && await goto('fish_hint'));
+  // §28 2:20: ONE cast at the spot beside the chest lands a gem; the bag opens with it picked and it goes into the mail's socket
+  await ev(() => { const o = G.map.objects.find(q => q.fish && q.src.pool === 'vale_a'); window.__tp(o.x + 0.9, o.y + 0.6); });
+  await wait(300);
+  const cast = await ev(() => ({ prompt: G.prompt && G.prompt.text, did: interact(G.player) }));
+  const sock = await wf(() => G.ui.open && G.ui.gem != null, null, 6000);
+  const sk = await ev(() => { const p = G.player, mail = p.equip.chest, gem = G.ui.sel && G.ui.sel.gem; clickItem(mail); const r = { gem, sockets: mail.sockets.slice(), cast: !!G.prog.fishing.valeCast }; closeInv(); return r; });
+  check('vale (§28 2:20): one guaranteed cast -> a Chipped gem; the bag opens with it picked; it sockets into the mail', cast.prompt === 'Fish' && sock && sk.gem === 'sapphire_1' && sk.sockets[0] === 'sapphire_1' && sk.cast, { cast, sk });
   check('vale: cottage tablet', await goto('tablet') && await said('vale_tablet'));
+  // §28 3:50: the Iron Cap lies on the cottage step (no line: silence is the seed)
+  const capAt = await ev(() => { const d = G.drops.find(q => q.found === 'ironcap'); if (!d) return null; const n = window.__log.talks.length; window.__tp(d.x, d.y); window.__n = n; return { x: d.x, y: d.y }; });
+  const capped = await wf(() => G.player.equip.head && G.player.equip.head.base === 'ironcap', null, 4000);
+  check('vale (§28 3:50): the Iron Cap by the cottage goes on when you reach it (C = War Cry); Pip says nothing', !!capAt && capped && await ev(() => slotSkill(G.player, 'c') === 'warcry' && window.__log.talks.length === window.__n), capAt); await shot('vale_cottage_cap');
   check('vale: lantern trigger needs the Stone first, then advances quest to step 1', await goto('lantern_found') && (await quest('vale_lantern')) === 1); await shot('vale_lost_lantern');
   check('vale: garden ambush: 3 slimes', await goto('garden_ambush') && await wf(() => window.__live().length === 3, null, 6000)); await shot('vale_garden_ambush');
   const slimes = await ev(() => window.__live());
   check('vale: ambush slimes are gloomslime', slimes.every(t => t === 'gloomslime'), slimes);
+  await ev(() => { window.__loot.length = 0; });
   await fight('garden_done');
   check('vale: ambush cleared -> rift opens (portal, banner, vale_rift, shard_root step 0)', await wf(() => G.trig.fired.garden_done) && (await portalOpen('pinewood')) === true && await said('vale_rift') && (await quest('shard_root')) === 0); await shot('vale_rift_open');
+  await wait(600);
+  const bootLoot = await ev(() => window.__loot.slice());
+  await ev(() => { const d = G.drops.find(q => q.kind === 'item' && q.it.base === 'ironboots'); if (d) window.__tp(d.x, d.y); });
+  const booted = await wf(() => G.player.equip.boots && G.player.equip.boots.base === 'ironboots', null, 4000);
+  check('vale (§28 4:50): the garden ambush drops the Common Iron Boots (no random roll) and they go on (SHIFT = Charge); the potion chip is in', bootLoot.includes('item:boots/common') && await ranAction("a.type === 'loot' && a.item === 'ironboots' && !a.count") && booted && await ev(() => slotSkill(G.player, 'shift') === 'charge' && hudShown('pot') > 0), bootLoot);
   check('vale: lantern returned -> quest done + reward', await goto('lantern_return') && (await quest('vale_lantern')) === 'done' && await ranAction("a.type === 'loot' && a.item === 'socket_rune'"));
   check('vale: hidden gem cache', await goto('gems'));
   // the three sections beyond the hub: each bridge / gate is a keyed barrier that stays shut until its key is held
@@ -322,17 +364,27 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('vale (return): the Dream Arena bridge now opens with the key the Pinewood gave (after Act I)', da && da.open, da);
 
   // =================================================================== M3 trinket sources (DESIGN 19.4 Acquisition): chest markers carry `loot`
-  const wantLoot = [['vale', 'ledge-chest', 'ring'], ['pinewood', 'boss-chest', 'amulet'], ['pinewood', 'warrens-chest', 'belt']];
+  // §28: the ring moved from the ledge chest to the tutorial chest (the Origin ring is the first chest's ring)
+  const wantLoot = [['vale', 'tutorial-chest', 'ring'], ['pinewood', 'boss-chest', 'amulet'], ['pinewood', 'warrens-chest', 'belt']];
   const lootData = await ev(w => w.map(([m, label]) => { const o = G.world.maps[m].objects.filter(q => q.label === label); return { n: o.length, loot: o.length ? o[0].loot : null, chest: o.length ? o[0].t === 'chest' : false }; }), wantLoot);
   wantLoot.forEach(([m, label, slot], i) => check(`trinket source: ${m} ${label} exists in world data with loot:'${slot}'`, lootData[i].n === 1 && lootData[i].chest && lootData[i].loot === slot, lootData[i]));
   const lootOnlyOne = await ev(() => ['vale', 'pinewood'].flatMap(m => G.world.maps[m].objects.filter(q => q.loot).map(q => q.label)).sort().join());
-  check('trinket sources: only those three chests carry a loot field', lootOnlyOne === 'boss-chest,ledge-chest,warrens-chest', lootOnlyOne);
+  check('trinket sources: only those three chests carry a loot field', lootOnlyOne === 'boss-chest,tutorial-chest,warrens-chest', lootOnlyOne);
   // guarded: only once the engine honours the field (a trinketSlotOf helper, or openChest reading src.loot)
   const engineLoot = await ev(() => typeof trinketSlotOf === 'function' || /\.loot\b/.test(String(openChest)));
   if (engineLoot) {
     for (const [m, label, slot] of wantLoot) {
       const got = await ev(([mid, lb]) => { const src = G.world.maps[mid].objects.find(q => q.label === lb); window.__loot.length = 0; openChest({ x: src.x, y: src.y, z: 0, src, chest: true }); return window.__loot.slice(); }, [m, label]);
-      check(`trinket source: opening ${label} drops a ${slot} (engine active)`, got.some(k => k.startsWith('item:' + slot + '/')), got);
+      check(`trinket source: opening ${label} drops a ${slot} (engine active)${label === 'tutorial-chest' ? ': exactly one, the Origin ring' : ''}`, got.some(k => k.startsWith('item:' + slot + '/')) && (label !== 'tutorial-chest' || got.join() === 'item:chest/common,item:ring/uncommon,gem'), got);
+    }
+    const ledge = await ev(() => { const src = G.world.maps.vale.objects.find(q => q.label === 'ledge-chest'); return { loot: src.loot || null, placed: chestTrinket(src, 3).length }; });
+    check('trinket source: the ledge chest no longer places a ring (no loot field; random trinket drops aside)', !ledge.loot && ledge.placed === 0, ledge);
+    // chest marker guaranteed: 'epic' -> at least one Epic+ GEAR item (the belt of the Warrens chest stays Rare)
+    const RI = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4, mythic: 5 };
+    for (const label of ['mini-boss-chest', 'warrens-chest']) {
+      const runs = await ev(lb => { const src = G.world.maps.pinewood.objects.find(q => q.label === lb), out = []; for (let k = 0; k < 12; k++) { window.__loot.length = 0; openChest({ x: src.x, y: src.y, z: 0, src, chest: true }); out.push(window.__loot.slice()); } G.drops.length = 0; return out; }, label);
+      const bad = runs.filter(r => !(r.some(k => /^item:(weapon|head|chest|boots)\//.test(k) && RI[k.split('/')[1]] >= 3) && (label !== 'warrens-chest' || r.filter(k => k.startsWith('item:belt/')).pop() === 'item:belt/rare')));
+      check(`chest guaranteed: 'epic' -> ${label} always holds an Epic+ gear item (12 opens${label === 'warrens-chest' ? '; its loot belt stays Rare' : ''})`, !bad.length, bad.slice(0, 3));
     }
   } else console.log('  SKIP trinket-source open checks (engine does not honour chest loot yet)');
   console.log('  guarded trinket open check active: ' + engineLoot);

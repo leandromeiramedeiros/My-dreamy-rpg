@@ -670,7 +670,7 @@ function gearAction(a) {
 // State: G.ui.open/tab, G.ui.sel (focused item or gem), G.ui.gem (picked gem's bag index), G.ui.salvage, G.ui.note.
 // Mouse acts on the first click; touch selects on the first tap and acts on the second.
 function openInv(tab) { G.ui.open = true; G.ui.tab = tab || G.ui.tab || 'inv'; G.ui.gem = null; G.ui.salvage = false; G.mouse.down = false; }
-function closeInv() { if (!G.ui.open) return; G.ui.open = false; G.ui.gem = null; G.ui.salvage = false; G.ui.sel = null; saveGame(); }
+function closeInv() { if (!G.ui.open) return; G.ui.open = false; G.ui.gem = null; G.ui.salvage = false; G.ui.sel = null; G.ui.teach = null; saveGame(); }
 function invNote(s, col = '#ffb0c8') { G.ui.note = { s, col, t: G.t + 2.6 }; if (col === '#ffb0c8') sfx('hurt'); }
 // touch and gamepad are select-then-select (CONTROLS.md): the first tap / A shows the item, the second acts
 const secondTap = key => { if (!(G.touch || (typeof IN !== 'undefined' && IN.device === 'pad')) || G.ui.sel === key) return true; G.ui.sel = key; return false; };
@@ -785,7 +785,7 @@ function teachEquip(p, it) {
   if (!p.bag.includes(it) || G.state !== 'play') return;
   if (G.ui.open || G.ui.pause || G.ui.help || G.ui.map || G.fadeDir) { delay(0.5, () => teachEquip(p, it)); return; }
   openInv('inv'); G.ui.sel = it; G.ui.teach = { it, t: G.t };
-  if (typeof UI !== 'undefined' && UI.focus) UI.focus.set('btn:equip', true);
+  if (typeof UI !== 'undefined' && UI.focus) UI.focus.set('btn:equip');
 }
 // a bare-start game (§28) is "in its opening" until the hero wears the whole first kit; saves from before §28 never are
 const openingActive = () => !!(G.prog && G.prog.secrets && G.prog.secrets.opening === 'bare');
@@ -819,7 +819,7 @@ function guaranteeRarity(list, min, L) {
   const gear = list.filter(d => d.kind === 'item' && !isTrinket(d.it));
   if (gear.some(d => rarityAtLeast(d.it.rarity, min))) return;
   const d = gear.sort((a, b) => RARITY[b.it.rarity].i - RARITY[a.it.rarity].i)[0];
-  if (d) d.it = rollItem(L, min, d.it.slot); else list.unshift({ kind: 'item', it: rollItem(L, min) });
+  if (d) d.it = rollItem(L, min, d.it.slot); else list.unshift({ kind: 'item', it: rollItem(L, min, pick2(SLOTS)) });
 }
 // a save from before §28 that opened the tutorial chest when it held no ring (the ring sat in the ledge chest, now moved): the
 // next Vale chest it opens carries the Origin ring, once, if the hero owns no ring at all

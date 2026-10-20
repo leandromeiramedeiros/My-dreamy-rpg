@@ -597,6 +597,12 @@ function drawItemPanel(ctx, p, x, y, w, what, hov, gemPick, ringKey, emptyKey) {
   else if (what.bi != null && what.bi >= 0) {
     if (cmp) drawCompare('vs equipped'); else UI.text(ctx, 'Nothing equipped here', x + 8, 436, 'small', UC.dim);
     UI.button(ctx, x + 8, 464, 140, 32, 'EQUIP', { id: 'btn:equip', size: 'small', fn: () => bagEquip(p, it) });
+    // §28 the first chest's lesson (items.js teachEquip): EQUIP holds the focus (accept equips) and pulses gold until the mail is
+    // worn or the bag closes; the focus model's own reset (the panel reads focus before the button registers) is undone here
+    if (u.teach && u.teach.it === it) {
+      if (!u.teach.focused || UI.focus.id === 'bag:' + p.bag.indexOf(it)) { u.teach.focused = true; UI.focus.set('btn:equip'); }
+      ctx.globalAlpha = 0.55 + 0.45 * Math.sin(G.t * 6); UI.frame(ctx, x + 4, 460, 148, 40, 'focus', { tint: UC.gold }); ctx.globalAlpha = 1;
+    }
     UI.button(ctx, x + 156, 464, 140, 32, 'SELL', { id: 'btn:sell2', size: 'small', fn: () => { u.sel = it; doSell(p); } });
   }
 }

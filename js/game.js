@@ -1450,7 +1450,7 @@ function openingOnEnter(m) {
   if (!S.opening && isBare(p) && p.level === 1 && m.id === G.world.start && !(G.prog.trig[m.id] || []).length) S.opening = 'bare';
   else if (isBare(p) && m.id !== G.world.start && !S.opening) { for (const k of SLOTS) p.equip[k] = firstKitPiece(k); recalcStats(p, true); }
   if (S.opening === 'bare' && m.id !== G.world.start) hudNoun('all');   // leaving the Vale: whatever the opening did not show, shows now
-  if (!G.pip || G.pip.map !== m.id) G.pip = { map: m.id, x: p.x - 0.7, y: p.y - 0.6, z: p.z + 2.4, goal: null };
+  if (!G.pip || G.pip.map !== m.id) G.pip = { map: m.id, x: p.x + PIP.ox, y: p.y + PIP.oy, z: p.z + PIP.oz, goal: null };
 }
 // the HUD pieces (hud.js draws each with hudShown(piece) as its alpha): bars (portrait, HP / MP / ST / XP, status row), tracker,
 // map (minimap), lmb q e r f c shift (skill chips), skills (1 2 3), pot. Nouns map to pieces; slot chips also need their skill.
@@ -1473,7 +1473,6 @@ function hudShown(piece) {
 function hudWatch(p) {
   if (!openingActive()) return;
   const T = G.trig, S = G.prog.secrets;
-  if (T && T.fired.wake && !S['hud:bars']) hudNoun('move');
   if (p.equip.weapon && !S['hud:q']) hudNoun('weapon');
   if (p.equip.chest && !S['hud:f']) hudNoun('chest');
   if (p.equip.head && !S['hud:c']) hudNoun('head');
@@ -1486,7 +1485,7 @@ function hudWatch(p) {
 // Pip (§28): a small warm light parented to the hero (offset up-left, a slow bob). An objective card with x / y sends it drifting
 // up to 2 tiles toward that point for ~1 s, then it returns. No AI, not interactable (the full companion is M7). hud.js draws it;
 // pipLight() is the lights-pass record for render.js (render lane).
-const PIP = { ox: -0.7, oy: -0.6, oz: 2.4, bob: 0.18, lead: 2, leadT: 1, follow: 5 };
+const PIP = { ox: -0.9, oy: 0.3, oz: 3.4, bob: 0.18, lead: 2, leadT: 1, follow: 5 };   // offset: up-left of the hero, head height
 function pipPoint(x, y) { if (G.pip && isFinite(x) && isFinite(y)) G.pip.goal = { x, y, t: G.t }; }
 function updatePip(dt) {
   const p = G.player, P = G.pip; if (!p || !P) return;
@@ -1592,6 +1591,7 @@ function updateTriggers(dt) {
     if (i === prev) continue; prev = i;
     const tr = m.triggers[i];
     if (tr.disabled) continue;
+    if (tr.opening && !openingActive()) continue;   // §28 `opening: true`: a bare-start beat; never plays for a save from before §28
     const once = tr.once !== false;
     if (once && T.fired[tr.id]) continue;
     if ((tr.requires || []).some(id => !T.fired[id])) continue;

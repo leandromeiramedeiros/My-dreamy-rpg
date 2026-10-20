@@ -117,6 +117,15 @@ const CASTS = async () => {
   await w(1500); G.enemies.length = 0; p.invulnT = 0;
   return res;
 };
+// §28 the bare-start opening must never replay for an existing save: run 30 s of opening timers in the loaded world and watch
+// what plays (dialogue), what is placed (first-kit pickups), the HUD (whole) and the gear (all four slots worn, nothing removed)
+const OPENING = async () => {
+  const w = ms => new Promise(r => setTimeout(r, ms)), talks = [], tk = window.talk, p = G.player, before = SLOTS.map(k => p.equip[k] && p.equip[k].id).join();
+  window.talk = a => { talks.push(a.id || (a.lines || [])[0]); return tk(a); };
+  G.trig.t += 30; await w(900); window.talk = tk;
+  return { opening: (G.prog.secrets || {}).opening || null, days: !!G.trig.fired.days, placed: G.drops.filter(d => d.found).map(d => d.found), talks,
+    hud: ['bars', 'tracker', 'map', 'lmb', 'q', 'e', 'r', 'f', 'c', 'shift', 'skills', 'pot'].every(k => hudShown(k) === 1), gear: SLOTS.map(k => p.equip[k] && p.equip[k].id).join() === before && SLOTS.every(k => p.equip[k]) };
+};
 // save -> read back -> migrate (no-op on v4) -> applySave onto a fresh hero -> save: identical (t stripped); one evaluate, no frame between
 const ROUND = () => {
   const strip = d => { const o = JSON.parse(JSON.stringify(d)); delete o.t; return o; };
@@ -175,6 +184,10 @@ const ROUND = () => {
       const v2 = await ev(V2_CHECK);
       check(`${tag}: every item has the v2 fields (${v2.n} items; affix tiers ${v2.tiers || 'none'})`, v2.bad.length === 0 && v2.trinkets.every(x => x === null), v2.bad);
       if (n === 1) { await wait(1200); await page.screenshot({ path: path.join(SHOTS, `${name}-v4.png`) }); }
+      if (n === 1) {
+        const op = await ev(OPENING);
+        check(`${tag}: §28 the opening does not replay (no bare-start marker, no "three days" line, no sword / cap placed, whole HUD, all gear kept; map ${got.map})`, !op.opening && !op.days && !op.placed.length && !op.talks.length && op.hud && op.gear, op);
+      }
       const casts = await ev(CASTS);
       check(`${tag}: every slotted skill + both weapon options cast (${Object.keys(casts).join(' ')})`, Object.values(casts).every(Boolean) && errs.length === 0, { casts, errs: errs.slice(0, 3) });
       const rt = await ev(ROUND);

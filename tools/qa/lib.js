@@ -218,7 +218,7 @@ class Bot {
       // boss timer
       if (s.boss && !this.bossRun) { this.bossRun = { type: s.boss.type, lvl: s.p.lvl, bossLvl: s.boss.lvl, at: +this.el(), t0: Date.now(), deaths0: s.deaths, hp: s.boss.max, pot0: s.p.pot, map: s.map, maxHp: s.p.maxHp, wk: s.p.wid }; this.log('BOSS START ' + s.boss.type, this.bossRun); }
       if (this.bossRun && s.boss) this.bossRun.minHpPct = Math.min(this.bossRun.minHpPct == null ? 100 : this.bossRun.minHpPct, Math.round(s.p.hp / s.p.maxHp * 100));
-      if (this.bossRun && !s.boss && s.st === 'play') { const b = this.bossRun; this.bossRun = null; b.dur = +((Date.now() - b.t0) / 1000).toFixed(1); b.deaths = s.deaths - b.deaths0; b.killed = !!this.bossKilled; this.bossKilled = null; b.potions = Math.max(0, b.pot0 - s.p.pot); this.out.bosses.push(b); this.log('BOSS END ' + b.type, b); this.save(); }
+      if (this.bossRun && !s.boss && s.st === 'play') { const b = this.bossRun; this.bossRun = null; b.dur = +((Date.now() - b.t0) / 1000).toFixed(1); b.deaths = s.deaths - b.deaths0; b.killed = !!this.bossKilled || s.deaths === b.deaths0;   /* the boss bar went away without a death = a kill (the kill event's boss flag is not always set) */ this.bossKilled = null; b.potions = Math.max(0, b.pot0 - s.p.pot); this.out.bosses.push(b); this.log('BOSS END ' + b.type, b); this.save(); }
       // enemy stuck in wall check
       this.enemyStuck(s);
     }

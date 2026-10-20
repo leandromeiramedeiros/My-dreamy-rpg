@@ -869,7 +869,7 @@ const PAD_STUB = () => {
       const np = makePlayer(), kit = starterLoot(np), sr = kit.find(d => d.kind === 'item' && d.it.slot === 'ring');
       out.starter = { bare: np.equip.ring1 === null, kit: kit.map(d => d.kind === 'gem' ? 'gem:' + d.gem : d.it.base + '/' + d.it.rarity + '/' + d.it.sockets.length).join(), base: sr && sr.it.base };
       G.player = np; if (sr) equipItem(np, sr.it); out.starter.boon = !!(np.boons && np.boons.originKnight); out.starter.name = sr && itemName(sr.it);
-      const p = G.player = makePlayer(); p.level = 14; p.x = G.map.start.x; p.y = G.map.start.y; recalcStats(p, true);
+      const p = G.player = makePlayer(); p.level = 14; p.x = G.map.start.x; p.y = G.map.start.y; p.equip.weapon = firstKitPiece('weapon'); recalcStats(p, true);   // §28: makePlayer is bare
       // an L14 drop: every affix T2 (ilvl 14..15 -> T2), the name from the T2 prefix / suffix noun, req = max(base, ilvl - 2), flavour + hist
       const bad = [];
       for (let k = 0; k < 40; k++) {
@@ -962,6 +962,49 @@ const PAD_STUB = () => {
   const st2 = await p2.evaluate(() => G.state);
   check('dpr 2: HUD backing store 1920x1080, title click still lands', w2.w === 1920 && w2.k === 2 && st2 === 'play', { w2, st2 });
   await ctx2.close();
+  // ---------- 6a. §28 the bare start: null gear slots everywhere (stats, skills, attack, menus, save / load, pickups) ----------
+  {
+    const bp = await br.newPage({ viewport: { width: 960, height: 540 } }); const berr = []; bp.on('pageerror', e => berr.push(e.message));
+    await bp.goto(`${base}/index.html?map=vale`, { waitUntil: 'load' });
+    await bp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    const b28 = await bp.evaluate(async () => {
+      const w = ms => new Promise(r => setTimeout(r, ms)), out = {};
+      G.state = 'play'; G.banner = null; const p = G.player = makePlayer(); p.x = G.map.start.x; p.y = G.map.start.y; p.z = tileH(G.map, p.x, p.y); p.invulnT = 99;
+      out.bare = { slots: EQUIP_SLOTS.filter(k => p.equip[k]).length, gear: Object.values(p.gear).join(), wdmg: p.wdmg, dmgBase: +p.dmgBase.toFixed(2), skills: ['q', 'e', 'r', 'f', 'c', 'shift'].map(k => slotSkill(p, k)).join() };
+      // the shove: 1 damage-ish (no sword damage), knockback; Q refuses, the barefoot roll dodges
+      G.enemies.length = 0; const e = spawnEnemy('slime', p.x + 0.9, p.y, 0); e.spawnT = 0; const hp0 = e.hp; p.aim = 0; p.atkT = 0; basicAttack(p); await w(120);
+      out.shove = { dmg: +(hp0 - e.hp).toFixed(1), lmb: skillSlotState(p, 'lmb').name, q: useSkill(p, 'q'), roll: (p.st = p.maxSt, useSkill(p, 'shift')) };
+      G.enemies.length = 0; p.dash = null; await w(300);
+      // menus with every slot empty: character, inventory, loadout panel
+      for (const t of ['skills', 'inv']) { openInv(t); await w(200); } G.ui.sel = null; await w(150); closeInv();
+      // save / load: empty slots stay empty; an unreadable gear item falls back to the slot's first-kit Common (never a lost slot)
+      const s1 = migrate(JSON.parse(JSON.stringify(saveData()))), q1 = makePlayer(); applySave(q1, s1);
+      out.load = { empty: EQUIP_SLOTS.filter(k => q1.equip[k]).length };
+      const s2 = migrate(JSON.parse(JSON.stringify(saveData()))); s2.player.equip.head = { id: 'i_9', base: 'no_such_base', rarity: 'rare', affixes: [], sockets: [] };
+      const q2 = makePlayer(); applySave(q2, s2); out.load.fallback = q2.equip.head && q2.equip.head.base + '/' + q2.equip.head.rarity; out.load.others = ['weapon', 'chest', 'boots'].filter(k => q2.equip[k]).length;
+      G.player = p;
+      // pickups flagged `equip` go on when the slot is empty, into the bag when it is not
+      const cap = makeItem('ironcap', 'common', 1); pickup(p, { kind: 'item', it: cap, rar: 'common', x: p.x, y: p.y, z: p.z, equip: true });
+      const cap2 = makeItem('ironcap', 'common', 1); pickup(p, { kind: 'item', it: cap2, rar: 'common', x: p.x, y: p.y, z: p.z, equip: true });
+      out.wear = { head: p.equip.head === cap, second: p.bag.includes(cap2), c: slotSkill(p, 'c') };
+      // the ambush's fixed boots: Common Iron Boots for an empty slot; a hero already in boots gets the old Uncommon+ roll
+      const L0 = []; const dl = window.dropLoot; window.dropLoot = (x, y, list) => L0.push(list.map(d => d.it ? d.it.base + '/' + d.it.rarity : d.kind));
+      lootAction({ type: 'loot', item: 'ironboots', rarity: 'common', x: p.x, y: p.y }); p.equip.boots = makeItem('ironboots', 'common', 1); recalcStats(p, false);
+      lootAction({ type: 'loot', item: 'ironboots', rarity: 'common', x: p.x, y: p.y }); window.dropLoot = dl;
+      out.boots = { fresh: L0[0].join(), worn: L0[1].length === 1 && !/^ironboots/.test(L0[1][0]) && !/\/common$/.test(L0[1][0]) };
+      // a game that did not start bare (every save from before §28): the HUD is whole
+      const sec = G.prog.secrets.opening; G.prog.secrets.opening = undefined; out.hudWhole = ['bars', 'map', 'q', 'pot', 'skills'].every(k => hudShown(k) === 1); G.prog.secrets.opening = sec;
+      return out;
+    });
+    check('§28 bare hero: every slot null; p.gear keeps default ids for render; wdmg 1; no Q E R F C, SHIFT = barefoot Roll', b28.bare.slots === 0 && b28.bare.wdmg === 1 && b28.bare.skills === ',,,,,roll' && b28.bare.gear === 'sword,knighthelm,warden,knightgreaves', b28.bare);
+    check('§28 bare hero: LMB is a weak Shove (<= 3 damage), Q refuses, the roll dodges', b28.shove.lmb === 'Shove' && b28.shove.dmg > 0 && b28.shove.dmg <= 3 && b28.shove.q === false && b28.shove.roll === true, b28.shove);
+    check('§28 save / load: empty gear slots stay empty; an unreadable gear item becomes the slot\'s first-kit Common', b28.load.empty === 0 && b28.load.fallback === 'ironcap/common' && b28.load.others === 0, b28.load);
+    check('§28 pickups: a first-kit piece goes on into an empty slot, a second one goes to the bag', b28.wear.head && b28.wear.second && b28.wear.c === 'warcry', b28.wear);
+    check('§28 garden boots: fixed Common Iron Boots (no roll); a hero already in boots gets the old Uncommon+ roll instead', b28.boots.fresh === 'ironboots/common' && b28.boots.worn, b28.boots);
+    check('§28 a game that did not start bare keeps the whole HUD', b28.hudWhole);
+    check('§28 bare-hero menus, attack and save paths raise no page errors', berr.length === 0, berr.slice(0, 3));
+    await bp.close();
+  }
   // ---------- 6b. phone settings (?phone=1): 256 px chunks, 12 resident, 16 awake; touring the synthetic zone stays under the cap ----------
   const p3 = await br.newPage({ viewport: { width: 960, height: 540 } }); p3.on('pageerror', e => errs.push('pageerror(phone): ' + e.message));
   await p3.goto(`${base}/index.html?scene=play&phone=1`, { waitUntil: 'load' });
@@ -1457,6 +1500,20 @@ const PAD_STUB = () => {
     check('boss phases: cunning forms — Mossjaw bar 2 lunge feints (0.4 s fake, re-aimed real wind-up >= 0.55 s); Bramblehorn bar 2 trunkSwipe -> backhand; bar 3 rootGrab lead-aims; bossFairness clean for both and flags fast cones (walk-out), short feints, long leads, bad transitions, missing onEnter',
       cun.feint === 0.4 && cun.tele0 && cun.afterFeint && cun.realWind >= 0.55 && cun.phaseM === 1 && cun.then === 'backhand' && cun.p2 === 1 && cun.second === 'backhand' && cun.lead === 0.45 && cun.p3 === 2 && cun.leadOff > 0.05 && cun.fair === 0
         && ['a', 'bar', 'feint', 'lead-aim', 'walk-out'].every(k => cun.rules.split(',').includes(k)), cun);
+    // the tamed howl (QA run-big M3): at most 2 hounds, a 12 s rest, hounds -20 % HP / -30 % bite, a readable cue, and they flee when Mossjaw dies
+    const howl = await bp.evaluate(async () => {
+      const wt = ms => new Promise(r => setTimeout(r, ms)), p = G.player, out = {}; p.invulnT = 999; G.enemies.length = 0; G.effects.length = 0; G.shrink = null;   // Bramblehorn's root ring from the check above
+      const m = spawnEnemy('mossjaw', p.x + 2, p.y, 0); m.spawnT = 0; m.hp = m.maxHp * 0.4; syncPhase(m); await wt(100); m.bk.mv = null; m.bk.queue.length = 0; m.cd = 99;
+      startMove(m, 'howl'); out.wind = G.lastWarn.wind; out.sfx = G.lastWarn.sfx; out.rest = +(m.bk.rest.howl - G.t).toFixed(1); await wt(1300);
+      const hs = G.enemies.filter(e => e.summoner === m && !e.dead), base = Math.round(ENEMY.shadehound.hp * enemyHpMul(hs[0] ? hs[0].lvl : 1));
+      out.n = hs.length; out.hpK = hs[0] ? +(hs[0].maxHp / base).toFixed(2) : 0; out.dmK = hs[0] ? +(hs[0].dm / enemyDmgMul(hs[0].lvl)).toFixed(2) : 0;
+      out.max = BOSSES.mossjaw.moveDefs.howl.max;
+      m.bk.rest.howl = 0; m.bk.mv = null; m.cd = 99; startMove(m, 'howl'); await wt(1300); out.capped = G.enemies.filter(e => e.summoner === m && !e.dead).length;
+      m.hp = 1; m.bk.transT = 0; damageEnemy(m, 1e6, { el: 'fire' }); out.bossDead = m.dead; for (let k = 0; k < 40 && G.enemies.some(e => e.summoner === m && !e.dead); k++) await wt(100); /* the boss-death slowmo stretches the 1.2 s flee */ out.left = G.enemies.filter(e => e.summoner === m && !e.dead).length;
+      G.enemies.length = 0; G.boss = null; G.effects.length = 0; return out;
+    });
+    check('boss phases: Mossjaw howl — max 2 hounds (a recast at 2 adds none), 12 s rest, hounds x0.8 HP / x0.7 bite, cue >= 0.55 s, hounds flee + despawn on the boss death',
+      howl.n === 2 && howl.max === 2 && howl.capped === 2 && howl.rest >= 11.5 && howl.hpK > 0.75 && howl.hpK < 0.85 && Math.abs(howl.dmK - 0.7) < 0.02 && howl.wind >= 0.55 && howl.bossDead && howl.left === 0, howl);
     await bp.close();
   }
   // ---------- §30 Echo: the spirit clone (game.js ECHO, rule 'echo'; render.js drawEcho; strip: tools/shots/m3-echo) ----------

@@ -6,12 +6,15 @@ const DISP = document.getElementById('game');
 const dctx = DISP.getContext('2d');
 // HUD at min(devicePixelRatio, 2) (§16.6.6): the backing store is DW*k x DH*k and every draw keeps using the
 // 960x540 coordinate space through one transform; the scene stays 480x270 and is scaled up into it.
+// Phones (maps.js PHONE) keep k = 1 (§26.4 step 3, capped DPR): a 960x540 store is ~0.5 of a phone's device pixels, the browser
+// upscales it with smoothing off (index.html image-rendering), and the per-frame scene blit + HUD fill a quarter of the pixels.
 let HUD_K = 1;
+const HUD_K_MAX = PHONE ? 1 : 2;
 function fit() {
   const s = Math.min(window.innerWidth / DW, window.innerHeight / DH);
   DISP.style.width = Math.floor(DW * s) + 'px';
   DISP.style.height = Math.floor(DH * s) + 'px';
-  const k = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+  const k = Math.min(HUD_K_MAX, Math.max(1, window.devicePixelRatio || 1));
   if (k !== HUD_K || DISP.width !== DW * k) { HUD_K = k; DISP.width = DW * k; DISP.height = DH * k; }
   dctx.setTransform(HUD_K, 0, 0, HUD_K, 0, 0); dctx.imageSmoothingEnabled = false;
   // R3 #2: a touch device held upright gets the "rotate to play" card (screens.js drawRotateCard) instead of a 40 % letterbox
@@ -174,6 +177,7 @@ function loop(now) {
   frameEma += (fdt * 1000 - frameEma) * 0.05;
   // particle budget follows the measured frame time: shed motes first when a device struggles
   PART.budget = clamp(PART.budget + (frameEma > 20 ? -0.02 : frameEma < 17.5 ? 0.01 : 0), 0.35, 1);
+  qualityAdapt(frameEma, fdt);   // phone: the post-effect tier follows the frame time too (render.js QUALITY)
   acc += fdt;
   const frameT0 = performance.now();
   let n = 0;
@@ -359,6 +363,7 @@ function loadWorld() {
   return WORLD_DATA;
 }
 async function boot() {
+  if (PHONE) PART.cap = 300;   // §26.4 step 4: the phone particle cap (game.js pool: 600 on desktop; PART.budget still sheds below it)
   await loadSprites();
   buildArt(); initPost();
   G.world = loadWorld();

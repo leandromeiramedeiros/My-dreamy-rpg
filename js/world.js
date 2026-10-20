@@ -234,7 +234,7 @@ const WORLD_DATA = {
      "role": "elder_stone",
      "title": "Elder Stone",
      "label": "elder stone",
-     "text": "The Stone knows her. The Stone does not say. Past the cottage, where the path ends, a light waits."
+     "text": "Past the cottage, where the path ends, a light waits."
     },
     {
      "t": "crystal",
@@ -285,20 +285,14 @@ const WORLD_DATA = {
      "warp": true
     },
     {
-     "t": "sign",
-     "x": 32.8,
-     "y": 57,
-     "label": "sign",
-     "text": "Training yard south-east. Elder Stone north-east."
-    },
-    {
      "t": "chest",
      "x": 21,
      "y": 51,
      "role": "chest",
      "label": "tutorial-chest",
      "tier": "wood",
-     "starter": true
+     "starter": true,
+     "loot": "ring"
     },
     {
      "t": "crystal_violet",
@@ -313,8 +307,7 @@ const WORLD_DATA = {
      "y": 36,
      "role": "chest_silver",
      "tier": "silver",
-     "label": "ledge-chest",
-     "loot": "ring"
+     "label": "ledge-chest"
     },
     {
      "t": "fishspot",
@@ -3079,6 +3072,14 @@ const WORLD_DATA = {
      },
      "actions": [
       {
+       "type": "wait",
+       "seconds": 3
+      },
+      {
+       "type": "noun",
+       "noun": "move"
+      },
+      {
        "type": "dialogue",
        "id": "vale_wake"
       },
@@ -3091,7 +3092,65 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Hit the training dummies"
+       "text": "Hit the training dummies",
+       "x": 37.5,
+       "y": 60
+      }
+     ]
+    },
+    {
+     "id": "days",
+     "name": "Pip: three days",
+     "opening": true,
+     "when": {
+      "type": "timer",
+      "after": "wake",
+      "seconds": 20
+     },
+     "requires": [
+      "wake"
+     ],
+     "actions": [
+      {
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "Three days. You've been asleep three days."
+       ]
+      },
+      {
+       "type": "noun",
+       "noun": "vale"
+      }
+     ]
+    },
+    {
+     "id": "sword",
+     "name": "The sword in the grass",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "gear",
+       "item": "rustyblade",
+       "x": 37.5,
+       "y": 60
+      }
+     ]
+    },
+    {
+     "id": "cottage_cap",
+     "name": "The cap on the child's bed",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "gear",
+       "item": "ironcap",
+       "x": 21.2,
+       "y": 25.4
       }
      ]
     },
@@ -3148,6 +3207,10 @@ const WORLD_DATA = {
      },
      "actions": [
       {
+       "type": "noun",
+       "noun": "dodge"
+      },
+      {
        "type": "dialogue",
        "speaker": "Pip",
        "lines": [
@@ -3157,7 +3220,9 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Follow the path to the Elder Stone"
+       "text": "Open the chest west of the bed",
+       "x": 21,
+       "y": 51
       }
      ]
     },
@@ -3189,7 +3254,9 @@ const WORLD_DATA = {
       },
       {
        "type": "objective",
-       "text": "Open the chest, then find the lantern"
+       "text": "Find the lost lantern past the cottage",
+       "x": 22,
+       "y": 26
       }
      ]
     },
@@ -3224,6 +3291,12 @@ const WORLD_DATA = {
        "lines": [
         "Open your bag and equip it."
        ]
+      },
+      {
+       "type": "objective",
+       "text": "Follow the path to the Elder Stone",
+       "x": 39,
+       "y": 47.5
       }
      ]
     },
@@ -3238,11 +3311,8 @@ const WORLD_DATA = {
      },
      "actions": [
       {
-       "type": "dialogue",
-       "speaker": "Pip",
-       "lines": [
-        "Ripples. Fishing waits in the Pinewood."
-       ]
+       "type": "message",
+       "text": "Ripples in the water. Interact to cast."
       }
      ]
     },
@@ -3300,6 +3370,10 @@ const WORLD_DATA = {
      ],
      "actions": [
       {
+       "type": "noun",
+       "noun": "potion"
+      },
+      {
        "type": "banner",
        "title": "Gloom in the garden",
        "sub": "Slimes ooze out of the flowers"
@@ -3350,8 +3424,8 @@ const WORLD_DATA = {
       },
       {
        "type": "loot",
-       "rarity": "uncommon",
-       "count": 1,
+       "item": "ironboots",
+       "rarity": "common",
        "x": 36,
        "y": 23
       },

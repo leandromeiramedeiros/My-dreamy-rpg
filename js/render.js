@@ -20,8 +20,6 @@ const PERF = (() => {
   let q = null; try { q = new URLSearchParams(location.search).get('perf'); } catch (e) { /* no location */ }
   return { on: !!q && q !== '0', flush: q === 'flush', t: 0, ph: {}, draws: 0, d0: 0, dph: {} };
 })();
-// quality tiers (§26.4 steps 3-4): 'high' = desktop, the reference look; 'phone' = the ?phone=1 / coarse-pointer caps
-const QUALITY = { tier: 'high' };
 function perfMark(name, cx) {
   if (!PERF.on) return;
   if (PERF.flush) (cx || sctx).getImageData(0, 0, 1, 1);
@@ -144,7 +142,7 @@ function drawGround(ctx, m) {
 // scheduling: groundTick(m, false) before drawGround (the camera chunk synchronously, visible-missing chunks with a large
 // budget so they show this frame); groundTick(m, true) at the end of drawScene = the idle prefetch, which only spends
 // what is left of a ~14 ms scene (at most IDLE_MS) on the ring of chunks around the view.
-const IDLE_MS = PHONE ? 1.5 : 2.5, CAM_CHUNK_MS = PHONE ? 12 : 16;
+const IDLE_MS = PHONE ? 1.5 : 2.5, IDLE_END = PHONE ? 9.5 : 10.5, CAM_CHUNK_MS = PHONE ? 12 : 16;
 const preloadOwns = job => { try { return !!(PRELOAD && job.m.id === PRELOAD.id); } catch (e) { return false; } };   // main.js PRELOAD
 function groundTick(m, idle, sceneMs = 0) {
   const cg = chunkGrid(m), g = m.gp, S = cg.S, t0 = performance.now();
@@ -172,7 +170,12 @@ function groundTick(m, idle, sceneMs = 0) {
   // idle = the frame rate is holding AND this frame has slack: the work since the frame began (main.js `last`, the rAF
   // timestamp: update steps + this scene) leaves room before ~12.5 ms (the HUD and the blit still follow)
   let spent = sceneMs; try { spent = Math.max(sceneMs, performance.now() - last); } catch (e) { /* no main loop */ }
-  const budget = !idle ? (G.fade > 0.3 ? 14 : PHONE ? 6 : 8) : ema > 17.2 ? 0 : clamp(12.5 - spent, 0, IDLE_MS);
+  // phone: 3 ms a frame for visible-missing chunks (a 256 px chunk lands over ~10 frames behind the low-res preview) - the build
+  // bursts were most of the phone p95 (§26.4 tail)
+  // idle: the prefetch must END by IDLE_END ms into the frame - the HUD, the scene blit and the canvas commit (~4 ms headless)
+  // still follow. It used to run up to 12.5 + 2.5 ms whenever the frame EMA was under 17.2 ms, so once a frame got cheaper the
+  // prefetch ate the slack and pushed frames back over vsync (the frame average settled at ~17.2 ms whatever the scene cost).
+  const budget = !idle ? (G.fade > 0.3 ? 14 : PHONE ? 3 : 8) : ema > 17 ? 0 : clamp(IDLE_END - spent, 0, IDLE_MS);
   want.sort((a, b) => a.pri - b.pri);
   const keep = new Set(want.map(w => chunkKey(m, w.idx)));
   for (const [k, job] of CHUNK.jobs) if (!keep.has(k) && !preloadOwns(job) && (job.m !== m || CHUNK.frame - (job.touch || 0) > 60)) dropChunkJob(k, job);   // stale partial builds (a portal preload's own job stays)
@@ -241,27 +244,8 @@ function drawScene() {
     ctx.globalAlpha = 0.85; ctx.drawImage(c, Math.round(x), Math.round(y)); ctx.globalAlpha = 1;
   });
   perfMark('sky.mtn');
-  // god rays: dawn shafts from the low sun, slanting down to the right through the mist
-  if (th.rays) {
-    ctx.globalCompositeOperation = 'lighter';
-    for (let k = 0; k < 7; k++) {
-      const a = th.rays.alpha * (0.6 + 0.4 * Math.sin(G.t * 0.35 + k * 1.3)), x0 = mx - 90 + k * 28, w0 = 6 + (k % 3) * 5;
-      const g = ctx.createLinearGradient(x0, my, x0 + 220, RH);
-      g.addColorStop(0, `rgba(255,214,160,${a})`); g.addColorStop(1, 'rgba(255,214,160,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0, my); ctx.lineTo(x0 + w0, my); ctx.lineTo(x0 + 260 + w0 * 4, RH + 40); ctx.lineTo(x0 + 190, RH + 40); ctx.closePath(); ctx.fill();
-    }
-    ctx.globalCompositeOperation = 'source-over';
-  }
-  if (m.themeId === 'vale') {
-    ctx.globalCompositeOperation = 'lighter';
-    for (let k = 0; k < 5; k++) {
-      const a = 0.035 + 0.025 * Math.sin(G.t * 0.5 + k * 1.7), x0 = mx - 30 + k * 18;
-      const g = ctx.createLinearGradient(x0, my, x0 - 160, RH);
-      g.addColorStop(0, `rgba(255,220,240,${a})`); g.addColorStop(1, 'rgba(255,220,240,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0, my); ctx.lineTo(x0 + 10 + k * 3, my); ctx.lineTo(x0 - 140 + k * 10, RH); ctx.lineTo(x0 - 200 + k * 6, RH); ctx.closePath(); ctx.fill();
-    }
-    ctx.globalCompositeOperation = 'source-over';
-  }
+  // god rays: dawn shafts from the low sun, slanting down to the right through the mist (+ the Vale's pink moon shafts)
+  if (QUALITY.cfg.rays && (th.rays || m.themeId === 'vale')) drawRays(ctx, m, th, mx, my);
   perfMark('sky');
   // cloud sea far below
   const groundBot = (m.W + m.H) * 8 + 12;
@@ -358,7 +342,7 @@ function drawScene() {
   // ---- bloom + grade ----
   applyBloom(ctx, th.bloom * (typeof flashCap === 'function' ? flashCap() : 1));
   perfMark('bloom');
-  ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.22; ctx.drawImage(GRADE[m.themeId], 0, 0);
+  if (QUALITY.cfg.grade) { ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.22; ctx.drawImage(GRADE[m.themeId], 0, 0); }
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   perfMark('grade.soft');
   if (p.buffs.dreamveil) { ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = 'rgba(255,140,220,0.25)'; ctx.fillRect(0, 0, RW, RH); ctx.globalCompositeOperation = 'source-over'; }
@@ -367,6 +351,43 @@ function drawScene() {
   perfMark('grade');
   groundTick(m, true, performance.now() - sceneT0);   // idle prefetch with what is left of the frame
   perfMark('chunks');
+}
+
+// perf: the ray shafts were 5-7 gradient polygons a frame (~0.5 ms in the software rasteriser). They are summed into one layer
+// ('lighter' is additive, so the layer adds the same light) and the layer is re-rastered only when the moon moves a whole pixel
+// or every 0.1 s (a shaft's alpha drifts < 0.002 in that time); each frame blits the layer's box once.
+const RAYS = { L: makeCanvas(RW, RH), key: '', box: null };
+function drawRays(ctx, m, th, mx, my) {
+  const key = m.themeId + '|' + Math.round(mx) + '|' + Math.round(my) + '|' + Math.floor(G.t * 10);
+  if (key !== RAYS.key) {
+    RAYS.key = key; const x = RAYS.L.x; x.clearRect(0, 0, RW, RH);
+    if (th.rays) {
+      x.globalCompositeOperation = 'lighter';
+      for (let k = 0; k < 7; k++) {
+        const a = th.rays.alpha * (0.6 + 0.4 * Math.sin(G.t * 0.35 + k * 1.3)), x0 = mx - 90 + k * 28, w0 = 6 + (k % 3) * 5;
+        const g = x.createLinearGradient(x0, my, x0 + 220, RH);
+        g.addColorStop(0, `rgba(255,214,160,${a})`); g.addColorStop(1, 'rgba(255,214,160,0)');
+        x.fillStyle = g; x.beginPath(); x.moveTo(x0, my); x.lineTo(x0 + w0, my); x.lineTo(x0 + 260 + w0 * 4, RH + 40); x.lineTo(x0 + 190, RH + 40); x.closePath(); x.fill();
+      }
+      x.globalCompositeOperation = 'source-over';
+    }
+    if (m.themeId === 'vale') {
+      x.globalCompositeOperation = 'lighter';
+      for (let k = 0; k < 5; k++) {
+        const a = 0.035 + 0.025 * Math.sin(G.t * 0.5 + k * 1.7), x0 = mx - 30 + k * 18;
+        const g = x.createLinearGradient(x0, my, x0 - 160, RH);
+        g.addColorStop(0, `rgba(255,220,240,${a})`); g.addColorStop(1, 'rgba(255,220,240,0)');
+        x.fillStyle = g; x.beginPath(); x.moveTo(x0, my); x.lineTo(x0 + 10 + k * 3, my); x.lineTo(x0 - 140 + k * 10, RH); x.lineTo(x0 - 200 + k * 6, RH); x.closePath(); x.fill();
+      }
+      x.globalCompositeOperation = 'source-over';
+    }
+    // the box the shafts can cover (forest: right of the sun, Vale: left), clipped to the view
+    const bx0 = th.rays ? mx - 90 : mx - 230, bx1 = th.rays ? mx + 410 : mx + 70, x0 = clamp(Math.floor(m.themeId === 'vale' ? Math.min(bx0, mx - 230) : bx0), 0, RW), x1 = clamp(Math.ceil(m.themeId === 'vale' ? Math.max(bx1, mx + 70) : bx1), 0, RW), y0 = clamp(Math.floor(my), 0, RH);
+    RAYS.box = x1 > x0 && y0 < RH ? [x0, y0, x1 - x0, RH - y0] : null;
+  }
+  if (!RAYS.box) return;
+  const [bx, by, bw, bh] = RAYS.box;
+  ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(RAYS.L.c, bx, by, bw, bh, bx, by, bw, bh); ctx.globalCompositeOperation = 'source-over';
 }
 
 // ===== static prop shadows, pre-rendered (§26.4 step 5) =================================================================
@@ -459,20 +480,43 @@ function drawMoon(ctx, x, y, r, col) {
   ctx.drawImage(mc, Math.round(x) - R, Math.round(y) - R);
 }
 
-function drawFall(ctx, f, edge) {
-  const th = G.map.theme, W = th.water;
-  for (let px = 0; px < 16; px++) {
-    const [vx, vy0] = sToView(f.x0 + px, f.y0 + px * 0.5);
-    if (vx < -2 || vx > RW + 2) continue;
-    const seed = hash2(px, f.x0, 5);
-    for (let y = 0; y < f.len; y += 2) {
-      const k = y / f.len;
-      const flow = (y - G.t * 90 + seed * 60) % 16;
-      const c = W[clamp(Math.floor(4 + (flow < 0 ? flow + 16 : flow) / 16 * 2 + (px % 3 === 0 ? 1 : 0)), 0, W.length - 1)];
-      const a = edge ? (1 - k) * 0.9 : 0.95;
-      ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${a})`;
-      ctx.fillRect(Math.round(vx), Math.round(vy0 + y + (edge ? Math.sin(y * 0.05 + G.t) * k * 3 : 0)), 1, 2);
+// perf (§26.4 step 5): a fall was 16 x len/2 fillRects a frame, each with a new rgba() string (an edge fall: ~1600). The flow
+// pattern repeats every 16 px of travel (90 px/s), so each fall is rastered once per whole-pixel flow phase (FALL_PH frames,
+// the same colours, alphas and the same whole-pixel rows as the old per-rect loop, with the slant baked in) and blitted. An edge
+// fall's sway (a per-row offset that drifts with G.t) is applied by blitting its frame in FALL_BAND-row slices, each shifted by
+// the sway at its middle row (<= 1 px from the old per-row sway). Caches: per fall, at most FALL_MAX falls (oldest dropped).
+const FALL_PH = 16, FALL_BAND = 4, FALL_MAX = 48, FALL_CACHE = new Map();
+function fallFrame(f, edge, ph) {
+  let C = FALL_CACHE.get(f);
+  if (!C) {
+    if (FALL_CACHE.size >= FALL_MAX) FALL_CACHE.delete(FALL_CACHE.keys().next().value);
+    FALL_CACHE.set(f, C = { frames: [], h: Math.ceil(f.len) + 10 });
+  }
+  let c = C.frames[ph];
+  if (!c) {
+    const W = G.map.theme.water, v = makeCanvas(16, C.h), fy = f.y0 - Math.floor(f.y0);   // the rows keep f.y0's fraction
+    for (let px = 0; px < 16; px++) {
+      const seed = hash2(px, f.x0, 5), oy = Math.round(fy + px * 0.5);
+      for (let y = 0; y < f.len; y += 2) {
+        const k = y / f.len, flow = (y - ph + seed * 60) % 16;
+        const col = W[clamp(Math.floor(4 + (flow < 0 ? flow + 16 : flow) / 16 * 2 + (px % 3 === 0 ? 1 : 0)), 0, W.length - 1)];
+        v.x.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${edge ? (1 - k) * 0.9 : 0.95})`;
+        v.x.fillRect(px, oy + y, 1, 2);
+      }
     }
+    c = C.frames[ph] = v.c;
+  }
+  return c;
+}
+function drawFall(ctx, f, edge) {
+  const [vx, vy] = sToView(f.x0, f.y0);
+  if (vx > RW + 2 || vx + 16 < -2) return;
+  const ph = ((Math.floor(G.t * 90) % FALL_PH) + FALL_PH) % FALL_PH, img = fallFrame(f, edge, ph), x = Math.round(vx), y0 = Math.floor(vy);
+  if (!edge) { if (y0 + img.height >= 0 && y0 < RH) ctx.drawImage(img, x, y0); }
+  else for (let r = 0; r < f.len + 8; r += FALL_BAND) {
+    const ym = Math.min(f.len, r + FALL_BAND / 2), sway = Math.round(Math.sin(ym * 0.05 + G.t) * (ym / f.len) * 3), dy = y0 + r + sway;
+    if (dy + FALL_BAND < 0 || dy >= RH) continue;
+    ctx.drawImage(img, 0, r, 16, FALL_BAND, x, dy, 16, FALL_BAND);
   }
   if (!edge) { // foam at base
     const [bx, by] = sToView(f.x0 + 8, f.y0 + 4 + f.len);
@@ -480,14 +524,23 @@ function drawFall(ctx, f, edge) {
   }
 }
 
+// water glints: ~100 in a lake view, each was a new rgba() string + its own fillRect. The glint alpha now snaps to GLINT_LV levels
+// (a 3 x 1 px sparkle, 0.025 alpha steps) and each level is one path of rects + one fill: no per-frame strings, ~20 fills.
+const GLINT_LV = 32, GLINT_FILL = Array.from({ length: GLINT_LV + 1 }, (_, i) => `rgba(230,250,255,${(i / GLINT_LV) * 0.8})`);
+const GLINT_BUF = { q: [], lv: new Uint8Array(256), xy: new Int16Array(512) };
 function drawWater(ctx, m, x0, y0, x1, y1) {
-  for (const s of gridQuery(m, 'water', x0, y0, x1, y1)) {
-    const fy = (s.b + G.t * 0.35) % 1, x = s.i + s.a, y = s.j + fy;
-    const [vx, vy] = worldToView(x, y, 0);
-    if (vx < -4 || vx > RW + 4 || vy < -4 || vy > RH + 4) continue;
-    const a = Math.sin(fy * Math.PI) * 0.8;
-    ctx.fillStyle = `rgba(230,250,255,${a})`;
-    ctx.fillRect(Math.round(vx), Math.round(vy), 3, 1);
+  const B = GLINT_BUF; B.q.length = 0;
+  const q = gridQuery(m, 'water', x0, y0, x1, y1, B.q), n = q.length;
+  if (B.lv.length < n) { B.lv = new Uint8Array(n * 2); B.xy = new Int16Array(n * 4); }
+  for (let i = 0; i < n; i++) {
+    const s = q[i], fy = (s.b + G.t * 0.35) % 1, [vx, vy] = worldToView(s.i + s.a, s.j + fy, 0);
+    if (vx < -4 || vx > RW + 4 || vy < -4 || vy > RH + 4) { B.lv[i] = 0; continue; }
+    B.lv[i] = Math.round(Math.sin(fy * Math.PI) * GLINT_LV); B.xy[i * 2] = Math.round(vx); B.xy[i * 2 + 1] = Math.round(vy);
+  }
+  for (let lv = 1; lv <= GLINT_LV; lv++) {
+    let any = false;
+    for (let i = 0; i < n; i++) if (B.lv[i] === lv) { if (!any) { ctx.beginPath(); any = true; } ctx.rect(B.xy[i * 2], B.xy[i * 2 + 1], 3, 1); }
+    if (any) { ctx.fillStyle = GLINT_FILL[lv]; ctx.fill(); }
   }
 }
 
@@ -1306,27 +1359,38 @@ function drawEffect(ctx, e, lights) {
   }
 }
 
+// rgbaQ(hex, a): rgba() with the alpha snapped to 1/255 (the canvas keeps 8-bit colour), from a per-colour table built on first
+// use: the particle passes draw ~150 rects a frame and each used to build a fresh rgba() string (§26.4: no per-frame allocations)
+const RGBA_Q = new Map();
+function rgbaQ(hex, a) {
+  let t = RGBA_Q.get(hex);
+  if (!t) { if (RGBA_Q.size > 256) RGBA_Q.clear(); const c = hexToRgb(hex); t = new Array(256); for (let i = 0; i < 256; i++) t[i] = `rgba(${c[0]},${c[1]},${c[2]},${i / 255})`; RGBA_Q.set(hex, t); }
+  return t[a <= 0 ? 0 : a >= 1 ? 255 : Math.round(a * 255)];
+}
 function drawParticles(ctx, lights) {
+  const ox = RW / 2 - camX, oy = RH / 2 - camY;   // worldToView without the per-particle array
   for (const f of (G.amb || [])) {
-    const [vx, vy] = worldToView(f.x, f.y, f.z);
+    const vx = isoX(f.x, f.y) + ox, vy = isoY(f.x, f.y, f.z) + oy;
     if (vx < -10 || vx > RW + 10 || vy < -10 || vy > RH + 10) continue;
-    const fade = Math.min(1, f.t, f.life - f.t);
+    const fade = Math.min(1, f.t, f.life - f.t), x = Math.round(vx), y = Math.round(vy);
+    ctx.globalCompositeOperation = 'lighter';
     if (f.k === 'fly') {
       const a = (0.5 + 0.5 * Math.sin(G.t * 3 + f.ph)) * fade;
-      ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(220,255,160,${a})`; ctx.fillRect(Math.round(vx), Math.round(vy), 1, 1);
-      ctx.fillStyle = `rgba(200,255,140,${a * 0.35})`; ctx.fillRect(Math.round(vx) - 1, Math.round(vy), 3, 1); ctx.fillRect(Math.round(vx), Math.round(vy) - 1, 1, 3);
+      ctx.fillStyle = rgbaQ('#dcffa0', a); ctx.fillRect(x, y, 1, 1);
+      ctx.fillStyle = rgbaQ('#c8ff8c', a * 0.35); ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3);
       if (a > 0.5) lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: 14, col: '#d8ff9a', a: a * 0.6 });
     } else if (f.k === 'mote') {
-      ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,226,180,${fade * (0.35 + 0.3 * Math.sin(G.t * 2 + f.ph))})`; ctx.fillRect(Math.round(vx), Math.round(vy), 1, 1);
+      ctx.fillStyle = rgbaQ('#ffe2b4', fade * (0.35 + 0.3 * Math.sin(G.t * 2 + f.ph))); ctx.fillRect(x, y, 1, 1);
     } else {
-      ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,120,170,${fade * 0.8})`; ctx.fillRect(Math.round(vx), Math.round(vy), 1, 1);
+      ctx.fillStyle = rgbaQ('#ff78aa', fade * 0.8); ctx.fillRect(x, y, 1, 1);
     }
   }
+  let op = null;
   for (const q of G.parts) {
-    const [vx, vy] = worldToView(q.x, q.y, q.z);
-    const a = 1 - q.t / q.life;
-    ctx.globalCompositeOperation = q.glow ? 'lighter' : 'source-over';
-    ctx.fillStyle = rgba(q.col, q.mist ? a * 0.35 : a);
+    const vx = isoX(q.x, q.y) + ox, vy = isoY(q.x, q.y, q.z) + oy;
+    const a = 1 - q.t / q.life, o = q.glow ? 'lighter' : 'source-over';
+    if (o !== op) { ctx.globalCompositeOperation = op = o; }
+    ctx.fillStyle = rgbaQ(q.col, q.mist ? a * 0.35 : a);
     const s = q.mist ? Math.round(q.size + q.t * 3) : q.size;
     ctx.fillRect(Math.round(vx - s / 2), Math.round(vy - s / 2), s, s);
   }
@@ -1355,7 +1419,35 @@ function drawFog(ctx, tex, size, par, spx, spy, alpha) {
 // §16.6.1: one cached 64x64 radial sprite per light colour (alpha 1 -> 0), drawn scaled with globalAlpha = L.a.
 // A linear alpha ramp scaled by globalAlpha equals the old per-light rgba(col, a) -> rgba(col, 0) gradient.
 const COARSE_POINTER = PHONE || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
-const LIGHT_MAX = 40, LIGHT_STATS = { inView: 0, drawn: 0 };
+// ===== quality tiers (DESIGN §26.4 steps 3-4) ==============================================================================
+//   high  : desktop, the reference look (every pass below at full quality)
+//   phone : PHONE / coarse pointer. Lightmap and bloom upscaled without smoothing (the smoothed full-res upscales are the
+//           costliest single blits in a software rasteriser); the bloom glow is smoothed to half res first, so it stays soft
+//           (2 x 2 blocks of an already blurred glow), and re-extracted every other frame; no soft-light colour grade; at most
+//           24 lights; one fog layer (§16.6.6); particle cap 300 (main.js boot); HUD backing store at 1x (main.js fit).
+//   low   : phone + no bloom, no light halos, no god rays, at most 16 lights.
+// A phone starts on 'phone' and moves to 'low' when its frame time holds over 21 ms for 2 s, back after 4 s under 17 ms
+// (qualityAdapt, from main.js loop). ?quality=high|phone|low pins a tier (no adapting): the client's A/B on a real device.
+const QUALITY_TIERS = {
+  high: { lmSmooth: true, bloom: 'full', grade: true, halos: true, rays: true, lights: 40 },
+  phone: { lmSmooth: false, bloom: 'half', grade: false, halos: true, rays: true, lights: 24 },
+  low: { lmSmooth: false, bloom: 'off', grade: false, halos: false, rays: false, lights: 16 },
+};
+const QUALITY = (() => {
+  let q = null; try { q = new URLSearchParams(location.search).get('quality'); } catch (e) { /* no location */ }
+  const pinned = !!QUALITY_TIERS[q], tier = pinned ? q : COARSE_POINTER ? 'phone' : 'high';
+  return { tier, pinned, cfg: QUALITY_TIERS[tier], over: 0, under: 0 };
+})();
+function setQuality(tier) { if (!QUALITY_TIERS[tier]) return; QUALITY.tier = tier; QUALITY.cfg = QUALITY_TIERS[tier]; QUALITY.over = QUALITY.under = 0; BH.ok = false; }
+function qualityAdapt(ema, dt) {
+  if (QUALITY.pinned || QUALITY.tier === 'high') return;
+  QUALITY.over = ema > 21 ? QUALITY.over + dt : 0; QUALITY.under = ema < 17 ? QUALITY.under + dt : 0;
+  if (QUALITY.tier === 'phone' && QUALITY.over > 2) setQuality('low');
+  else if (QUALITY.tier === 'low' && QUALITY.under > 4) setQuality('phone');
+}
+const LIGHT_STATS = { inView: 0, drawn: 0, litTiles: 0 };
+const LM_TILES = { t: 15, nx: RW / 2 / 15, ny: RH / 2 / 15, mark: new Uint8Array((RW / 2 / 15) * (RH / 2 / 15)) };   // 16 x 9 tiles of 15 lightmap texels
+const BH = makeCanvas(RW / 2, RH / 2);   // phone tier: the bloom glow smoothed up to half res, then blitted 2x without smoothing
 const LIGHT_SPR = new Map();
 function lightSprite(col) {
   let c = LIGHT_SPR.get(col);
@@ -1392,20 +1484,56 @@ function applyLighting(ctx, lights, th, ambient) {
     vis.push([vx, vy, L]);
   }
   LIGHT_STATS.inView = vis.length;
+  const LIGHT_MAX = QUALITY.cfg.lights;
   if (vis.length > LIGHT_MAX) {   // budget: keep the hero's light, then the strongest nearest the centre
     const sc = ([vx, vy, L]) => (L.keep ? 1e9 : 0) + L.a * L.r / (1 + Math.hypot(vx - RW / 2, vy - RH / 2) / 120);
     vis = vis.sort((a, b) => sc(b) - sc(a)).slice(0, LIGHT_MAX);
   }
   LIGHT_STATS.drawn = vis.length;
-  for (const [vx, vy, L] of vis) { const d = Math.max(1, Math.round(L.r)); x.globalAlpha = clamp(L.a, 0, 1); x.drawImage(lightSized(L.col, d), Math.round(vx / 2 - d / 2), Math.round(vy / 2 - d / 2)); }
+  const mark = LM_TILES.mark; mark.fill(0);
+  for (const [vx, vy, L] of vis) {
+    const d = Math.max(1, Math.round(L.r)), a = clamp(L.a, 0, 1), lx = Math.round(vx / 2 - d / 2), ly = Math.round(vy / 2 - d / 2);
+    if (a <= 0) continue;
+    x.globalAlpha = a; x.drawImage(lightSized(L.col, d), lx, ly);
+    // the lightmap tiles this light touches (+1 texel: the smoothed upscale reads one texel past the sprite)
+    const T = LM_TILES.t, i0 = clamp(Math.floor((lx - 1) / T), 0, LM_TILES.nx - 1), i1 = clamp(Math.floor((lx + d + 1) / T), 0, LM_TILES.nx - 1);
+    const j0 = clamp(Math.floor((ly - 1) / T), 0, LM_TILES.ny - 1), j1 = clamp(Math.floor((ly + d + 1) / T), 0, LM_TILES.ny - 1);
+    if (lx + d + 1 < 0 || ly + d + 1 < 0 || lx - 1 >= RW / 2 || ly - 1 >= RH / 2) continue;
+    const cx = lx + d / 2, cy = ly + d / 2, rr = (d / 2 + 1.5) * (d / 2 + 1.5);   // the sprite is a disc: mark only tiles it reaches
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const qx = clamp(cx, i * T, i * T + T), qy = clamp(cy, j * T, j * T + T);
+      if ((qx - cx) * (qx - cx) + (qy - cy) * (qy - cy) <= rr) mark[j * LM_TILES.nx + i] = 1;
+    }
+  }
   x.globalAlpha = 1;
   perfMark('lights.lm');
-  ctx.globalCompositeOperation = 'multiply'; ctx.imageSmoothingEnabled = true;
-  ctx.drawImage(LM.c, 0, 0, RW, RH);
+  // multiply the scene by the lightmap. Tiles no light reaches hold exactly the ambient colour, so they are multiplied by one
+  // solid fill; the lit tiles get the upscaled lightmap through a rect clip (the same draw, the same pixels, only where lit):
+  // the smoothed full-res upscale was the costliest blit of the frame and most of the view is usually plain ambient.
+  ctx.globalCompositeOperation = 'multiply';
+  const T2 = LM_TILES.t * 2;
+  let lit = 0, dark = 0;
+  ctx.beginPath();
+  for (let j = 0; j < LM_TILES.ny; j++) for (let i = 0; i < LM_TILES.nx; i++) if (!mark[j * LM_TILES.nx + i]) {
+    let k = i; while (k + 1 < LM_TILES.nx && !mark[j * LM_TILES.nx + k + 1]) k++;
+    ctx.rect(i * T2, j * T2, (k - i + 1) * T2, T2); dark++; i = k;
+  } else lit++;
+  if (dark) { ctx.fillStyle = ambient || th.ambient; ctx.fill(); }
+  if (lit) {
+    ctx.save(); ctx.beginPath();
+    for (let j = 0; j < LM_TILES.ny; j++) for (let i = 0; i < LM_TILES.nx; i++) if (mark[j * LM_TILES.nx + i]) {
+      let k = i; while (k + 1 < LM_TILES.nx && mark[j * LM_TILES.nx + k + 1]) k++;
+      ctx.rect(i * T2, j * T2, (k - i + 1) * T2, T2); i = k;
+    }
+    ctx.clip(); ctx.imageSmoothingEnabled = QUALITY.cfg.lmSmooth;
+    ctx.drawImage(LM.c, 0, 0, RW, RH);
+    ctx.restore(); ctx.globalCompositeOperation = 'multiply';
+  }
+  LIGHT_STATS.litTiles = lit;
   perfMark('lights.mul');
   // additive halos — the "fake light" glow
   ctx.globalCompositeOperation = 'lighter';
-  for (const [vx, vy, L] of vis) {
+  if (QUALITY.cfg.halos) for (const [vx, vy, L] of vis) {
     const d = Math.max(1, Math.round(L.r * 1.1));
     ctx.globalAlpha = clamp(L.a * 0.32 * fc, 0, 1); ctx.drawImage(lightSized(L.col, d), Math.round(vx - d / 2), Math.round(vy - d / 2));
   }
@@ -1413,6 +1541,9 @@ function applyLighting(ctx, lights, th, ambient) {
 }
 
 function applyBloom(ctx, strength) {
+  const mode = QUALITY.cfg.bloom; if (mode === 'off' || strength <= 0) return;
+  // phone ('half'): the glow is re-extracted from the scene every other frame (BH holds the last one; §26.4 frame-skip)
+  if (mode === 'half' && (CHUNK.frame & 1) && BH.ok) { bloomBlit(ctx, BH.c, strength, false); return; }
   const w = RW / 4, h = RH / 4;
   B1.x.imageSmoothingEnabled = true; B1.x.globalCompositeOperation = 'source-over'; B1.x.clearRect(0, 0, w, h); B1.x.drawImage(SCN.c, 0, 0, w, h);
   // bright-pass: v^4 via self-multiplication (no ctx.filter dependency)
@@ -1426,7 +1557,12 @@ function applyBloom(ctx, strength) {
   BC.x.globalAlpha = 0.4; BC.x.drawImage(BT.c, 0, 0);
   BC.x.globalCompositeOperation = 'lighter'; BC.x.globalAlpha = 0.6; BC.x.drawImage(B2.c, 0, 0, w, h);
   BC.x.globalAlpha = 1; BC.x.globalCompositeOperation = 'source-over';
-  ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true;
-  ctx.globalAlpha = strength; ctx.drawImage(BC.c, 0, 0, RW, RH);
+  let src = BC.c;
+  if (mode === 'half') { BH.x.imageSmoothingEnabled = true; BH.x.clearRect(0, 0, RW / 2, RH / 2); BH.x.drawImage(BC.c, 0, 0, RW / 2, RH / 2); src = BH.c; BH.ok = true; }
+  bloomBlit(ctx, src, strength, mode === 'full');
+}
+function bloomBlit(ctx, src, strength, smooth) {
+  ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = smooth;
+  ctx.globalAlpha = strength; ctx.drawImage(src, 0, 0, RW, RH);
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
 }

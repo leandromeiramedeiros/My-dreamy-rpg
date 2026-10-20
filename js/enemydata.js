@@ -142,7 +142,7 @@ var BOSS_DATA = {
   // more aggression (windMul 1.0 -> 0.85 -> 0.7, cdMul = shorter gaps). Fairness floors: js/bosses.js bossFairness.
   mossjaw: {
     name: 'Mossjaw', sprite: 'mossjaw', kind: 'mini', level: 5, zone: 'rootHollow',
-    type: 'beast', el: 'nature', hp: 8250, lengthSec: [60, 90], staggerMax: 4,   // 8560 -> 6000 (QA M1) -> 8250 (M3 step 2: v2 gear + implicits; every family 60-90 s on reference gear, balsim)
+    type: 'beast', el: 'nature', hp: 10000, lengthSec: [60, 90], staggerMax: 4,   // 8560 -> 6000 (QA M1) -> 8250 (M3 step 2) -> 10000 (§26.2 after the howl was tamed: reference 60-90 s holds; -1 tier 3-4/6 at the L8 arrival)
     res: { nature: 0.5, fire: -0.5 },        // weak fire, resists nature (STORY.md)
     bars: true, transition: 1.5,             // 2 bars (mini-boss)
     moveDefs: {
