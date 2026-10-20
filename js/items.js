@@ -62,8 +62,8 @@ function baseStats(b) {
 
 // ===== affixes + uniques =========================================================
 // value at item level L = (a + b*L) * roll(0.6..1)
-const AFFIX = { hp: [25, 6], mp: [15, 3], def: [0.02, 0.002], power: [0.03, 0.004], crit: [0.02, 0.0015], haste: [0.03, 0.003],
-  regen: [1, 0.25], mpRegen: [0.8, 0.15], speed: [0.1, 0.01], critDmg: [0.08, 0.007], cdr: [0.02, 0.002], skillDmg: [0.04, 0.004] };
+const AFFIX = { hp: [25, 6], mp: [15, 3], def: [0.02, 0.002], power: [0.045, 0.004], crit: [0.02, 0.0015], haste: [0.03, 0.003],
+  regen: [1, 0.25], mpRegen: [0.8, 0.15], speed: [0.1, 0.01], critDmg: [0.1, 0.007], cdr: [0.02, 0.002], skillDmg: [0.04, 0.004] };
 for (const el of RES_ELS) AFFIX[resKey(el)] = 'res';   // resistance affixes roll 10-20%, not by level; resAll is legendary-only
 const STAT_NAME = { dmg: 'Damage', hp: 'HP', mp: 'MP', def: 'Armour', power: 'Damage', crit: 'Crit chance', haste: 'Attack speed', regen: 'HP/s',
   mpRegen: 'MP/s', speed: 'Move speed', critDmg: 'Crit damage', cdr: 'Cooldowns', skillDmg: 'Skill damage', resAll: 'All res' };
