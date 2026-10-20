@@ -117,8 +117,10 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
   2. pixel FX prototype: DONE and APPROVED by the client (tools/fx-board.html; js/elfx.js)
   3. QA full bot run
   4. ship M3 (PR #4)
-  5. docs/organisation meeting with the expert game director; apply its ruling
-  6. RESUME.md resume kit, then pause until Friday
+  5. Wind-as-a-force meeting (expert environmental & gameplay systems designer): ambient wind pushes/pulls trees and small objects; wind spells push/pull them harder
+  6. Lighting meeting (expert lighting director): dynamic lights, shadows, rim light; bloom and additive light that stays cohesive and not washed out; keep/improve/remove godrays and volumetrics; lit status effects on enemies and hero (burning blooms and emits light)
+  7. docs/organisation meeting with the expert game director, which also folds meetings 5–6 back into spells and the whole game (spells cast light and wind, etc.); apply its ruling
+  8. RESUME.md resume kit, then pause until Friday
 * Done: the elements meeting (§33) and the element VFX language (§32); both are scheduled into M4a/M4b/M5
 
 ## Status snapshot (M2b shipped)

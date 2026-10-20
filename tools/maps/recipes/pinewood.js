@@ -102,15 +102,15 @@ module.exports = zone({
   // root-stair lands beside it); the vantage looks over the Clearing road and the forest; the drop from the 10 lands on the gate road.
   // Signature moment: the forest and the Clearing's road seen from the summit (camera: the summit, facing east).
   stacks: {
-    hawk: { land: true, levels: [4, 7, 10, 13, 16, 10], r: [5.6, 5.2, 3.9, 2.9, 2.1, 2.0], centres: [[70.6, 36], [69.5, 36], [69, 35.6], [68.6, 35], [68.3, 34.6], [74.2, 37.8]], over: [1, 5], rough: 0.08, bare: [4], sparse: { 1: 0.25, 2: 0, 3: 0, 5: 0 } },
+    hawk: { land: true, levels: [4, 16, 13, 10], r: [5.9, 4.4, 1.7, 2.3], centres: [[70, 37], [68.8, 37.2], [73.1, 36.6], [73.6, 39.6]], over: [1, 2, 3], rough: 0.2, bare: [1], sparse: { 2: 0, 3: 0 } },
   },
   switchbacks: {
     hawkApproach: { from: { path: 'main', near: [56, 46] }, w: 2, pts: [[58, 41.6, 4], [59.2, 38.6, 5.4]] },
-    hawkUp: { w: 2, pts: [[64.6, 38.4, 7], [65.6, 40.3, 7, 0.4], [72.6, 40.4, 10, 0.3], [74, 39.6, 10, 0.3], [73.2, 38.6, 10, 0.3], [68.6, 38.6, 13, 0.3], [68.2, 37.8, 13]] },
+    hawkUp: { w: 1.8, pts: [[64.6, 38.8, 6], [65.8, 40.9, 6, 0.3], [72.6, 41.1, 10, 0.4], [74, 40.2, 10, 0.4], [72.8, 39.2, 10.3, 0.2], [66.4, 39.1, 14.2, 0.2], [65.4, 37.4, 16, 0.3], [66.6, 36.6, 16]] },
   },
   bridges: [{ x: 9, y: 32, axis: 'y', len: 5, w: 2, lvl: 4 }, { x: 60, y: 37, axis: 'x', len: 4, w: 3, lvl: 6, span: true }],
-  climbs: { hawk_roots: { x: 68.4, y: 37.3, to: { x: 68.4, y: 36.2 } } },
-  drops: { hawk_drop: { rect: [76, 35, 78, 40] } },
+  drops: { hawk_drop: { rect: [75, 37, 78, 42] } },
+  setPiece: { hawk: { pine: [67.4, 34.6], boulders: [[64.6, 41.6], [74.8, 42.2], [76.4, 40.8]] } },
   vantage: { id: 'hawks_rest', at: [68.3, 34.6], r: 1.9, reveal: 34, title: 'Hawk\'s Rest', sub: 'The Clearing road, and something big asleep at its end', pip: ['From up here it\'s small. It isn\'t.'] },
   ledgeHints: [{ id: 'hawk_ledge', name: 'The gate road below', at: [75, 38.2], pip: ['The road to the Clearing is right below. Jump, Aerin.'] }],
   portals: {

@@ -72,7 +72,7 @@ module.exports = {
     // the 9 a promontory over the garden, the 14 the Stone's Crown. 4 -> 9: a two-leg switchback on the 9's east face (seen from the
     // terrace); 9 -> 14: a root ladder on the Crown's south face; 9 -> 0: a drop-down into the garden (the shortcut home).
     // Signature moment: the first look over the cloud sea from the Crown (camera: the Crown, facing south).
-    g.stack('cairn', { levels: [4, 9, 14], r: [7.2, 5, 2.8], centres: [[55.6, 15], [49.5, 16.5], [47, 18]], over: [1, 2], rough: 0.12, bare: [2], sparse: { 1: 0.22 } });
+    g.stack('cairn', { levels: [4, 9, 14], r: [7.2, 5, 2.8], centres: [[55.6, 15], [49.5, 16.5], [47, 18]], over: [1, 2], rough: 0.16, bare: [2], sparse: { 1: 0.22 }, floor: [null, null, 'x'] });   // the Crown: old flagstones
     g.lobe(47.2, 24, 3.8, 0); g.room('cairnLawn', { kind: 'flat', x: 48.6, y: 23.4, r: 2.9, lvl: 0, side: true });   // the garden's east lawn: the drop's landing
     g.switchback('cairnUp', { w: 2, pts: [[57.4, 21.6, 4], [56.6, 17.4, 5.2, 0.3], [56.4, 13.4, 6.6, 0.6], [55, 12.4, 6.6, 0.4], [54.1, 14.2, 7, 0.3], [54, 18.4, 9, 0.5], [52.4, 18.6, 9]] });
   },

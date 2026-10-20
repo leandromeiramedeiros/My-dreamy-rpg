@@ -320,7 +320,7 @@ class MapGen {
   // switchback(id, o): a climbing path of `legs` with 180-degree turns (minutes §3.1.3). o = { from (as path), pts: [[x, y, lvl, hold], ...]
   //   (the leg ends and turn landings), w }. No meander: the legs follow the control points; _pathsPass's Lipschitz profile + _stairs
   //   emit the ramps and 's' tiles. Its own RNG stream (side), so the rest of the map rolls as before.
-  switchback(id, o) { return this.path(id, Object.assign({ kind: 'branch', w: 2, meander: 0, every: 99, step: 0.4, side: true, stack: true }, o)); }
+  switchback(id, o) { return this.path(id, Object.assign({ kind: 'branch', w: 2, meander: 0, every: 99, step: 0.4, side: true, stack: true, stairs: false }, o)); }
   // climb(id, o): a root ladder up a wall (minutes §3.1.4): Interact at either end = a 0.6 s climb (game.js startClimb). o = { x, y (the foot,
   //   on the low side, in front of a S / E facing wall), to: { x, y } (the top) }. Emitted as a root_ladder object pair.
   climb(id, o) { const c = Object.assign({ id }, o); this.climbs.push(c); return c; }
@@ -658,6 +658,12 @@ class MapGen {
         this.h[y][x] = s.levels[k]; this.zone[y][x] |= ZONE.stack | (s.bare.includes(k) ? ZONE.bare : 0);
         if (s.floor[k]) this.type[y][x] = s.floor[k];
         (this.stackK || (this.stackK = grid(W, H, -1)))[y][x] = k;
+      }
+      // the apron: no tree / rock within 3 tiles in front (+x / +y) of the stack's walls, so its faces read from the road
+      for (let y = Math.max(0, Math.floor(r0.y - R)); y <= Math.min(H - 1, r0.y + R + 4); y++) for (let x = Math.max(0, Math.floor(r0.x - R)); x <= Math.min(W - 1, r0.x + R + 4); x++) {
+        if (!this.land[y][x]) continue;
+        let wall = false; for (let b = 0; b <= 3 && !wall; b++) for (let a = 0; a <= 3 && !wall; a++) { const yy = y - b, xx = x - a; if ((a || b) && yy >= 0 && xx >= 0 && (this.zone[yy][xx] & ZONE.stack) && this.h[yy][xx] >= this.h[y][x] + 3) wall = true; }
+        if (wall) this.zone[y][x] |= ZONE.bare;
       }
     }
     // corridors (owner path decides height and tile type)
@@ -1082,6 +1088,10 @@ class MapGen {
     if (Object.keys(this.anchors).length) m.anchors = Object.values(this.anchors).map(a => Object.assign({}, a));
     if (this.drops.length) m.drops = this.drops.map(d => [d.rect[0], d.rect[1], d.rect[2] - d.rect[0], d.rect[3] - d.rect[1]]);   // §29 G3 maps.js walkable
     if (this.spans.length) m.spans = this.spans.map(r => r.slice());   // §29 G3 log bridges with nothing under them
+    if (this.stacks.length) {   // §29 G3 the stack's tiles show rock faces (maps.js rasterColumn): rows of [x0, y, length] runs
+      const runs = []; for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) { if (!(this.zone[y][x] & ZONE.stack) || !this.land[y][x]) continue; let n = 1; while (x + n < this.W && (this.zone[y][x + n] & ZONE.stack) && this.land[y][x + n]) n++; runs.push([x, y, n]); x += n - 1; }
+      m.rock = runs;
+    }
     if (this.levelAreas && this.levelAreas.length) m.levelAreas = this.levelAreas.map(z => Object.assign({}, z));   // §26.2 pockets: items.js enemyLevel
     m.triggers = this.triggers;
     return m;

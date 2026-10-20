@@ -1102,7 +1102,7 @@ function heroOccluders(m, p, list, hkey) {
     if (it.kind !== 'column' || it.key <= hkey || !it.img) continue;
     const cx = it.sx - camX + RW / 2, cy = it.sy - camY + RH / 2;
     if (cx > x1 || cx + 32 < x0 || cy > y1 - 4 || cy + it.img.height < y0) continue;
-    const h = m.h[Math.floor(it.y)][Math.floor(it.x)]; if (h <= p.z + 1) continue;
+    const h = m.h[Math.floor(it.y)][Math.floor(it.x)]; if (h < p.z + 3) continue;   // a wall of 3+ levels (18 px) hides half the hero
     it._cut = CHUNK.frame; if (++OCC.n >= OCC.max) break;
   }
   return OCC.n > 0;

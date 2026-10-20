@@ -111,6 +111,11 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
     return mode;
   };
   const dist2 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  // §29 G3: hold movement keys (screen directions) for ms, then report where the hero is
+  const walkKeys = async (keys, ms) => { for (const k of keys) await page.keyboard.down(k); await wait(ms); for (const k of keys) await page.keyboard.up(k); await wait(250); return ev(() => ({ x: G.player.x, y: G.player.y, z: G.player.z, h: tileH(G.map, G.player.x, G.player.y), fall: !!G.player.fall })); };
+  const vantageDone = () => wf(() => !G.vantage, null, 8000);
+  // a root ladder by id: Interact at its end (the engine's use.fn), then wait for the 0.6 s climb
+  const climbLadder = async id => { const r = await ev(id => { const o = G.map.objects.find(q => q.ladder && q.src.id === id); if (!o) return null; window.__tp(o.x, o.y); const z0 = G.player.z; o.use.fn(o); return { z0, text: o.use.text(o), climbing: !!G.player.climb }; }, id); await wf(() => !G.player.climb, null, 3000); await wait(200); return r && Object.assign(r, await ev(() => ({ z1: G.player.z, x: G.player.x, y: G.player.y }))); };
 
   // =================================================================== THE VALE (80x80)
   check('vale: 80x80, level band [1,3]', await ev(() => G.map.id === 'vale' && G.map.W === 80 && G.map.H === 80 && JSON.stringify(G.world.maps.vale.level) === '[1,3]'));
@@ -199,6 +204,19 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('vale: the fallen-tree gate opens once its key (Act IV) is held', mo && mo.open, mo); await dropKey('key_act4');
   check('vale: Moon Pond beat (night fishing, section moon)', await goto('moon_pond') && (await secOf()) === 'moon'); await shot('vale_moon_pond');
   check('vale: Dream Arena islet beat (section arena)', await goto('arena_islet') && (await secOf()) === 'arena'); await shot('vale_dream_arena');
+  // ---- §29 G3 the Dreamer's Cairn: root ladder 9 -> 14, the Stone's Crown vantage (fog lifts, the cinematic runs), the drop home
+  const lad = await climbLadder('cairn_roots');
+  check('vale (§29 G3): the root ladder climbs the Crown (9 -> 14 in ~0.6 s, Interact "Climb")', lad && lad.climbing && lad.text === 'Climb' && Math.abs(lad.z0 - 9) < 0.2 && Math.abs(lad.z1 - 14) < 0.2, lad);
+  const fog0 = await ev(() => G.map.mini ? G.map.mini.vis.reduce((a, b) => a + b, 0) : 0);
+  check('vale (§29 G3): the Stone\'s Crown starts the vantage reveal', await goto('crown') && await ev(() => !!G.vantage && G.vantage.id === 'crown')); await wait(1700); await shot('vale_crown_vantage');
+  await vantageDone();
+  const fog1 = await ev(() => G.map.mini ? G.map.mini.vis.reduce((a, b) => a + b, 0) : 0);
+  check('vale (§29 G3): the reveal lifts the fog of war over the Vale (>= 600 new tiles) and ends by itself', fog1 - fog0 >= 600 && await ev(() => !G.vantage), { fog0, fog1 });
+  const down = await climbLadder('cairn_roots_top');
+  check('vale (§29 G3): the root ladder climbs back down (14 -> 9)', down && down.text === 'Climb down' && Math.abs(down.z1 - 9) < 0.2, down);
+  check('vale (§29 G3): Pip at the garden ledge', await goto('cairn_ledge'));
+  const drop = await walkKeys(['a', 's'], 900);
+  check('vale (§29 G3): walking off the 9 ledge drops into the garden lawn (lands at 0), and the wall is one-way', drop.h === 0 && !drop.fall && Math.abs(drop.z) < 0.1 && drop.y > 20.9 && await ev(([x, y]) => !walkable(G.map, x, y - 1.2, 0), [drop.x, drop.y]), drop);
   // shrine-to-shrine warp: both shrines discovered, refused while an enemy is awake
   check('vale: rift terrace shrine fires; both shrines are discovered', await goto('shrine_terrace') && await wf(() => ((G.prog.shrines || {}).vale || []).includes('shrine_terrace'), null, 3000));
   await goto('shrine'); await ev(() => { G.prog.shrines.vale = ['shrine_start', 'shrine_terrace']; });
@@ -387,6 +405,12 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('hollow: the root-stair (warp door) leaves the Hollow up to shrine 3 (' + exitMode + ')', (await secOf()) === 'forest' && await ev(() => { const o = G.map.objects.find(q => q.shrineId === 'shrine3'); return Math.hypot(G.player.x - o.x, G.player.y - o.y) < 3.5; }));
   check('hollow: arriving at shrine 3 re-attunes it (the checkpoint follows the hero out of the Hollow)', await wf(() => { const o = G.map.objects.find(q => q.shrineId === 'shrine3'); return G.checkpoint && Math.hypot(G.checkpoint.x - o.x, G.checkpoint.y - o.y) < 2.6; }, null, 5000) && await fired('shrine3'));
 
+  // ---- §29 G3 Hawk's Rest: shrine 3 and the vantage on the summit (the root-stair lands there), the drop from the 10 onto the gate road
+  check('pinewood (§29 G3): shrine 3 stands on Hawk\'s Rest summit (h 16) and the vantage ran on arrival', await ev(() => { const o = G.map.objects.find(q => q.shrineId === 'shrine3'); return tileH(G.map, o.x, o.y) === 16; }) && await fired('hawks_rest'));
+  await vantageDone();
+  check('pinewood (§29 G3): Pip on the 10 ledge above the gate road', await goto('hawk_ledge'));
+  const hdrop = await walkKeys(['d', 's'], 900);
+  check('pinewood (§29 G3): walking off the 10 ledge drops onto the gate road (lands at 4)', hdrop.h === 4 && !hdrop.fall && Math.abs(hdrop.z - 4) < 0.1 && hdrop.x > 75, hdrop); await shot('pinewood_hawk_drop');
   // =================================================================== BRAMBLEHORN'S CLEARING (inline arena)
   await wait(300); await ev(() => window.__hero());
   check('clearing: the arena hint at the gate fires; arena_gate is open for good after Mossjaw', await goto('arena_hint') && await ev(() => gateOpen(G.map, 'arena_gate')));

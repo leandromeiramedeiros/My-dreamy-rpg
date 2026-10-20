@@ -310,6 +310,10 @@ function populate(S, g, T) {
     tr.push(T.enter(V.id, V.title, vx, vy, V.r || 2, [T.vantage(V.id, V.reveal || 30, { title: V.title, sub: V.sub || '' }), ...(V.pip ? [T.dialogue('Pip', V.pip)] : [])]));
     g.poi('landmark', vx, vy);
   }
+  for (const sp of Object.values(S.setPiece || {})) {   // the summit's lone giant pine (the hawk's perch) and boulders at the foot
+    if (sp.pine) g.addObj('pine_giant', sp.pine[0], sp.pine[1], { v: 1, force: true, sp: 2.5 });
+    for (const [x, y] of sp.boulders || []) if (g.walkTile(x, y)) g.addObj('rock_dark', x, y, { v: 0, force: true, sp: 0.9 });
+  }
   for (const L of S.ledgeHints || []) tr.push(T.enter(L.id, L.name, L.at[0], L.at[1], L.r || 1.6, [T.dialogue('Pip', L.pip)]));
 
   // ============================================================== scatter (per section) + density fill

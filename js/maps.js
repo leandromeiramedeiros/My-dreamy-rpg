@@ -728,7 +728,7 @@ function rasterColumn(m, i, j) {
   const W = 32;
   const ox = isoX(i, j) - 16, oy = isoY(i, j, h);
   const pillar = t === 'pillar';
-  const faceRamp = (t === 's' || t === 'x' || t === 'r' || pillar) ? th.stone : th.earth;
+  const faceRamp = (t === 's' || t === 'x' || t === 'r' || pillar || (m.rockAt && m.rockAt[j * m.W + i])) ? th.stone : th.earth;   // §29 G3: a stack's faces are rock
   const topT = pillar ? 'x' : t;
   // visible face depth per side: down to the lower neighbour's top when that neighbour is itself a column (drawn after this one)
   const vis = (nx, ny) => { const hn = isSpan(m, nx, ny) ? 0 : hAt(m, nx, ny); return hn > 0 && hn < h && m.type[ny][nx] !== 'pillar' ? (h - hn) * ZS : hn >= h && m.type[ny][nx] !== 'pillar' ? 0 : hz; };
@@ -1028,6 +1028,7 @@ function* buildMapStages(id, d) {
   // §29 G3: drop-down landings (walkable) and log spans (no ground under them)
   if (d.drops && d.drops.length) { m.dropIn = new Uint8Array(d.W * d.H); for (const [x0, y0, w, h] of d.drops) for (let y = Math.max(0, y0); y < Math.min(d.H, y0 + h); y++) for (let x = Math.max(0, x0); x < Math.min(d.W, x0 + w); x++) m.dropIn[y * d.W + x] = 1; }
   if (d.spans && d.spans.length) { m.spans = d.spans.map(r => r.slice()); m.span = new Uint8Array(d.W * d.H); for (const [x0, y0, w, h] of d.spans) for (let y = Math.max(0, y0); y < Math.min(d.H, y0 + h); y++) for (let x = Math.max(0, x0); x < Math.min(d.W, x0 + w); x++) m.span[y * d.W + x] = 1; }
+  if (d.rock && d.rock.length) { m.rockAt = new Uint8Array(d.W * d.H); for (const [x0, y, n] of d.rock) for (let x = x0; x < Math.min(d.W, x0 + n); x++) m.rockAt[y * d.W + x] = 1; }
   m.cx = d.sigil ? d.sigil.x : d.W / 2; m.cy = d.sigil ? d.sigil.y : d.H / 2;
   m.start = { x: d.start.x, y: d.start.y };
   // a portal may name its arrival point: to: { map, x, y } or arrive: { x, y } (else the target map's start)
