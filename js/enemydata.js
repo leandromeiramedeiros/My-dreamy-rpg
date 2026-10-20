@@ -35,7 +35,7 @@ var ENEMY_DATA = {
 
   // ---- Pinewood (L3-10, mid L6.5) -----------------------------------------------------------
   gloomslime: {
-    name: 'Gloom Slime', sprite: 'slime', look: 'slime', hp: 390, speed: 2.2, dmg: 32, el: 'gloom', dmgType: 'gloom', stagger: 2,
+    name: 'Gloom Slime', sprite: 'slime', look: 'slime', hp: 355, speed: 2.2, dmg: 32, el: 'gloom', dmgType: 'gloom', stagger: 2,
     res: { slash: -0.5, pierce: 0.5 },
     tags: ['amorphous'],
     parts: ['chase', 'brute', 'split'],
@@ -44,7 +44,7 @@ var ENEMY_DATA = {
   },
   // Child spawned by Gloom Slime split: ~1 s to kill, no XP of its own.
   gloomslime_small: {
-    name: 'Gloom Slime (small)', sprite: 'slime', look: 'slime', scale: 0.7, r: 0.28, hgt: 1.3, hp: 115, speed: 2.6, dmg: 20, el: 'gloom', dmgType: 'gloom', stagger: 1,
+    name: 'Gloom Slime (small)', sprite: 'slime', look: 'slime', scale: 0.7, r: 0.28, hgt: 1.3, hp: 100, speed: 2.6, dmg: 20, el: 'gloom', dmgType: 'gloom', stagger: 1,
     res: { slash: -0.5, pierce: 0.5 },
     tags: ['amorphous', 'child'],
     parts: ['chase', 'brute'],
@@ -52,7 +52,7 @@ var ENEMY_DATA = {
     xp: 0, loot: null
   },
   shadehound: {
-    name: 'Shade Hound', sprite: 'hound', look: 'hound', hp: 365, speed: 3.4, dmg: 48, el: 'gloom', dmgType: 'slash', stagger: 1,
+    name: 'Shade Hound', sprite: 'hound', look: 'hound', hp: 320, speed: 3.4, dmg: 48, el: 'gloom', dmgType: 'slash', stagger: 1,
     res: { arcane: 0.5, holy: -0.5 },
     tags: ['beast'],
     parts: ['charge'],
@@ -60,7 +60,7 @@ var ENEMY_DATA = {
     xp: 0.12, loot: 'common_pinewood'
   },
   brambleshaman: {
-    name: 'Bramble Shaman', sprite: 'shaman', look: 'ogre', scale: 0.8, hp: 440, speed: 1.8, dmg: 24, el: 'nature', dmgType: 'nature', stagger: 1,
+    name: 'Bramble Shaman', sprite: 'shaman', look: 'ogre', scale: 0.8, hp: 380, speed: 1.8, dmg: 24, el: 'nature', dmgType: 'nature', stagger: 1,
     res: { nature: 0.5, fire: -0.5 },
     tags: ['caster', 'support'],
     parts: ['kite', 'zone-caster', 'healer'],
@@ -81,7 +81,7 @@ var ENEMY_DATA = {
     xp: 0.2, loot: 'common_pinewood'
   },
   thornbackboar: {
-    name: 'Thornback Boar', sprite: 'boar', look: 'hound', scale: 1.25, hp: 380, speed: 2.6, dmg: 56, el: 'nature', dmgType: 'pierce', stagger: 3,
+    name: 'Thornback Boar', sprite: 'boar', look: 'hound', scale: 1.25, hp: 375, speed: 2.6, dmg: 56, el: 'nature', dmgType: 'pierce', stagger: 3,
     res: { slash: 0.5, pierce: 0, nature: 0.5, fire: -0.5 },
     tags: ['beast', 'armoured'],
     parts: ['burrow', 'brute'],
@@ -90,7 +90,7 @@ var ENEMY_DATA = {
   },
   // Sleeper: appears in Root Hollow only (§21.1, §21.4: sleepers appear once per map, after a shrine).
   mountaintroll: {
-    name: 'Mountain Troll', sprite: 'troll', hp: 370, speed: 1.4, dmg: 88, el: 'none', dmgType: 'slash', stagger: 4,
+    name: 'Mountain Troll', sprite: 'troll', hp: 375, speed: 1.4, dmg: 88, el: 'none', dmgType: 'slash', stagger: 4,
     res: { slash: 0.5, pierce: 0.5, frost: -0.5 },
     tags: ['brute', 'sleeper'],
     parts: ['sleep', 'brute'],
@@ -134,11 +134,11 @@ var ENCOUNTERS = {
 //
 // HP formula (DESIGN §20.3): hp = lengthSec * refDPS(L) * uptime, then L1 base = that / enemyHpMul(L), with refDPS
 //   = tools/balsim.js's measured rotation DPS against the boss (geometric mean of the three weapon families):
-//   Mossjaw L5, 72 s, uptime 0.7 -> 9260 · Bramblehorn L8, 170 s, uptime 0.6 -> 23630 (enemyHpMul = 1.09^(L-1)).
+//   Mossjaw L5, 72 s, uptime 0.7 -> 8560 · Bramblehorn L8, 170 s, uptime 0.6 -> 21470 (enemyHpMul = 1.09^(L-1)).
 var BOSS_DATA = {
   mossjaw: {
     name: 'Mossjaw', sprite: 'mossjaw', kind: 'mini', level: 5, zone: 'rootHollow',
-    type: 'beast', el: 'nature', hp: 9260, lengthSec: [60, 90], staggerMax: 4,
+    type: 'beast', el: 'nature', hp: 8560, lengthSec: [60, 90], staggerMax: 4,
     res: { nature: 0.5, fire: -0.5 },        // weak fire, resists nature (STORY.md)
     moveDefs: {
       lunge:   { type: 'line', len: 6, wind: 0.6, open: 1.2, stagger: 1 },
@@ -154,7 +154,7 @@ var BOSS_DATA = {
   },
   bramblehorn: {
     name: 'Old Bramblehorn', sprite: 'bramblehorn', kind: 'guardian', level: 8, zone: 'pinewood',
-    type: 'beast', el: 'nature', hp: 23630, lengthSec: [150, 240], staggerMax: 5,
+    type: 'beast', el: 'nature', hp: 21470, lengthSec: [150, 240], staggerMax: 5,
     res: { nature: 0.5, fire: -0.5 },        // STORY.md gives no weak/resist for Bramblehorn; assumed to match the beast-nature type
     moveDefs: {
       stomp:     { type: 'circle', r: 3, at: 'self', wind: 0.9, open: 1.5, stagger: 1 },
