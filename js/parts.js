@@ -96,9 +96,9 @@ const BUILTIN_ROWS = {
     el: 'nature', dmgType: 'slash', stagger: 0, res: { fire: -0.5, pierce: 0.5 }, tags: ['beast'],
     parts: ['chase', 'brute'], params: { brute: { shape: 'circle', r: 2.4, range: 2, wind: 1, cd: 2.4 } } },
   // Bramblehorn's phase-2 add (STORY.md): a rooted thorn turret; Wildfire is the counter
-  sapling: { name: 'Sapling', look: 'ogre', scale: 0.55, hp: 260, r: 0.3, speed: 0, dmg: 22, hgt: 1.6, blood: '#7ac060', xp: 0.03,
+  sapling: { name: 'Sapling', look: 'ogre', scale: 0.55, hp: 170, r: 0.3, speed: 0, dmg: 15,   // hp 260 -> 170, dmg 22 -> 15, cd 2.6 -> 3.2 (QA B2: 6 card saplings + summons out-chipped an under-geared hero) hgt: 1.6, blood: '#7ac060', xp: 0.03,
     el: 'nature', dmgType: 'pierce', stagger: 1, res: { fire: -0.5, nature: 0.5 }, tags: ['plant', 'child'],
-    parts: ['stationary', 'shoot'], params: { shoot: { range: 7, wind: 0.8, cd: 2.6, speed: 6, col: '#a6f08a' } } },
+    parts: ['stationary', 'shoot'], params: { shoot: { range: 7, wind: 0.8, cd: 3.2, speed: 6, col: '#a6f08a', tele: true } } },   // tele: its wind-up shows (QA m6 read it as idle)
   dummy: { name: 'Training dummy', ai: 'dummy', hp: 9999, r: 0.35, speed: 0, dmg: 0, hgt: 3, blood: '#e7c9a0', parts: [] },
 };
 // generator / STORY names -> ENEMY_DATA ids (only applied when the alias target exists and the name itself does not)
@@ -300,9 +300,11 @@ const PARTS = {
     } },
   shoot: { cat: 'attack', def: { range: 6, wind: 0.6, cd: 2.1, speed: 5.5, r: 0.35, life: 2.5, n: 1, spread: 0.25, rec: 0.3, col: '#9ef0ff' },
     ready: (e, P, c) => c.d < P.range,
-    begin: (e, P) => P.wind,
+    // tele: true = a thin aim line during the wind-up (turrets like the sapling read as idle without it)
+    // and the shot then flies along the line shown (an honest telegraph: stepping off it dodges it), like sniper
+    begin(e, P, c) { if (P.tele) { e.aimA = c.ang; tele({ kind: 'line', x: e.x, y: e.y, ang: c.ang, len: Math.min(P.range, c.d + 1), w: 0.3, life: P.wind, col: P.col }); } return P.wind; },
     fire(e, P, c) {
-      const a0 = Math.atan2(c.p.y - e.y, c.p.x - e.x);
+      const a0 = P.tele && e.aimA != null ? e.aimA : Math.atan2(c.p.y - e.y, c.p.x - e.x);
       for (let k = 0; k < P.n; k++) spawnProj({ x: e.x, y: e.y, z: 2.2, ang: a0 + (k - (P.n - 1) / 2) * P.spread, speed: P.speed, r: P.r, dmg: e.def.dmg * e.dm * enemyDmgK(e), el: e.el, life: P.life, kind: 'orb', col: P.col, friendly: false, src: e });
       sfx('arcane'); return null;
     } },

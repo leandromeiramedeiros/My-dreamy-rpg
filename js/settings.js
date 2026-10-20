@@ -13,7 +13,7 @@
 //                                 'dreamy.settings.v1' so they hold on the title screen and across New Dream)
 //   onSettingsChange(fn)          fn(key, value) after every change
 //   Getters used by the game:  sfxVol() musicVol() shakeMul() hitstopOn() flashCap() damageNumbersOn()
-//     damageTakenMul() (Story 0.6, Normal 1) aimAssistCone() (radians half-angle; off 0 / low 6° / high 10° = the
+//     damageTakenMul() (Story 0.6, Normal 1) bossHitCap() (max share of max HP per telegraphed boss hit: Story 0.30, Normal 0.45) aimAssistCone() (radians half-angle; off 0 / low 6° / high 10° = the
 //     20° cone) attackToggle() textPx() (body px 14/18/22) moveDeadzone() aimDeadzone()
 // ---------------------------------------------------------------------------
 const SETTINGS_SCHEMA = [
@@ -78,6 +78,8 @@ const hitstopOn = () => SETTINGS.hitstop;
 const flashCap = () => SETTINGS.flashReduce ? 0.5 : 1;                     // render.js: bloom + light flash multiplier
 const damageNumbersOn = () => SETTINGS.damageNumbers;
 const damageTakenMul = () => SETTINGS.difficulty === 'story' ? 0.6 : 1;
+// DESIGN §20.3 "one mistake never kills": no single telegraphed boss hit takes more than this share of the hero's ACTUAL max HP
+const bossHitCap = () => SETTINGS.difficulty === 'story' ? 0.30 : 0.45;
 const aimAssistCone = () => ({ off: 0, low: 6, high: 10 }[SETTINGS.aimAssist] || 0) * Math.PI / 180;
 const attackToggle = () => SETTINGS.attackMode === 'toggle';
 const textPx = () => ({ S: 14, M: 18, L: 22 }[SETTINGS.textSize] || 18);

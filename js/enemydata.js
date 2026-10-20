@@ -138,12 +138,12 @@ var ENCOUNTERS = {
 var BOSS_DATA = {
   mossjaw: {
     name: 'Mossjaw', sprite: 'mossjaw', kind: 'mini', level: 5, zone: 'rootHollow',
-    type: 'beast', el: 'nature', hp: 8560, lengthSec: [60, 90], staggerMax: 4,
+    type: 'beast', el: 'nature', hp: 6000, lengthSec: [60, 90], staggerMax: 4,   // 8560 -> 6000 (QA M1: an under-geared melee hero must kill it within 90 s, balsim live)
     res: { nature: 0.5, fire: -0.5 },        // weak fire, resists nature (STORY.md)
     moveDefs: {
-      lunge:   { type: 'line', len: 6, wind: 0.6, open: 1.2, stagger: 1 },
+      lunge:   { type: 'line', len: 6, wind: 0.75, open: 1.2, stagger: 1 },   // wind 0.6 -> 0.75 (QA M1: a 0.3 s reaction + 1.1-tile sidestep must fit)
       rootSpit:{ type: 'rain', count: 3, r: 1.2, at: 'player', wind: 0.8, open: 1.0 },
-      burrow:  { type: 'vanish', dur: 1.5, then: { type: 'circle', r: 2, at: 'self' }, wind: 0.8, open: 1.2 },
+      burrow:  { type: 'vanish', dur: 1.5, then: { type: 'circle', r: 1.6, at: 'self' }, wind: 1.0, open: 1.2 },   // r 2 / wind 0.8 -> 1.6 / 1.0: it surfaces under the hero, who must be able to walk out (balsim live)
       howl:    { type: 'summon', kind: 'shadehound', n: 2, wind: 0.8, open: 1.0 }  // phase-2 move (director ruling): teaches target priority
     },
     phases: [
@@ -154,7 +154,7 @@ var BOSS_DATA = {
   },
   bramblehorn: {
     name: 'Old Bramblehorn', sprite: 'bramblehorn', kind: 'guardian', level: 8, zone: 'pinewood',
-    type: 'beast', el: 'nature', hp: 21470, lengthSec: [150, 240], staggerMax: 5,
+    type: 'beast', el: 'nature', hp: 17200, lengthSec: [150, 240], staggerMax: 5,   // 21470 -> 17200 (QA B2: within 240 s under-geared, balsim live)
     res: { nature: 0.5, fire: -0.5 },        // STORY.md gives no weak/resist for Bramblehorn; assumed to match the beast-nature type
     moveDefs: {
       stomp:     { type: 'circle', r: 3, at: 'self', wind: 0.9, open: 1.5, stagger: 1 },
@@ -166,7 +166,7 @@ var BOSS_DATA = {
     phases: [
       { hpBelow: 1.0, moves: { stomp: 3, rootGrab: 2, trunkSwipe: 2 }, onEnter: [] },
       { hpBelow: 0.5, moves: { stomp: 2, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1 },
-        onEnter: [{ type: 'arenaShrink', pattern: 'roots_inward' }, { type: 'roar', banner: 'The roots wake', dur: 1.2 }] }
+        onEnter: [{ type: 'arenaShrink', pattern: 'roots_inward', k: 0.75, rMin: 5.5 }, { type: 'roar', banner: 'The roots wake', dur: 1.2 }] }   // ring >= 5.5 tiles: room to walk out of a 3-tile stomp, and the card's saplings (<= 5.4 from the centre) stay inside
     ],
     xp: 1, loot: 'root_crown'
   }

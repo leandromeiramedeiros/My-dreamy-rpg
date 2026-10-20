@@ -112,7 +112,7 @@ function installHooks() {
     let wk = null; try { wk = item('weapon', p.gear.weapon).kind; } catch (e) { /* */ }
     o.p = { x: +p.x.toFixed(2), y: +p.y.toFixed(2), z: p.z, hp: Math.round(p.hp), maxHp: Math.round(p.maxHp), mp: Math.round(p.mp), maxMp: Math.round(p.maxMp), pot: p.potions, lvl: p.level, xp: Math.round(p.xp), dead: p.dead, ult: Math.round(p.ult), dash: !!p.dash, rootT: p.rootT, slowT: p.slowT, invul: p.invulnT > 0, aim: p.aim, wk, wid: p.gear.weapon, st: Math.round(p.st), castT: p.castT, casting: !!p.cast, bag: p.bag.filter(Boolean).length, dust: p.dust };
     o.sk = {}; for (const s of ['q', 'e', 'r', 'f', 'c', 'shift', '1', '2', '3']) { try { const id = slotSkill(p, s); if (id) o.sk[s] = { id, cd: +((p.cds[id] || 0)).toFixed(2), mp: Math.round((SKILLS[id].mp || 0)), st: SKILLS[id].st || 0 }; } catch (e) { /* */ } }
-    o.en = G.enemies.filter(e => !e.dead).map(e => ({ type: e.type, x: +e.x.toFixed(2), y: +e.y.toFixed(2), hp: Math.round(e.hp), max: Math.round(e.maxHp), boss: !!e.boss, dummy: !!e.dummy, asleep: !!e.asleep, spawnT: +(e.spawnT || 0).toFixed(2), r: e.r, elite: !!(e.mods && e.mods.length), state: e.state, lvl: e.lvl, stun: e.stunT > 0 }));
+    o.en = G.enemies.filter(e => !e.dead).map(e => ({ type: e.type, x: +e.x.toFixed(2), y: +e.y.toFixed(2), hp: Math.round(e.hp), max: Math.round(e.maxHp), boss: !!e.boss, dummy: !!e.dummy, asleep: !!e.asleep, spawnT: +(e.spawnT || 0).toFixed(2), r: e.r, elite: !!(e.mods && e.mods.length), state: e.state, lvl: e.lvl, stun: e.stunT > 0, still: e.move === 'stationary' }));
     o.boss = G.boss && !G.boss.dead ? { type: G.boss.type, hp: Math.round(G.boss.hp), max: Math.round(G.boss.maxHp), phase: G.boss.phaseN || 0, x: +G.boss.x.toFixed(2), y: +G.boss.y.toFixed(2), lvl: G.boss.lvl, state: G.boss.state } : null;
     o.warn = G.lastWarn ? { boss: G.lastWarn.boss, move: G.lastWarn.move, type: G.lastWarn.type, wind: G.lastWarn.wind, open: G.lastWarn.open, t: G.lastWarn.t } : null;
     o.tele = G.effects.filter(f => f.type === 'tele').map(f => ({ kind: f.kind, x: +f.x.toFixed(2), y: +f.y.toFixed(2), r: f.r, ang: f.ang, arc: f.arc, len: f.len, w: f.w, t: +f.t.toFixed(2), life: f.life }));
@@ -228,7 +228,7 @@ class Bot {
     this.eh = this.eh || {};
     const now = Date.now();
     for (const e of s.en) {
-      if (e.dummy || e.asleep || e.spawnT > 0 || e.boss) continue;
+      if (e.dummy || e.asleep || e.spawnT > 0 || e.boss || e.still) continue;   // turrets (move: stationary) never move by design
       const k = e.type + '@' + Math.round(e.x * 2) + ',' + Math.round(e.y * 2), d = Math.hypot(e.x - s.p.x, e.y - s.p.y);
       const h = this.eh[e.type + e.lvl + '|' + s.map];
       if (!h || Math.hypot(h.x - e.x, h.y - e.y) > 0.15) this.eh[e.type + e.lvl + '|' + s.map] = { x: e.x, y: e.y, t: now };

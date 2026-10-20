@@ -474,6 +474,7 @@ function setCheckpoint(x, y, label) {
   p.potions = MAX_POTIONS;
   say(`${label || 'Checkpoint'} — potions refilled`); sfx('heal'); fx({ type: 'ring', x, y, r: 1.4, col: '#9ef0ff', life: 0.5 }); saveGame();
 }
+const INTERACT_R = 2.5, LOOT_NEAR = [];
 function updateLoot(dt) {
   const p = G.player; if (!p || p.dead || G.state !== 'play') return;
   for (const d of G.drops) {
@@ -486,8 +487,12 @@ function updateLoot(dt) {
   G.drops = G.drops.filter(d => !d.done);
   // chests, shrines and lore tablets wait for the Interact action (Space / A / the touch context button);
   // pickups above stay automatic. G.prompt = the nearest one in reach, for the HUD prompt and interact().
+  // perf: only the objects in the spatial-grid buckets around the hero (maps.js gridQuery), not every prop of the map;
+  // INTERACT_R covers the largest reach (keydoor 1.8)
   let best = null, bd = 9;
-  for (const o of G.map.objects) {
+  LOOT_NEAR.length = 0;
+  const near = typeof gridQuery === 'function' ? gridQuery(G.map, 'objs', p.x - INTERACT_R, p.y - INTERACT_R, p.x + INTERACT_R, p.y + INTERACT_R, LOOT_NEAR) : G.map.objects;
+  for (const o of near) {
     // o.use = { kind, reach, on(o), text(o), fn(o) }: map-engine interactables (maps.js: keydoor, lever, fishspot)
     const kind = o.chest && !o.opened ? 'chest' : o.checkpoint ? 'shrine' : o.tablet ? 'tablet' : o.use && o.use.on(o) ? o.use.kind : null; if (!kind) continue;
     const d = dist(p.x, p.y, o.x, o.y), reach = o.use && kind === o.use.kind ? o.use.reach : kind === 'chest' ? 1.3 : kind === 'shrine' ? 1.4 : 1.5;
@@ -557,7 +562,7 @@ function saveData() {
     player: { level: p.level, xp: Math.floor(p.xp), equip: p.equip, bag: p.bag, dust: p.dust, potions: p.potions, tool: p.tool || null, uid: UID },
     skills: { byId, runes: p.runes || [], tomes: p.tomes || [], wsk: p.wsk, csk: p.csk },
     world: { map: G.map.id, checkpoint: G.checkpoint, trig: G.prog.trig, chests: G.prog.chests, secrets: G.prog.secrets || {}, gates: G.prog.gates || {},
-      fog: fogSaveData(), sections: G.prog.sections || {}, shrines: G.prog.shrines || {} },
+      fog: fogSaveData(), sections: G.prog.sections || {}, shrines: G.prog.shrines || {}, once: G.prog.once || {}, obj: G.prog.obj || {} },
     bosses, bestiary: seenOut, fishing: G.prog.fishing || {}, quests: G.prog.quests || {}, zone100: G.prog.zone100 || {},
     settings: typeof settingsData === 'function' ? settingsData() : {},
     bindings: typeof IN !== 'undefined' ? IN.getBindings() : null,
@@ -594,8 +599,9 @@ function migrate(s) {
       bosses, bestiary, fishing: {}, quests: {}, zone100: {}, settings: null, bindings: null, stats: { playtime: 0, deaths: 0 },
     };
   }
-  // v3 plus (§25 big maps, no version bump): world.fog / world.sections / world.shrines default to empty
-  if (s.version === SAVE_VERSION && s.world && typeof s.world === 'object') for (const k of ['fog', 'sections', 'shrines']) if (!s.world[k] || typeof s.world[k] !== 'object') s.world[k] = {};
+  // v3 plus (§25 big maps, no version bump): world.fog / world.sections / world.shrines / world.once (once-per-save banners,
+  // dialogue) / world.obj (the objective log, game.js) default to empty
+  if (s.version === SAVE_VERSION && s.world && typeof s.world === 'object') for (const k of ['fog', 'sections', 'shrines', 'once', 'obj']) if (!s.world[k] || typeof s.world[k] !== 'object') s.world[k] = {};
   return s.version === SAVE_VERSION ? s : null;
 }
 // ===== fog of war in the save: world.fog[mapId] = 'WxH:' + base64 of the explored-tile bitfield (1 bit per tile,
@@ -645,7 +651,7 @@ function applySave(p, s) {
   const firsts = {}; for (const k in s.bosses || {}) if (s.bosses[k] && s.bosses[k].firstKill) firsts[k] = true;
   G.prog = { chests: W.chests || {}, firsts, trig: W.trig || {}, secrets: W.secrets || {}, gates: W.gates || {},
     fishing: s.fishing || {}, quests: s.quests || {}, zone100: s.zone100 || {},
-    fog: W.fog || {}, sections: W.sections || {}, shrines: W.shrines || {} };
+    fog: W.fog || {}, sections: W.sections || {}, shrines: W.shrines || {}, once: W.once || {}, obj: W.obj || {} };
   for (const id in G.maps) if (G.maps[id]) G.maps[id].mini = null;   // minimaps re-seed their fog from the loaded save
   G.seen = {};
   for (const k in s.bestiary || {}) { const b = s.bestiary[k] || {}; G.seen[k] = { kills: +b.kills || 0, res: b.res || {}, reactions: b.reactions || {} }; }

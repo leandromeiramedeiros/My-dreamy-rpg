@@ -192,10 +192,16 @@ function surfaceColor(m, t, wx, wy, px, py) {
 const SLAB = 12;
 function groundPrep(m) {
   if (m.gp) return m.gp;
+  const g = groundPrepGen(m); while (!g.next().done);
+  return m.gp;
+}
+// the same, yielding after every tile row (a portal preload time-slices it, main.js preloadStep)
+function* groundPrepGen(m) {
+  if (m.gp) return;
   const th = m.theme, minSX = -m.H * 16, W = (m.W + m.H) * 16, GB = (m.W + m.H) * 8;
   const H = GB + SLAB + th.underDepth + 60;
   const top = new Int32Array(W).fill(-1), edge = new Int32Array(W).fill(-1);
-  for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) {
+  for (let j = 0; j < m.H; j++, yield) for (let i = 0; i < m.W; i++) {
     if (!m.type[j][i]) continue;
     const cx = (i - j) * 16 - minSX, a = Math.max(0, cx - 17), b = Math.min(W - 1, cx + 17);
     for (let px = a; px <= b; px++) {
@@ -226,7 +232,7 @@ function groundPrep(m) {
   }
   for (const s of m.crystalSpots) m.lights.push({ sx: s.px + minSX, sy: s.py + 8, r: 46, col: m.themeId === 'ruins' ? '#b36bff' : '#7fd2ff', a: 0.75 });
   m.gox = minSX; m.goy = 0;
-  return (m.gp = { W, H, GB, minSX, top, edge, len, bot, root });
+  m.gp = { W, H, GB, minSX, top, edge, len, bot, root };
 }
 const isGutter = (m, x, y) => !!(m.gutter && x >= 0 && y >= 0 && x < m.W && y < m.H && m.gutter[y * m.W + x]);
 // a gutter pixel: 'v' = a chasm whose north lip shows a cliff face, 'k' = darkness
@@ -375,9 +381,14 @@ function chunkEvict(cur) {
 // cheap 1/4-res stand-in drawn under chunks that are still in the queue (flat tile colours, slab, underside)
 function groundPreview(m) {
   if (m.preview) return m.preview;
+  const g = groundPreviewGen(m); while (!g.next().done);
+  return m.preview;
+}
+function* groundPreviewGen(m) {   // yields every 8 preview rows (main.js preloadStep)
+  if (m.preview) return;
   const g = groundPrep(m), th = m.theme, Q = 4, w = Math.ceil(g.W / Q), h = Math.ceil(g.H / Q), img = new ImageData(w, h), d = img.data;
   const pal = { g: th.grass[3], f: th.grass[4], d: th.grass[1], p: th.path[2], w: th.water[3], b: th.wood[2], s: th.stone[2], x: th.stone[2], r: th.stone[1], pillar: th.stone[3] };
-  for (let qy = 0; qy < h; qy++) for (let qx = 0; qx < w; qx++) {
+  for (let qy = 0; qy < h; qy++, qy % 8 || (yield)) for (let qx = 0; qx < w; qx++) {
     const px = qx * Q + 2, py = qy * Q + 2; if (px >= g.W) continue;
     const e = g.edge[px]; if (e < 0 || py < g.top[px]) continue;
     let c = null;
@@ -388,7 +399,7 @@ function groundPreview(m) {
     const i = (qy * w + qx) * 4; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255;
   }
   const { c, x } = makeCanvas(w, h); x.putImageData(img, 0, 0);
-  return (m.preview = c);
+  m.preview = c;
 }
 // chunk index under a world-screen point (sx, sy)
 function chunkAt(m, sx, sy) { const cg = chunkGrid(m), g = m.gp; return clamp(Math.floor((sx - g.minSX) / cg.S), 0, cg.nx - 1) + clamp(Math.floor(sy / cg.S), 0, cg.ny - 1) * cg.nx; }
@@ -590,7 +601,18 @@ const TILE_TYPES = {
 };
 const THEME_OF = {};   // map id -> theme id (for portal colours)
 
+// buildMapStages: the same build as a generator that yields between its heavy steps (parse + props / finalizeMap's
+// ground prep / anchors + section centres, each <= ~30 ms on Pinewood) so main.js preloadStep can spread a map load
+// over the portal fade-in frames. buildMapFromData runs it to the end and rasters the start chunk (boot, the editor).
 function buildMapFromData(id, d) {
+  const g = buildMapStages(id, d); let r; while (!(r = g.next()).done);
+  const m = r.value;
+  // the start chunk is rastered now (behind the loading screen); a portal load spreads it over the fade (main.js preloadStep)
+  // and the low-res stand-in for chunks still streaming is made now too (~40 ms on Pinewood: never in a play frame)
+  if (!(typeof window !== 'undefined' && window.EDITOR_MODE)) { ensureChunkAt(m, m.start.x, m.start.y); groundPreview(m); }
+  return m;
+}
+function* buildMapStages(id, d) {
   const m = newMap(d.W, d.H, THEMES[d.theme] || THEMES.vale);
   m.id = id; m.themeId = THEMES[d.theme] ? d.theme : 'vale';
   m.name = d.name || id; m.sub = d.sub || ''; m.objective = d.objective || '';
@@ -613,11 +635,12 @@ function buildMapFromData(id, d) {
   });
   buildSections(m, d);
   placeObjects(m, d);
+  yield 'objects';
+  if (!(typeof window !== 'undefined' && window.EDITOR_MODE)) yield* groundPrepGen(m);   // finalizeMap then finds m.gp
   finalizeMap(m);
+  yield 'ground';
   buildAnchors(m, d);
   sectionCentres(m);
-  // the start chunk is rastered now (behind the loading screen / the portal fade); the rest streams in (render.js)
-  if (!(typeof window !== 'undefined' && window.EDITOR_MODE)) ensureChunkAt(m, m.start.x, m.start.y);
   return m;
 }
 // ===== sections, anchors ========================================================================================

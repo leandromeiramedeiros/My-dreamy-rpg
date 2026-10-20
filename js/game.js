@@ -567,11 +567,13 @@ function playerActions(p, dt) {
   if (IN.pressed('interact')) interact(p);
 }
 // el = damage type of the hit (§5b); the hero's resist applies on top of defence (arcane ignores half of it)
-function hurtPlayer(dmg, srcX, srcY, el = 'slash') {
+// o.boss: a telegraphed boss hit (bosses.js bossHit): hard-capped at bossHitCap() of the hero's max HP (§20.3)
+function hurtPlayer(dmg, srcX, srcY, el = 'slash', o) {
   const p = G.player;
   if (p.dead || p.invulnT > 0 || (p.dash && p.dash.opt.invuln) || G.state !== 'play') return false;
   const r = (p.res && p.res[el]) || 0;
   let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1) * (typeof damageTakenMul === 'function' ? damageTakenMul() : 1);
+  if (o && o.boss) d = Math.min(d, p.maxHp * (typeof bossHitCap === 'function' ? bossHitCap() : 0.45));
   p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2;
   text(p.x, p.y, p.z + 3, Math.round(d), '#ff5a7a');
   shake(4); sfx('hurt');
@@ -989,11 +991,59 @@ function startTriggers() {
   G.shrink = null; G.talk = [];
   triggerBuckets(m);
   if (typeof syncGates === 'function') syncGates(m);
+  OBJ_REPLAY = objectiveLog(m.id).length ? 'skip' : 'seed';   // a save from before the log: seed it from the settled cards
   for (const tr of m.triggers) if (settled.includes(tr.id)) {
     G.trig.fired[tr.id] = true; G.trig.at[tr.id] = 0;
-    for (const a of tr.actions || []) if (LASTING_ACTIONS[a.type]) runAction(a);
+    TRIG_SRC = tr.id;
+    try { for (const a of tr.actions || []) if (LASTING_ACTIONS[a.type]) runAction(a); } finally { TRIG_SRC = null; }
   }
+  OBJ_REPLAY = null;
+  setObjective();   // death / re-entry: the tracker comes from the saved objective log, not the cards' array order
 }
+// ===== retries: once-per-save presentation, and the objective from progress (QA m1 / m2) =====================
+// G.prog.once['zone:<map>' | 'dlg:<id>' | 'dlg:<map>:<card>' | 'banner:<map>:<card>'] = 1: zone banners (main.js
+// enterMap), trigger dialogue (boss intros, hints) and boss / map_enter banners play once per save, so a retry after a
+// death does not replay them. Saved as world.once.
+function onceSeen(key) { const S = G.prog.once || (G.prog.once = {}); if (S[key]) return true; S[key] = 1; return false; }
+let TRIG_CARD = null;   // the card whose actions are running (fireTrigger), for the once-per-save keys
+// G.prog.obj[map] = [{ id: setter card, text, done }] in fire order (saved as world.obj). An entry is CLOSED when a
+// completion card (all_enemies_dead / enemy_killed) that transitively `requires` its setter fires, unless the setter is
+// itself a completion card (its line is the "what next" after a fight). currentObjective() = the newest open entry,
+// else the active main quest step of this zone, else the map's own line. Recomputed (setObjective) on map entry /
+// respawn, on every objective action and whenever a completion card fires (a section cleared).
+let OBJ_REPLAY = null;
+const COMPLETION_WHEN = { all_enemies_dead: 1, enemy_killed: 1 };
+function objectiveLog(mid) { const O = G.prog.obj || (G.prog.obj = {}); return O[mid] || (O[mid] = []); }
+function recordObjective(text) {
+  if (OBJ_REPLAY === 'skip' || !G.map) return;
+  const L = objectiveLog(G.map.id), id = TRIG_SRC || null;
+  if (id) { const i = L.findIndex(e => e.id === id); if (i >= 0) L.splice(i, 1); }
+  L.push({ id, text: text || '' });
+  if (L.length > 48) L.shift();
+}
+function closeObjectives(tr) {
+  const m = G.map, L = objectiveLog(m.id); if (!L.length || !(tr.requires || []).length) return;
+  const req = new Set(), stack = (tr.requires || []).slice();
+  while (stack.length) { const id = stack.pop(); if (req.has(id)) continue; req.add(id); const t = m.triggers.find(q => q.id === id); if (t) stack.push(...(t.requires || [])); }
+  for (const e of L) if (e.id && req.has(e.id)) { const t = m.triggers.find(q => q.id === e.id); if (!t || !COMPLETION_WHEN[(t.when || {}).type]) e.done = true; }
+}
+function questObjective(mid) {
+  if (typeof QUESTS === 'undefined') return '';
+  const Q = G.prog.quests || {};
+  for (const d of QUESTS) { const st = Q[d.id]; if (d.main && d.zone === mid && st && st !== 'done' && d.steps && d.steps[st.step]) return d.steps[st.step]; }
+  return '';
+}
+function currentObjective() {
+  const m = G.map; if (!m || !G.prog) return G.objective || '';
+  if (G.objective !== G._objAuto) return G.objective || '';   // written directly (a scene, a test): show that
+  return objectiveFromProgress(m);
+}
+function objectiveFromProgress(m) {
+  const L = (G.prog.obj || {})[m.id] || [];
+  for (let i = L.length - 1; i >= 0; i--) if (!L[i].done) return L[i].text;
+  return L.length ? questObjective(m.id) || m.objective || '' : m.objective || questObjective(m.id) || '';
+}
+function setObjective() { if (!G.map || !G.prog) return; G.objective = G._objAuto = objectiveFromProgress(G.map); }
 function settleTriggers() {
   const T = G.trig, m = G.map;
   if (G.pendingSpawns || G.enemies.some(enemyAwake)) return;
@@ -1063,11 +1113,19 @@ function triggerCondition(tr) {
 function fireTrigger(tr) {
   const T = G.trig; T.fired[tr.id] = true; T.at[tr.id] = T.t;
   let d = 0;
-  const run = a => { const was = TRIG_SRC; TRIG_SRC = tr.id; try { runAction(a); } finally { TRIG_SRC = was; } };
+  if (COMPLETION_WHEN[(tr.when || {}).type]) closeObjectives(tr);   // a section / fight cleared: its objective closes
+  const run = a => { const was = TRIG_SRC, wc = TRIG_CARD; TRIG_SRC = tr.id; TRIG_CARD = tr; try { runAction(a); } finally { TRIG_SRC = was; TRIG_CARD = wc; } };
   for (const a of tr.actions || []) {
     if (a.type === 'wait') { d += +a.seconds || 0; continue; }
     if (d > 0) { G.pendingSpawns++; delay(d, () => { G.pendingSpawns--; run(a); }); } else run(a);
   }
+  setObjective();
+}
+// once-per-save keys for a card's banner / dialogue (null = always plays: repeating cards, NPC talk outside triggers)
+function onceKey(kind, a) {
+  const tr = TRIG_CARD; if (!tr || tr.once === false || !G.map) return null;
+  if (kind === 'dlg') return a.id ? 'dlg:' + a.id : `dlg:${G.map.id}:${tr.id}`;
+  return a.boss || (tr.when || {}).type === 'map_enter' ? `banner:${G.map.id}:${tr.id}:${a.title || ''}` : null;
 }
 // spawns made by trigger cards carry the card id (e.trig) and the running arena (e.arena)
 function tagSpawn(e, src) { if (e && src) e.trig = src; return e; }
@@ -1081,15 +1139,16 @@ function runAction(a) {
       break;
     }
     case 'spawn_boss': G.boss = tagSpawn(spawnEnemy('boss', a.x != null && a.x !== '' ? +a.x : m.cx + 1.5, a.y != null && a.y !== '' ? +a.y : m.cy - 1.5, 1.6), TRIG_SRC); break;
-    case 'banner': G.banner = { s: a.title || '', sub: a.sub || '', t: a.boss ? 3.4 : 2.6, max: a.boss ? 3.4 : 2.6, boss: !!a.boss }; if (a.boss) { sfx('roar'); shake(6); } break;
+    case 'banner': { const k = onceKey('banner', a); if (k && onceSeen(k)) break; }
+      G.banner = { s: a.title || '', sub: a.sub || '', t: a.boss ? 3.4 : 2.6, max: a.boss ? 3.4 : 2.6, boss: !!a.boss }; if (a.boss) { sfx('roar'); shake(6); } break;
     case 'message': say(a.text || ''); break;
-    case 'objective': G.objective = a.text || ''; break;
+    case 'objective': recordObjective(a.text); if (!OBJ_REPLAY) setObjective(); break;
     case 'heal': healPlayer(p, p.maxHp * (+a.pct || 0) / 100); break;
     case 'open_portal': case 'close_portal': {
       const byId = a.id != null && a.id !== '';
       m.portals.forEach((pt, i) => { if (byId ? pt.id === a.id : (a.index == null || a.index === '' || +a.index === -1 || +a.index === i)) pt.open = a.type === 'open_portal'; }); break;
     }
-    case 'dialogue': talk(a); break;
+    case 'dialogue': { const k = onceKey('dlg', a); if (k && onceSeen(k)) break; talk(a); break; }
     case 'openGate': if (typeof openGate === 'function') openGate(a.id, true); if (G.arena && !G.arena.done && G.arena.gates.includes(a.id)) { G.arena.done = true; G.arena = null; } break;   // won: the fight is over
     case 'closeGate': if (typeof closeGate === 'function') closeGate(a.id); break;
     case 'warp': startWarp(a.to != null ? a.to : { x: a.x, y: a.y }); break;

@@ -708,14 +708,14 @@ const PAD_STUB = () => {
     for (const [ax, ay] of DIRS8) {
       await ev(([X, Y]) => { const p = G.player; G.enemies.length = 0; p.x = X; p.y = Y; p.z = tileH(G.map, X, Y); p.dash = null; p.rootT = 0; p.stuckT = 0; p.unstuck = 0; }, [X, Y]);
       await ev(a => window.__axes([a[0], a[1], 0, 0]), [ax, ay]);
-      let maxDH = 0;
-      for (let k = 0; k < 6; k++) { await wait(100); maxDH = Math.max(maxDH, await ev(h0 => Math.abs(tileH(G.map, G.player.x, G.player.y) - h0), await ev(([X, Y]) => tileH(G.map, X, Y), [X, Y]))); }
+      await wait(600);
       await ev(() => window.__axes([0, 0, 0, 0])); await wait(80);
-      const q = await ev(([X, Y]) => ({ d: +Math.hypot(G.player.x - X, G.player.y - Y).toFixed(2), un: G.player.unstuck || 0 }), [X, Y]);
-      res.push({ d: q.d, maxDH, un: q.un });
+      const q = await ev(([X, Y]) => ({ d: +Math.hypot(G.player.x - X, G.player.y - Y).toFixed(2), tx: Math.floor(G.player.x), un: G.player.unstuck || 0 }), [X, Y]);
+      res.push(q);
     }
-    const out = res.filter(r => r.d > 0.3).length;
-    check(`B1 wedge (${X}, ${Y}) Pinewood stairs: the hero walks out (>= 5 of 8 directions), no direction climbs 2 heights`, out >= 5 && res.every(r => r.maxDH <= 1), res.map(r => r.d));
+    // stick (0.7, 0.7) = world +x: from both spots that is the tile across a 2-height edge (spot 1 climbs 0 -> 2, spot 2 drops 2 -> 0)
+    const out = res.filter(r => r.d > 0.3).length, across = res[5];
+    check(`B1 wedge (${X}, ${Y}) Pinewood stairs: the hero walks out (>= 5 of 8 directions) and still cannot cross the 2-height edge`, out >= 5 && across.tx === Math.floor(X) && res.every(r => r.un === 0), res.map(r => r.d));
   }
   // unstick safety: a hero shut inside a blocked tile (nothing can move it) is nudged to the nearest free tile after ~1.5 s of input
   const uns = await ev(async () => {
@@ -732,6 +732,37 @@ const PAD_STUB = () => {
     window.__axes([0.7, 0.7, 0, 0]); await w(2200); window.__axes([0, 0, 0, 0]); await w(80); return { un: p.unstuck, x: +p.x.toFixed(2) };
   });
   check('unstick: holding into a wall for 2 s does not teleport the hero', wall.un === 0 && wall.x < 33, wall);
+  // retries (QA m1 / m2): after a death the objective comes from progress, not from the cards' array order; boss intro
+  // dialogue and zone banners play once per save; clearing the Fox Warrens closes its "sneak past" line
+  const rt = await ev(async () => {
+    const w = ms => new Promise(r => setTimeout(r, ms)), m = G.map, card = id => m.triggers.find(t => t.id === id), out = {}, talks = [];
+    const tk = window.talk; window.talk = a => { talks.push(a.id || 'inline'); return tk(a); };
+    const keep = { prog: G.prog, cp: G.checkpoint }; G.prog = { chests: {}, firsts: {}, trig: {}, quests: {} };
+    G.player.invulnT = 999;
+    for (const id of ['h_intro', 'h_r1_done', 'h_r2_done', 'h_boss']) fireTrigger(card(id));
+    out.boss = currentObjective(); G.enemies.length = 0; await w(50);
+    G.checkpoint = { map: 'pinewood', x: 23.5, y: 6.5 }; G.banner = null; respawn(); G.player.invulnT = 999; G.enemies.length = 0;
+    out.afterDeath = currentObjective(); out.zoneBanner = G.banner && G.banner.s;
+    fireTrigger(card('boss')); out.talk1 = talks.filter(t => t === 'boss_bramblehorn_intro').length; G.enemies.length = 0;
+    respawn(); G.player.invulnT = 999; G.enemies.length = 0; G.banner = null;
+    out.bramble = currentObjective(); fireTrigger(card('boss')); out.talk2 = talks.filter(t => t === 'boss_bramblehorn_intro').length; out.bossBanner2 = G.banner && G.banner.s; G.enemies.length = 0;
+    fireTrigger(card('w_enter')); out.sneak = currentObjective(); G.enemies.length = 0;
+    for (const id of ['w_hall', 'w_vault', 'w_done']) { fireTrigger(card(id)); G.enemies.length = 0; }
+    out.afterVault = currentObjective(); out.saved = !!(saveData().world.obj.pinewood && saveData().world.once);
+    window.talk = tk; G.prog = keep.prog; G.checkpoint = keep.cp; G.delays.length = 0; G.talk = []; G.pendingSpawns = 0;
+    return out;
+  });
+  check('retries: objective recomputed after a death (Mossjaw, Bramblehorn) and after the Warrens vault; boss intro + zone banner once per save', /Mossjaw/.test(rt.boss) && rt.afterDeath === rt.boss && !rt.zoneBanner && rt.talk1 === 1 && rt.talk2 === 1 && !rt.bossBanner2 && /Bramblehorn/.test(rt.bramble) && /[Ss]neak/.test(rt.sneak) && !/[Ss]neak/.test(rt.afterVault) && rt.saved, rt);
+  // boss damage fairness (§20.3 / QA M1): a telegraphed boss hit never takes more than 45 % of max HP (Story 30 %); roar warns first
+  const cap = await ev(() => {
+    const p = G.player, r = {}; p.invulnT = 0; p.dash = null;
+    for (const diff of ['normal', 'story']) { setSetting('difficulty', diff); p.hp = p.maxHp; p.invulnT = 0; hurtPlayer(1e5, p.x, p.y, 'nature', { boss: true }); r[diff] = +(1 - p.hp / p.maxHp).toFixed(3); }
+    setSetting('difficulty', 'normal'); p.hp = p.maxHp; p.invulnT = 0; hurtPlayer(1e5, p.x, p.y, 'nature'); r.plain = p.dead; p.dead = false; G.state = 'play'; p.hp = p.maxHp; p.invulnT = 999;
+    const b = spawnEnemy('bramblehorn', p.x + 3, p.y, 0); startMove(b, { type: 'roar', banner: 'x', dur: 0.4 }); r.roarWind = G.lastWarn.wind; r.roarTele = G.effects.some(e => e.type === 'tele' && e.src === b);
+    r.fair = bossFairness('bramblehorn').length + bossFairness('mossjaw').length; G.enemies.length = 0; G.boss = null; G.effects.length = 0;
+    return r;
+  });
+  check('boss hit cap: 45 % of max HP (Story 30 %), uncapped for other damage; roar has a wind-up + telegraph; Mossjaw / Bramblehorn pass bossFairness', cap.normal <= 0.451 && cap.normal >= 0.44 && cap.story <= 0.301 && cap.plain === true && cap.roarWind >= 0.6 && cap.roarTele && cap.fair === 0, cap);
   await ev(() => { G.enemies.length = 0; G.boss = null; enterMap('vale'); G.state = 'play'; G.player.invulnT = 0; });
   // save slots: slot 1 = the legacy key, slots 2-3 beside it, an index for the title
   const slots = await ev(() => {

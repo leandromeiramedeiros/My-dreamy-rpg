@@ -21,21 +21,27 @@ let camX = 0, camY = 0;
 const worldToView = (x, y, z = 0) => [isoX(x, y) - camX + RW / 2, isoY(x, y, z) - camY + RH / 2];
 const sToView = (sx, sy) => [sx - camX + RW / 2, sy - camY + RH / 2];
 
-function prepTheme(m) {
+// the backdrop of a theme, one part per prepThemeStep call (each <= ~40 ms; every builder seeds its own noise, so
+// the result is the same whether it is built in one go at boot or over the frames of a portal fade, main.js preloadStep)
+const THEME_PARTS = {
+  sky: th => buildSky(th),
+  far: (th, jag) => buildMountains(th, th.seed, th.mtnFar[0], th.mtnFar[1], th.mtnFar[2], 110, jag),
+  near: (th, jag) => buildMountains(th, th.seed + 5, th.mtnNear[0], th.mtnNear[1], th.mtnNear[2], 70, jag),
+  clouds: th => [0, 1, 2, 3].map(i => buildCloud(th.seed * 10 + i, 90 + i * 14, 40 + (i % 2) * 10, th.cloud)),
+  sea: th => [0, 1, 2].map(i => buildCloud(th.seed * 20 + i, 150, 46, th.cloud)),
+  fog: th => buildFog(th.seed, th.fog),
+  fog2: th => buildFog(th.seed + 7, th.fog2),
+  islets: th => [0, 1, 2].map(i => buildIslet(th, th.seed * 30 + i, 30 + i * 8)),
+};
+function prepThemeStep(m) {
   const th = m.theme;
-  if (th._bg) return;
-  const jag = m.themeId === 'ruins' ? true : th.pines ? 'pines' : false;
-  th._bg = {
-    sky: buildSky(th),
-    far: buildMountains(th, th.seed, th.mtnFar[0], th.mtnFar[1], th.mtnFar[2], 110, jag),
-    near: buildMountains(th, th.seed + 5, th.mtnNear[0], th.mtnNear[1], th.mtnNear[2], 70, jag),
-    clouds: [0, 1, 2, 3].map(i => buildCloud(th.seed * 10 + i, 90 + i * 14, 40 + (i % 2) * 10, th.cloud)),
-    sea: [0, 1, 2].map(i => buildCloud(th.seed * 20 + i, 150, 46, th.cloud)),
-    fog: buildFog(th.seed, th.fog),
-    fog2: buildFog(th.seed + 7, th.fog2),
-    islets: [0, 1, 2].map(i => buildIslet(th, th.seed * 30 + i, 30 + i * 8)),
-  };
+  if (th._bg) return true;
+  const jag = m.themeId === 'ruins' ? true : th.pines ? 'pines' : false, bg = th._bgPart || (th._bgPart = {});
+  const k = Object.keys(THEME_PARTS).find(k => !(k in bg));
+  if (k) { bg[k] = THEME_PARTS[k](th, jag); return false; }
+  th._bg = bg; delete th._bgPart; return true;
 }
+function prepTheme(m) { while (!prepThemeStep(m)); }
 function buildIslet(th, seed, w) {
   seedRng(seed);
   const h = Math.round(w * 1.2), pb = new PixBuf(w, h);
@@ -121,11 +127,14 @@ function drawGround(ctx, m) {
 // scheduling: groundTick(m, false) before drawGround (the camera chunk synchronously, visible-missing chunks with a large
 // budget so they show this frame); groundTick(m, true) at the end of drawScene = the idle prefetch, which only spends
 // what is left of a ~14 ms scene (at most IDLE_MS) on the ring of chunks around the view.
-const IDLE_MS = PHONE ? 1.5 : 2.5;
+const IDLE_MS = PHONE ? 1.5 : 2.5, CAM_CHUNK_MS = PHONE ? 12 : 16;
+const preloadOwns = job => { try { return !!(PRELOAD && job.m.id === PRELOAD.id); } catch (e) { return false; } };   // main.js PRELOAD
 function groundTick(m, idle, sceneMs = 0) {
   const cg = chunkGrid(m), g = m.gp, S = cg.S, t0 = performance.now();
   const c0 = chunkAt(m, camX, camY);   // the chunk under the camera: always built now (start, respawn, warp arrival)
-  if (!idle && !cg.empty[c0] && !chunkResident(m, c0)) { buildChunkStep(m, c0, Infinity); GROUND_STATS.syncBuilds++; }
+  // perf (QA: 290-450 ms frames on a warp / section arrival): never Infinity; CAM_CHUNK_MS a frame, the low-res
+  // groundPreview fills in for the few frames it takes (under the warp / respawn fade on most arrivals)
+  if (!idle && !cg.empty[c0] && !chunkResident(m, c0)) { buildChunkStep(m, c0, CAM_CHUNK_MS); GROUND_STATS.syncBuilds++; }
   const vx0 = camX - RW / 2 - g.minSX, vy0 = camY - RH / 2, want = [];
   const pre = S * 0.6, ci0 = Math.floor((vx0 - pre) / S), ci1 = Math.floor((vx0 + RW + pre) / S), cj0 = Math.floor((vy0 - pre) / S), cj1 = Math.floor((vy0 + RH + pre) / S);
   let vis = 0, visTotal = 0, ringRes = 0;
@@ -148,7 +157,7 @@ function groundTick(m, idle, sceneMs = 0) {
   const budget = !idle ? (G.fade > 0.3 ? 14 : PHONE ? 6 : 8) : ema > 17.2 ? 0 : clamp(12.5 - spent, 0, IDLE_MS);
   want.sort((a, b) => a.pri - b.pri);
   const keep = new Set(want.map(w => chunkKey(m, w.idx)));
-  for (const [k, job] of CHUNK.jobs) if (!keep.has(k) && (job.m !== m || CHUNK.frame - (job.touch || 0) > 60)) dropChunkJob(k, job);   // stale partial builds
+  for (const [k, job] of CHUNK.jobs) if (!keep.has(k) && !preloadOwns(job) && (job.m !== m || CHUNK.frame - (job.touch || 0) > 60)) dropChunkJob(k, job);   // stale partial builds (a portal preload's own job stays)
   for (const w of want) {
     if (!idle && !w.visible) break;
     if (!w.visible && allowPre-- <= 0) break;

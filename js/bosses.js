@@ -36,7 +36,7 @@
 //   maps type -> recipe when loaded) and records G.lastWarn = { boss, move, type, sfx, t } (tests, captions).
 // ---------------------------------------------------------------------------
 const STAGGER_HIT = 2.5;                 // one heavy hit's stagger points (skills give 2-3)
-const FAIR_WIND = 0.6, FAIR_OPEN = 1.2;
+const FAIR_WIND = 0.6, FAIR_OPEN = 1.2, ROAR_WIND = 0.8;   // a roar's default wind-up (warn sfx + ring tele)
 // reference hero eHP by level (§20.3 table; balsim measures the real hero against it)
 const REF_EHP_TABLE = [[1, 3, 900, 900], [3, 10, 1100, 1900], [10, 17, 1900, 3000], [17, 24, 3000, 4400], [24, 31, 4400, 6200], [31, 38, 6200, 8500]];
 function REF_EHP(L) {
@@ -66,11 +66,11 @@ const BUILTIN_BOSSES = {
 // engine-side defaults for the BOSS_DATA rows (numbers BOSS_DATA leaves out: damage, look, timings)
 const BOSS_FILL = {
   mossjaw: { look: 'hound', scale: 1.9, r: 0.8, hgt: 3.6, speed: 2.2, keep: 1.6, blood: '#7ac060', breakOpen: 1.5, tags: ['beast'], unique: null, rune: true,
-    moves: { lunge: { hit: 'big', dmgPct: 0.6, el: 'slash', w: 0.7, dash: true, cd: 0.6 }, rootSpit: { hit: 'chip', el: 'nature', spread: [0.8, 2.6], cd: 0.6 },
+    moves: { lunge: { hit: 'big', dmgPct: 0.4, el: 'slash', w: 0.7, dash: true, cd: 0.6, why: 'QA M1: 0.6 -> 0.4 x REF_EHP; with the 45 % max-HP cap (bossHitCap) two lunges no longer end a weak-gear hero' }, rootSpit: { hit: 'chip', el: 'nature', spread: [0.8, 2.6], cd: 0.6 },
       burrow: { hit: 'big', el: 'nature', cd: 0.6 }, howl: { cd: 0.8, max: 3 } } },
   bramblehorn: { look: 'troll', scale: 1.35, r: 1.0, hgt: 5.2, speed: 1.5, keep: 2.4, blood: '#9ab06a', breakOpen: 2, tags: ['beast'], unique: 'rootcrown',
-    moves: { stomp: { hit: 'big', el: 'nature', hitstop: 0.06, cd: 0.7 }, rootGrab: { hit: 'chip', el: 'nature', w: 0.6, cd: 0.7 }, trunkSwipe: { hit: 'chip', dmgPct: 0.22, el: 'slash', cd: 0.6 },
-      rootWall: { k: 0.65, dur: 2, wind: 0.8, open: 1.2, cd: 0.6 }, saplings: { kind: 'sapling', max: 3, cd: 0.8 } } },
+    moves: { stomp: { hit: 'big', el: 'nature', hitstop: 0.06, cd: 0.7 }, rootGrab: { hit: 'chip', el: 'nature', w: 0.6, cd: 0.7 }, trunkSwipe: { hit: 'chip', dmgPct: 0.14, el: 'slash', cd: 0.6 },
+      rootWall: { k: 0.75, rMin: 5.5, dur: 2, wind: 0.8, open: 1.2, cd: 0.6 }, saplings: { kind: 'sapling', max: 3, cd: 0.8 } } },
 };
 const BOSSES = {};
 (function buildBosses() {
@@ -168,7 +168,7 @@ function bossBreak(b) {
 }
 // damage of a move hit: absolute (x level multiplier) or a fraction of the reference eHP at the boss level
 const moveDmg = (b, M) => M.dmg != null ? M.dmg * b.dm : (M.dmgPct || HIT_FRAC[M.hit] || 0.1) * REF_EHP(b.lvl);
-const bossHit = (b, M, x, y) => hurtPlayer(moveDmg(b, M), x != null ? x : b.x, y != null ? y : b.y, M.el || b.el);
+const bossHit = (b, M, x, y) => hurtPlayer(moveDmg(b, M), x != null ? x : b.x, y != null ? y : b.y, M.el || b.el, { boss: true });   // capped: bossHitCap()
 const col0 = M => M.col || '#ff3a7a';
 const ghostOf = b => (b.type === 'boss' ? (b.face < 0 ? ART.boss.f : ART.boss.n) : null);
 
@@ -186,7 +186,8 @@ const BOSS_MOVES = {
     start(b, M, s) { const at = M.at === 'player' ? G.player : b; s.x = at.x; s.y = at.y; tele({ kind: 'circle', x: s.x, y: s.y, r: M.r || 3, life: s.wind, col: col0(M) }); },
     update(b, M, s) {
       if (s.step === 0 && s.t > s.wind) {
-        if (M.at !== 'player') { s.x = b.x; s.y = b.y; }
+        // the hit lands where the telegraph was drawn (s.x, s.y from start), not where knockback has since pushed the
+        // boss: an honest telegraph (QA B2: stomps landing beside their circle)
         if (playerIn({ kind: 'circle', x: s.x, y: s.y, r: M.r || 3 })) bossHit(b, M, s.x, s.y);
         fx({ type: 'ring', x: s.x, y: s.y, r: (M.r || 3) + 0.2, col: '#ff7ae0', life: 0.5 }); burst(s.x, s.y, 0.2, 50, [b.blood, '#ff7ae0', '#2a1c38'], 6); shake(12); if (M.hitstop) hitstop(M.hitstop); sfx('boom');
         s.step = 1;
@@ -280,7 +281,11 @@ const BOSS_MOVES = {
       if (s.step === 0 && s.t > (s.wind || 0.6)) {
         s.step = 1;
         const alive = G.enemies.filter(o => o.summoner === b && !o.dead).length, n = Math.max(0, Math.min(M.n || 2, (M.max || 6) - alive));
-        for (let k = 0; k < n; k++) { const a = M.pattern === 'random' ? Math.random() * 6.28 : k / n * 6.28 + 0.4, e = spawnAt(enemyId(M.kind || 'slime'), b.x + Math.cos(a) * (M.r || 3), b.y + Math.sin(a) * (M.r || 3), 0.6); if (e) e.summoner = b; }
+        for (let k = 0; k < n; k++) {
+          const a = M.pattern === 'random' ? Math.random() * 6.28 : k / n * 6.28 + 0.4; let x = b.x + Math.cos(a) * (M.r || 3), y = b.y + Math.sin(a) * (M.r || 3);
+          const A = G.shrink; if (A && A.dmg) { const d = dist(x, y, A.x, A.y), lim = Math.max(1, A.r - 1.2); if (d > lim) { x = A.x + (x - A.x) / d * lim; y = A.y + (y - A.y) / d * lim; } }   // adds land inside the root ring, where the hero can reach them
+          const e = spawnAt(enemyId(M.kind || 'slime'), x, y, 0.6); if (e) e.summoner = b;
+        }
         sfx('roar');
       }
       return s.t > (s.wind || 0.6) + s.open;
@@ -302,8 +307,12 @@ const BOSS_MOVES = {
     } },
   arenaShrink: {
     start(b, M, s) {
-      const m = G.map, A = G.shrink || (G.shrink = { x: m.cx, y: m.cy, r: M.r0 || 7.5, dmg: 0 });
+      // centred on the running inline arena (G.arena, game.js startArena), else the map's sigil. QA B2: Pinewood's sigil is
+      // Mossjaw's den, 58 tiles from Bramblehorn's arena, so the ring sat far away and every phase-2 second ticked the hero
+      const m = G.map, ar = G.arena && !G.arena.done && G.arena.map === m.id ? G.arena : null;
+      const A = G.shrink || (G.shrink = ar ? { x: ar.x, y: ar.y, r: M.r0 || ar.r || 7.5, dmg: 0 } : { x: m.cx, y: m.cy, r: M.r0 || 7.5, dmg: 0 });
       s.r0 = A.r; s.r1 = Math.max(M.rMin || 3.5, A.r * (M.k || 0.65)); A.dmg = moveDmg(b, Object.assign({ hit: 'chip' }, M)) * 0.5; A.el = M.el || b.el; A.pattern = M.pattern || 'roots_inward';
+      A.armAt = G.t + (s.wind || 0.8) + (M.dur || 2);   // the new ring only bites once it has finished closing (updateArena)
       tele({ kind: 'circle', x: A.x, y: A.y, r: s.r1, life: s.wind || 0.8, col: '#9ae06a' });
       say(M.text || 'The roots close in!'); shake(5);
     },
@@ -334,13 +343,19 @@ const BOSS_MOVES = {
       }
       return false;
     } },
+  // roar: a ROAR_WIND s wind-up (warn cue at start + a circle tele of M.ring) before the shout, its shake and its adds,
+  // so nothing that lands around a roar comes unwarned (QA B2: roar had wind 0)
   roar: {
-    start(b, M, s) {
-      const msg = M.text || M.banner; if (msg) say(msg);
-      sfx('roar'); shake(10); fx({ type: 'ring', x: b.x, y: b.y, r: M.ring || 6, col: '#ff5aa0', life: 0.8 });
-      for (const [type, a, r] of M.adds || []) spawnAt(enemyId(type), b.x + Math.cos(a) * r, b.y + Math.sin(a) * r, 1);
-    },
-    update: (b, M, s) => s.t > (M.dur || 1.2) },
+    start(b, M, s) { s.wind = M.wind > 0 ? s.wind : ROAR_WIND; if (G.lastWarn && G.lastWarn.move === M.name) G.lastWarn.wind = s.wind; tele({ kind: 'circle', x: b.x, y: b.y, r: M.ring || 6, life: s.wind, col: M.col || '#ff5aa0' }); },
+    update(b, M, s) {
+      if (s.step === 0 && s.t > s.wind) {
+        s.step = 1;
+        const msg = M.text || M.banner; if (msg) say(msg);
+        sfx('roar'); shake(10); fx({ type: 'ring', x: b.x, y: b.y, r: M.ring || 6, col: '#ff5aa0', life: 0.8 });
+        for (const [type, a, r] of M.adds || []) spawnAt(enemyId(type), b.x + Math.cos(a) * r, b.y + Math.sin(a) * r, 1);
+      }
+      return s.t > s.wind + (M.dur || 1.2);
+    } },
   sequence: {
     start(b, M, s) { s.i = 0; s.gapT = 0; },
     update(b, M, s, dt) {
@@ -356,11 +371,18 @@ const BOSS_MOVES = {
       return true;
     } },
 };
-// arena shrink (G.shrink = { x, y, r, dmg, el }; reset on map entry by startTriggers): outside the safe circle hurts every 0.5 s
+// arena shrink (G.shrink = { x, y, r, dmg, el }; reset on map entry by startTriggers; centred on G.arena when one runs):
+// outside the safe circle hurts every 0.5 s
+// Warned (QA B2 "no-warn" bucket): no ticks while the ring is still closing (A.armAt), and each time the hero steps
+// outside an armed ring a cue (text + sfx) and a SHRINK_GRACE s grace come before the first tick.
+const SHRINK_GRACE = 0.6;
 function updateArena(dt) {
   const A = G.shrink; if (!A || !A.dmg) return;
   const p = G.player; A.tickT = (A.tickT || 0) - dt;
-  if (A.tickT <= 0) { A.tickT = 0.5; if (dist(p.x, p.y, A.x, A.y) > A.r) hurtPlayer(A.dmg, A.x, A.y, A.el || 'nature'); }
+  const out = dist(p.x, p.y, A.x, A.y) > A.r && !(A.armAt > G.t);
+  if (!out) A.outT = null;
+  else if (A.outT == null) { A.outT = G.t; A.tickT = Math.max(A.tickT, SHRINK_GRACE); text(p.x, p.y, p.z + 3.4, 'ROOTS! GET INSIDE', '#9ae06a', true); sfx(typeof WARN_SFX !== 'undefined' && WARN_SFX.arenaShrink || 'trap'); G.lastWarn = { boss: G.boss ? G.boss.type : null, move: 'rootRing', type: 'arenaShrink', sfx: null, wind: SHRINK_GRACE, open: 0, t: G.t }; }
+  if (A.tickT <= 0) { A.tickT = 0.5; if (out) hurtPlayer(A.dmg, A.x, A.y, A.el || 'nature'); }
   if (Math.random() < dt * 30) { const a = Math.random() * 6.28; addPart({ x: A.x + Math.cos(a) * A.r, y: A.y + Math.sin(a) * A.r, z: 0, vx: 0, vy: 0, vz: 1.5, life: 0.6, t: 0, col: '#9ae06a', grav: 0, size: 1, glow: true }, false); }
 }
 
@@ -371,7 +393,8 @@ function bossFairness(id) {
   const Wmin = Math.min(1, ...D.phases.map(ph => ph.windMul || 1));
   for (const n in D.moveDefs) {
     const M = D.moveDefs[n], sc = M.scale || 'all';
-    if (['summon', 'roar', 'sequence', 'random', 'blink', 'arenaShrink', 'pull'].includes(M.type)) continue;
+    if (['summon', 'sequence', 'random', 'blink', 'arenaShrink', 'pull'].includes(M.type)) continue;
+    if (M.type === 'roar') { const w = (M.wind > 0 ? M.wind : ROAR_WIND) * (sc === 'none' ? 1 : Wmin); if (w < FAIR_WIND - 1e-6) out.push({ move: n, rule: 'roar wind >= 0.6 s', got: +w.toFixed(2), legacy: !!M.legacy }); continue; }
     let wind = (M.type === 'volley' ? (M.delay != null ? M.delay : M.wind) : M.wind) || 0;
     if (M.type === 'vanish') wind = (M.then && M.then.wind) || M.wind || 0.8;
     wind *= sc === 'none' ? 1 : Wmin;
@@ -380,6 +403,12 @@ function bossFairness(id) {
     if (wind < FAIR_WIND - 1e-6) out.push({ move: n, rule: 'wind >= 0.6 s', got: +wind.toFixed(2), legacy: !!M.legacy });
     if (big && open < FAIR_OPEN - 1e-6) out.push({ move: n, rule: 'open >= 1.2 s after a big hit', got: +open.toFixed(2), legacy: !!M.legacy });
   }
+  // phase onEnter roars (inline moves): the same wind-up rule
+  D.phases.forEach((ph, i) => (ph.onEnter || []).forEach(ref => {
+    const M = typeof ref === 'string' ? D.moveDefs[ref] : ref; if (!M || M.type !== 'roar') return;
+    const w = (M.wind > 0 ? M.wind : ROAR_WIND) * ((M.scale || 'all') === 'none' ? 1 : (ph.windMul || 1));
+    if (w < FAIR_WIND - 1e-6) out.push({ move: `phase${i + 1}.onEnter.roar`, rule: 'roar wind >= 0.6 s', got: +w.toFixed(2), legacy: !!M.legacy });
+  }));
   return out;
 }
 // hud.js draws ENEMY.boss.name over the boss bar: until it reads G.boss, name the boss that is actually fighting

@@ -53,7 +53,7 @@ ev(`function simMap(lo, hi) {
   const W = 48, m = { id: 'sim', W, H: W, type: [], h: [], block: [], colliders: [], objects: [], portals: [], triggers: [], cx: W / 2, cy: W / 2, falls: [], lights: [] };
   for (let y = 0; y < W; y++) { m.type.push(Array(W).fill('g')); m.h.push(Array(W).fill(0)); m.block.push(Array(W).fill(false)); }
   G.world = { maps: { sim: { level: [lo, hi] } }, start: 'sim' }; G.map = m; G.state = 'play';
-  G.enemies = []; G.projs = []; G.effects = []; G.zones = []; G.parts = []; G.texts = []; G.delays = []; G.drops = []; G.boss = null; G.shrink = null; G.trig = null;
+  G.enemies = []; G.projs = []; G.effects = []; G.zones = []; G.parts = []; G.texts = []; G.delays = []; G.drops = []; G.boss = null; G.shrink = null; G.trig = null; G.arena = null;
   G.prog = { chests: {}, firsts: {}, trig: {}, quests: {}, gates: {}, secrets: {} };
   return m;
 }
@@ -90,15 +90,19 @@ ev(`function simAffix(stat, ilvl, rarity, q) {
 }
 function simGear(fams, L, rarity, kind) {
   const p = makePlayer(); p.level = L; let tier = 0; for (let t = 0; t < 5; t++) if (TIER_REQ[t] <= L) tier = t; if (tier === 4) tier = 3;
+  // 'under' (QA M1 / B2): one tier below the band, Uncommon weapon + chest, Common head + boots, no gems
+  const UNDER = { weapon: 'uncommon', head: 'common', chest: 'uncommon', boots: 'common' };
+  if (kind === 'under') tier = Math.max(0, tier - 1);
   const OFF = ['power', 'crit', 'critDmg', 'haste', 'skillDmg'], REF = { weapon: ['power', 'crit', 'critDmg'], armour: ['hp', 'def', 'crit'] };
   const g = L < 10 ? 1 : L < 24 ? 2 : 3;
   ['weapon', 'head', 'chest', 'boots'].forEach((slot, i) => {
-    const base = FAMILY_TIERS[fams[i]][tier].split(':')[0];
-    const it = makeItem(base, rarity, L, { sockets: slot === 'weapon' || slot === 'chest' ? 1 : 0 });
+    const base = FAMILY_TIERS[fams[i]][tier].split(':')[0], rar = kind === 'under' ? UNDER[slot] : rarity;
+    const it = makeItem(base, rar, L, { sockets: kind === 'under' ? 0 : slot === 'weapon' || slot === 'chest' ? 1 : 0 });
+    if (kind === 'under') it.affixes = (slot === 'weapon' ? REF.weapon : REF.armour).slice(0, RARITY[rar].affixes).map(stat => ({ stat, v: simAffix(stat, L, rar, 0.8) }));
     if (kind === 'reference') it.affixes = (slot === 'weapon' ? REF.weapon : REF.armour).slice(0, RARITY[rarity].affixes).map(stat => ({ stat, v: simAffix(stat, L, rarity, 0.8) }));
     if (kind === 'optimal') it.affixes = (slot === 'weapon' ? ['power', 'critDmg', 'crit'] : slot === 'head' ? ['crit', 'critDmg', 'power'] : slot === 'chest' ? ['power', 'skillDmg', 'crit'] : ['haste', 'power', 'crit']).slice(0, RARITY[rarity].affixes).map(stat => ({ stat, v: simAffix(stat, L, rarity, 1) }));
     // reference gems are diamonds (element-neutral: a ruby would amplify only fire skills and skew weapon parity)
-    if (it.sockets.length) it.sockets[0] = kind === 'random' ? pick2(GEM_TYPES) + '_' + g : kind === 'optimal' ? (slot === 'weapon' ? 'ruby_' + g : 'amethyst_' + g) : 'diamond_' + g;
+    if (it.sockets.length && kind !== 'under') it.sockets[0] = kind === 'random' ? pick2(GEM_TYPES) + '_' + g : kind === 'optimal' ? (slot === 'weapon' ? 'ruby_' + g : 'amethyst_' + g) : 'diamond_' + g;
     p.equip[slot] = it;
   });
   recalcStats(p, true); return p;
@@ -242,9 +246,145 @@ for (const id of BOSS_IDS) {
     log(`    telegraphed big hits vs the reference hero: ${big.map(h => `${h.move} ${Math.round(h.f * 100)} %`).join(', ')} (target 35-45 %)`);
     for (const h of big) {
       if (h.f >= 1) red(`${id}.${h.move} one-shots the reference hero (${Math.round(h.f * 100)} % HP)`);
-      else if (h.f < 0.35 || h.f > 0.45) notes.push(`${id}.${h.move} big hit ${Math.round(h.f * 100)} % of hero HP (target 35-45 %)`);
+      else if (h.f < 0.35 || h.f > 0.45) { const why = ev(`BOSSES['${ENEMY[id].boss || id}'].moveDefs['${h.move}'].why || ''`); (why ? explained : notes).push(`${id}.${h.move} big hit ${Math.round(h.f * 100)} % of hero HP (target 35-45 %)${why ? ' — ' + why : ''}`); }
     }
   }
+}
+
+// 3b. live boss fights, under-geared (QA M1 / B2; §20.3 "three mistakes kill, one never does")
+// The boss runs its real AI and BOSS_MOVES (not frozen). The hero: 'under' gear (one tier below the band, Uncommon
+// weapon + chest, Common head + boots, no gems) at the lowest level a QA run arrived at, a sword, MELEE ONLY and NO
+// KITING: it walks back into reach after every step aside, never uses the boots dodge to gain distance (Charge: 4 tiles + i-frames would
+// be kiting) EXCEPT as an emergency escape from a telegraph it cannot walk out of in the time left (a burrow surfacing
+// under it), basic x3 -> skill (Q / E alternating, R when charged). Telegraph discipline: REACT s after a telegraph
+// appears it walks out of it if it stands inside (circle: outward, line: sideways, cone: the shorter way out), except
+// for a per-fight budget of MISTAKES (the 3rd and the 12th telegraph it stands in: it eats those hits; "three mistakes
+// kill, one never does" + 2 potions = room for about two). The arena card's own adds (js/world.js: Mossjaw's ogres,
+// Bramblehorn's saplings) spawn on the card's schedule, relative to the boss. It stays inside a shrinking
+// root ring. Turret shots (saplings) are not dodged; boss and ogre / hound telegraphs are. Potions: 2, drunk below 50 % HP (one heals 40 %). Target priority: an add within 6 tiles (hounds, saplings) first, then the boss.
+// Red: any trial lost (dead or still fighting at 1.5x the length cap), the median kill slower than the §20.3 maximum
+// (mini 90 s, guardian 240 s), or a single boss hit above bossHitCap() of the hero's max HP.
+const LIVE = { mossjaw: { L: 7, max: 90 }, bramblehorn: { L: 9, max: 240 } };   // L: lowest arrival level (REPORT: 7-9 / 9-11)
+const REACT = 0.3, MISTAKES = [3, 12], LIVE_POTIONS = 2, LIVE_TRIALS = Math.max(TRIALS, 6);
+ev(`const ADD_R = 3;
+function simBossFight(id, L, maxT, react, mistakes, potions, card) {
+  const p = G.player, cx = G.map.cx, cy = G.map.cy; if (card.arena) G.arena = { id: 'sim', map: G.map.id, gates: [], x: cx, y: cy, r: card.arena.r, pillars: [], broken: [], done: false };
+  const b = spawnEnemy(id, cx + card.bx, cy + card.by, 0); G.boss = b; p.potions = potions; p.hp = p.maxHp;
+  { const a = Math.atan2(cy - b.y, cx - b.x) || 0; p.x = b.x + Math.cos(a) * 3; p.y = b.y + Math.sin(a) * 3; }   // the hero walks in from the arena side
+  const adds = card.adds;
+  const seq = ['b', 'b', 'b', 's'], seen = new Map(), out = { won: false, t: 0, potions: 0, hits: 0, bossHits: 0, maxHit: 0, maxBossHit: 0, tele: 0, mistakes: 0, taken: 0 };
+  let i = 0, alt = 0, t = 0, n = 0;
+  const hp0 = hurtPlayer;
+  hurtPlayer = function (dmg, x, y, el, o) { const before = p.hp, r = hp0.apply(this, arguments); if (r) { const f = (before - p.hp) / p.maxHp; out.hits++; out.taken += before - p.hp; out.maxHit = Math.max(out.maxHit, f); if (o && o.boss) { out.bossHits++; out.maxBossHit = Math.max(out.maxBossHit, f); } const near = G.enemies.filter(q => !q.dead && q !== b).sort((q, r) => dist(p.x, p.y, q.x, q.y) - dist(p.x, p.y, r.x, r.y))[0], ring = G.shrink && x === G.shrink.x && y === G.shrink.y; const k = (o && o.boss ? b.state : ring ? 'rootRing' : near ? near.type : 'other') + (p.rootT > 0 ? '(rooted)' : ''); (out.by || (out.by = {}))[k] = +(((out.by || {})[k] || 0) + f).toFixed(2); } return r; };
+  const inShape = (e, m) => {
+    if (e.kind === 'circle') return dist(p.x, p.y, e.x, e.y) < e.r + p.r + m;
+    if (e.kind === 'cone') { const d = dist(p.x, p.y, e.x, e.y); return d < e.r + p.r + m && Math.abs(angDiff(e.ang, Math.atan2(p.y - e.y, p.x - e.x))) < e.arc / 2 + m / Math.max(1, d); }
+    if (e.kind === 'line') return segDist(p.x, p.y, e.x, e.y, e.x + Math.cos(e.ang) * e.len, e.y + Math.sin(e.ang) * e.len) < e.w + p.r + m;
+    return false;
+  };
+  const away = e => {
+    if (e.kind === 'circle') { const a = Math.atan2(p.y - e.y, p.x - e.x); return dist(p.x, p.y, e.x, e.y) > 0.05 ? a : Math.atan2(p.y - b.y, p.x - b.x) + Math.PI / 2; }
+    const side = (p.x - e.x) * Math.sin(e.ang) - (p.y - e.y) * Math.cos(e.ang) >= 0 ? -1 : 1;
+    if (e.kind === 'line') return e.ang + side * Math.PI / 2;
+    const d = dist(p.x, p.y, e.x, e.y), da = angDiff(e.ang, Math.atan2(p.y - e.y, p.x - e.x)), radial = e.r + p.r - d, lateral = d * Math.sin(Math.max(0, e.arc / 2 - Math.abs(da)));
+    return radial < lateral ? Math.atan2(p.y - e.y, p.x - e.x) : e.ang + side * Math.PI / 2;
+  };
+  const bx0 = b.x, by0 = b.y, pend = adds.slice();
+  // escape heading that also keeps it inside a root ring: straight out of the shape, else the first of +-45 / +-90 degrees
+  // that still leaves the shape (tested 2.4 tiles along) and stays inside; none: straight out (a ring tick beats a big hit)
+  const ringSafe = (a, e) => { const A = G.shrink; if (!A || !A.dmg) return a;
+    const ok = h => { const ox = p.x, oy = p.y; p.x += Math.cos(h) * 2.4; p.y += Math.sin(h) * 2.4; const r = (!e || !inShape(e, 0.1)) && dist(p.x, p.y, A.x, A.y) < A.r - 0.3; p.x = ox; p.y = oy; return r; };
+    for (const d of [0, 0.785, -0.785, 1.571, -1.571]) if (ok(a + d)) return a + d;
+    return a; };
+  const step = (a, dt) => { if (p.rootT > 0) return; const sp = p.speed * dt; moveEntity(p, Math.cos(a) * sp, Math.sin(a) * sp, tileH(G.map, p.x, p.y)); };
+  while (!b.dead && !p.dead && t < maxT) {
+    const dt = 1 / 60;
+    if (p.hp < p.maxHp * 0.5 && p.potions > 0 && !((p.potT || 0) > G.t)) { drinkPotion(p); out.potions++; }
+    // telegraph discipline
+    let threat = null;
+    for (const e of G.effects) {
+      if (e.type !== 'tele' || (e.src && e.src.move === 'stationary') || !(e.kind === 'circle' || e.kind === 'line' || e.kind === 'cone')) continue;   // turret chip shots (saplings) are not dodged
+      let s = seen.get(e); if (!s) seen.set(e, s = { t, counted: false, miss: false });
+      if (t - s.t < react || !inShape(e, 0.35)) continue;
+      if (!s.counted) { s.counted = true; out.tele++; s.miss = mistakes.includes(out.tele); if (s.miss) out.mistakes++; }
+      const pri = q => (q.src === b ? 0 : 10) + q.life - q.t;   // the boss's own telegraphs first, then the most urgent
+      if (!s.miss && (!threat || pri(e) < pri(threat))) threat = e;
+    }
+    const A = G.shrink, sd = A ? dist(p.x, p.y, A.x, A.y) : 0;
+    // target priority (the howl / sapling adds teach it, enemydata.js): the nearest add within ADD_R (a turret: ADD_R + 3), else the boss
+    let tg = b.under ? null : b, td = ADD_R;
+    for (const e of G.enemies) if (e !== b && !e.dead && !(e.spawnT > 0)) { const d = dist(p.x, p.y, e.x, e.y) - (e.move === 'stationary' ? 3 : 0); if (d < td) { td = d; tg = e; } }   // turrets (saplings) count as 3 tiles nearer: they never come to you
+    // a telegraph it cannot walk out of in the time left (burrow surfacing under it): the boots dodge, if ready, out of the shape
+    if (threat && !p.dash && p.rootT <= 0) {
+      const e = threat, d = dist(p.x, p.y, e.x, e.y), need = 0.1 + (e.kind === 'circle' ? e.r + p.r - d : e.kind === 'line' ? e.w + p.r - segDist(p.x, p.y, e.x, e.y, e.x + Math.cos(e.ang) * e.len, e.y + Math.sin(e.ang) * e.len)
+        : Math.min(e.r + p.r - d, d * Math.sin(Math.max(0, e.arc / 2 - Math.abs(angDiff(e.ang, Math.atan2(p.y - e.y, p.x - e.x)))))));
+      const sk = slotSkill(p, 'shift');
+      if (need > (e.life - e.t) * p.speed && sk && !(p.cds[sk] > 0) && p.st >= (SKILLS[sk].st || 0)) { const a0 = p.aim; p.aim = ringSafe(away(e), e); G.mouse.wx = p.x + Math.cos(p.aim) * 3; G.mouse.wy = p.y + Math.sin(p.aim) * 3; if (useSkill(p, 'shift')) out.dodges = (out.dodges || 0) + 1; else p.aim = a0; }
+    }
+    for (let k = pend.length - 1; k >= 0; k--) if (t >= pend[k].t) { const q = pend[k]; pend.splice(k, 1); for (let j = 0; j < q.n; j++) spawnAt(q.enemy, bx0 + q.dx, by0 + q.dy, q.r, false); }
+    if (p.dash) {}
+    else if (threat) { const sv = seen.get(threat); if (sv.h == null) sv.h = ringSafe(away(threat), threat); const h = sv.h; /* heading chosen once per telegraph: re-aiming every frame orbits a circle */ step(h, dt); }
+    else if (A && A.dmg && sd > A.r - 0.6 && !(tg && tg !== b && dist(tg.x, tg.y, A.x, A.y) > A.r - 0.6)) step(Math.atan2(A.y - p.y, A.x - p.x), dt);   // stays in the ring, unless an add to kill stands outside it
+    else if (tg && dist(p.x, p.y, tg.x, tg.y) > 1.1 + tg.r * 0.5 + 0.3) {   // back into reach, but never into a live telegraph it has seen
+      const a = Math.atan2(tg.y - p.y, tg.x - p.x), ox = p.x, oy = p.y; p.x += Math.cos(a) * 0.4; p.y += Math.sin(a) * 0.4;
+      const bad = G.effects.some(e => e.type === 'tele' && seen.has(e) && t - seen.get(e).t >= react && !seen.get(e).miss && inShape(e, 0.35)); p.x = ox; p.y = oy;
+      if (!bad) step(a, dt);
+    }
+    else if (tg && !p.dash && !castActive(p) && p.atkT <= 0 && p.castT <= 0) {
+      p.aim = Math.atan2(tg.y - p.y, tg.x - p.x); G.mouse.wx = tg.x; G.mouse.wy = tg.y;
+      const teleUp = G.effects.some(e => e.type === 'tele' && e.src === b);   // no dash skill (Dash Strike moves 3.8 tiles) into a live telegraph
+      if (seq[i] === 'b' || teleUp) basicAttack(p);
+      else if (p.ult >= 100 && useSkill(p, 'r')) {}
+      else { const k = alt++ % 2 ? 'e' : 'q'; if (!useSkill(p, k)) useSkill(p, k === 'q' ? 'e' : 'q'); }
+      if (!teleUp || seq[i] === 'b') i = (i + 1) % seq.length;
+    }
+    simStep(dt); t += dt;
+    if (++n % 600 === 0) for (const [e] of seen) if (!G.effects.includes(e)) seen.delete(e);
+  }
+  hurtPlayer = hp0;
+  out.addsLeft = G.enemies.filter(e => !e.dead && e !== b).length;
+  out.won = b.dead && !p.dead; out.t = t; out.hpLeft = p.dead ? 0 : p.hp / p.maxHp; out.bossLeft = b.dead ? 0 : b.hp / b.maxHp; out.maxHp = p.maxHp;
+  return out;
+}`);
+log('\nLIVE BOSS FIGHTS, UNDER-GEARED (QA M1/B2: tier -1, Common/Uncommon, no gems; sword, melee only, no kiting, boots dodge only as an escape;');
+log(`  steps out of telegraphs ${REACT} s after they show; mistakes: it eats telegraphs no. ${MISTAKES.join(' and ')}; ${LIVE_POTIONS} potions; the arena card's adds; ${LIVE_TRIALS} seeded trials; cap ${Math.round(ev("bossHitCap()") * 100)} % max HP)`);
+log('  boss          L   hero HP  won   length s (median / max)   potions   mistakes  max boss hit  hp left   target');
+// the arena card that spawns the boss (js/world.js): its later spawns, timed from the boss spawn, placed relative to it
+function arenaAdds(id) {
+  const maps = ev('WORLD_DATA.maps');
+  for (const mid in maps) for (const tr of maps[mid].triggers || []) {
+    let t = 0, at = null, arena = null; const out = [];
+    for (const a of tr.actions || []) {
+      if (a.type === 'arena') arena = { x: +a.x, y: +a.y, r: +a.r || 6 };
+      if (a.type === 'wait') { t += +a.seconds || 0; continue; }
+      if (a.type !== 'spawn') continue;
+      if (a.enemy === id && !at) { at = { t, x: +a.x, y: +a.y }; continue; }
+      if (at) out.push({ t: t - at.t, enemy: a.enemy, n: +a.count || 1, dx: +a.x - at.x, dy: +a.y - at.y, r: a.radius !== '' && a.radius != null ? +a.radius : 1.5 });
+    }
+    // the boss's place relative to the fight's centre (the inline arena, else the map's sigil, where a ring would centre)
+    const c = arena || maps[mid].sigil || { x: at ? at.x : 0, y: at ? at.y : 0 };
+    if (at) return { adds: out, arena: arena ? { r: arena.r } : null, bx: at.x - c.x, by: at.y - c.y };
+  }
+  return { adds: [], arena: null, bx: 3, by: 0 };
+}
+const liveRows = [];
+for (const id in LIVE) {
+  if (!ENEMY[id]) continue;
+  const { L, max } = LIVE[id], B = ev(`BOSSES['${ENEMY[id].boss || id}']`), runs = [];
+  for (let k = 0; k < LIVE_TRIALS; k++) {
+    ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); simHero(${JSON.stringify(FAMS.sword)}, ${L}, 'rare', 'under')`);
+    runs.push(ev(`simBossFight('${id}', ${L}, ${max * 1.5}, ${REACT}, ${JSON.stringify(MISTAKES)}, ${LIVE_POTIONS}, ${JSON.stringify(arenaAdds(id))})`));
+  }
+  const won = runs.filter(r => r.won), lens = won.map(r => r.t).sort((a, b) => a - b), med = lens.length ? lens[Math.floor(lens.length / 2)] : Infinity;
+  const row = { id, L, hp: Math.round(runs[0].maxHp), won: won.length, trials: runs.length, med, maxLen: lens.length ? lens[lens.length - 1] : Infinity, potions: Math.max(...runs.map(r => r.potions)),
+    mistakes: Math.max(...runs.map(r => r.mistakes)), maxBossHit: Math.max(...runs.map(r => r.maxBossHit)), hpLeft: won.length ? Math.min(...won.map(r => r.hpLeft)) : 0, bossLeft: Math.max(...runs.map(r => r.bossLeft)) };
+  liveRows.push(row);
+  log(`  ${id.padEnd(13)} ${String(L).padEnd(3)} ${String(row.hp).padEnd(8)} ${(row.won + '/' + row.trials).padEnd(5)} ${(Math.round(med) + ' / ' + Math.round(row.maxLen)).padEnd(25)} ${String(row.potions).padEnd(9)} ${String(row.mistakes).padEnd(9)} ${(Math.round(row.maxBossHit * 100) + ' %').padEnd(13)} ${(Math.round(row.hpLeft * 100) + ' %').padEnd(9)} <= ${max} s, won`);
+  const by = {}; for (const r of runs) for (const k in r.by || {}) by[k.replace('(rooted)', '')] = (by[k.replace('(rooted)', '')] || 0) + r.by[k] / runs.length;
+  log(`    damage taken per fight, in hero max HP (mean): ${Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v.toFixed(2)).join(', ')}`);
+  if (row.won < row.trials) red(`live ${id} (under-geared L${L}, melee, ${LIVE_POTIONS} potions): lost ${row.trials - row.won} of ${row.trials} (boss left at up to ${Math.round(row.bossLeft * 100)} %)`);
+  if (med > max) red(`live ${id} (under-geared L${L}): median kill ${Math.round(med)} s over the ${max} s maximum`);
+  if (row.maxBossHit > ev('bossHitCap()') + 0.005) red(`live ${id}: one boss hit took ${Math.round(row.maxBossHit * 100)} % of max HP (cap ${Math.round(ev('bossHitCap()') * 100)} %)`);
 }
 
 // 4. builds: optimal / random, reactions, ultimate, caps
@@ -327,5 +467,5 @@ if (explained.length && !QUIET) { log('\nEXPLAINED (not red):'); for (const s of
 if (notes.length) { log('\nNOTES (targets, not CI flags):'); for (const s of notes) log('  - ' + s); }
 say(flags.length ? `\nbalsim RED FLAGS (${flags.length}):` : `\nbalsim: no red flags (${explained.length} explained, ${notes.length} notes).`);
 for (const s of flags) say('  ! ' + s);
-if (JSON_OUT) console.log(JSON.stringify({ heroRows, ttkRows, bossRows, surv, econ, xp: { p2, p5 }, flags, explained, notes }, null, 1));
+if (JSON_OUT) console.log(JSON.stringify({ heroRows, ttkRows, bossRows, liveRows, surv, econ, xp: { p2, p5 }, flags, explained, notes }, null, 1));
 process.exit(flags.length ? 1 : 0);
