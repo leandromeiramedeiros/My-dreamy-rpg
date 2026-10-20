@@ -313,7 +313,8 @@ const WORLD_DATA = {
      "y": 36,
      "role": "chest_silver",
      "tier": "silver",
-     "label": "ledge-chest"
+     "label": "ledge-chest",
+     "loot": "ring"
     },
     {
      "t": "fishspot",
@@ -4597,7 +4598,8 @@ const WORLD_DATA = {
      "role": "chest_gold",
      "tier": "gold",
      "label": "warrens-chest",
-     "guaranteed": "epic"
+     "guaranteed": "epic",
+     "loot": "belt"
     },
     {
      "t": "crystal",
@@ -4659,7 +4661,8 @@ const WORLD_DATA = {
      "y": 26.33,
      "role": "chest_gold",
      "tier": "gold",
-     "label": "boss-chest"
+     "label": "boss-chest",
+     "loot": "amulet"
     },
     {
      "t": "pine_giant",

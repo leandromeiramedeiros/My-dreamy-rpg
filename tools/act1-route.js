@@ -321,6 +321,22 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   const da = await tryDoor('bridge_arena', 'barrier');
   check('vale (return): the Dream Arena bridge now opens with the key the Pinewood gave (after Act I)', da && da.open, da);
 
+  // =================================================================== M3 trinket sources (DESIGN 19.4 Acquisition): chest markers carry `loot`
+  const wantLoot = [['vale', 'ledge-chest', 'ring'], ['pinewood', 'boss-chest', 'amulet'], ['pinewood', 'warrens-chest', 'belt']];
+  const lootData = await ev(w => w.map(([m, label]) => { const o = G.world.maps[m].objects.filter(q => q.label === label); return { n: o.length, loot: o.length ? o[0].loot : null, chest: o.length ? o[0].t === 'chest' : false }; }), wantLoot);
+  wantLoot.forEach(([m, label, slot], i) => check(`trinket source: ${m} ${label} exists in world data with loot:'${slot}'`, lootData[i].n === 1 && lootData[i].chest && lootData[i].loot === slot, lootData[i]));
+  const lootOnlyOne = await ev(() => ['vale', 'pinewood'].flatMap(m => G.world.maps[m].objects.filter(q => q.loot).map(q => q.label)).sort().join());
+  check('trinket sources: only those three chests carry a loot field', lootOnlyOne === 'boss-chest,ledge-chest,warrens-chest', lootOnlyOne);
+  // guarded: only once the engine honours the field (a trinketSlotOf helper, or openChest reading src.loot)
+  const engineLoot = await ev(() => typeof trinketSlotOf === 'function' || /\.loot\b/.test(String(openChest)));
+  if (engineLoot) {
+    for (const [m, label, slot] of wantLoot) {
+      const got = await ev(([mid, lb]) => { const src = G.world.maps[mid].objects.find(q => q.label === lb); window.__loot.length = 0; openChest({ x: src.x, y: src.y, z: 0, src, chest: true }); return window.__loot.slice(); }, [m, label]);
+      check(`trinket source: opening ${label} drops a ${slot} (engine active)`, got.some(k => k.startsWith('item:' + slot + '/')), got);
+    }
+  } else console.log('  SKIP trinket-source open checks (engine does not honour chest loot yet)');
+  console.log('  guarded trinket open check active: ' + engineLoot);
+
   // =================================================================== every trigger card fired at least once
   const missing = await ev(() => { const out = {}; for (const id of ['vale', 'pinewood']) out[id] = G.world.maps[id].triggers.map(t => t.id).filter(t => !window.__fired[id + ':' + t]); return out; });
   const total = await ev(() => ({ vale: G.world.maps.vale.triggers.length, pinewood: G.world.maps.pinewood.triggers.length }));

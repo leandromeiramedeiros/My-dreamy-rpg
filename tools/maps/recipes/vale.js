@@ -83,7 +83,7 @@ module.exports = {
     g.marker('sign', R.start.x + 2.8, R.start.y + 1, { label: 'sign', text: 'Training yard south-east. Elder Stone north-east.' }); g.poi('sign', R.start.x + 2.8, R.start.y + 1);
     g.marker('chest', C0.x, C0.y, { label: 'tutorial-chest', tier: 'wood', starter: true }); g.poi('chest', C0.x, C0.y);   // starter: true -> items.js starterLoot() (weapon, armour, gem)
     g.marker('gem_cache', R.gemNook.x, R.gemNook.y, { label: 'secret gem cache' }); g.poi('secret', R.gemNook.x, R.gemNook.y);
-    g.marker('chest_silver', R.ledge.x, R.ledge.y, { label: 'ledge-chest' }); g.poi('chest', R.ledge.x, R.ledge.y);
+    g.marker('chest_silver', R.ledge.x, R.ledge.y, { label: 'ledge-chest', loot: 'ring' }); g.poi('chest', R.ledge.x, R.ledge.y);
     const fa = g.waterEdge(C0.x - 1, C0.y + 3.5, 7), fb = g.waterEdge(R.plaza.x + 13, R.plaza.y + 2, 9), fm = g.waterEdge(70, 69, 6);
     g.marker('fishspot', fa.x, fa.y, { pool: 'vale_a' }); g.marker('fishspot', fb.x, fb.y, { pool: 'vale_b' }); g.marker('fishspot', fm.x, fm.y, { pool: 'vale_moon' });
     g.poi('fish', fa.x, fa.y); g.poi('fish', fb.x, fb.y); g.poi('fish', fm.x, fm.y);

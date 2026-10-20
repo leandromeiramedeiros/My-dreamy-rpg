@@ -46,6 +46,7 @@ function zone(S) {
 
 function populate(S, g, T) {
   const R = g.roomBy, E = S.enemies, X = S.text, SAY = S.say, tr = g.triggers;
+  const lootOf = k => (S.chestLoot && S.chestLoot[k]) ? { loot: S.chestLoot[k] } : {};   // DESIGN 19.4: a chest marker's `loot` guarantees one trinket of that slot (passes through gen -> world.js)
   const snap = (x, y, r = 1.6) => g.nearWalkable(x, y, r);
   const r2 = v => Math.round(v * 100) / 100;
   const doorMode = T.warpMode === 'door';
@@ -229,7 +230,7 @@ function populate(S, g, T) {
   // ============================================================== WARRENS (vault: a noise puzzle, 3 sleepers)
   {
     const wd = R.w_door, wh = R.w_hall, wv = R.w_vault, W = E.warrens;
-    g.marker('chest_gold', wv.x, wv.y - 0.5, { label: 'warrens-chest', guaranteed: 'epic' }); g.poi('chest', wv.x, wv.y);
+    g.marker('chest_gold', wv.x, wv.y - 0.5, Object.assign({ label: 'warrens-chest', guaranteed: 'epic' }, lootOf('vault'))); g.poi('chest', wv.x, wv.y);
     for (const k of ['w_hall', 'w_vault']) { g.ring(k, 'crystal', 4, 0.9); g.poi('room', R[k].x, R[k].y); }
     g.poi('start', wd.x, wd.y);
     tr.push(T.enter('w_enter', 'Fox Warrens', wd.x, wd.y, 4, [T.banner(W.title, W.sub), T.dialogue('Pip', W.pip), T.objective(W.objective)]));
@@ -246,7 +247,7 @@ function populate(S, g, T) {
     const ag = nearRoomEdge(g, 'main', 'arena', -1, 1.4);
     g.addObj('gate', ag.x, ag.y, { id: 'arena_gate', ang: r2(ag.ang), len: S.w.main, force: true, sp: 0.1 }); g.poi('gate', ag.x, ag.y);
     g.ring('arena', 'brazier', 4, 0.62, { rot: 0.8 });
-    g.marker('chest_gold', A.x + A.r * 0.55, A.y - A.r * 0.55, { label: 'boss-chest' });
+    g.marker('chest_gold', A.x + A.r * 0.55, A.y - A.r * 0.55, Object.assign({ label: 'boss-chest' }, lootOf('boss')));
     shrineTrig('shrine3');
     tr.push(T.enter('arena_hint', 'The rooted arena gate', ag.x, ag.y, 3.4, [T.message(X.arenaSealed)], ['shrine3']));
     const B = E.boss;

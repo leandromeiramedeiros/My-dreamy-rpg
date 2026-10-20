@@ -100,6 +100,7 @@ module.exports = zone({
   ambush: [{ id: 'ford', name: 'Thornbacks at the ford', at: { path: 'main', frac: 0.335 }, r: 4.2, pack: 'pw_boar_pierce', requires: ['r1_done'], banner: ['Thornback Boars', 'Arrows glance off their bristles (resist pierce)'], clear: { text: 'The ford is quiet again.', heal: 20 } }],
   signs: [{ room: 'start', dx: 3.2, dy: -3.4, text: 'North: the Root Hollow. Mind the creek.' }, { room: 'r1', dx: -4.5, dy: -5.5, text: 'Danger: ogres in the clearing' }],
   startOff: [-0.5, 0.8],
+  chestLoot: { boss: 'amulet', vault: 'belt' },   // DESIGN 19.4: Bramblehorn's chest -> amulet; the first secret vault (Fox Warrens) -> belt
   text: {
     intro: ['The animals are running.', 'Something big has woken in the wood.'],
     tablet: 'Bramblehorn kept the roots. He loved the roots too much.',
