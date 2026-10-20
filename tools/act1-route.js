@@ -224,7 +224,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   const packs = await ev(() => { const ids = new Set(), types = new Set(); for (const t of G.map.triggers) for (const a of t.actions) { if (a.pack) ids.add(a.pack); if (a.type === 'spawnPack') { ids.add(a.id); types.add('spawnPack'); } } return { ids: [...ids].sort().join(), types: [...types].join() }; });
   check('pinewood: every §21 pack is placed, with spawnPack (6 pw_* + 3 rh_*)', packs.ids === 'pw_boar_last,pw_boar_pierce,pw_boar_shaman,pw_ogre_grove,pw_ogre_run,pw_ogre_slimes,rh_boar_wrong,rh_ogre_pack,rh_troll_sleeper' && packs.types === 'spawnPack', packs);
   const shr = await ev(() => G.map.objects.filter(o => o.shrineId).map(o => o.shrineId + (o.src.warp === false ? '(plain)' : '')).sort());
-  check('pinewood: 3 warp shrines in the forest + the Hollow midpoint checkpoint', shr.join() === 'hollow_shrine(plain),shrine1,shrine2,shrine3', shr);
+  check('pinewood: 3 road warp shrines + the root-door and Mossjaw\'s-gate warp shrines (§26.2) + the Hollow midpoint checkpoint', shr.join() === 'den_shrine,door_shrine,hollow_shrine(plain),shrine1,shrine2,shrine3', shr);
   check('pinewood: shrine 1 attunes', await goto('shrine1') && await ev(() => (G.prog.shrines.pinewood || []).includes('shrine1')));
   check('pinewood: r1 ogre pack', await goto('r1')); const r1 = await fight('r1_done');
   check('pinewood: r1 spawned ogre + gloomslime + shadehound; cleared', r1.includes('ogre') && r1.includes('gloomslime') && r1.includes('shadehound') && await fired('r1_done'), r1); await shot('pinewood_r1_ogres');
@@ -248,6 +248,44 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   // landmarks + waysides: a point of interest every <=15 tiles of road, shown by the object counts
   const dens = await ev(() => ({ giants: G.map.objects.filter(o => o.src && o.src.t === 'pine_giant').length, beams: G.map.objects.filter(o => o.beam).length, signs: G.map.objects.filter(o => o.src && o.src.t === 'sign').length }));
   check('pinewood: landmarks (giant-pine groups with a beam) are placed along the road', dens.beams >= 12 && dens.giants >= 24, dens);
+
+  // ---- §26.2 elite pockets: 1 elite + 3-5 commons, the first clear guarantees a Rare+ at ilvl >= boss level - 2 in a rotating, usable
+  // slot (the hero's weakest worn gear slot, in the family worn there); the pocket respawns on map re-entry and later clears pay no guarantee
+  const PK = path.join(__dirname, 'shots', 'm3-pockets'); fs.mkdirSync(PK, { recursive: true });
+  const pkShot = async name => { await wait(700); await page.screenshot({ path: path.join(PK, name + '.png') }); };
+  await ev(() => { window.__items = []; const dl = window.dropLoot; window.dropLoot = (x, y, list) => { for (const d of list) if (d.kind === 'item') window.__items.push({ slot: d.it.slot, rarity: d.it.rarity, ilvl: d.it.ilvl, base: d.it.base, req: d.it.req }); return dl(x, y, list); }; });
+  const pockets = await ev(() => G.map.triggers.filter(t => /^pk_[a-z_]+$/.test(t.id) && !/_done$/.test(t.id)).map(t => ({ id: t.id, once: t.once, elite: t.actions.find(a => a.elite), commons: t.actions.filter(a => a.type === 'spawn' && !a.elite).length, floor: (G.map.triggers.find(q => q.id === t.id + '_done').actions.find(a => a.type === 'loot') || {}).ilvl })));
+  check('pinewood (§26.2): 4 elite pockets (2 by the Hollow door, 2 by the Clearing), each 1 elite + 3-5 commons, re-arming (once: false)', pockets.length === 4 && pockets.every(q => q.once === false && q.elite && q.commons >= 3 && q.commons <= 5), pockets);
+  const pkSlots = [];
+  for (const pk of pockets) {
+    await ev(() => { window.__items.length = 0; window.__killAll(); });
+    const before = await ev(() => ({ equip: Object.fromEntries(['weapon', 'head', 'chest', 'boots'].map(k => [k, G.player.equip[k] ? G.player.equip[k].base : null])), gear: Object.assign({}, G.player.gear), level: G.player.level }));
+    const ok = await goto(pk.id); await wf(id => G.enemies.filter(e => e.trig === id && !e.dead).length >= 4, pk.id, 5000);
+    const comp = await ev(id => G.enemies.filter(e => e.trig === id && !e.dead).map(e => ({ t: e.type, elite: !!e.elite, mods: e.mods || [], lvl: e.lvl })), pk.id);
+    await pkShot(pk.id);
+    await fight(pk.id + '_done'); await wait(400);
+    const got = await ev(() => window.__items.slice());
+    const ran = await ev(id => window.__log.actions.filter(a => a.type === 'loot' && a.slot === 'upgrade').length, pk.id);
+    const g = got.find(it => ['weapon', 'head', 'chest', 'boots'].includes(it.slot) && ['rare', 'epic', 'legendary', 'mythic'].includes(it.rarity) && it.ilvl >= pk.floor && it.req <= before.level);
+    const fam = g ? await ev(b => BASES[b].family, g.base) : null;
+    if (g) pkSlots.push(g.slot);
+    check(`pocket ${pk.id}: 1 ${pk.elite.enemy} elite (${pk.elite.elite}) + ${comp.length - 1} commons; first clear -> a Rare+ ${g ? g.slot + ' ' + g.rarity + ' ilvl ' + g.ilvl : '?'} (floor ${pk.floor}) in the worn family`, ok && comp.filter(e => e.elite).length === 1 && comp.find(e => e.elite).t === pk.elite.enemy && comp.find(e => e.elite).mods.includes(pk.elite.elite) && comp.length - 1 === pk.commons && await fired(pk.id + '_done') && !!g && fam === before.gear[g.slot], { comp, got, fam, worn: before.gear });
+    // equip it (a player would): the next pocket's guarantee then targets another slot
+    await ev(b => { const i = G.player.bag.findIndex(it => it && it.base === b); for (const d of G.drops.slice()) if (d.kind === 'item' && d.it.base === b) { G.player.equip[d.it.slot] = d.it; } recalcStats(G.player, true); G.drops.length = 0; }, g ? g.base : null);
+  }
+  check('pockets: the four guarantees rotate through four different gear slots', new Set(pkSlots).size === 4, pkSlots);
+  // map re-entry: every pocket respawns; a second clear fires no guarantee (its _done card stays settled)
+  await wait(600);
+  await ev(() => enterMap('pinewood')); await wait(600); await ev(() => window.__hero());
+  const pk0 = pockets[0].id;
+  await ev(() => { window.__items.length = 0; });
+  const re = await goto(pk0); await wf(id => G.enemies.filter(e => e.trig === id && !e.dead).length >= 4, pk0, 5000);
+  const reN = await ev(id => G.enemies.filter(e => e.trig === id && !e.dead).length, pk0);
+  await fight(null, 3); await wait(500);
+  const reDone = await ev(id => ({ spawn: window.__fired['pinewood:' + id], done: window.__fired['pinewood:' + id + '_done'] }), pk0);
+  check(`pockets: ${pk0} respawns on map re-entry (${reN} enemies) and the second clear pays no guarantee (only the elite's own drop)`, re && reN === pockets[0].commons + 1 && reDone.spawn === 2 && reDone.done === 1, reDone);
+  // the root-door shrine by the Mossjaw pockets
+  check('pinewood (§26.2): the root-door warp shrine attunes', await goto('door_shrine') && await ev(() => (G.prog.shrines.pinewood || []).includes('door_shrine'))); await pkShot('door_shrine');
 
   // ---- secrets (5): crack gem, env pond -> Warrens, lever bridge -> islet, Hollow crack, cross-section cache
   check('pinewood: secret 1 - cracked wall: hum, wall solid, then opens', await (async () => {
@@ -325,8 +363,21 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   // the root-stair is sealed and the Clearing gate shut until Mossjaw falls
   const sealed = await ev(() => { const o = G.map.objects.find(q => q.warpdoor && q.gid === 'hollow_exit'); const gate = G.map.objects.some(q => q.barrier === 'gate' && q.gid === 'arena_gate' && !q.gone); return { door: !!o, locked: o ? !doorUnlocked(G.map, o) || (o.src && o.src.open === false && !gateOpen(G.map, 'hollow_exit')) : null, arenaGate: gate }; });
   check('hollow: before Mossjaw the root-stair is sealed and the Clearing gate is shut', sealed.arenaGate && (sealed.door ? sealed.locked : await ev(() => G.map.objects.some(q => q.barrier === 'gate' && q.gid === 'hollow_exit_gate' && !q.gone))), sealed);
+  // §26.2: Mossjaw's gate shrine; from the root-door shrine by the pockets, a shrine warp lands at the den gate
+  check('hollow (§26.2): Mossjaw\'s-gate warp shrine attunes', await goto('den_shrine') && await ev(() => (G.prog.shrines.pinewood || []).includes('den_shrine') && shrineTargets().some(o => o.shrineId === 'door_shrine'))); await pkShot('den_shrine');
+  await ev(() => { const o = G.map.objects.find(q => q.shrineId === 'door_shrine'); window.__tp(o.x, o.y); });
+  const swOk = await ev(() => shrineWarp('den_shrine')); await warpDone(); await wait(300); await ev(() => window.__hero());
+  const swAt = await ev(() => { const o = G.map.objects.find(q => q.shrineId === 'den_shrine'), w = window.__trg('h_boss').when; return { sec: window.__sec(), d: Math.hypot(G.player.x - o.x, G.player.y - o.y), toFight: Math.hypot(o.x - w.x, o.y - w.y) - w.r }; });
+  check('pinewood -> hollow (§26.2): a shrine warp from the root door lands at Mossjaw\'s gate, a few tiles from the den', swOk && swAt.sec === 'hollow' && swAt.d < 3 && swAt.toFight < 8, swAt);
   // Mossjaw
   check('hollow: Mossjaw den: boss spawns (G.boss set, mossjaw)', await goto('h_boss') && await wf(() => G.boss && G.boss.type === 'mossjaw', null, 9000)); await shot('hollow_mossjaw');
+  {   // a retry: dying to Mossjaw wakes at Mossjaw's gate, the den re-arms
+    await ev(() => { const p = G.player; p.invulnT = 0; p.hp = 1; hurtPlayer(99999, p.x + 1, p.y); });
+    await wf(() => G.state === 'dead', null, 3000); await wf(() => G.state === 'play' && !G.player.dead, null, 12000); await wait(600); await ev(() => window.__hero());
+    const rs = await ev(() => { const o = G.map.objects.find(q => q.shrineId === 'den_shrine'); return { near: Math.hypot(G.player.x - o.x, G.player.y - o.y) < 4, bossTrig: !!G.trig.fired.h_boss, sec: window.__sec() }; });
+    check('hollow (§26.2): dying to Mossjaw respawns at Mossjaw\'s gate (the den re-arms)', rs.near && !rs.bossTrig && rs.sec === 'hollow', rs);
+    await goto('h_boss'); await wf(() => G.boss && G.boss.type === 'mossjaw', null, 9000);
+  }
   const bossHp = await ev(() => G.boss ? { hp: G.boss.hp, lvl: G.boss.lvl } : null);
   await fight('h_boss_done', 8);
   check('hollow: Mossjaw falls -> quest step 3, the root-stair unseals, the Clearing gate opens', await wf(() => G.trig.fired.h_boss_done) && (await quest('shard_root')) === 3 && await ev(() => gateOpen(G.map, 'arena_gate') && (gateOpen(G.map, 'hollow_exit') || gateOpen(G.map, 'hollow_exit_gate'))), bossHp);

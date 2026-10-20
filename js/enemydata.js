@@ -96,6 +96,29 @@ var ENEMY_DATA = {
     parts: ['sleep', 'brute'],
     params: { sleep: { wakeRadius: 3, wakeOn: 'proximity' }, brute: { wind: 0.9, open: 1.2, shape: 'circle', r: 2.5, range: 2 } },
     xp: 0.24, loot: 'common_pinewood'
+  },
+
+  // ---- §26.2 elite pockets (Pinewood, near the bosses). Always spawned as ELITES (spawn card elite: '<mod>' -> x ELITE_HP hp,
+  // x ELITE_DMG dmg, one elite mod; js/parts.js makeElite), so hp here is the pre-elite base like the ogre's: elite-spawn TTK
+  // ~12 s at Pinewood L7 (tools/balsim.js ELITE SPAWN TTK). Normal rows: they track the hero's level inside the band.
+  // Gnarlroot Brute: the Mossjaw pockets by the Root Hollow door. A slow root-troll with a wide slam: teaches spacing.
+  gnarlbrute: {
+    name: 'Gnarlroot Brute', art: 'mountaintroll', look: 'troll', scale: 0.95, hp: 520, speed: 1.6, dmg: 70, el: 'nature', dmgType: 'slash', stagger: 3,
+    res: { slash: 0.25, fire: -0.5 },
+    tags: ['brute'],
+    parts: ['chase', 'brute'],
+    params: { brute: { shape: 'circle', r: 2.2, range: 1.8, wind: 0.85, open: 1.1, cd: 2.0 } },
+    xp: 0.24, loot: 'common_pinewood'
+  },
+  // Thornsow Matriarch: the Bramblehorn pockets by the Clearing. A big thornback that burrows and spurs the pack around her
+  // (aura-buffer): kill her first or fight a faster pack.
+  thornsow: {
+    name: 'Thornsow Matriarch', art: 'thornbackboar', look: 'hound', scale: 1.55, hp: 430, speed: 2.4, dmg: 60, el: 'nature', dmgType: 'pierce', stagger: 3,
+    res: { slash: 0.25, nature: 0.5, fire: -0.5 },
+    tags: ['beast', 'armoured'],
+    parts: ['burrow', 'brute', 'aura-buffer'],
+    params: { burrow: { vanish: 1.4, erupt: { shape: 'circle', r: 2.2 }, staggerOnSurface: true }, brute: { shape: 'cone', r: 2.0, range: 1.7, wind: 0.7 }, 'aura-buffer': { r: 3.5, dmg: 1.2, speed: 1.1 } },
+    xp: 0.2, loot: 'common_pinewood'
   }
 };
 

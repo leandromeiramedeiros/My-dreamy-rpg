@@ -125,6 +125,24 @@ function populate(S, g, T) {
   tr.push(T.enter('elite', 'Elite guarding the key', el.x, el.y, el.r + 0.2, [T.banner(E.elite.title, E.elite.sub, true), T.spawn(E.elite.enemy, 1, el.x - 1, el.y, 1.2, { elite: 'shielded' })], ['r1_done']));
   tr.push(T.allDead('elite_done', 'Elite defeated', ['elite'], [T.message(X.eliteDone), T.loot('rare', 1, el.x, el.y, Object.assign({ item: S.key }, E.elite.lootSlot ? { slot: E.elite.lootSlot } : {})), T.dialogue('Pip', [X.keyLine]), T.step(S.quest, 1), T.objective(X.keyObjective)]));
 
+  // ============================================================== FOREST: elite pockets (DESIGN 26.2, the gear loop)
+  // S.pockets: [{ id, room, boss, name, sub?, elite, mod, mobs: [[enemy, n], ...] }]. Each pocket is an off-path clearing near its boss:
+  //   <id>       enter_area, once: false + a cooldown longer than any visit: it fires once per map entry (G.trig resets on entry and on
+  //              respawn) and never settles, so the pocket RESPAWNS on map re-entry. 1 elite (spawn elite: mod) + 3-5 commons.
+  //   <id>_done  all_enemies_dead on that card's spawns, once: true -> settles, so only the FIRST clear pays the guarantee: one Rare+ at
+  //              item level >= (boss level - 2) in slot 'upgrade' (items.js lootAction: the hero's weakest worn gear slot no earlier pocket
+  //              filled, in the family worn there). Later clears drop only the elite's own rollLoot('elite') (normal elite rates).
+  const BOSS_LVL = id => { const b = (require('./gamedata.js').BOSS_DATA || {})[id]; if (!b || !b.level) throw new Error('pocket boss without a level: ' + id); return b.level; };
+  for (const pk of S.pockets || []) {
+    const rm = R[pk.room], floor = BOSS_LVL(pk.boss) - 2, n = pk.mobs.reduce((a, m) => a + m[1], 0);
+    if (n < 3 || n > 5) throw new Error(`pocket ${pk.id}: ${n} commons (DESIGN 26.2: 3-5)`);
+    g.ring(pk.room, 'lantern', 3, 0.92, { rot: 0.4 }); g.poi('pocket', rm.x, rm.y);
+    const spawns = [T.banner(pk.name, pk.sub || 'Elite pocket'), T.spawn(pk.elite, 1, rm.x, rm.y - 0.5, 0.5, { elite: pk.mod })];
+    let k = 0; for (const [en, c] of pk.mobs) for (let i = 0; i < c; i++, k++) { const a = 0.5 + k * 2 * Math.PI / n, q = snap(rm.x + Math.cos(a) * 2.1, rm.y + Math.sin(a) * 2.1, 1); spawns.push(T.spawn(en, 1, q.x, q.y, 0.5)); }
+    tr.push(Object.assign(T.enter(pk.id, pk.name, rm.x, rm.y, rm.r + 0.4, spawns), { once: false, cooldown: 100000 }));
+    tr.push(T.allDead(pk.id + '_done', pk.name + ': first clear', [pk.id], [T.message(pk.done || 'The pocket is quiet. Something good was guarded here.'), T.loot('rare', 1, rm.x, rm.y, { slot: 'upgrade', ilvl: floor })]));
+  }
+
   // ============================================================== FOREST: secrets (crack, bridge lever, env pond, cross-section cache)
   const secretTriggers = [];
   {   // 1. the cracked wall (signposted: lantern tell + Pip hum) -> gem cache
@@ -181,6 +199,11 @@ function populate(S, g, T) {
     if (!doorMode) g.addObj('keydoor', kd.x, kd.y, { id: 'door_key', key: S.key, ang: r2(kd.ang), len: S.w.branch, force: true, sp: 0.1 });
     g.warp('hollow_door', { x: hd.x, y: hd.y - 0.2, to: { x: hst.x + 1.4, y: hst.y - 0.3 }, key: S.key, label: 'Root Hollow', marker: true, boss: E.den.doorBoss });
     g.anchor('hollow_in', hst.x + 1.4, hst.y - 0.3); g.poi('door', hd.x, hd.y);
+    if (S.doorShrine) {   // DESIGN 26.2 cheap retries: a warp shrine at the boss door, beside the Mossjaw pockets
+      const q = snap(hd.x + S.doorShrine.dx, hd.y + S.doorShrine.dy, 1.2);
+      g.marker('shrine', q.x, q.y, { id: 'door_shrine', name: S.doorShrine.name, label: 'checkpoint', warp: true }); g.poi('shrine', q.x, q.y); g.anchor('door_shrine_land', q.x + 1.2, q.y + 0.6);
+      tr.push(repeat(T.enter('door_shrine', S.doorShrine.name, q.x, q.y, 2.2, [T.checkpoint('Checkpoint: ' + S.doorShrine.name), T.heal(100)])));
+    }
     tr.push(T.enter('hdoor_hint', 'The root door', kd.x, kd.y, 3.2, [T.message(X.locked)]));
   }
   {   // the root-stair out: sealed until Mossjaw falls; lands beside shrine 3. Door mode: a warpdoor with open:false that a trigger openGate opens;
@@ -208,6 +231,15 @@ function populate(S, g, T) {
   g.poi('start', hst.x, hst.y);
   tr.push(T.enter('h_intro', 'Pip in the dark', hst.x, hst.y, 5, [T.say(SAY.hollow), T.step(S.quest, 2), T.objective(X.hollowObjective)]));
   tr.push(repeat(T.enter('h_shrine', 'Midpoint shrine', hs.x, hs.y, 2.2, [T.checkpoint('Checkpoint: ' + X.hollowShrineName), T.heal(100)])));
+  if (S.denShrine) {   // DESIGN 26.2: a warp shrine just outside Mossjaw's gate. Dying in the den respawns here (~6 tiles from the fight), and any
+    // forest shrine (door_shrine by the pockets) warps here. Found only past the keyed door and the gallery, so it opens no sequence break:
+    // the root-stair out stays sealed until Mossjaw falls, and warping out to a forest shrine only skips a walk.
+    const hp = g.pathBy.h_main, want = den.r + S.denShrine.back;
+    let best = null; for (const sm of hp.samples) { if (sm.x > den.x) continue; const d = Math.abs(Math.hypot(sm.x - den.x, sm.y - den.y) - want); if (!best || d < best.d) best = { d, x: sm.x, y: sm.y }; }
+    const q = snap(best.x, best.y - 1.3, 1.2);
+    g.marker('shrine', q.x, q.y, { id: 'den_shrine', name: S.denShrine.name, label: 'checkpoint', warp: true }); g.poi('shrine', q.x, q.y);
+    tr.push(repeat(T.enter('den_shrine', S.denShrine.name, q.x, q.y, 2.2, [T.checkpoint('Checkpoint: ' + S.denShrine.name), T.heal(100)])));
+  }
   fightIn(T, g, tr, 'h_r1', E.h_r1, null);
   tr.push(T.enter('h_r2', E.h_r2.name, h2.x, h2.y, h2.r - 1.5, waveActions(T, g, h2, E.h_r2.waves, E.h_r2.gap, E.h_r2.banner), ['h_r1_done', 'h_shrine']));
   tr.push(T.allDead('h_r2_done', 'Gallery cleared', ['h_r2'], [T.message(E.h_r2.clear), T.heal(25), T.loot('uncommon', 1, h2.x, h2.y), T.objective('Pull the lever to raise the gate')]));

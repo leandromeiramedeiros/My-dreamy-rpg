@@ -1033,9 +1033,9 @@ const PAD_STUB = () => {
     for (const s of m.sections.filter(q => q.tiles)) { p.x = s.cx; p.y = s.cy; p.z = tileH(m, p.x, p.y); G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12; for (let k = 0; k < 50; k++) { await w(30); maxRes = Math.max(maxRes, CHUNK.cache.size); } }
     for (let k = 0; k < 200 && (GROUND_STATS.visMissing || CHUNK.jobs.size); k++) await w(25);
     const e0 = CHUNK.thrash; await w(2500);
-    return { size: CHUNK.size, max: CHUNK.max, cap: SLEEP.cap, coarse: COARSE_POINTER, maxRes, evicted: CHUNK.evicted, thrash: CHUNK.thrash - e0, tourThrash: CHUNK.thrash, tier: QUALITY.tier, partCap: PART.cap, hudK: HUD_K, kMax: HUD_K_MAX };
+    return { size: CHUNK.size, max: CHUNK.max, cap: SLEEP.cap, coarse: COARSE_POINTER, maxRes, evicted: CHUNK.evicted, thrash: CHUNK.thrash - e0, tourThrash: CHUNK.thrash, tier: QUALITY.tier, partCap: PART.cap, hudK: HUD_K, gov: GOV.on, rung: GOV.rungs[GOV.ri] };
   }, SYN);
-  check('phone: §26.4 caps - quality tier phone (or low), particle cap 300, HUD backing store capped at 1x', ['phone', 'low'].includes(ph.tier) && ph.partCap === 300 && ph.kMax === 1 && ph.hudK === 1, { tier: ph.tier, partCap: ph.partCap, hudK: ph.hudK, kMax: ph.kMax });
+  check('phone: §26.4 caps - quality tier phone (or low), particle cap 300, the resolution governor on (DPR rung 0.5..1; at DPR 1 the store stays 1x)', ['phone', 'low'].includes(ph.tier) && ph.partCap === 300 && ph.gov && ph.rung >= 0.5 && ph.rung <= 1 && ph.hudK === 1, { tier: ph.tier, partCap: ph.partCap, hudK: ph.hudK, gov: ph.gov, rung: ph.rung });
   check('phone: ?phone=1 -> 256 px chunks, <= 12 resident while touring (LRU evicts, no thrash), 16 awake, one fog layer', ph.size === 256 && ph.max === 12 && ph.cap === 16 && ph.coarse && ph.maxRes <= 12 && ph.evicted > 0 && ph.thrash === 0, ph);
   await p3.close();
   // ======================= M3 UI lane (tooltip v2, paper doll, ring rule, ICONS routing) — owned by the UI agent =======================

@@ -45,6 +45,11 @@ module.exports = zone({
     shr2: { kind: 'nook', x: 66, y: 60, r: 2, lvl: 4 },
     shr3: { kind: 'nook', x: 84, y: 36, r: 2, lvl: 4 },
     arena: { kind: 'arena', x: 100, y: 31, r: 8.5, lvl: 4, walled: true, pillars: 4, rune: 3, wall: 2.2 },
+    // §26.2 elite pockets: off-path clearings near the bosses (2 by Mossjaw's Hollow door, 2 by Bramblehorn's Clearing)
+    pk_moss_w: { kind: 'clearing', x: 31, y: 31, r: 3.4, lvl: 4 },
+    pk_moss_e: { kind: 'clearing', x: 57, y: 31, r: 3.4, lvl: 4 },
+    pk_bram_n: { kind: 'clearing', x: 74, y: 27, r: 3.4, lvl: 4 },
+    pk_bram_s: { kind: 'clearing', x: 89, y: 53, r: 3.2, lvl: 4 },
     // ---- hollow
     h_start: { kind: 'clearing', x: 5.5, y: 10, r: 3, lvl: 0 },
     h_r1: { kind: 'chamber', x: 15, y: 12, r: 4, lvl: 0, walled: true },
@@ -76,6 +81,10 @@ module.exports = zone({
     cache: { from: { room: 'r2' }, w: 1.6, pts: [[17, 56, 4], 'cache'] },
     fish_b: { from: { path: 'loop2', near: [73, 58] }, w: 1.6, pts: [[79, 58.4, 4], [83.2, 59.2, 4]] },
     hdoor: { from: { path: 'main', near: [44, 47] }, pts: [[44, 41, 4], 'hdoor'] },
+    pk_moss_w: { from: { room: 'hdoor' }, pts: [[37.5, 33.5, 4], 'pk_moss_w'] },
+    pk_moss_e: { from: { room: 'hdoor' }, pts: [[50.5, 33.5, 4], 'pk_moss_e'] },
+    pk_bram_n: { from: { path: 'main', near: [84, 41] }, pts: [[79, 31, 4], 'pk_bram_n'] },
+    pk_bram_s: { from: { path: 'main', near: [80, 46] }, pts: [[85, 50, 4], 'pk_bram_s'] },
     // ---- hollow
     h_main: { kind: 'main', meander: 2.2, every: 6, type: 'p', pts: ['h_start', 'h_r1', [20, 10, 1], 'h_shrine', [29, 8, 3], 'h_r2', [39, 11, 3], 'h_den'] },
     h_lever: { from: { path: 'h_main', near: [37, 12] }, type: 'p', pts: [[36, 14.4, 3], 'h_lever'] },
@@ -93,6 +102,17 @@ module.exports = zone({
     home_arena: { room: 'arena', dx: 2.5, dy: -4, to: 'vale', open: false, arrive: 'vale.pine' },
     next: { room: 'arena', dx: -2.5, dy: -4, to: 'ruins', open: false, marker: true },
   },
+  // §26.2 the gear loop: elite pockets near each boss (zone.js emits them; first clear = a Rare >= boss level - 2 in a rotating slot)
+  pockets: [
+    { id: 'pk_moss_w', room: 'pk_moss_w', boss: 'mossjaw', name: 'The Mossbound Hollow', sub: 'Elite pocket: a Gnarlroot Brute and its pack', elite: 'gnarlbrute', mod: 'shielded', mobs: [['gloomslime', 2], ['shadehound', 1], ['brambleshaman', 1]] },
+    { id: 'pk_moss_e', room: 'pk_moss_e', boss: 'mossjaw', name: 'The Root Bend', sub: 'Elite pocket: a Gnarlroot Brute and its pack', elite: 'gnarlbrute', mod: 'vampiric', mobs: [['ogre', 1], ['shadehound', 2]] },
+    { id: 'pk_bram_n', room: 'pk_bram_n', boss: 'bramblehorn', name: 'Thornsow Wallow', sub: 'Elite pocket: a Thornsow Matriarch and her sounder', elite: 'thornsow', mod: 'burning', mobs: [['thornbackboar', 1], ['gloomslime', 2], ['brambleshaman', 1]] },
+    { id: 'pk_bram_s', room: 'pk_bram_s', boss: 'bramblehorn', name: 'The Bramble Pit', sub: 'Elite pocket: a Thornsow Matriarch and her sounder', elite: 'thornsow', mod: 'storm', mobs: [['ogre', 1], ['shadehound', 2], ['gloomslime', 1], ['brambleshaman', 1]] },
+  ],
+  // §26.2 cheap retries: a warp shrine at Mossjaw's boss door (the Hollow door, beside its pockets) and one just outside Mossjaw's den gate;
+  // Bramblehorn's is shrine3 ('The Clearing gate', already at the arena gate). Shrine warp = the full-map screen (game.js shrineWarp).
+  doorShrine: { name: 'The root door', dx: 2.2, dy: 1.4 },
+  denShrine: { name: 'Mossjaw\'s gate', back: 2.6 },
   shrines: { shrine1: { room: 'shr1', name: 'The road to the plaza' }, shrine2: { room: 'shr2', name: 'The creek ford' }, shrine3: { room: 'shr3', name: 'The Clearing gate' } },
   landmark: [65, 69.5],
   fish: [[52, 70], [84, 60.5]],
@@ -152,5 +172,8 @@ module.exports = zone({
   ],
   optional: [
     { sec: 'warrens', label: 'secrets + Fox Warrens (env pond, 3 sleepers)', walk: 80, fight: 70, pause: 25 },
+    // §26.2: farming budget ~6 min of the 24-min cap. Each pocket: spur walk there and back + a 1 elite / 3-5 commons fight + loot pause
+    { sec: 'forest', label: 'elite pockets x2 by the Hollow door (Mossjaw)', walk: 40, fight: 120, pause: 16 },
+    { sec: 'forest', label: 'elite pockets x2 by the Clearing (Bramblehorn)', walk: 60, fight: 130, pause: 16 },
   ],
 });

@@ -227,6 +227,7 @@ function drawScene() {
   if (!th.moon.sun) drawStars(ctx, bg.sky.stars, pxs, pys);
   perfMark('sky.base');
   const mo = th.moon, mx = mo.x + pxs * 0.5, my = mo.y + pys * 0.5;
+  BLOOM_MOONAT = BLOOM_MOONAT || [0, 0, null]; BLOOM_MOONAT[0] = mx; BLOOM_MOONAT[1] = my; BLOOM_MOONAT[2] = mo;   // the bloom's moon emitter
   ctx.drawImage(moonGlow(mo), Math.round(mx - mo.r * 4), Math.round(my - mo.r * 4));
   if (mo.sun) { ctx.fillStyle = mo.col; ctx.beginPath(); ctx.arc(Math.round(mx), Math.round(my), mo.r, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff6e0'; ctx.beginPath(); ctx.arc(Math.round(mx), Math.round(my), mo.r * 0.7, 0, Math.PI * 2); ctx.fill(); }
   else drawMoon(ctx, mx, my, mo.r, mo.col);
@@ -321,17 +322,20 @@ function drawScene() {
   perfMark('fx');
   // ---- fog & mist ----
   const forest = m.themeId === 'forest', fk = 1 - look.dark * 0.7;
-  perfMark('fx');
-  drawFog(ctx, bg.fog, 256, 0.5, 7, 2.5, (forest ? 0.24 : m.themeId === 'vale' ? 0.15 : 0.18) * fk);
+  const FL = FOG_LAYERS; FL.length = 0;
+  FL.push([bg.fog, 256, 0.5, 7, 2.5, (forest ? 0.24 : m.themeId === 'vale' ? 0.15 : 0.18) * fk]);
   if (!COARSE_POINTER) {   // §16.6.6: one fog layer on touch devices
-    perfMark('fog.1');
-    drawFog(ctx, bg.fog2, 384, 0.8, -4, 1.2, (forest ? 0.09 : m.themeId === 'vale' ? 0.07 : 0.1) * fk);
-    if (forest) drawFog(ctx, bg.fog, 512, 1.1, 3, 0.6, 0.14 * fk);   // heavy low mist banks
+    FL.push([bg.fog2, 384, 0.8, -4, 1.2, (forest ? 0.09 : m.themeId === 'vale' ? 0.07 : 0.1) * fk]);
+    if (forest) FL.push([bg.fog, 512, 1.1, 3, 0.6, 0.14 * fk]);   // heavy low mist banks
   }
+  if (QUALITY.cfg.fogHole && !p.dead) drawFogClear(ctx, FL, worldToView(p.x, p.y, p.z));
+  else for (const L of FL) drawFog(ctx, L[0], L[1], L[2], L[3], L[4], L[5]);
 
   perfMark('fog');
   // ---- lighting ----
+  const nStatic = lights.length;
   lightsIn(m, camX - RW / 2, camY - RH / 2, camX + RW / 2, camY + RH / 2, lights);
+  for (let i = nStatic; i < lights.length; i++) lights[i].__st = 1;   // map lights: stable objects (the light pool keys them)
   for (const o of viewObjs) if (o.brazier) { lights.push({ sx: isoX(o.x, o.y), sy: isoY(o.x, o.y, o.z) - 14, r: 70 + Math.sin(G.t * 13 + o.x) * 6, col: '#c77bff', a: 0.9 }); }
   // the hero's light (a lantern in dark sections) is always kept by the light budget
   const heroL = p.dead ? null : { sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 10, r: 54 + 46 * look.dark, col: '#ffe6d0', a: 0.28 + 0.55 * look.dark, keep: true };
@@ -1414,6 +1418,31 @@ function fogTile(tex, size) {
   if (!c) { const v = makeCanvas(size, size); v.x.imageSmoothingEnabled = true; v.x.drawImage(tex, 0, 0, size, size); c = m[size] = v.c; }
   return c;
 }
+// ===== fog clear zone around the hero (Lumina item 9, docs/meetings/2026-10-20-lumina.md; see docs/CREDITS.md) ==============
+// The fog layers used to lie on the hero as thickly as on the distance (the "washed" play band, §29.1). On the 'high' tier the
+// layers go into one cached buffer (FOGB, full res: a half-res buffer would need a smoothed 2x upscale, the costliest blit in
+// the software rasteriser - measured), a soft radial hole is cut out of it with destination-out at the hero (FOG_HOLE: 85 %
+// clear inside 40 px, back to full haze at 110 px) and the buffer is laid on the scene in one blit. The buffer is rebuilt only
+// when a layer's whole-pixel offset, its alpha or the hero's screen spot changes. Phone tiers draw the layers directly (no hole).
+const FOG_LAYERS = [], FOGB = makeCanvas(RW, RH), FOG_HOLE = { R: 110, inner: 40, a: 0.85, c: null }, FOGK = { key: '' };
+function fogOff(size, par, spx, spy) { return [Math.round(-(((camX * par + G.t * spx) % size) + size) % size), Math.round(-(((camY * par + G.t * spy) % size) + size) % size)]; }
+function drawFogClear(ctx, layers, at) {
+  const hx = Math.round(at[0]), hy = Math.round(at[1] - 10);
+  let key = hx + ',' + hy;
+  for (const L of layers) { const [x, y] = fogOff(L[1], L[2], L[3], L[4]); key += '|' + x + ',' + y + ',' + Math.round(L[5] * 1000); }
+  if (key !== FOGK.key) {
+    FOGK.key = key; const x = FOGB.x;
+    x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; x.clearRect(0, 0, RW, RH);
+    for (const L of layers) drawFog(x, L[0], L[1], L[2], L[3], L[4], L[5]);
+    if (!FOG_HOLE.c) {
+      const H = FOG_HOLE, v = makeCanvas(H.R * 2, H.R * 2), g = v.x.createRadialGradient(H.R, H.R, 0, H.R, H.R, H.R);
+      g.addColorStop(0, `rgba(0,0,0,${H.a})`); g.addColorStop(H.inner / H.R, `rgba(0,0,0,${H.a})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+      v.x.fillStyle = g; v.x.fillRect(0, 0, H.R * 2, H.R * 2); H.c = v.c;
+    }
+    x.globalCompositeOperation = 'destination-out'; x.drawImage(FOG_HOLE.c, hx - FOG_HOLE.R, hy - FOG_HOLE.R); x.globalCompositeOperation = 'source-over';
+  }
+  ctx.drawImage(FOGB.c, 0, 0);
+}
 function drawFog(ctx, tex, size, par, spx, spy, alpha) {
   const ox = -(((camX * par + G.t * spx) % size) + size) % size, oy = -(((camY * par + G.t * spy) % size) + size) % size;
   const t = fogTile(tex, size), x0 = Math.round(ox), y0 = Math.round(oy);
@@ -1426,31 +1455,28 @@ function drawFog(ctx, tex, size, par, spx, spy, alpha) {
 // A linear alpha ramp scaled by globalAlpha equals the old per-light rgba(col, a) -> rgba(col, 0) gradient.
 const COARSE_POINTER = PHONE || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
 // ===== quality tiers (DESIGN §26.4 steps 3-4) ==============================================================================
-//   high  : desktop, the reference look (every pass below at full quality)
+//   high  : desktop, the reference look (every pass below at full quality; the fog clear zone around the hero)
 //   phone : PHONE / coarse pointer. Lightmap and bloom upscaled without smoothing (the smoothed full-res upscales are the
 //           costliest single blits in a software rasteriser); the bloom glow is smoothed to half res first, so it stays soft
 //           (2 x 2 blocks of an already blurred glow), and re-extracted every other frame; no soft-light colour grade; at most
 //           24 lights; one fog layer (§16.6.6); particle cap 300 (main.js boot); HUD backing store at 1x (main.js fit).
 //   low   : phone + no bloom, no light halos, no god rays, at most 16 lights.
-// A phone starts on 'phone' and moves to 'low' when its frame time holds over 21 ms for 2 s, back after 4 s under 17 ms
-// (qualityAdapt, from main.js loop). ?quality=high|phone|low pins a tier (no adapting): the client's A/B on a real device.
+// A phone starts on 'phone'; main.js GOV (the resolution governor) moves it along DPR rungs and, below the lowest rung, to 'low'
+// and back. ?quality=high|phone|low pins a tier (no governor): the client's A/B on a real device.
 const QUALITY_TIERS = {
-  high: { lmSmooth: true, bloom: 'full', grade: true, halos: true, rays: true, lights: 40 },
-  phone: { lmSmooth: false, bloom: 'half', grade: false, halos: true, rays: true, lights: 24 },
-  low: { lmSmooth: false, bloom: 'off', grade: false, halos: false, rays: false, lights: 16 },
+  high: { lmSmooth: true, bloom: 'full', grade: true, halos: true, rays: true, lights: 40, fogHole: true },
+  phone: { lmSmooth: false, bloom: 'half', grade: false, halos: true, rays: true, lights: 24, fogHole: false },
+  low: { lmSmooth: false, bloom: 'off', grade: false, halos: false, rays: false, lights: 16, fogHole: false },
 };
 const QUALITY = (() => {
   let q = null; try { q = new URLSearchParams(location.search).get('quality'); } catch (e) { /* no location */ }
   const pinned = !!QUALITY_TIERS[q], tier = pinned ? q : COARSE_POINTER ? 'phone' : 'high';
-  return { tier, pinned, cfg: QUALITY_TIERS[tier], over: 0, under: 0 };
+  // ?fog=plain | ?fog=clear: force the fog clear zone off / on for every tier (A/B on a device)
+  let f = null; try { f = new URLSearchParams(location.search).get('fog'); } catch (e) { /* no location */ }
+  if (f === 'plain' || f === 'clear') for (const k in QUALITY_TIERS) QUALITY_TIERS[k].fogHole = f === 'clear';
+  return { tier, pinned, cfg: QUALITY_TIERS[tier] };
 })();
-function setQuality(tier) { if (!QUALITY_TIERS[tier]) return; QUALITY.tier = tier; QUALITY.cfg = QUALITY_TIERS[tier]; QUALITY.over = QUALITY.under = 0; BH.ok = false; }
-function qualityAdapt(ema, dt) {
-  if (QUALITY.pinned || QUALITY.tier === 'high') return;
-  QUALITY.over = ema > 21 ? QUALITY.over + dt : 0; QUALITY.under = ema < 17 ? QUALITY.under + dt : 0;
-  if (QUALITY.tier === 'phone' && QUALITY.over > 2) setQuality('low');
-  else if (QUALITY.tier === 'low' && QUALITY.under > 4) setQuality('phone');
-}
+function setQuality(tier) { if (!QUALITY_TIERS[tier]) return; QUALITY.tier = tier; QUALITY.cfg = QUALITY_TIERS[tier]; BH.ok = false; FOGK.key = ''; }
 const LIGHT_STATS = { inView: 0, drawn: 0, litTiles: 0 };
 const LM_TILES = { t: 15, nx: RW / 2 / 15, ny: RH / 2 / 15, mark: new Uint8Array((RW / 2 / 15) * (RH / 2 / 15)) };   // 16 x 9 tiles of 15 lightmap texels
 const BH = makeCanvas(RW / 2, RH / 2);   // phone tier: the bloom glow smoothed up to half res, then blitted 2x without smoothing
@@ -1479,6 +1505,53 @@ function lightSized(col, d) {
   }
   return c;
 }
+// ===== light cap with hysteresis (Lumina LightPool rules, DESIGN §26.4; see docs/CREDITS.md) ==================================
+// The cap used to hard-sort every frame, so at 40 lights a light near the rank boundary popped on and off. Now: a light keeps a
+// record across frames (map lights by object; per-frame lights - VFX, fireflies, braziers - by the nearest same-colour light of
+// the last frame within 10 px), the lit set is re-ranked every LP_RERANK s with LP_HYST off the cost of lights already lit,
+// and a light that gains or loses its slot fades over LP_FADE s instead of popping. Cost (lower = better) is in tile units:
+// distance from the view centre (22 px a unit) minus 3 x log2(1 + strength / 40); the hero's light (keep) always wins.
+// Under the cap a new light shows at once; in a capped view it starts dark, an immediate re-rank decides, and it fades into a
+// freed slot. Under the cap every record simply fades to full.
+const LP_RERANK = 0.2, LP_FADE = 0.35, LP_HYST = 2, LPOOL = { recs: new WeakMap(), prev: [], cur: [], t: 0, timer: 0 };
+let LIGHT_VIS = [];
+const lightCost = (vx, vy, L, lit) => L.keep ? -1e9 : Math.hypot(vx - RW / 2, vy - RH / 2) / 22 - 3 * Math.log2(1 + clamp(L.a, 0, 1) * L.r / 40) - (lit ? LP_HYST : 0);
+function lightPool(vis, cap) {
+  const P = LPOOL, now = G.t, dt = clamp(now - P.t, 0, 0.1), capped = vis.length > cap; P.t = now;
+  const cur = P.cur; cur.length = 0; let fresh = false;
+  for (const v of vis) {
+    const L = v[2]; let r = P.recs.get(L);
+    if (r && now - r.seen > 0.5) r = null;   // a map light back in view after a while starts over
+    if (!r && !L.__st) {   // a per-frame light: the nearest same-colour record of the last frame
+      let best = null, bd = 100;
+      for (const q of P.prev) if (!q.claimed && !q.st && q.col === L.col) { const d = (q.vx - v[0]) ** 2 + (q.vy - v[1]) ** 2; if (d < bd) { bd = d; best = q; } }
+      r = best;
+    }
+    if (!r) { r = { st: !!L.__st, col: L.col, lit: true, w: capped ? 0 : 1 }; if (capped) fresh = true; }
+    if (L.__st) P.recs.set(L, r);
+    r.claimed = true; r.seen = now; r.vx = v[0]; r.vy = v[1]; r.v = v; cur.push(r);
+  }
+  P.timer -= dt;
+  if (P.timer <= 0 || fresh) {
+    P.timer = LP_RERANK;
+    if (capped) { cur.sort((a, b) => lightCost(a.vx, a.vy, a.v[2], a.lit) - lightCost(b.vx, b.vy, b.v[2], b.lit)); cur.forEach((r, i) => { r.lit = i < cap; }); }
+    else for (const r of cur) r.lit = true;
+  }
+  // slots: at most `cap` lights draw. Lights losing their slot fade out first; a light given a slot fades in once one is free
+  // (a re-rank hands it the slot, the fade-out of the old owner frees it), so the count never passes the cap.
+  const out = []; let used = 0;
+  for (const r of cur) {
+    r.claimed = false;
+    if (r.v[2].keep) { r.w = 1; continue; }
+    if (!r.lit) r.w = clamp(r.w - dt / LP_FADE, 0, 1);
+    if (r.lit && r.w > 0) r.w = clamp(r.w + dt / LP_FADE, 0, 1);
+  }
+  for (const r of cur) if (r.v[2].keep || r.w > 0) used++;
+  for (const r of cur) if (r.lit && r.w === 0 && !r.v[2].keep && used < cap) { r.w = Math.min(1, dt / LP_FADE) || 0.05; used++; }
+  for (const r of cur) if (r.w > 0) { r.v[3] = r.w; out.push(r.v); }
+  P.cur = P.prev; P.prev = cur;
+  return out;
+}
 function applyLighting(ctx, lights, th, ambient) {
   const x = LM.x, fc = typeof flashCap === 'function' ? flashCap() : 1;
   x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; x.fillStyle = ambient || th.ambient; x.fillRect(0, 0, RW / 2, RH / 2);
@@ -1490,15 +1563,11 @@ function applyLighting(ctx, lights, th, ambient) {
     vis.push([vx, vy, L]);
   }
   LIGHT_STATS.inView = vis.length;
-  const LIGHT_MAX = QUALITY.cfg.lights;
-  if (vis.length > LIGHT_MAX) {   // budget: keep the hero's light, then the strongest nearest the centre
-    const sc = ([vx, vy, L]) => (L.keep ? 1e9 : 0) + L.a * L.r / (1 + Math.hypot(vx - RW / 2, vy - RH / 2) / 120);
-    vis = vis.sort((a, b) => sc(b) - sc(a)).slice(0, LIGHT_MAX);
-  }
-  LIGHT_STATS.drawn = vis.length;
+  vis = lightPool(vis, QUALITY.cfg.lights);   // the cap, with hysteresis + crossfades: each entry gains its weight w (0..1]
+  LIGHT_STATS.drawn = vis.length; LIGHT_VIS = vis;
   const mark = LM_TILES.mark; mark.fill(0);
-  for (const [vx, vy, L] of vis) {
-    const d = Math.max(1, Math.round(L.r)), a = clamp(L.a, 0, 1), lx = Math.round(vx / 2 - d / 2), ly = Math.round(vy / 2 - d / 2);
+  for (const [vx, vy, L, w] of vis) {
+    const d = Math.max(1, Math.round(L.r)), a = clamp(L.a, 0, 1) * w, lx = Math.round(vx / 2 - d / 2), ly = Math.round(vy / 2 - d / 2);
     if (a <= 0) continue;
     x.globalAlpha = a; x.drawImage(lightSized(L.col, d), lx, ly);
     // the lightmap tiles this light touches (+1 texel: the smoothed upscale reads one texel past the sprite)
@@ -1539,29 +1608,56 @@ function applyLighting(ctx, lights, th, ambient) {
   perfMark('lights.mul');
   // additive halos — the "fake light" glow
   ctx.globalCompositeOperation = 'lighter';
-  if (QUALITY.cfg.halos) for (const [vx, vy, L] of vis) {
+  if (QUALITY.cfg.halos) for (const [vx, vy, L, w] of vis) {
     const d = Math.max(1, Math.round(L.r * 1.1));
-    ctx.globalAlpha = clamp(L.a * 0.32 * fc, 0, 1); ctx.drawImage(lightSized(L.col, d), Math.round(vx - d / 2), Math.round(vy - d / 2));
+    ctx.globalAlpha = clamp(L.a * 0.32 * fc * w, 0, 1); ctx.drawImage(lightSized(L.col, d), Math.round(vx - d / 2), Math.round(vy - d / 2));
   }
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
 }
 
+// ===== emitter-only bloom (DESIGN §26.4 step 4; Lumina item 5, docs/meetings/2026-10-20-lumina.md; see docs/CREDITS.md) =========
+// The bloom used to bright-pass the whole scene (v^4 of a 1/4-res copy), so a white slash, a hit flash or the Echo's bright body
+// whited out the very target the fight is about. Now only EMITTERS go into the 1/4-res glow buffer (EM = BT): the drawn lights
+// (cores 0.15 x their radius, weighted by the light pool: braziers / flames, projectiles and spells push lights too), the moon /
+// sun halo, the water glints, and the VFX cores (the additive effects redrawn at 1/4 scale into VB - drawEffect only draws and
+// pushes lights, no particles or randomness - then laid in at BLOOM_VFX alpha: VFX sit AT the threshold, not over it). The 1/8 mip gets a warm tint, the two are summed at 1/4 (BC) and added to the scene once, as before. No scene
+// read-back, no bright-pass chain.
+const BLOOM_LOW = 0.8, BLOOM_LIGHT = 0.75, BLOOM_CORE = 0.22, BLOOM_VFX = 0.45, BLOOM_MOON = 0.45, BLOOM_WARM = 'rgba(255,176,96,0.35)';
+const VB = makeCanvas(RW / 4, RH / 4), BLOOM_SINK = [];   // VB: the VFX pass at 1/4; BLOOM_SINK swallows the lights it pushes
+let BLOOM_MOONAT = null;   // [x, y, moon] of this frame's moon (drawScene), null when no sky was drawn
+function bloomEmitters() {
+  const w = RW / 4, h = RH / 4, x = BT.x;
+  x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, w, h);
+  x.globalCompositeOperation = 'lighter'; x.imageSmoothingEnabled = true;
+  if (BLOOM_MOONAT) { const [mx, my, mo] = BLOOM_MOONAT, g = moonGlow(mo), d = g.width / 4; x.globalAlpha = BLOOM_MOON; x.drawImage(g, mx / 4 - d / 2, my / 4 - d / 2, d, d); }
+  for (const [vx, vy, L, wt] of LIGHT_VIS) {
+    const d = Math.max(1, Math.round(L.r * BLOOM_CORE)); x.globalAlpha = clamp(L.a * BLOOM_LIGHT * wt, 0, 1);
+    x.drawImage(lightSized(L.col, d), Math.round(vx / 4 - d / 2), Math.round(vy / 4 - d / 2));
+  }
+  // water glints (this frame's, from drawWater's buffers): one quarter-res dot each
+  const B = GLINT_BUF, n = B.q.length;
+  for (let i = 0; i < n; i++) if (B.lv[i]) { x.globalAlpha = B.lv[i] / GLINT_LV * 0.5; x.fillStyle = '#e6faff'; x.fillRect(B.xy[i * 2] >> 2, B.xy[i * 2 + 1] >> 2, 1, 1); }
+  // VFX cores: the additive effects, redrawn at 1/4 into VB, laid in at the threshold
+  const v = VB.x; v.setTransform(1, 0, 0, 1, 0, 0); v.globalAlpha = 1; v.globalCompositeOperation = 'source-over'; v.clearRect(0, 0, w, h);
+  let any = false;
+  v.setTransform(0.25, 0, 0, 0.25, 0, 0); v.imageSmoothingEnabled = true; BLOOM_SINK.length = 0;
+  for (const e of G.effects) if (e.type !== 'tele' && e.type !== 'marker' && e.type !== 'line' && e.type !== 'ghost' && e.type !== 'summon' && e.type !== 'aimflash') { v.globalCompositeOperation = 'lighter'; drawEffect(v, e, BLOOM_SINK); any = true; }
+  v.setTransform(1, 0, 0, 1, 0, 0); v.globalAlpha = 1; v.globalCompositeOperation = 'source-over'; BLOOM_SINK.length = 0;
+  if (any) { x.globalAlpha = BLOOM_VFX; x.drawImage(VB.c, 0, 0); }
+  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+}
 function applyBloom(ctx, strength) {
   const mode = QUALITY.cfg.bloom; if (mode === 'off' || strength <= 0) return;
-  // phone ('half'): the glow is re-extracted from the scene every other frame (BH holds the last one; §26.4 frame-skip)
+  // phone ('half'): the glow is rebuilt every other frame (BH holds the last one; §26.4 frame-skip)
   if (mode === 'half' && (CHUNK.frame & 1) && BH.ok) { bloomBlit(ctx, BH.c, strength, false); return; }
   const w = RW / 4, h = RH / 4;
-  B1.x.imageSmoothingEnabled = true; B1.x.globalCompositeOperation = 'source-over'; B1.x.clearRect(0, 0, w, h); B1.x.drawImage(SCN.c, 0, 0, w, h);
-  // bright-pass: v^4 via self-multiplication (no ctx.filter dependency)
-  BT.x.globalCompositeOperation = 'source-over'; BT.x.drawImage(B1.c, 0, 0);
-  BT.x.globalCompositeOperation = 'multiply'; BT.x.drawImage(B1.c, 0, 0); BT.x.drawImage(B1.c, 0, 0); BT.x.drawImage(B1.c, 0, 0);
-  BT.x.globalCompositeOperation = 'source-over';
-  B2.x.imageSmoothingEnabled = true; B2.x.clearRect(0, 0, RW / 8, RH / 8); B2.x.drawImage(BT.c, 0, 0, RW / 8, RH / 8);
-  // perf: the two glow layers are summed at 1/4 res (BC) so the full-res additive pass runs once, not twice
-  // (0.4 x BT + 0.6 x B2 upscaled; 'lighter' is additive, so the result matches the old two-pass blend)
+  bloomEmitters();
+  B2.x.imageSmoothingEnabled = true; B2.x.globalCompositeOperation = 'source-over'; B2.x.clearRect(0, 0, RW / 8, RH / 8); B2.x.drawImage(BT.c, 0, 0, RW / 8, RH / 8);
+  B2.x.globalCompositeOperation = 'source-atop'; B2.x.fillStyle = BLOOM_WARM; B2.x.fillRect(0, 0, RW / 8, RH / 8); B2.x.globalCompositeOperation = 'source-over';   // the warm low mip
+  // the two glow layers are summed at 1/4 res (BC) so the full-res additive pass runs once (0.4 x EM + 0.6 x the 1/8 mip)
   BC.x.imageSmoothingEnabled = true; BC.x.globalCompositeOperation = 'source-over'; BC.x.clearRect(0, 0, w, h);
   BC.x.globalAlpha = 0.4; BC.x.drawImage(BT.c, 0, 0);
-  BC.x.globalCompositeOperation = 'lighter'; BC.x.globalAlpha = 0.6; BC.x.drawImage(B2.c, 0, 0, w, h);
+  BC.x.globalCompositeOperation = 'lighter'; BC.x.globalAlpha = BLOOM_LOW; BC.x.drawImage(B2.c, 0, 0, w, h);
   BC.x.globalAlpha = 1; BC.x.globalCompositeOperation = 'source-over';
   let src = BC.c;
   if (mode === 'half') { BH.x.imageSmoothingEnabled = true; BH.x.clearRect(0, 0, RW / 2, RH / 2); BH.x.drawImage(BC.c, 0, 0, RW / 2, RH / 2); src = BH.c; BH.ok = true; }

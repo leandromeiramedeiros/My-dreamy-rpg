@@ -6,15 +6,44 @@ const DISP = document.getElementById('game');
 const dctx = DISP.getContext('2d');
 // HUD at min(devicePixelRatio, 2) (§16.6.6): the backing store is DW*k x DH*k and every draw keeps using the
 // 960x540 coordinate space through one transform; the scene stays 480x270 and is scaled up into it.
-// Phones (maps.js PHONE) keep k = 1 (§26.4 step 3, capped DPR): a 960x540 store is ~0.5 of a phone's device pixels, the browser
-// upscales it with smoothing off (index.html image-rendering), and the per-frame scene blit + HUD fill a quarter of the pixels.
+// Phones (maps.js PHONE) start at k = 0.5 x DPR (>= 1; §26.4 step 3, capped DPR) and the governor below moves it: the browser
+// upscales the store with smoothing off (index.html image-rendering), and the per-frame scene blit + HUD fill fewer pixels.
 let HUD_K = 1;
-const HUD_K_MAX = PHONE ? 1 : 2;
+const HUD_K_MAX = 2;
+// ===== resolution governor (phones; Lumina ResolutionGovernor rules, docs/CREDITS.md; DESIGN §26.4 step 3) ====================
+// The phone backing store runs at a DPR rung (GOV.rungs: 0.5 .. 1.0 of the device ratio, 0.125 steps; k = rung x DPR, whole
+// eighths, 1..2). Timing source: the CPU frame time of loop() (update + render; no GPU timer in Canvas 2D), averaged per 0.5 s
+// sample; decisions on the median of the last 5 samples (one slow burst is no trend). Down one rung after 4 slow medians
+// (> GOV.slow ms), up after 20 fast ones (< GOV.fast ms), never twice within 3 s (cooldown, then fresh samples). Below the
+// lowest rung the next step down is the 'low' quality tier (render.js QUALITY), and the first step up leaves it. It replaces the
+// old EMA tier switch, which flapped. Desktop never runs it; ?quality=... pins the tier and turns it off.
+const GOV = { on: PHONE && !QUALITY.pinned, rungs: [0.5, 0.625, 0.75, 0.875, 1], ri: 0, slow: 14, fast: 9, acc: 0, n: 0, timer: 0, cooldown: 2, samples: [], sorted: [], nSlow: 0, nFast: 0, med: 0 };
+function governorStep(work, dt) {
+  const G2 = GOV; if (!G2.on) return;
+  G2.acc += work; G2.n++; G2.cooldown -= dt; G2.timer += dt;
+  if (G2.timer < 0.5) return;
+  const ms = G2.acc / Math.max(1, G2.n); G2.acc = 0; G2.n = 0; G2.timer = 0;
+  const S = G2.samples; S.push(ms); if (S.length > 5) S.shift();
+  if (S.length < 3) return;
+  const so = G2.sorted; so.length = 0; for (const v of S) so.push(v); so.sort((a, b) => a - b);
+  G2.med = so[so.length >> 1];
+  G2.nSlow = G2.med > G2.slow ? G2.nSlow + 1 : 0; G2.nFast = G2.med < G2.fast ? G2.nFast + 1 : 0;
+  if (G2.cooldown > 0) return;
+  if (G2.nSlow >= 4) {
+    if (G2.ri > 0) { G2.ri--; fit(); } else if (QUALITY.tier !== 'low') setQuality('low'); else return;
+    governorSettle();
+  } else if (G2.nFast >= 20) {
+    if (QUALITY.tier === 'low') setQuality('phone'); else if (G2.ri < G2.rungs.length - 1) { G2.ri++; fit(); } else return;
+    governorSettle();
+  }
+}
+function governorSettle() { GOV.cooldown = 3; GOV.nSlow = GOV.nFast = 0; GOV.samples.length = 0; }
 function fit() {
   const s = Math.min(window.innerWidth / DW, window.innerHeight / DH);
   DISP.style.width = Math.floor(DW * s) + 'px';
   DISP.style.height = Math.floor(DH * s) + 'px';
-  const k = Math.min(HUD_K_MAX, Math.max(1, window.devicePixelRatio || 1));
+  const dpr = window.devicePixelRatio || 1;
+  const k = PHONE ? clamp(Math.round(dpr * GOV.rungs[GOV.ri] * 8) / 8, 1, HUD_K_MAX) : Math.min(HUD_K_MAX, Math.max(1, dpr));
   if (k !== HUD_K || DISP.width !== DW * k) { HUD_K = k; DISP.width = DW * k; DISP.height = DH * k; }
   dctx.setTransform(HUD_K, 0, 0, HUD_K, 0, 0); dctx.imageSmoothingEnabled = false;
   // R3 #2: a touch device held upright gets the "rotate to play" card (screens.js drawRotateCard) instead of a 40 % letterbox
@@ -177,7 +206,6 @@ function loop(now) {
   frameEma += (fdt * 1000 - frameEma) * 0.05;
   // particle budget follows the measured frame time: shed motes first when a device struggles
   PART.budget = clamp(PART.budget + (frameEma > 20 ? -0.02 : frameEma < 17.5 ? 0.01 : 0), 0.35, 1);
-  qualityAdapt(frameEma, fdt);   // phone: the post-effect tier follows the frame time too (render.js QUALITY)
   acc += fdt;
   const frameT0 = performance.now();
   let n = 0;
@@ -194,7 +222,9 @@ function loop(now) {
   if (PRELOAD) preloadStep(clamp(PRELOAD_FRAME - (performance.now() - frameT0), 2, PRELOAD_MS));   // a portal fade's map load (see transition)
   else if (G.state === 'dead') prebuildRespawn(clamp(PRELOAD_FRAME - (performance.now() - frameT0), 2, PRELOAD_MS));
   if (typeof AUDIO !== 'undefined') AUDIO.frame(fdt);   // music director: song / stems / intensity / ducking (notes are timed by its 25 ms audio-clock tick)
-  if (PERF.on) perfEnd(performance.now() - frameT0, n);
+  const workMs = performance.now() - frameT0;
+  governorStep(workMs, fdt);   // phone: DPR rung / quality tier from the CPU frame time (GOV below)
+  if (PERF.on) perfEnd(workMs, n);
   requestAnimationFrame(loop);
 }
 
@@ -225,7 +255,7 @@ function perfStats(total, reset) {
   const f = q(R.f), w = q(R.w), ph = {};
   const src = total ? R.tot : R.ph, sn = total ? R.totN : R.phN;
   for (const k in src) ph[k] = +(src[k] / Math.max(1, sn)).toFixed(2);
-  const out = { fps: 1000 / f.avg, frame: f, work: w, draws: R.draws, parts: G.parts.length + (G.amb ? G.amb.length : 0), ph, tier: QUALITY.tier };
+  const out = { fps: 1000 / f.avg, frame: f, work: w, draws: R.draws, parts: G.parts.length + (G.amb ? G.amb.length : 0), ph, tier: QUALITY.tier, rung: GOV.on ? GOV.rungs[GOV.ri] : null, govMed: GOV.on ? +GOV.med.toFixed(1) : null };
   if (total) {   // tools: update steps per frame, and the phase split of the frames whose work went over 18 ms
     out.steps = +(R.steps / Math.max(1, R.totN)).toFixed(2); out.slowFrames = R.slowN || 0; out.slow = {};
     for (const k in R.slow) out.slow[k] = +(R.slow[k] / Math.max(1, R.slowN)).toFixed(2);
@@ -240,7 +270,7 @@ function drawPerfOverlay(ctx) {
     const s = perfStats(); R.at = t;
     if (s) {
       const ph = Object.entries(s.ph).filter(([, v]) => v >= 0.05).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v.toFixed(1));
-      R.txt = [`${s.fps.toFixed(0)} fps  frame ${s.frame.avg.toFixed(1)} / p95 ${s.frame.p95.toFixed(1)} ms`, `work ${s.work.avg.toFixed(1)} / p95 ${s.work.p95.toFixed(1)} ms  q:${s.tier}`,
+      R.txt = [`${s.fps.toFixed(0)} fps  frame ${s.frame.avg.toFixed(1)} / p95 ${s.frame.p95.toFixed(1)} ms`, `work ${s.work.avg.toFixed(1)} / p95 ${s.work.p95.toFixed(1)} ms  q:${s.tier}${s.rung ? ' dpr x' + s.rung + ' k' + HUD_K : ''}`,
         `draws ${s.draws}  parts ${s.parts}`].concat(ph.reduce((rows, x, i) => { if (i % 4 === 0) rows.push(x); else rows[rows.length - 1] += '  ' + x; return rows; }, []));
       for (const k in R.ph) R.ph[k] = 0; R.phN = 0;
     }
