@@ -20,63 +20,12 @@ const G = {
 
 };
 
-// ===== audio (tiny synth) ======================================================
-let AC = null;
-function initAudio() { if (!AC) try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } }
-function tone(f0, f1, dur, type = 'sine', vol = 0.08, noise = false, at = 0) {
-  if (!AC || G.muted) return;
-  vol *= typeof sfxVol === 'function' ? sfxVol() : 1; if (vol <= 0) return;
-  const t = AC.currentTime + at, g = AC.createGain();
-  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  let src;
-  if (noise) {
-    const b = AC.createBuffer(1, Math.floor(AC.sampleRate * dur), AC.sampleRate), d = b.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    src = AC.createBufferSource(); src.buffer = b;
-    const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(40, f1), t + dur);
-    src.connect(f); f.connect(g);
-  } else {
-    src = AC.createOscillator(); src.type = type; src.frequency.setValueAtTime(f0, t); src.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
-    src.connect(g);
-  }
-  g.connect(AC.destination); src.start(t); src.stop(t + dur);
-}
-function sfx(k) {
-  switch (k) {
-    case 'swing': tone(1800, 500, 0.12, 0, 0.05, true); break;
-    case 'slash': tone(2400, 400, 0.18, 0, 0.07, true); break;
-    case 'heavy': tone(900, 80, 0.3, 0, 0.12, true); tone(140, 50, 0.3, 'square', 0.05); break;
-    case 'dash': tone(600, 2400, 0.18, 0, 0.06, true); break;
-    case 'boom': tone(300, 40, 0.6, 0, 0.18, true); tone(90, 30, 0.5, 'sine', 0.15); break;
-    case 'fire': tone(500, 1500, 0.25, 0, 0.07, true); break;
-    case 'frost': tone(2600, 1800, 0.25, 'triangle', 0.04); break;
-    case 'arcane': tone(500, 1100, 0.25, 'triangle', 0.05); tone(750, 1650, 0.25, 'sine', 0.03); break;
-    case 'bow': tone(300, 900, 0.1, 'triangle', 0.05); break;
-    case 'zap': tone(3000, 300, 0.25, 'sawtooth', 0.03); break;
-    case 'heal': tone(520, 1040, 0.4, 'sine', 0.05); tone(780, 1560, 0.4, 'sine', 0.03); break;
-    case 'hit': tone(220, 90, 0.08, 'square', 0.04); break;
-    case 'hurt': tone(160, 60, 0.2, 'sawtooth', 0.07); break;
-    case 'shout': tone(180, 90, 0.4, 'sawtooth', 0.06); break;
-    case 'shield': tone(400, 600, 0.3, 'triangle', 0.06); break;
-    case 'blink': tone(2000, 400, 0.15, 'sine', 0.05); break;
-    case 'trap': tone(800, 200, 0.1, 'square', 0.04); break;
-    case 'beam': tone(200, 1200, 0.5, 'sawtooth', 0.04); break;
-    case 'veil': tone(300, 150, 0.8, 'sine', 0.07); tone(450, 225, 0.8, 'sine', 0.04); break;
-    case 'wave': tone(400, 1600, 0.3, 'triangle', 0.05); break;
-    case 'portal': tone(200, 800, 1.2, 'sine', 0.08); tone(300, 1200, 1.2, 'triangle', 0.04); break;
-    case 'die': tone(400, 60, 0.4, 0, 0.08, true); break;
-    case 'roar': tone(120, 40, 1.0, 'sawtooth', 0.1); tone(400, 80, 1.0, 0, 0.08, true); break;
-    case 'levelup': [523, 659, 784, 1047].forEach((f, i) => tone(f, f * 1.01, 0.32, 'triangle', 0.06, false, i * 0.09)); tone(1568, 2093, 0.6, 'sine', 0.03, false, 0.36); break;
-    case 'pickup': tone(880, 1320, 0.09, 'sine', 0.04); break;
-    case 'loot': tone(660, 1320, 0.25, 'triangle', 0.05); tone(990, 1980, 0.3, 'sine', 0.03, false, 0.06); break;
-    case 'chest': tone(180, 420, 0.22, 'square', 0.04); tone(2000, 600, 0.2, 0, 0.04, true); break;
-    default: if (/^drop\d$/.test(k)) {   // drop chime: one more, higher note per rarity step
-      const n = +k[4];
-      for (let i = 0; i < n; i++) tone(660 * Math.pow(1.26, i), 660 * Math.pow(1.26, i) * 1.01, 0.22 + n * 0.04, 'triangle', 0.035 + n * 0.006, false, i * 0.07);
-      if (n >= 3) tone(2640, 3520, 0.5, 'sine', 0.02, false, n * 0.07);
-    }
-  }
-}
+// ===== audio ===================================================================
+// js/audio.js is the engine (buses, voice pool, music director, captions). These two wrappers keep every call site.
+//   initAudio()          create / resume the AudioContext from a user gesture (also automatic on the first gesture)
+//   sfx(id, pos?)        play an SFX_RECIPES id; pos = { x, y } world tiles for pan + distance (optional)
+function initAudio() { if (typeof AUDIO !== 'undefined') AUDIO.unlock(); }
+function sfx(k, pos) { if (typeof AUDIO !== 'undefined') AUDIO.sfx(k, pos); }
 
 // ===== generic helpers ==========================================================
 // CAST = the skill being resolved ({ skill, el }); delays/projectiles/zones/dashes capture it so gem
@@ -765,6 +714,7 @@ function spawnEnemy(type, x, y, spawnT = 0.9, o = {}) {
 }
 function killEnemy(e) {
   e.dead = true; sfx('die');
+  if (e.boss && typeof AUDIO !== 'undefined') AUDIO.onBossKilled(e);   // victory stinger, the boss song bows out
   const counts = e.dummy || partsDeath(e);   // split / zone-on-death; a swarm or twin counts once, on its last member
   if (counts && !e.noXp) onEnemyKilled(e);   // XP + loot (items.js)
   if (counts) { G.kills[e.type] = (G.kills[e.type] || 0) + 1; G.kills.any = (G.kills.any || 0) + 1; if (!e.dummy) sighting(e.type).kills++; }

@@ -20,6 +20,7 @@ const SETTINGS_SCHEMA = [
   { key: 'music', label: 'Music', group: 'audio', type: 'slider', min: 0, max: 1, step: 0.25, def: 0.75 },
   { key: 'sfx', label: 'Sound effects', group: 'audio', type: 'slider', min: 0, max: 1, step: 0.25, def: 0.75 },
   { key: 'muted', label: 'Mute all', group: 'audio', type: 'toggle', def: false },
+  { key: 'captions', label: 'Sound captions', group: 'audio', type: 'toggle', def: false },
   { key: 'difficulty', label: 'Difficulty', group: 'game', type: 'choice', def: 'normal', options: [{ v: 'story', label: 'Story' }, { v: 'normal', label: 'Normal' }] },
   { key: 'shake', label: 'Screen shake', group: 'display', type: 'slider', min: 0, max: 100, step: 25, def: 100 },
   { key: 'hitstop', label: 'Hitstop', group: 'display', type: 'toggle', def: true },

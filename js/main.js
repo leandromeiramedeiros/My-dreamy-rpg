@@ -43,6 +43,7 @@ function enterMap(id, at) {
 function transition(to, at) {
   if (G.fadeDir) return;
   G.fadeDir = 1; G.fadeTo = to; G.fadeAt = at || null; sfx('portal');
+  if (typeof AUDIO !== 'undefined') AUDIO.onTransition(to);   // the zone song fades over 1 bar during the rift fade
 }
 // death: lose 10% of this level's bar (never a level), wake at the last checkpoint (or this map's start) with
 // full HP and potions; settled triggers survive, so only the encounter you died in resets
@@ -109,6 +110,7 @@ function render() {
   dctx.drawImage(SCN.c, 0, 0, DW, DH);
   UI.begin();
   drawHUD(dctx);   // draws its own toasts and focus ring per screen
+  if (typeof AUDIO !== 'undefined') AUDIO.drawCaptions(dctx);   // sound captions (setting), bottom-left
   G.ui.wheel = 0;
   if (G.fade > 0) {
     const g = dctx.createRadialGradient(DW / 2, DH / 2, 0, DW / 2, DH / 2, DW * 0.7);
@@ -139,6 +141,7 @@ function loop(now) {
   }
   if (n === 5) acc = 0;   // spiral-of-death guard after a long stall
   render();
+  if (typeof AUDIO !== 'undefined') AUDIO.frame(fdt);   // music director: song / stems / intensity / ducking (notes are timed by its 25 ms audio-clock tick)
   requestAnimationFrame(loop);
 }
 // pause the loop while the tab is hidden; resume without a time jump
