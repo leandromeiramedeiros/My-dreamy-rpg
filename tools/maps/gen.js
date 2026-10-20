@@ -137,6 +137,7 @@ function catmull(pts, step) {
 // collider radius r and default spacing sp (min centre distance to other props, averaged between the two)
 const PROP = {
   tree_round: { r: 0.32, sp: 1.6 }, tree_poplar: { r: 0.32, sp: 1.3 }, tree_blossom: { r: 0.32, sp: 1.8 }, tree_teal: { r: 0.32, sp: 1.5 },
+  tree_oak: { r: 0.34, sp: 1.8 }, tree_birch: { r: 0.26, sp: 1.0 },   // §29 G2 forest broadleaves (js/maps.js OBJ_TYPES)
   tree_dead: { r: 0.3, sp: 1.4 }, bush: { r: 0.2, sp: 0.8 }, rock: { r: 0.28, sp: 0.9 }, rock_dark: { r: 0.28, sp: 0.9 },
   grass: { r: 0, sp: 0.45 }, mushroom: { r: 0, sp: 0.5 }, lantern: { r: 0.12, sp: 2 }, lantern_blue: { r: 0.12, sp: 2 },
   crystal: { r: 0.25, sp: 1 }, crystal_violet: { r: 0.25, sp: 1 }, sign: { r: 0.15, sp: 1 }, shrine: { r: 0.35, sp: 2 }, brazier: { r: 0.3, sp: 2 },
@@ -795,7 +796,7 @@ class MapGen {
     ob.sp = o.sp != null ? o.sp : def.sp;
     this.objs.push(ob);
     const i = Math.floor(x), j = Math.floor(y);
-    if (i >= 0 && j >= 0 && i < this.W && j < this.H) (this.occ[j][i] = this.occ[j][i] || []).push({ x, y, sp: ob.sp, t });
+    if (i >= 0 && j >= 0 && i < this.W && j < this.H) (this.occ[j][i] = this.occ[j][i] || []).push({ x, y, sp: ob.sp, t, v: ob.v || 0 });
     return ob;
   }
   // rich marker (chest, tablet, shrine...). kind may be a future kind; resolved at emit time.
@@ -811,7 +812,7 @@ class MapGen {
     if (def.r > 0) {
       if (tt === 'p' || tt === 'x' || tt === 'r') return false;
       const pc = ctx ? ctx.dPath : this.pathClear(x, y);
-      if (pc < def.r + 0.55) return false;
+      if (pc < def.r + (def.r <= 0.22 ? 0.15 : 0.55)) return false;   // §29 G2: small props (r <= 0.22) may stand in the corridor verge
       const z = this.zoneAt(x, y);
       if (z & ZONE.fight) return false;
     }
@@ -851,7 +852,7 @@ class MapGen {
           if (rule.types && !rule.types.includes(gc.type)) continue;
           if (!this.placeOk(rule.t, gx, gy, gc)) continue;
           if (!rule.force && !this.free(gx, gy, sp)) continue;
-          const opts = {}; if (rule.v) opts.v = this.rng.int(0, rule.v - 1); if (rule.flip && this.rng.chance(0.5)) opts.f = 1; if (rule.sp != null) opts.sp = sp;
+          const opts = {}; if (rule.v) opts.v = this.variantFor(rule.t, gx, gy, rule.v); if (rule.flip && this.rng.chance(0.5)) opts.f = 1; if (rule.sp != null) opts.sp = sp;
           const ob = this.addObj(rule.t, gx, gy, opts); if (rule.then) rule.then(ob, gc, this);
           placed++;
         }
@@ -859,6 +860,18 @@ class MapGen {
       stats[rule.t] = (stats[rule.t] || 0) + placed;
     }
     return stats;
+  }
+  // §29 G2 variation budget: no identical (type, variant) within 3 tiles. A random variant, then the next free one in order
+  // (one rng draw whatever happens, so the stream stays aligned); all taken -> the random one.
+  variantFor(t, x, y, n) {
+    const v0 = this.rng.int(0, n - 1); if (n < 2) return v0;
+    const used = new Set(), bi = Math.floor(x), bj = Math.floor(y);
+    for (let dj = -3; dj <= 3; dj++) for (let di = -3; di <= 3; di++) {
+      const c = this.occ[bj + dj] && this.occ[bj + dj][bi + di]; if (!c) continue;
+      for (const o of c) if (o.t === t && Math.hypot(o.x - x, o.y - y) < 3) used.add(o.v);
+    }
+    for (let k = 0; k < n; k++) { const v = (v0 + k) % n; if (!used.has(v)) return v; }
+    return v0;
   }
   // ring of props around a room (e.g. standing stones), skipping places that block walkways
   ring(roomId, t, n, frac, o = {}) {

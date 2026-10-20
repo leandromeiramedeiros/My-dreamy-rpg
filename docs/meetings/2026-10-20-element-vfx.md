@@ -208,8 +208,10 @@ to the last 25 % of life on the `high` tier, plain alpha steps 1 / 0.6 / 0.3 on 
 6. **Budgets.** Counts: inside the existing caps, no raise. Sub-allocation of `PART.cap` 300 (phone) / 600 (desktop):
    combat bursts reserve 120 / 240 (the eviction rule already gives them priority), element idle 90 / 180, scenery
    ambience 90 / 180 (today's motes). Time: the `parts` perf phase (tools/perf.js, `?perf=1`) ≤ 0.6 ms phone and ≤ 0.9 ms
-   desktop at the cap, i.e. net ≤ +0.3 ms on phone after the per-draw spawn offset in (3); UIP ≤ 0.15 ms. The acceptance
-   gate is the phone p95 reading, not the phase number: ≤ 20.0 ms on pine-fight with 6 emitting bodies.
+   desktop at the cap; UIP ≤ 0.15 ms. **Net phone cost ≤ 0 ms:** the per-draw spawn migration in (3) and the sprite blits
+   replacing `rgbaQ` fill rects must return at least what the sheets cost, because the baseline is already ~20.3 ms (F7)
+   and the gate is absolute. The acceptance gate is the phone p95 reading, not the phase number: ≤ 20.0 ms on pine-fight
+   with 6 emitting bodies, which means this lane must also *recover* ≥ 0.3 ms; the P2 before / after pair proves it.
 7. **Bloom.** Particles stay out of VB (F2). A sheet's light step is ≤ 0.9 luminance and the core pixel is one pixel, so
    even the additive `lighter` pass cannot build a white block. Lights: only projectiles and the Echo push a light, at
    `a ≤ 0.35`; idle emitters push none. The m3-feel / perf-parity bloom strips are re-shot (A7) and the fight band is
