@@ -435,7 +435,7 @@ const PAD_STUB = () => {
   const ward = await ev(() => { const D = BOSSES.boss; return { moves: Object.keys(D.moveDefs).join(), p2: D.phases[1].hpBelow, adds: D.phases[1].onEnter[0].adds.length, hp: ENEMY.boss.hp, moss: Object.keys(BOSSES.mossjaw.moveDefs).join() }; });
   check('boss: Gloam Warden ported to BOSS_MOVES (cleave slam volley charge voidrain, 50 % roar + 4 adds); Mossjaw is data', ward.moves === 'cleave,slam,volley,charge,voidrain' && ward.p2 === 0.5 && ward.adds === 4 && ward.moss === 'lunge,rootSpit,burrow,howl', ward);
   // map objects on an inline test map: gate + lever, keydoor + key, hidden wall, fishspot, arrive portal, fractional house
-  const flow = await ev(async () => {
+  const flowP = ev(async () => {
     const w = ms => new Promise(r => setTimeout(r, ms)), W = 14, row = 'g'.repeat(W);
     G.world.maps.m2b_test = { name: 'Test Glade', sub: 'gates', theme: 'forest', W, H: W, tiles: Array(W).fill(row), heights: Array(W).fill('0'.repeat(W)), start: { x: 3, y: 7 },
       portals: [{ x: 12, y: 12, to: 'vale', open: true, id: 'home', arrive: { x: 5.5, y: 6.5 } }],
@@ -444,6 +444,7 @@ const PAD_STUB = () => {
       triggers: [], objective: 'Test the gates', level: [3, 10] };
     THEME_OF.m2b_test = 'forest'; delete G.maps.m2b_test; G.prog.gates = {}; G.prog.secrets = {};
     enterMap('m2b_test'); G.state = 'play';
+    G.player.x = 5.2; G.player.y = 8.6; G.banner = null; window.__flowHold = true; while (window.__flowHold) await w(50);
     const p = G.player, m = G.map; p.invulnT = 99;
     const gateCols = m.colliders.filter(c => c.barrier === 'gate').length;
     p.x = 6; p.y = 7; for (let i = 0; i < 40; i++) moveEntity(p, 0.05, 0, 0); const blocked = p.x < 6.9;
@@ -465,7 +466,10 @@ const PAD_STUB = () => {
     p.x = 7; p.y = 9; p.invulnT = 99;
     return { gateCols, blocked, leverPrompt, opened, pulled, locked, stillShut, unlockTxt, doorOpen, hiddenOpen, fish, q0, q1, q2, talk, cp, spawned, closed, arrive: pt.arrive && pt.arrive.x === 5.5, house: m.objects.some(o => o.src && o.src.t === 'house') };
   });
-  await shotM2b('gate_lever_keydoor_testmap');
+  await page.waitForFunction(() => window.__flowHold === true); await wait(500); await shotM2b('gate_lever_keydoor_testmap_closed');
+  await ev(() => { window.__flowHold = false; });
+  const flow = await flowP;
+  await shotM2b('gate_lever_keydoor_testmap_open');
   check('map: gate blocks, lever (Interact) opens it and flips, saved in G.prog.gates', flow.gateCols >= 3 && flow.blocked && flow.leverPrompt === 'lever' && flow.opened && flow.pulled, flow);
   check('map: keydoor stays locked without its key, a loot card item:key_* unlocks it', flow.locked === 'Locked' && flow.stillShut && flow.unlockTxt === 'Unlock' && flow.doorOpen);
   check('map: openGate reveals a hidden wall; fishspot stub prompt; fractional house coords; portal arrive + id', flow.hiddenOpen && flow.fish === 'fishspot' && flow.house && flow.arrive && flow.closed);
