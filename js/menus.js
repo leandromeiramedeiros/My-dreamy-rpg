@@ -131,7 +131,7 @@ function statRows(p, short) {
   const sp = Math.round((p.speed / 3.7 - 1) * 100);
   return [['Atk', Math.round(item('weapon', p.gear.weapon).basic.dmg * p.power)], ['HP', p.maxHp], ['MP', p.maxMp], ['Def', pctText(p.def)],
     ['Crit dmg', signedPct(p.critDmg)], ['Crit', pctText(p.crit)], ['Skill dmg', signedPct(p.skillDmg)], ['Haste', signedPct(p.haste)],
-    ['Potions', `${p.potions}/${MAX_POTIONS}`], ['CDR', signedPct(p.cdr, true)], ['Speed', signedPct(sp / 100)], ['Regen', `${+p.regen.toFixed(1)}/s`]].map(([k, v]) => [S[k] || k, v]);
+    ['Potions', `${p.potions}/${p.maxPotions || MAX_POTIONS}`], ['CDR', signedPct(p.cdr, true)], ['Speed', signedPct(sp / 100)], ['Regen', `${+p.regen.toFixed(1)}/s`]].map(([k, v]) => [S[k] || k, v]);
 }
 // colW = one number (equal columns) or [left, right] widths (the inventory's 216 px column needs a wide left column)
 function drawStats(ctx, p, x, y, colW, rowH, short) {
@@ -351,7 +351,7 @@ function compareDeltas(it, cmp) {
   const a = statsOf(it), b = statsOf(cmp), out = [];
   for (const k of new Set(Object.keys(a).concat(Object.keys(b)))) {
     const d = (a[k] || 0) - (b[k] || 0); if (!STAT_NAME[k] || !deltaShown(k, d)) continue;
-    out.push({ id: k, d, text: cleanZero(fmtStat(k, d, true)), rel: Math.abs(d) / Math.max(Math.abs(a[k] || 0), Math.abs(b[k] || 0), 1e-6) });
+    out.push({ id: k, d, text: cleanZero(fmtStat(k, d, true)).replace(/^(?=\d)/, '+'), rel: Math.abs(d) / Math.max(Math.abs(a[k] || 0), Math.abs(b[k] || 0), 1e-6) });
   }
   const ord = k => { const i = STAT_ORDER.indexOf(k); return i < 0 ? 99 : i; };
   return out.sort((x, y) => ord(x.id) - ord(y.id)).slice(0, 3);
@@ -362,6 +362,19 @@ function wrapLines(s, size, w, max) {
   if (line) out.push(line);
   if (out.length > max) { const rest = out.splice(max - 1).join(' '); out.push(fitText(rest, w, size)); }
   return out;
+}
+// boon.text is always the MAJOR wording; a minor boon shows its minor numbers (BOONS row: minor / major value tables)
+function boonText(it) {
+  const b = it.boon; if (!b || b.grade !== 'minor' || typeof BOONS === 'undefined') return b ? b.text : '';
+  const row = (BOONS[it.slot] || []).find(r => r.id === b.id); if (!row || !row.major || !row.minor) return b.text;
+  let t = b.text;
+  for (const k in row.major) {
+    const mv = row.major[k], nv = row.minor[k]; if (nv == null) continue;
+    for (const [from, to] of [[Math.round(mv * 100), Math.round(nv * 100)], [mv, nv]]) {
+      const re = new RegExp('(?<![\\d.])' + String(from).replace('.', '\\.') + '(?![\\d.])'); if (re.test(t)) { t = t.replace(re, String(to)); break; }
+    }
+  }
+  return t;
 }
 function trinketRow(id) {
   const all = (typeof TRINKET_UNIQUES !== 'undefined' ? TRINKET_UNIQUES : []).concat(typeof WORLD_UNIQUES !== 'undefined' ? WORLD_UNIQUES : []);
@@ -412,7 +425,7 @@ function itemTipRows(p, it, o = {}) {
   const gemText = it.sockets.filter(Boolean).map(g => { const gs = gemStats(g, it.slot); return Object.entries(gs).map(([k, v]) => fmtStat(k, v)).join(' '); }).join(', ');
   if (it.sockets.length) add('sockets', 2, 30, { sockets: it.sockets, text: gemText, skills: [] });
   // 7 trinket boon, unique rule
-  if (it.boon && it.boon.text) add('boon', 2, 0, { lines: wrapLines((it.boon.grade === 'minor' ? 'Minor: ' : 'Boon: ') + it.boon.text, 'small', w, 2) });
+  if (it.boon && it.boon.text) add('boon', 2, 0, { lines: wrapLines((it.boon.grade === 'minor' ? 'Minor: ' : 'Boon: ') + boonText(it), 'small', w, 2) });
   const rule = tipRuleText(it); if (rule) add('rule', 1, 0, { lines: wrapLines(rule, 'small', w, 2) });
   // 8 family line, 9 granted skills
   if (!touch) {
@@ -422,7 +435,7 @@ function itemTipRows(p, it, o = {}) {
   if (skills.length) add('skills', touch ? 3 : 6, 44, { skills });
   if (!touch) {
     const tags = tipTags(it); if (tags.length) add('syn', 8, 0, { lines: wrapLines('Synergises with: ' + tags.join(', '), 'small', w, 2) });
-    const fv = typeof FLAVOR !== 'undefined' && (FLAVOR[it.unique] || FLAVOR[it.base]); if (fv) add('flavor', 7, 0, { lines: wrapLines(fv, 'small', w, 2) });
+    const fv = itemFlavor(it); if (fv) add('flavor', 7, 0, { lines: wrapLines(fv, 'small', w, 2) });
   }
   // 12 footer: Found / Kills / Tempered
   const h = it.hist || {}, parts = [];

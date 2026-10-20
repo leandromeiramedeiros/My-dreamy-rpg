@@ -1193,7 +1193,7 @@ const PAD_STUB = () => {
     await e(() => { const p = G.player; p.hp = p.maxHp * 0.2; }); await frames(pg1, 4);
     const red = []; for (let i = 0; i < 12; i++) { red.push((await px(18, 488))[0]); await wait(45); }
     check('R3 #8 HUD low-HP pulse: the portrait frame breathes red at 2 Hz (red channel varies)', Math.max(...red) - Math.min(...red) > 25, red);
-    await e(() => { const p = G.player; p.hp = p.maxHp; p.cds = p.cds || {}; p.cds.q = 0.25; }); await wait(120);
+    await e(() => { const p = G.player; p.hp = p.maxHp; p.cds = p.cds || {}; p.cds[skillSlotState(p, 'q').id] = 0.25; }); await wait(120);
     const rdy = await e(() => new Promise(r => { let seen = false, n = 0; const f = () => { const h = HUD.ready.q; if (h && h.t != null && G.t - h.t < 0.13) seen = true; if (++n < 40) requestAnimationFrame(f); else r({ seen, cd: G.player.cds.q }); }; requestAnimationFrame(f); }));
     check('R3 #8 skill-ready rim flash fires when a cooldown ends (HUD.ready.q.t within 120 ms)', rdy.seen, rdy);
     const ring = await e(() => { const p = G.player; HUD.lvl.n = p.level; p.level += 1; return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); }).then(() => px(160, 508));

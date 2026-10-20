@@ -20,6 +20,9 @@ const EL_ICON_COL = { slash: 'physical', pierce: 'physical' };
 const uiReady = () => !!(typeof UI_ART !== 'undefined' && UI.image(UI_ART.src));
 const elColor = el => UI.el(EL_ICON_COL[el] || el);
 const easeOut = k => 1 - (1 - k) * (1 - k);
+// the ultimate's charge as a fraction of what R needs now (some amulets / boons let R fire below 100): ultNeed(p), game.js
+const ultFrac = p => { const n = typeof ultNeed === 'function' ? ultNeed(p) : 100; return n <= 0 ? 1 : clamp((p.ult || 0) / n, 0, 1); };
+const potionMax = p => p.maxPotions || MAX_POTIONS;
 const pctText = v => Math.round((v || 0) * 100) + '%';
 
 // ---- offscreen cache -------------------------------------------------------------------------------------------
@@ -243,7 +246,7 @@ function drawSkillBar(ctx, p, inert) {
   });
   if (drawSkillSlot(ctx, p, 'pot', POTION_X, SLOT_Y)) hover = { slot: 'pot', x: POTION_X };
   // potion charge pips
-  for (let k = 0; k < MAX_POTIONS; k++) UI.sprite(ctx, k < p.potions ? 'pipFull' : 'pipEmpty', POTION_X + 5 + k * 12, 530, { scale: 2 });
+  for (let k = 0; k < potionMax(p); k++) UI.sprite(ctx, k < p.potions ? 'pipFull' : 'pipEmpty', POTION_X + 5 + k * 12, 530, { scale: 2 });
   HUD.hoverSlot = hover && !inert && IN.device === 'kbm' ? hover.slot : null;   // render.js: faint range ring
   if (hover && !inert && (IN.device === 'kbm')) skillTooltip(ctx, p, hover);
 }
@@ -251,7 +254,7 @@ function drawSkillSlot(ctx, p, slot, x, y) {
   const st = skillSlotState(p, slot), icon = slotIcon(p, st), ult = slot === 'r', pot = slot === 'pot';
   const ready = pot ? (st.cd <= 0 && st.potions > 0) : st.ready !== false && !st.cdFrac;
   // ready flash: cooldown just ended -> 120 ms white rim + a 2 px icon pop
-  const prev = HUD.ready[slot]; if (prev && prev.cd && !(st.cd > 0)) prev.t = G.t; HUD.ready[slot] = Object.assign(prev || {}, { cd: st.cd > 0 || (ult && st.charge < 1) });
+  const prev = HUD.ready[slot]; if (prev && prev.cd && !(st.cd > 0)) prev.t = G.t; HUD.ready[slot] = Object.assign(prev || {}, { cd: st.cd > 0 || (ult && ultFrac(p) < 1) });
   const flashK = prev && prev.t != null ? 1 - (G.t - prev.t) / 0.12 : 0;
   const rim = !icon ? UC.bevel : ult ? UC.gold : pot ? UC.hp : slot === 'lmb' ? UC.line : elColor(st.element);
   const empty = !icon;
@@ -259,10 +262,10 @@ function drawSkillSlot(ctx, p, slot, x, y) {
   hudSlot(ctx, x, y, SLOT, empty ? UC.bevel : rim, icon, { gray: !!st.mpShort || !!st.stShort || (pot && !st.potions), dy });
   const ix = x + 6, iy = y + 6;
   if (!empty) {
-    if (ult && st.charge < 1) { UI.sweep(ctx, x + 4, y + 4, 36, 36, 1 - st.charge, { label: Math.floor(st.charge * 100) + '', col: UC.edge }); }
+    if (ult && ultFrac(p) < 1) { UI.sweep(ctx, x + 4, y + 4, 36, 36, 1 - ultFrac(p), { label: Math.floor(ultFrac(p) * 100) + '', col: UC.edge }); }
     else if (st.cdFrac > 0) UI.sweep(ctx, x + 4, y + 4, 36, 36, st.cdFrac, { label: st.cd >= 1 ? Math.ceil(st.cd) + '' : st.cd.toFixed(1) });
     else if (pot && st.cd > 0) UI.sweep(ctx, x + 4, y + 4, 36, 36, st.cd, {});
-    if (ult && st.ready && st.charge >= 1) { ctx.globalAlpha = 0.25 + 0.25 * Math.sin(G.t * 8); ctx.fillStyle = UC.gold; ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; hudFrame(ctx, x, y, SLOT, SLOT, 'slotRim', { tint: UC.gold, alpha: 1 }); }
+    if (ult && ultFrac(p) >= 1) { ctx.globalAlpha = 0.25 + 0.25 * Math.sin(G.t * 8); ctx.fillStyle = UC.gold; ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; hudFrame(ctx, x, y, SLOT, SLOT, 'slotRim', { tint: UC.gold, alpha: 1 }); }
     if (st.unavailable) { ctx.fillStyle = UC.edge; ctx.globalAlpha = 0.5; ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; }
     if (st.flash > 0) { ctx.fillStyle = '#ffffff'; ctx.globalAlpha = Math.min(0.6, st.flash * 2); ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; }
   }
@@ -282,7 +285,7 @@ function drawSkillSlot(ctx, p, slot, x, y) {
 }
 function skillTooltip(ctx, p, h) {
   const st = skillSlotState(p, h.slot); let c;
-  if (h.slot === 'pot') c = { title: 'Health Potion', titleCol: UC.hpHi, lines: [`Heal 40% of max HP. ${p.potions}/${MAX_POTIONS} charges, refilled at checkpoints.`] };
+  if (h.slot === 'pot') c = { title: 'Health Potion', titleCol: UC.hpHi, lines: [`Heal 40% of max HP. ${p.potions}/${potionMax(p)} charges, refilled at checkpoints.`] };
   else if (h.slot === 'lmb') { const w = item('weapon', p.gear.weapon); c = { title: w.basic.name, lines: [`Basic attack of the ${w.name}. Builds MP on hit.`] }; }
   else if (!st.id) return;
   else {
@@ -599,10 +602,10 @@ function touchSkillBtn(ctx, p, b, held, aiming, a = 1) {
   const short = !!(st.mpShort || st.stShort), rim = !st.id ? UC.bevel : short ? UC.mp : ult ? UC.gold : elColor(st.element);
   let icon = st.id ? skillIcon(st.id) : (b.slot === 'shift' ? miscIcon('dust') : null);
   const lock = st.unavailable ? 0.5 : 1;
-  touchBtn(ctx, b.x, b.y, b.r, rim, { icon, gray: short, cdFrac: ult ? (st.charge < 1 ? 1 - st.charge : 0) : st.cdFrac, held, lift: aiming ? 4 : 0, flash: fl, alpha: a * lock });
+  touchBtn(ctx, b.x, b.y, b.r, rim, { icon, gray: short, cdFrac: ult ? (ultFrac(p) < 1 ? 1 - ultFrac(p) : 0) : st.cdFrac, held, lift: aiming ? 4 : 0, flash: fl, alpha: a * lock });
   if (st.id && a > 0.5) {
     const y = b.y - (aiming ? 4 : 0);
-    if (ult && st.charge < 1) UI.text(ctx, Math.floor(st.charge * 100) + '', b.x, y - 7, 'small', UC.text, 'center');
+    if (ult && ultFrac(p) < 1) UI.text(ctx, Math.floor(ultFrac(p) * 100) + '', b.x, y - 7, 'small', UC.text, 'center');
     else if (cd > 0) UI.text(ctx, cd >= 1 ? Math.ceil(cd) + '' : cd.toFixed(1), b.x, y - 7, 'small', UC.text, 'center');
   }
 }
@@ -639,8 +642,8 @@ function drawTouchControls(ctx) {
     if (b.slot === 'pot') {
       const st = skillSlotState(p, 'pot'), n = p.potions || 0;
       touchBtn(ctx, b.x, b.y, b.r, UC.hp, { icon: miscIcon('potion'), gray: !n, cdFrac: st.cd > 0 ? st.cd / 1 : 0, held });
-      for (let i = 0; i < MAX_POTIONS; i++) {   // one pip per potion on the rim
-        const a = (270 + (i - (MAX_POTIONS - 1) / 2) * 24) * TDEG, px = b.x + Math.cos(a) * (b.r - 3), py = b.y + Math.sin(a) * (b.r - 3);
+      for (let i = 0; i < potionMax(p); i++) {   // one pip per potion on the rim
+        const a = (270 + (i - (potionMax(p) - 1) / 2) * 24) * TDEG, px = b.x + Math.cos(a) * (b.r - 3), py = b.y + Math.sin(a) * (b.r - 3);
         ctx.fillStyle = '#0b0716'; ctx.beginPath(); ctx.arc(px, py, 4, 0, 7); ctx.fill();
         ctx.fillStyle = i < n ? UC.hpHi : UC.bevel; ctx.beginPath(); ctx.arc(px, py, 2.5, 0, 7); ctx.fill();
       }
@@ -649,7 +652,7 @@ function drawTouchControls(ctx) {
     if (b.slot === 'interact') { touchBtn(ctx, b.x, b.y, b.r, UC.gold, { held, label: G.prompt ? G.prompt.text.split(' ')[0].toUpperCase() : 'USE' }); continue; }
     if (b.slot === 'atk') {
       touchBtn(ctx, b.x, b.y, b.r, UC.line, { held, icon: uiItemIcon(p.equip.weapon), iconSize: 48 });
-      const ch = ultCharge(p);
+      const ch = ultFrac(p);
       UI.ring(ctx, b.x, b.y, b.r - 2, 1, UC.edge, 3);   // the rim doubles as the ultimate charge ring
       UI.ring(ctx, b.x, b.y, b.r - 2, ch, UC.gold, 3);
       if (ch >= 1) { ctx.save(); ctx.globalAlpha = 0.35 + 0.35 * Math.sin(now * 8); UI.ring(ctx, b.x, b.y, b.r + 1, 1, UC.gold, 3); ctx.restore(); }

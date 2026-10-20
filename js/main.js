@@ -87,7 +87,7 @@ const deathXpLoss = p => Math.min(Math.floor(p.xp), Math.round(xpToNext(p.level)
 function respawn() {
   const p = G.player;
   p.xp -= deathXpLoss(p);
-  p.dead = false; p.buffs = {}; p.cds = {}; p.cast = null; p.ult = 0; recalcStats(p, true); p.potions = MAX_POTIONS;
+  p.dead = false; p.buffs = {}; p.cds = {}; p.cast = null; p.ult = 0; recalcStats(p, true); p.potions = p.maxPotions || MAX_POTIONS;
   G.state = 'play';
   const cp = G.checkpoint && G.world.maps[G.checkpoint.map] ? G.checkpoint : null;
   enterMap(cp ? cp.map : G.map.id, cp);
