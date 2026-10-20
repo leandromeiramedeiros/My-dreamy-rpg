@@ -1,11 +1,12 @@
 'use strict';
 // Root-cave / crypt palette: dead roots at the rim, glowing mushrooms and crystals for light, dark rocks, little grass.
-const sstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+// §29 G2: every n x DENSITY (2.5, _density.js); the dead trees keep no random flip (maps.js mirrors trees by the theme's light side)
+const { DENSITY, sstep } = require('./_density.js');
 module.exports = function caveRules(scale = 1) {
-  const n = k => Math.round(k * scale);
+  const n = k => Math.round(k * scale * DENSITY);
   const wall = c => sstep(4.5, 0.8, Math.max(0, c.dEdge));
   return [
-    { t: 'tree_dead', n: n(46), sp: 1.5, v: 4, flip: true, p: c => (0.15 + 1.0 * wall(c) + 0.7 * sstep(0.55, 0.75, c.cl)) * sstep(0.6, 2.4, c.dPath) * (c.dRoom < 0.5 ? 0 : 1) },
+    { t: 'tree_dead', n: n(46), sp: 1.5, v: 4, p: c => (0.15 + 1.0 * wall(c) + 0.7 * sstep(0.55, 0.75, c.cl)) * sstep(0.6, 2.4, c.dPath) * (c.dRoom < 0.5 ? 0 : 1) },
     { t: 'rock_dark', n: n(34), sp: 1.0, v: 2, flip: true, group: [1, 3], spread: 1.1, p: c => 0.25 + 0.8 * c.cliff + 0.5 * wall(c) },
     { t: 'mushroom', n: n(26), sp: 0.6, group: [2, 5], spread: 0.9, p: c => 0.2 + 0.8 * sstep(0.45, 0.7, c.cl) },
     { t: 'crystal', n: n(8), sp: 3.2, p: c => 0.2 + 0.8 * wall(c) + 0.5 * c.cliff },

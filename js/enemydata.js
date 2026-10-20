@@ -100,7 +100,7 @@ var ENEMY_DATA = {
 
   // ---- §26.2 elite pockets (Pinewood, near the bosses). Always spawned as ELITES (spawn card elite: '<mod>' -> x ELITE_HP hp,
   // x ELITE_DMG dmg, one elite mod; js/parts.js makeElite), so hp here is the pre-elite base like the ogre's: elite-spawn TTK
-  // ~12 s at Pinewood L7 (tools/balsim.js ELITE SPAWN TTK). Normal rows: they track the hero's level inside the band.
+  // ~12 s at Pinewood L7 (tools/balsim.js ELITE SPAWN TTK). cls 'elite' = level +2: inside a pocket that is the boss's level + 2 (the map's levelAreas, items.js enemyLevel). xp is pre-multiplied x ELITE_XP (an elite-class row does not get that multiplier).
   // Gnarlroot Brute: the Mossjaw pockets by the Root Hollow door. A slow root-troll with a wide slam: teaches spacing.
   gnarlbrute: {
     name: 'Gnarlroot Brute', cls: 'elite', art: 'mountaintroll', look: 'troll', scale: 0.95, hp: 520, speed: 1.6, dmg: 70, el: 'nature', dmgType: 'slash', stagger: 3,
