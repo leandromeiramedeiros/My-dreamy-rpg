@@ -1784,3 +1784,32 @@ Measured on 6 fixed camera shots in each PR:
 * **Name and placement:** the rule id is `echo`. The story expert names it at placement (no reused character names). It
   drops late (Act III+) as a reward for a built character.
 * **Unique budget:** a **19th unique (client decision)**, on a weapon legendary that works with every weapon class. It is the one deliberate exception to the §19.5 cap of 18; the cap stays at 19 from here on.
+
+## 31. Lumina study: adoption decisions (client + expert game director, 2026-10-20)
+Source: gitlab.com/stubborn-hug/lumina. Minutes: docs/meetings/2026-10-20-lumina.md. Client decision: the author confirmed
+it is open source; we may copy code/data, crediting every lift in docs/CREDITS.md. Take techniques, never identity
+(no gold/navy UI, no compositions, no Cinderheart-as-a-whole).
+* **Tilt-shift: none.** Keep the crisp look; no band blur, no bokeh-disc pass.
+* **Combat VFX:** pixel FX atlas (grey-level frames tinted per element, dithered fade, data-driven effect table).
+  Prototype 3 effects first (slash, fire burst, frost hit); the client approves them before the full swap in M5.
+* **Lock-on: never.** Free aim only; the melee magnet (M4) covers target assist.
+* **Time of day / weather: named moods only.** A fixed mood per section or vantage, taken from Lumina's keyframe table and
+  recoloured to our ramps; mist/overcast as a mood in M5. No running clock, no rain or snow.
+* **Stamina at 0:** "winded" (the action fires; recovery ×1.35). Never refused.
+* **Kharzul:** takes at most two of Cinderheart's eight mechanics, never the brazier charge; the rest are spread across
+  the other bosses as §26.1 cunning-form data.
+* **M3 rides existing lanes:**
+  * Perf lane: emitter-only bloom, governor hysteresis, light-cap hysteresis, fog clear zone (desktop tier).
+  * §29 G2: leaf-cluster crowns, the ground-detail scatter grammar and travelling gusts.
+  * §27: victim jitter of ±1 px.
+* **M4 (about 18 days):**
+  * input buffer and cancel windows
+  * melee magnet
+  * poise and rear crits
+  * attack tokens (melee 3 / ranged 2)
+  * a global telegraph grammar
+  * pickups v2
+  * a trigger condition grammar (StoryCondition)
+  * quest stages with live counters
+  * perfect dodge
+  * the Cinderheart knobs as boss data

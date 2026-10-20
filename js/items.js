@@ -647,9 +647,9 @@ function upgradeSlot(p) {
 function rollUpgrade(p, L, r, slot) {
   const fam = p.gear && FAMILY_TIERS[p.gear[slot]] ? p.gear[slot] : null;
   if (!fam) return rollItem(L, r, slot);
-  let tier = 0; for (let t = 0; t < 5; t++) if (TIER_REQ[t] <= L + 1) tier = t;
+  let tier = 0; for (let t = 0; t < 5; t++) if (TIER_REQ[t] <= p.level) tier = t;   // the best tier the hero can wear NOW (never the +1 look-ahead)
   if (tier === 4 && !rarityAtLeast(r, 'legendary')) tier = 3;
-  return makeItem(FAMILY_TIERS[fam][tier].split(':')[0], r, L);
+  return makeItem(FAMILY_TIERS[fam][tier].split(':')[0], r, Math.min(L, p.level + 2));   // req = ilvl - 2 stays <= the hero's level
 }
 function lootAction(a) {
   const p = G.player, [lo, hi] = zoneLevel(), L = Math.max(clamp(p.level, lo, hi), +a.ilvl || 0), list = [];
