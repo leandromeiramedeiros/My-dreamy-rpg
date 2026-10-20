@@ -811,13 +811,13 @@ const AUDIO = (() => {
 
   // ==================================================================== offline rendering (tests, tools)
   function bufferStats(buf, from, to) {
-    let sum = 0, peak = 0, n = 0, bad = 0; const sr = buf.sampleRate, a = Math.floor((from || 0) * sr), b = Math.min(buf.length, Math.floor((to || buf.duration) * sr));
+    let sum = 0, peak = 0, peakIn = 0, n = 0, bad = 0; const sr = buf.sampleRate, a = Math.floor((from || 0) * sr), b = Math.min(buf.length, Math.floor((to || buf.duration) * sr));
     for (let c = 0; c < buf.numberOfChannels; c++) {
       const d = buf.getChannelData(c);
-      for (let i = 0; i < buf.length; i++) { const v = d[i]; if (!isFinite(v)) { bad++; continue; } const x = Math.abs(v); if (x > peak) peak = x; if (i >= a && i < b) { sum += v * v; n++; } }
+      for (let i = 0; i < buf.length; i++) { const v = d[i]; if (!isFinite(v)) { bad++; continue; } const x = Math.abs(v); if (x > peak) peak = x; if (i >= a && i < b) { sum += v * v; n++; if (x > peakIn) peakIn = x; } }
     }
     const rms = Math.sqrt(sum / Math.max(n, 1));
-    return { rms, peak, rmsDb: 20 * Math.log10(rms || 1e-9), peakDb: 20 * Math.log10(peak || 1e-9), bad, seconds: buf.duration };
+    return { rms, peak, peakIn, rmsDb: 20 * Math.log10(rms || 1e-9), peakDb: 20 * Math.log10(peak || 1e-9), bad, seconds: buf.duration };
   }
   // drive an offline engine with the LIVE tick: suspend every `step` s, run tick + any scripted events, resume
   function drive(ctx, Eo, seconds, events, step) {

@@ -1463,3 +1463,11 @@ Tier names and per-tier visuals follow the expert's table, kept in the productio
 * **Cut order:** Mirage → Stormweave → Crusader → Nightshade → Duelist.
 * **Scope warning:** §23 and §24 together do not fit M4–M7 alongside the 27 maps and 28 enemies. The client chooses
   (§24.1).
+
+### 24.1 Scope decision (client)
+**Everything stays:** 15 weapon variants (§23), 12 armour suits (§24), 27 maps (§22), 28 enemies (§21). The client
+accepts that the finale arrives roughly 8 studio-weeks later. Every tier is fully drawn; no placeholder tiers. To protect
+the schedule:
+* The weapon and armour **parts kit** is built in M3, before any variant art.
+* Art runs as a continuous lane: one art agent on variants and one on enemies, in parallel with maps.
+* The cut orders in §23.6 and §24 stay on file as emergency levers only.

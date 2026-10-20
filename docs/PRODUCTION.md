@@ -89,7 +89,7 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * In progress: art wiring + ground aim indicators + balance parity (Opus); Act I maps, first 10 minutes, lantern quest,
   3 secrets (Sonnet level designer).
 * Next: audio engine + Act I music/SFX; QA play-test; ship M2b.
-* Pending design consult: 3 weapon variants per weapon class (e.g. sword/rapier/mace, axe/hammer/halberd,
+* Weapon variants (§23) + armour suits (§24) adopted; client chose full scope with a later finale (§24.1).
   staff/spellbook/orb) with unique skills, statuses and per-tier looks.
 * Client preference: status reports without commit/PR chatter.
 * §23 weapon variants adopted: 5 classes × 3 variants; parts kit + refactor + save migration in M3; variants roll out M4–M7.
