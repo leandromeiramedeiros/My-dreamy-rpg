@@ -1545,8 +1545,8 @@ const PAD_STUB = () => {
     await xp.evaluate(() => {
       const p = G.player; G.enemies.length = 0; G.projs.length = 0; G.effects.length = 0; G.parts.length = 0; G.texts.length = 0; G.drops.length = 0; G.echo = null; G.banner = null; G.msg = null;
       p.sum.fireDmg = 0.35; p.cast = null; p.atkT = 0; p.aim = 0; p.face = 1; p.invulnT = 999;
-      for (let k = 0; k < 3; k++) { const e = spawnEnemy('thornbackboar', p.x + 2.2 + k * 1.6, p.y + 0.2 + k * 0.7, 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.stunT = 99; e.state = 'idle'; }
-      window.__es = (n) => { for (let i = 0; i < n; i++) { const fr = hitlagStep(); if (!fr) { p.x += 0.06; p.y += 0.02; p.moving = true; p.walkT += STEP; } if (p.atkT <= 0 && !p.cast) { p.aim = 0; basicAttack(p); } update(fr ? 0 : STEP, STEP); p.moving = true; } G.cam.x = isoX(p.x, p.y) - 20; G.cam.y = isoY(p.x, p.y, p.z) - 12; render(); };
+      for (let k = 0; k < 3; k++) { const e = spawnEnemy('thornbackboar', p.x + 1.4 - k * 0.5, p.y + 0.6 + k * 1.3, 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.stunT = 99; e.state = 'idle'; }
+      window.__es = (n) => { for (let i = 0; i < n; i++) { const fr = hitlagStep(); if (!fr) { p.x -= 0.03; p.y += 0.06; p.moving = true; p.walkT += STEP; } if (p.atkT <= 0 && !p.cast) { p.aim = 0; basicAttack(p); } update(fr ? 0 : STEP, STEP); p.moving = true; } G.cam.x = isoX(p.x, p.y) - 20; G.cam.y = isoY(p.x, p.y, p.z) - 12; render(); };
     });
     for (const [i, n] of [20, 6, 6, 6, 6, 6, 6, 6].entries()) {
       await xp.evaluate(n => __es(n), n);
