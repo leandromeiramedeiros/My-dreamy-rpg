@@ -149,13 +149,14 @@ var BOSS_DATA = {
       lunge:   { type: 'line', len: 6, wind: 0.75, open: 1.2, stagger: 1 },   // wind 0.6 -> 0.75 (QA M1: a 0.3 s reaction + 1.1-tile sidestep must fit); bar 2: 0.64
       rootSpit:{ type: 'rain', count: 3, r: 1.2, at: 'player', wind: 0.9, open: 1.0 },   // wind 0.8 -> 0.9: walk-out of a 1.2 circle on the hero in bar 2 (0.77 s)
       burrow:  { type: 'vanish', dur: 1.5, then: { type: 'circle', r: 1.6, at: 'self' }, wind: 1.15, open: 1.2 },  // r 2 / wind 0.8 -> 1.6 / 1.0 -> 1.15 (§26.2: 0.98 s in bar 2, a 2-tile walk-out after a 0.3 s reaction): it surfaces under the hero
-      howl:    { type: 'summon', kind: 'shadehound', n: 2, wind: 0.8, open: 1.0 }  // bar-2 move (director ruling): teaches target priority
+      howl:    { type: 'summon', kind: 'shadehound', n: 2, wind: 0.8, open: 1.0 }  // bar-2 move (director ruling): teaches target priority; 0.68 s cue in bar 2 (ring + warn_summon)
     },
     phases: [
       // bar 1: the hound learns you
-      { hpBelow: 1.0, moves: { lunge: 3, rootSpit: 2, burrow: 2 }, onEnter: [] },
-      // bar 2: new move howl (2 shadehounds); cunning: the lunge FEINTS (0.4 s fake crouch, then the real 0.64 s lunge, re-aimed); windMul 0.85, gaps x0.5, speed x1.2
-      { hpBelow: 0.5, moves: { lunge: 3, rootSpit: 2, burrow: 2, howl: 3 }, windMul: 0.85, cdMul: 0.5, speedMul: 1.2,
+      { hpBelow: 1.0, moves: { lunge: 3, rootSpit: 2, burrow: 3 }, cdMul: 0.75, onEnter: [] },
+      // bar 2: new move howl (2 shadehounds, at most 2 alive, 12 s rest; BOSS_FILL: hounds -20 % HP / -30 % bite, they flee when Mossjaw dies);
+      // cunning: the lunge FEINTS (0.4 s fake crouch, then the real 0.64 s lunge, re-aimed); windMul 0.85, gaps x0.4, speed x1.2
+      { hpBelow: 0.5, moves: { lunge: 3, rootSpit: 2, burrow: 3, howl: 8 }, windMul: 0.85, cdMul: 0.4, speedMul: 1.2,
         forms: { lunge: { feint: 0.4 } },
         onEnter: [{ type: 'roar', banner: 'Mossjaw rears up', dur: 1.2 }] }
     ],

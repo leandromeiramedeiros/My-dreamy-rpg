@@ -86,7 +86,7 @@ const BUILTIN_BOSSES = {
 // engine-side defaults for the BOSS_DATA rows (numbers BOSS_DATA leaves out: damage, look, timings)
 const BOSS_FILL = {
   mossjaw: { look: 'hound', scale: 1.9, r: 0.8, hgt: 3.6, speed: 2.2, keep: 1.6, blood: '#7ac060', breakOpen: 1.5, tags: ['beast'], unique: null, rune: true,
-    moves: { lunge: { hit: 'big', dmgPct: 0.4, el: 'slash', w: 0.7, dash: true, cd: 0.6, scale: 'wind', why: 'QA M1: 0.6 -> 0.4 x REF_EHP; with the 45 % max-HP cap (bossHitCap) two lunges no longer end a weak-gear hero' }, rootSpit: { hit: 'chip', el: 'nature', spread: [0.8, 2.6], cd: 0.6 },
+    moves: { lunge: { hit: 'big', dmgPct: 0.6, el: 'slash', w: 0.7, dash: true, cd: 0.6, scale: 'wind' },   // QA M1 0.6 -> 0.4; §26.2 back to 0.6 (~39 %, in the §20.3 band; the 45 % cap holds) once the howl pile was tamed rootSpit: { hit: 'chip', el: 'nature', spread: [0.8, 2.6], cd: 0.6 },
       burrow: { hit: 'big', el: 'nature', cd: 0.6, scale: 'wind' },
       howl: { cd: 0.8, max: 2, rest: 12, addHp: 0.8, addDmg: 0.7, why: 'QA run-big M3: 12/12 deaths to a 3-hound pile -> 2 alive max, 12 s rest, hounds -20 % HP / -30 % bite, flee on the boss death' } } },
   bramblehorn: { look: 'troll', scale: 1.35, r: 1.0, hgt: 5.2, speed: 1.5, keep: 2.4, blood: '#9ab06a', breakOpen: 2, tags: ['beast'], unique: 'rootcrown',
