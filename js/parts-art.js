@@ -438,3 +438,111 @@ const PARTS_ART = (function () {
     ],
   };
 })();
+
+// =====================================================================================================================
+// LIVE CHEST SUITS: warden / dreamweave / stalker x 5 tiers. Layers (see the format at the top): half-mirrored torsos, a left/right
+// arm pair (attach 'arm'), a swaying skirt (dreamweave), plain overlays for the off-centre bits. Marker slots -> stamps.
+// =====================================================================================================================
+(function () {
+  const { KITS, dk } = PARTS_ART;
+  const rep = (n, s) => Array(n).fill(s);
+  const STEEL = ['#7d8494', '#98a6bd', '#b4c4dc', '#c9d6ec', '#dfe8f8'];
+
+  // ---- WARDEN (heavy): breastplate b, fauld / pauldrons e (same steel, a separate material so the edges read), gold t, tabard c.
+  // slots: 1 pauld (marker x7,y14) | 2 tab (x10,y24) | 3 trim (x8,y26) | 4 bracer (arm x6,y18) | 5 glove (arm x6,y23)
+  KITS.chest.warden = {
+    cape: '#b02a42',
+    tpl: { slots: { 1: 'pauld', 2: 'tab', 3: 'trim', 4: 'bracer', 5: 'glove' }, layers: [
+      { id: 'torso', view: 'front', attach: 'bob', mirror: 'half', at: [3, 9], rows: rep(5, '.........').concat(['....1....', '.....bZZZ', '.....bbbB', '.....bbb*', '.....bbZB', '.....bbbB', '.....bbbB', '.....eeee', '.....LLLL', '.....eeee', '.......2.', '.........', '.....3...']) },
+      { id: 'torso', view: 'back', attach: 'bob', mirror: 'half', at: [3, 14], rows: ['....1....', '.....bbbb'].concat(rep(6, '.....bbbB'), ['.....bbbb']) },
+      { id: 'arm', attach: 'arm', mirror: 'pair', at: [6, 18], rows: ['4', '.', '.', '.', '.', '5'] },
+    ] },
+    pal: { b: STEEL[0], e: STEEL[0], t: 'gold', c: '#b02a42', s: '#ffffff' },
+    parts: {
+      pauld: {
+        p1: { at: [2, 0], rows: ['eee', '%ee'] },
+        p2: { at: [2, 0], rows: ['eee', '%ee', 'LLL'] },
+        p3: { at: [3, 0], rows: ['eeee', 'e%ee', 'tttt'] },
+        p4: { at: [3, 2], rows: ['E...', 'eeee', 'eMee', 'e%ee', 'tttt', '.LLL'] },
+        p5: { at: [4, 5], rows: ['T....', '.M...', '.MT..', 'E....', 'eeeee', 'eMeee', 'ee%ee', 'ttttt', '.LLLL'] },
+      },
+      tab: { tab: { at: [0, 1], rows: ['cc', 'cc', 'cc'] } },
+      trim: {
+        trim1: { at: [0, 11], rows: ['..MM', '....', '....', '....', '....', 'MMMM', '...M', '...M'] },
+        trim2: { at: [0, 11], rows: ['Q.MM', 'Q...', 'Q...', 'QTT.', 'Q...', 'MMMM', '...M', '...M'] },
+        trim3: { at: [0, 11], rows: ['Q.MM', 'Q.T.', 'Q...', 'QTT.', 'Q...', 'MMMM', '...M', '...M', '.MMM', '...M', '...T'] },
+      },
+      bracer: { vam: { at: [0, 0], rows: ['ee', 'ee', 'ee', 'ee'] }, vamg: { at: [0, 0], rows: ['tt', 'ee', 'ee', 'ee'] } },
+      glove: { gaunt: { at: [0, 0], rows: ['ee', 'ee'] } },
+    },
+    tiers: [
+      { pal: { b: STEEL[0], e: STEEL[0] }, parts: { pauld: 'p1' } },
+      { pal: { b: STEEL[1], e: STEEL[1] }, parts: { pauld: 'p2', tab: 'tab', bracer: 'vam' } },
+      { pal: { b: STEEL[2], e: STEEL[2] }, parts: { pauld: 'p3', tab: 'tab', trim: 'trim1', bracer: 'vamg', glove: 'gaunt' } },
+      { pal: { b: STEEL[3], e: STEEL[3] }, parts: { pauld: 'p4', tab: 'tab', trim: 'trim2', bracer: 'vamg', glove: 'gaunt' } },
+      { pal: { b: STEEL[4], e: STEEL[4] }, parts: { pauld: 'p5', tab: 'tab', trim: 'trim3', bracer: 'vamg', glove: 'gaunt' } },
+    ],
+  };
+
+  // ---- DREAMWEAVE (caster): robe b, sash + cuffs a, neck k / r, mantle m, gold t. slots: 1 strip-less... see the stamps
+  // 2 mantle (x7,y13) | 3 strip (x8,y23) | 4 collar (x9,y23) | 5 cuffTop (arm) | 6 cuff (arm) | 7 dust | 8 hem (skirt, x3,y29)
+  const ROBE = ['#8a86b8', '#7664c4', '#5c46b8', '#46369c', '#30287c'], SASH = ['#a88a5a', '#d05078', '#d8a838', '#e8c850', '#ffe27a'];
+  KITS.chest.dreamweave = {
+    cape: '#5648c0',
+    tpl: { slots: { 2: 'mantle', 3: 'strip', 4: 'collar', 5: 'cuffTop', 6: 'cuff', 7: 'dust', 8: 'hem' }, layers: [
+      { id: 'skirt', attach: 'none', mirror: 'half', sway: 27, at: [3, 23], rows: ['.....bbbb', '....bbbbZ', '....bbbbZ', '...bbbbb$', '...bbbbbZ', '...bbbbbZ', '8........'] },
+      { id: 'robe', view: 'front', attach: 'bob', mirror: 'half', at: [3, 13], rows: ['....2....', '.........', '.....bBkk', '.....bb*r', '.....bbbb', '.....bbbb', '.....bbbb', '.....aa%A', '.....aaaA', '.....bbbb', '.....34..'] },
+      { id: 'robe', view: 'back', attach: 'bob', mirror: 'half', at: [3, 13], rows: ['....2....', '.........', '.....bBbb', '.....bbbb', '.....bbbb', '.....bbbb', '.....bbbb', '.....aaaa', '.....aaaa', '.....bbbb', '.....34..'] },
+      { id: 'tail', view: 'front', attach: 'bob', at: [13, 22], rows: ['aa', 'aa', 'aa', 'aa', 'aa', 'A.'] },
+      { id: 'tail', view: 'back', attach: 'bob', at: [10, 22], rows: ['aa', 'aa', 'aa', 'aa', 'aa'] },
+      { id: 'sleeve', attach: 'arm', mirror: 'pair', at: [5, 18], rows: ['5..', 'bbb', 'bbb', 'bbb', 'bbb', '6..'] },
+      { id: 'dust', attach: 'none', at: [9, 26], rows: ['7'] },
+    ] },
+    pal: { b: ROBE[0], a: SASH[0], m: '#6a5ad0', k: '#ecb890', r: '#c88a68', t: 'gold', s: '#ffffff' },
+    parts: {
+      mantle: { mantle: { at: [2, -1], rows: ['.mmmmm', 'mmmmm.', 'MMMm..'] } },
+      strip: { strip: { at: [0, 7], rows: ['B', 'B', 'B', 'B'] } },
+      collar: { collar: { at: [1, 8], rows: ['MMMM'] }, collar2: { at: [1, 8], rows: ['MMMT'] } },
+      cuffTop: { gold: { at: [0, -1], rows: ['MMM'] } },
+      cuff: { low: { at: [0, 1], rows: ['ZZZ'] }, sash: { at: [0, 1], rows: ['UUU'] } },
+      hem: { hem: { at: [0, 1], rows: ['...MMMMMM'] } },
+      dust: { dust1: { at: [1, 2], rows: ['M......', '......T', '.T.....'] }, dust2: { at: [1, 2], rows: ['M.T.....', '......T.', '.T..S...', '.......T'] } },
+    },
+    tiers: [0, 1, 2, 3, 4].map(t => ({
+      pal: { b: ROBE[t], a: SASH[t], m: t === 3 ? '#6a5ad0' : '#4a3cb0' },
+      parts: [{ cuff: 'low' }, { strip: 'strip', cuff: 'sash' }, { strip: 'strip', collar: 'collar', cuffTop: 'gold', cuff: 'sash', hem: 'hem' },
+        { strip: 'strip', collar: 'collar', cuffTop: 'gold', cuff: 'sash', hem: 'hem', mantle: 'mantle', dust: 'dust1' },
+        { strip: 'strip', collar: 'collar2', cuffTop: 'gold', cuff: 'sash', hem: 'hem', mantle: 'mantle', dust: 'dust2' }][t],
+    })),
+  };
+
+  // ---- STALKER (medium): coat b / e, strap + belt r, undershirt v, sleeves o, fur f, brass n, gold t (steel before T3).
+  // slots: 1 pad (x7,y14) | 2 fur (arm x6,y23) | 3 wrap (arm x6,y18) | 5 buckle (x11,y21)
+  const LEATHER = ['#8c6a44', '#76593a', '#5e6b3c', '#3f5a3a', '#2c3430'];
+  KITS.chest.stalker = {
+    cape: '#4a7a3c',
+    tpl: { slots: { 1: 'pad', 2: 'fur', 3: 'wrap', 5: 'buckle' }, layers: [
+      { id: 'coat', view: 'front', attach: 'bob', mirror: 'half', at: [3, 13], rows: ['.........', '....1BZZZ', '.....bZZZ', '.....b%bv', '.....bbbv', '.....bb*v', '.....bbbv', '.....bbbv', '.....rrr5', '.....eeee', '.....ZZZX'] },
+      { id: 'coat', view: 'back', attach: 'bob', mirror: 'half', at: [3, 13], rows: ['.........', '....1ZZZ.', '.....ZZZb', '.....bbbZ', '.....bbbZ', '.....bbbZ', '.....bbbZ', '.....bbbZ', '.....rrrr', '.....eeee', '.....ZZZX'] },
+      { id: 'strap', view: 'front', attach: 'bob', at: [9, 16], rows: ['r.....', 'rr....', '.rr...', '..rrNr', '...rrr', '....rr'] },
+      { id: 'strap', view: 'back', attach: 'bob', at: [9, 16], rows: ['.....r', '....rr', '...rr.', '..rr..', '.rr...', 'rr....'] },
+      { id: 'sleeve', attach: 'arm', mirror: 'pair', at: [6, 18], rows: ['3.', '..', '..', '..', '..', '2.'] },
+    ] },
+    pal: { b: LEATHER[0], e: LEATHER[0], r: '#3a2818', v: '#58689a', o: dk(LEATHER[0], 0.7), n: '#b8a070', f: 'fur', t: '#b0b0b8', j: '#e86a4a' },
+    parts: {
+      pad: {
+        s1: { at: [2, -1], rows: ['eNe', 'eee'] },
+        s2: { at: [2, 0], rows: ['Mee', 'eNe', 'LLL'] },
+        s3: { at: [2, 1], rows: ['ffffff', 'Meeffff', 'eNe.f', 'LLL'] },
+        s4: { at: [3, 4], rows: ['.N......', 'j.......', '.j......', '.ffffff.', '.Meeffff', '.eNe.f..', '.LLL....', '.....M..', '........', '.....M..'] },
+      },
+      buckle: { default: { at: [0, 0], rows: ['M'] } },
+      wrap: { wrap: { at: [0, -1], rows: ['No', 'oo', 'oo'] } },
+      fur: { fur: { at: [0, 1], rows: ['ff'] } },
+    },
+    tiers: [0, 1, 2, 3, 4].map(t => ({
+      pal: { b: LEATHER[t], e: LEATHER[t], o: dk(LEATHER[t], 0.7), t: t >= 2 ? 'gold' : '#b0b0b8' },
+      parts: [{ pad: 's1' }, { pad: 's1', wrap: 'wrap' }, { pad: 's2', wrap: 'wrap' }, { pad: 's3', wrap: 'wrap', fur: 'fur' }, { pad: 's4', wrap: 'wrap', fur: 'fur' }][t],
+    })),
+  };
+})();
