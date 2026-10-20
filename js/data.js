@@ -209,6 +209,9 @@ const SKILLS = {
     cast(p, a) { blinkPlayer(p, a, 3.6); sfx('blink'); } },
   sprint: { name: 'Sprint', element: 'nature', icon: 'sprint', color: '#c08a5e', cd: 9, st: 30, aim:{shape:'self',range:0}, desc: 'BOOTS — +80% move speed for 3s and shake off slows.',
     cast(p) { addBuff(p, 'sprint', 3); p.slowT = 0; burst(p.x, p.y, 0.2, 10, ['#ffffff', '#e7d6c0'], 2); sfx('dash'); } },
+  // §28: bare feet (no boots yet) still dodge: a short roll toward your aim (game.js slotSkill, UNARMED.roll)
+  roll: { name: 'Roll', element: 'slash', icon: 'roll', color: '#e7e0ff', cd: 1.2, st: 25, aim:{shape:'dash',range:2.4,len:2.4}, desc: 'BAREFOOT — a quick roll toward your aim. Boots replace it.',
+    cast(p, a) { dashPlayer(p, Math.cos(a), Math.sin(a), 2.4, 0.22, { invuln: true, roll: true }); sfx('dash'); } },
   // ---------------- Character (chosen freely) ----------------
   secondwind: { name: 'Second Wind', element: 'nature', icon: 'heart', color: '#ff8fb0', cd: 25, mp: 30, aim:{shape:'self',range:0}, desc: 'CHARACTER — instantly heal 35% of max HP.',
     cast(p) { healPlayer(p, p.maxHp * 0.35 * healMul(p)); fx({ type: 'ring', x: p.x, y: p.y, r: 1.2, col: '#ffb0c8', life: 0.5 }); burst(p.x, p.y, p.z + 1, 24, ['#ffb0c8', '#ffffff', '#8fe0a0'], 2); sfx('heal'); } },

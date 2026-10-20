@@ -194,9 +194,11 @@ function recalcStats(p, full) {
   const C = capsT();
   const s = { hp: 0, mp: 0, def: 0, power: 0, crit: 0, haste: 0, regen: 0, mpRegen: 0, speed: 0, critDmg: 0, cdr: 0, skillDmg: 0, dmg: 0, resAll: 0 };
   let trkAll = 0;
+  // §28 null gear slots: an empty slot's p.gear entry is that slot's DEFAULT family id (render.js / menus read item(slot, p.gear[slot])
+  // for a pose or a name), never the last item worn; everything that acts (skills, damage, the paper doll) reads p.equip
+  for (const slot of SLOTS) p.gear[slot] = p.equip[slot] ? familyOf(p.equip[slot].base) : ITEMS[slot][0].id;
   for (const slot of EQUIP_SLOTS) {
     const it = p.equip[slot]; if (!it) continue;
-    if (SLOTS.includes(slot)) p.gear[slot] = familyOf(it.base);
     const st = statsOf(it), trk = isTrinket(it);
     for (const k in st) {
       let v = st[k];
@@ -231,7 +233,9 @@ function recalcStats(p, full) {
   const hpR = full || !p.maxHp ? 1 : p.hp / p.maxHp, mpR = full || !p.maxMp ? 1 : p.mp / p.maxMp;
   const B = G.tune.player, L = p.level - 1, w = item('weapon', p.gear.weapon);
   p.maxHp = Math.round(B.hp * (1 + 0.04 * L) + s.hp); p.maxMp = Math.round(B.mp + s.mp); p.maxSt = B.stamina;
-  p.wdmg = s.dmg || w.basic.dmg; p.dmgBase = B.damage * (1 + 0.03 * L) * p.wdmg / w.basic.dmg; p.bonus = Math.min(C.gearPower, s.power);
+  // bare hands (§28): the shove's 1 damage, never the default sword's 50
+  const armed = !!p.equip.weapon;
+  p.wdmg = armed ? s.dmg || w.basic.dmg : UNARMED.basic.dmg; p.dmgBase = B.damage * (1 + 0.03 * L) * (armed ? p.wdmg / w.basic.dmg : 1); p.bonus = Math.min(C.gearPower, s.power);
   p.power = p.dmgBase * (1 + p.bonus);
   p.def = s.def / (1 + s.def);   // additive armour sum -> one diminishing transform (0.2 -> 17%, 0.7 -> 41%, 1.5 -> 60%)
   p.crit = Math.min(C.crit, B.crit + s.crit); p.critDmg = 0.8 + s.critDmg; p.haste = Math.min(C.haste, s.haste);
@@ -335,13 +339,18 @@ function ultNeed(p) { const c = ultCost(p); return p.boons && p.boons.rFirstFree
 const FIGHT_GAP = 8;
 function combatPing(p) { if (!p) return; if (G.t - (p.combatT != null ? p.combatT : -1e9) > FIGHT_GAP) p.freeR = true; p.combatT = G.t; }
 const SLOT_KEYS = ['q', 'e', 'r', 'f', 'c', 'shift', '1', '2', '3'];
+// an empty slot grants nothing (§28 bare start): no weapon -> no Q E R, no chest / helm -> no F / C; bare feet keep a short
+// Roll on SHIFT (UNARMED.roll) so the dodge verb exists before the first boots (4:50)
 function slotSkill(p, slot) {
-  if (slot === 'q' || slot === 'e' || slot === 'r') return p.wsk[p.gear.weapon][slot];
-  if (slot === 'f') return item('chest', p.gear.chest).skill;
-  if (slot === 'c') return item('head', p.gear.head).skill;
-  if (slot === 'shift') return item('boots', p.gear.boots).skill;
+  if (slot === 'q' || slot === 'e' || slot === 'r') return p.equip.weapon && p.wsk[p.gear.weapon] ? p.wsk[p.gear.weapon][slot] : null;
+  if (slot === 'f') return p.equip.chest ? item('chest', p.gear.chest).skill : null;
+  if (slot === 'c') return p.equip.head ? item('head', p.gear.head).skill : null;
+  if (slot === 'shift') return p.equip.boots ? item('boots', p.gear.boots).skill : UNARMED.roll;
   return p.csk[+slot - 1] || null;
 }
+// the bare-handed hero (§28): LMB is a shove (1 damage, a little knockback, no skills), SHIFT a barefoot roll
+const UNARMED = { name: 'Bare hands', kind: 'unarmed', element: 'slash', basic: { name: 'Shove', dmg: 1, rate: 0.5 }, roll: 'roll' };
+const weaponOf = p => (p.equip.weapon ? item('weapon', p.gear.weapon) : UNARMED);
 // ===== skill casting: ultimate charge, dodge-cancel, ranks and modifiers (DESIGN §15.2–15.3) ===================
 const SLOT_ACTION = { lmb: 'attack', q: 'skillQ', e: 'skillE', r: 'skillR', f: 'skillF', c: 'skillC', shift: 'dodge', 1: 's1', 2: 's2', 3: 's3', pot: 'potion' };
 const CANCEL_AFTER = 0.1;            // dodge cancels a cast only after its first 0.1 s (buffered until then)
@@ -413,7 +422,7 @@ const MP_ON_HIT = { sword: 8, staff: 9, bow: 7, daggers: 6, dagger: 6, twohander
 const MP_HIT_CAP = 40;
 function basicMpGain(p, c) {
   if (c && c.basic) { if (c.mpDone) return; c.mpDone = true; }
-  const w = item('weapon', p.gear.weapon), g0 = MP_ON_HIT[w && w.kind] != null ? MP_ON_HIT[w.kind] : G.tune.player.mpOnHit;
+  const w = weaponOf(p), g0 = MP_ON_HIT[w && w.kind] != null ? MP_ON_HIT[w.kind] : G.tune.player.mpOnHit;
   const gain = Math.round(g0 * (1 + ((p.sum && p.sum.mpOnHit) || 0)));   // +x % MP on hit (Linen Robe implicit, Mystic origin ring)
   const L = p.mpHits || (p.mpHits = []), t = G.t;
   while (L.length && t - L[0][0] >= 1) L.shift();
@@ -519,7 +528,7 @@ function echoReplay(p, E, r) {
   const c = { skill: r.basic ? null : r.id, basic: r.basic, el, slot: r.slot, ctx, hit: true, src: 'echo', mpDone: true, caster: g };
   g.aim = r.a; g.face = Math.cos(r.a) - Math.sin(r.a) >= 0 ? 1 : -1; g.swing = null; g.castT = 0; g.atkT = 0; g.dash = null; g.combo = r.combo;
   const tx = g.x + r.dx, ty = g.y + r.dy;
-  try { withCast(c, () => { if (r.basic) basicSwing(g, item('weapon', p.gear.weapon)); else if (SKILLS[r.id]) SKILLS[r.id].cast(g, r.a, tx, ty); }); }
+  try { withCast(c, () => { if (r.basic) basicSwing(g, weaponOf(p)); else if (SKILLS[r.id]) SKILLS[r.id].cast(g, r.a, tx, ty); }); }
   catch (err) { console.warn('echo replay', r.id, err); }
   if (!E.alive) { E.alive = true; E.age = 0; }
   E.idleT = 0; E.count++; E.log.push(r.basic ? 'lmb' : r.id); if (E.log.length > 12) E.log.shift();
@@ -557,7 +566,7 @@ function updateEcho(p, dt) {
 
 function basicAttack(p) {
   if (p.atkT > 0 || p.dash || p.dead || p.rootT > 0 || castActive(p)) return;   // skills never cancel into attacks
-  const w = item('weapon', p.gear.weapon);
+  const w = weaponOf(p);
   // basic attacks are casts too (skill: null, basic: true) so their hits carry a ctx; they build MP on hit
   const c = { skill: null, basic: true, el: w.element || 'slash', slot: 'lmb', ctx: newCtx(w.element || 'slash') }, combo = p.combo, a0 = p.aim;
   withCast(c, () => basicSwing(p, w));
@@ -566,7 +575,12 @@ function basicAttack(p) {
 function basicSwing(p, w) {
   const a = p.aim;
   p.atkT = w.basic.rate / (1 + p.haste);
-  if (w.kind === 'sword') {
+  if (w.kind === 'unarmed') {   // §28: a short two-handed shove, the empty hands' only verb
+    swingWeapon(p, 0.14, 1.2, 1);
+    hitCone(p.x, p.y, a, 1.4, 1.1, w.basic.dmg, { knock: 0.35 });
+    fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 1.1, r: 0.9, col: '#f2e6ff', life: 0.14, w: 2, dir: 1 });
+    sfx('swing');
+  } else if (w.kind === 'sword') {
     p.combo = (p.combo + 1) % 3;
     const big = p.combo === 2;
     swingWeapon(p, 0.17, big ? 2.6 : 1.9, p.combo % 2 ? -1 : 1);
@@ -769,7 +783,7 @@ const ultReady = (p = G.player) => (p.ult || 0) >= 100;
 function skillSlotState(p, slot) {
   const action = SLOT_ACTION[slot], glyph = typeof IN !== 'undefined' ? IN.glyph(action) : '';
   if (slot === 'pot') return { slot, action, glyph, potions: p.potions, max: MAX_POTIONS, cd: Math.max(0, (p.potT || 0) - G.t), unavailable: p.dead };
-  if (slot === 'lmb') { const w = item('weapon', p.gear.weapon); return { slot, action, glyph, id: null, name: w.basic.name, element: w.element, cd: Math.max(0, p.atkT), cdFrac: 0, unavailable: !!(p.dash || p.rootT > 0 || castActive(p)) }; }
+  if (slot === 'lmb') { const w = weaponOf(p); return { slot, action, glyph, id: null, name: w.basic.name, element: w.element, cd: Math.max(0, p.atkT), cdFrac: 0, unavailable: !!(p.dash || p.rootT > 0 || castActive(p)) }; }
   const id = slotSkill(p, slot), s = id && SKILLS[id];
   if (!s) return { slot, action, glyph, id: null };
   const ult = slot === 'r', cd = Math.max(0, p.cds[id] || 0), max = p.cdm[id] || s.cd;
