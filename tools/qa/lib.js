@@ -106,9 +106,9 @@ function installHooks() {
 
   // ---------- snapshot
   Q.snap = () => {
-    const p = G.player, m = G.map, o = { t: +G.t.toFixed(2), st: G.state, ui: { open: !!G.ui.open, help: !!G.ui.help, pause: !!G.ui.pause, settings: !!G.ui.settings }, fadeDir: G.fadeDir, fade: +(G.fade || 0).toFixed(2), dev: IN.device };
+    const p = G.player, m = G.map, o = { t: +G.t.toFixed(2), st: G.state, ui: { map: !!G.ui.map, open: !!G.ui.open, help: !!G.ui.help, pause: !!G.ui.pause, settings: !!G.ui.settings }, fadeDir: G.fadeDir, fade: +(G.fade || 0).toFixed(2), dev: IN.device };
     if (!p) return o;
-    o.map = m && m.id; o.W = m && m.W;
+    o.map = m && m.id; o.W = m && m.W; o.warp = !!G.warp; try { const sc = sectionAt(m, p.x, p.y); o.sec = sc && sc.id; } catch (e) { o.sec = null; }
     let wk = null; try { wk = item('weapon', p.gear.weapon).kind; } catch (e) { /* */ }
     o.p = { x: +p.x.toFixed(2), y: +p.y.toFixed(2), z: p.z, hp: Math.round(p.hp), maxHp: Math.round(p.maxHp), mp: Math.round(p.mp), maxMp: Math.round(p.maxMp), pot: p.potions, lvl: p.level, xp: Math.round(p.xp), dead: p.dead, ult: Math.round(p.ult), dash: !!p.dash, rootT: p.rootT, slowT: p.slowT, invul: p.invulnT > 0, aim: p.aim, wk, wid: p.gear.weapon, st: Math.round(p.st), castT: p.castT, casting: !!p.cast, bag: p.bag.filter(Boolean).length, dust: p.dust };
     o.sk = {}; for (const s of ['q', 'e', 'r', 'f', 'c', 'shift', '1', '2', '3']) { try { const id = slotSkill(p, s); if (id) o.sk[s] = { id, cd: +((p.cds[id] || 0)).toFixed(2), mp: Math.round((SKILLS[id].mp || 0)), st: SKILLS[id].st || 0 }; } catch (e) { /* */ } }
@@ -153,7 +153,7 @@ function installHooks() {
   };
   Q.view = (x, y, z) => { const p = G.player; const v = worldToView(x, y, z == null ? p.z : z); return [v[0] * 2, v[1] * 2]; };
   Q.canvas = () => { const r = DISP.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, DW, DH }; };
-  Q.objects = () => G.map.objects.filter(o => o.chest || o.lever || o.checkpoint || o.tablet || o.use || o.fish || o.barrier).map(o => ({ x: +o.x.toFixed(2), y: +o.y.toFixed(2), chest: !!o.chest && !o.opened, lever: !!o.lever, pulled: !!o.pulled, shrine: !!o.checkpoint, tablet: !!o.tablet, use: o.use ? o.use.kind : null, barrier: o.barrier || null, gid: o.gid || null, fish: !!o.fish, id: o.src && o.src.id, label: o.src && o.src.label, title: o.src && o.src.title, tier: o.src && o.src.tier }));
+  Q.objects = () => G.map.objects.filter(o => o.warpdoor || o.shrineId || o.chest || o.lever || o.checkpoint || o.tablet || o.use || o.fish || o.barrier).map(o => ({ warp: !!o.warpdoor, shrineId: o.shrineId || null, x: +o.x.toFixed(2), y: +o.y.toFixed(2), chest: !!o.chest && !o.opened, lever: !!o.lever, pulled: !!o.pulled, shrine: !!o.checkpoint, tablet: !!o.tablet, use: o.use ? o.use.kind : null, barrier: o.barrier || null, gid: o.gid || null, fish: !!o.fish, id: o.src && o.src.id, label: o.src && o.src.label, title: o.src && o.src.title, tier: o.src && o.src.tier }));
   Q.isEq = (slot, uid) => !!(G.player.equip[slot] && G.player.equip[slot].uid === uid);
   Q.bag = () => G.player.bag.map((it, i) => it && !it.gem ? { i, uid: it.uid, slot: it.slot, rarity: it.rarity, base: it.base, ilvl: it.ilvl, reqLvl: it.reqLvl, name: itemName(it), fam: (typeof FAMILY_TIERS !== 'undefined' && Object.keys(FAMILY_TIERS).find(f => FAMILY_TIERS[f].some(t => t.split(':')[0] === it.base))) || null, curFam: G.player.gear.weapon, score: itemScore(it), eq: itemScore(G.player.equip[it.slot]) } : null).filter(Boolean);
   function itemScore(it) { if (!it) return 0; const r = RARITY[it.rarity] ? RARITY[it.rarity].i : 0; return r * 1000 + (it.ilvl || it.reqLvl || 0) * 10 + (it.dmg || it.power || 0); }
@@ -259,6 +259,8 @@ class Bot {
     if (s.st === 'title') { await this.drv.title(s); return true; }
     if (s.st === 'dead') { await this.setMove(0, 0); await this.drv.attack(false); await this.onDead(s); return true; }
     this.deathShot = false;
+    if (s.warp) { await this.setMove(0, 0); await sleep(120); return true; }
+    if (s.ui.map) { await this.setMove(0, 0); await this.drv.closeMap(s); await sleep(250); return true; }
     if (s.ui.open || s.ui.help || s.ui.pause || s.ui.settings) { await this.setMove(0, 0); await this.drv.attack(false); await this.drv.closeMenu(s); await sleep(250); return true; }
     if (s.fadeDir) { await this.setMove(0, 0); await sleep(80); return true; }
     // potion
@@ -440,6 +442,8 @@ class KbmDriver {
   async potion() { await this.tap('Digit4', 60); }
   async interact() { await this.tap('Space', 70); }
   async closeMenu(s) { await this.tap('Escape', 70); }
+  async closeMap() { await this.tap('KeyM', 70); }
+  async openMap() { await this.tap('KeyM', 70); }
   async respawn() { await this.tap('Space', 80); }
   async title() { if (!this.cv) await this.cvr(); const c = this.cv; await this.page.mouse.move(c.l + 480 / c.DW * c.w, c.t + 372 / c.DH * c.h); await sleep(150); await this.page.mouse.click(c.l + 480 / c.DW * c.w, c.t + 372 / c.DH * c.h); await sleep(800); }
   async clickDisp(x, y) { if (!this.cv) await this.cvr(); const c = this.cv; await this.page.mouse.move(c.l + x / c.DW * c.w, c.t + y / c.DH * c.h); await sleep(60); await this.page.mouse.click(c.l + x / c.DW * c.w, c.t + y / c.DH * c.h); }
@@ -460,6 +464,8 @@ class PadDriver {
   async potion() { await this.tap(1, 70); }
   async interact() { await this.tap(0, 70); }
   async closeMenu() { await this.tap(1, 80); }
+  async closeMap() { await this.tap(1, 80); }
+  async openMap() { await this.tap(13, 80); }
   async respawn() { await this.tap(0, 80); }
   async title() { await this.tap(0, 90); await sleep(800); }
   async reset() { this.L = [0, 0]; this.R = [0, 0]; await this.axes(); await this.attack(false); }
@@ -502,6 +508,8 @@ class TouchDriver {
     if (cand) { await this.tapAt(cand.x + cand.w / 2, cand.y + cand.h / 2); return; }
     await this.tapAt(930, 20);
   }
+  async closeMap() { await this.tapAt(480, 500); }
+  async openMap() { await this.tapAt(880, 70); }
   async respawn() { const fl = await this.page.evaluate(() => window.__qa.focusList()); const r = fl.find(q => q.id === 'btn:wake'); if (r) await this.tapAt(r.x + r.w / 2, r.y + r.h / 2); else await this.tapAt(480, 320); }
   async title() { await this.tapAt(480, 372); await sleep(900); }
   async openBag() { const m = (await this.page.evaluate(() => window.__qa.touchMenu())).find(q => q.id === 'gear'); await this.tapAt(m.x + m.w / 2, m.y + m.h / 2); }

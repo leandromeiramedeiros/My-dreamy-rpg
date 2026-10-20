@@ -17,6 +17,10 @@
 //   AUDIO.frame(dt)              once per display frame (main.js loop): the director. Reads G and decides the wanted
 //                                song, stems, intensity, ducking and telegraph fallbacks; the 25 ms tick applies them on
 //                                beat / bar boundaries. Cheap (see AUDIO.stats).
+//                                Music follows the map, then the hero's SECTION (maps.js sectionAt, 0.75 s hysteresis;
+//                                warp doors switch at once): SECTION_MUSIC, e.g. pinewood.hollow -> roothollow,
+//                                warrens -> roothollow at low intensity, clearing -> pinewood, boss_bramblehorn while
+//                                its arena fight runs. A section change that changes the song crossfades like a zone change.
 //   AUDIO.onTransition(mapId)    the rift fade started (main.js transition): fade the current song over 1 bar now; the
 //                                next zone song starts on its bar 1 at the next bar line.
 //   AUDIO.onBossKilled(e)        victory stinger; the boss song fades and the map's calm song returns after the stinger.
@@ -73,6 +77,14 @@ const AUDIO = (() => {
   const MAP_MUSIC = { vale: 'vale', pinewood: 'pinewood', roothollow: 'roothollow', pinewood_boss: 'boss_bramblehorn' };
   const THEME_MUSIC = { vale: 'vale', forest: 'pinewood' };
   const BOSS_MUSIC = { bramblehorn: 'boss_bramblehorn' };   // any other boss fight in Act I borrows boss_bramblehorn
+  // map -> section (js/maps.js sections, sectionAt on the hero) -> { song, mask, arena }. mask 'low' = the song at low
+  // intensity (lead, perc and extra halved); arena = the song while an inline arena fight runs (the `arena` action) or
+  // its boss is alive. Sections not listed play the map song. vale.moon is the pond (fishing song).
+  const SECTION_MUSIC = {
+    pinewood: { hollow: { song: 'roothollow' }, warrens: { song: 'roothollow', mask: 'low' }, clearing: { song: 'pinewood', arena: 'boss_bramblehorn' } },
+    vale: { moon: { song: 'fishing' } },   // the moon pond
+  };
+  const SECTION_HOLD = 0.75;   // s a new section must hold before the music follows (borders never flip-flop)
   // reverb colour per song: [seconds, brightness]
   const VERB = { bright: [2.6, 0.65], forest: [2.2, 0.55], cave: [3.0, 0.4], hall: [2.4, 0.5] };
   const SONG_VERB = { roothollow: 'cave', boss_bramblehorn: 'hall', pinewood: 'forest', fishing: 'forest' };
@@ -646,10 +658,42 @@ const AUDIO = (() => {
     const b = bossAlive(g);
     if (b) return BOSS_MUSIC[b.type] || 'boss_bramblehorn';
     const id = D.transitionTo || (g.map && g.map.id);
+    const sec = sectionMusic(g, id);
+    if (sec) {
+      const A = g.arena;
+      if (sec.arena && A && !A.done && A.map === id && A.id !== D.bossDownArena) return sec.arena;
+      return sec.song;
+    }
     if (id === D.bossDown && MAP_MUSIC[id] && /^boss_/.test(MAP_MUSIC[id])) return 'pinewood';   // the court after the fight
     if (MAP_MUSIC[id]) return MAP_MUSIC[id];
     const th = g.world && g.world.maps && g.world.maps[id] && g.world.maps[id].theme;
     return THEME_MUSIC[th] || null;
+  }
+  function sectionMusic(g, id) {
+    if (D.transitionTo) return null;   // a rift fade: the next map decides once it is entered
+    const T = SECTION_MUSIC[id]; return (T && D.section && T[D.section] && MUSIC[T[D.section].song]) ? T[D.section] : null;
+  }
+  // the hero's section with hysteresis; a warp-door fade jumps straight to its destination's section (a transition)
+  function trackSection(g, dt) {
+    const m = g.map, p = g.player;
+    if (!m || !p || typeof sectionAt !== 'function' || !m.sections) { D.section = null; return; }
+    if (g.warp && g.warp.dst && g.warp !== D.warpSeen) {
+      D.warpSeen = g.warp; const s = sectionAt(m, g.warp.dst.x, g.warp.dst.y);
+      if (s && s.id && s.id !== 'main') { D.section = s.id; D.secCand = null; }
+      return;
+    }
+    if (g.warp) return;
+    const s = sectionAt(m, p.x, p.y), id = s && s.id;
+    if (!id || id === 'main' || id === D.section) { D.secCand = null; return; }   // gutters ('main') keep the last section
+    if (!D.section) { D.section = id; D.secCand = null; return; }
+    if (D.secCand !== id) { D.secCand = id; D.secT = 0; }
+    D.secT += dt;
+    if (D.secT >= SECTION_HOLD) { D.section = id; D.secCand = null; }
+  }
+  function levelsFor(song) {
+    const lv = song.stems ? stemLevels(song, D.phase) : intensityLevels(song, D.intensity);
+    if (D.mask === 'low' && !song.stems) for (const k of ['lead', 'perc', 'extra']) if (lv[k] !== undefined) lv[k] *= 0.5;
+    return lv;
   }
   function stemIndex(g) {
     const b = bossAlive(g); if (!b) return 0;
@@ -679,7 +723,7 @@ const AUDIO = (() => {
         const boss = /^boss_/.test(want);
         if (!Z) {
           if (want === 'title' && !D.wasTitle && MUSIC.lullaby) { D.wasTitle = true; E.startTrack('lullaby', { as: 'title', chain: 'title', loop: false, at: cur + 0.05 }); }
-          else E.startTrack(want, { at: cur + 0.05, phase: D.phase, intensity: D.intensity, fadeIn: 0.4 });
+          else E.startTrack(want, { at: cur + 0.05, phase: D.phase, levels: levelsFor(MUSIC[want]), fadeIn: 0.4 });
         } else if (boss) {   // hard cut on the beat + phase stinger
           const tb = E.nextBeat(Z, 0.04);
           E.stopTrack(Z, tb, tb + 0.03);
@@ -690,9 +734,9 @@ const AUDIO = (() => {
           const tb = E.nextBar(Z, 0.05);
           E.stopTrack(Z, cur, Math.max(tb, cur + Z.barDur * 0.5));
           E.setVerb(SONG_VERB[want] || 'bright', E.verbSlot = (E.verbSlot + 1) % E.verbs.length);
-          E.startTrack(want, { at: tb, phase: D.phase, intensity: D.intensity, fadeIn: 0.25 });
+          E.startTrack(want, { at: tb, phase: D.phase, levels: levelsFor(MUSIC[want]), fadeIn: 0.25 });
         }
-        D.applied = { phase: D.phase, intensity: D.intensity };
+        D.applied = { phase: D.phase, intensity: D.intensity, mask: D.mask };
       }
       return;
     }
@@ -703,9 +747,9 @@ const AUDIO = (() => {
       E.setLevels(Z, stemLevels(Z.song, D.phase), 1);
       if (up && D.phase >= 2) playStinger('phase', E.nextBeat(Z));
     }
-    if (!Z.song.stems && Z.song.intensity && A.intensity !== D.intensity) {
-      const fb = D.intensity === 'calm' ? 2 : 1; A.intensity = D.intensity;
-      E.setLevels(Z, intensityLevels(Z.song, D.intensity), fb);
+    if (!Z.song.stems && (A.intensity !== D.intensity || A.mask !== D.mask)) {
+      const fb = D.intensity === 'calm' ? 2 : 1; A.intensity = D.intensity; A.mask = D.mask;
+      E.setLevels(Z, levelsFor(Z.song), fb);
     }
   }
   function playStinger(name, at) {
@@ -731,8 +775,10 @@ const AUDIO = (() => {
       if (D.scanT <= 0) {   // 4x per second is plenty for music decisions
         D.scanT = 0.25;
         const mapId = g.map && g.map.id;
-        if (mapId !== D.mapId) { D.mapId = mapId; D.transitionTo = null; if (D.bossDown && D.bossDown !== mapId) D.bossDown = null; }
+        if (mapId !== D.mapId) { D.mapId = mapId; D.transitionTo = null; D.section = null; D.secCand = null; D.bossDownArena = null; if (D.bossDown && D.bossDown !== mapId) D.bossDown = null; }
+        trackSection(g, 0.25);
         D.want = desiredSong(g);
+        const se = sectionMusic(g, mapId); D.mask = (se && se.mask && D.want === se.song) ? se.mask : null;
         D.phase = stemIndex(g);
         const cs = combatState(g);
         if (cs !== 'calm') { D.aggroT = 0; D.intensity = cs; }
@@ -879,10 +925,12 @@ const AUDIO = (() => {
     state: () => (AC ? AC.state : 'none'),
     current: () => (E && E.zone ? E.zone.as : null),
     wanted: () => D.want,
-    director: () => ({ want: D.want, phase: D.phase, intensity: D.intensity, ducks: E ? Object.keys(E.ducks) : [], duckDb: E ? E.duckDb : 0, overlay: D.overlayId, zone: E && E.zone ? E.zone.id : null }),
+    SECTION_MUSIC,
+    director: () => ({ want: D.want, section: D.section, mask: D.mask, phase: D.phase, intensity: D.intensity, ducks: E ? Object.keys(E.ducks) : [], duckDb: E ? E.duckDb : 0, overlay: D.overlayId, zone: E && E.zone ? E.zone.id : null }),
     onTransition(to) { D.transitionTo = to || null; const g = gG(); if (g) D.want = desiredSong(g); },
     onBossKilled(e) {
       const g = gG(); D.bossDown = g && g.map ? g.map.id : null;
+      D.bossDownArena = g && g.arena && !g.arena.done ? g.arena.id : null;   // that arena's fight is over for the music
       if (E) { D.victoryUntil = E.ctx.currentTime + 3.6; playStinger('victory'); if (E.zone) { const c = E.ctx.currentTime; E.stopTrack(E.zone, c, c + 1.2); } }
       caption((typeof SFX_CAPTIONS !== 'undefined' && SFX_CAPTIONS.victory) || '[victory]');
       if (g) D.want = null;

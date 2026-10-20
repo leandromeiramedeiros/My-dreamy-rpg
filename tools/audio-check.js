@@ -8,7 +8,7 @@
 //  3. renders every music state (each MUSIC id; boss songs x stem phases 1-4; songs with `intensity` x each state) with
 //     the engine's live 25 ms tick code driving an OfflineAudioContext (fails on NaN, low body RMS, clipping)
 //  4. mix checks: dialogue duck depth (rendered A/B), mono fold, reduce bass, mute on the master bus
-//  5. live behaviour: map -> song wiring (title/vale, pinewood, roothollow, pinewood_boss, Bramblehorn stems by boss
+//  5. live behaviour: map + section -> song wiring (title/vale, pinewood forest/hollow/warrens/clearing + arena, Bramblehorn stems by boss
 //     phase, death overlay + duck, victory on boss kill), voice caps, 6x/s limit, spatial attenuation, never-silent
 //     telegraphs (G.lastWarn fallback), captions, settings -> buses, scheduler per-frame cost
 // Usage: node tools/audio-check.js [sampleRate=32000]       exit 1 on any failure
@@ -140,18 +140,47 @@ const pad = (s, n) => String(s).padEnd(n);
     return r;
   });
   check('transport: the new zone song starts on its bar 1, on a bar line of the old song', bar1.oldBars !== null && Math.abs(bar1.oldBars - Math.round(bar1.oldBars)) < 1e-3 && bar1.stepLater > 0 && bar1.fromStep0, bar1);
-  // maps can be missing while the world is being rebuilt: then only the MAP_MUSIC table is checked (SKIP line)
-  const maps = await ev(() => Object.keys(G.world.maps));
-  const tbl = await ev(() => AUDIO.MAP_MUSIC);
-  if (maps.includes('roothollow')) {
-    d = await nextZone(() => { enterMap('roothollow'); }, () => AUDIO.current() === 'roothollow');
-    check('wiring: roothollow', d.zone === 'roothollow', d);
-  } else { console.log('SKIP  wiring: roothollow (map not in WORLD_DATA right now)'); check('wiring table: roothollow -> roothollow', tbl.roothollow === 'roothollow'); }
-  if (maps.includes('pinewood_boss')) {
-    d = await nextZone(() => { enterMap('pinewood_boss'); }, () => AUDIO.current() === 'boss_bramblehorn');
-    check('wiring: pinewood_boss -> boss_bramblehorn, stem A before the fight', d.zone === 'boss_bramblehorn' && d.phase === 0, d);
-  } else { console.log('SKIP  wiring: pinewood_boss (map not in WORLD_DATA right now)'); check('wiring table: pinewood_boss -> boss_bramblehorn', tbl.pinewood_boss === 'boss_bramblehorn'); }
-  const bossMap = maps.includes('pinewood_boss') ? 'pinewood_boss' : 'pinewood';
+  // sections (js/maps.js sectionAt): music follows the hero's section with hysteresis; warp doors switch at once
+  await ev(() => {
+    window.__secPt = (id) => {   // a walkable tile whose section is `id`, nearest the section's centre
+      const m = G.map, S = m.sections.find((q) => q.id === id), R = S.rects || [[S.x, S.y, S.w, S.h]];
+      let best = null;
+      for (const [x, y, w, h] of R) for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) {
+        const cx = i + 0.5, cy = j + 0.5;
+        if (sectionAt(m, cx, cy) !== S || !walkable(m, cx, cy, tileH(m, cx, cy))) continue;
+        const d = Math.hypot(cx - (x + w / 2), cy - (y + h / 2)); if (!best || d < best.d) best = { x: cx, y: cy, d };
+      }
+      return best;
+    };
+    window.__goSec = (id) => { const q = __secPt(id), p = G.player; p.x = q.x; p.y = q.y; p.z = tileH(G.map, q.x, q.y); G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12; return q; };
+  });
+  const tbl = await ev(() => AUDIO.SECTION_MUSIC);
+  check('sections: table wires pinewood hollow / warrens / clearing (+ vale.moon pond)', tbl.pinewood.hollow.song === 'roothollow' && tbl.pinewood.warrens.mask === 'low' && tbl.pinewood.clearing.arena === 'boss_bramblehorn' && tbl.vale.moon.song === 'fishing');
+  d = await nextZone(() => { enterMap('pinewood'); G.state = 'play'; G.player.invulnT = 999; __goSec('forest'); }, () => AUDIO.current() === 'pinewood' && AUDIO.director().section === 'forest');
+  check('section: pinewood.forest -> pinewood', d.zone === 'pinewood' && d.section === 'forest', d);
+  d = await nextZone(() => { G.enemies.length = 0; __goSec('hollow'); }, () => AUDIO.current() === 'roothollow');
+  const hol = await ev(() => { const E = AUDIO.engine, T = E.zone, old = E.tracks.find((t) => t.id === 'pinewood'); return { oldBars: old ? +((T.t0 - old.t0) / old.barDur).toFixed(4) : null, lead: T.layers.lead.ramp.v1 }; });
+  check('section: pinewood.hollow -> roothollow (dungeon mask: no lead), on a bar line of the old song', d.zone === 'roothollow' && d.section === 'hollow' && hol.lead === 0 && hol.oldBars !== null && Math.abs(hol.oldBars - Math.round(hol.oldBars)) < 1e-3, Object.assign({}, d, hol));
+  const hyst = await ev(async () => {
+    const w = (ms) => new Promise((r) => setTimeout(r, ms)), T = AUDIO.engine.zone, out = {};
+    __goSec('warrens'); await w(300); __goSec('hollow'); await w(300); __goSec('warrens'); await w(300); __goSec('hollow'); await w(600);
+    out.flip = AUDIO.director().section; out.sameTrack = AUDIO.engine.zone === T;
+    __goSec('warrens'); await w(1600);
+    const Z = AUDIO.engine.zone; out.section = AUDIO.director().section; out.mask = AUDIO.director().mask; out.zone = Z.id; out.sameTrack2 = Z === T; out.perc = Z.layers.perc.ramp.v1;
+    return out;
+  });
+  check('section: border flicker under 0.75 s never flips the music (hysteresis)', hyst.flip === 'hollow' && hyst.sameTrack, hyst);
+  check('section: warrens -> roothollow at low intensity (same track, layers ramp down)', hyst.section === 'warrens' && hyst.mask === 'low' && hyst.zone === 'roothollow' && hyst.sameTrack2 && hyst.perc < 0.45, hyst);
+  const warp = await ev(async () => {
+    const w = (ms) => new Promise((r) => setTimeout(r, ms)), q = __secPt('forest');
+    const ok = startWarp({ x: q.x, y: q.y }); await w(350);
+    return { ok, section: AUDIO.director().section, want: AUDIO.wanted() };
+  });
+  check('section: a warp-door fade switches at once (no hysteresis) and counts as a transition', warp.ok && warp.section === 'forest' && warp.want === 'pinewood', warp);
+  d = await nextZone(() => { __goSec('clearing'); }, () => AUDIO.director().section === 'clearing' && AUDIO.current() === 'pinewood');
+  check('section: the clearing plays pinewood before the arena fight', d.zone === 'pinewood' && d.section === 'clearing', d);
+  d = await nextZone(() => { startArena({ id: 'bramble_arena', gate: 'arena_gate', x: 100, y: 31, r: 8.5 }); }, () => AUDIO.current() === 'boss_bramblehorn');
+  check('section: the clearing arena action -> boss_bramblehorn (hard cut on the beat), stem A before the boss', d.zone === 'boss_bramblehorn' && d.phase === 0, d);
   // intensity on a calm song: aggro raises percussion
   const inten = await ev(async () => {
     const w = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -165,9 +194,10 @@ const pad = (s, n) => String(s).padEnd(n);
   });
   check('intensity: aggro raises percussion (bar-quantised), lead down a notch, all clear decays to calm', inten.id === 'pinewood' && inten.perc1 > inten.perc0 && inten.lead1 < 1 && inten.intensity !== 'calm' && inten.after === 'calm' && inten.perc2 === inten.perc0, inten);
   // boss: stems follow the phase in js/bosses.js, phase stinger, victory on the kill
-  const boss = await ev(async (bossMap) => {
+  const boss = await ev(async () => {
     const w = (ms) => new Promise((r) => setTimeout(r, ms)), out = {};
-    enterMap(bossMap); await w(1500);
+    enterMap('pinewood'); G.state = 'play'; __goSec('clearing'); await w(1500);
+    startArena({ id: 'bramble_arena', gate: 'arena_gate', x: 100, y: 31, r: 8.5 }); await w(1200);
     const p = G.player; p.invulnT = 999;
     const b = spawnEnemy('bramblehorn', p.x + 3, p.y, 0); b.cd = 99; await w(900);
     out.cut = AUDIO.current(); out.p1 = AUDIO.director().phase;
@@ -184,7 +214,7 @@ const pad = (s, n) => String(s).padEnd(n);
     await w(4500); out.after = AUDIO.current();
     G.enemies.length = 0; G.slowmo = 0;
     return out;
-  }, bossMap);
+  });
   check('boss: Bramblehorn fight -> boss_bramblehorn; stems A / AB on aggro / ABC at bosses.js phase 2 / ABCD on enrage', boss.cut === 'boss_bramblehorn' && boss.p2 === 1 && boss.bkPhase === 1 && boss.p3 === 2 && boss.leadTarget > 0 && boss.p4 === 3, boss);
   check('boss: stinger(phase) on the phase change, victory stinger on the kill, calm song after', boss.stingerPhase && boss.dead && boss.victory && boss.after === 'pinewood', boss);
   // telegraphs: the warnSfx hook is voiced; a move without a cue still gets one (never silent)
