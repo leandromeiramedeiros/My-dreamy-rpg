@@ -800,7 +800,7 @@ const AUDIO = (() => {
   function drawCaptions(ctx) {
     if (!captions.length || !S().captions || typeof UI === 'undefined' || !UI.text) return;
     const px = typeof textPx === 'function' ? textPx() : 18, size = px <= 14 ? 'small' : 'body', lh = px <= 14 ? 18 : px >= 22 ? 26 : 22;
-    let y = 470 - (captions.length - 1) * lh;
+    let y = 400 - (captions.length - 1) * lh;   // stacked upward, clear of the portrait / HP block
     for (const c of captions) {
       const s = c.s + (c.n > 1 ? ' x' + c.n : ''), a = Math.min(1, c.t * 2), w = (UI.measure ? UI.measure(s, size) : s.length * 8) + 16;
       ctx.globalAlpha = 0.55 * a; ctx.fillStyle = '#0a0614'; ctx.fillRect(16, y - 4, w, lh); ctx.globalAlpha = 1;
