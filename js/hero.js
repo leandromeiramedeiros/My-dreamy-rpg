@@ -102,162 +102,26 @@ const HERO = (function () {
     g.p(11, 12, '#a65a4a'); g.p(12, 12, '#b86a58');     // mouth
   }
 
-  // ---- shared tables -------------------------------------------------------
-  const CAPEC = { warden: '#b02a42', dreamweave: '#5648c0', stalker: '#4a7a3c' };
-  const M_STEEL = mapT(['#7d8494', '#98a6bd', '#b4c4dc', '#c9d6ec', '#dfe8f8']);
+  // ---- armour: painted from the parts kit (js/parts-art.js). PARTS_ART.armour(slot, family, tier, view) -> { layers, sockets }; each layer is a cell
+  // list moved by an animation offset: attach 'bob' | 'arm' (a left / right pair: bob + lay / ray) | 'leg' (pair: -la / -ra) | 'none'; `sway` y0 shifts
+  // the cells below it by the skirt sway. Rarity / tempered / gems are applied by the callers (withTemper, g.gems).
+  const M_STEEL = mapT(['#7d8494', '#98a6bd', '#b4c4dc', '#c9d6ec', '#dfe8f8']);   // kept for the cape trim colours below
   const FUR = [{ h: '#f4f0e6', m: '#e4e0d4', l: '#bdb8a8' }][0];
-
-  // ---- BOOTS (every tier changes the silhouette: shaft height, flared cops/cuffs, fins, wings) ----
-  const BOOTS = {
-    knightgreaves: {
-      anc: [[8, 29], [14, 29], [9, 26]],
-      draw(g, P, back, T) {
-        const R = M_STEEL[T], top = [28, 27, 26, 26, 26][T];
-        for (let s = 0; s < 2; s++) {
-          g.oy = -(s ? P.ra : P.la); const M = g.mir(s);
-          if (T >= 4) {                                              // feathered wings
-            M.r(5, 25, 3, 1, WHITE.h); M.r(4, 26, 4, 1, WHITE.m); M.r(3, 27, 5, 1, WHITE.h); M.r(4, 28, 4, 1, GOLD.m); M.r(5, 29, 2, 1, GOLD.h);
-          }
-          M.b(9, top, 3, 29 - top, R); M.b(8, 29, 4, 2, R); M.p(7, 30, R.l);
-          M.r(9, 28, 3, 1, R.l);
-          if (T === 2) { M.b(8, 25, 4, 3, R); M.r(8, 27, 4, 1, GOLD.m); M.p(7, 29, R.m); M.p(7, 30, GOLD.m); }
-          if (T >= 3) { M.b(7, 24, 5, 3, R); M.r(7, 26, 5, 1, GOLD.m); M.p(6, 25, GOLD.h); M.p(6, 24, GOLD.m); M.p(7, 29, GOLD.m); M.p(7, 30, GOLD.h); M.r(8, 29, 4, 1, GOLD.m); }
-          if (T >= 4) { M.r(9, 24, 3, 1, GOLD.h); M.p(8, 23, GOLD.m); }
-        }
-      }
-    },
-    clothsandals: {
-      anc: [[8, 29], [14, 29], [9, 27]],
-      draw(g, P, back, T) {
-        const C = mapT(['#b8a078', '#c8a868', '#5a84c0', '#7a5cc8', '#e8e0f8'])[T], tie = mapT(['#8a7050', '#a07848', '#d8c070', '#e8b830', '#ffe27a'])[T];
-        const top = [28, 27, 26, 25, 25][T];
-        for (let s = 0; s < 2; s++) {
-          g.oy = -(s ? P.ra : P.la); const M = g.mir(s);
-          if (T >= 3) { M.r(5, 25, 3, 1, C.h); M.r(4, 26, 4, 1, C.m); M.r(3, 27, 5, 1, C.h); M.r(4, 28, 4, 1, C.l); if (T >= 4) { M.r(2, 26, 2, 1, GOLD.h); M.r(3, 28, 2, 1, GOLD.m); } }
-          M.b(8, 29, 4, 2, tie); M.r(8, 30, 4, 1, tie.d);
-          M.b(9, top, 3, 29 - top, C);
-          for (let y = top; y < 29; y += 2) { M.p(9, y, C.l); M.p(11, y + 1 > 28 ? 28 : y + 1, C.l); }
-          if (T >= 1) M.r(9, top, 3, 1, tie.m);
-          if (T >= 2) { M.r(7, 27, 2, 1, tie.m); M.p(7, 28, tie.l); M.p(6, 28, tie.m); M.r(9, 28, 3, 1, GOLD.m); }
-          if (T >= 4) { M.r(9, 25, 3, 1, GOLD.m); }
-        }
-      }
-    },
-    stalkershoes: {
-      anc: [[8, 29], [14, 29], [9, 26]],
-      draw(g, P, back, T) {
-        const L = mapT(['#8a6840', '#745638', '#5e5a34', '#3e5a3a', '#2c3430'])[T], top = [28, 27, 27, 27, 27][T];
-        for (let s = 0; s < 2; s++) {
-          g.oy = -(s ? P.ra : P.la); const M = g.mir(s);
-          M.b(9, top, 3, 29 - top, L); M.b(8, 29, 4, 2, L); M.r(8, 30, 4, 1, L.d);
-          if (T >= 1) { M.p(10, 28, '#d8c8a0'); M.p(9, 27, '#d8c8a0'); M.p(11, 27, '#d8c8a0'); M.p(9, 29, '#b0b0b8'); }
-          if (T >= 2) { M.b(8, 25, 4, 2, L); M.r(8, 26, 4, 1, L.l); M.p(8, 29, GOLD.m); M.p(10, 25, GOLD.m); }
-          if (T >= 3) { M.r(7, 24, 5, 2, FUR.m); M.p(7, 26, FUR.l); M.p(6, 25, FUR.m); M.p(8, 23, FUR.m); M.p(10, 23, FUR.l); M.r(7, 24, 5, 1, FUR.h); }
-          if (T >= 4) { M.r(7, 29, 1, 2, GOLD.m); M.p(6, 30, GOLD.h); M.p(6, 27, GOLD.m); M.p(5, 26, GOLD.h); M.p(6, 28, GOLD.l); M.p(11, 29, GOLD.m); }
-        }
+  function paintKit(g, P, kit) {
+    for (const L of kit.layers) {
+      const n = L.pair ? 2 : 1;
+      for (let s = 0; s < n; s++) {
+        g.oy = L.attach === 'bob' ? P.bob : L.attach === 'arm' ? P.bob + (s ? P.ray : P.lay) : L.attach === 'leg' ? -(s ? P.ra : P.la) : 0;
+        const cells = s ? L.cellsR : L.cells, sw = L.sway;
+        for (let i = 0; i < cells.length; i++) { const q = cells[i]; g.p(sw != null && q[1] >= sw ? q[0] + P.sw : q[0], q[1], q[2]); }
       }
     }
-  };
-
-  // ---- CHEST ---------------------------------------------------------------
-  const CHEST = {
-    warden: {
-      anc: [[11, 17], [5, 15], [17, 15]],
-      draw(g, P, back, T) {
-        const R = M_STEEL[T], tab = RP(CAPEC.warden);
-        g.oy = P.bob;
-        if (back) { g.b(8, 15, 8, 8, R); g.r(11, 16, 1, 6, R.h); g.r(12, 16, 1, 6, R.l); }
-        else {
-          g.b(8, 15, 8, 6, R); g.r(11, 16, 1, 5, R.h); g.r(12, 16, 1, 5, R.l);
-          g.r(9, 15, 6, 1, R.l); g.p(10, 18, R.l); g.p(13, 18, R.l);
-          g.b(8, 21, 8, 3, R); g.r(8, 22, 8, 1, R.l);                           // fauld
-          if (T >= 1) { g.r(10, 23, 4, 3, tab.m); g.r(10, 23, 1, 3, tab.h); g.r(13, 23, 1, 3, tab.l); g.p(11, 25, tab.l); }
-          if (T >= 2) { g.r(8, 20, 8, 1, GOLD.m); g.r(10, 15, 4, 1, GOLD.m); g.s(11, 21, 1, 2, GOLD.m); }
-          if (T >= 3) { g.r(8, 15, 1, 5, GOLD.l); g.r(15, 15, 1, 5, GOLD.l); g.s(9, 18, 2, 1, GOLD.h); }
-          if (T >= 4) { g.r(11, 24, 2, 1, GOLD.m); g.p(11, 25, GOLD.h); g.r(9, 23, 6, 1, GOLD.m); g.s(10, 16, 1, 1, GOLD.h); }
-        }
-        for (let s = 0; s < 2; s++) {                                           // vambrace + gauntlet
-          g.oy = P.bob + (s ? P.ray : P.lay); const M = g.mir(s);
-          if (T >= 1) { M.b(6, 18, 2, 4, R); if (T >= 2) M.r(6, 18, 2, 1, GOLD.m); }
-          if (T >= 2) M.b(6, 23, 2, 2, R);
-        }
-        g.oy = P.bob;
-        const w = [3, 3, 4, 4, 5][T], h = [2, 3, 3, 4, 4][T], y = T >= 3 ? 13 : 14, x = 8 - w;   // pauldrons
-        g.sb(x, y, w, h, R);
-        if (T >= 1) g.s(x, y + h - 1, w, 1, R.l);
-        if (T >= 2) g.s(x, y + h - 1, w, 1, GOLD.m);
-        if (T >= 3) { g.s(x, y - 1, 1, 1, R.h); g.s(x + 1, y + h, w - 1, 1, R.l); g.s(x + 1, y + 1, 1, 1, GOLD.m); }
-        if (T >= 4) { g.s(x + 1, y - 3, 1, 2, GOLD.m); g.s(x, y - 4, 1, 1, GOLD.h); g.s(x + 2, y - 2, 1, 1, GOLD.h); }
-        if (!back) g.gems(this.anc);
-      }
-    },
-    dreamweave: {
-      anc: [[11, 16], [11, 20], [11, 26]],
-      draw(g, P, back, T) {
-        const R = mapT(['#8a86b8', '#7664c4', '#5c46b8', '#46369c', '#30287c'])[T];
-        const SA = mapT(['#a88a5a', '#d05078', '#d8a838', '#e8c850', '#ffe27a'])[T], sw = P.sw;
-        g.oy = P.bob;
-        g.b(8, 15, 8, 8, R);
-        g.oy = 0;                                                                // skirt (sways)
-        g.shape(23, [[8, 15], [7, 16], [7, 16], [6, 17], [6 + sw, 17 + sw], [6 + sw, 17 + sw]], R);
-        g.r(11, 24, 1, 5, R.l); if (!back) g.r(12, 24, 1, 4, R.h);
-        g.oy = P.bob;
-        if (!back) { g.r(10, 15, 4, 1, '#ecb890'); g.r(11, 16, 2, 1, '#c88a68'); g.s(9, 15, 1, 1, R.h); }
-        g.r(8, 20, 8, 2, SA.m); g.r(8, 20, 8, 1, SA.h); g.r(8, 21, 8, 1, SA.l);   // sash
-        if (!back) { g.r(11, 20, 2, 2, SA.h); g.r(13, 22, 2, 5, SA.m); g.r(14, 22, 1, 5, SA.l); g.p(13, 27, SA.h); }
-        else { g.r(10, 22, 2, 5, SA.m); g.r(11, 22, 1, 5, SA.l); }
-        for (let s = 0; s < 2; s++) {                                            // bell sleeves
-          g.oy = P.bob + (s ? P.ray : P.lay); const M = g.mir(s);
-          M.b(5, 19, 3, 4, R); M.r(5, 22, 3, 1, T >= 1 ? SA.m : R.l);
-          if (T >= 2) M.r(5, 19, 3, 1, GOLD.m);
-        }
-        g.oy = P.bob;
-        if (T >= 1) g.s(8, 16, 1, 4, R.h);
-        if (T >= 2) g.r(8, 15, 8, 1, GOLD.m);
-        if (T >= 3) { g.shape(14, [[6, 10], [5, 9], [5, 8]], RP(T === 3 ? '#6a5ad0' : '#4a3cb0'), true); g.s(5, 16, 3, 1, GOLD.m); }
-        g.oy = 0;
-        if (T >= 2) { g.r(6 + sw, 28, 12, 1, GOLD.m); }
-        if (T >= 3) { g.p(9, 26, GOLD.h); g.p(14, 25, GOLD.h); g.p(8, 24, GOLD.m); }
-        if (T >= 4) { g.p(10, 24, GOLD.h); g.p(15, 27, GOLD.h); g.p(12, 26, '#ffffff'); g.r(11, 15, 2, 1, GOLD.h); }
-        g.oy = P.bob;
-        if (!back) g.gems(this.anc);
-      }
-    },
-    stalker: {
-      anc: [[11, 18], [9, 16], [13, 20]],
-      draw(g, P, back, T) {
-        const R = mapT(['#8c6a44', '#76593a', '#5e6b3c', '#3f5a3a', '#2c3430'])[T], ST = RP('#3a2818');
-        g.oy = P.bob;
-        g.b(8, 15, 8, 7, R);
-        g.s(8, 21, 4, 3, R.m); g.s(8, 23, 4, 1, R.l); g.p(11, 23, R.d);       // coat flaps
-        if (!back) {
-          g.r(11, 16, 2, 6, '#58689a'); g.r(11, 16, 1, 6, '#7080b0');           // open front
-          for (let i = 0; i < 6; i++) { g.p(9 + i, 16 + i, ST.m); if (i < 5) g.p(9 + i, 17 + i, ST.l); }   // bandolier
-          g.b(13, 19, 2, 3, ST); g.p(13, 19, '#b8a070');                        // pouch
-          g.s(9, 14, 3, 2, R.l); g.s(8, 14, 3, 1, R.h);                         // high collar
-          g.r(8, 21, 8, 1, ST.m); g.s(11, 21, 1, 1, T >= 2 ? GOLD.m : '#b0b0b8');
-        } else {
-          g.r(11, 16, 1, 6, R.l); g.r(8, 21, 8, 1, ST.m); g.s(8, 14, 3, 2, R.l);
-          for (let i = 0; i < 6; i++) g.p(14 - i, 16 + i, ST.m);
-        }
-        for (let s = 0; s < 2; s++) {
-          g.oy = P.bob + (s ? P.ray : P.lay); const M = g.mir(s);
-          if (T >= 1) { M.b(6, 19, 2, 3, { h: R.m, m: R.l, l: R.d }); M.p(6, 19, '#c8b890'); }
-          if (T >= 3) M.b(6, 22, 2, 1, FUR);
-        }
-        g.oy = P.bob;
-        g.sb(5, T >= 2 ? 14 : 15, 3, T >= 2 ? 3 : 2, R); g.s(6, 15, 1, 1, '#d8d4c8');   // pads + rivets
-        if (T >= 2) { g.s(5, 16, 3, 1, R.l); g.s(5, 14, 1, 1, GOLD.m); }
-        if (T >= 3) { g.r(8, 14, 8, 1, FUR.m); g.s(8, 13, 3, 1, FUR.l); g.s(9, 15, 1, 1, FUR.m); g.s(5, 13, 3, 1, FUR.m); }
-        if (T >= 4) { g.s(9, 17, 1, 1, GOLD.m); g.s(9, 19, 1, 1, GOLD.m); g.s(5, 12, 1, 1, '#e86a4a'); g.s(4, 11, 1, 1, '#c8482a'); g.p(5, 10, '#ffd8a0'); }
-        if (!back) g.gems(this.anc);
-      }
-    }
-  };
+    g.oy = P.bob; g.gems(kit.sockets);
+  }
 
   // ---- CAPE ----------------------------------------------------------------
   function cape(g, P, back, chest) {
-    const base = CAPEC[chest && chest.family] || '#b02a42', T = chest ? chest.tier : 0;
+    const kc = chest && PARTS_ART.KITS.chest[chest.family], base = (kc && kc.cape) || '#b02a42', T = chest ? chest.tier : 0;
     const C = RP(dk(base, 0.8 + T * 0.06)), sw = P.sw, len = T >= 1 ? 12 : 10;
     g.oy = P.bob;
     if (back) {
@@ -277,174 +141,9 @@ const HERO = (function () {
     }
   }
 
-  // ---- HELMETS -------------------------------------------------------------
-  const HEAD = {
-    knighthelm: {
-      anc: [[11, 5], [8, 6], [14, 6]],
-      draw(g, P, back, T) {
-        const R = M_STEEL[T], PL = RP(['#c8283c', '#c8283c', '#d02e48', '#e03050', '#f03a58'][T]);
-        g.oy = P.bob;
-        if (T >= 4) { g.s(5, 6, 2, 1, WHITE.h); g.s(4, 5, 2, 1, WHITE.m); g.s(5, 7, 2, 1, GOLD.m); g.s(4, 8, 2, 1, WHITE.m); g.s(3, 6, 1, 2, GOLD.h); }   // wings
-        g.shape(3, [[9, 14], [8, 15], [7, 16], [7, 16], [7, 16], [7, 16], [7, 16], [7, 16], [7, 16], [8, 15], [8, 15], [9, 14]], R);
-        if (T === 0) g.r(11, 2, 2, 1, R.m);
-        if (T === 1) { g.r(11, 1, 2, 2, PL.m); g.p(11, 1, PL.h); g.p(12, 2, PL.l); }
-        if (T === 2) { g.shape(0, [[11, 13], [10, 13], [10, 12], [10, 12]], PL); g.p(14, 1, PL.l); g.p(14, 2, PL.d); }
-        if (T === 3) { g.shape(0, [[10, 14], [9, 14], [9, 13], [10, 12], [10, 12]], PL); g.p(15, 1, PL.m); g.p(16, 2, PL.l); g.p(16, 3, PL.l); g.p(17, 4, PL.d); }
-        if (T === 4) { g.shape(0, [[9, 14], [8, 15], [8, 15], [9, 14], [10, 13], [10, 12]], PL); g.p(16, 3, PL.m); g.p(17, 4, PL.l); g.p(17, 5, PL.d); g.p(6, 3, PL.m); g.p(5, 4, PL.l); g.p(5, 5, PL.d); }
-        if (back) {
-          g.r(11, 3, 1, 10, R.h); g.r(12, 3, 1, 9, R.l); g.r(7, 8, 10, 1, R.l);
-          if (T >= 2) g.r(7, 9, 10, 1, GOLD.m);
-        } else {
-          g.r(8, 7, 8, 1, R.l); g.r(8, 8, 8, 1, '#0c0a16'); g.r(8, 9, 8, 1, R.l);   // brow + visor slit
-          g.p(9, 8, '#9ae8ff'); g.p(10, 8, '#d8f8ff'); g.p(13, 8, '#d8f8ff'); g.p(14, 8, '#9ae8ff');   // glowing eyes
-          g.r(11, 3, 1, 9, R.h); g.r(12, 3, 1, 9, R.l); g.r(11, 8, 2, 1, '#0c0a16');
-          g.s(9, 11, 2, 1, R.d); g.s(9, 12, 1, 1, R.d);                           // vents
-          if (T >= 1) g.r(8, 13, 8, 1, R.l);
-          if (T >= 2) { g.r(8, 7, 8, 1, GOLD.m); g.r(8, 9, 8, 1, GOLD.l); }
-          if (T >= 3) { g.r(11, 3, 2, 5, GOLD.m); g.r(11, 3, 1, 5, GOLD.h); }
-          if (T >= 4) { g.r(8, 5, 8, 1, GOLD.m); g.sp(8, 12, GOLD.m); g.r(11, 9, 2, 4, GOLD.m); }
-        }
-        if (!back) g.gems(this.anc.map(a => [a[0], a[1]]));
-      }
-    },
-    arcanecowl: {
-      anc: [[11, 6], [8, 6], [14, 6]],
-      draw(g, P, back, T) {
-        const R = mapT(['#4a5aa8', '#4a46b8', '#5a3ec0', '#6a2ec8', '#3a1e98'])[T];
-        g.oy = P.bob;
-        g.shape(0, [[15, 17], [14, 16], [13, 16], [12, 15], [11, 15], [10, 15], [9, 15], [8, 16], [7, 16], [7, 16], [7, 16]], R);   // pointed tip
-        if (T >= 4) { g.p(18, 0, GOLD.h); g.p(18, 1, GOLD.m); g.p(19, 0, '#ffffff'); }
-        if (back) { g.shape(11, [[7, 16], [7, 16], [8, 15], [8, 15]], R); g.r(11, 3, 1, 11, R.l); g.r(12, 5, 1, 8, R.d); }
-        else {
-          g.shape(11, [[7, 8], [7, 8], [7, 8], [7, 8]], R); g.shape(11, [[15, 16], [15, 16], [15, 16], [15, 16]], R);
-          g.r(9, 8, 6, 1, R.d); g.r(9, 9, 6, 1, R.l); g.r(8, 9, 1, 5, R.l);
-          g.shape(14, [[7, 10], [8, 11]], R); g.shape(14, [[13, 16], [12, 15]], R);   // cowl on shoulders
-          if (T >= 2) { g.r(9, 8, 6, 1, GOLD.l); g.s(7, 9, 1, 5, GOLD.m); }
-          g.p(12, 5, T >= 3 ? '#ffffff' : GOLD.h);                                  // star emblem
-          if (T >= 1) { g.p(11, 5, GOLD.m); g.p(12, 4, GOLD.m); g.p(12, 6, GOLD.m); g.p(13, 5, GOLD.m); }
-          if (T >= 3) { g.sp(9, 3, GOLD.m); g.p(14, 8, '#ffffff'); g.p(10, 4, '#ffffff'); g.p(8, 9, GOLD.h); }
-          if (T >= 4) { g.p(12, 5, '#ff9ae8'); g.p(11, 4, GOLD.h); g.p(13, 4, GOLD.h); g.p(11, 6, GOLD.h); g.p(13, 6, GOLD.h); g.p(14, 3, '#ffffff'); g.sp(8, 13, GOLD.h); }
-        }
-        g.p(10, 3, R.h); g.p(11, 2, R.h);
-        g.r(7, 7, 10, 1, T >= 2 ? GOLD.m : R.l);
-        if (!back) g.gems(this.anc);
-      }
-    },
-    wardenhood: {
-      anc: [[11, 6], [8, 6], [14, 6]],
-      draw(g, P, back, T) {
-        const R = mapT(['#5a7a3e', '#4a8a40', '#3a9a50', '#2f8a64', '#237a6c'])[T], LF = RP(['#78a840', '#68c048', '#58d060', '#60e088', '#ffd860'][T]);
-        const leaf = (x, y, c) => { g.p(x, y, c.m); g.p(x + 1, y, c.h); g.p(x, y + 1, c.l); g.p(x + 1, y + 1, c.m); };
-        g.oy = P.bob;
-        g.shape(3, [[9, 14], [8, 15], [7, 16], [7, 16], [7, 16], [7, 16]], R);
-        if (back) { g.shape(9, [[7, 16], [7, 16], [7, 16], [8, 15], [8, 15]], R); g.r(11, 4, 1, 9, R.l); g.r(12, 6, 1, 7, R.d); }
-        else {
-          g.shape(9, [[7, 8], [7, 8], [7, 8], [7, 8], [8, 9], [9, 10]], R); g.shape(9, [[15, 16], [15, 16], [15, 16], [15, 16], [14, 15], [13, 14]], R);
-          g.r(9, 7, 6, 1, R.d); g.r(9, 8, 6, 1, R.l);
-          if (T >= 2) { g.r(9, 8, 6, 1, LF.m); g.s(8, 9, 1, 1, LF.h); }
-        }
-        leaf(10, 1, LF); leaf(13, 1, LF); g.p(12, 3, R.h);
-        if (T >= 1) { leaf(5, 5, LF); leaf(17, 5, LF); leaf(6, 10, LF); leaf(16, 10, LF); }
-        if (T >= 2) { g.p(8, 3, '#f06a8a'); g.p(15, 3, '#f06a8a'); g.p(9, 14, '#f0d860'); g.p(14, 14, '#f06a8a'); }
-        if (T >= 3) { g.s(7, 1, 1, 2, '#7a5a38'); g.s(6, 0, 1, 1, '#7a5a38'); g.s(5, 0, 1, 1, LF.h); g.s(8, 0, 1, 1, LF.m); }
-        if (T >= 4) { g.r(8, 3, 8, 1, GOLD.m); g.s(4, 1, 1, 1, GOLD.h); g.s(3, 3, 1, 2, GOLD.m); g.p(11, 0, '#ffffff'); g.p(12, 0, GOLD.h); }
-        if (!back) g.gems(this.anc);
-      }
-    }
-  };
-
-  // ---- WEAPONS (separate held sprites, 16x40, point up; grip = hand anchor) -
+  // ---- WEAPONS: separate held sprites painted from the parts kit (js/parts-art.js: template + tier table + stamps) -------------
+  // PARTS_ART.weapon(family, tier, demo) -> { w, h, cells:[[x,y,'#hex']], grip, tip, sockets, aim, light }; the grip is the hand anchor.
   const WW = 16;
-  const WEAP = {
-    sword: {
-      grip: [8, 28], anc: [[7, 29], [7, 20], [7, 37]], oy: -6, H: 34, tipY: T => 29 - [11, 14, 17, 19, 21][T] - 6,
-      draw(g, T) {
-        g.oy = -6;
-        const B = RP(['#a0907e', '#aeb8c8', '#c4d4e8', '#d8ecff', '#fff0c0'][T]), wide = T >= 2;
-        const L = [11, 14, 17, 19, 21][T], top = 29 - L, x0 = wide ? 6 : 7, w = wide ? 4 : 2;
-        const G = T === 0 ? RP('#6a5a4a') : T === 1 ? RP('#8a94a8') : GOLD, lea = RP(T >= 3 ? '#3a2848' : '#5a3a24');
-        for (let y = top; y <= 28; y++) {
-          const tip = y === top, xx = tip ? 7 : x0, ww = tip ? 2 : w;
-          g.r(xx, y, ww, 1, B.m); g.p(xx, y, B.h); g.p(xx + ww - 1, y, ww === 2 ? B.l : B.m);
-          if (wide && !tip) { g.p(8, y, B.l); }
-          if (T === 3 && !tip && y % 3 === 0) { g.p(x0, y, '#8ad8ff'); g.p(x0 + w - 1, y, '#8ad8ff'); }
-          if (T === 4 && !tip) { if (y % 4 === 0) g.p(7, y, GOLD.m); g.p(9, y, GOLD.h); }
-        }
-        if (T === 0) { g.p(8, top + 2, '#a05a38'); g.p(7, top + 6, '#a05a38'); g.p(8, top + 8, '#a05a38'); g.ctx.clearRect(8, top + 4 + g.oy, 1, 1); g.p(7, top + 4, B.d); }
-        if (T === 1) g.r(7, top + 3, 1, L - 5, B.l);
-        const gw = [6, 8, 10, 12, 14][T], gx = 8 - gw / 2;
-        g.b(gx, 29, gw, 2, G);
-        if (T >= 2) { g.s(gx, 28, 1, 1, GOLD.h); }
-        if (T >= 3) { g.s(gx, 27, 1, 2, GOLD.m); g.s(gx + 1, 31, 2, 1, GOLD.l); }
-        if (T >= 4) { g.s(gx - 1, 26, 1, 3, GOLD.h); g.s(gx + 2, 31, 2, 2, WHITE.m); g.s(gx + 3, 33, 1, 1, WHITE.h); g.s(gx, 31, 1, 1, GOLD.m); }
-        g.r(7, 31, 2, 6, lea.m);
-        for (let y = 31; y < 37; y += 2) g.r(7, y, 2, 1, lea.l);
-        if (T >= 2) { g.r(7, 31, 2, 1, GOLD.m); g.r(7, 36, 2, 1, GOLD.m); }
-        if (T <= 1) g.b(7, 37, 2, 2, G); else if (T === 2) g.b(6, 37, 4, 2, GOLD); else g.b(6, 37, 4, 3, GOLD);
-        g.gems(this.anc);
-      }
-    },
-    staff: {
-      grip: [8, 26], oy: 0, H: 38, tipY: T => [9, 9, 8.5, 8.5, 8.5][T] | 0, anc: [[7, 8], [7, 24], [7, 31]],
-      draw(g, T) {
-        const W = RP(['#7a5a3a', '#6a4a30', '#5e4028', '#e8e0c0', '#f4ecd0'][T]), O = RP(['#6a8ac0', '#58b0e8', '#9070f0', '#d070ff', '#ff9ae8'][T]);
-        const r = [1.7, 2.3, 2.9, 3.3, 3.9][T], cy = [9, 9, 8.5, 8.5, 8.5][T], cx = 7.5;
-        g.r(7, 14, 2, 23, W.m); g.r(7, 14, 1, 23, W.h); g.r(8, 14, 1, 23, W.l);
-        if (T === 0) { g.p(8, 22, W.d); g.p(7, 29, W.d); }
-        if (T >= 2) { g.r(7, 22, 2, 1, GOLD.m); g.r(7, 30, 2, 1, GOLD.m); g.r(7, 35, 2, 2, GOLD.m); }
-        if (T >= 3) { g.p(7, 26, '#8ad8ff'); g.p(8, 33, '#8ad8ff'); g.r(7, 37, 2, 1, GOLD.l); }
-        const pr = [[[6, 14], [5, 13], [5, 12], [5, 11], [5, 10]], [[6, 14], [5, 13], [4, 12], [4, 11], [4, 10], [4, 9]],
-          [[6, 14], [5, 13], [4, 12], [4, 11], [4, 10], [4, 9], [5, 8]], [], []][T];
-        const pc = T >= 2 ? GOLD : W;
-        pr.forEach(([x, y]) => { g.p(x, y, pc.m); g.p(15 - x, y, pc.m); g.p(x, y - 1 < 0 ? 0 : y, pc.h); });
-        if (T === 1) { g.p(4, 13, '#58c060'); g.p(11, 13, '#58c060'); g.p(5, 14, '#58c060'); }
-        if (T >= 3) {                                            // crescent / rings
-          for (let y = 0; y < 18; y++) for (let x = 0; x < WW; x++) {
-            const d = Math.hypot(x - cx, y - cy), dr = Math.hypot(x - cx, (y - cy) * 2.4);
-            if (T >= 3 && d >= r + 1 && d <= r + 2.1 && y <= cy + 2) g.p(x, y, d < r + 1.6 ? GOLD.h : GOLD.m);
-            if (T >= 4 && Math.abs(dr - (r + 3.4)) < 0.55 && y > cy) g.p(x, y, GOLD.m);
-          }
-        }
-        for (let y = 0; y < 18; y++) for (let x = 0; x < WW; x++) {   // orb
-          const d = Math.hypot(x - cx, y - cy); if (d > r) continue;
-          const sh = (x - cx) + (y - cy);
-          g.p(x, y, sh < -r * 0.5 ? O.h : sh > r * 0.6 ? O.l : O.m);
-        }
-        g.p(Math.round(cx - r * 0.5 - 0.5), Math.round(cy - r * 0.5 - 0.5), '#ffffff');
-        if (T >= 2) g.p(7, Math.round(cy), O.h);
-        if (T >= 3) { g.p(2, 3, O.h); g.p(13, 5, O.h); g.p(3, 12, '#ffffff'); }
-        if (T >= 4) { g.s(2, 7, 1, 2, GOLD.m); g.s(1, 6, 1, 1, GOLD.h); g.p(7, 0, GOLD.h); g.p(8, 0, GOLD.m); g.p(7, 1, '#fff'); g.p(8, 1, GOLD.h); }
-        g.gems(this.anc);
-      }
-    },
-    bow: {
-      grip: [12, 16], oy: -4, H: 32, tipY: T => 2, anc: [[10, 19], [9, 12], [9, 28]],
-      draw(g, T) {
-        g.oy = -4;
-        const W = RP(['#8a6038', '#6e4a2c', '#5a6a34', '#3c7a4c', '#f0e0a0'][T]);
-        const bx = y => 11 - Math.round(6 * Math.pow((y - 20) / 14, 2)) + (T >= 2 ? Math.max(0, 9 - y) + Math.max(0, y - 31) : 0);
-        const sx = bx(6);
-        for (let y = 6; y <= 34; y++) {
-          const a = bx(y), b = bx(y + 1 > 34 ? 34 : y + 1), lo = Math.min(a, b);
-          const tipZone = y <= 8 || y >= 32;
-          g.r(lo, y, Math.abs(a - b) + 2, 1, (T >= 2 && tipZone) ? GOLD.m : W.m);
-          g.p(lo, y, (T >= 2 && tipZone) ? GOLD.h : W.h); g.p(Math.max(a, b) + 1, y, W.l);
-          if (T === 3 && y % 5 === 2 && !tipZone) g.p(a + 1, y, '#9affb0');
-          if (T === 4 && y % 4 === 0 && !tipZone) g.p(a, y, GOLD.m);
-        }
-        const SC = ['#d8d0c0', '#e8e0d0', '#f0e8d0', '#a0ffb0', '#ffffff'][T];
-        g.r(sx, 7, 1, 27, SC);
-        const lea = RP('#5a3a24');
-        for (let y = 17; y <= 23; y++) { g.r(11, y, 2, 1, (y % 2) ? lea.l : lea.m); }
-        if (T >= 2) { g.r(11, 17, 2, 1, GOLD.m); g.r(11, 23, 2, 1, GOLD.m); }
-        if (T >= 3) { g.p(13, 18, '#8ad8ff'); g.p(13, 22, '#8ad8ff'); }
-        if (T >= 4) { g.p(13, 17, WHITE.h); g.p(14, 16, WHITE.m); g.p(14, 18, WHITE.m); g.p(13, 23, WHITE.h); g.p(14, 22, WHITE.m); g.p(14, 24, WHITE.m); g.p(15, 20, GOLD.h); g.p(14, 20, GOLD.m); g.p(13, 20, GOLD.m); }
-        g.gems(this.anc);
-      }
-    }
-  };
-
-
   // ---- trinket overlays (DESIGN 19.4) + tempered edge ------------------------------------
   const ELC = { fire: '#ff8a3a', frost: '#5fd4ff', nature: '#5fd65f', lightning: '#ffe14a', arcane: '#b07cff', physical: '#aab4cc', holy: '#ffd75a' };
   const BELTC = { rope_sash: '#b8935a', mistwoven_belt: '#7fa8c8', moonlit_girdle: '#b8b4ee', cindersash: '#d8601c', quietgirdle: '#4a4a88', tidewovenclasp: '#2aa0a8', hollowbell: '#d8b040' };
@@ -503,14 +202,14 @@ const HERO = (function () {
     }
     cx.putImageData(new ImageData(o, w, h), 0, 0);
   }
-  const piece = p => (p && p.family ? { family: p.family, tier: clamp(p.tier | 0, 0, 4), gems: p.gems || null, tempered: !!p.tempered, rarity: p.rarity || 'common' } : null);
+  const piece = p => (p && p.family ? { family: p.family, tier: clamp(p.tier | 0, 0, 4), gems: p.gems || null, tempered: !!p.tempered, rarity: p.rarity || 'common', demo: !!p.demo } : null);
   function renderFrame(L, back, fi, only) {
     const { c, x } = makeCanvas(FW, FH), g = mkG(x, back), P = FR[fi];
     x.translate(0, TOP);
-    const run = (slot, tbl, args) => {
+    const run = slot => {
       const p = L[slot]; if (!p || (only && only !== slot)) return;
-      const fam = tbl[p.family]; if (!fam) return;
-      g.gl = p.gems; g.oy = 0; withTemper(x, g, p.tempered, back, tg => fam.draw(tg, P, back, p.tier));
+      const kit = PARTS_ART.armour(slot, p.family, p.tier, back ? 'back' : 'front'); if (!kit) return;
+      g.gl = p.gems; g.oy = 0; withTemper(x, g, p.tempered, back, tg => paintKit(tg, P, kit));
     };
     const doCape = () => { if (!only || only === 'cape') { g.gl = null; cape(g, P, back, L.chest); } };
     const tri = (slot, f) => { const p = L[slot]; if (!p || (only && only !== slot)) return; g.gl = null; withTemper(x, g, p.tempered, back, tg => f(tg, p)); };
@@ -519,10 +218,10 @@ const HERO = (function () {
       g.gl = null; body(g, P, back, L);
       if (!L.boots) for (let s = 0; s < 2; s++) { g.oy = -(s ? P.ra : P.la); g.mir(s).b(8, 29, 4, 2, RP(L.skin || '#ecb890')); }
     } else if (!back) doCape();
-    run('boots', BOOTS); run('chest', CHEST);
+    run('boots'); run('chest');
     if (back && (!only || only === 'cape')) doCape();
     tri('belt', (tg, p) => drawBelt(tg, P, back, p)); tri('amulet', (tg, p) => drawAmulet(tg, P, back, p));
-    run('head', HEAD);
+    run('head');
     if (fi === 6 && L.ring && (!only || only === 'ring')) {
       const hit = L.ring.filter(r => RANKS.indexOf(r.rarity) >= 3);
       if (hit.length) { const r = hit[0]; g.gl = null; withTemper(x, g, r.tempered, back, tg => drawRingGlint(tg, P, r)); }
@@ -531,10 +230,14 @@ const HERO = (function () {
     return c;
   }
   function renderWeapon(w) {
-    const fam = WEAP[w.family], { c, x } = makeCanvas(WW, fam ? fam.H : 20), g = mkG(x, false, WW);
-    if (!fam) return { c, grip: [8, 10], tip: [8, 0] };
-    g.gl = w.gems; fam.draw(g, w.tier); if (w.tempered) edgeLight(c, 0.6); outline(c);
-    return { c, grip: fam.grip, tip: [8, fam.tipY(w.tier)] };
+    const kit = PARTS_ART.weapon(w.family, w.tier, w.demo);
+    if (!kit) return { c: makeCanvas(WW, 20).c, grip: [8, 10], tip: [8, 0], aim: 'up', light: null };
+    const { c, x } = makeCanvas(kit.w, kit.h), g = mkG(x, false, kit.w);
+    for (const q of kit.cells) { x.fillStyle = q[2]; x.fillRect(q[0], q[1], 1, 1); }
+    g.gl = w.gems; g.gems(kit.sockets);
+    if (w.tempered) edgeLight(c, 0.6);
+    outline(c);
+    return { c, grip: kit.grip, tip: kit.tip, aim: kit.aim, light: kit.light };
   }
 
   const cache = new Map();
@@ -554,7 +257,8 @@ const HERO = (function () {
     if (L.weapon) {
       const w = renderWeapon(L.weapon);
       b.weapon = w.c; b.weaponGrip = { x: w.grip[0], y: w.grip[1] }; b.weaponTip = { x: w.tip[0], y: w.tip[1] };
-    } else { b.weapon = null; b.weaponGrip = { x: 0, y: 0 }; b.weaponTip = { x: 0, y: 0 }; }
+      b.weaponAim = w.aim; b.weaponLight = w.light;
+    } else { b.weapon = null; b.weaponAim = 'up'; b.weaponLight = null; b.weaponGrip = { x: 0, y: 0 }; b.weaponTip = { x: 0, y: 0 }; }
     const h0 = b.hand.front[0];
     b.anchors = {
       head: { x: 12, y: 9 + TOP }, chest: { x: 12, y: 19 + TOP }, boots: { x: 12, y: 28 + TOP },
@@ -700,6 +404,12 @@ const HERO = (function () {
     ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = sv * Math.min(1, a); ctx.drawImage(tc.c, x - PAD, y - PAD);
     ctx.globalAlpha = sv; ctx.globalCompositeOperation = sc;
   }
+  // build every rim layer a build can ask for (both views, 7 frames, the weapon): call once after build(), off the frame loop
+  function prewarm(b) {
+    if (b._warm) return; b._warm = true;
+    for (const v of ['front', 'back']) for (let i = 0; i < FR.length; i++) rimsOf(b, v, i);
+    weaponRimOf(b);
+  }
   // mythic aura (radial haze + orbiting stars) around a w x h box at x,y; a handful of fillRects, mythic only
   function drawAura(ctx, x, y, w, h, rarity, t) {
     const f = rarityFx[rarity]; if (!f || !f.aura) return;
@@ -765,8 +475,8 @@ const HERO = (function () {
   }
 
   return {
-    FW, FH, TOP, FRAMES: FR.length, ATTACK: 6, REST_ANGLE: REST, build, drawHero, slotSprite, rarityFx, rarityColor, drawGlow, emit, stepParticles, drawParticles, drawTrinketGlow, rimsOf, weaponRimOf, drawRim, drawAura, BELT_COLORS: BELTC, ELEMENT_COLORS: ELC,
-    FAMILIES: { head: Object.keys(HEAD), chest: Object.keys(CHEST), boots: Object.keys(BOOTS), weapon: Object.keys(WEAP) },
+    FW, FH, TOP, FRAMES: FR.length, ATTACK: 6, REST_ANGLE: REST, build, drawHero, slotSprite, rarityFx, rarityColor, drawGlow, emit, stepParticles, drawParticles, drawTrinketGlow, rimsOf, weaponRimOf, drawRim, drawAura, prewarm, BELT_COLORS: BELTC, ELEMENT_COLORS: ELC,
+    FAMILIES: { head: PARTS_ART.families('head'), chest: PARTS_ART.families('chest'), boots: PARTS_ART.families('boots'), weapon: PARTS_ART.families('weapon') },
     GEMS: Object.keys(GEMC), RARITIES: ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'],
     gemColor: n => GEMC[n]
   };

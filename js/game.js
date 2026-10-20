@@ -115,27 +115,172 @@ function makePlayer() {
   recalcStats(p, true);
   return p;
 }
-// The stats seam (§3 balance rule): every gear/affix/gem bonus is summed per stat, then applied once.
+// The stats seam (§3 balance rule): every gear/affix/implicit/gem/boon bonus is summed per stat, then applied once.
 // Base damage = tuning x level x (equipped weapon damage / its family's reference damage), so the basic
 // attack AND every skill scale with the weapon; p.bonus is the single additive damage % sum.
+// p.sum = the full summed gear bag (every stat key, incl. ones with no system yet: statusChance, poise, reflect, fishLuck...),
+// read by the engine hooks below (element damage %, pierce, charge rate, MP on hit, kill heal...). CAPS (itemdata.js, §19.6)
+// is applied here and only here: cdr 40 %, crit 60 %, haste 50 %, gear power 150 %, reaction bonus 50 % (incl. resonance),
+// Mark cap 5, potions 5; trinket resists max +10 % per line and +15 % resAll across the trinkets; hero res [-0.5, +0.6].
+const CAPS_DEFAULT = { cdr: 0.4, crit: 0.6, haste: 0.5, gearPower: 1.5, reactionBonus: 0.5, markCap: 5, potions: 5, trinketResLine: 0.1, trinketResAll: 0.15, heroResMin: -0.5, heroResMax: 0.6 };
+const capsT = () => (typeof CAPS !== 'undefined' ? CAPS : CAPS_DEFAULT);
+const MARK_BASE = 3;   // the Mark cap before gear (Marks themselves land with the Shadows class, M4)
+// ring element (§19.4 resonance): its boon's element, else the element of its implicit / first element-damage affix
+const RING_EL = { fireBurn: 'fire', frostPower: 'frost', naturePower: 'nature', lightningPower: 'lightning', arcanePower: 'arcane', holyPower: 'holy', conductJump: 'lightning', shatterRadius: 'frost' };
+function ringElement(it) {
+  if (!it) return null;
+  if (it.boon && RING_EL[it.boon.id]) return RING_EL[it.boon.id];
+  const k = [it.implicit && it.implicit.id].concat(it.affixes.map(a => a.id)).find(id => id && /^(fire|frost|nature|lightning|arcane|holy)Dmg$/.test(id));
+  return k ? k.slice(0, -3) : null;
+}
+// equipped boons by id (§19.6: ids never stack; two of one id count once, the major grade wins)
+function equippedBoons(p) {
+  const out = {};
+  for (const k of TRINKET_SLOTS) {
+    const it = p.equip[k], b = it && it.boon, row = b && boonRow(b.id); if (!row) continue;
+    const prev = out[b.id]; if (prev && !(prev.grade === 'minor' && b.grade !== 'minor')) continue;
+    out[b.id] = { id: b.id, grade: b.grade, slot: k, vals: row[b.grade === 'minor' ? 'minor' : 'major'] || row.major || {} };
+  }
+  return out;
+}
 function recalcStats(p, full) {
+  const C = capsT();
   const s = { hp: 0, mp: 0, def: 0, power: 0, crit: 0, haste: 0, regen: 0, mpRegen: 0, speed: 0, critDmg: 0, cdr: 0, skillDmg: 0, dmg: 0, resAll: 0 };
-  for (const slot of SLOTS) { const it = p.equip[slot]; if (!it) continue; p.gear[slot] = familyOf(it.base); const st = statsOf(it); for (const k in st) s[k] = (s[k] || 0) + st[k]; }
-  p.res = {}; for (const el of RES_ELS) p.res[el] = clamp((s[resKey(el)] || 0) + s.resAll, -0.5, 0.6);   // §5b: additive, clamped
+  let trkAll = 0;
+  for (const slot of EQUIP_SLOTS) {
+    const it = p.equip[slot]; if (!it) continue;
+    if (SLOTS.includes(slot)) p.gear[slot] = familyOf(it.base);
+    const st = statsOf(it), trk = isTrinket(it);
+    for (const k in st) {
+      let v = st[k];
+      if (trk && k === 'resAll') { v = Math.min(v, Math.max(0, C.trinketResAll - trkAll)); trkAll += v; }   // +15 % across all trinkets
+      else if (trk && /^res[A-Z]/.test(k)) v = Math.min(v, C.trinketResLine);                             // +10 % per trinket line
+      s[k] = (s[k] || 0) + v;
+    }
+  }
+  // boons (§19.4): passive boon numbers join the same sum through their EFFECTS row's `stats` map; triggers run via emitEffects
+  p.boons = equippedBoons(p);
+  for (const id in p.boons) { const row = EFFECT_BY_ID[id]; if (row && row.stats) for (const k in row.stats) if (typeof p.boons[id].vals[k] === 'number') s[row.stats[k]] = (s[row.stats[k]] || 0) + p.boons[id].vals[k]; }
+  // belt gem wrap (gemWrap boon): the best gem below Radiant in chest (minor) or chest / boots (major) counts +1 grade, one socket only
+  p.wrap = null;
+  if (p.boons.gemWrap) {
+    let best = null;
+    for (const slot of p.boons.gemWrap.vals.gemWrapSlots || ['chest']) { const it = p.equip[slot]; if (!it) continue; it.sockets.forEach((g, si) => { const q = g && gemParse(g); if (q && q.grade < GEM_MAX && (!best || q.grade > best.grade)) best = { slot, si, gem: g, type: q.type, grade: q.grade }; }); }
+    if (best) {
+      p.wrap = best;
+      const a = gemStats(best.gem, best.slot), b = gemStats(best.type + '_' + (best.grade + 1), best.slot);
+      for (const k in b) s[k] = (s[k] || 0) + b[k] - (a[k] || 0);
+    }
+  }
+  p.sum = s;
+  p.res = {}; for (const el of RES_ELS.concat('holy')) p.res[el] = clamp((s[resKey(el)] || 0) + s.resAll, C.heroResMin, C.heroResMax);   // §5b: additive, clamped
   p.amp = gemAmp(p);
+  // ring resonance (§19.4): two rings of one element -> that element's reaction +25 % (x2 with the Kindred Band), inside the 50 %
+  // reaction-bonus cap. Reactions arrive in M4: p.reactBonus is read there; p.resonance drives the aura colour (art lane).
+  const e1 = ringElement(p.equip.ring1), e2 = ringElement(p.equip.ring2);
+  p.resonance = e1 && e1 === e2 ? { el: e1, bonus: Math.min(C.reactionBonus, 0.25 * (hasRule(p, 'kindredband') ? 2 : 1)) } : null;
+  p.reactBonus = {}; if (p.resonance) p.reactBonus[p.resonance.el] = p.resonance.bonus;
   p.huntBonus = {};   // bestiary hunt milestones (+5% vs a type, additive into the damage sum) — filled by M-later
   const hpR = full || !p.maxHp ? 1 : p.hp / p.maxHp, mpR = full || !p.maxMp ? 1 : p.mp / p.maxMp;
   const B = G.tune.player, L = p.level - 1, w = item('weapon', p.gear.weapon);
   p.maxHp = Math.round(B.hp * (1 + 0.04 * L) + s.hp); p.maxMp = Math.round(B.mp + s.mp); p.maxSt = B.stamina;
-  p.wdmg = s.dmg || w.basic.dmg; p.dmgBase = B.damage * (1 + 0.03 * L) * p.wdmg / w.basic.dmg; p.bonus = s.power;
+  p.wdmg = s.dmg || w.basic.dmg; p.dmgBase = B.damage * (1 + 0.03 * L) * p.wdmg / w.basic.dmg; p.bonus = Math.min(C.gearPower, s.power);
   p.power = p.dmgBase * (1 + p.bonus);
   p.def = s.def / (1 + s.def);   // additive armour sum -> one diminishing transform (0.2 -> 17%, 0.7 -> 41%, 1.5 -> 60%)
-  p.crit = Math.min(0.75, B.crit + s.crit); p.critDmg = 0.8 + s.critDmg; p.haste = Math.min(1, s.haste);
-  p.cdr = Math.min(0.4, s.cdr); p.skillDmg = s.skillDmg; p.regen = B.regen + s.regen; p.mpRegen = B.mpRegen + s.mpRegen; p.speed = B.speed + s.speed;
+  p.crit = Math.min(C.crit, B.crit + s.crit); p.critDmg = 0.8 + s.critDmg; p.haste = Math.min(C.haste, s.haste);
+  p.cdr = Math.min(C.cdr, s.cdr); p.skillDmg = s.skillDmg; p.regen = B.regen + s.regen; p.mpRegen = B.mpRegen + s.mpRegen; p.speed = B.speed + s.speed;
+  p.markCap = Math.min(C.markCap, MARK_BASE + (s.markCap || 0));
+  p.maxPotions = Math.min(C.potions, MAX_POTIONS + (s.potionCharge || 0));
+  if (p.potions > p.maxPotions) p.potions = p.maxPotions;
   p.hp = p.maxHp * hpR; p.mp = p.maxMp * mpR; if (full) p.st = p.maxSt;
   const key = SLOTS.map(k => p.gear[k]).join();
   if (key !== p.sprKey) { p.sprKey = key; p.spr = buildPlayerSprites(p.equip); }
 }
+// ===== EFFECTS (§18.1 / §19.6): the smallest hook that becomes the M4 combo bus ==========================================
+// One row per trinket boon (src 'trinket', every BOONS + origin id) and per trigger affix (src 'affix': onDodge / onKill):
+//   { id, src, when: 'passive'|'hit'|'kill'|'dodge'|'ultimate'|'potion'|null, stats?: { boonKey: p.sum key }, do?(ctx, vals, p), icd, name, hint, dataOnly? }
+// `stats` rows fold into recalcStats' sum; event rows run from emitEffects(when, ctx) at the existing single call sites
+// (hit = damageEnemy, kill = killEnemy, dodge / ultimate = useSkill, potion = drinkPotion). ICD default 0.5 s, chain depth 2
+// (an effect-triggered hit cannot trigger further effects). A `dataOnly` row names a boon whose system is not built yet (M4+).
+// No row names a skill.
+const EFFECT_ICD = 0.5;
+const EFFECT_IMPL = {
+  // ring
+  fireBurn: { when: 'hit', stats: { fireDmg: 'fireDmg' }, do(c, v) { if (c.el === 'fire' && Math.random() < (v.burnChance || 0)) { const e = c.e; e.burnT = Math.max(e.burnT || 0, 2); e.burnTick = e.burnTick || 0.5; e.burnCast = c.cast; } } },
+  frostPower: { when: 'hit', stats: { frostDmg: 'frostDmg' }, do(c, v) { if (c.el === 'frost' && Math.random() < (v.freezeChance || 0)) { const e = c.e; e.stunT = Math.max(e.stunT, e.boss ? 0.25 : 1); e.frozen = 1; } } },
+  naturePower: { when: 'passive', stats: { natureDmg: 'natureDmg' }, partial: 'poisonChance (no hero poison yet)' },
+  lightningPower: { when: 'passive', stats: { lightningDmg: 'lightningDmg' }, partial: 'shockDur (no Shock status yet)' },
+  arcanePower: { when: 'passive', stats: { arcaneDmg: 'arcaneDmg' }, partial: 'markDur (no Marks yet)' },
+  holyPower: { when: 'passive', stats: { holyDmg: 'holyDmg', stagger: 'holyStagger' } },
+  projPierce: { when: 'passive', stats: { pierce: 'pierce' } },
+  markCap: { when: 'passive', stats: { markCap: 'markCap' }, partial: 'capped (Mark cap 5); Marks land in M4' },
+  // amulet
+  rFrostTag: { when: 'passive', stats: { rDmg: 'ultDmg' }, partial: 'the frost tag (tags land in M4)' },
+  rCost: { when: 'passive', stats: { rCost: 'rCost' } },
+  rFirstFree: { when: 'passive', stats: { rFirstCost: 'rFirstCost' }, flag: 'rFirstFree' },
+  ultDmg: { when: 'passive', stats: { ultDmg: 'ultDmg' } },
+  ultRadius: { when: 'passive', stats: { ultRadius: 'ultRadius' } },
+  skillDmgFull: { when: 'passive', stats: { skillDmg: 'skillDmgFull' } },
+  chargeOnDodge: { when: 'dodge', do(c, v, p) { p.ult = Math.min(100, p.ult + (v.chargeOnDodge || 0)); } },
+  chargeOnKill: { when: 'kill', icd: 0, do(c, v, p) { p.ult = Math.min(100, p.ult + (v.chargeOnKill || 0)); } },
+  mpOnR: { when: 'ultimate', do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + (v.mpOnR || 0)); } },
+  critAfterR: { when: 'ultimate', do(c, v, p) { p.critR = { v: v.crit || 0, until: G.t + 6 }; } },
+  // belt
+  potionCleanse: { when: 'potion', icd: 0, do(c, v, p) { let n = v.potionCleanse || 1; for (const k of ['rootT', 'slowT', 'dreadT']) if (n > 0 && p[k] > 0) { p[k] = 0; n--; } } },
+  killHeal: { when: 'passive', stats: { killHeal: 'killHeal' } },
+  salvageDust: { when: 'passive', stats: { salvageDust: 'salvageDust' } },
+  gemWrap: { when: 'passive' },   // recalcStats: p.wrap
+  potionCap: { when: 'passive', stats: { potionCharge: 'potionCharge' } },
+  dustOnKill: { when: 'kill', icd: 0, do(c, v, p) { if (enemyClassOf(c.e) !== 'normal') p.dust += v.dustOnElite || 0; } },
+  flaskRegen: { when: 'potion', icd: 0, do(c, v, p) { for (let k = 1; k <= 4; k++) delay(k, () => { if (!p.dead) healPlayer(p, p.maxHp * (v.potionRegen || 0)); }); } },
+  potionMp: { when: 'potion', icd: 0, do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + p.maxMp * (v.potionMp || 0)); } },
+  dodgeIframe: { when: 'dodge', icd: 0, do(c, v, p) { const x = v.dodgeIframeDur || 0; if (p.dash && p.dash.opt.invuln) p.invulnT = Math.max(p.invulnT, p.dash.t + x); else if (p.invulnT > 0) p.invulnT += x; } },
+  // origin rings (§17.1: the Origin passive is the starter ring's boon)
+  originKnight: { when: 'passive', stats: { def: 'def' } },
+  originMystic: { when: 'passive', stats: { mpOnHit: 'mpOnHit' } },
+  originRanger: { when: 'passive', stats: { critDmg: 'critDmg' } },
+  originWarrior: { when: 'passive', stats: { stagger: 'weaponStagger' } },
+};
+// trigger affixes (§19.1 suffixes, Epic+): onDodge heals v of max HP, onKill restores v of max MP
+const AFFIX_EFFECTS = [
+  { id: 'onDodge', src: 'affix', when: 'dodge', do(c, v, p) { healPlayer(p, p.maxHp * v); } },
+  { id: 'onKill', src: 'affix', when: 'kill', do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + p.maxMp * v); } },
+];
+const EFFECTS = [], EFFECT_BY_ID = {}, EFFECTS_WHEN = {};
+(function buildEffects() {
+  const rows = [];
+  if (typeof BOONS !== 'undefined') for (const slot in BOONS) for (const b of BOONS[slot]) rows.push(b);
+  if (typeof ORIGIN_RINGS !== 'undefined') for (const o of ORIGIN_RINGS) rows.push(o.boon);
+  for (const b of rows) {
+    const impl = EFFECT_IMPL[b.id];
+    const row = Object.assign({ id: b.id, src: 'trinket', when: null, icd: EFFECT_ICD, name: b.name, hint: b.text, tags: b.tags || [] }, impl || { dataOnly: true });
+    EFFECTS.push(row); EFFECT_BY_ID[b.id] = row;
+  }
+  for (const r of AFFIX_EFFECTS) { const row = Object.assign({ icd: EFFECT_ICD, name: r.id, hint: '' }, r); EFFECTS.push(row); EFFECT_BY_ID['affix:' + r.id] = row; }
+  for (const r of EFFECTS) if (r.do && r.when) (EFFECTS_WHEN[r.when] || (EFFECTS_WHEN[r.when] = [])).push(r);
+})();
+const boonLive = id => !!(EFFECT_BY_ID[id] && !EFFECT_BY_ID[id].dataOnly);
+let FX_DEPTH = 0;
+function emitEffects(when, ctx) {
+  const p = G.player, list = EFFECTS_WHEN[when]; if (!p || !p.boons || !list || FX_DEPTH >= 2 || p.dead) return;
+  const icd = p.fxIcd || (p.fxIcd = {});
+  FX_DEPTH++;
+  try {
+    for (const r of list) {
+      const vals = r.src === 'trinket' ? p.boons[r.id] && p.boons[r.id].vals : p.sum && p.sum[r.id];
+      if (!vals) continue;
+      if (r.icd && (icd[r.id] || -1e9) > G.t) continue;
+      r.do(ctx, vals, p);
+      if (r.icd) icd[r.id] = G.t + r.icd;
+    }
+  } finally { FX_DEPTH--; }
+}
+// ultimate cost (rCost boon: 80 or 90 charge instead of 100) and the first-R-in-a-fight discount (rFirstFree: free / half)
+const ultCost = p => (p.sum && p.sum.rCost ? Math.min(100, p.sum.rCost) : 100);
+function ultNeed(p) { const c = ultCost(p); return p.boons && p.boons.rFirstFree && p.freeR ? (p.boons.rFirstFree.vals.rFirstFree ? 0 : c * (p.sum.rFirstCost || 1)) : c; }
+// a fight starts after FIGHT_GAP s with no damage dealt or taken (arms rFirstFree)
+const FIGHT_GAP = 8;
+function combatPing(p) { if (!p) return; if (G.t - (p.combatT != null ? p.combatT : -1e9) > FIGHT_GAP) p.freeR = true; p.combatT = G.t; }
 const SLOT_KEYS = ['q', 'e', 'r', 'f', 'c', 'shift', '1', '2', '3'];
 function slotSkill(p, slot) {
   if (slot === 'q' || slot === 'e' || slot === 'r') return p.wsk[p.gear.weapon][slot];
@@ -206,7 +351,8 @@ function addSkillHit(p, id) {
 }
 // ultimate charge: fed by the pre-multiplier damage of every hit (level-independent), reactions x2 (M4)
 // §20.5: a single hit adds at most 5 % charge, a reaction hit at most 10 %
-const ultGain = (p, base, reaction) => Math.min(reaction ? 10 : 5, base * G.tune.player.ultRate * (reaction ? 2 : 1) * (1 + ultChargeBonus(p)));
+// chargeSpeed (amulet implicits, affixes) joins the diamond bonus as one additive charge-rate sum
+const ultGain = (p, base, reaction) => Math.min(reaction ? 10 : 5, base * G.tune.player.ultRate * (reaction ? 2 : 1) * (1 + ultChargeBonus(p) + ((p.sum && p.sum.chargeSpeed) || 0)));
 // §20.5 MP builder: per weapon family, basic attacks only, ONCE per swing (not per target), hard cap 40 MP/s from
 // hits over a rolling 1 s window. Values ~ swing time so every family builds ~15-23 MP/s on basics
 // (sword 8 / 0.42 s, staff 9 / 0.48 s, bow 7 / 0.36 s, daggers 6 / 0.28 s, two-hander 14 / 0.62 s).
@@ -214,7 +360,8 @@ const MP_ON_HIT = { sword: 8, staff: 9, bow: 7, daggers: 6, dagger: 6, twohander
 const MP_HIT_CAP = 40;
 function basicMpGain(p, c) {
   if (c && c.basic) { if (c.mpDone) return; c.mpDone = true; }
-  const w = item('weapon', p.gear.weapon), gain = MP_ON_HIT[w && w.kind] != null ? MP_ON_HIT[w.kind] : G.tune.player.mpOnHit;
+  const w = item('weapon', p.gear.weapon), g0 = MP_ON_HIT[w && w.kind] != null ? MP_ON_HIT[w.kind] : G.tune.player.mpOnHit;
+  const gain = Math.round(g0 * (1 + ((p.sum && p.sum.mpOnHit) || 0)));   // +x % MP on hit (Linen Robe implicit, Mystic origin ring)
   const L = p.mpHits || (p.mpHits = []), t = G.t;
   while (L.length && t - L[0][0] >= 1) L.shift();
   const used = L.reduce((a, q) => a + q[1], 0), add = Math.max(0, Math.min(gain, MP_HIT_CAP - used));
@@ -243,18 +390,21 @@ function useSkill(p, slot) {
     cancelCast(p);
   }
   if (p.dash) return false;
-  if (ult && p.ult < 100) { if (!G.ultWarnT || G.t > G.ultWarnT) { say('Ultimate is still charging'); G.ultWarnT = G.t + 1.2; } return false; }
+  const need = ult ? ultNeed(p) : 0;   // 100, or the amulet's rCost / first-R-of-a-fight discount
+  if (ult && p.ult < need) { if (!G.ultWarnT || G.t > G.ultWarnT) { say('Ultimate is still charging'); G.ultWarnT = G.t + 1.2; } return false; }
   const ctx = skillCtx(p, id, s), mp = Math.round((s.mp || 0) * ctx.mp);
+  if (ult && p.sum && p.sum.ultRadius) ctx.r *= 1 + p.sum.ultRadius * 0.4;   // amulet ultRadius: +1 tile on a ~2.5-tile ultimate
   if (mp > p.mp) { say('Not enough mana'); return false; }
   p.mp -= mp; p.st -= s.st || 0;
   // ultimates use the charge bar instead of a cooldown (a short lockout stops double-casts)
-  if (ult) { p.ult = 0; p.cds[id] = p.cdm[id] = 0.5; }
-  else p.cds[id] = p.cdm[id] = s.cd * ctx.cd * (1 - Math.min(0.4, p.cdr));
+  if (ult) { p.ult = Math.max(0, p.ult - need); if (p.freeR && p.boons && p.boons.rFirstFree) p.freeR = false; p.cds[id] = p.cdm[id] = 0.5; }
+  else p.cds[id] = p.cdm[id] = s.cd * ctx.cd * (1 - Math.min(capsT().cdr, p.cdr));
   if (p.swing && p.atkT > 0) p.swing = null;   // attacks cancel into skills
   const c = { skill: id, el: ctx.element, slot, ctx, hit: false };
   const n0 = G.delays.length;
   withCast(c, () => s.cast(p, p.aim, G.mouse.wx, G.mouse.wy));
   if (id === 'orbit') p.orbitCast = c;
+  if (dodge) emitEffects('dodge', { p, c }); else if (ult) emitEffects('ultimate', { p, c });
   let dur = Math.max(0, p.castT, p.swing ? p.swing.dur - p.swing.t : 0);
   for (let i = n0; i < G.delays.length; i++) if (G.delays[i].c === c) dur = Math.max(dur, G.delays[i].t);
   if (p.dash && p.dash.cast === c) dur = Math.max(dur, p.dash.t);
@@ -574,7 +724,7 @@ function hurtPlayer(dmg, srcX, srcY, el = 'slash', o) {
   const r = (p.res && p.res[el]) || 0;
   let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1) * (typeof damageTakenMul === 'function' ? damageTakenMul() : 1);
   if (o && o.boss) d = Math.min(d, p.maxHp * (typeof bossHitCap === 'function' ? bossHitCap() : 0.45));
-  p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2;
+  p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2; combatPing(p);
   text(p.x, p.y, p.z + 3, Math.round(d), '#ff5a7a');
   shake(4); sfx('hurt');
   burst(p.x, p.y, p.z + 1.2, 8, ['#ff5a7a', '#ffffff'], 2);
@@ -595,10 +745,17 @@ function damageEnemy(e, base, o = {}) {
   // one additive sum: gear damage % (+ skill damage % and the element's gem amplification for skill hits)
   // skill rank (+6 %/rank above 1) joins the same additive sum; modifier ctx.dmg multiplies (numbers only)
   const cx = c && c.ctx;
-  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (sk ? p.skillDmg + elementAmp(p, el) + skillRankBonus(p, sk) : 0)) * buffMul(p) * (cx ? cx.dmg : 1) * (p.dreadT > 0 ? 0.85 : 1);
+  // v2 gear: + the element's damage % (implicits, prefixes, ring boons), the amulet's ultimate damage on R hits and its
+  // skill damage while the charge bar is full — all inside the same additive sum
+  const S = p.sum || {}, ultHit = c && c.slot === 'r';
+  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (S[el + 'Dmg'] || 0) + (ultHit ? S.ultDmg || 0 : 0)
+    + (sk ? p.skillDmg + elementAmp(p, el) + skillRankBonus(p, sk) + (p.ult >= 100 ? S.skillDmgFull || 0 : 0) : 0)) * buffMul(p) * (cx ? cx.dmg : 1) * (p.dreadT > 0 ? 0.85 : 1);
+  if (!e.dummy) combatPing(p);
   const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
   dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
-  const st = o.stagger != null ? o.stagger : cx ? cx.stagger || 0 : sk && SKILLS[sk] ? SKILLS[sk].stagger || 0 : 0;
+  let st = o.stagger != null ? o.stagger : cx ? cx.stagger || 0 : sk && SKILLS[sk] ? SKILLS[sk].stagger || 0 : 0;
+  // +stagger from gear: heavy-strike implicits (on hits that already stagger), holy hits (Halo Hoop), weapon skills (Warrior ring)
+  if (!o.dot) st += (st > 0 ? S.stagger || 0 : 0) + (el === 'holy' ? S.holyStagger || 0 : 0) + (sk && c.slot && 'qer'.includes(c.slot) ? S.weaponStagger || 0 : 0);
   if (st) {   // the boss stagger bar (hud.js): fills with heavy hits, BREAK flash when full, then empties
     // per-boss staggerMax (bosses.js) rescales the points so the bar's 0..STAGGER_CAP fraction stays right
     e.stagger = (e.stagger || 0) + st * (e.staggerCap ? STAGGER_CAP / e.staggerCap : 1);
@@ -606,7 +763,7 @@ function damageEnemy(e, base, o = {}) {
     else if (!e.boss) partsStagger(e, st);
   }
   if (e.parts && e.parts.length || e.mods) dmg = partsHurt(e, dmg, o);   // shield-front, sleepers waking, elite shields
-  let crit = Math.random() < p.crit;
+  let crit = Math.random() < Math.min(capsT().crit, p.crit + (p.critR && p.critR.until > G.t ? p.critR.v : 0));
   if (p.buffs.veil && !o.dot) { crit = true; delete p.buffs.veil; }
   if (crit) dmg *= 1 + p.critDmg;
   dmg *= frand(0.9, 1.1);
@@ -636,7 +793,8 @@ function damageEnemy(e, base, o = {}) {
   if (o.slow) e.slowT = Math.max(e.slowT, o.slow * 2 * (cx ? cx.slow : 1));
   if (o.burn) { e.burnT = o.burn * (cx ? cx.burn : 1); e.burnTick = 0.5; e.burnCast = c; }
   if (!o.dot) { burst(e.x, e.y, e.z + e.hgt * 0.6, 5, ['#ffffff', e.blood || '#c7a8ff'], 2.5); sfx('hit'); }
-  if (e.hp <= 0) killEnemy(e);
+  if (!o.dot && eff < 1 && !e.dead) emitEffects('hit', { e, el, dmg, o, cast: c, crit });
+  if (e.hp <= 0 && !e.dead) killEnemy(e);
   return true;
 }
 // the first weak/resist hit on an enemy type pops a nameplate; from then on its icons show by its HP bar (saved)
@@ -675,6 +833,7 @@ function hitLine(x, y, a, len, w, dmg, o = {}) {
 // ===== projectiles ===================================================================
 function spawnProj(o) {
   const p = Object.assign({ t: 0, hit: new Set(), pierce: 0, friendly: true, cast: CAST }, o);
+  const hero = G.player; if (p.friendly && hero && hero.sum && hero.sum.pierce && p.pierce < 99) p.pierce += hero.sum.pierce;   // +N pierce (bow implicits, ring boon)
   // 6° projectile magnetism on pad / touch (never mouse)
   if (p.friendly && typeof IN !== 'undefined' && IN.assist() && typeof aimAssistCone === 'function' && aimAssistCone() > 0) {
     const tgt = autoTarget(G.player, (o.speed || 10) * (o.life || 1), [Math.cos(o.ang), Math.sin(o.ang)], 6 * Math.PI / 180);
@@ -781,11 +940,12 @@ function killEnemy(e) {
   const counts = e.dummy || partsDeath(e);   // split / zone-on-death; a swarm or twin counts once, on its last member
   SPAWN_TRIG = was;
   if (counts && !e.noXp) onEnemyKilled(e);   // XP + loot (items.js)
+  if (counts && !e.dummy) emitEffects('kill', { e });
   if (counts) { G.kills[e.type] = (G.kills[e.type] || 0) + 1; G.kills.any = (G.kills.any || 0) + 1; if (!e.dummy) sighting(e.type).kills++; }
   burst(e.x, e.y, e.z + e.hgt * 0.5, e.boss ? 120 : 24, [e.blood, '#ffffff', '#ffb0e0'], e.boss ? 7 : 3.5);
   fx({ type: 'ring', x: e.x, y: e.y, r: e.boss ? 4 : 1.2, col: e.blood, life: 0.4 });
   // spirit motes drift up toward the player — a little healing
-  if (!e.boss) delay(0.2, () => { healPlayer(G.player, 14); G.player.mp = Math.min(G.player.maxMp, G.player.mp + 10); });
+  if (!e.boss) delay(0.2, () => { const q = G.player; healPlayer(q, 14 * (1 + ((q.sum && q.sum.killHeal) || 0))); q.mp = Math.min(q.maxMp, q.mp + 10); });   // belt killHeal boon
   if (e.boss) { shake(14); hitstop(0.25); G.slowmo = 1.4; G.shrink = null; }
 }
 const enemyTimeScale = () => G.player.buffs.dreamveil ? 0.35 : 1;

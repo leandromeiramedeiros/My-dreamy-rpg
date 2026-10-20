@@ -138,7 +138,7 @@ var ENCOUNTERS = {
 var BOSS_DATA = {
   mossjaw: {
     name: 'Mossjaw', sprite: 'mossjaw', kind: 'mini', level: 5, zone: 'rootHollow',
-    type: 'beast', el: 'nature', hp: 6000, lengthSec: [60, 90], staggerMax: 4,   // 8560 -> 6000 (QA M1: an under-geared melee hero must kill it within 90 s, balsim live)
+    type: 'beast', el: 'nature', hp: 8250, lengthSec: [60, 90], staggerMax: 4,   // 8560 -> 6000 (QA M1) -> 8250 (M3 step 2: v2 gear + implicits; every family 60-90 s on reference gear, balsim)
     res: { nature: 0.5, fire: -0.5 },        // weak fire, resists nature (STORY.md)
     moveDefs: {
       lunge:   { type: 'line', len: 6, wind: 0.75, open: 1.2, stagger: 1 },   // wind 0.6 -> 0.75 (QA M1: a 0.3 s reaction + 1.1-tile sidestep must fit)
@@ -154,7 +154,7 @@ var BOSS_DATA = {
   },
   bramblehorn: {
     name: 'Old Bramblehorn', sprite: 'bramblehorn', kind: 'guardian', level: 8, zone: 'pinewood',
-    type: 'beast', el: 'nature', hp: 17200, lengthSec: [150, 240], staggerMax: 5,   // 21470 -> 17200 (QA B2: within 240 s under-geared, balsim live)
+    type: 'beast', el: 'nature', hp: 23100, lengthSec: [150, 240], staggerMax: 5,   // 21470 -> 17200 (QA B2) -> 23100 (M3 step 2: v2 gear; every family 150-240 s on reference gear, balsim)
     res: { nature: 0.5, fire: -0.5 },        // STORY.md gives no weak/resist for Bramblehorn; assumed to match the beast-nature type
     moveDefs: {
       stomp:     { type: 'circle', r: 3, at: 'self', wind: 0.9, open: 1.5, stagger: 1 },

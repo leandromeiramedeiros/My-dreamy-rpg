@@ -26,8 +26,8 @@
 //   ilvl: 16,                 item level 1..40
 //   req: 14,                  required hero level = max(base req, ilvl - 2) (Mythic >= 36)
 //   implicit: { id: 'holyDmg', v: 0.06, text: '+6% holy damage' } | null,
-//                             fixed per base (IMPLICITS / TRINKET_BASES, itemdata.js); id = a stat key.
-//                             DATA ONLY in M3: not added by statsOf() until the CAPS step (step 2).
+//                             fixed per base (IMPLICITS / TRINKET_BASES, itemdata.js); id = a stat key. statsOf() adds it
+//                             (M3 step 2); ids with no engine system yet land in p.sum for M4 (see recalcStats).
 //   affixes: [{ id: 'power', tier: 2, v: 0.07, kind: 'P' }, { id: 'hp', tier: 1, v: 40, kind: 'S' }],
 //                             id = stat key (AFFIX_V2), tier 1..3 (ilvl gates: T1 1+, T2 14+, T3 28+), v = rolled value in
 //                             AFFIX units (percent stats are fractions), kind 'P' prefix | 'S' suffix; prefixes first.
@@ -41,9 +41,12 @@
 //   name: { prefix: 'Fierce' | null, suffix: 'of the Fox' | null },   §19.3 name parts. Display name (itemName):
 //                             unique ? its name : [prefix, BASES name, suffix].join(' '). Mythic suffix from MYTHIC_NAMES.
 // }
-// M3 compat mirrors (NOT saved, non-enumerable, removed in step 2): it.reqLvl -> it.req, affix.stat -> affix.id, it.uid -> it.id,
-// for readers not yet on v2 (menus.js tooltip / bag). New code reads the v2 names. makeTestItem(opts) builds a valid v2
-// item for UI / art work (deterministic, no RNG); makeItem() still rolls the M2 way until step 2 (affix rolling).
+// M3 compat mirrors (NOT saved, non-enumerable): it.reqLvl -> it.req, affix.stat -> affix.id, it.uid -> it.id. KEPT in step 2
+// because menus.js (UI lane) still reads reqLvl and affix.stat; remove them once the UI lane is on v2. New code reads the v2
+// names. makeItem() rolls v2 (§19.1 counts, named tiers, grammar names, boons); makeTestItem(opts) builds a deterministic
+// v2 item for UI / art work. itemFlavor(it) = the flavour line (FLAVOR, looked up: not an item field).
+// Engine (step 2): makeItem / rollTrinket / makeTrinketUnique / originRing, temperItem / imbueItem (Elder Stone, no UI yet),
+// trinkets 15 % of drops once Act I's placements are done (trinketDropsOn), chest markers `loot: ring|amulet|belt`.
 // ---------------------------------------------------------------------------
 const SLOTS = ['weapon', 'head', 'chest', 'boots'];                 // gear slots (they grant skills; recalc + gems read these)
 const TRINKET_SLOTS = ['ring1', 'ring2', 'amulet', 'belt'];          // §19.4 equip keys (passive only; stats land in step 2)
@@ -51,14 +54,17 @@ const EQUIP_SLOTS = SLOTS.concat(TRINKET_SLOTS);                      // every p
 const TRINKET_KINDS = ['ring', 'amulet', 'belt'];                     // item.slot of a trinket
 const equipKeysFor = slot => slot === 'ring' ? ['ring1', 'ring2'] : [slot];
 const MAX_LEVEL = 40;
+// affixes = the §19.1 count (Common 0 · Uncommon 1 · Rare 1P+1S · Epic 3 · Legendary 2P+2S · Mythic 3P+2S); AFFIX_COUNT splits it
 const RARITY = {
   common:    { i: 0, name: 'Common',    col: '#d8d8d8', mult: 1.00, affixes: 0, sockets: [0, 1] },
   uncommon:  { i: 1, name: 'Uncommon',  col: '#6ee36e', mult: 1.15, affixes: 1, sockets: [1, 1] },
   rare:      { i: 2, name: 'Rare',      col: '#5aa8ff', mult: 1.35, affixes: 2, sockets: [1, 2] },
   epic:      { i: 3, name: 'Epic',      col: '#c070ff', mult: 1.60, affixes: 3, sockets: [2, 3] },
-  legendary: { i: 4, name: 'Legendary', col: '#ffb030', mult: 1.90, affixes: 3, sockets: [3, 3] },
-  mythic:    { i: 5, name: 'Mythic',    col: '#ff4f7a', mult: 2.30, affixes: 4, sockets: [3, 3] },
+  legendary: { i: 4, name: 'Legendary', col: '#ffb030', mult: 1.90, affixes: 4, sockets: [3, 3] },
+  mythic:    { i: 5, name: 'Mythic',    col: '#ff4f7a', mult: 2.30, affixes: 5, sockets: [3, 3] },
 };
+// [P, S] per rarity (§19.1). Uncommon rolls ONE of either kind; Epic is 2P+1S or 1P+2S (makeItem picks).
+const AFFIX_COUNT = { common: [0, 0], uncommon: [1, 0], rare: [1, 1], epic: [2, 1], legendary: [2, 2], mythic: [3, 2] };
 const RARITIES = Object.keys(RARITY);
 function mixHex(a, b, k) { const A = hexToRgb(a), B = hexToRgb(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * k).toString(16).padStart(2, '0')).join(''); }
 // mythic colour-cycles; everything else is its table colour
@@ -96,7 +102,7 @@ function trinketBases() {
   if (typeof TRINKET_BASES === 'undefined') return {};
   TRK_BASES = {};
   const add = (t, tier, req) => { TRK_BASES[t.id] = { id: t.id, name: t.name, slot: t.slot, family: t.slot, variant: t.slot, class: 'trinket', suit: null,
-    tier, reqLvl: req, icon: t.slot, color: '#d8c8a0', kind: t.slot, implicit: t.implicit || null, unique: t.unique || null, rule: t.rule || null, boon: t.boon || null }; };
+    tier, reqLvl: req, icon: t.slot, color: '#d8c8a0', kind: t.slot, implicit: t.implicit || null, unique: t.unique || null, rule: t.rule || null, boon: t.boon || null, origin: t.origin || null }; };
   for (const t of TRINKET_BASES) add(t, clamp((t.tier | 0) - 1, 0, 2), t.reqLvl || 1);
   for (const u of (typeof TRINKET_UNIQUES !== 'undefined' ? TRINKET_UNIQUES : []).concat(typeof WORLD_UNIQUES !== 'undefined' ? WORLD_UNIQUES : []))
     add(Object.assign({}, u, { unique: u.id, rule: u.id }), 1, 16);
@@ -111,8 +117,12 @@ const RES_ELS = ['slash', 'pierce', 'fire', 'frost', 'nature', 'lightning', 'arc
 const RES_SHORT = { slash: 'Sl', pierce: 'Pi', fire: 'Fi', frost: 'Fr', nature: 'Na', lightning: 'Li', arcane: 'Ar', gloom: 'Gl' };
 const EL_COL = { slash: '#ffffff', pierce: '#e7eeff', fire: '#ff9a4a', frost: '#9fe8ff', nature: '#8fe0a0', lightning: '#fff07a', arcane: '#d6b0ff', holy: '#fff2b0', gloom: '#c070ff' };
 const resKey = el => 'res' + el[0].toUpperCase() + el.slice(1);
-const PCT_STATS = { def: 1, power: 1, crit: 1, haste: 1, speed: 1, critDmg: 1, cdr: 1, skillDmg: 1, resAll: 1 };
+const PCT_STATS = { def: 1, power: 1, crit: 1, haste: 1, speed: 1, critDmg: 1, cdr: 1, skillDmg: 1, resAll: 1, resHoly: 1,
+  statusChance: 1, chargeSpeed: 1, mpOnHit: 1, behindDmg: 1, reflect: 1, fishLuck: 1, onDodge: 1, onKill: 1 };
 for (const el of RES_ELS) PCT_STATS[resKey(el)] = 1;
+// element damage % (AFFIX_V2 prefixes, implicits, ring boons): one key per damage type, added to that type's hits
+const DMG_ELS = ['slash', 'pierce', 'fire', 'frost', 'nature', 'lightning', 'arcane', 'holy', 'shatter'];
+for (const el of DMG_ELS) PCT_STATS[el + 'Dmg'] = 1;
 function baseStats(b) {
   const fam = item(b.slot, b.family); if (!fam) return {};   // trinkets: no base stats (their implicit is data until step 2)
   if (b.slot === 'weapon') return { dmg: fam.basic.dmg * TIER_DMG[b.tier] };
@@ -130,7 +140,12 @@ for (const el of RES_ELS) AFFIX[resKey(el)] = 'res';   // resistance affixes rol
 const STAT_NAME = { dmg: 'Damage', hp: 'HP', mp: 'MP', def: 'Armour', power: 'Damage', crit: 'Crit chance', haste: 'Attack speed', regen: 'HP/s',
   mpRegen: 'MP/s', speed: 'Move speed', critDmg: 'Crit damage', cdr: 'Cooldowns', skillDmg: 'Skill damage', resAll: 'All res' };
 for (const el of RES_ELS) STAT_NAME[resKey(el)] = el[0].toUpperCase() + el.slice(1) + ' res';
-const STAT_ORDER = ['dmg', 'hp', 'mp', 'def', 'power', 'skillDmg', 'crit', 'critDmg', 'haste', 'cdr', 'regen', 'mpRegen', 'speed', 'resAll', ...RES_ELS.map(resKey)];
+for (const el of DMG_ELS) STAT_NAME[el + 'Dmg'] = el[0].toUpperCase() + el.slice(1) + ' damage';
+Object.assign(STAT_NAME, { resHoly: 'Holy res', statusChance: 'Status chance', markCap: 'Mark cap', chargeSpeed: 'Charge rate', mpOnHit: 'MP on hit',
+  pierce: 'Pierce', stagger: 'Stagger', poise: 'Poise', backstab: 'Backstab arc', behindDmg: 'Damage from behind', reflect: 'Reflect',
+  potionCharge: 'Potion charge', fishLuck: 'Fishing luck', onDodge: 'HP on dodge', onKill: 'MP on kill' });
+const STAT_ORDER = ['dmg', 'hp', 'mp', 'def', 'power', 'skillDmg', ...DMG_ELS.map(el => el + 'Dmg'), 'crit', 'critDmg', 'haste', 'cdr', 'chargeSpeed', 'statusChance', 'markCap',
+  'regen', 'mpRegen', 'speed', 'onDodge', 'onKill', 'resAll', ...RES_ELS.map(resKey), 'resHoly'];
 function fmtStat(k, v, sign = true) {
   const sg = sign ? (v >= 0 ? '+' : '-') : '', a = Math.abs(v);
   if (k === 'dmg') return `${sign && v < 0 ? '-' : ''}${Math.round(a)} ${STAT_NAME[k]}`;
@@ -153,9 +168,11 @@ const UNIQUES = {
 const hasUnique = (p, id) => EQUIP_SLOTS.some(s => p.equip[s] && p.equip[s].unique === id);
 const hasRule = (p, id) => EQUIP_SLOTS.some(s => p.equip[s] && p.equip[s].rule === id);
 const uniqueFor = key => Object.keys(UNIQUES).find(k => UNIQUES[k].boss === key);
+// a boss unique (§19.5): the base's implicit + its rule + the rarity's random affixes (v2: 2P+2S; the old fixed +10 % resAll
+// line is gone, resAll now rolls as a Legendary+ suffix). It keeps its own name (name parts stay null).
 function makeUnique(id, ilvl) {
-  const U = UNIQUES[id], it = makeItem(U.base, U.mythic ? 'mythic' : 'legendary', Math.max(ilvl, BASES[U.base].reqLvl));
-  it.unique = id; it.rule = id; it.affixes.push(mkAffix('resAll', 0.1, it.ilvl)); return it;
+  const U = UNIQUES[id];
+  return makeItem(U.base, U.mythic ? 'mythic' : 'legendary', Math.max(ilvl, BASES[U.base].reqLvl), { unique: id });
 }
 
 // ===== gems (DESIGN §4.3) ==========================================================
@@ -181,7 +198,8 @@ const gemStats = (id, slot) => { const g = gemParse(id); return g ? (slot === 'w
 const EL_GEM = { fire: 'ruby', frost: 'sapphire', nature: 'emerald', lightning: 'topaz', arcane: 'amethyst' };
 function gemAmp(p) {
   const a = {}; for (const t of GEM_TYPES) a[t] = 0;
-  for (const s of SLOTS) for (const id of (p.equip[s] || { sockets: [] }).sockets) { const g = id && gemParse(id); if (g) a[g.type] += g.grade; }
+  for (const s of EQUIP_SLOTS) for (const id of (p.equip[s] || { sockets: [] }).sockets) { const g = id && gemParse(id); if (g) a[g.type] += g.grade; }
+  if (p.wrap) a[p.wrap.type] += 1;   // belt gemWrap boon: the wrapped gem counts one grade higher (recalcStats)
   return a;
 }
 // +5% per grade to that element's skills, ADDED to the hit's damage sum. M4 stubs: ruby burn on fireball/meteor,
@@ -227,26 +245,121 @@ function v2Item(o) {
     boon: o.boon || null, rule: o.rule || null, unique: o.unique || null, hist: o.hist || newHist(), tempered: o.tempered || null,
     name: o.name || { prefix: null, suffix: null } });
 }
-function makeItem(base, rarity = 'common', ilvl, o = {}) {
-  const b = BASES[base], R = RARITY[rarity];
-  ilvl = clamp(Math.round(ilvl || b.reqLvl), 1, MAX_LEVEL);
-  const req = Math.max(b.reqLvl, ilvl - 2, rarity === 'mythic' ? MYTHIC_REQ : 0);
-  const it = v2Item({ id: newUid(), base, rarity, ilvl, req: clamp(req, 1, MAX_LEVEL), affixes: [], sockets: [] });
-  const pool = Object.keys(AFFIX).filter(k => AFFIX[k] !== 'res' && !(b.slot !== 'weapon' && k === 'skillDmg' && Math.random() < 0.5));
-  for (let n = 0; n < 2; n++) pool.push(resKey(pick2(RES_ELS)));   // two resist candidates per roll (dupes are skipped)
-  for (let n = 0; n < R.affixes && pool.length; n++) {
-    const k = pool.splice((Math.random() * pool.length) | 0, 1)[0];
-    if (it.affixes.some(a => a.id === k)) { n--; continue; }
-    if (AFFIX[k] === 'res') { it.affixes.push(mkAffix(k, Math.round(10 + Math.random() * 10) / 100, ilvl)); continue; }
-    const [a, pl] = AFFIX[k];
-    let v = (a + pl * ilvl) * (0.6 + Math.random() * 0.4) * (1 + 0.08 * R.i);
-    v = PCT_STATS[k] ? Math.round(v * 1000) / 1000 : (v < 10 ? Math.round(v * 10) / 10 : Math.round(v));
-    it.affixes.push(mkAffix(k, v, ilvl));
+// ===== makeItem v2 (§19.1, §19.3, §19.4) ====================================================================
+// Affix rows come from AFFIX_V2 (itemdata.js): row[tier - 1] = { name, r: [lo, hi], minRarity? }. The tier is the ilvl gate
+// (affixTier: T1 1+, T2 14+, T3 28+); only temperItem raises it. v is uniform in the tier's range (o.q fixes the quantile).
+// Not rolled on drops until their system lands (M4): statusChance, markCap (valid ids for temper / makeTestItem / data).
+const AFFIX_DORMANT = ['statusChance', 'markCap'];
+// pool weights: element damage % and single resists are niche lines (8 resists would otherwise drown hp / def)
+const affixWeight = id => /^res[A-Z]/.test(id) && id !== 'resAll' ? 0.35 : /^[a-z]+Dmg$/.test(id) && id !== 'critDmg' && id !== 'skillDmg' ? 0.5 : 1;
+const affixTable = kind => (typeof AFFIX_V2 !== 'undefined' ? AFFIX_V2[kind === 'P' ? 'prefix' : 'suffix'] : null) || {};
+const affixRow = (id, kind = affixKind(id)) => affixTable(kind)[id] || null;
+const affixAllowed = (id, kind, rarity) => { const row = affixRow(id, kind); return !!row && row.every(t => !t.minRarity || rarityAtLeast(rarity, t.minRarity)); };
+// the stored value: percent stats to 3 decimals, flat stats to 0.1 under 10 else whole, markCap whole
+function roundAffix(id, v) { return id === 'markCap' ? Math.round(v) : PCT_STATS[id] ? Math.round(v * 1000) / 1000 : v < 10 ? Math.round(v * 10) / 10 : Math.round(v); }
+function affixValue(id, tier, q = Math.random(), kind = affixKind(id)) {
+  const row = affixRow(id, kind), t = row && row[clamp(tier, 1, 3) - 1]; if (!t) return 0;
+  return roundAffix(id, t.r[0] + (t.r[1] - t.r[0]) * clamp(q, 0, 1));
+}
+function pickWeighted(ids) {
+  const tot = ids.reduce((a, id) => a + affixWeight(id), 0); let r = Math.random() * tot;
+  for (const id of ids) if ((r -= affixWeight(id)) < 0) return id;
+  return ids[ids.length - 1];
+}
+// [P, S] for an item: §19.1 counts, Uncommon = one of either, Epic = 2P+1S | 1P+2S; ring P only, belt S only, amulet <= 1P+1S
+function affixCounts(slot, rarity) {
+  let [np, ns] = AFFIX_COUNT[rarity];
+  if (rarity === 'uncommon' && Math.random() < 0.5) { np = 0; ns = 1; }
+  if (rarity === 'epic' && Math.random() < 0.5) { np = 1; ns = 2; }
+  if (slot === 'ring') { np += ns; ns = 0; } else if (slot === 'belt') { ns += np; np = 0; }
+  else if (slot === 'amulet') { const n = np + ns; np = Math.min(1, np || (n > 1 ? 1 : 0)); ns = Math.min(1, n - np); }
+  return [np, ns];
+}
+// trinket resist lines never exceed CAPS.trinketResLine (§19.6); recalcStats enforces the resAll total across trinkets
+const trinketResCap = () => (typeof CAPS !== 'undefined' ? CAPS.trinketResLine : 0.1);
+function rollAffixes(slot, rarity, ilvl, o = {}) {
+  const tier = affixTier(ilvl), out = [], q = o.q;
+  const push = (id, kind) => { let v = affixValue(id, tier, q != null ? q : Math.random(), kind); if (TRINKET_KINDS.includes(slot) && /^res[A-Z]/.test(id)) v = Math.min(v, trinketResCap()); out.push(compatAffix({ id, tier, v, kind })); };
+  if (Array.isArray(o.affixes)) { for (const id of o.affixes) push(id, affixKind(id)); }
+  else {
+    const [np, ns] = affixCounts(slot, rarity);
+    for (const [kind, n] of [['P', np], ['S', ns]]) for (let k = 0; k < n; k++) {
+      const ids = Object.keys(affixTable(kind)).filter(id => !AFFIX_DORMANT.includes(id) && affixAllowed(id, kind, rarity) && !out.some(a => a.id === id));
+      if (ids.length) push(pickWeighted(ids), kind);
+    }
   }
-  it.affixes.sort((a, c) => (a.kind === 'P' ? 0 : 1) - (c.kind === 'P' ? 0 : 1));   // prefixes first (stable)
-  const [s0, s1] = R.sockets, ns = o.sockets != null ? o.sockets : (rarity === 'common' ? (Math.random() < 0.25 ? 1 : 0) : s0 + ((Math.random() * (s1 - s0 + 1)) | 0));
+  out.sort((a, c) => (a.kind === 'P' ? 0 : 1) - (c.kind === 'P' ? 0 : 1));   // prefixes first (stable)
+  return out;
+}
+// §19.3 name grammar [prefix-tier name] [base] [of the suffix noun]: Uncommon one part, Rare+ both, Mythic suffix from MYTHIC_NAMES,
+// uniques and origin rings keep their own names (parts null). The prefix is the first P affix's tier name, the suffix the first S's noun.
+function nameParts(it, mythicSuffix) {
+  const b = baseOf(it.base) || {};
+  if (it.unique || b.unique || b.origin || it.rarity === 'common') return { prefix: null, suffix: null };
+  const P = it.affixes.find(a => a.kind === 'P'), S = it.affixes.find(a => a.kind === 'S'), row = P && affixRow(P.id, 'P');
+  const pre = row && row[P.tier - 1] ? row[P.tier - 1].name : null;
+  const suf = it.rarity === 'mythic' ? mythicSuffix || (it.name && it.name.suffix) || (typeof MYTHIC_NAMES !== 'undefined' ? pick2(MYTHIC_NAMES) : null)
+    : S && typeof SUFFIX_NOUN !== 'undefined' && SUFFIX_NOUN[S.id] ? 'of the ' + SUFFIX_NOUN[S.id] : null;
+  return it.rarity === 'uncommon' ? { prefix: pre, suffix: pre ? null : suf } : { prefix: pre, suffix: suf };
+}
+// the flavour line (§19.3): one per base, unique, trinket base and origin ring (FLAVOR, itemdata.js). Looked up, never stored.
+const itemFlavor = it => (typeof FLAVOR !== 'undefined' && it && (FLAVOR[it.unique] || FLAVOR[it.base])) || '';
+// boon rows by id: BOONS (per slot) + the origin rings' fixed boons
+let BOON_ROWS = null;
+function boonRow(id) {
+  if (!BOON_ROWS) { BOON_ROWS = {}; if (typeof BOONS !== 'undefined') for (const slot in BOONS) for (const r of BOONS[slot]) BOON_ROWS[r.id] = Object.assign({ slot }, r);
+    if (typeof ORIGIN_RINGS !== 'undefined') for (const o of ORIGIN_RINGS) BOON_ROWS[o.boon.id] = Object.assign({ slot: 'ring', origin: o.origin }, o.boon); }
+  return BOON_ROWS[id] || null;
+}
+// a trinket's boon (§19.4): Uncommon minor, Rare+ major; origin rings carry their fixed boon. Random drops only roll boons
+// whose system runs today (boonLive, game.js EFFECTS); the data-only rows stay valid ids (makeTestItem, M4).
+function rollBoon(b, rarity, want) {
+  if (!TRINKET_KINDS.includes(b.slot) || rarity === 'common') return null;
+  const grade = rarity === 'uncommon' ? 'minor' : 'major';
+  if (b.boon) return { id: b.boon.id, grade, text: b.boon.text };
+  const rows = typeof BOONS !== 'undefined' ? BOONS[b.slot] || [] : [];
+  const live = rows.filter(r => typeof boonLive !== 'function' || boonLive(r.id));
+  const row = (want && rows.find(r => r.id === want)) || pick2(live.length ? live : rows);
+  return row ? { id: row.id, grade, text: row.text } : null;
+}
+// sockets: the rarity's range, its max only from ilvl 20 (§19.1); rings 0, amulet / belt 0..1 (Rare+ always 1)
+function rollSockets(slot, rarity, ilvl) {
+  if (slot === 'ring') return 0;
+  if (TRINKET_KINDS.includes(slot)) return rarityAtLeast(rarity, 'rare') ? 1 : Math.random() < (rarity === 'common' ? 0.25 : 0.5) ? 1 : 0;
+  const [s0, s1] = RARITY[rarity].sockets, hi = ilvl >= 20 ? s1 : Math.max(s0, s1 - 1);
+  return rarity === 'common' ? (Math.random() < 0.25 ? 1 : 0) : s0 + ((Math.random() * (hi - s0 + 1)) | 0);
+}
+// makeItem(base, rarity, ilvl, o): any gear or trinket base. o (all optional): sockets (count) · affixes ([ids], kinds inferred)
+// · q (0..1 roll quantile, balsim) · boon (a BOONS id) · unique (sets unique + rule; the name parts stay null) · mythicName
+function makeItem(base, rarity = 'common', ilvl, o = {}) {
+  const b = baseOf(base); if (!b) throw new Error('makeItem: unknown base ' + base);
+  ilvl = clamp(Math.round(ilvl || b.reqLvl), 1, MAX_LEVEL);
+  const req = clamp(Math.max(b.reqLvl, ilvl - 2, rarity === 'mythic' ? MYTHIC_REQ : 0), 1, MAX_LEVEL);
+  const uq = o.unique || b.unique || null;
+  const it = v2Item({ id: newUid(), base, rarity, ilvl, req, affixes: rollAffixes(b.slot, rarity, ilvl, o), sockets: [],
+    boon: rollBoon(b, rarity, o.boon), rule: uq, unique: uq });
+  it.name = nameParts(it, o.mythicName);
+  const ns = o.sockets != null ? o.sockets : rollSockets(b.slot, rarity, ilvl);
   for (let i = 0; i < ns; i++) it.sockets.push(null);
   return it;
+}
+// ===== trinkets (§19.4): rollTrinket (drops), makeTrinketUnique (vaults / chests), originRing (the free starter ring) =====
+const TRINKET_REQ = [1, 16, 32];
+function rollTrinket(lvl, rarity, slot) {
+  slot = TRINKET_KINDS.includes(slot) ? slot : pick2(['ring', 'ring', 'amulet', 'belt']);
+  const list = Object.values(trinketBases()).filter(t => t.slot === slot && !t.unique && !t.origin).sort((a, c) => a.tier - c.tier);
+  let k = 0; list.forEach((t, i) => { if (t.reqLvl <= lvl + 1) k = i; });
+  if (k > 0 && Math.random() < 0.25) k--;
+  return makeItem(list[k].id, rarity, lvl + (Math.random() < 0.3 ? 1 : 0));
+}
+// a trinket / world unique (§19.5): Legendary, its fixed implicit + rule, a major boon from its slot, 2 random affixes
+const makeTrinketUnique = (id, ilvl) => makeItem(id, 'legendary', Math.max(ilvl || 16, trinketBases()[id].reqLvl));
+// §17.1 + §19.4: the Origin passive is the starter ring's boon. Origins are not chosen in code yet, so the origin follows the
+// starting weapon's class (a new game starts with the Rusty Blade -> blades -> Knight).
+const ORIGIN_OF_CLASS = { blades: 'knight', foci: 'mystic', shots: 'ranger', shadows: 'thief', greatarms: 'warrior' };
+function originRing(weaponBase) {
+  const b = baseOf(weaponBase), id = 'origin_' + (ORIGIN_OF_CLASS[b && b.class] || 'knight');
+  return trinketBases()[id] ? makeItem(id, 'uncommon', 1, { affixes: [], sockets: 0 }) : null;
 }
 // base + affix + unique + gem stats of one instance (summed)
 function itemBase(it) {
@@ -254,10 +367,12 @@ function itemBase(it) {
   const bs = baseStats(b); for (const st in bs) base[st] = st === 'dmg' ? Math.round(bs[st] * k) : st.startsWith('res') ? bs[st] : bs[st] * k;
   return base;
 }
-// one instance's stats: base + affixes + socketed gems, summed per stat (additive, §3 balance rule)
+// one instance's stats: base + implicit + affixes + socketed gems, summed per stat (additive, §3 balance rule). Implicits
+// apply from M3 step 2; boons, resonance and the belt's gem wrap are player-level (recalcStats), never per item.
 function statsOf(it) {
   const s = {}, add = (k, v) => { s[k] = (s[k] || 0) + v; }, base = itemBase(it);
   for (const k in base) add(k, base[k]);
+  if (it.implicit && it.implicit.id && typeof it.implicit.v === 'number') add(it.implicit.id, it.implicit.v);
   for (const a of it.affixes) add(a.id, a.v);
   for (const g of it.sockets) if (g) { const gs = gemStats(g, it.slot); for (const k in gs) add(k, gs[k]); }
   return s;
@@ -272,7 +387,8 @@ function itemName(it) {
 // (40 kills + 3 chests + 2 elites + 7 trigger loot cards per band + bosses, 80 % salvaged) gives ~2,470 at / 1, so
 // / 2.3 lands on ~1,080
 const SALVAGE_DIV = 2.3;
-const salvageValue = it => Math.max(1, Math.round([1, 3, 8, 20, 50, 120][RARITY[it.rarity].i] * (1 + it.ilvl / 10) / SALVAGE_DIV));
+// p (optional): the belt's salvageDust boon multiplies it (game.js EFFECTS, p.sum.salvageDust)
+const salvageValue = (it, p) => Math.max(1, Math.round([1, 3, 8, 20, 50, 120][RARITY[it.rarity].i] * (1 + it.ilvl / 10) / SALVAGE_DIV * ((p && p.sum && p.sum.salvageDust) || 1)));
 // renderer hook for M2: what the hero visibly wears in a slot
 // slot: any EQUIP_SLOTS key. family === variant (hero.js reads `family`).
 function equippedVisual(slot, p = G.player) {
@@ -353,8 +469,13 @@ function rollRarity(cls, lvl) {
   for (let i = 0; i < w.length; i++) if ((r -= w[i]) < 0) return RARITIES[i];
   return 'common';
 }
+// §19.4: after the Act I placements (the first ring, Bramblehorn's amulet, the vault belt) trinkets are 15 % of item drops.
+// "After" = the amulet chest has been opened (G.prog.secrets['trinket:amulet'], set by openChest) or the hero is past Act I (L10+).
+const TRINKET_DROP = 0.15, TRINKET_DROP_LVL = 10;
+const trinketDropsOn = (p = G.player) => !!((G.prog && G.prog.secrets && G.prog.secrets['trinket:amulet']) || (p && p.level >= TRINKET_DROP_LVL));
 function rollItem(lvl, rarity, slot) {
   const p = G.player;
+  if (TRINKET_KINDS.includes(slot) || (!slot && trinketDropsOn(p) && Math.random() < TRINKET_DROP)) return rollTrinket(lvl, rarity, slot);
   slot = slot || pick2(['weapon', 'weapon', 'head', 'chest', 'boots', 'head', 'chest', 'boots']);
   // 40% of drops stay in the families you already wear
   const fams = ITEMS[slot].map(f => f.id), fam = p && p.gear[slot] && Math.random() < 0.4 ? p.gear[slot] : pick2(fams);
@@ -440,7 +561,7 @@ function unsocketGem(p, it, si) {
 function salvageItem(p, bi) {
   const it = p.bag[bi]; if (!it || it.gem) return 'Only gear can be salvaged';
   for (let k = 0; k < it.sockets.length; k++) if (it.sockets[k]) { if (!bagAdd(p, { gem: it.sockets[k] })) return 'Bag full'; it.sockets[k] = null; }
-  p.bag[bi] = null; const v = salvageValue(it); p.dust += v; return v;
+  p.bag[bi] = null; const v = salvageValue(it, p); p.dust += v; return v;
 }
 // 3 gems of one kind and grade -> 1 of the next grade (bag stack `bi`). Returns '' or the reason it refused.
 function combineGems(p, bi) {
@@ -453,10 +574,44 @@ function combineGems(p, bi) {
   if (!bagAdd(p, { gem: next })) { if (p.bag[bi]) p.bag[bi].n += 3; else p.bag[bi] = { gem: e.gem, n: 3 }; return 'Bag full'; }
   return '';
 }
+// ===== Elder Stone crafting, engine only (§19.2; the panel is M5). Both return '' on success or the reason they refused. =====
+// temperItem(it, affixId, p): raise ONE affix by one tier (T1 -> T2 -> T3), once per item, for Dust by rarity (Rare 20 /
+// Epic 60 / Legendary+ 150; Common and Uncommon cannot be tempered). The roll keeps its place in the range (quantile), the
+// name prefix follows the new tier, it.tempered = { affix }. imbueItem(it, p): one more socket up to the rarity's max (rings
+// never; amulet / belt 1), for IMBUE_COST Dust by rarity.
+const TEMPER_COST = { rare: 20, epic: 60, legendary: 150, mythic: 150 };
+const IMBUE_COST = { common: 30, uncommon: 30, rare: 60, epic: 100, legendary: 150, mythic: 150 };
+function temperItem(it, affixId, p = G.player) {
+  if (!it || it.gem || !baseOf(it.base)) return 'Nothing to temper';
+  const cost = TEMPER_COST[it.rarity]; if (!cost) return 'Only Rare or better can be tempered';
+  if (it.tempered) return 'Already tempered';
+  const a = it.affixes.find(x => x.id === affixId); if (!a) return 'No such affix';
+  const row = affixRow(a.id, a.kind); if (!row) return 'This affix has no tiers';
+  if (a.tier >= 3) return 'Already the highest tier';
+  if ((p.dust || 0) < cost) return `Needs ${cost} Dust`;
+  const lo = row[a.tier - 1].r, hi = row[a.tier].r, q = lo[1] > lo[0] ? clamp((a.v - lo[0]) / (lo[1] - lo[0]), 0, 1) : 0.5;
+  a.tier++; a.v = affixValue(a.id, a.tier, q, a.kind);
+  if (isTrinket(it) && /^res[A-Z]/.test(a.id)) a.v = Math.min(a.v, trinketResCap());
+  it.tempered = { affix: a.id }; it.name = nameParts(it);
+  p.dust -= cost;
+  if (isEquipped(p, it)) recalcStats(p, false);
+  return '';
+}
+const maxSocketsOf = it => it.slot === 'ring' ? 0 : TRINKET_KINDS.includes(it.slot) ? 1 : RARITY[it.rarity].sockets[1];
+function imbueItem(it, p = G.player) {
+  if (!it || it.gem || !baseOf(it.base)) return 'Nothing to imbue';
+  if (it.slot === 'ring') return 'Rings cannot hold sockets';
+  if (it.sockets.length >= maxSocketsOf(it)) return 'No room for another socket';
+  const cost = IMBUE_COST[it.rarity];
+  if ((p.dust || 0) < cost) return `Needs ${cost} Dust`;
+  it.sockets.push(null); p.dust -= cost;
+  if (isEquipped(p, it)) recalcStats(p, false);
+  return '';
+}
 // bag sort: gear by rarity (best first) then slot then item level, gems last (grouped by type and grade)
 function sortBag(p) {
   const rank = e => e.gem ? 1000 : -RARITY[e.rarity].i * 100 - e.ilvl / 100;
-  const slotI = e => e.gem ? 0 : SLOTS.indexOf(e.slot);
+  const slotI = e => e.gem ? 0 : ['weapon', 'head', 'chest', 'boots', 'ring', 'amulet', 'belt'].indexOf(e.slot);
   const list = p.bag.filter(Boolean).sort((a, b) => rank(a) - rank(b) || slotI(a) - slotI(b) || (a.gem ? String(a.gem).localeCompare(b.gem) : 0));
   p.bag = list.concat(new Array(BAG_SIZE - list.length).fill(null));
 }
@@ -470,6 +625,7 @@ function lootAction(a) {
   if (a.item) {
     if (/^key_/.test(a.item)) { const S = G.prog.secrets || (G.prog.secrets = {}); S['key:' + a.item] = true; text(p.x, p.y, p.z + 3.4, 'Key found', '#ffd35a', true); if (typeof UI !== 'undefined') UI.toast({ text: 'Key: ' + a.item.replace(/^key_/, '').replace(/_/g, ' '), col: '#ffd35a' }); sfx('loot'); }
     else if (UNIQUES[a.item]) list.push({ kind: 'item', it: makeUnique(a.item, L) });
+    else if (trinketBases()[a.item] && trinketBases()[a.item].unique) list.push({ kind: 'item', it: makeTrinketUnique(a.item, L) });   // vault / world uniques (§19.5)
     else { (p.runes = p.runes || []).push(a.item); if (typeof UI !== 'undefined') UI.toast({ text: a.item.replace(/_/g, ' '), col: '#b48aff' }); }
   }
   const has = v => v != null && v !== '', x = has(a.x) ? +a.x : p.x + 1, y = has(a.y) ? +a.y : p.y + 1;
@@ -546,7 +702,7 @@ function onEnemyKilled(e) {
 }
 function pickup(p, d) {
   if (d.kind === 'potion') {
-    if (p.potions < MAX_POTIONS) { p.potions++; text(p.x, p.y, p.z + 3, '+1 Potion', '#ff8aa8'); } else healPlayer(p, p.maxHp * 0.15);
+    if (p.potions < maxPotions(p)) { p.potions++; text(p.x, p.y, p.z + 3, '+1 Potion', '#ff8aa8'); } else healPlayer(p, p.maxHp * 0.15);
   } else if (d.kind === 'gem') { if (!bagAdd(p, { gem: d.gem })) return false; text(p.x, p.y, p.z + 3, gemName(d.gem), gemParse(d.gem).def.col); }
   else { if (!bagAdd(p, d.it)) return false; if (d.it.hist && !d.it.hist.found && G.map) d.it.hist.found = G.map.id; text(p.x, p.y, p.z + 3, itemName(d.it), RARITY[d.it.rarity].col, RARITY[d.it.rarity].i >= 3); }
   sfx(RARITY[d.rar].i >= 3 ? 'loot' : 'pickup');
@@ -569,14 +725,28 @@ function openChest(o) {
   // chest tier (generator: wood | silver | gold) raises the rarity floor; gold adds an item and a gem
   const floor = { silver: 'uncommon', gold: 'rare' }[o.src.tier], list = o.src.starter ? starterLoot() : rollLoot('chest', L);
   if (o.src.tier === 'gold') list.push({ kind: 'item', it: rollItem(L, rollRarity('elite', L)) }, { kind: 'gem', gem: rollGem(L + 5) });
-  if (floor) for (const d of list) if (d.kind === 'item' && !rarityAtLeast(d.it.rarity, floor)) d.it = rollItem(L, floor);
+  if (floor) for (const d of list) if (d.kind === 'item' && !rarityAtLeast(d.it.rarity, floor)) d.it = rollItem(L, floor, isTrinket(d.it) ? d.it.slot : undefined);
+  list.push(...chestTrinket(o.src, L));
   dropLoot(o.x, o.y, list);
   gainXp(p, Math.round(xpToNext(L) * (o.src.starter ? 0.8 : 0.5)));
 }
+// CHEST CONTRACT (level lane, §19.4 placements): a chest marker may carry `loot: 'ring' | 'amulet' | 'belt'`. Opening it drops,
+// IN ADDITION to the normal loot, one trinket of that slot: a ring Uncommon+ (the chest's rarity roll, floored), an amulet or
+// a belt Rare (+ the chest tier floor: gold -> at least Rare anyway). It also records G.prog.secrets['trinket:<slot>'] (saved),
+// which unlocks random trinket drops once the amulet's chest is open (trinketDropsOn).
+const TRINKET_CHEST_FLOOR = { ring: 'uncommon', amulet: 'rare', belt: 'rare' };
+function chestTrinket(src, L) {
+  const slot = src && src.loot; if (!TRINKET_KINDS.includes(slot)) return [];
+  let r = rollRarity('chest', L); if (!rarityAtLeast(r, TRINKET_CHEST_FLOOR[slot])) r = TRINKET_CHEST_FLOOR[slot];
+  if (slot !== 'ring' && RARITY[r].i > RARITY.rare.i) r = 'rare';   // amulet / belt: Rare exactly (§19.4 placements)
+  if (G.prog) (G.prog.secrets || (G.prog.secrets = {}))['trinket:' + slot] = true;
+  return [{ kind: 'item', it: rollTrinket(L, r, slot) }];
+}
+const maxPotions = p => p.maxPotions || MAX_POTIONS;   // MAX_POTIONS + belt potion charges, capped at CAPS.potions (recalcStats)
 function setCheckpoint(x, y, label) {
   const p = G.player;
   G.checkpoint = { map: G.map.id, x, y };
-  p.potions = MAX_POTIONS;
+  p.potions = maxPotions(p);
   say(`${label || 'Checkpoint'} — potions refilled`); sfx('heal'); fx({ type: 'ring', x, y, r: 1.4, col: '#9ef0ff', life: 0.5 }); saveGame();
 }
 const INTERACT_R = 2.5, LOOT_NEAR = [];
@@ -629,6 +799,7 @@ function drinkPotion(p) {
   if (p.hp >= p.maxHp) { say('Already at full health'); return; }
   p.potions--; p.potT = G.t + 1; healPlayer(p, p.maxHp * 0.4);
   burst(p.x, p.y, p.z + 1, 16, ['#ff8aa8', '#ffffff', '#ffd6ec'], 2); sfx('heal');
+  if (typeof emitEffects === 'function') emitEffects('potion', { p });   // belt boons (cleanse, regen, MP)
 }
 
 // ===== save / load: 3 slots ===================================================================================
@@ -762,7 +933,7 @@ const validItem = it => it && baseOf(it.base) && RARITY[it.rarity] && Array.isAr
 function applySave(p, s) {
   const P = s.player || {}, K = s.skills || {}, W = s.world || {};
   p.level = clamp(+P.level || 1, 1, MAX_LEVEL); p.xp = Math.max(0, +P.xp || 0); p.dust = +P.dust || 0;
-  p.potions = clamp(P.potions != null ? +P.potions : MAX_POTIONS, 0, MAX_POTIONS);
+  const pot = P.potions != null ? +P.potions : null;   // clamped to the belt-aware max after recalcStats below
   for (const slot of EQUIP_SLOTS) {
     const it = (P.equip || {})[slot];
     if (validItem(it) && equipKeysFor(baseOf(it.base).slot).includes(slot)) { it.sockets = it.sockets.map(g => gemParse(g) ? g : null); p.equip[slot] = compatItem(it); }
@@ -802,13 +973,15 @@ function applySave(p, s) {
   UID = Math.max(+P.uid || 0, ...[...loaded, ...p.bag].map(idNum));
   for (const k of SLOTS) if (p.equip[k] && !loaded.has(p.equip[k])) p.equip[k].id = newUid();
   recalcStats(p, true);
+  p.potions = clamp(pot != null ? pot : maxPotions(p), 0, maxPotions(p));
 }
 
 // ===== starter + showcase kits ====================================================================================
 function starterKit(p) {
   p.equip = { weapon: makeItem('rustyblade', 'common', 1, { sockets: 0 }), head: makeItem('ironcap', 'common', 1, { sockets: 0 }),
     chest: makeItem('ironmail', 'common', 1, { sockets: 1 }), boots: makeItem('ironboots', 'common', 1, { sockets: 0 }),
-    ring1: null, ring2: null, amulet: null, belt: null };   // §19.4 trinket slots: empty until the first Vale chest (step 2)
+    ring1: null, ring2: null, amulet: null, belt: null };
+  p.equip.ring1 = originRing(p.equip.weapon.base);   // §17.1 / §19.4: the free Origin starter ring (Knight for the Rusty Blade)
   p.bag = Array(BAG_SIZE).fill(null);
 }
 // ?scene=... showcases: a mid-level hero (L16) with rare/epic tier-2 gear of the chosen weapon variant (legacy ids accepted)
@@ -839,7 +1012,6 @@ function sampleBag(p) {
 //   or false · unique: a UNIQUES / trinket-unique id (sets base, rule and name) · rule · tempered: true | affix id · hist · name
 // e.g. makeTestItem({ slot: 'chest', variant: 'warden', tier: 2, rarity: 'epic', sockets: ['ruby_2', null], tempered: true })
 //      makeTestItem({ slot: 'ring', rarity: 'rare', boon: 'fireBurn' })     makeTestItem({ unique: 'rootcrown' })
-const AFFIX_COUNT = { common: [0, 0], uncommon: [1, 0], rare: [1, 1], epic: [2, 1], legendary: [2, 2], mythic: [3, 2] };   // [P, S]
 function makeTestItem(opts = {}) {
   const uq = opts.unique || null, trk = trinketBases();
   let base = opts.base || (uq && (UNIQUES[uq] ? UNIQUES[uq].base : trk[uq] ? uq : null));

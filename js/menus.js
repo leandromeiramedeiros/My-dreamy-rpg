@@ -99,8 +99,14 @@ function drawTabScreen(ctx) {
 }
 
 // ===== INVENTORY ===================================================================================================================
-const EQ_POS = { weapon: [40, 92], head: [184, 92], chest: [40, 176], boots: [184, 176] };
-const EQ_LABEL = { weapon: 'Weapon', head: 'Helm', chest: 'Chest', boots: 'Boots' };
+// Paper doll (DESIGN §19.4 / HUD.md): 8 slots, 48 px. Spec coordinates are relative to the panel (20,20); ring1 (24,88), ring2 (176,88),
+// amulet (100,64), belt (100,300). The four gear slots sit between the rings and the belt.
+const EQ_ORIGIN = [PX, PY];
+const EQ_REL = { amulet: [100, 64], ring1: [24, 88], ring2: [176, 88], weapon: [24, 152], head: [176, 152], chest: [24, 216], boots: [176, 216], belt: [100, 300] };
+const EQ_POS = {}; for (const k in EQ_REL) EQ_POS[k] = [EQ_ORIGIN[0] + EQ_REL[k][0], EQ_ORIGIN[1] + EQ_REL[k][1]];
+const EQ_LABEL = { weapon: 'Weapon', head: 'Helm', chest: 'Chest', boots: 'Boots', ring1: 'Ring', ring2: 'Ring', amulet: 'Amulet', belt: 'Belt' };
+const EQ_DOLL = [144, 142];   // doll sprite: centre x, top y
+const RING_KEYS = ['ring1', 'ring2'];
 function statRows(p, short) {
   const S = short ? { 'Crit dmg': 'CDmg', 'Skill dmg': 'SkDmg', Potions: 'Pots', Speed: 'Spd', Regen: 'Rgn' } : {};
   return [['Atk', Math.round(item('weapon', p.gear.weapon).basic.dmg * p.power)], ['HP', p.maxHp], ['MP', p.maxMp], ['Def', pctText(p.def)], ['Crit', pctText(p.crit)], ['Crit dmg', '+' + pctText(p.critDmg)],
@@ -119,19 +125,28 @@ function drawResistRow(ctx, p, x, y, cell) {
     UI.text(ctx, (v > 0 ? '+' : '') + v, cx + 24, cy + 3, 'small', v > 0 ? UC.text : v < 0 ? UC.danger : UC.dim);
   });
 }
+// one equipment / bag slot. With icons.js the 24 px art (frame + gem dots baked in) draws at 2x and ICONS.frame adds the animated glow;
+// without it the legacy 16 px icon + hand-drawn socket dots.
 function drawItemSlot(ctx, x, y, s, it, o = {}) {
-  if (it) { UI.frame(ctx, x, y, s, s, 'rarity', { rarity: it.rarity }); ctx.drawImage(itemIcon(it), x + (s - 32) / 2, y + (s - 32) / 2, 32, 32); }
-  else hudFrame(ctx, x, y, s, s, 'slot', null);
-  if (it) it.sockets.forEach((g, k) => { ctx.fillStyle = UC.edge; ctx.fillRect(x + 6 + k * 10, y + s - 12, 8, 8); ctx.fillStyle = g ? gemParse(g).def.col : '#3a3058'; ctx.fillRect(x + 8 + k * 10, y + s - 10, 4, 4); });
+  if (it && uiArt()) {
+    const ic = uiItemIcon(it); ctx.imageSmoothingEnabled = false; ctx.drawImage(ic, x, y, s, s);
+    if (ICONS.frame) ICONS.frame(ctx, x, y, s, it.rarity, G.t);
+  } else if (it) {
+    UI.frame(ctx, x, y, s, s, 'rarity', { rarity: it.rarity }); ctx.drawImage(itemIcon(it), x + (s - 32) / 2, y + (s - 32) / 2, 32, 32);
+    it.sockets.forEach((g, k) => { ctx.fillStyle = UC.edge; ctx.fillRect(x + 6 + k * 10, y + s - 12, 8, 8); ctx.fillStyle = g ? gemParse(g).def.col : '#3a3058'; ctx.fillRect(x + 8 + k * 10, y + s - 10, 4, 4); });
+  } else {
+    hudFrame(ctx, x, y, s, s, 'slot');
+    if (o.label) UI.text(ctx, o.label, x + s / 2, y + (s - 14) / 2 + 2, 'small', UC.bevel, 'center', { shadow: false });
+  }
   if (o.sel) UI.frame(ctx, x - 4, y - 4, s + 8, s + 8, 'focus', { tint: o.salvage ? UC.danger : UC.gold });
 }
 function drawDoll(ctx, p, cx, y) {
   const spr = p.spr.front[0], sc = 3, w = spr.width * sc, h = spr.height * sc;
   ctx.fillStyle = UC.edge; ctx.globalAlpha = 0.45; ctx.fillRect(cx - 24, y + h - 4, 48, 6); ctx.fillRect(cx - 18, y + h + 2, 36, 4); ctx.globalAlpha = 1;
   ctx.imageSmoothingEnabled = false; ctx.drawImage(spr, UI.snap(cx - w / 2), UI.snap(y), w, h);
-  const best = Math.max(...SLOTS.map(s => (p.equip[s] ? RARITY[p.equip[s].rarity].i : 0)));
-  if (best >= 3) {   // legendary-ish gear: sparkles orbit the hero
-    const rc = SLOTS.map(s => p.equip[s]).filter(Boolean).sort((a, b) => RARITY[b.rarity].i - RARITY[a.rarity].i)[0];
+  const worn = EQUIP_SLOTS.map(s => p.equip[s]).filter(Boolean).sort((a, b) => RARITY[b.rarity].i - RARITY[a.rarity].i);
+  if (worn.length && RARITY[worn[0].rarity].i >= 3) {   // epic+ gear: sparkles orbit the hero
+    const rc = worn[0];
     for (let i = 0; i < 4; i++) { const a = G.t * 1.4 + i * 1.6, sx = cx + Math.cos(a) * 40, sy = y + h / 2 + Math.sin(a * 1.3) * 44; ctx.fillStyle = rarityCol(rc.rarity); ctx.globalAlpha = 0.5 + 0.5 * Math.sin(G.t * 5 + i); ctx.fillRect(UI.snap(sx), UI.snap(sy), 4, 4); }
     ctx.globalAlpha = 1;
   }
@@ -139,66 +154,124 @@ function drawDoll(ctx, p, cx, y) {
 function whatOf(p, id) {
   if (!id) return null;
   if (id.startsWith('bag:')) { const e = p.bag[+id.slice(4)]; return e ? (e.gem ? { gemIdx: +id.slice(4) } : { it: e, bi: +id.slice(4) }) : null; }
-  if (id.startsWith('eq:')) { const it = p.equip[id.slice(3)]; return it ? { it, eq: true } : null; }
+  if (id.startsWith('eq:')) { const it = p.equip[id.slice(3)]; return it ? { it, eq: true, key: id.slice(3) } : null; }
   return null;
 }
-function drawInventoryTab(ctx, p) {
-  const u = G.ui; let hov = null;
-  const gemPick = u.gem != null && p.bag[u.gem] && p.bag[u.gem].gem ? u.gem : null; if (gemPick == null) u.gem = null;
-  const sel = u.sel;
-  // ---- column 1: paper doll + sheet ----
-  for (const slot of SLOTS) {
-    const [x, y] = EQ_POS[slot], it = p.equip[slot];
-    const r = mnRegion(x, y, 48, 48, 'eq:' + slot, () => clickItem(it));
-    drawItemSlot(ctx, x, y, 48, it, { sel: sel === it && it });
-    UI.text(ctx, EQ_LABEL[slot], x + 24, y + 50, 'small', UC.dim, 'center');
-    if (r.on && it) hov = { it, eq: true };
+
+// ---- ring rule (DESIGN §19.4) -------------------------------------------------------------------------------------------------
+// An empty ring slot always fills first (ring1, then ring2). When BOTH are full, equipping a ring never replaces one silently:
+// the bag ring enters "pick" mode (G.ui.ringPick), both ring slots light up, focus lands on the WEAKER ring (lower rarity, then
+// lower ilvl; a tie is ring1) and the player confirms a ring slot (click / tap / A) to swap that one out. The compare deltas always
+// read against the ring that confirm would replace. A selected bag ring plus a click on any ring slot also equips straight there.
+const ringRank = it => it ? RARITY[it.rarity].i * 1000 + it.ilvl : -1;
+const weakerRing = p => ringRank(p.equip.ring2) < ringRank(p.equip.ring1) ? 'ring2' : 'ring1';
+const ringsFull = p => RING_KEYS.every(k => p.equip[k]);
+// the equipped item `it` would replace if equipped now (null when it goes to an empty slot, is equipped, or has no peer)
+function replacedBy(p, it, chosen) {
+  if (!it || it.gem || isEquipped(p, it)) return null;
+  const ks = equipKeysFor(it.slot);
+  if (ks.length === 1) return p.equip[ks[0]] || null;
+  if (ks.some(k => !p.equip[k])) return null;
+  return p.equip[chosen && ks.includes(chosen) ? chosen : weakerRing(p)];
+}
+function equipNote(r, okMsg) { if (r) invNote(r); else { sfx('shield'); if (okMsg) invNote(okMsg, UC.mpHi); } return !r; }
+function startRingPick(p, it) {
+  const u = G.ui; u.ringPick = it; u.ringCand = null; u.sel = it; u.ringPickT = G.t;
+  UI.focus.set('eq:' + weakerRing(p), true); sfx('pickup');
+}
+function cancelRingPick() { const u = G.ui; u.ringPick = null; u.ringCand = null; }
+// ring-aware equip for a bag item (bag click, EQUIP button)
+function bagEquip(p, e) {
+  const u = G.ui;
+  if (e.slot === 'ring' && !isEquipped(p, e) && ringsFull(p) && e.req <= p.level) { startRingPick(p, e); return; }
+  if (equipNote(equipItem(p, e))) u.sel = e;
+}
+function bagClickMenu(i, alt) {
+  const p = G.player, u = G.ui, e = p.bag[i], was = u.ringPick; cancelRingPick();
+  if (e && !e.gem && e.slot === 'ring' && !alt && !u.salvage && u.gem == null && ringsFull(p) && !isEquipped(p, e)) {
+    if (was === e) return;                 // a second click on the ring being placed cancels
+    if (!secondTap(e)) return;             // touch / pad: the first press only shows the ring
+    bagEquip(p, e); return;
   }
-  drawDoll(ctx, p, 136, 108);
-  mnDivider(ctx, COL1 + 8, 244, 200, 2);
-  UI.text(ctx, `Lv ${p.level}`, COL1 + 8, 254, 'body', UC.gold);
+  clickBag(i, alt);
+}
+function clickEquipSlot(key) {
+  const p = G.player, u = G.ui, it = p.equip[key], pick = u.ringPick;
+  if (pick) {
+    if (RING_KEYS.includes(key)) {
+      if (G.touch && u.ringCand !== key) { u.ringCand = key; sfx('pickup'); return; }   // touch: tap once to compare, again to confirm
+      cancelRingPick(); if (equipNote(equipItem(p, pick, key), `${itemName(pick)} equipped`)) u.sel = pick;
+      return;
+    }
+    cancelRingPick();
+  }
+  const sel = u.sel;
+  if (u.gem == null && sel && sel.sockets && !isEquipped(p, sel) && p.bag.includes(sel) && equipKeysFor(sel.slot).includes(key)) { if (equipNote(equipItem(p, sel, key))) u.sel = sel; return; }
+  if (it) clickItem(it); else if (u.gem != null) invNote('Gems go into an item', UC.dim); else u.sel = null;
+}
+
+function drawInventoryTab(ctx, p) {
+  const u = G.ui; let hov = null, ringOn = null;
+  const gemPick = u.gem != null && p.bag[u.gem] && p.bag[u.gem].gem ? u.gem : null; if (gemPick == null) u.gem = null;
+  if (u.ringPick && (!p.bag.includes(u.ringPick) || G.t - (u.ringPickT || 0) > 0.5)) cancelRingPick();   // placed, salvaged, or the screen was closed
+  if (u.ringPick) u.ringPickT = G.t;
+  const sel = u.sel, pick = u.ringPick;
+  // ---- column 1: paper doll + sheet ----
+  drawDoll(ctx, p, EQ_DOLL[0], EQ_DOLL[1]);
+  for (const key of EQUIP_SLOTS) {
+    const [x, y] = EQ_POS[key], it = p.equip[key], isRing = RING_KEYS.includes(key);
+    const r = mnRegion(x, y, 48, 48, 'eq:' + key, () => clickEquipSlot(key));
+    drawItemSlot(ctx, x, y, 48, it, { sel: sel === it && it && !pick, label: it ? null : EQ_LABEL[key] });
+    if (pick && isRing) {   // both ring slots pulse gold; the one confirm would replace is marked
+      ctx.globalAlpha = 0.55 + 0.45 * Math.sin(G.t * 6); UI.frame(ctx, x - 4, y - 4, 56, 56, 'focus', { tint: UC.gold }); ctx.globalAlpha = 1;
+      if (key === (u.ringCand || (r.on && key) || null)) UI.text(ctx, 'REPLACE', x + 24, y - 20, 'small', UC.gold, 'center');
+    } else if (!pick && gemPick == null && sel && sel.sockets && p.bag.includes(sel) && equipKeysFor(sel.slot).includes(key) && !it) UI.text(ctx, 'EQUIP', x + 24, y + 50, 'small', UC.gold, 'center');
+    if (r.on) { if (it && !pick) hov = { it, eq: true, key }; if (isRing) ringOn = key; }
+  }
+  mnDivider(ctx, COL1 + 8, 372, 200, 2);
+  UI.text(ctx, `Lv ${p.level}`, COL1 + 8, 378, 'body', UC.gold);
   const need = xpToNext(p.level);
-  UI.text(ctx, p.level >= MAX_LEVEL ? 'MAX' : `${Math.floor(p.xp)}/${need} XP`, COL1 + 208, 258, 'small', UC.dim, 'right');
-  UI.bar(ctx, COL1 + 12, 284, 192, 8, p.level >= MAX_LEVEL ? 1 : p.xp / need, { id: 'tab-xp', col: UC.xp, hi: UC.xp, ghost: false, wipe: false });
-  drawStats(ctx, p, COL1 + 4, 308, 108, 20, true);
-  mnHead(ctx, 'RESIST', COL1 + 8, 428);
-  drawResistRow(ctx, p, COL1 + 8, 448, 52);
+  UI.text(ctx, p.level >= MAX_LEVEL ? 'MAX' : `${Math.floor(p.xp)}/${need} XP`, COL1 + 208, 382, 'small', UC.dim, 'right');
+  UI.bar(ctx, COL1 + 12, 400, 192, 8, p.level >= MAX_LEVEL ? 1 : p.xp / need, { id: 'tab-xp', col: UC.xp, hi: UC.xp, ghost: false, wipe: false });
+  drawStats(ctx, p, COL1 + 4, 414, 108, 16, true);
   // ---- column 2: bag ----
   const bx = COL2 + 10, by = 108, filled = p.bag.filter(Boolean).length;
   UI.text(ctx, `BAG ${filled}/${BAG_SIZE}`, bx, 80, 'body', UC.stHi);
-  UI.button(ctx, COL2 + 232, 72, 84, 30, 'SORT', { id: 'btn:sort', size: 'small', fn: () => { sortBag(p); u.sel = null; u.gem = null; sfx('pickup'); } });
+  UI.button(ctx, COL2 + 232, 72, 84, 30, 'SORT', { id: 'btn:sort', size: 'small', fn: () => { sortBag(p); u.sel = null; u.gem = null; cancelRingPick(); sfx('pickup'); } });
   for (let i = 0; i < BAG_SIZE; i++) {
     const cx = bx + (i % 6) * 54, cy = by + Math.floor(i / 6) * 54, e = p.bag[i];
-    const r = mnRegion(cx, cy, 48, 48, 'bag:' + i, alt => clickBag(i, alt === true), { alt: () => clickBag(i, true), def: i === 0 });
+    const r = mnRegion(cx, cy, 48, 48, 'bag:' + i, alt => bagClickMenu(i, alt === true), { alt: () => bagClickMenu(i, true), def: i === 0 });
     if (!e) { hudFrame(ctx, cx, cy, 48, 48, 'slot'); ctx.fillStyle = UC.edge; ctx.globalAlpha = r.on ? 0.1 : 0.35; ctx.fillRect(cx + 4, cy + 4, 40, 40); ctx.globalAlpha = 1; if (r.on) UI.frame(ctx, cx - 4, cy - 4, 56, 56, 'focus', { tint: UC.dim }); continue; }
     if (e.gem) {
       const g = gemParse(e.gem), on = gemPick === i;
       UI.frame(ctx, cx, cy, 48, 48, 'slot', { col: g.def.col });
-      ctx.drawImage(gemIcon(g.type, g.grade), cx + 8, cy + 8, 32, 32);
+      const gi = uiGemIcon(e.gem); ctx.imageSmoothingEnabled = false; if (gi.width === 24) ctx.drawImage(gi, cx, cy, 48, 48); else ctx.drawImage(gi, cx + 8, cy + 8, 32, 32);
       UI.text(ctx, GEM_GRADES[g.grade - 1][0], cx + 6, cy + 4, 'small', UC.text);
       if (e.n > 1) UI.text(ctx, 'x' + e.n, cx + 44, cy + 30, 'small', UC.text, 'right');
       if (on) UI.frame(ctx, cx - 4, cy - 4, 56, 56, 'focus', { tint: g.def.col });
       if (r.on) hov = { gemIdx: i };
     } else {
       drawItemSlot(ctx, cx, cy, 48, e, { sel: sel === e, salvage: u.salvage });
-      if (e.reqLvl > p.level) UI.text(ctx, 'L' + e.reqLvl, cx + 44, cy + 30, 'small', UC.danger, 'right');
+      if (e.req > p.level) UI.text(ctx, 'L' + e.req, cx + 44, cy + 30, 'small', UC.danger, 'right');
       if (r.on) hov = { it: e, bi: i };
     }
   }
   // bag actions
   const ay = by + 5 * 54 + 8, sv = u.salvage;
-  UI.button(ctx, bx, ay, 100, 32, sv ? 'SALVAGE ON' : 'SALVAGE', { id: 'btn:salvage', size: 'small', kind: sv ? 'danger' : 'plain', col: sv ? UC.hpHi : null, fn: () => { u.salvage = !u.salvage; u.gem = null; u.confirm = null; } });
+  UI.button(ctx, bx, ay, 100, 32, sv ? 'SALVAGE ON' : 'SALVAGE', { id: 'btn:salvage', size: 'small', kind: sv ? 'danger' : 'plain', col: sv ? UC.hpHi : null, fn: () => { u.salvage = !u.salvage; u.gem = null; u.confirm = null; cancelRingPick(); } });
   UI.button(ctx, bx + 108, ay, 100, 32, 'COMBINE', { id: 'btn:combine', size: 'small', fn: () => doCombine(p) });
   UI.button(ctx, bx + 216, ay, 100, 32, 'SELL', { id: 'btn:sell', size: 'small', fn: () => doSell(p) });
   const noteOn = u.note && u.note.t > G.t;
-  const hint = gemPick != null ? `${gemName(p.bag[gemPick].gem)} picked: choose a socket or an item` : sv ? 'Salvage is on: pick gear to turn it into Dream Dust' :
+  const hint = pick ? (IN.device === 'touch' ? 'Tap a ring to compare, tap it again to replace it.' : `Replace which ring? Choose ring 1 or ring 2 (${IN.glyph('accept')}).`) :
+    gemPick != null ? `${gemName(p.bag[gemPick].gem)} picked: choose a socket or an item` : sv ? 'Salvage is on: pick gear to turn it into Dream Dust' :
     IN.device === 'touch' ? 'Tap: details, tap again: equip. Hold: salvage.' : IN.device === 'pad' ? `${IN.glyph('accept')} select / equip   ${IN.glyph('menuAlt')} salvage   ${IN.glyph('tabPrev')}${IN.glyph('tabNext')} tabs` : 'Click: equip   Right-click: salvage   Gems: click a gem, then a socket';
-  UI.wrap(ctx, noteOn ? u.note.s : hint, bx, ay + 44, 320, 'small', noteOn ? u.note.col : UC.dim);
+  UI.wrap(ctx, noteOn && !pick ? u.note.s : hint, bx, ay + 44, 320, 'small', pick ? UC.gold : noteOn ? u.note.col : UC.dim);
   // ---- column 3: item / gem ----
   let what = hov;
-  if (!what && UI.focus.showing() && UI.focus.current()) what = whatOf(p, UI.focus.current().id);
+  if (pick) what = { it: pick, bi: p.bag.indexOf(pick), pick: true };
+  else if (!what && UI.focus.showing() && UI.focus.current()) what = whatOf(p, UI.focus.current().id);
   if (!what && sel) what = sel.gem ? { gemIdx: sel.gemIdx } : sel.sockets ? { it: sel, bi: p.bag.indexOf(sel), eq: isEquipped(p, sel) } : null;
-  drawItemPanel(ctx, p, COL3 + 4, 76, 324, what, hov, gemPick);
+  drawItemPanel(ctx, p, COL3 + 4, 76, 324, what, hov, gemPick, pick ? (u.ringCand || ringOn) : null);
 }
 function doCombine(p) {
   const u = G.ui; let bi = u.sel && u.sel.gem != null ? u.sel.gemIdx : -1;
@@ -213,16 +286,183 @@ function doSell(p) {
   const r = salvageItem(p, bi); u.confirm = null;
   if (typeof r === 'string') invNote(r); else { invNote(`Sold for ${r} Dream Dust`, UC.bright); sfx('chest'); u.sel = null; }
 }
-// tooltip / compare column: green / red deltas against the equipped piece
-function drawItemPanel(ctx, p, x, y, w, what, hov, gemPick) {
+
+// ===== TOOLTIP v2 (DESIGN §19.3) ================================================================================================
+// itemTipRows(p, it, o) builds the tooltip as DATA (<= 12 logical lines, tested headless); drawTipRows() paints it. o: { w, touch,
+// cmp (the equipped item to compare against), maxH }. Top to bottom: name (rarity colour) · icon row (family, tier, base stats) ·
+// "Lv · ilvl · Rarity" · implicit (dim blue) · affixes P then S with tier pips and green / red deltas · sockets · trinket boon ·
+// unique rule (gold) · family line · granted skills · "Synergises with" (only when tag data exists) · flavour · footer.
+// Touch (o.touch): affixes collapse to icon + number chips, sockets and skills share one row, and the family, synergy and
+// flavour lines are dropped. Over budget, the lowest-priority rows go first (synergy, flavour, skills, family, footer ...).
+const TIP_BLUE = '#8fa8e8', TIP_GREEN = '#6ee36e', TIP_BOON = '#7be0d0', TIP_MAX_LINES = 12;
+const SLOT_WORD = { weapon: 'Weapon', head: 'Helm', chest: 'Chest', boots: 'Boots', ring: 'Ring', amulet: 'Amulet', belt: 'Belt' };
+const CLASS_WORD = { blades: 'Blades', greatarms: 'Great arms', shots: 'Shots', foci: 'Foci', shadows: 'Shadows', heavy: 'Heavy', caster: 'Caster', medium: 'Medium', shadow: 'Shadow', trinket: 'Trinket' };
+const SKILL_KEY = { chest: 'F', head: 'C', boots: 'SHF' };
+const AX_NAME = { fireDmg: 'Fire damage', frostDmg: 'Frost damage', natureDmg: 'Nature damage', lightningDmg: 'Lightning damage', arcaneDmg: 'Arcane damage', holyDmg: 'Holy damage',
+  statusChance: 'Status chance', markCap: 'Mark cap', chargeSpeed: 'Charge rate', onDodge: 'Heal on dodge', onKill: 'MP on kill', resHoly: 'Holy res' };
+const STAT_COL = { dmg: '#ff9a4a', power: '#ff9a4a', skillDmg: '#ffb86a', crit: '#ffd35a', critDmg: '#ffd35a', haste: '#9ef0ff', cdr: '#9ab8ff', hp: '#ff6a8a', mp: '#4f7df0', def: '#b9c2dc',
+  regen: '#8fe0a0', mpRegen: '#7aa0ff', speed: '#e7eeff', fireDmg: '#ff9a4a', frostDmg: '#9fe8ff', natureDmg: '#8fe0a0', lightningDmg: '#fff07a', arcaneDmg: '#d6b0ff', holyDmg: '#fff2b0' };
+const statCol = id => STAT_COL[id] || (/^res/.test(id) ? EL_COL[(id.slice(3, 4).toLowerCase() + id.slice(4))] || '#d6c2ff' : '#d6c2ff');
+// "+7% Damage", "+40 HP", "+1 Mark cap": fmtStat (items.js) for the M2 stats, a local label table for the v2-only ones
+function affixText(id, v, sign = true) {
+  if (STAT_NAME[id]) return fmtStat(id, v, sign);
+  const sg = sign ? (v >= 0 ? '+' : '-') : '', a = Math.abs(v), nm = AX_NAME[id] || id;
+  return id === 'markCap' ? `${sg}${Math.round(a)} ${nm}` : `${sg}${+(a * 100).toFixed(a * 100 < 10 ? 1 : 0)}% ${nm}`;
+}
+const deltaText = (id, d) => '(' + (affixText(id, d, true).split(' ')[0]) + ')';
+function wrapLines(s, size, w, max) {
+  const out = []; let line = '';
+  for (const wd of String(s).split(' ')) { const t = line ? line + ' ' + wd : wd; if (UI.measure(t, size) > w && line) { out.push(line); line = wd; } else line = t; }
+  if (line) out.push(line);
+  if (out.length > max) { const rest = out.splice(max - 1).join(' '); out.push(fitText(rest, w, size)); }
+  return out;
+}
+function trinketRow(id) {
+  const all = (typeof TRINKET_UNIQUES !== 'undefined' ? TRINKET_UNIQUES : []).concat(typeof WORLD_UNIQUES !== 'undefined' ? WORLD_UNIQUES : []);
+  return all.find(u => u.id === id) || null;
+}
+function tipRuleText(it) {
+  const id = it.unique || it.rule; if (!id) return '';
+  if (UNIQUES[id]) return UNIQUES[id].desc;
+  const t = trinketRow(id); return t ? t.text || '' : '';
+}
+function tipTags(it) {
+  if (it.boon && typeof BOONS !== 'undefined') { const row = (BOONS[it.slot] || []).find(r => r.id === it.boon.id); if (row && row.tags) return row.tags; }
+  const t = trinketRow(it.unique || it.rule); return t && t.tags ? t.tags : [];
+}
+function tipFamily(p, it) {
+  const b = baseOf(it.base) || {};
+  if (isTrinket(it)) return '';
+  if (it.slot === 'weapon') { const f = item('weapon', b.family); return `${f ? f.label || f.name : b.family}  ${CLASS_WORD[it.class] || it.class || ''}`; }
+  const suit = it.suit && ARMOUR[it.class] && ARMOUR[it.class].suits[it.suit]; if (!suit) return '';
+  const n = ['head', 'chest', 'boots'].filter(s => { const q = s === it.slot ? it : p.equip[s]; return q && q.suit === it.suit; }).length;
+  return `${suit.name} ${n}/3 - 3: ${ARMOUR[it.class].rule}`;
+}
+function itemTipRows(p, it, o = {}) {
+  const w = o.w || 308, touch = !!o.touch, cmp = o.cmp || null, b = baseOf(it.base) || {}, R = RARITY[it.rarity], rows = [];
+  const LH = UI.lineH('small'), add = (k, pri, h, d) => { rows.push(Object.assign({ k, pri, h }, d)); return rows[rows.length - 1]; };
+  const mineB = itemBase(it), cmpB = cmp ? itemBase(cmp) : null, acc = x => { const s = {}; for (const a of x.affixes) s[a.id] = (s[a.id] || 0) + a.v; return s; };
+  const mineA = acc(it), cmpA = cmp ? acc(cmp) : null;
+  // 1 name
+  const nm = wrapLines(itemName(it), 'body', w, 2);
+  add('name', 0, nm.length * UI.lineH('body'), { lines: nm, col: rarityCol(it.rarity) });
+  // 2 icon row: art, family + tier, up to two base stats with compare deltas
+  const stats = STAT_ORDER.filter(k => mineB[k]).slice(0, 2).map(k => ({ id: k, s: fmtStat(k, mineB[k], k !== 'dmg').replace(/^\+/, ''), d: cmpB ? mineB[k] - (cmpB[k] || 0) : 0 }));
+  const fam = isTrinket(it) ? SLOT_WORD[it.slot] : (item(it.slot, b.family) || {}).label || (item(it.slot, b.family) || {}).name || SLOT_WORD[it.slot];
+  add('head', 0, 30, { icon: uiItemIcon(it), label: `${fam}  T${(it.tier | 0) + 1}`, stats });
+  // 3 Lv / ilvl / rarity
+  add('lv', 0, LH, { req: it.req, ilvl: it.ilvl, rar: R.name, bad: it.req > p.level });
+  // 4 implicit
+  if (it.implicit && it.implicit.text) add('implicit', 2, LH, { s: it.implicit.text });
+  // 5 affixes
+  const temp = it.tempered && it.tempered.affix;
+  const aff = it.affixes.map(a => ({ id: a.id, v: a.v, kind: a.kind, tier: a.tier || 1, text: affixText(a.id, a.v), d: cmpA ? a.v - (cmpA[a.id] || 0) : 0, hasCmp: !!cmpA, tempered: temp === a.id }));
+  if (touch) { if (aff.length) add('chips', 0, 26 * Math.ceil(aff.length / 3), { aff }); }
+  else for (const a of aff) add('aff', 0, LH, a);
+  // 6 sockets (+ granted skills on touch)
+  const skills = [];
+  const fm = !isTrinket(it) ? item(it.slot, b.family) : null;
+  if (fm) { if (it.slot === 'weapon') for (const k of ['q', 'e', 'r']) { if (fm[k] && fm[k][0] && SKILLS[fm[k][0]]) skills.push({ id: fm[k][0], key: k.toUpperCase() }); } else if (fm.skill && SKILLS[fm.skill]) skills.push({ id: fm.skill, key: SKILL_KEY[it.slot] }); }
+  const gemText = it.sockets.filter(Boolean).map(g => { const gs = gemStats(g, it.slot); return Object.entries(gs).map(([k, v]) => fmtStat(k, v)).join(' '); }).join(', ');
+  if (it.sockets.length) add('sockets', 2, 30, { sockets: it.sockets, text: gemText, skills: touch ? skills : [] });
+  else if (touch && skills.length) add('sockets', 2, 30, { sockets: [], text: '', skills });
+  // 7 trinket boon, unique rule
+  if (it.boon && it.boon.text) add('boon', 2, 0, { lines: wrapLines((it.boon.grade === 'minor' ? 'Minor: ' : 'Boon: ') + it.boon.text, 'small', w, 2) });
+  const rule = tipRuleText(it); if (rule) add('rule', 1, 0, { lines: wrapLines(rule, 'small', w, 2) });
+  // 8 family line, 9 granted skills
+  if (!touch) {
+    const fl = tipFamily(p, it); if (fl) add('family', 5, LH, { s: fl });
+    if (skills.length) add('skills', 6, 30, { skills });
+    const tags = tipTags(it); if (tags.length) add('syn', 8, 0, { lines: wrapLines('Synergises with: ' + tags.join(', '), 'small', w, 2) });
+    const fv = typeof FLAVOR !== 'undefined' && (FLAVOR[it.unique] || FLAVOR[it.base]); if (fv) add('flavor', 7, 0, { lines: wrapLines(fv, 'small', w, 2) });
+  }
+  // 12 footer: Found / Kills / Tempered
+  const h = it.hist || {}, parts = [];
+  const zone = h.found && G.world && G.world.maps && G.world.maps[h.found];
+  if (h.found) parts.push('Found: ' + ((zone && zone.name) || h.found));
+  if (it.slot === 'weapon' && (h.kills || 0) > 0) parts.push('Kills ' + h.kills);
+  if (it.tempered) parts.push('Tempered');
+  if (parts.length) add('footer', 4, LH, { parts, tempered: !!it.tempered });
+  for (const r of rows) if (r.lines && !r.h) r.h = r.lines.length * LH;
+  // budget: at most 12 logical lines and maxH pixels; lowest priority (highest number) goes first, later rows first on a tie
+  const maxH = o.maxH || 350, total = () => rows.reduce((a, r) => a + r.h + 2, 0);
+  while (rows.length > TIP_MAX_LINES || total() > maxH) {
+    let worst = -1; rows.forEach((r, i) => { if (worst < 0 || r.pri >= rows[worst].pri) worst = i; });
+    if (rows[worst].pri === 0) break;
+    rows.splice(worst, 1);
+  }
+  return { rows, count: rows.length, height: total(), rarity: it.rarity };
+}
+// a row of tier pips: "◆◆◇" (tempered affixes in gold)
+const pips = (t, gold) => '◆◆◆'.slice(0, clamp(t, 1, 3)) + '◇◇◇'.slice(0, 3 - clamp(t, 1, 3));
+function drawTipRows(ctx, T, x, y, w, o = {}) {
+  const LH = UI.lineH('small'); let yy = y;
+  for (const r of T.rows) {
+    if (r.k === 'name') r.lines.forEach((l, i) => UI.text(ctx, l, x, yy + i * UI.lineH('body'), 'body', r.col));
+    else if (r.k === 'head') {
+      const ic = r.icon; if (ic) { ctx.imageSmoothingEnabled = false; if (ic.width === 24) ctx.drawImage(ic, x, yy + 3, 24, 24); else ctx.drawImage(ic, x, yy + 1, 28, 28); }
+      UI.text(ctx, r.label, x + 32, yy + 8, 'small', UC.text);
+      r.stats.forEach((st, i) => {
+        const dt = st.d && Math.abs(st.d) > 1e-3 ? deltaText(st.id, st.d) : '', dw = dt ? UI.measure(dt, 'small') + 6 : 0, sy = yy + (r.stats.length > 1 ? i * 14 : 8) - (r.stats.length > 1 ? 1 : 0);
+        if (dt) UI.text(ctx, dt, x + w, sy, 'small', st.d > 0 ? TIP_GREEN : UC.danger, 'right');
+        UI.text(ctx, st.s, x + w - dw, sy, 'small', UC.text, 'right');
+      });
+    } else if (r.k === 'lv') {
+      let cx = x; const seg = (s, col) => { cx += UI.text(ctx, s, cx, yy, 'small', col) + 4; }, dot = () => { ctx.fillStyle = UC.bevel; ctx.fillRect(cx, yy + 6, 2, 2); cx += 8; };
+      seg(`Lv ${r.req}`, r.bad ? UC.danger : UC.text); dot(); seg(`ilvl ${r.ilvl}`, UC.dim); dot(); seg(r.rar, rarityCol(T.rarity));
+    } else if (r.k === 'implicit') UI.text(ctx, fitText(r.s, w, 'small'), x, yy, 'small', TIP_BLUE);
+    else if (r.k === 'aff') {
+      const pc = r.tempered ? UC.gold : r.kind === 'P' ? UC.bright : UC.dim;
+      UI.text(ctx, pips(r.tier), x, yy, 'small', pc);
+      UI.text(ctx, fitText(r.text, w - 120, 'small'), x + 44, yy, 'small', UC.text);
+      if (r.hasCmp && Math.abs(r.d) > 1e-3) UI.text(ctx, deltaText(r.id, r.d), x + w, yy, 'small', r.d > 0 ? TIP_GREEN : UC.danger, 'right');
+    } else if (r.k === 'chips') {
+      r.aff.forEach((a, i) => {
+        const cx = x + (i % 3) * Math.floor(w / 3), cy = yy + Math.floor(i / 3) * 26;
+        UI.sprite(ctx, 'bullet', cx, cy + 4, { scale: 2, tint: a.tempered ? UC.gold : statCol(a.id) });
+        const num = affixText(a.id, a.v, true).split(' ')[0];
+        const tw = UI.text(ctx, num, cx + 18, cy + 2, 'small', UC.text);
+        if (a.hasCmp && Math.abs(a.d) > 1e-3) UI.text(ctx, a.d > 0 ? '▲' : '▼', cx + 22 + tw, cy + 2, 'small', a.d > 0 ? TIP_GREEN : UC.danger);
+      });
+    } else if (r.k === 'sockets') {
+      const p = o.p, it = o.it; let cx = x;
+      r.sockets.forEach((g, k) => {
+        const reg = o.interactive ? mnRegion(cx, yy, 28, 28, 'sock:' + k, () => clickSocket(it, k)) : { on: false };
+        hudFrame(ctx, cx, yy, 28, 28, 'slot');
+        if (g) { const gi = uiGemIcon(g); ctx.imageSmoothingEnabled = false; if (gi.width === 24) ctx.drawImage(gi, cx + 2, yy + 2, 24, 24); else ctx.drawImage(gi, cx + 6, yy + 6, 16, 16); }
+        else UI.sprite(ctx, 'bulletHollow', cx + 7, yy + 7, { scale: 2, tint: o.gemPick != null ? UC.gold : UC.dim });
+        if (reg.on) UI.frame(ctx, cx - 4, yy - 4, 36, 36, 'focus', { tint: UC.bright });
+        cx += 32;
+      });
+      const sk = r.skills || [];
+      if (sk.length) {
+        let sx = x + w - sk.length * 40;
+        for (const s of sk) { ctx.imageSmoothingEnabled = false; ctx.drawImage(uiSkillIcon(s.id), sx, yy + 3, 24, 24); UI.text(ctx, s.key, sx + 26, yy + 8, 'small', UC.dim); sx += 40; }
+        if (r.text) UI.text(ctx, fitText(r.text, x + w - sk.length * 40 - cx - 8, 'small'), cx + 4, yy + 8, 'small', UC.dim);
+      } else if (r.text) UI.text(ctx, fitText(r.text, w - (cx - x) - 4, 'small'), cx + 4, yy + 8, 'small', UC.dim);
+    } else if (r.k === 'boon') r.lines.forEach((l, i) => UI.text(ctx, l, x, yy + i * LH, 'small', TIP_BOON));
+    else if (r.k === 'rule') r.lines.forEach((l, i) => UI.text(ctx, l, x, yy + i * LH, 'small', UC.gold));
+    else if (r.k === 'family') UI.text(ctx, fitText(r.s, w, 'small'), x, yy, 'small', UC.bright);
+    else if (r.k === 'skills') { let sx = x; for (const s of r.skills) { ctx.imageSmoothingEnabled = false; ctx.drawImage(uiSkillIcon(s.id), sx, yy + 3, 24, 24); const tw = UI.text(ctx, s.key, sx + 28, yy + 8, 'small', UC.dim); sx += 36 + tw; } }
+    else if (r.k === 'syn') r.lines.forEach((l, i) => UI.text(ctx, l, x, yy + i * LH, 'small', UC.dim));
+    else if (r.k === 'flavor') r.lines.forEach((l, i) => UI.text(ctx, l, x, yy + i * LH, 'small', '#7e72a8'));
+    else if (r.k === 'footer') { let cx = x; r.parts.forEach((s, i) => { if (i) { ctx.fillStyle = UC.bevel; ctx.fillRect(cx + 2, yy + 6, 2, 2); cx += 10; } cx += UI.text(ctx, s, cx, yy, 'small', s === 'Tempered' ? UC.gold : UC.dim); }); }
+    yy += r.h + 2;
+  }
+  return yy;
+}
+
+// column 3: gem details, or the item tooltip v2 plus the equip / sell actions
+function drawItemPanel(ctx, p, x, y, w, what, hov, gemPick, ringKey) {
   const u = G.ui;
   if (!what) { UI.wrap(ctx, IN.device === 'touch' ? 'Tap an item or gem to see it here.' : 'Hover or select an item to see it here.', x + 8, y + 8, w - 16, 'small', UC.dim); return; }
   const gemId = what.gemIdx != null ? p.bag[what.gemIdx] && p.bag[what.gemIdx].gem : null;
   if (what.gemIdx != null) {
     if (!gemId) return;
     const g = gemParse(gemId); if (!g) return;
-    UI.text(ctx, gemName(gemId), x + 8, y, 'body', g.def.col);
-    UI.text(ctx, 'Gem', x + 8, y + 24, 'small', UC.dim);
+    const gi = uiGemIcon(gemId); if (gi) { ctx.imageSmoothingEnabled = false; ctx.drawImage(gi, x + 8, y - 2, 24, 24); }
+    UI.text(ctx, gemName(gemId), x + 40, y, 'body', g.def.col);
+    UI.text(ctx, 'Gem', x + 40, y + 24, 'small', UC.dim);
     let yy = y + 52;
     UI.text(ctx, 'In armour', x + 8, yy, 'small', UC.dim); yy += 18;
     for (const [k, v] of Object.entries(g.def.arm(g.grade))) { UI.text(ctx, fmtStat(k, v), x + 16, yy, 'small', UC.mpHi); yy += 18; }
@@ -233,44 +473,17 @@ function drawItemPanel(ctx, p, x, y, w, what, hov, gemPick) {
     UI.wrap(ctx, 'Pick it, then choose a socket. Three of a kind combine into the next grade.', x + 8, 440, w - 16, 'small', UC.dim);
     return;
   }
-  const it = what.it; if (!it || !BASES[it.base]) return;
-  const b = BASES[it.base], R = RARITY[it.rarity], eq = p.equip[b.slot], cmp = eq && eq !== it ? statsOf(eq) : null, mine = statsOf(it);
-  UI.text(ctx, fitText(itemName(it), w - 16, 'body'), x + 8, y, 'body', rarityCol(it.rarity));
-  UI.text(ctx, `${R.name} ${EQ_LABEL[b.slot]}   T${b.tier + 1}   ilvl ${it.ilvl}`, x + 8, y + 24, 'small', UC.dim);
-  UI.text(ctx, `Requires Lv ${it.reqLvl}`, x + 8, y + 42, 'small', it.reqLvl > p.level ? UC.danger : UC.dim);
-  // sockets: clickable, filled / empty diamonds
-  let yy = y + 66;
-  it.sockets.forEach((g, k) => {
-    const sx = x + 8 + k * 36, r = mnRegion(sx, yy, 32, 32, 'sock:' + k, () => clickSocket(it, k));
-    hudFrame(ctx, sx, yy, 32, 32, 'slot');
-    if (g) ctx.drawImage(gemIcon(gemParse(g).type, gemParse(g).grade), sx + 8, yy + 8, 16, 16);
-    else UI.sprite(ctx, 'bulletHollow', sx + 9, yy + 9, { scale: 2, tint: gemPick != null ? UC.gold : UC.dim });
-    if (r.on) UI.frame(ctx, sx - 4, yy - 4, 40, 40, 'focus', { tint: UC.bright });
-  });
-  yy += it.sockets.length ? 44 : 0;
-  const delta = k => cmpDelta(ctx, x + w - 8, yy, k, mine, cmp);
-  const base = itemBase(it);
-  for (const k of STAT_ORDER) if (base[k]) { UI.text(ctx, fmtStat(k, base[k], k !== 'dmg'), x + 8, yy, 'small', UC.text); delta(k); yy += 18; }
-  for (const a of it.affixes) { UI.text(ctx, fmtStat(a.stat, a.v), x + 8, yy, 'small', UC.mpHi); delta(a.stat); yy += 18; }
-  it.sockets.forEach(g => { if (g) { const gs = gemStats(g, it.slot); UI.text(ctx, fitText(`${gemName(g)}: ${Object.entries(gs).map(([k, v]) => fmtStat(k, v)).join(', ')}`, w - 16), x + 8, yy, 'small', gemParse(g).def.col); yy += 18; } });
-  if (it.unique && UNIQUES[it.unique]) { yy += 4; yy = UI.wrap(ctx, UNIQUES[it.unique].desc, x + 8, yy, w - 16, 'small', UC.gold); }
-  // skills with icons
-  yy += 6; mnDivider(ctx, x + 8, yy, w - 16, 2); yy += 10;
-  const fam = item(b.slot, b.family);
-  if (b.slot === 'weapon') for (const k of ['q', 'e', 'r']) { ctx.drawImage(skillIcon(fam[k][0]), x + 8, yy, 32, 32); UI.text(ctx, k.toUpperCase(), x + 46, yy + 2, 'small', UC.dim); yy = Math.max(yy + 36, UI.wrap(ctx, fam[k].map(id => SKILLS[id].name).join(' / '), x + 84, yy + 2, w - 92, 'small', UC.text) + 4); }
-  else { ctx.drawImage(skillIcon(fam.skill), x + 8, yy, 32, 32); UI.text(ctx, { chest: 'F', head: 'C', boots: 'SHF' }[b.slot], x + 46, yy + 2, 'small', UC.dim); UI.text(ctx, SKILLS[fam.skill].name, x + 84, yy + 2, 'small', UC.text); yy += 36; }
-  if (what.eq || eq === it) UI.text(ctx, 'Equipped', x + 8, 432, 'small', UC.gold);
+  const it = what.it; if (!it || !baseOf(it.base)) return;
+  const cmp = replacedBy(p, it, ringKey);
+  const T = itemTipRows(p, it, { w: w - 16, touch: IN.device === 'touch' || !!G.touch, cmp, maxH: 350 });
+  drawTipRows(ctx, T, x + 8, y, w - 16, { p, it, interactive: true, gemPick });
+  if (what.pick) UI.text(ctx, cmp ? `Replaces ${fitText(itemName(cmp), 190)}` : 'Choose a ring slot', x + 8, 436, 'small', UC.gold);
+  else if (what.eq || isEquipped(p, it)) UI.text(ctx, 'Equipped', x + 8, 432, 'small', UC.gold);
   else if (what.bi != null && what.bi >= 0) {
-    UI.text(ctx, cmp ? 'vs equipped:' : 'Nothing equipped here', x + 8, 436, 'small', UC.dim);
-    UI.button(ctx, x + 8, 464, 140, 32, 'EQUIP', { id: 'btn:equip', size: 'small', fn: () => { const r = equipItem(p, it); if (r) invNote(r); else { sfx('shield'); u.sel = it; } } });
+    UI.text(ctx, cmp ? `vs equipped: ${fitText(itemName(cmp), 190)}` : 'Nothing equipped here', x + 8, 436, 'small', UC.dim);
+    UI.button(ctx, x + 8, 464, 140, 32, 'EQUIP', { id: 'btn:equip', size: 'small', fn: () => bagEquip(p, it) });
     UI.button(ctx, x + 156, 464, 140, 32, 'SELL', { id: 'btn:sell2', size: 'small', fn: () => { u.sel = it; doSell(p); } });
   }
-}
-function cmpDelta(ctx, rx, y, k, mine, cmp) {
-  if (!cmp) return;
-  const d = (mine[k] || 0) - (cmp[k] || 0); if (Math.abs(d) < 1e-3) return;
-  const good = k === 'cdr' ? d > 0 : d > 0;
-  UI.text(ctx, `(${fmtStat(k, d, true).split(' ')[0]})`, rx, y, 'small', good ? '#6ee36e' : UC.danger, 'right');
 }
 
 // ===== CHARACTER ===================================================================================================================

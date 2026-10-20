@@ -111,7 +111,7 @@ function heroLookOf(equip) {
   const gemType = g => String(g).split('_')[0];
   const part = (slot, trinket) => {
     const v = equip[slot]; if (!v) return null;
-    if (typeof v === 'string') return { family: v, tier: trinket ? 1 : 1 };           // a bare family id (tools, old callers)
+    if (typeof v === 'string') return { family: v, tier: 1 };           // a bare family id (tools, old callers)
     const b = baseOf(v.base); if (!b) return null;
     const el = v.implicit && /Dmg$/.test(v.implicit.id) ? v.implicit.id.slice(0, -3) : null;
     const o = { family: trinket ? v.base : b.variant, tier: trinket ? b.tier + 1 : b.tier, rarity: v.rarity, tempered: !!v.tempered };
@@ -132,6 +132,9 @@ function buildPlayerSprites(equip) {
   // portrait: hud.js crops 16x16 at (ox, ox); centre the face in it (head spans x 7..16, y 2..15 of the 24x34 frame)
   const pc = makeCanvas(20, 20); pc.x.drawImage(hero.front[0], -2, 0);
   out.portrait = pc.c; out.w = W; out.h = H; out.ox = HERO_PORTRAIT_OX;
+  let top = 'common';                                                                     // best rarity worn: drives the aura, light and particles
+  for (const k of HERO_SLOTS) { const v = equip[k]; if (v && typeof v !== 'string' && RARITY[v.rarity] && RARITY[v.rarity].i > RARITY[top].i) top = v.rarity; }
+  out.top = top === 'common' ? null : top;
   HERO.prewarm(hero);
   return out;
 }

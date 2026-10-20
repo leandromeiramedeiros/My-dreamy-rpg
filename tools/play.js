@@ -894,6 +894,135 @@ const PAD_STUB = () => {
   }, SYN);
   check('phone: ?phone=1 -> 256 px chunks, <= 12 resident while touring (LRU evicts, no thrash), 16 awake, one fog layer', ph.size === 256 && ph.max === 12 && ph.cap === 16 && ph.coarse && ph.maxRes <= 12 && ph.evicted > 0 && ph.thrash === 0, ph);
   await p3.close();
+  // ======================= M3 UI lane (tooltip v2, paper doll, ring rule, ICONS routing) — owned by the UI agent =======================
+  {
+    const pg = await br.newPage({ viewport: { width: 960, height: 540 } });
+    pg.on('pageerror', e => errs.push('pageerror(m3-ui): ' + e.message));
+    pg.on('console', m => { if (m.type() === 'error') errs.push('console(m3-ui): ' + m.text()); });
+    await pg.goto(`${base}/index.html?scene=play`, { waitUntil: 'load' });
+    await pg.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    if (!(await pg.evaluate(() => typeof ICONS !== 'undefined'))) await pg.addScriptTag({ path: path.join(ROOT, 'js', 'icons.js') });
+    await wait(300);
+    const m3 = (fn, arg) => pg.evaluate(fn, arg);
+    // fill the 8 slots + bag with makeTestItem items; trap the legacy mirrors (reqLvl / uid / affix.stat) and spy on ICONS.item
+    await m3(() => {
+      const p = G.player; p.level = 40; window.__legacy = 0; window.__iconArgs = [];
+      const trap = it => { for (const k of ['reqLvl', 'uid']) Object.defineProperty(it, k, { get() { window.__legacy++; return k === 'uid' ? this.id : this.req; }, configurable: true });
+        for (const a of it.affixes) Object.defineProperty(a, 'stat', { get() { window.__legacy++; return this.id; }, configurable: true }); return it; };
+      window.__trap = trap;
+      const t = o => trap(makeTestItem(o));
+      p.equip.weapon = t({ slot: 'weapon', variant: 'sword', tier: 1, rarity: 'rare', ilvl: 12, sockets: ['ruby_2', null] });
+      p.equip.head = t({ slot: 'head', variant: 'knighthelm', tier: 1, rarity: 'uncommon' });
+      p.equip.chest = t({ slot: 'chest', variant: 'warden', tier: 2, rarity: 'epic', ilvl: 16, sockets: ['diamond_2', null], tempered: true });
+      p.equip.boots = t({ slot: 'boots', variant: 'knightgreaves', tier: 1, rarity: 'rare' });
+      p.equip.ring1 = t({ slot: 'ring', rarity: 'rare', boon: 'fireBurn' });
+      p.equip.ring2 = t({ slot: 'ring', tier: 1, rarity: 'epic', ilvl: 18, boon: 'frostPower' });
+      p.equip.amulet = t({ slot: 'amulet', rarity: 'rare' });
+      p.equip.belt = t({ slot: 'belt', rarity: 'uncommon' });
+      p.bag = Array(BAG_SIZE).fill(null);
+      window.__sword = t({ slot: 'weapon', variant: 'sword', tier: 2, rarity: 'rare', ilvl: 18, sockets: ['topaz_1'] });
+      window.__ring = t({ slot: 'ring', rarity: 'legendary', tier: 2, ilvl: 30 });
+      window.__lantern = t({ unique: 'pipslantern', hist: { found: 'spire', kills: 0, bossKills: 0 } });
+      [window.__sword, window.__ring, window.__lantern, t({ unique: 'rootcrown' })].forEach(e => bagAdd(p, e));
+      recalcStats(p, true);
+      const f = ICONS.item; ICONS.item = function (b, ...r) { window.__iconArgs.push(b); return f.call(this, b, ...r); };
+      openInv('inv'); G.ui.sel = null;
+    });
+    await wait(500);
+    // -- paper doll: the 4 trinket slots at the §19.4 positions (relative to the panel), all 8 slots focusable / hit-testable
+    const doll = await m3(() => ({ rel: EQ_REL, pos: EQ_POS, keys: EQUIP_SLOTS, ids: UI.focus.list.map(r => r.id).filter(i => i.startsWith('eq:')) }));
+    check('paper doll: ring1 (24,88) ring2 (176,88) amulet (100,64) belt (100,300) from the panel origin; 8 slots registered',
+      JSON.stringify([doll.rel.ring1, doll.rel.ring2, doll.rel.amulet, doll.rel.belt]) === '[[24,88],[176,88],[100,64],[100,300]]' && doll.keys.every(k => doll.ids.includes('eq:' + k)) && doll.ids.length === 8, doll);
+    // -- tooltip rows: <= 12 lines for every kind, name in rarity colour, v2 names only (legacy mirrors never read)
+    const tip = await m3(() => {
+      const p = G.player, out = [];
+      const all = EQUIP_SLOTS.map(k => p.equip[k]).concat(p.bag.filter(Boolean));
+      for (const it of all) for (const touch of [false, true]) {
+        const T = itemTipRows(p, it, { w: 308, touch, cmp: replacedBy(p, it) });
+        out.push({ n: T.count, k: T.rows.map(r => r.k).join(','), touch, col: T.rows[0].col === rarityCol(it.rarity), name: T.rows[0].lines.join(' ') === itemName(it) || T.rows[0].lines.length > 1 });
+      }
+      return { out, legacy: window.__legacy };
+    });
+    check('tooltip v2: <= 12 lines for all 8 slots + bag items, desktop and touch', tip.out.every(o => o.n <= 12), tip.out.map(o => o.n));
+    check('tooltip v2: name first, in rarity colour; touch collapses affixes (chips) and drops family / synergy / flavour',
+      tip.out.every(o => o.k.startsWith('name,head,lv') && o.col) && tip.out.filter(o => o.touch).every(o => !/\baff\b|family|syn|flavor/.test(o.k)) && tip.out.filter(o => !o.touch).some(o => /aff/.test(o.k)), tip.out.slice(0, 4));
+    // -- compare: the Rare bag sword vs the equipped Rare sword shows deltas; the legendary trinket shows boon + rule + synergy
+    const cmpT = await m3(() => {
+      const p = G.player, T = itemTipRows(p, window.__sword, { w: 308, touch: false, cmp: replacedBy(p, window.__sword) }), L = itemTipRows(p, window.__lantern, { w: 308, touch: false, cmp: null });
+      const head = T.rows.find(r => r.k === 'head'), aff = T.rows.filter(r => r.k === 'aff');
+      return { dmgDelta: head.stats[0].d, affD: aff.map(a => +a.d.toFixed(3)), hasCmp: aff.every(a => a.hasCmp), lk: L.rows.map(r => r.k) };
+    });
+    check('tooltip v2: Rare weapon has compare deltas vs the equipped weapon; unique trinket shows boon + gold rule + synergy + footer',
+      cmpT.dmgDelta > 0 && cmpT.hasCmp && cmpT.affD.length === 2 && ['boon', 'rule', 'syn', 'flavor', 'footer'].every(k => cmpT.lk.includes(k)), cmpT);
+    // -- ICONS routing: every ICONS.item call got a BASE id (never a variant / suit id); trinkets resolved through baseOf
+    const ic = await m3(() => {
+      const bad = window.__iconArgs.filter(b => !baseOf(b) || ['sword', 'staff', 'bow', 'warden', 'dreamweave', 'stalker', 'ring', 'amulet', 'belt'].includes(b));
+      return { n: window.__iconArgs.length, bad: [...new Set(bad)], toast: (() => { const e = G.player.bag.find(x => x && x.rarity === 'rare'); const q = UI.toast({ text: itemName(e), rarity: 'rare' }); return { framed: !!q.framed, w: q.icon && q.icon.width }; })() };
+    });
+    check('icons: ICONS.item only with base ids; loot toast uses the 24 px ICONS art', ic.n > 0 && ic.bad.length === 0 && ic.toast.framed && ic.toast.w === 24, ic);
+    // -- drop labels / pickup toast use the generated v2 name
+    const drop = await m3(() => {
+      const it = makeTestItem({ slot: 'weapon', variant: 'sword', tier: 1, rarity: 'rare', ilvl: 12 }); G.drops = [];
+      spawnDrop(G.player.x + 1, G.player.y, { kind: 'item', it }); const d = G.drops[0];
+      return { name: d.name, want: itemName(it), rar: d.rar, hasPart: !!(it.name.prefix || it.name.suffix) };
+    });
+    check('drop label: the generated v2 name in rarity colour', drop.name === drop.want && drop.rar === 'rare' && drop.hasPart, drop);
+    // -- ring rule. 1) empty ring slot fills first, no prompt. 2) both full: the bag ring enters pick mode, focus on the weaker ring, confirm replaces ONLY that one
+    const ring = await m3(() => {
+      const p = G.player, r = {}; G.ui.ringPick = null;
+      const ring1 = p.equip.ring1, ring2 = p.equip.ring2, spare = window.__ring, bi = p.bag.indexOf(spare);
+      r.weaker = weakerRing(p);                                  // ring1 is Rare, ring2 Epic -> ring1
+      bagClickMenu(bi, false);
+      r.pick = G.ui.ringPick === spare; r.stillBag = p.bag.includes(spare); r.unchanged = p.equip.ring1 === ring1 && p.equip.ring2 === ring2;
+      r.focus = UI.focus.id; r.cmp = replacedBy(p, spare, null) === ring1;
+      clickEquipSlot('ring2');                                    // the player chose ring2 (the stronger one): that one is replaced
+      r.after = { ring1: p.equip.ring1 === ring1, ring2: p.equip.ring2 === spare, oldInBag: p.bag.includes(ring2), pickCleared: !G.ui.ringPick };
+      // empty slot first: clear ring2, equip another ring from the bag -> straight into ring2, no pick
+      const other = makeTestItem({ slot: 'ring', rarity: 'uncommon' }); p.equip.ring2 = null; bagAdd(p, other);
+      bagClickMenu(p.bag.indexOf(other), false);
+      r.empty = { in2: p.equip.ring2 === other, noPick: !G.ui.ringPick };
+      return r;
+    });
+    check('ring rule: empty slot fills first; both full -> pick mode (focus on the weaker ring, compare vs it), confirm replaces only the chosen ring',
+      ring.weaker === 'ring1' && ring.pick && ring.stillBag && ring.unchanged && ring.focus === 'eq:ring1' && ring.cmp && ring.after.ring1 && ring.after.ring2 && ring.after.oldInBag && ring.after.pickCleared && ring.empty.in2 && ring.empty.noPick, ring);
+    // -- mouse: real hit-test on the doll slot; pad: focus.move reaches every slot; touch: tap compares first, second tap confirms
+    await m3(() => { const p = G.player; p.equip.ring2 = makeTestItem({ slot: 'ring', rarity: 'rare' }); window.__ring2 = makeTestItem({ slot: 'ring', rarity: 'epic', ilvl: 20 }); bagAdd(p, window.__ring2); G.ui.ringPick = null; G.ui.sel = null; });
+    await wait(300);
+    const mouse = await m3(() => {
+      const p = G.player, e = window.__ring2, before = p.equip.ring1;
+      const [bx, by] = (() => { const i = p.bag.indexOf(e); return [COL2 + 10 + (i % 6) * 54 + 10, 108 + Math.floor(i / 6) * 54 + 10]; })();
+      UI.click(bx, by);                                           // mouse click on the bag ring -> pick mode
+      const pick = G.ui.ringPick === e;
+      const [rx, ry] = EQ_POS.ring1; UI.click(rx + 10, ry + 10);   // click the ring1 doll slot
+      return { pick, equipped: p.equip.ring1 === e, oldOut: !p.equip.ring1 || p.equip.ring1 !== before };
+    });
+    check('mouse: click bag ring then the ring1 doll slot replaces ring1', mouse.pick && mouse.equipped && mouse.oldOut, mouse);
+    await m3(() => { const p = G.player; window.__ring3 = makeTestItem({ slot: 'ring', rarity: 'legendary', tier: 2, ilvl: 30 }); bagAdd(p, window.__ring3); G.ui.sel = null; G.ui.ringPick = null; UI.focus.set('eq:ring1', true); });
+    await wait(250);
+    const pad = await m3(() => {
+      // every doll slot is reachable from every other with d-pad moves (BFS over UI.focus.move), and ring1 -> right goes toward ring2 / amulet
+      const ids = EQUIP_SLOTS.map(k => 'eq:' + k), edges = {};
+      for (const id of ids) { edges[id] = []; for (const d of ['up', 'down', 'left', 'right']) { UI.focus.set(id, true); const r = UI.focus.move(d); if (r && ids.includes(r.id)) edges[id].push(r.id); } }
+      const seen = new Set(['eq:ring1']), q = ['eq:ring1']; while (q.length) for (const n of edges[q.shift()]) if (!seen.has(n)) { seen.add(n); q.push(n); }
+      return { reach: seen.size, edges };
+    });
+    check('pad / keyboard focus: all 8 paper-doll slots are reachable with the d-pad', pad.reach === 8, pad);
+    const touch = await m3(() => {
+      const p = G.player, e = window.__ring3, r = {}; G.touch = true; IN.device = 'touch'; G.ui.sel = null; G.ui.ringPick = null;
+      const bi = p.bag.indexOf(e), keep1 = p.equip.ring1, keep2 = p.equip.ring2;
+      bagClickMenu(bi, false); r.first = { pick: !G.ui.ringPick, sel: G.ui.sel === e };          // first tap only shows the ring
+      bagClickMenu(bi, false); r.second = { pick: G.ui.ringPick === e };                         // second tap starts the pick
+      clickEquipSlot('ring2'); r.cand = { cand: G.ui.ringCand === 'ring2', unchanged: p.equip.ring2 === keep2 };   // tap a ring: compare only
+      clickEquipSlot('ring2'); r.done = { ring2: p.equip.ring2 === e, ring1: p.equip.ring1 === keep1 };            // tap again: replace
+      const T = itemTipRows(p, e, { w: 308, touch: true }); r.touchRows = T.rows.map(x => x.k);
+      G.touch = false; IN.device = 'kbm'; return r;
+    });
+    check('touch: tap shows the ring, second tap starts the pick, tap a ring slot compares, tap again replaces; tooltip collapsed',
+      touch.first.pick && touch.first.sel && touch.second.pick && touch.cand.cand && touch.cand.unchanged && touch.done.ring2 && touch.done.ring1 && touch.touchRows.includes('chips'), touch);
+    check('legacy mirrors (reqLvl / affix.stat / uid) were never read by the UI render, tooltip or equip paths', (await m3(() => window.__legacy)) === 0);
+    await pg.close();
+  }
+  // ======================= end M3 UI lane =======================
   check('no page errors', errs.length === 0, errs.slice(0, 5));
   await br.close(); srv.close();
   console.log(fails ? `\n${fails} check(s) failed` : '\nAll play checks passed');

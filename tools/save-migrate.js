@@ -8,11 +8,15 @@
 //                             rolled by the v3 rollers and the best of it equipped and socketed, alternates + ranks (L10)
 // and expect-v3-<name>.json is what the v3 build computed after continueGame() on that save (PROBE below, verbatim).
 // For each fixture: write it to all 3 slots, then per slot: migrate on load, equipment intact under the v4 ids, the v2 item
-// fields present, stats within 1 % of v3, quests / world / bestiary / progress preserved, every slotted skill casts, then
+// fields present, stats as v4 computes them (below), quests / world / bestiary / progress preserved, every slotted skill casts, then
 // save -> migrate is a no-op -> applySave -> save is identical; finally reload the page and check every slot again.
 // Plus makeTestItem() shapes (incl. trinkets) survive a save round trip. Screenshots: tools/shots/save-migrate/.
-// NOTE for step 2: PROBE reads the v3 names (uid, reqLvl, affix.stat) through the M3 compat mirrors so it matches the
-// expect files exactly; when the mirrors are removed, switch PROBE to id / req / affix.id and map the expect files.
+// STATS (M3 step 2, deliberate): implicits now apply in statsOf and CAPS clamp in recalcStats, so v3-equal stats are no longer
+// expected. Instead: (1) each migrated item's statsOf = its v3 stats + its base's implicit (within 1 %); (2) the loaded hero's
+// stats = a FRESH v4 recalcStats of a new hero wearing the same items (exact); (3) with the implicits stripped, that fresh v4
+// recalc is still within 1 % of the v3 hero (the migration itself changed nothing else).
+// NOTE: PROBE reads the v3 names (uid, reqLvl, affix.stat) through the M3 compat mirrors (kept in step 2: menus.js still reads
+// them); when the mirrors are removed, switch PROBE to id / req / affix.id and map the expect files.
 // Usage: node tools/save-migrate.js     (exit 1 on any failed check or page error; tools/smoke.js runs it)
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
@@ -53,9 +57,14 @@ function compare(exp, got) {
   const bad = [];
   let maxDev = 0;
   const num = (k, a, b) => { if (typeof a !== 'number') { if (!same(a, b)) bad.push(k); return; } const d = Math.abs(a - b) / Math.max(Math.abs(a), 1e-9); if (a !== 0) maxDev = Math.max(maxDev, d); if (!near(a, b)) bad.push(`${k}: ${a} -> ${b}`); };
-  for (const k of ['level', 'xp', 'maxHp', 'maxMp', 'maxSt', 'power', 'dmgBase', 'wdmg', 'bonus', 'def', 'crit', 'critDmg', 'haste', 'cdr', 'skillDmg', 'regen', 'mpRegen', 'speed', 'dust', 'potions']) num(k, exp[k], got[k]);
-  for (const k in exp.res) num('res.' + k, exp.res[k], got.res[k]);
+  // progress numbers are v3-equal; the hero's derived stats must equal a fresh v4 computation (got.fresh, exact)
+  for (const k of ['level', 'xp', 'maxSt', 'dust', 'potions']) num(k, exp[k], got[k]);
+  for (const k of ['maxHp', 'maxMp', 'power', 'dmgBase', 'wdmg', 'bonus', 'def', 'crit', 'critDmg', 'haste', 'cdr', 'skillDmg', 'regen', 'mpRegen', 'speed']) if (got[k] !== got.fresh[k]) bad.push(`fresh ${k}: ${got.fresh[k]} != loaded ${got[k]}`);
+  for (const k in got.fresh.res) if (got.res[k] !== got.fresh.res[k]) bad.push(`fresh res.${k}`);
   for (const k in exp.amp) num('amp.' + k, exp.amp[k], got.amp[k]);
+  for (const k in exp.res) num('stripped res.' + k, exp.res[k], got.stripped.res[k]);
+  // the v3 hero vs a fresh v4 recalc with the implicits stripped (got.stripped): the migration changed nothing else
+  for (const k of ['maxHp', 'maxMp', 'power', 'dmgBase', 'wdmg', 'bonus', 'def', 'crit', 'critDmg', 'haste', 'cdr', 'skillDmg', 'regen', 'mpRegen', 'speed']) num('stripped ' + k, exp[k], got.stripped[k]);
   const stats = { maxDev, bad };
   const gearExp = {}; for (const s in exp.gear) gearExp[s] = ren(exp.gear[s]);
   const eq = {};
@@ -63,8 +72,11 @@ function compare(exp, got) {
     const a = exp.equip[s], b = got.equip[s];
     if (!a || !b) { eq[s] = same(a, b); continue; }
     let ok = a.uid === b.uid && a.base === b.base && a.rarity === b.rarity && a.ilvl === b.ilvl && a.reqLvl === b.reqLvl && same(a.sockets, b.sockets) && a.unique === b.unique && same(a.affixes.slice().sort(), b.affixes.slice().sort());
-    for (const k in a.stats) if (!near(a.stats[k], b.stats[k])) ok = false;
-    if (Object.keys(a.stats).sort().join() !== Object.keys(b.stats).sort().join()) ok = false;
+    // v4 statsOf = the v3 stats + the base's implicit (IMPLICITS, passed in by the page as got.implicits)
+    const want = Object.assign({}, a.stats), im = got.implicits[a.base];
+    if (im) want[im.stat] = (want[im.stat] || 0) + im.v;
+    for (const k in want) if (!near(want[k], b.stats[k])) ok = false;
+    if (Object.keys(want).sort().join() !== Object.keys(b.stats).sort().join()) ok = false;
     eq[s] = ok;
   }
   const wskExp = {}; for (const f in exp.wsk) wskExp[ren(f)] = exp.wsk[f];
@@ -147,10 +159,17 @@ const ROUND = () => {
       const tag = `${name} slot ${n}`;
       const mig = await ev(n => { const s = selectSlot(n); return s && { v: s.version, eq: Object.keys(s.player.equip).join(), trk: ['ring1', 'ring2', 'amulet', 'belt'].map(k => s.player.equip[k]), wsk: Object.keys(s.skills.wsk || {}).join() }; }, n);
       check(`${tag}: migrates to v4 (equip gains ring1 ring2 amulet belt, empty; wsk keyed by variant)`, mig && mig.v === 4 && mig.eq === 'weapon,head,chest,boots,ring1,ring2,amulet,belt' && mig.trk.every(x => x === null) && mig.wsk.split(',').every(k => ['sword', 'staff', 'bow'].includes(k)), mig);
-      const got = await ev(src => { continueGame(G.save); return (new Function('return (' + src + ')()'))(); }, PROBE.toString());
+      const got = await ev(src => { continueGame(G.save); const r = (new Function('return (' + src + ')()'))();
+        // a fresh v4 hero wearing the same items, and the same with every implicit stripped (copies; the live hero is untouched)
+        const p = G.player, KS = ['maxHp', 'maxMp', 'power', 'dmgBase', 'wdmg', 'bonus', 'def', 'crit', 'critDmg', 'haste', 'cdr', 'skillDmg', 'regen', 'mpRegen', 'speed'];
+        const calc = strip => { const q = makePlayer(); q.level = p.level; for (const k of EQUIP_SLOTS) { const it = p.equip[k]; q.equip[k] = it ? (strip ? Object.assign(JSON.parse(JSON.stringify(it)), { implicit: null }) : it) : null; } G.player = q; recalcStats(q, true); G.player = p;
+          const o = {}; for (const k of KS) o[k] = q[k]; o.res = Object.assign({}, q.res); return o; };
+        r.fresh = calc(false); r.stripped = calc(true);
+        r.implicits = {}; for (const s of SLOTS) { const it = p.equip[s]; if (it && IMPLICITS[it.base]) r.implicits[it.base] = IMPLICITS[it.base]; }
+        return r; }, PROBE.toString());
       const c = compare(exp, got);
       check(`${tag}: equipment intact under the v4 ids (gear ${Object.values(got.gear).join('/')})`, c.gear && Object.values(c.equip).every(Boolean) && c.bag, { gear: got.gear, equip: c.equip, bag: c.bag });
-      check(`${tag}: stats recalc within 1 % of v3 (max deviation ${(c.stats.maxDev * 100).toFixed(4)} %)`, c.stats.bad.length === 0, c.stats.bad);
+      check(`${tag}: stats = a fresh v4 recalc (implicits on, CAPS); items = v3 + implicit; implicits stripped = v3 within 1 % (max ${(c.stats.maxDev * 100).toFixed(4)} %)`, c.stats.bad.length === 0, c.stats.bad);
       check(`${tag}: skills (slots, wsk ${c.wskKeys}, csk, runes, ranks, mods) preserved`, c.slots && c.wsk && c.skills, { slots: got.slots, wsk: got.wsk });
       check(`${tag}: quests, world and progress preserved (map ${got.map}, ${Object.keys(got.prog.quests || {}).length} quests, ${got.prog.chests} chests, ${got.seen} bestiary)`, c.world && c.prog && c.seen && c.playtime, { world: c.world, prog: c.prog, seen: c.seen, playtime: c.playtime });
       const v2 = await ev(V2_CHECK);
@@ -202,10 +221,14 @@ const ROUND = () => {
       const before = p.equip.ring1 && p.equip.ring2 && p.equip.amulet && p.equip.belt;
       const s = migrate(JSON.parse(JSON.stringify(saveData()))), q = makePlayer(); applySave(q, s);
       const kept = ['ring1', 'ring2', 'amulet', 'belt'].map(k => q.equip[k] && q.equip[k].id === p.equip[k].id).every(Boolean);
-      return { n: made.length, bad, equip: [r1, r2, r3, r4].join('|'), before: !!before, kept, names: made.map(itemName) };
+      // a NEW hero has the Origin starter ring (§17.1, §19.4) and it survives the save round trip with its boon live
+      const np = makePlayer(), sr = np.equip.ring1; G.player = np; const s2 = migrate(JSON.parse(JSON.stringify(saveData()))), q2 = makePlayer(); applySave(q2, s2); G.player = p;
+      const starter = { base: sr && sr.base, boon: sr && sr.boon && sr.boon.id, live: !!(np.boons && np.boons.originKnight), kept: !!(q2.equip.ring1 && q2.equip.ring1.base === 'origin_knight' && q2.boons.originKnight), flavor: !!itemFlavor(sr) };
+      return { n: made.length, bad, equip: [r1, r2, r3, r4].join('|'), before: !!before, kept, names: made.map(itemName), starter };
     });
     check(`makeTestItem: ${t.n} v2 items (gear, uniques, ring / amulet / belt) are valid, mirrors work (${t.names.slice(0, 4).join(' · ')} ...)`, t.n === 12 && t.bad.length === 0, t.bad);
     check('makeTestItem: trinkets equip into ring1 / ring2 / amulet / belt and survive a save round trip', t.equip === '|||' && t.before && t.kept, t);
+    check(`new game: the Origin starter ring (${t.starter.base}, boon ${t.starter.boon}) is worn, live, flavoured and survives a save round trip`, t.starter.base === 'origin_knight' && t.starter.boon === 'originKnight' && t.starter.live && t.starter.kept && t.starter.flavor, t.starter);
     check('makeTestItem: no page errors', errs.length === 0, errs.slice(0, 3));
     await ctx.close();
   }

@@ -718,55 +718,79 @@ function drawPortal(ctx, o, lights) {
   }
 }
 
+// ===== the hero (M3): the layered paper-doll from js/hero.js, drawn from cached canvases only ================================
+// p.spr.hero = HERO.build(look): 7 frames per view (0-1 idle, 2-5 walk, 6 attack), the held weapon canvas (grip anchored on the hand)
+// and per-frame rim layers. art.js buildPlayerSprites rebuilds it when heroSig(p.equip) changes (an equip, a tier, a gem, tempering).
+// Per frame this is: 1 drawImage for the body, 1 rotated drawImage for the weapon, <= 3 rim blits (one per glowing rarity) -
+// no pixel work. Facing: art is drawn facing right; face < 0 mirrors the whole transform and the aim angle (pi - a).
+const WEAPON_POSE = { sword: 'swing', staff: 'cast', bow: 'aim' };   // how each weapon kind is held (default: swing)
 function drawPlayer(ctx, p, lights) {
   const [vx, vy] = worldToView(p.x, p.y, p.z);
+  if (!p.spr || !p.spr.hero || p.spr.sig !== heroSig(p.equip)) p.spr = buildPlayerSprites(p.equip);
   if (p.dead) {
     ctx.globalAlpha = Math.max(0, 1 - G.deadT); const spr = p.spr.front[0];
     ctx.save(); ctx.translate(Math.round(vx), Math.round(vy)); ctx.rotate(Math.PI / 2 * Math.min(1, G.deadT * 2)); ctx.drawImage(spr, -spr.width / 2, 1 - spr.height); ctx.restore(); ctx.globalAlpha = 1; return;
   }
-  const spr = currentPlayerSprite(p);
-  const bob = p.moving ? 0 : (Math.sin(G.t * 2.5) > 0.7 ? 1 : 0);
-  const dx = Math.round(vx - spr.width / 2), dy = Math.round(vy - spr.height + 1 + bob);
-  const w = item('weapon', p.gear.weapon), o = p.spr.ox;
-  const hx = dx + (p.face > 0 ? 12.5 + o * 2 : 3.5), hy = dy + 14.5 + o;
-  const sa = Math.atan2(G.mouse.y - hy, G.mouse.x - hx);
+  const H = p.spr.hero, t = G.t, flip = p.face < 0, view = p.back ? 'back' : 'front';
+  const w = item('weapon', p.gear.weapon), pose = WEAPON_POSE[w.kind] || 'swing';
+  const atk = !!(p.swing || p.castT > 0 || p.spin > 0 || (G.mouse.down && pose === 'aim'));
+  const fi = atk ? HERO.ATTACK : p.dash ? 2 + (Math.floor(t * 18) & 3) : p.moving ? 2 + (Math.floor(p.walkT * 8) & 3) : (Math.sin(t * 2.5) > 0.3 ? 1 : 0);
+  const dx = Math.round(vx - H.w / 2), dy = Math.round(vy - H.h + 1);
+  const hand = H.hand[view][fi];
+  const hx = flip ? dx + H.w - hand.x : dx + hand.x, hy = dy + hand.y;           // hand in scene px (the mirrored hand when flipped)
+  const sa = Math.atan2(G.mouse.y - hy, G.mouse.x - hx);                           // world aim angle (0 = right)
+  let ang;                                                                         // world angle the weapon points along
+  if (pose === 'swing') {
+    ang = p.face > 0 ? -1.15 : -Math.PI + 1.15;
+    if (p.swing) { const k = 1 - Math.pow(1 - p.swing.t / p.swing.dur, 2); ang = sa + p.swing.dir * (-p.swing.arc / 2 + p.swing.arc * k); }
+    if (p.spin > 0) ang = t * 40;
+  } else if (pose === 'cast') ang = p.castT > 0 ? sa : (p.face > 0 ? -1.35 : -Math.PI + 1.35);
+  else ang = (p.castT > 0 || G.mouse.down) ? sa : (p.face > 0 ? 0.5 : Math.PI - 0.5);
+  const la = flip ? Math.PI - ang : ang;                                           // the same angle in the mirrored (right-facing) frame
   if (p.buffs.veil) ctx.globalAlpha = 0.4;
-  const drawW = () => drawWeapon(ctx, p, w, hx, hy, sa, lights);
+  if (p.spr.top && HERO.rarityFx[p.spr.top].aura) HERO.drawAura(ctx, dx, dy, H.w, H.h, p.spr.top, t);
+  ctx.save(); ctx.translate(flip ? dx + H.w : dx, dy); if (flip) ctx.scale(-1, 1);
+  const wspr = H.weapon;
+  const drawW = () => {
+    if (!wspr) return;
+    ctx.save(); ctx.translate(hand.x, hand.y); ctx.rotate(la + (H.weaponAim === 'right' ? 0 : Math.PI / 2));
+    ctx.drawImage(wspr, -H.weaponGrip.x, -H.weaponGrip.y);
+    const wr = HERO.weaponRimOf(H); if (wr) HERO.drawRim(ctx, wr, -H.weaponGrip.x, -H.weaponGrip.y, t);
+    ctx.restore();
+  };
   if (p.back) drawW();
-  ctx.drawImage(spr, dx, dy);
-  if (p.hurtT > 0 && Math.floor(p.hurtT * 30) % 2) ctx.drawImage(silOf(spr, '#ffffff'), dx, dy);
+  const frame = H[view][fi];
+  ctx.drawImage(frame, 0, 0);
+  const rims = HERO.rimsOf(H, view, fi); for (let i = 0; i < rims.length; i++) HERO.drawRim(ctx, rims[i], 0, 0, t);
+  if (p.hurtT > 0 && Math.floor(p.hurtT * 30) % 2) ctx.drawImage(silOf(frame, '#ffffff'), 0, 0);
   if (!p.back) drawW();
+  ctx.restore();
   ctx.globalAlpha = 1;
+  // lights: the weapon (swing flash, staff tip, a steady glow for T4+ weapons) and the best piece's rarity light
+  const wlen = H.weapon ? H.weaponGrip.y - H.weaponTip.y : 0, tipx = hx + Math.cos(ang) * wlen, tipy = hy + Math.sin(ang) * wlen;
+  if (pose === 'swing' && (p.swing || p.spin > 0)) lights.push({ sx: hx + Math.cos(ang) * 10 + camX - RW / 2, sy: hy + Math.sin(ang) * 10 + camY - RH / 2, r: 30, col: '#ffe9a0', a: 0.6 });
+  else if (pose === 'cast') lights.push({ sx: tipx + camX - RW / 2, sy: tipy + camY - RH / 2, r: 34 + (p.castT > 0 ? 20 : 0), col: H.weaponLight || '#7fe6ff', a: 0.85 });
+  else if (H.weaponLight) lights.push({ sx: (hx + tipx) / 2 + camX - RW / 2, sy: (hy + tipy) / 2 + camY - RH / 2, r: 18, col: H.weaponLight, a: 0.55 });
+  if (p.spr.top) {
+    const fx = HERO.rarityFx[p.spr.top];
+    if (fx.light >= 40) lights.push({ sx: vx + camX - RW / 2, sy: vy - 16 + camY - RH / 2, r: fx.light * 0.6, col: HERO.rarityColor(p.spr.top, t), a: 0.45 });
+    if (fx.rate && (p.spr.fxT || 0) !== t) {                                       // ember / mote / star particles through the game's own budgeted system
+      const dt = Math.min(0.05, t - (p.spr.fxT || t)); p.spr.fxT = t; p.spr.fxAcc = (p.spr.fxAcc || 0) + fx.rate * dt * 0.5;
+      while (p.spr.fxAcc >= 1) {
+        p.spr.fxAcc -= 1; const up = fx.kind === 'ember' || fx.kind === 'star', col = fx.kind === 'ember' ? pick2(['#ffd070', '#ffa020', '#ff6a18']) : HERO.rarityColor(p.spr.top, frand(0, 9));
+        addPart({ x: p.x + frand(-0.35, 0.35), y: p.y + frand(-0.35, 0.35), z: p.z + frand(0.4, 4.6), vx: 0, vy: 0, vz: up ? frand(0.8, 2.2) : fx.kind === 'mote' ? -frand(0.2, 0.8) : 0, life: frand(0.6, 1.2), t: 0, col, grav: 0, size: 1, glow: true });
+      }
+    }
+  }
   if (p.buffs.bulwark) {
     ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(190,215,255,${0.5 + Math.sin(G.t * 10) * 0.2})`;
-    ctx.beginPath(); ctx.ellipse(vx, vy - 11, 13, 15, 0, 0, Math.PI * 2); ctx.stroke(); ctx.globalCompositeOperation = 'source-over';
-    lights.push({ sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 11, r: 40, col: '#bfd6ff', a: 0.6 });
+    ctx.beginPath(); ctx.ellipse(vx, vy - 16, 15, 19, 0, 0, Math.PI * 2); ctx.stroke(); ctx.globalCompositeOperation = 'source-over';
+    lights.push({ sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 16, r: 40, col: '#bfd6ff', a: 0.6 });
   }
   if (p.buffs.bless || p.buffs.surge) {
     if (Math.random() < 0.5) addPart({ x: p.x + frand(-0.3, 0.3), y: p.y + frand(-0.3, 0.3), z: p.z, vx: 0, vy: 0, vz: frand(2, 3), life: 0.6, t: 0, col: p.buffs.bless ? '#ffe9a0' : '#c7a8ff', grav: 0, size: 1, glow: true });
   }
   if (p.buffs.mend && Math.random() < 0.3) addPart({ x: p.x + frand(-0.3, 0.3), y: p.y + frand(-0.3, 0.3), z: p.z + 1, vx: 0, vy: 0, vz: 1.5, life: 0.7, t: 0, col: '#8fffa8', grav: 0, size: 1, glow: true });
-}
-
-function drawWeapon(ctx, p, w, hx, hy, sa, lights) {
-  ctx.save(); ctx.translate(Math.round(hx), Math.round(hy));
-  if (w.kind === 'sword') {
-    let ang = p.face > 0 ? -1.15 : -Math.PI + 1.15;
-    if (p.swing) { const k = 1 - Math.pow(1 - p.swing.t / p.swing.dur, 2); ang = sa + p.swing.dir * (-p.swing.arc / 2 + p.swing.arc * k); }
-    if (p.spin > 0) ang = G.t * 40;
-    ctx.rotate(ang); ctx.drawImage(ART.weapons.sword, -2, -2);
-    if (p.swing || p.spin > 0) lights.push({ sx: hx + Math.cos(ang) * 10 + camX - RW / 2, sy: hy + Math.sin(ang) * 10 + camY - RH / 2, r: 30, col: '#ffe9a0', a: 0.6 });
-  } else if (w.kind === 'staff') {
-    const ang = p.castT > 0 ? sa : (p.face > 0 ? -1.35 : -Math.PI + 1.35);
-    ctx.rotate(ang); ctx.drawImage(ART.weapons.staff, -6, -2);
-    const tx = hx + Math.cos(ang) * 12, ty = hy + Math.sin(ang) * 12;
-    lights.push({ sx: tx + camX - RW / 2, sy: ty + camY - RH / 2, r: 34 + (p.castT > 0 ? 20 : 0), col: '#7fe6ff', a: 0.85 });
-  } else {
-    const ang = (p.castT > 0 || G.mouse.down) ? sa : (p.face > 0 ? 0.5 : Math.PI - 0.5);
-    ctx.rotate(ang); ctx.drawImage(ART.weapons.bow, -2, -9);
-    if (p.castT > 0) { ctx.drawImage(ART.weapons.arrow, -1, -1); }
-  }
-  ctx.restore();
 }
 
 function drawEnemy(ctx, e, lights) {
