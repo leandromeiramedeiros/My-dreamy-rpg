@@ -343,7 +343,7 @@ const SFX_CAPTIONS = {
   rx_detonate: '[detonate reaction]', codex: '[codex entry]',
   // stingers and loot
   levelup: '[level up]', victory: '[victory]', loot: '[loot]', pickup: '[item picked up]', chest: '[chest opened]',
-  drop1: '[item drop]', drop2: '[item drop]', drop3: '[rare drop]', drop4: '[epic drop]', drop5: '[legendary drop]',
+  drop1: '[item drop]', drop2: '[rare drop]', drop3: '[epic drop]', drop4: '[legendary drop]', drop5: '[mythic drop]',
   legendary_choir: '[legendary drop]', legendary_stinger: '[legendary drop]', mythic_swell: '[mythic drop]',
   // enemies
   en_beast_growl: '[beast growl]', en_beast_bark: '[beast lunge]', en_armour_scrape: '[armoured enemy]',

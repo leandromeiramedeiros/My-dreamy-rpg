@@ -8,7 +8,45 @@
 // id shares its suffix: lever_r2 -> gate_r2); levers also flip when a trigger opens their gate. keydoor opens on
 // Interact while the hero holds its key (hasKey, from a loot card's item: 'key_*'). fishspot { pool } is a visible
 // stub with an Interact prompt (fishing lands later). Object x / y may be fractional for every kind (house cells floor).
+//
+// ===== BIG MAPS (DESIGN §25): the contract the generator / level designer emits =================================
+// A zone is ONE map record split into SECTIONS that share the grid, separated by 3-tile VOID GUTTERS.
+//   tiles   'v' = gutter drawn as a CLIFF (a chasm under the land lip), 'k' = gutter drawn as DARKNESS (underground).
+//           Both are impassable and count as void for walking, edges, waterfalls and projectiles; only the
+//           raster and the minimap draw them. '.' stays plain void (sky).
+//   sections: [{ id, name, kind: 'outer' | 'under' | 'vault' | 'arena', x, y, w, h  (or rects: [[x, y, w, h], ...]),
+//               ambient?: '#hex' (lightmap fill, replaces theme.ambient), dark?: 0..1 (darkness module: the ambient is
+//               mixed toward black by `dark`, the hero carries a lantern; place lantern / crystal / mushroom objects
+//               for light), under?: true (kind 'under' implies it: darkened on the full map until discovered) }]
+//           Later rects win. Tiles in no rect belong to the implicit section { id: 'main' }. sectionAt(m, x, y).
+//   anchors: [{ id, x, y }]  named arrival points. Any object with an `id` (warpdoor, shrine, lever ...) is also an
+//           anchor. Resolution order: warpdoor ids -> anchors -> shrine ids -> other object ids.
+//   objects { t: 'warpdoor', id, x, y, to: { x, y } | '<anchorId>', key?: 'key_*', label? }  Interact = a 0.4 s fade
+//           warp inside the same map (no load, trigger state kept). Keyed doors stay locked until the hero holds the
+//           key (loot card item: 'key_*'); the unlock persists in G.prog.gates['map:id'].
+//           { t: 'shrine', id?, name?, x, y }  shrine id defaults to 'shrine_<x>_<y>'; discovered within 3 tiles;
+//           shrine-to-shrine warp from the full-map screen (M / D-pad down) while standing at a discovered shrine,
+//           only while no enemy is awake (game.js shrineWarp).
+//           { t: 'gate', id, open: true, ... }  an ARENA gate that starts open; the trigger action closeGate shuts it
+//           for the fight (never persisted), so a respawn reopens it; openGate (fight won) opens it for good.
+//   triggers  actions { type: 'warp', to: { x, y } | '<anchorId>' } · { type: 'closeGate', id } ·
+//           { type: 'arena', id, gate?, x, y, r }  starts an inline arena fight (closes `gate`, tags spawns, snapshots
+//           pillar tiles inside r). Dying resets it: gate reopens, adds go, pillars return (game.js triggers header).
+// Runtime (game, not editor): the ground is a CHUNKED raster (CHUNK below): 512 px chunks (256 on phones), at most 24
+// resident (12 on phones) across all maps, LRU-evicted; built in row bands from render.js groundTick() by priority
+// (visible-missing first, nearest the camera). Only the chunk under the camera is built synchronously (behind the
+// fade / loading screen); a 1/4-res preview covers chunks still in the queue. Columns (elevated tiles) are rastered
+// with their chunk and freed with it. m.ground exists only in the editor (EDITOR_MODE: one full raster).
+// PHONE = pointer: coarse, or ?phone=1 / ?phone=0 to force (engine-check's phone pass).
+// SPATIAL GRID (8x8-tile buckets): gridQuery(m, 'objs' | 'cols' | 'water', x0, y0, x1, y1, out) · nearColliders(m, x, y,
+// r, out) · lightsIn(m, sx0, sy0, sx1, sy1, out) (screen-space 256 px cells). Rebuilt lazily when the arrays change.
 // ---------------------------------------------------------------------------
+const PHONE = (() => {
+  try { const q = new URLSearchParams(location.search).get('phone'); if (q != null) return q !== '0'; } catch (e) { /* no location */ }
+  return !!(typeof window !== 'undefined' && window.matchMedia && matchMedia('(pointer: coarse)').matches);
+})();
+const CHUNK = { size: PHONE ? 256 : 512, max: PHONE ? 12 : 24, cache: new Map(), jobs: new Map(), frame: 0, built: 0, evicted: 0 };
+const GRID_B = 8;
 const THEMES = {
   vale: {
     seed: 11,
