@@ -176,6 +176,13 @@ function main() {
     }
   }
   for (const sk of CHAR_SKILLS || []) if (!skillIds.has(sk)) fail(F.data, 'character skill', sk, 'SKILLS entry');
+  // Every skill needs an aim block (docs/HUD.md, "Touch v2", "Aiming") with a known shape and a numeric range.
+  const AIM_SHAPES = new Set(['cone', 'circle', 'line', 'proj', 'self', 'dash']);
+  for (const [id, sk] of Object.entries(SKILLS || {})) {
+    if (!sk.aim || typeof sk.aim !== 'object') fail(F.data, 'aim', id, 'missing aim block');
+    else if (!AIM_SHAPES.has(sk.aim.shape)) fail(F.data, 'aim', id, `invalid shape "${sk.aim.shape}"`);
+    else if (typeof sk.aim.range !== 'number' || !(sk.aim.range >= 0)) fail(F.data, 'aim', id, `invalid range "${sk.aim.range}"`);
+  }
   for (const { id, u, file } of uniqueList) {
     for (const sk of [].concat(u.skill || [], u.skills || [])) if (!skillIds.has(sk)) fail(file, 'skill', id, sk);
   }
