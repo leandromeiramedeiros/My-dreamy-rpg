@@ -209,7 +209,7 @@ class Bot {
       this.prevPot = s.p.pot;
       if (now - this.lastNovel > 60000) { const f = await this.shot('deadtime'); this.find('minor', 'Dead time: >60 s with no new trigger/objective/XP/kill/loot event', { map: s.map, pos: [s.p.x, s.p.y], obj: s.obj, sinceMs: now - this.lastNovel }, f); this.lastNovel = now; }
       // new warnings
-      if (s.warn && s.warn.t !== this.lastWarnT) { this.lastWarnT = s.warn.t; this.out.warns.push({ at: +this.el(), boss: s.warn.boss, move: s.warn.move, type: s.warn.type, wind: s.warn.wind, open: s.warn.open }); this.warnJustNow = { t: Date.now(), w: s.warn }; }
+      if (s.warn && s.warn.t !== this.lastWarnT) { this.lastWarnT = s.warn.t; this.out.warns.push({ gt: s.warn.t, at: +this.el(), boss: s.warn.boss, move: s.warn.move, type: s.warn.type, wind: s.warn.wind, open: s.warn.open }); this.warnJustNow = { t: Date.now(), w: s.warn }; }
       // drops overlapping
       const D = s.drops; let ov = 0; for (let i = 0; i < D.length; i++) for (let j = i + 1; j < D.length; j++) if (Math.hypot(D[i].x - D[j].x, D[i].y - D[j].y) < 0.3) ov++;
       if (ov && !this.reportedOverlap) { this.reportedOverlap = true; const f = await this.shot('loot-overlap'); this.find('polish', 'Loot drops stack on top of each other (<0.3 tiles apart)', { pairs: ov, n: D.length, names: D.map(d => d.name) }, f); }
@@ -265,10 +265,20 @@ class Bot {
     if (s.fadeDir) { await this.setMove(0, 0); await sleep(80); return true; }
     // potion
     if (p.hp / p.maxHp < 0.35 && p.pot > 0 && Date.now() - this.lastPot > 1100) { this.lastPot = Date.now(); await this.drv.potion(); this.log('drink potion', { hp: p.hp, max: p.maxHp, pot: p.pot, map: s.map }); }
+    // QA run 5: dodge ON the boss warning (G.lastWarn): the hit lands ~wind s after warn.t, so Shift ~0.2 s before that, sidestepping lines/cones and leaving circles
+    if (s.boss && s.warn && s.warn.boss === s.boss.type && s.warn.wind > 0 && ['line', 'circle', 'cone'].includes(s.warn.type) && !p.dash && p.st >= 20 && Date.now() - this.lastDodge > 650) {
+      const age = s.t - s.warn.t, bd = Math.hypot(p.x - s.boss.x, p.y - s.boss.y);
+      if (age >= s.warn.wind - 0.42 && age <= s.warn.wind + 0.05 && bd < 9 && this.dowT !== s.warn.t) { this.dowT = s.warn.t;   // once per warning, widened window (run 5: only 5 dodges fired, poll tick ~100 ms)
+        let dx = p.x - s.boss.x, dy = p.y - s.boss.y; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+        if (s.warn.type !== 'circle') { const tl = s.tele.find(f => f.kind === 'line' || f.kind === 'cone'); const ang = tl ? tl.ang : Math.atan2(-dy, -dx); const cr = (p.x - (tl ? tl.x : s.boss.x)) * Math.sin(ang) - (p.y - (tl ? tl.y : s.boss.y)) * Math.cos(ang), sg = cr >= 0 ? 1 : -1; dx = -Math.sin(ang) * sg; dy = Math.cos(ang) * sg; }
+        const [sx, sy] = Bot.scr(dx, dy); await this.drv.attack(false); await this.setMove(sx, sy); await sleep(35);
+        this.lastDodge = Date.now(); await this.drv.dodge(sx, sy); this.out.dodgeOnWarn = (this.out.dodgeOnWarn || 0) + 1; this.log('dodge on warn', { move: s.warn.move, type: s.warn.type, age: +age.toFixed(2) }); return true;
+      }
+    }
     // telegraph avoidance
     if (s.covered || s.tele.length) { if (await this.avoidTele(s)) return true; }
     // combat
-    const hostile = s.en.filter(e => !e.dummy && !e.asleep && e.spawnT < 0.5);
+    const hostile = s.en.filter(e => !e.dummy && (g && g.wake ? true : !e.asleep) && e.spawnT < 0.5);   // g.wake: also attack sleepers (Fox Warrens)
     const dummyGoal = g && g.dummies;
     const engage = hostile.filter(e => Math.hypot(e.x - p.x, e.y - p.y) < (g && g.engageR || 10) || e.boss);
     if (engage.length || (dummyGoal && s.en.some(e => e.dummy))) return await this.fight(s, engage, g);
@@ -467,7 +477,7 @@ class PadDriver {
   async closeMap() { await this.tap(1, 80); }
   async openMap() { await this.tap(13, 80); }
   async respawn() { await this.tap(0, 80); }
-  async title() { await this.tap(0, 90); await sleep(800); }
+  async title() { await this.tap(0, 90); await sleep(500); await this.tap(13, 90); await sleep(300); await this.tap(0, 90); await sleep(800); }   // QA run 4: A alone on the default Slot-2 focus never starts the game; D-pad down + A does (see dbg-padtitle.js)
   async reset() { this.L = [0, 0]; this.R = [0, 0]; await this.axes(); await this.attack(false); }
 }
 

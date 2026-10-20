@@ -1,0 +1,1233 @@
+{
+ "name": "pad",
+ "maps": {
+  "vale": {
+   "enters": 1,
+   "ms": 113895,
+   "deaths": 0,
+   "potions": 0,
+   "kills": 0,
+   "lvlIn": 1,
+   "dmgTaken": 0,
+   "stuck": 0
+  }
+ },
+ "deaths": [],
+ "bosses": [],
+ "events": [
+  {
+   "at": 0.1,
+   "msg": "enter map vale",
+   "lvl": 1,
+   "hp": 760
+  },
+  {
+   "at": 0.3,
+   "msg": "title: New Dream via pad"
+  },
+  {
+   "at": 2.3,
+   "msg": "MARK vale-start",
+   "lvl": 1,
+   "deaths": 0
+  },
+  {
+   "at": 5.1,
+   "msg": "goal: dummies"
+  },
+  {
+   "at": 16.2,
+   "msg": "goal dummies: ok",
+   "sec": "11.2"
+  },
+  {
+   "at": 17,
+   "msg": "goal: start shrine"
+  },
+  {
+   "at": 19.9,
+   "msg": "goal start shrine: ok",
+   "sec": "2.9"
+  },
+  {
+   "at": 19.9,
+   "msg": "goal: yard_teach"
+  },
+  {
+   "at": 19.9,
+   "msg": "goal yard_teach: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 19.9,
+   "msg": "goal: elder plaza"
+  },
+  {
+   "at": 21.8,
+   "msg": "goal elder plaza: ok",
+   "sec": "1.8"
+  },
+  {
+   "at": 21.8,
+   "msg": "goal: read elder stone"
+  },
+  {
+   "at": 22.8,
+   "msg": "goal read elder stone: ok",
+   "sec": "1.1"
+  },
+  {
+   "at": 24.2,
+   "msg": "goal: tutorial chest (west of glade)"
+  },
+  {
+   "at": 28.8,
+   "msg": "goal tutorial chest (west of glade): ok",
+   "sec": "4.5"
+  },
+  {
+   "at": 29,
+   "msg": "FINDING[polish] Loot drops stack on top of each other (<0.3 tiles apart)",
+   "detail": {
+    "pairs": 1,
+    "n": 3,
+    "names": [
+     "Willow Wand",
+     "Iron Cap",
+     "Chipped Ruby"
+    ]
+   }
+  },
+  {
+   "at": 30.4,
+   "msg": "goal: pick up Chipped Ruby"
+  },
+  {
+   "at": 30.7,
+   "msg": "goal pick up Chipped Ruby: ok",
+   "sec": "0.3"
+  },
+  {
+   "at": 30.7,
+   "msg": "goal: pick up Willow Wand"
+  },
+  {
+   "at": 31,
+   "msg": "goal pick up Willow Wand: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 37.6,
+   "msg": "goal: lantern (far NW)"
+  },
+  {
+   "at": 51.4,
+   "msg": "goal lantern (far NW): ok",
+   "sec": "13.8"
+  },
+  {
+   "at": 53.2,
+   "msg": "goal: gem cache"
+  },
+  {
+   "at": 53.5,
+   "msg": "goal gem cache: ok",
+   "sec": "0.3"
+  },
+  {
+   "at": 55.1,
+   "msg": "goal: pick up Chipped Topaz"
+  },
+  {
+   "at": 55.6,
+   "msg": "goal pick up Chipped Topaz: ok",
+   "sec": "0.5"
+  },
+  {
+   "at": 55.6,
+   "msg": "goal: pick up Linen Robe"
+  },
+  {
+   "at": 55.9,
+   "msg": "goal pick up Linen Robe: ok",
+   "sec": "0.4"
+  },
+  {
+   "at": 55.9,
+   "msg": "goal: return lantern"
+  },
+  {
+   "at": 66.4,
+   "msg": "goal return lantern: ok",
+   "sec": "10.5"
+  },
+  {
+   "at": 68,
+   "msg": "goal: pick up Rusty Blade"
+  },
+  {
+   "at": 68.4,
+   "msg": "goal pick up Rusty Blade: ok",
+   "sec": "0.5"
+  },
+  {
+   "at": 68.5,
+   "msg": "goal: pick up Chipped Topaz"
+  },
+  {
+   "at": 69,
+   "msg": "goal pick up Chipped Topaz: ok",
+   "sec": "0.6"
+  },
+  {
+   "at": 69.1,
+   "msg": "objective after lantern return",
+   "obj": "Return the lantern to the Elder Stone.",
+   "ambush": false
+  },
+  {
+   "at": 69.1,
+   "msg": "goal: garden ambush"
+  },
+  {
+   "at": 74,
+   "msg": "goal garden ambush: ok",
+   "sec": "5.0"
+  },
+  {
+   "at": 74.2,
+   "msg": "goal: garden clear"
+  },
+  {
+   "at": 88,
+   "msg": "goal garden clear: ok",
+   "sec": "13.8"
+  },
+  {
+   "at": 92.2,
+   "msg": "goal: pick up Chipped Diamond"
+  },
+  {
+   "at": 92.5,
+   "msg": "goal pick up Chipped Diamond: ok",
+   "sec": "0.3"
+  },
+  {
+   "at": 100.6,
+   "msg": "after ambush",
+   "obj": "Take the rift south into the Misty Pinewood.",
+   "pine": true
+  },
+  {
+   "at": 100.6,
+   "msg": "MARK vale-done",
+   "lvl": 2,
+   "deaths": 0
+  },
+  {
+   "at": 100.6,
+   "msg": "goal: terrace shrine"
+  },
+  {
+   "at": 110.7,
+   "msg": "goal terrace shrine: ok",
+   "sec": "10.1"
+  },
+  {
+   "at": 112.1,
+   "msg": "full map",
+   "mode": "shrine",
+   "targets": [
+    "shrine_start"
+   ]
+  },
+  {
+   "at": [
+    32.78,
+    54.98
+   ],
+   "msg": "shrine warp",
+   "moved": 34.7
+  }
+ ],
+ "findings": [
+  {
+   "at": 29,
+   "sev": "polish",
+   "title": "Loot drops stack on top of each other (<0.3 tiles apart)",
+   "detail": {
+    "pairs": 1,
+    "n": 3,
+    "names": [
+     "Willow Wand",
+     "Iron Cap",
+     "Chipped Ruby"
+    ]
+   },
+   "shot": "tools/qa/shots/pad-005-loot-overlap.png",
+   "map": "vale"
+  }
+ ],
+ "errors": [],
+ "potions": {},
+ "shots": [
+  {
+   "at": 0.3,
+   "tag": "title",
+   "file": "tools/qa/shots/pad-001-title.png",
+   "map": "vale"
+  },
+  {
+   "at": 5.1,
+   "tag": "vale-wake",
+   "file": "tools/qa/shots/pad-002-vale-wake.png",
+   "map": "vale"
+  },
+  {
+   "at": 17,
+   "tag": "vale-dummies",
+   "file": "tools/qa/shots/pad-003-vale-dummies.png",
+   "map": "vale"
+  },
+  {
+   "at": 24.2,
+   "tag": "vale-elder",
+   "file": "tools/qa/shots/pad-004-vale-elder.png",
+   "map": "vale"
+  },
+  {
+   "at": 29,
+   "tag": "loot-overlap",
+   "file": "tools/qa/shots/pad-005-loot-overlap.png",
+   "map": "vale"
+  },
+  {
+   "at": 31.9,
+   "tag": "bag-vale",
+   "file": "tools/qa/shots/pad-006-bag-vale.png",
+   "map": "vale"
+  },
+  {
+   "at": 34.7,
+   "tag": "menu-bag-pad",
+   "file": "tools/qa/shots/pad-007-menu-bag-pad.png",
+   "map": "vale"
+  },
+  {
+   "at": 35.4,
+   "tag": "menu-pad-tab0",
+   "file": "tools/qa/shots/pad-008-menu-pad-tab0.png",
+   "map": "vale"
+  },
+  {
+   "at": 36.2,
+   "tag": "menu-pad-tab1",
+   "file": "tools/qa/shots/pad-009-menu-pad-tab1.png",
+   "map": "vale"
+  },
+  {
+   "at": 37,
+   "tag": "menu-pad-tab2",
+   "file": "tools/qa/shots/pad-010-menu-pad-tab2.png",
+   "map": "vale"
+  },
+  {
+   "at": 51.6,
+   "tag": "vale-lantern",
+   "file": "tools/qa/shots/pad-011-vale-lantern.png",
+   "map": "vale"
+  },
+  {
+   "at": 74.2,
+   "tag": "vale-ambush",
+   "file": "tools/qa/shots/pad-012-vale-ambush.png",
+   "map": "vale"
+  },
+  {
+   "at": 90.7,
+   "tag": "vale-rift-open",
+   "file": "tools/qa/shots/pad-013-vale-rift-open.png",
+   "map": "vale"
+  },
+  {
+   "at": 93.5,
+   "tag": "bag-vale2",
+   "file": "tools/qa/shots/pad-014-bag-vale2.png",
+   "map": "vale"
+  },
+  {
+   "at": 112.1,
+   "tag": "fullmap-terrace",
+   "file": "tools/qa/shots/pad-015-fullmap-terrace.png",
+   "map": "vale"
+  },
+  {
+   "at": 113.9,
+   "tag": "after-warp-vale",
+   "file": "tools/qa/shots/pad-016-after-warp-vale.png",
+   "map": "vale"
+  }
+ ],
+ "dead": [],
+ "stuck": [],
+ "fps": {
+  "vale": {
+   "frames": 6422,
+   "sumMs": 113926.29999999823,
+   "p95s": [
+    {
+     "p95": 33.29999999999927,
+     "max": 166.69999999999982
+    }
+   ]
+  }
+ },
+ "talks": [],
+ "warns": [],
+ "damage": [],
+ "started": "2026-10-20T04:54:42.355Z",
+ "lite": false,
+ "pev": [
+  {
+   "at": 2.3,
+   "k": "action",
+   "gt": 1.98,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_banner"
+  },
+  {
+   "at": 2.3,
+   "k": "talk",
+   "gt": 1.98,
+   "map": "vale",
+   "id": "vale_banner",
+   "first": "Whispering Vale"
+  },
+  {
+   "at": 2.3,
+   "k": "action",
+   "gt": 1.98,
+   "map": "vale",
+   "type": "spawn",
+   "id": "dummy"
+  },
+  {
+   "at": 2.3,
+   "k": "action",
+   "gt": 1.98,
+   "map": "vale",
+   "type": "spawn",
+   "id": "dummy"
+  },
+  {
+   "at": 2.3,
+   "k": "action",
+   "gt": 1.98,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_wake"
+  },
+  {
+   "at": 2.3,
+   "k": "talk",
+   "gt": 1.98,
+   "map": "vale",
+   "id": "vale_wake",
+   "first": "Up. You were sleeping like you meant it."
+  },
+  {
+   "at": 2.3,
+   "k": "action",
+   "gt": 1.98,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 2.3,
+   "k": "talk",
+   "gt": 1.98,
+   "map": "vale",
+   "id": null,
+   "first": "Training dummies are south-east. Hit one."
+  },
+  {
+   "at": 2.3,
+   "k": "action",
+   "gt": 1.98,
+   "map": "vale",
+   "type": "objective",
+   "text": "Hit the training dummies in the yard."
+  },
+  {
+   "at": 7.5,
+   "k": "action",
+   "gt": 7.43,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 7.5,
+   "k": "talk",
+   "gt": 7.43,
+   "map": "vale",
+   "id": null,
+   "first": "Swing. Then dodge. Then try your Q skill."
+  },
+  {
+   "at": 7.5,
+   "k": "action",
+   "gt": 7.43,
+   "map": "vale",
+   "type": "objective",
+   "text": "Follow the path north to the Elder Plaza."
+  },
+  {
+   "at": 19.9,
+   "k": "action",
+   "gt": 20.12,
+   "map": "vale",
+   "type": "checkpoint",
+   "text": "Checkpoint: Whispering Vale"
+  },
+  {
+   "at": 19.9,
+   "k": "action",
+   "gt": 20.12,
+   "map": "vale",
+   "type": "heal"
+  },
+  {
+   "at": 24.3,
+   "k": "action",
+   "gt": 22.17,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_elder"
+  },
+  {
+   "at": 24.3,
+   "k": "talk",
+   "gt": 22.17,
+   "map": "vale",
+   "id": "vale_elder",
+   "first": "The Stone knows her. The Stone does not say."
+  },
+  {
+   "at": 24.3,
+   "k": "action",
+   "gt": 22.17,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 24.3,
+   "k": "talk",
+   "gt": 22.17,
+   "map": "vale",
+   "id": null,
+   "first": "The Stone lost a light. Past the cottage, a path ends."
+  },
+  {
+   "at": 24.3,
+   "k": "action",
+   "gt": 22.17,
+   "map": "vale",
+   "type": "quest",
+   "id": "vale_lantern"
+  },
+  {
+   "at": 24.3,
+   "k": "action",
+   "gt": 22.17,
+   "map": "vale",
+   "type": "objective",
+   "text": "Open the chest west of the glade. Then find the Stone's lantern."
+  },
+  {
+   "at": 27.9,
+   "k": "action",
+   "gt": 28.37,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 27.9,
+   "k": "talk",
+   "gt": 28.37,
+   "map": "vale",
+   "id": null,
+   "first": "A chest! Interact to open it."
+  },
+  {
+   "at": 29.2,
+   "k": "loot",
+   "gt": 28.7,
+   "map": "vale",
+   "n": 3,
+   "kinds": [
+    "item:weapon/uncommon",
+    "item:head/uncommon",
+    "gem"
+   ]
+  },
+  {
+   "at": 37.7,
+   "k": "action",
+   "gt": 37.72,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_chest"
+  },
+  {
+   "at": 37.7,
+   "k": "talk",
+   "gt": 37.72,
+   "map": "vale",
+   "id": "vale_chest",
+   "first": "That glow? Keep it. Gear remembers you."
+  },
+  {
+   "at": 37.7,
+   "k": "action",
+   "gt": 37.72,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 37.7,
+   "k": "talk",
+   "gt": 37.72,
+   "map": "vale",
+   "id": null,
+   "first": "Open your bag and equip it."
+  },
+  {
+   "at": 51.3,
+   "k": "action",
+   "gt": 51.82,
+   "map": "vale",
+   "type": "message",
+   "text": "The Stone's lantern, still warm."
+  },
+  {
+   "at": 51.3,
+   "k": "action",
+   "gt": 51.82,
+   "map": "vale",
+   "type": "quest",
+   "id": "vale_lantern"
+  },
+  {
+   "at": 51.3,
+   "k": "action",
+   "gt": 51.82,
+   "map": "vale",
+   "type": "objective",
+   "text": "Return the lantern to the Elder Stone."
+  },
+  {
+   "at": 53.9,
+   "k": "action",
+   "gt": 53.88,
+   "map": "vale",
+   "type": "message",
+   "text": "A hidden gem cache!"
+  },
+  {
+   "at": 53.9,
+   "k": "action",
+   "gt": 53.88,
+   "map": "vale",
+   "type": "loot"
+  },
+  {
+   "at": 53.9,
+   "k": "loot",
+   "gt": 53.88,
+   "map": "vale",
+   "n": 2,
+   "kinds": [
+    "item:chest/uncommon",
+    "gem"
+   ]
+  },
+  {
+   "at": 61.3,
+   "k": "action",
+   "gt": 60.57,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_tablet"
+  },
+  {
+   "at": 61.3,
+   "k": "talk",
+   "gt": 60.57,
+   "map": "vale",
+   "id": "vale_tablet",
+   "first": "Four Wardens. One would not wake."
+  },
+  {
+   "at": 67.7,
+   "k": "action",
+   "gt": 66.9,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 67.7,
+   "k": "talk",
+   "gt": 66.9,
+   "map": "vale",
+   "id": null,
+   "first": "The Stone is lit. The Stone remembers kindness."
+  },
+  {
+   "at": 67.7,
+   "k": "action",
+   "gt": 66.9,
+   "map": "vale",
+   "type": "quest",
+   "id": "vale_lantern"
+  },
+  {
+   "at": 67.7,
+   "k": "action",
+   "gt": 66.9,
+   "map": "vale",
+   "type": "loot"
+  },
+  {
+   "at": 67.7,
+   "k": "loot",
+   "gt": 66.9,
+   "map": "vale",
+   "n": 2,
+   "kinds": [
+    "item:weapon/rare",
+    "gem"
+   ]
+  },
+  {
+   "at": 67.7,
+   "k": "action",
+   "gt": 66.9,
+   "map": "vale",
+   "type": "message",
+   "text": "Reward: a gem and a Socket Rune."
+  },
+  {
+   "at": 75.1,
+   "k": "action",
+   "gt": 74.45,
+   "map": "vale",
+   "type": "banner",
+   "text": "Gloom in the garden"
+  },
+  {
+   "at": 75.1,
+   "k": "action",
+   "gt": 74.45,
+   "map": "vale",
+   "type": "spawn",
+   "id": "gloomslime"
+  },
+  {
+   "at": 75.1,
+   "k": "action",
+   "gt": 74.45,
+   "map": "vale",
+   "type": "spawn",
+   "id": "gloomslime"
+  },
+  {
+   "at": 75.1,
+   "k": "action",
+   "gt": 74.45,
+   "map": "vale",
+   "type": "spawn",
+   "id": "gloomslime"
+  },
+  {
+   "at": 77.8,
+   "k": "kill",
+   "gt": 77.83,
+   "map": "vale",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 77.8,
+   "k": "loot",
+   "gt": 77.83,
+   "map": "vale",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 79,
+   "k": "kill",
+   "gt": 78.55,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 79,
+   "k": "kill",
+   "gt": 79.35,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 82.7,
+   "k": "kill",
+   "gt": 82.57,
+   "map": "vale",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 82.7,
+   "k": "loot",
+   "gt": 82.57,
+   "map": "vale",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 82.7,
+   "k": "kill",
+   "gt": 83.15,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 85.1,
+   "k": "kill",
+   "gt": 85.52,
+   "map": "vale",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 85.1,
+   "k": "loot",
+   "gt": 85.52,
+   "map": "vale",
+   "n": 1,
+   "kinds": [
+    "gem"
+   ]
+  },
+  {
+   "at": 86.5,
+   "k": "kill",
+   "gt": 85.83,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 86.5,
+   "k": "kill",
+   "gt": 86.05,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 86.5,
+   "k": "kill",
+   "gt": 86.25,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 86.5,
+   "k": "action",
+   "gt": 86.25,
+   "map": "vale",
+   "type": "message",
+   "text": "The garden is quiet. Something hums in the south."
+  },
+  {
+   "at": 86.5,
+   "k": "action",
+   "gt": 86.25,
+   "map": "vale",
+   "type": "heal"
+  },
+  {
+   "at": 86.5,
+   "k": "action",
+   "gt": 86.25,
+   "map": "vale",
+   "type": "loot"
+  },
+  {
+   "at": 86.5,
+   "k": "loot",
+   "gt": 86.25,
+   "map": "vale",
+   "n": 1,
+   "kinds": [
+    "item:boots/rare"
+   ]
+  },
+  {
+   "at": 86.5,
+   "k": "action",
+   "gt": 86.25,
+   "map": "vale",
+   "type": "open_portal"
+  },
+  {
+   "at": 86.5,
+   "k": "action",
+   "gt": 86.25,
+   "map": "vale",
+   "type": "sound"
+  },
+  {
+   "at": 86.5,
+   "k": "action",
+   "gt": 86.25,
+   "map": "vale",
+   "type": "banner",
+   "text": "The Pinewood rift opens"
+  },
+  {
+   "at": 86.5,
+   "k": "action",
+   "gt": 86.25,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_rift"
+  },
+  {
+   "at": 86.5,
+   "k": "talk",
+   "gt": 86.25,
+   "map": "vale",
+   "id": "vale_rift",
+   "first": "The Pinewood screams. Let's be rude back."
+  },
+  {
+   "at": 86.5,
+   "k": "action",
+   "gt": 86.25,
+   "map": "vale",
+   "type": "quest",
+   "id": "shard_root"
+  },
+  {
+   "at": 86.5,
+   "k": "action",
+   "gt": 86.25,
+   "map": "vale",
+   "type": "objective",
+   "text": "Take the rift south into the Misty Pinewood."
+  }
+ ],
+ "marks": [
+  {
+   "at": 2.3,
+   "name": "vale-start",
+   "map": "vale",
+   "sec": "hub",
+   "lvl": 1,
+   "hp": 760,
+   "deaths": 0
+  },
+  {
+   "at": 100.6,
+   "name": "vale-done",
+   "map": "vale",
+   "sec": "hub",
+   "lvl": 2,
+   "hp": 676,
+   "deaths": 0
+  }
+ ],
+ "warps": [
+  {
+   "from": "terrace",
+   "to": "shrine_start",
+   "moved": 34.7,
+   "sec": "hub",
+   "ms": 1683
+  }
+ ],
+ "finished": "2026-10-20T04:56:36.345Z",
+ "totalSec": 114,
+ "seenTalk": {
+  "vale:vale_banner": [
+   2.3
+  ],
+  "vale:vale_wake": [
+   2.3
+  ],
+  "vale:Training dummies are south-east. Hit one.": [
+   2.3
+  ],
+  "vale:Swing. Then dodge. Then try your Q skill.": [
+   7.5
+  ],
+  "vale:vale_elder": [
+   24.3
+  ],
+  "vale:The Stone lost a light. Past the cottage, a path ends.": [
+   24.3
+  ],
+  "vale:A chest! Interact to open it.": [
+   27.9
+  ],
+  "vale:vale_chest": [
+   37.7
+  ],
+  "vale:Open your bag and equip it.": [
+   37.7
+  ],
+  "vale:vale_tablet": [
+   61.3
+  ],
+  "vale:The Stone is lit. The Stone remembers kindness.": [
+   67.7
+  ],
+  "vale:vale_rift": [
+   86.5
+  ]
+ },
+ "finalSnap": {
+  "t": 114.48,
+  "st": "play",
+  "ui": {
+   "map": false,
+   "open": false,
+   "help": false,
+   "pause": false,
+   "settings": false
+  },
+  "fadeDir": 0,
+  "fade": 0,
+  "dev": "pad",
+  "map": "vale",
+  "W": 80,
+  "warp": false,
+  "sec": "hub",
+  "p": {
+   "x": 32.78,
+   "y": 54.98,
+   "z": 0,
+   "hp": 676,
+   "maxHp": 676,
+   "mp": 329,
+   "maxMp": 329,
+   "pot": 3,
+   "lvl": 2,
+   "xp": 9,
+   "dead": false,
+   "ult": 87,
+   "dash": false,
+   "rootT": -1.4166666666666665,
+   "slowT": -98.03333333332905,
+   "invul": false,
+   "aim": 0.9002747688143479,
+   "wk": "sword",
+   "wid": "dawnblade",
+   "st": 100,
+   "castT": -21.26666666666674,
+   "casting": false,
+   "bag": 8,
+   "dust": 0
+  },
+  "sk": {
+   "1": {
+    "id": "secondwind",
+    "cd": -0.02,
+    "mp": 30,
+    "st": 0
+   },
+   "2": {
+    "id": "chain",
+    "cd": -0.02,
+    "mp": 30,
+    "st": 0
+   },
+   "3": {
+    "id": "shootingstar",
+    "cd": -0.02,
+    "mp": 22,
+    "st": 0
+   },
+   "q": {
+    "id": "sunslash",
+    "cd": -0.02,
+    "mp": 18,
+    "st": 0
+   },
+   "e": {
+    "id": "dashstrike",
+    "cd": -0.02,
+    "mp": 25,
+    "st": 0
+   },
+   "r": {
+    "id": "judgement",
+    "cd": 0,
+    "mp": 60,
+    "st": 0
+   },
+   "f": {
+    "id": "manasurge",
+    "cd": 0,
+    "mp": 0,
+    "st": 0
+   },
+   "c": {
+    "id": "warcry",
+    "cd": 0,
+    "mp": 20,
+    "st": 0
+   },
+   "shift": {
+    "id": "charge",
+    "cd": -0.02,
+    "mp": 0,
+    "st": 35
+   }
+  },
+  "en": [
+   {
+    "type": "dummy",
+    "x": 38.2,
+    "y": 63.4,
+    "hp": 9999,
+    "max": 9999,
+    "boss": false,
+    "dummy": true,
+    "asleep": false,
+    "spawnT": 0,
+    "r": 0.35,
+    "elite": false,
+    "state": "chase",
+    "lvl": 1,
+    "stun": true
+   },
+   {
+    "type": "dummy",
+    "x": 39.8,
+    "y": 64.8,
+    "hp": 9999,
+    "max": 9999,
+    "boss": false,
+    "dummy": true,
+    "asleep": false,
+    "spawnT": 0,
+    "r": 0.35,
+    "elite": false,
+    "state": "chase",
+    "lvl": 1,
+    "stun": true
+   }
+  ],
+  "boss": null,
+  "warn": null,
+  "tele": [],
+  "covered": false,
+  "zones": 0,
+  "prompt": {
+   "kind": "shrine",
+   "text": "Rest (refill potions)",
+   "x": 32,
+   "y": 54.2
+  },
+  "obj": "Take the rift south into the Misty Pinewood.",
+  "msg": null,
+  "pend": 0,
+  "banner": null,
+  "fired": [
+   "banner",
+   "dummies",
+   "wake",
+   "yard_teach",
+   "shrine",
+   "elder",
+   "chest",
+   "lantern_found",
+   "gems",
+   "tablet",
+   "lantern_return",
+   "garden_ambush",
+   "garden_done",
+   "shrine_terrace"
+  ],
+  "drops": [],
+  "portals": [
+   {
+    "id": "ruins",
+    "to": "ruins",
+    "x": 56.5,
+    "y": 20,
+    "open": true,
+    "ok": true
+   },
+   {
+    "id": "grotto",
+    "to": "grotto",
+    "x": 63.8,
+    "y": 19.4,
+    "open": false,
+    "ok": false
+   },
+   {
+    "id": "caldera",
+    "to": "caldera",
+    "x": 57.4,
+    "y": 25.8,
+    "open": false,
+    "ok": false
+   },
+   {
+    "id": "spire",
+    "to": "spire",
+    "x": 63.8,
+    "y": 25.4,
+    "open": false,
+    "ok": false
+   },
+   {
+    "id": "pine",
+    "to": "pinewood",
+    "x": 49,
+    "y": 69.3,
+    "open": true,
+    "ok": true
+   }
+  ],
+  "quests": {
+   "vale_lantern": "done",
+   "shard_root": {
+    "step": 0
+   }
+  },
+  "keys": [],
+  "deaths": 0,
+  "col": 300,
+  "checkpoint": {
+   "map": "vale",
+   "x": 32.777817459305204,
+   "y": 54.97781745930521
+  },
+  "talkQ": 0,
+  "tablet": false,
+  "touch": false,
+  "tpage": 0,
+  "hudh": 1
+ }
+}

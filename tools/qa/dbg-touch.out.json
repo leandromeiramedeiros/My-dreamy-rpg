@@ -1,0 +1,142 @@
+[
+ [
+  "state",
+  "play"
+ ],
+ [
+  "btn q",
+  {
+   "slot": "q",
+   "x": 744,
+   "y": 394,
+   "r": 30
+  }
+ ],
+ [
+  "before",
+  {
+   "cd": 0,
+   "mp": 260,
+   "page": 0
+  }
+ ],
+ [
+  "aim while dragging",
+  {
+   "skill": "sunslash",
+   "cancel": false,
+   "clamped": true,
+   "d": 142
+  }
+ ],
+ [
+  "aim after returning onto button",
+  {
+   "cancel": true
+  }
+ ],
+ [
+  "after cancel-release (cd/mp should be unchanged)",
+  {
+   "cd": 0,
+   "mp": 260,
+   "page": 0
+  }
+ ],
+ [
+  "after cast-release (cd should be > 0)",
+  {
+   "cd": 2.62,
+   "mp": 243,
+   "page": 0
+  }
+ ],
+ [
+  "AIM_X",
+  {
+   "x": 480,
+   "y": 500,
+   "r": 32
+  }
+ ],
+ [
+  "aim at X",
+  {
+   "cancel": true
+  }
+ ],
+ [
+  "after X-release",
+  {
+   "cd": -0.02,
+   "mp": 250,
+   "page": 0
+  }
+ ],
+ [
+  "page toggle",
+  {
+   "before": 0,
+   "after": 1,
+   "slots0": [
+    "atk",
+    "q",
+    "e",
+    "r",
+    "f",
+    "c",
+    "shift",
+    "pot",
+    "toggle"
+   ],
+   "slots1": [
+    "atk",
+    "1",
+    "2",
+    "3",
+    "f",
+    "c",
+    "shift",
+    "pot",
+    "toggle"
+   ]
+  }
+ ],
+ [
+  "btn 1 (page 2)",
+  {
+   "slot": "1",
+   "x": 744,
+   "y": 394,
+   "r": 30
+  }
+ ],
+ [
+  "tapped skill 1 (cd/hp)",
+  {
+   "s1": {
+    "id": "secondwind",
+    "cd": 24.45,
+    "mp": 30,
+    "st": 0
+   },
+   "hp": 760
+  }
+ ],
+ [
+  "page back",
+  0
+ ],
+ [
+  "after 6 quick toggles",
+  0
+ ],
+ [
+  "bag open",
+  true
+ ],
+ [
+  "bag closed by close-button",
+  true
+ ]
+]

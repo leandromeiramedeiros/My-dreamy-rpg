@@ -142,7 +142,7 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
     await bot.clear('ford clear', 180000); await loot(2000);
     await shrine(66, 60, 'shrine2');
     if (PASS !== 'touch') { await warpTest('shrine2', 'shrine1'); await bot.shot('after-warp-pine'); }
-    await bot.goal({ name: 'r2 plaza', x: 26, y: 58, r: 5, until: q => has(q, 'r2'), timeout: 300000 }); await bot.shot('pinewood-r2');
+    for (let t = 0; t < 3 && !has(await bot.snap(), 'r2'); t++) await bot.goal({ name: 'r2 plaza', x: 26, y: 58, r: 5, until: q => has(q, 'r2') && q.sec === 'forest', timeout: 300000 }); await bot.shot('pinewood-r2');   // retry: after a shrine warp the first call returned instantly (run 2)
     await bot.clear('r2 clear', 240000); await loot(2500); await equipBest('pine3'); await mark('pinewood-r2-done');
     if (!LITE) {
       await bot.goal({ name: 'cache hint', x: 14.99, y: 55.35, r: 3, until: q => has(q, 'cache_hint'), timeout: 120000 }); await bot.shot('pinewood-cache-door');
@@ -157,6 +157,15 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
     if (!LITE) {
       await bot.goal({ name: 'env hint', x: 100, y: 46, r: 4, until: q => has(q, 'env_hint'), timeout: 250000 }); await bot.goal({ name: 'env open', x: 100.5, y: 47.5, r: 2.4, until: q => has(q, 'env_open'), timeout: 60000 }); await bot.shot('pinewood-env');
       await chest('detour-chest', 'detour chest');
+      // Fox Warrens vault (pond secret): 3 sleeping mountain trolls; walk in, wake them, clear, rune + chest, back out
+      if (await door('warrens_door', 'warrens')) {
+        await mark('warrens-enter');
+        await bot.goal({ name: 'warrens hall', x: 80, y: 10, r: 3.5, until: q => has(q, 'w_hall'), timeout: 120000, noFinding: true, engageR: 0 }); await bot.shot('warrens-hall');
+        await bot.goal({ name: 'warrens vault', x: 99, y: 9.5, r: 3, until: q => has(q, 'w_vault'), timeout: 120000, noFinding: true, engageR: 0 }); await bot.shot('warrens-vault');
+        await bot.clear('warrens clear', 240000, { wake: true, noFinding: true, engageR: 30 }); await loot(3000); await equipBest('warrens');
+        s = await bot.snap(); bot.log('after warrens', { obj: s.obj, fired: has(s, 'w_done') }); await chest('warrens-chest', 'warrens chest');
+        await door('warrens_exit', 'forest'); await mark('warrens-exit');
+      }
     }
     if (STOP === 'pinewood') throw new Error('STOP');
     await bot.goal({ name: 'hollow door hint', x: 44, y: 39.29, r: 3.2, until: q => has(q, 'hdoor_hint'), timeout: 300000, noFinding: true }); await bot.shot('pinewood-hollow-door');
@@ -184,7 +193,14 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
     await lever('lever_h_r2', 'gate lever'); await mark('hollow-lever');
     await bot.goal({ name: 'ceiling tell', x: 31.5, y: 8.64, r: 2.4, until: q => has(q, 'h_ceiling'), timeout: 100000, noFinding: true }); await loot(2500);
     await bot.goal({ name: 'mossjaw den', x: 45, y: 10.5, r: 3.3, until: q => has(q, 'h_boss'), timeout: 250000, softlock: true }); await bot.shot('hollow-mossjaw-start');
-    await bossFight('mossjaw', 480000); await loot(3500); await equipBest('mossjaw'); await mark('mossjaw-done');
+    await bossFight('mossjaw', 480000);
+    for (let t = 0; t < 10; t++) {   // QA retry loop (run 3: 7 straight deaths on a weak-gear hero); done when the objective leaves 'Defeat Mossjaw'
+      s = await bot.snap(); if (s.obj && !/Mossjaw/.test(s.obj) && !s.boss) break;
+      bot.log('Mossjaw retry #' + (t + 1), { lvl: s.p.lvl, deaths: s.deaths, obj: s.obj });
+      await bot.goal({ name: 'mossjaw retry', x: 45, y: 10.5, r: 3.3, until: q => !!q.boss, timeout: 200000, noFinding: true });
+      await bossFight('mossjaw', 480000);
+    }
+    await loot(3500); await equipBest('mossjaw'); await mark('mossjaw-done');
     s = await bot.snap(); bot.log('after Mossjaw', { obj: s.obj, sec: s.sec });
     await chest('mini-boss-chest', 'mini-boss chest');
     // root-stair exit door up to the Clearing shrine
@@ -195,7 +211,14 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
     await shrine(84, 36, 'clearing shrine3');
     if (!LITE) { await bot.goal({ name: 'arena hint', x: 95.06, y: 37.51, r: 3.4, until: q => has(q, 'arena_hint'), timeout: 60000, noFinding: true }); }
     await bot.goal({ name: 'bramblehorn', x: 100, y: 31, r: 6.5, until: q => has(q, 'boss'), timeout: 300000, softlock: true }); await bot.shot('clearing-boss-start');
-    await bossFight('bramblehorn', 600000); await loot(4000); await equipBest('clearing');
+    await bossFight('bramblehorn', 600000);
+    for (let t = 0; t < 8; t++) {   // QA retry loop: a real player would retry after dying; stop once the arena portal opens (= boss dead)
+      s = await bot.snap(); if (s.portals.find(q => q.id === 'home_arena' && q.open)) break;
+      bot.log('Bramblehorn retry #' + (t + 1), { lvl: s.p.lvl, deaths: s.deaths });
+      await bot.goal({ name: 'bramblehorn retry', x: 100, y: 31, r: 6.5, until: q => !!q.boss, timeout: 200000, noFinding: true });
+      await bossFight('bramblehorn', 600000);
+    }
+    await loot(4000); await equipBest('clearing');
     s = await bot.snap(); bot.log('after Bramblehorn', { obj: s.obj, portals: s.portals.map(q => [q.id, q.open]) }); await mark('bramblehorn-done');
     await chest('boss-chest', 'boss chest');
     if (STOP === 'court') throw new Error('STOP');
