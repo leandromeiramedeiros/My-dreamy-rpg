@@ -793,6 +793,7 @@ function drawPlayer(ctx, p, lights) {
   if (p.buffs.mend && Math.random() < 0.3) addPart({ x: p.x + frand(-0.3, 0.3), y: p.y + frand(-0.3, 0.3), z: p.z + 1, vx: 0, vy: 0, vz: 1.5, life: 0.7, t: 0, col: '#8fffa8', grav: 0, size: 1, glow: true });
 }
 
+const LEGACY_ENEMY_K = 1.5;
 function drawEnemy(ctx, e, lights) {
   const [vx, vy0] = worldToView(e.x, e.y, e.z);
   let vy = vy0;
@@ -804,9 +805,11 @@ function drawEnemy(ctx, e, lights) {
   if (e.mimic) { const ci = ART.chest; ctx.drawImage(e.flash > 0 ? silOf(ci, '#ffffff') : ci, Math.round(vx - ci.width / 2), Math.round(vy - ci.height + 1)); return; }
   ctx.globalAlpha = spawnA * (e.fadeT > 0 ? 0.35 : 1);
   if (e.elite) drawEliteAura(ctx, e);
-  let img, white;
+  let img, white, dr = null;   // dr = where a custom sprite was drawn (the frozen tint reuses it)
   const def = ENEMY[e.type] || {}, look = enemyLook(def, e.type), cs = look.img, lk = look.kind;
-  const sc = def.scale || 1, scaled = sc !== 1 && !cs;
+  // M3: the old sprites (slime, hound, ogre, dummy, the Warden...) were drawn against a 16x24 hero; the hero is 24x34 now, so they
+  // are drawn LEGACY_ENEMY_K times bigger (visual only: e.r / hgt, i.e. every hitbox, are untouched). ENEMY_ART sprites are already hero-sized.
+  const sc = (def.scale || 1) * LEGACY_ENEMY_K, scaled = sc !== 1 && !cs;
   if (scaled) { ctx.save(); ctx.translate(Math.round(vx), Math.round(vy)); ctx.scale(sc, sc); ctx.translate(-Math.round(vx), -Math.round(vy)); }
   if (cs) {
     // pixel-editor sprite (sprites face right) with behaviour-driven motion
@@ -820,6 +823,7 @@ function drawEnemy(ctx, e, lights) {
     img = base;
     const w = Math.round(base.width * (1 + sq) * sc), hh = Math.round(base.height * (1 - sq) * sc);
     const dx = Math.round(vx - w / 2 + ox), dy = Math.round(vy - hh + 1 + oy);
+    dr = [dx, dy, w, hh];
     ctx.drawImage(e.flash > 0 ? silOf(base, '#ffffff') : base, dx, dy, w, hh);
     if (look.tint) { ctx.globalAlpha = spawnA * 0.3; ctx.drawImage(silOf(base, look.tint), dx, dy, w, hh); ctx.globalAlpha = spawnA; }
     if (e.state === 'wind' && (def.ai === 'brute' || e.boss)) { ctx.globalAlpha = spawnA * (0.25 + 0.25 * Math.sin(e.anim * 30)); ctx.drawImage(silOf(base, '#ff5040'), dx, dy, w, hh); ctx.globalAlpha = spawnA; }
@@ -855,10 +859,13 @@ function drawEnemy(ctx, e, lights) {
     const wob = e.flash > 0 ? Math.round(Math.sin(G.t * 60) * 1) : 0;
     ctx.drawImage(e.flash > 0 ? silOf(img, '#ffffff') : img, Math.round(vx - img.width / 2 + wob), Math.round(vy - img.height + 1));
   }
+  if (e.frozen && img) {
+    ctx.globalAlpha = 0.5 * spawnA;
+    if (dr) ctx.drawImage(silOf(img, '#bff4ff'), dr[0], dr[1], dr[2], dr[3]); else ctx.drawImage(silOf(img, '#bff4ff'), Math.round(vx - img.width / 2), Math.round(vy - img.height));
+  }
   if (scaled) ctx.restore();
   if (e.asleep && Math.random() < 0.03) text(e.x, e.y, e.z + e.hgt + 0.3, 'z', '#c8c0e0', false, 1.2);
   if (e.eShield > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = rgba('#cfe6ff', 0.4 + 0.4 * e.eShield / e.eShieldMax); projRing(ctx, e.x, e.y, 0.2, e.r + 0.45); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
-  if (e.frozen) { ctx.globalAlpha = 0.5 * spawnA; if (img) ctx.drawImage(silOf(img, '#bff4ff'), Math.round(vx - img.width / 2), Math.round(vy - img.height)); }
   ctx.globalAlpha = 1;
   if (e.stunT > 0 && !e.frozen) for (let k = 0; k < 3; k++) { const a = G.t * 6 + k * 2.1; ctx.fillStyle = '#ffe36a'; ctx.fillRect(Math.round(vx + Math.cos(a) * 6), Math.round(vy - e.hgt * ZS - 4 + Math.sin(a) * 2), 1, 1); }
   // nameplates (bar, icons, statuses) are drawn by hud.js drawNameplates on the 2x grid

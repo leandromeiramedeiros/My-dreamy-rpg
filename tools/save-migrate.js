@@ -15,8 +15,8 @@
 // expected. Instead: (1) each migrated item's statsOf = its v3 stats + its base's implicit (within 1 %); (2) the loaded hero's
 // stats = a FRESH v4 recalcStats of a new hero wearing the same items (exact); (3) with the implicits stripped, that fresh v4
 // recalc is still within 1 % of the v3 hero (the migration itself changed nothing else).
-// NOTE: PROBE reads the v3 names (uid, reqLvl, affix.stat) through the M3 compat mirrors (kept in step 2: menus.js still reads
-// them); when the mirrors are removed, switch PROBE to id / req / affix.id and map the expect files.
+// NOTE: the M3 compat mirrors are gone (step 2); PROBE reads id / req / affix.id and reports them under the v3 names
+// (uid, reqLvl, stat=) so the expect files compare unchanged.
 // Usage: node tools/save-migrate.js     (exit 1 on any failed check or page error; tools/smoke.js runs it)
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
@@ -32,15 +32,15 @@ const srv = http.createServer((q, r) => {
 let fails = 0;
 const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && info !== undefined ? '  ' + JSON.stringify(info).slice(0, 600) : ''}`); if (!ok) fails++; };
 
-// the v3 probe (identical to the one that wrote expect-v3-*.json; v2 items answer uid / reqLvl / affix.stat through the M3 mirrors)
+// the v3 probe (the one that wrote expect-v3-*.json, mapped to the v2 names: uid <- id, reqLvl <- req, affix.stat <- affix.id)
 const PROBE = () => {
   const p = G.player, r = {};
   for (const k of ['level', 'xp', 'maxHp', 'maxMp', 'maxSt', 'power', 'dmgBase', 'wdmg', 'bonus', 'def', 'crit', 'critDmg', 'haste', 'cdr', 'skillDmg', 'regen', 'mpRegen', 'speed', 'dust', 'potions']) r[k] = p[k];
   r.res = Object.assign({}, p.res); r.amp = Object.assign({}, p.amp);
   r.gear = Object.assign({}, p.gear);
   r.slots = {}; for (const s of ['q', 'e', 'r', 'f', 'c', 'shift', '1', '2', '3']) r.slots[s] = slotSkill(p, s);
-  r.equip = {}; for (const s of SLOTS) { const it = p.equip[s]; r.equip[s] = it ? { uid: it.uid, base: it.base, rarity: it.rarity, ilvl: it.ilvl, reqLvl: it.reqLvl, affixes: it.affixes.map(a => a.stat + '=' + a.v), sockets: it.sockets.slice(), unique: it.unique || null, stats: statsOf(it) } : null; }
-  r.bag = p.bag.map(e => e ? (e.gem ? 'gem:' + e.gem + 'x' + e.n : 'item:' + e.uid + ':' + e.base) : null);
+  r.equip = {}; for (const s of SLOTS) { const it = p.equip[s]; r.equip[s] = it ? { uid: it.id, base: it.base, rarity: it.rarity, ilvl: it.ilvl, reqLvl: it.req, affixes: it.affixes.map(a => a.id + '=' + a.v), sockets: it.sockets.slice(), unique: it.unique || null, stats: statsOf(it) } : null; }
+  r.bag = p.bag.map(e => e ? (e.gem ? 'gem:' + e.gem + 'x' + e.n : 'item:' + e.id + ':' + e.base) : null);
   r.wsk = JSON.parse(JSON.stringify(p.wsk)); r.csk = p.csk.slice(); r.runes = (p.runes || []).slice();
   r.ranks = JSON.parse(JSON.stringify(p.ranks)); r.mods = JSON.parse(JSON.stringify(p.mods));
   r.map = G.map.id; r.checkpoint = G.checkpoint;
@@ -208,7 +208,7 @@ const ROUND = () => {
         const j = JSON.parse(JSON.stringify(it)), why = [];
         if (Object.keys(j).join() !== KEYS) why.push('keys');
         if (!validItem(it)) why.push('validItem');
-        if (it.reqLvl !== it.req || (it.affixes[0] && it.affixes[0].stat !== it.affixes[0].id) || it.uid !== it.id) why.push('mirrors');
+        if ('reqLvl' in it || 'uid' in it || (it.affixes[0] && 'stat' in it.affixes[0])) why.push('legacy mirrors present');
         if (it.affixes.some(a => !['P', 'S'].includes(a.kind) || a.tier < 1 || a.tier > 3)) why.push('affixes');
         if (it.slot === 'ring' && (it.sockets.length || it.affixes.some(a => a.kind !== 'P'))) why.push('ring rules');
         if (it.slot === 'belt' && it.affixes.some(a => a.kind !== 'S')) why.push('belt rules');
@@ -226,7 +226,7 @@ const ROUND = () => {
       const starter = { base: sr && sr.base, boon: sr && sr.boon && sr.boon.id, live: !!(np.boons && np.boons.originKnight), kept: !!(q2.equip.ring1 && q2.equip.ring1.base === 'origin_knight' && q2.boons.originKnight), flavor: !!itemFlavor(sr) };
       return { n: made.length, bad, equip: [r1, r2, r3, r4].join('|'), before: !!before, kept, names: made.map(itemName), starter };
     });
-    check(`makeTestItem: ${t.n} v2 items (gear, uniques, ring / amulet / belt) are valid, mirrors work (${t.names.slice(0, 4).join(' · ')} ...)`, t.n === 12 && t.bad.length === 0, t.bad);
+    check(`makeTestItem: ${t.n} v2 items (gear, uniques, ring / amulet / belt) are valid, no legacy mirrors (${t.names.slice(0, 4).join(' · ')} ...)`, t.n === 12 && t.bad.length === 0, t.bad);
     check('makeTestItem: trinkets equip into ring1 / ring2 / amulet / belt and survive a save round trip', t.equip === '|||' && t.before && t.kept, t);
     check(`new game: the Origin starter ring (${t.starter.base}, boon ${t.starter.boon}) is worn, live, flavoured and survives a save round trip`, t.starter.base === 'origin_knight' && t.starter.boon === 'originKnight' && t.starter.live && t.starter.kept && t.starter.flavor, t.starter);
     check('makeTestItem: no page errors', errs.length === 0, errs.slice(0, 3));

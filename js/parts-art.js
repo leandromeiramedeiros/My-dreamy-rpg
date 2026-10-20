@@ -129,10 +129,12 @@ const PARTS_ART = (function () {
 
   // compile one set at one tier -> { layers:[{id, view, attach, pair, sway, cells, cellsR}], sockets:[[x,y]], grip, tip, light, aim }
   const memo = {};
-  function compile(kind, family, ti, demo) {
-    const mk = kind + ':' + family + ':' + ti + (demo ? ':d' : ''); if (memo[mk]) return memo[mk];
+  function compile(kind, family, ti, demo, growCap) {
+    const mk = kind + ':' + family + ':' + ti + (demo ? ':d' : '') + (growCap != null ? ':g' + growCap : ''); if (memo[mk]) return memo[mk];
     const set = (demo ? DEMO : KITS)[kind] && (demo ? DEMO : KITS)[kind][family]; if (!set) return null;
-    const tier = set.tiers[Math.max(0, Math.min(set.tiers.length - 1, ti | 0))], pal = palOf(set, tier);
+    let tier = set.tiers[Math.max(0, Math.min(set.tiers.length - 1, ti | 0))];
+    if (growCap != null && (tier.grow | 0) > growCap) tier = Object.assign({}, tier, { grow: growCap });     // icons: a shorter blade
+    const pal = palOf(set, tier);
     const res = { kind, family, tier: ti, layers: [], sockets: [], grip: null, tip: null, light: tier.light || null, aim: set.tpl.aim || 'up' };
     const socks = [];
     for (const layer of set.tpl.layers) {
@@ -155,9 +157,9 @@ const PARTS_ART = (function () {
     return (memo[mk] = res);
   }
   // a weapon is one 'none' layer: normalise it to a canvas (pad px of margin for hero.js' outline): { w, h, cells, grip, tip, sockets, aim, light }
-  function weapon(family, ti, demo, pad) {
+  function weapon(family, ti, demo, pad, growCap) {
     pad = pad == null ? 2 : pad;
-    const c = compile('weapon', family, ti, demo); if (!c) return null;
+    const c = compile('weapon', family, ti, demo, growCap); if (!c) return null;
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
     for (const L of c.layers) for (const q of L.cells) { x0 = Math.min(x0, q[0]); y0 = Math.min(y0, q[1]); x1 = Math.max(x1, q[0]); y1 = Math.max(y1, q[1]); }
     const ox = pad - x0, oy = pad - y0, cells = [];
@@ -491,7 +493,7 @@ const PARTS_ART = (function () {
     cape: '#5648c0',
     tpl: { slots: { 2: 'mantle', 3: 'strip', 4: 'collar', 5: 'cuffTop', 6: 'cuff', 7: 'dust', 8: 'hem' }, layers: [
       { id: 'skirt', attach: 'none', mirror: 'half', sway: 27, at: [3, 23], rows: ['.....bbbb', '....bbbbZ', '....bbbbZ', '...bbbbb$', '...bbbbbZ', '...bbbbbZ', '8........'] },
-      { id: 'robe', view: 'front', attach: 'bob', mirror: 'half', at: [3, 13], rows: ['....2....', '.........', '.....bBkk', '.....bb*r', '.....bbbb', '.....bbbb', '.....bbbb', '.....aa%A', '.....aaaA', '.....bbbb', '.....34..'] },
+      { id: 'robe', view: 'front', attach: 'bob', mirror: 'half', at: [3, 13], rows: ['....2....', '.........', '.....bBkk', '.....bb*r', '.....bbbb', '.....bbbb', '.....bb%b', '.....aaaA', '.....aaaA', '.....bbbb', '.....34..'] },
       { id: 'robe', view: 'back', attach: 'bob', mirror: 'half', at: [3, 13], rows: ['....2....', '.........', '.....bBbb', '.....bbbb', '.....bbbb', '.....bbbb', '.....bbbb', '.....aaaa', '.....aaaa', '.....bbbb', '.....34..'] },
       { id: 'tail', view: 'front', attach: 'bob', at: [13, 22], rows: ['aa', 'aa', 'aa', 'aa', 'aa', 'A.'] },
       { id: 'tail', view: 'back', attach: 'bob', at: [10, 22], rows: ['aa', 'aa', 'aa', 'aa', 'aa'] },
@@ -685,5 +687,47 @@ const PARTS_ART = (function () {
     ] },
     pal: { b: LT[0], e: LT[0], n: '#d8c8a0', t: '#b0b0b8', a: 'gold', f: 'fur' },
     tiers: [0, 1, 2, 3, 4].map(t => ({ shape: 's' + t, pal: { b: LT[t], e: LT[t] }, parts: {} })),
+  };
+})();
+
+// =====================================================================================================================
+// DEMO (preview only, NOT reachable in game): one PLANNED variant written the kit way - the RAPIER (DESIGN 23.3: Tin Needle /
+// Moonpoint / Silver Estoc / Starpoint / Needle Eternal). This is everything a new variant costs: one template (the rows below),
+// one tier table (palette + part names), and the few stamps no other variant already has. Nothing else (no hero.js, no icons.js).
+// It lives in PARTS_ART.DEMO, not KITS, so HERO / the game never see it unless a look sets demo:true (tools/hero-preview.html does).
+// =====================================================================================================================
+(function () {
+  const { DEMO } = PARTS_ART;
+  const rep = (n, s) => Array(n).fill(s);
+  const B = '................';
+  const NEEDLE = '.......b........', EDGED = '.......ba.......';       // a 1 px blade; the glowing tiers add an edge column (a)
+  const rows = (blade) => [blade[0]].concat(rep(13, blade[1]), [B, B, '.......J........', '.......K........', '.......J........', '.......@........', '.......K........', '.......J........']);
+  // slots: 1 guard (marker = the cross-guard row, left of... the blade column x7) | 2 pommel | 3 binding (grip rings)
+  DEMO.weapon.rapier = {
+    tpl: { aim: 'up', slots: { 1: 'guard', 2: 'pommel', 3: 'band' }, layers: [
+      { id: 'blade', at: [0, 0], shapes: {
+        needle: { grow: [1, 1], rows: rows(['.......b........', NEEDLE]) },
+        edged: { grow: [1, 1], rows: rows(['.......b........', EDGED]) },
+      } },
+      { id: 'slots', at: [0, 0], grow: [1, 1], rows: rep(14, B).concat(['.......1........', B, '.......3........', B, B, B, B, B, '.......2........']) },
+    ] },
+    pal: { b: '#9a9ca6', t: '#6a6a74', g: '#4a3a30', a: '#8ad8ff', s: '#ffffff' },
+    parts: {
+      guard: {
+        bar: { at: [3, 0], rows: ['ttttttt', '...tt..'] },                                                                   // a plain cross
+        swept: { at: [3, 1], rows: ['T.....T', 'ttttttt', '.t.tt.t', '..tttt.'] },                                          // swept quillons + a small cup
+        cup: { at: [3, 1], rows: ['T.....T', 'ttttttt', '.ttttt.', '.tt*tt.', '..ttt..'] },                                // a bell guard (a gem socket in the cup)
+        halo: { at: [4, 3], rows: ['S.......S', 'T.......T', 'M.......M', 'ttttttttt', '.ttttttt.', '.ttt*ttt.', '..ttttt..', '...ttt...'] },   // gold wings + pearls
+      },
+      band: { ring: { at: [0, 0], rows: ['t'] } },
+      pommel: { ball: { at: [1, 0], rows: ['.t.', 't$t', '.t.'] } },
+    },
+    tiers: [
+      { shape: 'needle', grow: 0, pal: { b: '#9a9ca6', t: '#6a6a74' }, parts: { guard: 'bar', pommel: 'ball' } },
+      { shape: 'needle', grow: 2, pal: { b: '#c8d0e8', t: '#8a94c8', g: '#3a3050' }, parts: { guard: 'swept', band: 'ring', pommel: 'ball' } },
+      { shape: 'needle', grow: 4, pal: { b: '#e4ecff', t: '#d8dcf0', a: '#a8c8ff' }, parts: { guard: 'cup', band: 'ring', pommel: 'ball' } },
+      { shape: 'edged', grow: 6, pal: { b: '#f0f4ff', t: 'gold', a: '#8ad8ff', g: '#3a2848' }, parts: { guard: 'cup', band: 'ring', pommel: 'ball' }, light: '#8ad8ff' },
+      { shape: 'edged', grow: 8, pal: { b: '#fff6d8', t: 'gold', a: '#ffffff', g: '#3a2848' }, parts: { guard: 'halo', band: 'ring', pommel: 'ball' }, light: '#fff0c0' },
+    ],
   };
 })();

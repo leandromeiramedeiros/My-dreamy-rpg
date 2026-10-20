@@ -860,6 +860,87 @@ const PAD_STUB = () => {
     check('touch: zone banner draws below the top-left buttons', tb.touch === true && (tb.bottom === 0 || tb.bottom <= 164), tb);
     await tp.close();
   }
+  // ---------- 4f. M3 step 2 engine: items v2, trinkets, boons, CAPS, temper / imbue, chest contract ----------
+  {
+    const v2 = await ev(async () => {
+      const w = ms => new Promise(r => setTimeout(r, ms)), out = {};
+      G.enemies.length = 0; G.drops.length = 0;
+      // a new game's hero: the Origin starter ring (Rusty Blade -> blades -> Knight), boon live
+      const np = makePlayer(); out.starter = { base: np.equip.ring1 && np.equip.ring1.base, boon: !!(np.boons && np.boons.originKnight), name: itemName(np.equip.ring1) };
+      const p = G.player = makePlayer(); p.level = 14; p.x = G.map.start.x; p.y = G.map.start.y; recalcStats(p, true);
+      // an L14 drop: every affix T2 (ilvl 14..15 -> T2), the name from the T2 prefix / suffix noun, req = max(base, ilvl - 2), flavour + hist
+      const bad = [];
+      for (let k = 0; k < 40; k++) {
+        const it = rollItem(14, pick2(['uncommon', 'rare', 'epic']), pick2(['weapon', 'head', 'chest', 'boots'])), b = baseOf(it.base), why = [];
+        if (it.affixes.some(a => a.tier !== 2)) why.push('tier');
+        const [np2, ns2] = [it.affixes.filter(a => a.kind === 'P').length, it.affixes.filter(a => a.kind === 'S').length];
+        if (it.rarity === 'uncommon' && np2 + ns2 !== 1 || it.rarity === 'rare' && (np2 !== 1 || ns2 !== 1) || it.rarity === 'epic' && np2 + ns2 !== 3) why.push('counts');
+        const P = it.affixes.find(a => a.kind === 'P'), S = it.affixes.find(a => a.kind === 'S');
+        const pre = P && AFFIX_V2.prefix[P.id][1].name, suf = S && 'of the ' + SUFFIX_NOUN[S.id];
+        const want = it.rarity === 'uncommon' ? [pre || null, pre ? null : suf] : [pre || null, suf || null];
+        if (it.name.prefix !== want[0] || it.name.suffix !== want[1] || itemName(it) !== [want[0], b.name, want[1]].filter(Boolean).join(' ')) why.push('name ' + itemName(it));
+        if (it.req !== Math.max(b.reqLvl, it.ilvl - 2) || !itemFlavor(it) || !it.hist || it.implicit.id !== IMPLICITS[it.base].stat) why.push('req/flavour/hist/implicit');
+        if (why.length) bad.push(why.join(','));
+      }
+      out.l14 = { bad, sample: itemName(rollItem(14, 'rare', 'weapon')) };
+      // implicits apply: the Rusty Blade's +4 % slash damage lands in p.sum
+      out.implicit = +(p.sum.slashDmg || 0).toFixed(3);
+      // CAPS: stack cdr (T3 cdr on every gear slot, a cdr ring) -> p.cdr stays 0.40; crit 0.60; haste 0.50; potions 5
+      const stack = (id, n) => ['weapon', 'head', 'chest', 'boots'].forEach(s => { p.equip[s] = makeTestItem({ slot: s, rarity: 'legendary', ilvl: 34, affixes: [{ id, tier: 3, v: n }] }); });
+      p.level = 40;
+      stack('cdr', 0.15); p.equip.ring2 = makeTestItem({ slot: 'ring', rarity: 'rare', affixes: [{ id: 'cdr', tier: 3, v: 0.08 }] }); recalcStats(p, true);
+      out.cdr = { sum: +p.sum.cdr.toFixed(3), cdr: p.cdr };
+      stack('crit', 0.2); recalcStats(p, true); out.crit = { sum: +p.sum.crit.toFixed(3), crit: p.crit };
+      stack('haste', 0.2); recalcStats(p, true); out.haste = p.haste;
+      stack('power', 0.5); recalcStats(p, true); out.power = { sum: +p.sum.power.toFixed(2), bonus: p.bonus };
+      p.equip.belt = makeTestItem({ slot: 'belt', rarity: 'rare', boon: 'potionCap', affixes: [{ id: 'resFire', tier: 3, v: 0.2 }, { id: 'resAll', tier: 3, v: 0.1 }] });
+      p.equip.amulet = makeTestItem({ slot: 'amulet', rarity: 'legendary', affixes: [{ id: 'resAll', tier: 3, v: 0.1 }] });
+      recalcStats(p, true); out.pot = p.maxPotions; out.res = { fire: +(p.sum.resFire || 0).toFixed(3), all: +p.sum.resAll.toFixed(3) };
+      // belt implicit: +1 potion charge alone -> 4, and pickup fills to it
+      p.equip.belt = makeTestItem({ slot: 'belt', rarity: 'uncommon', boon: 'killHeal', affixes: [] }); recalcStats(p, true); p.potions = 3;
+      pickup(p, { kind: 'potion', x: p.x, y: p.y, z: 0, rar: 'uncommon' }); out.belt = { max: p.maxPotions, potions: p.potions };
+      // boon ids never stack; two same-element rings resonate (+25 % to that element's reaction, inside the 50 % cap)
+      p.equip.ring1 = makeTestItem({ slot: 'ring', rarity: 'rare', boon: 'fireBurn' }); p.equip.ring2 = makeTestItem({ slot: 'ring', rarity: 'rare', boon: 'fireBurn' }); recalcStats(p, true);
+      out.stack = { boons: Object.keys(p.boons).filter(k => k === 'fireBurn').length, fireDmg: +(p.sum.fireDmg || 0).toFixed(3), res: p.resonance };
+      // keyless equip of a third ring replaces the WEAKER ring (an Uncommon ring1 vs a Rare ring2)
+      p.equip.ring1 = makeTestItem({ slot: 'ring', rarity: 'uncommon', boon: 'projPierce' }); const keep = p.equip.ring2, nr = makeTestItem({ slot: 'ring', rarity: 'epic', boon: 'holyPower' });
+      p.bag = Array(BAG_SIZE).fill(null); bagAdd(p, nr); equipItem(p, nr); out.ringRule = p.equip.ring1 === nr && p.equip.ring2 === keep;
+      // temper: Rare 20 Dust, one tier up, once; the prefix name follows the tier; refusals
+      const it = makeItem('dawnblade', 'rare', 14, { affixes: ['power', 'hp'], q: 0.5 }); p.dust = 100;
+      const t0 = { v: it.affixes[0].v, name: itemName(it) }, r1 = temperItem(it, 'power', p);
+      out.temper = { r1, tier: it.affixes[0].tier, v0: t0.v, v1: it.affixes[0].v, name0: t0.name, name1: itemName(it), dust: p.dust, again: temperItem(it, 'hp', p), tempered: it.tempered,
+        unc: temperItem(makeItem('dawnblade', 'uncommon', 14), 'power', p), t3: temperItem(makeItem('sunforged', 'rare', 30, { affixes: ['power', 'hp'] }), 'power', p) };
+      p.dust = 5; out.temper.poor = temperItem(makeItem('dawnblade', 'epic', 14, { affixes: ['power', 'crit', 'hp'] }), 'crit', p);
+      // imbue: +1 socket for Dust up to the rarity max; rings never
+      p.dust = 200; const im = makeItem('dawnblade', 'rare', 14, { sockets: 1 });
+      out.imbue = { r1: imbueItem(im, p), n: im.sockets.length, dust: p.dust, full: imbueItem(im, p), ring: imbueItem(makeTestItem({ slot: 'ring' }), p) };
+      // the chest contract: loot 'ring' -> one extra ring >= Uncommon; 'amulet' -> a Rare amulet (and the trinket-drop gate opens)
+      const chest = loot => ({ x: p.x + 2, y: p.y, z: 0, chest: true, src: { x: 900 + G.drops.length, y: 900, tier: 'wood', loot } });
+      G.drops.length = 0; G.prog.secrets = {}; openChest(chest('ring')); await w(900);
+      const ring = G.drops.find(d => d.kind === 'item' && d.it.slot === 'ring');
+      G.drops.length = 0; openChest(chest('amulet')); await w(900);
+      const amu = G.drops.find(d => d.kind === 'item' && d.it.slot === 'amulet');
+      out.chest = { ring: ring && ring.it.rarity, ringBoon: !!(ring && ring.it.boon), amulet: amu && amu.it.rarity, gate: trinketDropsOn(p) };
+      // trinkets are ~15 % of item drops once the gate is open
+      let n = 0; for (let k = 0; k < 2000; k++) if (isTrinket(rollItem(20, 'rare'))) n++; out.share = n / 2000;
+      G.drops.length = 0;
+      return out;
+    });
+    check('v2: a new game wears the Origin starter ring (Knight, boon live)', v2.starter.base === 'origin_knight' && v2.starter.boon, v2.starter);
+    check(`v2: L14 drops roll T2 affixes with the §19.1 counts and grammar names, req = max(base, ilvl - 2), flavour + hist (${v2.l14.sample})`, v2.l14.bad.length === 0, v2.l14.bad.slice(0, 5));
+    check('v2: implicits apply in statsOf (Rusty Blade +4 % slash damage)', v2.implicit === 0.04, v2.implicit);
+    check('CAPS: stacked cdr gear stays at 40 % (crit 60 %, haste 50 %, gear power 150 %)', v2.cdr.sum > 0.4 && v2.cdr.cdr === 0.4 && v2.crit.crit === 0.6 && v2.haste === 0.5 && v2.power.bonus === 1.5, { cdr: v2.cdr, crit: v2.crit, haste: v2.haste, power: v2.power });
+    check('CAPS: potions 5; trinket resists +10 % per line, +15 % resAll across trinkets', v2.pot === 5 && v2.res.fire === 0.1 && Math.abs(v2.res.all - 0.15) < 1e-9, { pot: v2.pot, res: v2.res });
+    check('belt: implicit +1 potion charge (max 4), pickup fills to it', v2.belt.max === 4 && v2.belt.potions === 4, v2.belt);
+    check('boons: ids never stack (two Ember Sign rings = one +15 % fire); same-element rings resonate +25 %', v2.stack.boons === 1 && v2.stack.fireDmg === 0.15 && v2.stack.res && v2.stack.res.el === 'fire' && v2.stack.res.bonus === 0.25, v2.stack);
+    check('rings: a keyless equip with both ring slots full replaces the weaker ring', v2.ringRule === true);
+    const T = v2.temper;
+    check(`temper: Rare costs 20 Dust, +1 tier once, value + name follow (${T.name0} -> ${T.name1})`, T.r1 === '' && T.tier === 3 && T.v1 > T.v0 && T.dust === 80 && T.name1 !== T.name0 && T.tempered && T.tempered.affix === 'power' && T.again === 'Already tempered', T);
+    check('temper: refuses Uncommon, a T3 affix and too little Dust', /Rare or better/.test(T.unc) && /highest tier/.test(T.t3) && /Needs 60 Dust/.test(T.poor), { unc: T.unc, t3: T.t3, poor: T.poor });
+    check('imbue: +1 socket for 60 Dust (Rare), refuses past the rarity max and on rings', v2.imbue.r1 === '' && v2.imbue.n === 2 && v2.imbue.dust === 140 && /No room/.test(v2.imbue.full) && /Rings/.test(v2.imbue.ring), v2.imbue);
+    check("chest contract: loot 'ring' drops a ring >= Uncommon with a boon, 'amulet' a Rare amulet; trinket drops unlock", ['uncommon', 'rare', 'epic'].includes(v2.chest.ring) && v2.chest.ringBoon && v2.chest.amulet === 'rare' && v2.chest.gate, v2.chest);
+    check(`drops: trinkets are ~15 % of item drops after Act I (${(v2.share * 100).toFixed(1)} %)`, v2.share > 0.12 && v2.share < 0.18, v2.share);
+  }
   // ---------- 5. frame time ----------
   await page.reload({ waitUntil: 'load' });
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });

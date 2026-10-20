@@ -41,9 +41,8 @@
 //   name: { prefix: 'Fierce' | null, suffix: 'of the Fox' | null },   §19.3 name parts. Display name (itemName):
 //                             unique ? its name : [prefix, BASES name, suffix].join(' '). Mythic suffix from MYTHIC_NAMES.
 // }
-// M3 compat mirrors (NOT saved, non-enumerable): it.reqLvl -> it.req, affix.stat -> affix.id, it.uid -> it.id. KEPT in step 2
-// because menus.js (UI lane) still reads reqLvl and affix.stat; remove them once the UI lane is on v2. New code reads the v2
-// names. makeItem() rolls v2 (§19.1 counts, named tiers, grammar names, boons); makeTestItem(opts) builds a deterministic
+// The M3 compat mirrors (it.reqLvl / it.uid / affix.stat) are REMOVED (step 2): every reader is on req / id / affix.id.
+// compatItem / compatAffix stay as identity seams. makeItem() rolls v2 (§19.1 counts, named tiers, grammar names, boons); makeTestItem(opts) builds a deterministic
 // v2 item for UI / art work. itemFlavor(it) = the flavour line (FLAVOR, looked up: not an item field).
 // Engine (step 2): makeItem / rollTrinket / makeTrinketUnique / originRing, temperItem / imbueItem (Elder Stone, no UI yet),
 // trinkets 15 % of drops once Act I's placements are done (trinketDropsOn), chest markers `loot: ring|amulet|belt`.
@@ -227,15 +226,9 @@ function implicitOf(base) {
   return r ? { id: r.stat, v: r.v, text: r.text } : null;
 }
 const newHist = () => ({ found: null, kills: 0, bossKills: 0 });
-// M3 compat mirrors (non-enumerable, so never saved): reqLvl / uid on the item, stat on each affix
-function compatAffix(a) { if (a && !Object.getOwnPropertyDescriptor(a, 'stat')) Object.defineProperty(a, 'stat', { get() { return this.id; }, set(v) { this.id = v; }, enumerable: false, configurable: true }); return a; }
-function compatItem(it) {
-  if (!it || it.gem) return it;
-  if (!Object.getOwnPropertyDescriptor(it, 'reqLvl')) Object.defineProperty(it, 'reqLvl', { get() { return this.req; }, set(v) { this.req = v; }, enumerable: false, configurable: true });
-  if (!Object.getOwnPropertyDescriptor(it, 'uid')) Object.defineProperty(it, 'uid', { get() { return this.id; }, set(v) { this.id = v; }, enumerable: false, configurable: true });
-  (it.affixes || []).forEach(compatAffix);
-  return it;
-}
+// the M3 compat mirrors were removed in step 2; these identity seams keep the call sites (v2Item, applySave) unchanged
+const compatAffix = a => a;
+const compatItem = it => it;
 // the canonical v2 key order (save files diff cleanly); fills every v2 field a partial item lacks
 function v2Item(o) {
   const b = baseOf(o.base) || {};
@@ -530,8 +523,14 @@ function takeGem(p, i) { const s = p.bag[i]; if (!s || !s.gem) return null; cons
 
 // ===== the inventory seams: each returns '' on success or the reason it refused ======================
 const isEquipped = (p, it) => EQUIP_SLOTS.some(s => p.equip[s] === it);
-// the equip key an item goes to: its slot, or for a ring the empty ring slot (else ring1)
-function equipKey(p, it) { const ks = equipKeysFor(it.slot); if (ks.some(k => p.equip[k] === it)) return ks.find(k => p.equip[k] === it); return ks.find(k => !p.equip[k]) || ks[0]; }
+// the equip key an item goes to: its slot; a ring fills an empty ring slot first, else replaces the WEAKER ring (rarity, then
+// item level, then ring1). Every keyless path (clickBag, pad / touch) follows this; the inventory's pick mode passes a key.
+const ringScore = it => (it ? RARITY[it.rarity].i * 100 + it.ilvl : -1);
+function equipKey(p, it) {
+  const ks = equipKeysFor(it.slot); if (ks.some(k => p.equip[k] === it)) return ks.find(k => p.equip[k] === it);
+  const empty = ks.find(k => !p.equip[k]); if (empty || ks.length === 1) return empty || ks[0];
+  return ks.reduce((w, k) => (ringScore(p.equip[k]) < ringScore(p.equip[w]) ? k : w), ks[0]);
+}
 function equipItem(p, inst, key) {
   if (!inst || !baseOf(inst.base)) return 'Nothing to equip';
   if (inst.req > p.level) return `Requires level ${inst.req}`;
@@ -708,7 +707,7 @@ function pickup(p, d) {
   sfx(RARITY[d.rar].i >= 3 ? 'loot' : 'pickup');
   if (typeof UI !== 'undefined' && d.kind !== 'potion') {   // loot toast on the right edge (HUD.md)
     if (d.kind === 'gem') UI.toast({ text: gemName(d.gem), icon: gemIcon(gemParse(d.gem).type), col: gemParse(d.gem).def.col });
-    else UI.toast({ text: itemName(d.it), icon: itemIcon(d.it), rarity: d.it.rarity });
+    else UI.toast({ text: itemName(d.it), icon: itemIcon(d.it), rarity: d.it.rarity, item: d.it });
   } else if (typeof UI !== 'undefined') UI.toast({ text: '+1 Potion', icon: miscIcon('potion'), col: '#ff8fa8' });
   burst(d.x, d.y, d.z + 0.3, 8 + RARITY[d.rar].i * 4, [rarityCol(d.rar), '#ffffff'], 2);
   return true;

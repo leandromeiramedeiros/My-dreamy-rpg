@@ -11,6 +11,10 @@
 //   ICONS.gem(type, grade)               -> gem (grade 0..4: chipped..radiant)
 //   ICONS.misc(name)                     -> potion dust rune chest xp key choice shrine tablet gold
 //   ICONS.glyph(glyph, color)            -> OLD glyph names -> new art (drop-in for icon())
+//   Gear icons (the 12 live families x 5 tiers) are DERIVED from the parts kit (js/parts-art.js, the same templates + tier tables
+//   hero.js paints): weapons are the held sprite turned 45 degrees, chests / helms the front torso / head, boots one boot at 2x.
+//   Pass item.base (a BASES id: 'sunforged', 'knightplate'...), never a variant or suit id. Without parts-art.js loaded the older
+//   hand-drawn gear icons below are used. ICONS.kindFor(base) -> { slot, family, tier } | null reports what a base resolves to.
 //   ICONS.frame(ctx, x, y, size, rarity, t) -> animated rarity frame + glow, draw over a slot
 //   ICONS.elementOf[skillId]             -> 'fire'|'frost'|'nature'|'lightning'|'arcane'|'physical'|'holy'
 // Every returned canvas is cached - treat as read-only (drawImage it, never draw on it).
@@ -459,6 +463,66 @@ const ICONS = (() => {
       if (t === 4) { disc(10, 16, 1.1, R.lf, true); bar(6, 20, 21, 20, 1, 1, R.gd); spk(18, 11, 1, '#fff', R.lt[2]); }
     },
   };
+  // ---- gear icons derived from the parts kit (M3) --------------------------------------------------------------------
+  // family -> [slot, its 5 base ids by tier index] (must match items.js FAMILY_TIERS; tools/hero-preview.html checks it against BASES)
+  const GEAR = {
+    sword: ['weapon', ['rustyblade', 'dawnblade', 'sunforged', 'auroraedge', 'dawneternal']], staff: ['weapon', ['willowwand', 'starfall', 'cometrod', 'nebulasceptre', 'nighteternal']],
+    bow: ['weapon', ['hunterbow', 'moonbow', 'silverwing', 'eclipsebow', 'mooneternal']],
+    knighthelm: ['head', ['ironcap', 'knighthelm', 'sunguard', 'auroravisor', 'crownofdawn']], arcanecowl: ['head', ['novicehood', 'arcanecowl', 'starweave', 'astralcirclet', 'crownofstars']],
+    wardenhood: ['head', ['rangercap', 'wardenhood', 'mossmantle', 'thornwarden', 'crownofroots']],
+    warden: ['chest', ['ironmail', 'knightplate', 'sunplate', 'auroraplate', 'dawnaegis']], dreamweave: ['chest', ['linenrobe', 'dreamrobe', 'starwoven', 'nebularobe', 'dreamshroud']],
+    stalker: ['chest', ['jerkin', 'stalkerjacket', 'nightcoat', 'shadowweave', 'eclipsegarb']],
+    knightgreaves: ['boots', ['ironboots', 'knightgreaves', 'sungreaves', 'auroragreaves', 'dawnstriders']], clothsandals: ['boots', ['ropesandals', 'clothsandals', 'mistwalkers', 'skystep', 'cloudsteps']],
+    stalkershoes: ['boots', ['softshoes', 'stalkershoes', 'quietstep', 'shadowstep', 'eclipsetreads']],
+  };
+  const GEAR_OF = {}; for (const f in GEAR) GEAR[f][1].forEach((id, t) => { GEAR_OF[id] = { slot: GEAR[f][0], family: f, tier: t }; });
+  const LEGACY_KIND = { sword: 'sword', staff: 'staff', bow: 'bow', knighthelm: 'knight', arcanecowl: 'arcane', wardenhood: 'warden', warden: 'plate', dreamweave: 'robe', stalker: 'jacket',
+    knightgreaves: 'greaves', clothsandals: 'sandals', stalkershoes: 'shoes' };   // the pre-kit hand-drawn icons (used only without parts-art.js)
+  const ORIGIN = { origin_knight: 'physical', origin_mystic: 'arcane', origin_ranger: 'nature', origin_thief: 'frost', origin_warrior: 'fire' };   // starter rings
+  function kindFor(base, tier) {                     // a base id (or, for old callers, a family id) -> the kit family it draws
+    base = String(base || ''); if (GEAR_OF[base]) return GEAR_OF[base];
+    if (GEAR[base]) return { slot: GEAR[base][0], family: base, tier: clamp(tier | 0, 0, 4) };
+    return null;
+  }
+  // nearest-neighbour turn + fit of kit cells into the 24x24 icon: 3x3 sub-samples per pixel, the commonest colour wins (thin blades survive the shrink)
+  function turnFit(cells, deg, maxSize, keepScale) {
+    const g = new Map(); let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for (const [x, y, c] of cells) { g.set(x * 512 + y, c); x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x + 1); y1 = Math.max(y1, y + 1); }
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, a = deg * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+    let bx0 = 1e9, by0 = 1e9, bx1 = -1e9, by1 = -1e9;
+    for (const [x, y] of [[x0, y0], [x1, y0], [x0, y1], [x1, y1]]) { const u = (x - cx) * ca - (y - cy) * sa, v = (x - cx) * sa + (y - cy) * ca; bx0 = Math.min(bx0, u); bx1 = Math.max(bx1, u); by0 = Math.min(by0, v); by1 = Math.max(by1, v); }
+    const k = Math.min(keepScale || 1, maxSize / (bx1 - bx0), maxSize / (by1 - by0)), mx = (bx0 + bx1) / 2, my = (by0 + by1) / 2, out = [];
+    for (let v = 0; v < N; v++) for (let u = 0; u < N; u++) {
+      const hit = {}; let n = 0, best = null, bn = 0;
+      for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) {
+        const px = (u + (i + 0.5) / 3 - N / 2) / k + mx, py = (v + (j + 0.5) / 3 - N / 2) / k + my;
+        const sx = px * ca + py * sa + cx, sy = -px * sa + py * ca + cy, c = g.get(Math.floor(sx) * 512 + Math.floor(sy));
+        if (c) { n++; hit[c] = (hit[c] || 0) + 1; if (hit[c] > bn) { bn = hit[c]; best = c; } }
+      }
+      if (n >= 4) out.push([u, v, best]);
+    }
+    return out;
+  }
+  const memoKit = {};
+  function kitCells(slot, family, tier, demo) {      // -> [[x, y, '#hex']] already placed in the 24x24 icon, or null (no kit / no such family)
+    if (typeof PARTS_ART === 'undefined') return null;
+    const key = slot + family + tier + (demo ? 'd' : ''); if (key in memoKit) return memoKit[key];
+    let res = null;
+    if (slot === 'weapon') {
+      const w = PARTS_ART.weapon(family, tier, demo, 0, 4);
+      if (w) res = turnFit(w.cells, w.aim === 'up' ? 45 : -45, 22.5, 1);
+    } else {
+      const a = PARTS_ART.armour(slot, family, tier, 'front');
+      if (a) {
+        const cells = []; for (const L of a.layers) { for (const q of L.cells) cells.push(q); if (L.cellsR) for (const q of L.cellsR) cells.push(q); }
+        if (slot === 'boots') { const L = a.layers[a.layers.length - 1]; cells.length = 0; for (const q of L.cells) cells.push([(q[0] - 3) * 2, (q[1] - 23) * 2, q[2]], [(q[0] - 3) * 2 + 1, (q[1] - 23) * 2, q[2]], [(q[0] - 3) * 2, (q[1] - 23) * 2 + 1, q[2]], [(q[0] - 3) * 2 + 1, (q[1] - 23) * 2 + 1, q[2]]);
+          res = turnFit(cells, 0, 22.5, 1); }
+        else res = turnFit(cells, 0, 22.5, 1);
+      }
+    }
+    return (memoKit[key] = res);
+  }
+
   const KIND = { sword: [FAM, 'sword'], staff: [FAM, 'staff'], bow: [FAM, 'bow'],
     knight: [HM, 'knight'], arcane: [HM, 'arcane'], warden: [HM, 'warden'], plate: [CH, 'plate'], robe: [CH, 'robe'], jacket: [CH, 'jacket'],
     greaves: [BT, 'greaves'], sandals: [BT, 'sandals'], shoes: [BT, 'shoes'] };
@@ -742,13 +806,16 @@ const ICONS = (() => {
     // opts (all items, optional): { element: ring/amulet tint, implicit: element of the item's implicit -> dot on the frame, tempered: bright frame edge }
     // trinkets: base = TRINKET_BASES id | TRINKET_UNIQUES / WORLD_UNIQUES id | 'ring'|'amulet'|'belt' (+ tier 1..3)
     item(base, tier, rarity, gems, opts) {
-      tier = clamp(tier | 0, 0, 4); rarity = RC[rarity] ? rarity : 'common'; opts = opts || {};
+      const hadTier = typeof tier === 'number'; tier = clamp(tier | 0, 0, 4); rarity = RC[rarity] ? rarity : 'common'; opts = opts || {};
       const gk = (gems || []).map((g) => (g ? String(g) : '-')).join(',');
-      const tb = TRK_BASES[base] || (TRK_SLOT[base] ? [base, clamp(tier, 1, 3)] : null), uq = UQ[base] ? base : null, el = EC[opts.element] ? opts.element : null;
+      const og = ORIGIN[base] || null, tb = og ? ['ring', 1] : TRK_BASES[base] || (TRK_SLOT[base] ? [base, clamp(tier, 1, 3)] : null), uq = UQ[base] ? base : null;
+      const el = EC[opts.element] ? opts.element : og;
+      const kf0 = tb || uq ? null : kindFor(base, tier), kf = kf0 && (hadTier ? Object.assign({}, kf0, { tier }) : kf0), kc = kf && kitCells(kf.slot, kf.family, kf.tier);   // an explicit tier wins over the base's own
       return memo(`i:${base}:${tier}:${rarity}:${gk}:${el}:${opts.implicit || ''}:${opts.tempered ? 1 : 0}`, () => {
         let o;
         if (tb || uq) o = paint(() => (uq ? UQ[uq]() : TRK[tb[0]](tb[1], el && EC[el])), slotBg());
-        else { const kind = kindOf(base), [tab, name] = KIND[kind]; o = paint(() => tab[name](tier), slotBg()); }
+        else if (kc) o = paint(() => { for (const q of kc) P(q[0], q[1], q[2]); }, slotBg());                 // derived from the parts kit
+        else { const kind = kf ? LEGACY_KIND[kf.family] : kindOf(base), [tab, name] = KIND[kind]; o = paint(() => tab[name](kf ? kf.tier : tier), slotBg()); }
         (gems || []).slice(0, 3).forEach((g, k) => { const s = g ? String(g).split('_') : null; dotAt(o, k, s && s[0]); });
         drawStaticFrame(o, rarity);
         if (opts.implicit) implicitDot(o, opts.implicit);
@@ -756,7 +823,15 @@ const ICONS = (() => {
         return bake(o);
       });
     },
-    trinketIds: Object.keys(TRK_BASES), uniqueIds: Object.keys(UQ),
+    // a framed icon straight from a kit set (any family, incl. PARTS_ART.DEMO ones with demo = true): ICONS.kit('weapon', 'rapier', 3, 'epic', true)
+    kit(slot, family, tier, rarity, demo) {
+      tier = clamp(tier | 0, 0, 4); rarity = RC[rarity] ? rarity : 'common';
+      return memo(`k:${slot}:${family}:${tier}:${rarity}:${demo ? 1 : 0}`, () => {
+        const kc = kitCells(slot, family, tier, !!demo); if (!kc) return null;
+        const o = paint(() => { for (const q of kc) P(q[0], q[1], q[2]); }, slotBg()); drawStaticFrame(o, rarity); return bake(o);
+      });
+    },
+    trinketIds: Object.keys(TRK_BASES).concat(Object.keys(ORIGIN)), uniqueIds: Object.keys(UQ), kindFor, gearBases: GEAR_OF,
     gem(type, grade) {
       if (typeof type === 'string' && type.includes('_')) { const q = type.split('_'); type = q[0]; if (grade == null) grade = +q[1]; }
       grade = clamp(grade | 0, 0, 2); type = GEM[type] ? type : 'ruby';        // 3 grades: chipped, clear, radiant

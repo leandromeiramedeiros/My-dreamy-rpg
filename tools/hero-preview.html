@@ -1,10 +1,14 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>Hero preview</title>
 <style>
+ pre{margin:6px 12px;font:11px/1.25 monospace;color:#b8b0d8;white-space:pre-wrap;max-width:1250px}
  body{margin:0;background:#15121e;color:#cfc8e8;font:12px/1.4 monospace}
  h2{margin:14px 12px 4px;font-size:13px;color:#ffd870}
  canvas{display:block;image-rendering:pixelated;margin:0 12px}
 </style></head><body>
+<h2>PARTS KIT: every live weapon variant x tier (held sprite 3x, its kit-derived 24px icon 2x) and the planned RAPIER (demo: template + palette only, not in game)</h2><canvas id="kitw"></canvas>
+<h2>PARTS KIT: every armour suit x tier (helm + chest + boots of one suit, with the suit's weapon; front 3x, back 2x)</h2><canvas id="kits"></canvas>
+<h2>The RAPIER demo as data: one template + one tier table (everything a new variant costs; nothing else was touched)</h2><canvas id="rap"></canvas><pre id="rapdata"></pre>
 <h2>Gear families x tiers 0-4 (front | back), shown on base hero, 4x</h2><canvas id="gear"></canvas>
 <h2>Weapons x tiers 0-4 (held sprite + weapon alone), 4x</h2><canvas id="weap"></canvas>
 <h2>Mixed outfits with gems (front, back, walk strip)</h2><canvas id="mix"></canvas>
@@ -14,7 +18,7 @@
 <h2>Walk cycle (idle 2f, walk 4f), front/back, mirrored side, 6x</h2><canvas id="walk"></canvas>
 <script src="../js/util.js"></script>
 <script src="../js/sprites.js"></script><script src="../js/art.js"></script><script src="../js/data.js"></script>
-<script src="../js/parts-art.js"></script><script src="../js/hero.js"></script>
+<script src="../js/parts-art.js"></script><script src="../js/hero.js"></script><script src="../js/icons.js"></script>
 <script>
 'use strict';
 const BG = '#1d1a2a', TXT = '#cfc8e8';
@@ -24,6 +28,57 @@ function cell(x, px, py, w, h) { x.fillStyle = '#26223a'; x.fillRect(px, py, w, 
 const SC = 4, CW = 96, CH = 152;
 const FULL = { head: { family: 'knighthelm', tier: 3 }, chest: { family: 'warden', tier: 3 }, boots: { family: 'knightgreaves', tier: 3 }, weapon: { family: 'sword', tier: 3 } };
 function sprite(x, cvs, px, py, sc) { x.drawImage(cvs, 0, 0, cvs.width, cvs.height, px, py, cvs.width * sc, cvs.height * sc); }
+
+
+// ---- PARTS KIT: weapons (every live variant x tier + the rapier demo) -----------------------------------------------------
+const TIER_NAMES = {
+  sword: ['Rusty Blade', 'Dawnblade', 'Sunforged Blade', 'Aurora Edge', 'Dawn Eternal'], staff: ['Willow Wand', 'Starfall Staff', 'Comet Rod', 'Nebula Sceptre', 'Night Eternal'],
+  bow: ["Hunter's Bow", 'Moonbow', 'Silverwing', 'Eclipse Longbow', 'Moon Eternal'], rapier: ['Tin Needle', 'Moonpoint', 'Silver Estoc', 'Starpoint', 'Needle Eternal'],
+};
+(function () {
+  const rows = [['sword', false], ['staff', false], ['bow', false], ['rapier', true]], CWK = 214, RH = 150, x = cv('kitw', 80 + 5 * CWK, rows.length * RH + 6);
+  rows.forEach(([f, demo], r) => {
+    const y = r * RH + 4; label(x, f, 6, y + 20, '#ffd870'); if (demo) { label(x, 'DEMO', 6, y + 36, '#ff8aa0'); label(x, '(planned,', 6, y + 50, '#ff8aa0'); label(x, 'not in game)', 6, y + 62, '#ff8aa0'); }
+    for (let t = 0; t < 5; t++) {
+      const b = HERO.build({ weapon: { family: f, tier: t, demo, gems: t >= 2 ? ['ruby', 'topaz'] : null } }), px = 80 + t * CWK; cell(x, px, y, CWK - 4, RH - 4);
+      const w = b.weapon, sc = Math.min(3, Math.floor(118 / w.height)) || 1;
+      x.drawImage(w, 0, 0, w.width, w.height, px + 6, y + 6, w.width * sc, w.height * sc);
+      const ic = ICONS.kit('weapon', f, t, ['common', 'uncommon', 'rare', 'epic', 'legendary'][t], demo);
+      if (ic) x.drawImage(ic, 0, 0, 24, 24, px + 134, y + 8, 48, 48);
+      x.save(); x.translate(px + 120, y + 62); x.scale(1.4, 1.4); HERO.drawHero(x, b, 'front', 0, 0, 0); x.restore();
+      label(x, 'T' + (t + 1) + ' ' + TIER_NAMES[f][t], px + 6, y + RH - 10, '#cfc8e8');
+    }
+  });
+})();
+// ---- PARTS KIT: suits x tiers
+(function () {
+  const suits = [['warden', 'knighthelm', 'knightgreaves', 'sword'], ['dreamweave', 'arcanecowl', 'clothsandals', 'staff'], ['stalker', 'wardenhood', 'stalkershoes', 'bow']];
+  const CWS = 100, CHS = 128, x = cv('kits', 100 + 10 * CWS, suits.length * (CHS + 6) + 4);
+  suits.forEach(([chest, head, boots, weap], r) => {
+    const y = r * (CHS + 6) + 4; label(x, chest, 6, y + 30, '#ffd870'); label(x, head, 6, y + 46); label(x, boots, 6, y + 62); label(x, weap, 6, y + 78);
+    for (let t = 0; t < 5; t++) {
+      const b = HERO.build({ head: { family: head, tier: t }, chest: { family: chest, tier: t }, boots: { family: boots, tier: t }, weapon: { family: weap, tier: t } });
+      cell(x, 100 + t * CWS, y, CWS - 4, CHS); x.save(); x.translate(100 + t * CWS + 4, y + 8); x.scale(3, 3); x.imageSmoothingEnabled = false; HERO.drawHero(x, b, 'front', 0, 0, 0); x.restore();
+      label(x, 'T' + (t + 1), 100 + t * CWS + 4, y + 12);
+      cell(x, 100 + (t + 5) * CWS, y, CWS - 4, CHS); x.save(); x.translate(100 + (t + 5) * CWS + 14, y + 14); x.scale(2, 2); x.imageSmoothingEnabled = false; HERO.drawHero(x, b, 'back', 0, 0, 0); x.restore();
+      label(x, 'T' + (t + 1) + ' back', 100 + (t + 5) * CWS + 4, y + 12);
+    }
+  });
+})();
+// ---- the rapier demo: the data, shown (this is what an artist writes for a new variant)
+(function () {
+  const R = PARTS_ART.DEMO.weapon.rapier, x = cv('rap', 1280, 190);
+  for (let t = 0; t < 5; t++) {
+    const b = HERO.build({ weapon: { family: 'rapier', tier: t, demo: true, rarity: ['common', 'uncommon', 'rare', 'epic', 'legendary'][t] } }), px = 6 + t * 250; cell(x, px, 4, 244, 180);
+    x.save(); x.translate(px + 8, 14); x.scale(4, 4); x.imageSmoothingEnabled = false; HERO.drawHero(x, b, 'front', 0, 0, 0); x.restore();
+    const w = b.weapon; x.drawImage(w, 0, 0, w.width, w.height, px + 130, 10, w.width * 3, w.height * 3);
+    label(x, 'T' + (t + 1) + ' ' + TIER_NAMES.rapier[t], px + 6, 178);
+  }
+  const rowsOf = lay => (lay.shapes ? Object.keys(lay.shapes).map(k => '  shape ' + k + ' (grow ' + JSON.stringify(lay.shapes[k].grow) + '):\n    ' + lay.shapes[k].rows.join('\n    ')).join('\n') : '  ' + lay.rows.join('\n  '));
+  document.getElementById('rapdata').textContent =
+    'DEMO.weapon.rapier = {\n tpl: aim ' + R.tpl.aim + ', slots ' + JSON.stringify(R.tpl.slots) + '\n' + R.tpl.layers.map(l => ' layer "' + l.id + '":\n' + rowsOf(l)).join('\n') +
+    '\n pal: ' + JSON.stringify(R.pal) + '\n tiers:\n' + R.tiers.map((t, i) => '  T' + (i + 1) + ' ' + TIER_NAMES.rapier[i].padEnd(14) + JSON.stringify(t)).join('\n') + '\n}';
+})();
 
 // ---- gear grid
 (function () {
@@ -103,7 +158,7 @@ function rarRow(row, t, dt, y0, RS, bg) {
   document.getElementById('scalehere').appendChild(sc);
   const x = sc.getContext('2d'); x.imageSmoothingEnabled = false; grass(x, 480, 150);
   label(x, 'old 16px hero | new hero 1x idle, walk 4f, attack | new 2x', 4, 10, '#fff');
-  let old = null; try { old = buildPlayerSprites({ weapon: 'sword', head: 'knighthelm', chest: 'warden', boots: 'knightgreaves' }); } catch (e) { old = null; }
+  let old = null; try { old = buildLegacyPlayerSprites({ weapon: 'sword', head: 'knighthelm', chest: 'warden', boots: 'knightgreaves' }); } catch (e) { old = null; }
   if (old) { x.drawImage(old.front[0], 12, 40); x.drawImage(old.back[0], 36, 40); }
   const b = HERO.build(FULL), b2 = HERO.build(MIX[1][1]), b3 = HERO.build(MIX[2][1]);
   [b, b2, b3].forEach((bb, k) => {
