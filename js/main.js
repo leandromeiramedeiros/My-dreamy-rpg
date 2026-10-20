@@ -199,22 +199,24 @@ function loop(now) {
 // loop(): update + render + preload), draw calls (2D context calls this frame, counted by wrappers installed only when ?perf
 // is set), particles (pooled + ambient), and the per-phase split (render.js perfMark). Off: `PERF.on` is false, nothing is
 // wrapped, the loop pays two boolean tests. window.__perf() returns the same numbers for tools.
-const PERF_N = 240, PERF_RING = { f: new Float32Array(PERF_N), w: new Float32Array(PERF_N), i: 0, n: 0, ph: {}, phN: 0, tot: {}, totN: 0, slow: {}, slowN: 0, steps: 0, txt: null, at: 0 };
+const PERF_N = 240, PERF_RING = { f: new Float32Array(PERF_N), w: new Float32Array(PERF_N), i: 0, n: 0, ph: {}, phN: 0, tot: {}, totN: 0, slow: {}, slowN: 0, steps: 0, dtot: {}, txt: null, at: 0 };
 function perfBegin(dms) {
-  const R = PERF_RING; R.f[R.i] = dms; PERF.t = performance.now(); PERF.draws = 0;
+  const R = PERF_RING; R.f[R.i] = dms; PERF.t = performance.now(); PERF.draws = 0; PERF.d0 = 0;
   for (const k in PERF.ph) PERF.ph[k] = 0;
+  for (const k in PERF.dph) PERF.dph[k] = 0;
 }
 function perfEnd(work, steps) {
   const R = PERF_RING; R.w[R.i] = work; R.i = (R.i + 1) % PERF_N; R.n = Math.min(PERF_N, R.n + 1);
   for (const k in PERF.ph) { R.ph[k] = (R.ph[k] || 0) + PERF.ph[k]; R.tot[k] = (R.tot[k] || 0) + PERF.ph[k]; }
   R.phN++; R.totN++; R.steps = (R.steps || 0) + steps;
+  for (const k in PERF.dph) R.dtot[k] = (R.dtot[k] || 0) + PERF.dph[k];
   if (work > 18) { R.slowN = (R.slowN || 0) + 1; for (const k in PERF.ph) R.slow[k] = (R.slow[k] || 0) + PERF.ph[k]; }   // what the slow frames are made of
   R.draws = PERF.draws;
 }
 // perfStats(true): the phase split averaged since the last perfStats(true, true) reset (tools/perf.js), not the overlay's 250 ms window
 function perfStats(total, reset) {
   const R = PERF_RING, n = R.n; if (!n) return null;
-  if (reset) { R.tot = {}; R.totN = 0; R.slow = {}; R.slowN = 0; R.steps = 0; return null; }
+  if (reset) { R.tot = {}; R.totN = 0; R.slow = {}; R.slowN = 0; R.steps = 0; R.dtot = {}; return null; }
   const q = a => { const s = Array.from(a.subarray(0, n)).sort((x, y) => x - y); return { avg: s.reduce((x, y) => x + y, 0) / n, p95: s[Math.min(n - 1, Math.floor(n * 0.95))] }; };
   const f = q(R.f), w = q(R.w), ph = {};
   const src = total ? R.tot : R.ph, sn = total ? R.totN : R.phN;
@@ -223,6 +225,7 @@ function perfStats(total, reset) {
   if (total) {   // tools: update steps per frame, and the phase split of the frames whose work went over 18 ms
     out.steps = +(R.steps / Math.max(1, R.totN)).toFixed(2); out.slowFrames = R.slowN || 0; out.slow = {};
     for (const k in R.slow) out.slow[k] = +(R.slow[k] / Math.max(1, R.slowN)).toFixed(2);
+    out.drawsBy = {}; for (const k in R.dtot) if (R.dtot[k]) out.drawsBy[k] = Math.round(R.dtot[k] / Math.max(1, R.totN));
   }
   return out;
 }

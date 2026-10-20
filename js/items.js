@@ -662,7 +662,7 @@ function gearAction(a) {
   if (S['found:' + a.item] || p.equip[b.slot] || G.drops.some(d => d.found === a.item)) return false;
   const it = makeItem(a.item, RARITY[a.rarity] ? a.rarity : 'common', 1, { sockets: +a.sockets || 0, affixes: [] }), m = G.map;
   const x = +a.x, y = +a.y, z = tileH(m, x, y);
-  G.drops.push({ kind: 'item', it, sx: x, sy: y, x, y, z, t: 0.5, rar: it.rarity, name: itemName(it), found: a.item, equip: true, keep: true, line: a.line || null, ground: true });
+  G.drops.push({ kind: 'item', it, sx: x, sy: y, x, y, z, t: 0.5, rar: it.rarity, name: itemName(it), found: a.item, equip: true, keep: true, ground: true });
   return true;
 }
 
@@ -713,7 +713,7 @@ function spawnDrop(x, y, d) {
   const name = d.kind === 'item' ? itemName(d.it) : d.kind === 'gem' ? gemName(d.gem) : 'Health Potion';
   G.drops.push(Object.assign({ sx: x, sy: y, x: tx, y: ty, z: tileH(m, tx, ty), t: 0, rar, name }, d));
   if (RARITY[rar].i >= 1) sfx('drop' + RARITY[rar].i);   // pitch-stepped chime per rarity
-  if (G.drops.length > MAX_DROPS) { const i = G.drops.findIndex(q => q.rar === 'common'); G.drops.splice(i >= 0 ? i : 0, 1); }
+  if (G.drops.length > MAX_DROPS) { let i = G.drops.findIndex(q => q.rar === 'common' && !q.keep); if (i < 0) i = G.drops.findIndex(q => !q.keep); if (i >= 0) G.drops.splice(i, 1); }
 }
 function dropLoot(x, y, list) { list.forEach((d, i) => delay(i * 0.08, () => spawnDrop(x, y, d))); }
 function onEnemyKilled(e) {
@@ -743,11 +743,34 @@ function lateUniqueDrop(e, c) {
   for (const id in UNIQUES) { const U = UNIQUES[id]; if (U.late && (e.lvl || 0) >= U.late && !S['unique:' + id]) { S['unique:' + id] = true; return id; } }
   return null;
 }
+// §28 first-kit pickups: a drop flagged `equip` (the sword in the grass, the cottage cap, the ambush boots, the first chest's ring)
+// is PUT ON when its slot is empty, so the hero visibly takes it up; a `teach` drop (the first chest's mail) goes into the bag,
+// which then opens on it with EQUIP focused (only during a bare opening, G.prog.secrets.opening). `found` records the piece
+// (gearAction never places it again).
+function wearOnPickup(p, d) {
+  if (!d.equip || d.kind !== 'item') return false;
+  const it = d.it, key = equipKeysFor(it.slot).find(k => !p.equip[k]);
+  if (!key || it.req > p.level) return false;
+  p.equip[key] = it; recalcStats(p, false);
+  if (typeof hudNoun === 'function') hudNoun(key);
+  burst(p.x, p.y, p.z + 1.2, 18, [rarityCol(it.rarity), '#ffffff', '#ffe6a0'], 2.4);
+  fx({ type: 'ring', x: p.x, y: p.y, r: 1.1, col: '#ffe6a0', life: 0.45 });
+  return true;
+}
 function pickup(p, d) {
   if (d.kind === 'potion') {
     if (p.potions < maxPotions(p)) { p.potions++; text(p.x, p.y, p.z + 3, '+1 Potion', '#ff8aa8'); } else healPlayer(p, p.maxHp * 0.15);
-  } else if (d.kind === 'gem') { if (!bagAdd(p, { gem: d.gem })) return false; text(p.x, p.y, p.z + 3, gemName(d.gem), gemParse(d.gem).def.col); }
-  else { if (!bagAdd(p, d.it)) return false; if (d.it.hist && !d.it.hist.found && G.map) d.it.hist.found = G.map.id; text(p.x, p.y, p.z + 3, itemName(d.it), RARITY[d.it.rarity].col, RARITY[d.it.rarity].i >= 3); }
+  } else if (d.kind === 'gem') {
+    if (!bagAdd(p, { gem: d.gem })) return false; text(p.x, p.y, p.z + 3, gemName(d.gem), gemParse(d.gem).def.col);
+    if (d.teach === 'socket' && openingActive()) delay(0.7, () => teachSocket(p, d.gem));
+  }
+  else {
+    const worn = wearOnPickup(p, d);
+    if (!worn && !bagAdd(p, d.it)) return false;
+    if (d.it.hist && !d.it.hist.found && G.map) d.it.hist.found = G.map.id; text(p.x, p.y, p.z + 3, itemName(d.it), RARITY[d.it.rarity].col, RARITY[d.it.rarity].i >= 3);
+    if (d.found && G.prog) (G.prog.secrets || (G.prog.secrets = {}))['found:' + d.found] = true;
+    if (d.teach && !worn && openingActive()) delay(0.7, () => teachEquip(p, d.it));
+  }
   sfx(RARITY[d.rar].i >= 3 ? 'loot' : 'pickup');
   if (typeof UI !== 'undefined' && d.kind !== 'potion') {   // loot toast on the right edge (HUD.md)
     if (d.kind === 'gem') UI.toast({ text: gemName(d.gem), icon: gemIcon(gemParse(d.gem).type), col: gemParse(d.gem).def.col });
@@ -756,6 +779,16 @@ function pickup(p, d) {
   burst(d.x, d.y, d.z + 0.3, 8 + RARITY[d.rar].i * 4, [rarityCol(d.rar), '#ffffff'], 2);
   return true;
 }
+// the first chest's lesson (§28 "the bag opens on the mail"): the inventory opens on the item, EQUIP focused. Waits while
+// another screen is up; skipped once the item is worn or gone from the bag.
+function teachEquip(p, it) {
+  if (!p.bag.includes(it) || G.state !== 'play') return;
+  if (G.ui.open || G.ui.pause || G.ui.help || G.ui.map || G.fadeDir) { delay(0.5, () => teachEquip(p, it)); return; }
+  openInv('inv'); G.ui.sel = it; G.ui.teach = { it, t: G.t };
+  if (typeof UI !== 'undefined' && UI.focus) UI.focus.set('btn:equip', true);
+}
+// a bare-start game (§28) is "in its opening" until the hero wears the whole first kit; saves from before §28 never are
+const openingActive = () => !!(G.prog && G.prog.secrets && G.prog.secrets.opening === 'bare');
 const chestKey = o => `${G.map.id}:${o.x},${o.y}`;
 function syncChests(m) { for (const o of m.objects) if (o.chest) { o.opened = !!G.prog.chests[`${m.id}:${o.src.x},${o.src.y}`]; o.img = o.opened ? ART.chestOpen : ART.chest; } }
 function openChest(o) {
@@ -826,6 +859,7 @@ function updateLoot(dt) {
   const p = G.player; if (!p || p.dead || G.state !== 'play') return;
   for (const d of G.drops) {
     d.t += dt;
+    if (d.auto && d.t > 0.9) { d.x += (p.x - d.x) * Math.min(1, dt * 9); d.y += (p.y - d.y) * Math.min(1, dt * 9); d.sx = d.x; d.sy = d.y; d.z = p.z; }   // the first chest's kit flies to the hero
     if (d.t > 0.5 && dist(p.x, p.y, d.x, d.y) < 0.65) {
       if (pickup(p, d)) d.done = true;
       else if (!G.bagWarnT || G.t > G.bagWarnT) { say('Bag full — salvage something (TAB)'); G.bagWarnT = G.t + 2.5; }
@@ -848,7 +882,7 @@ function updateLoot(dt) {
   if (G.tablet && (!best || best.obj !== G.tablet)) G.tablet = null;   // walking away closes the tablet
   if (best) {
     const o = best.obj, cpHere = G.checkpoint && G.checkpoint.map === G.map.id && dist(G.checkpoint.x, G.checkpoint.y, o.x, o.y) < 2.5;
-    best.text = o.use && best.kind === o.use.kind ? o.use.text(o) : best.kind === 'chest' ? 'Open' : best.kind === 'tablet' ? (G.tablet === o ? 'Close' : 'Read') : cpHere ? 'Rest (refill potions)' : 'Rest (set checkpoint)';
+    best.text = best.kind === 'fishspot' && firstCastOpen(o) ? 'Fish' : o.use && best.kind === o.use.kind ? o.use.text(o) : best.kind === 'chest' ? 'Open' : best.kind === 'tablet' ? (G.tablet === o ? 'Close' : 'Read') : cpHere ? 'Rest (refill potions)' : 'Rest (set checkpoint)';
     best.x = o.x; best.y = o.y; best.z = o.z || 0;
   }
   G.prompt = best;
@@ -859,8 +893,30 @@ function interact(p) {
   if (q.kind === 'chest' && !o.opened) openChest(o);
   else if (q.kind === 'shrine') setCheckpoint(p.x, p.y);
   else if (q.kind === 'tablet') { G.tablet = G.tablet === o ? null : o; if (G.tablet) sfx('pickup'); }
+  else if (q.kind === 'fishspot' && firstCastOpen(o)) firstCast(p, o);
   else if (o.use && q.kind === o.use.kind) o.use.fn(o);
   return true;
+}
+// §28 2:20: ONE cast at the Vale's first fishing spot (pool vale_a, beside the tutorial chest) lands a guaranteed Chipped gem;
+// in a bare opening the bag then opens with that gem picked, so it goes into the mail's socket right there. Every other cast
+// stays the maps.js stub until fishing lands. Saved as G.prog.fishing.valeCast.
+const FIRST_CAST = { map: 'vale', pool: 'vale_a', gem: 'sapphire_1' };
+const firstCastOpen = o => !!(o && o.src && G.map && G.map.id === FIRST_CAST.map && o.src.pool === FIRST_CAST.pool && !(G.prog.fishing && G.prog.fishing.valeCast));
+function firstCast(p, o) {
+  (G.prog.fishing || (G.prog.fishing = {})).valeCast = true;
+  fx({ type: 'ring', x: o.x, y: o.y, r: 0.8, col: '#9fe8ff', life: 0.6 }); sfx('blink'); p.rootT = Math.max(p.rootT, 0.6);
+  delay(0.6, () => {
+    burst(o.x, o.y, (o.z || 0) + 0.4, 14, ['#9fe8ff', '#ffffff', GEMS.sapphire.col], 2.2);
+    dropLoot(p.x, p.y, [{ kind: 'gem', gem: FIRST_CAST.gem, auto: true, teach: 'socket' }]);
+  });
+}
+// the second bag lesson ("socket"): the bag opens with the fished gem picked; clicking the mail's empty socket sets it
+function teachSocket(p, gem) {
+  if (G.state !== 'play') return;
+  if (G.ui.open || G.ui.pause || G.ui.help || G.ui.map || G.fadeDir) { delay(0.5, () => teachSocket(p, gem)); return; }
+  const i = p.bag.findIndex(e => e && e.gem === gem), host = EQUIP_SLOTS.map(k => p.equip[k]).find(it => it && it.sockets.some(g => !g));
+  if (i < 0 || !host) return;
+  openInv('inv'); G.ui.gem = i; G.ui.sel = { gem, gemIdx: i }; G.ui.teach = { gem, t: G.t };
 }
 
 // ===== potions =========================================================================================

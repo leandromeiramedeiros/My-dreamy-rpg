@@ -42,7 +42,7 @@ const srv = http.createServer((q, r) => {
   const pf = await page.evaluate(() => window.__perf && window.__perf(true));
   const out = { map, query: extra || undefined, seconds: secs, frames: d.length, avg: +(d.reduce((a, b) => a + b, 0) / d.length).toFixed(2), p50: q(0.5), p95: q(0.95), p99: q(0.99), max: +d[d.length - 1].toFixed(2),
     work: { avg: +(w.reduce((a, b) => a + b, 0) / w.length).toFixed(2), p50: wq(0.5), p95: wq(0.95), p99: wq(0.99), max: +w[w.length - 1].toFixed(2) }, errors: errs.length };
-  if (pf && pf.ph && Object.keys(pf.ph).length) { out.phases = pf.ph; out.draws = pf.draws; out.parts = pf.parts; out.tier = pf.tier; out.steps = pf.steps; out.slowFrames = pf.slowFrames; out.slow = pf.slow; }   // only with ?perf in the query
+  if (pf && pf.ph && Object.keys(pf.ph).length) { out.phases = pf.ph; out.draws = pf.draws; out.parts = pf.parts; out.tier = pf.tier; out.steps = pf.steps; out.slowFrames = pf.slowFrames; out.slow = pf.slow; out.drawsBy = pf.drawsBy; }   // only with ?perf in the query
   console.log(JSON.stringify(out));
   await br.close(); srv.close();
 })();

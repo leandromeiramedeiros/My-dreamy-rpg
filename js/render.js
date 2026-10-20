@@ -18,7 +18,7 @@ const SCN = makeCanvas(RW, RH), sctx = SCN.x;
 // lands in the phase that queued it (a profiling mode: the readback itself slows the frame).
 const PERF = (() => {
   let q = null; try { q = new URLSearchParams(location.search).get('perf'); } catch (e) { /* no location */ }
-  return { on: !!q && q !== '0', flush: q === 'flush', t: 0, ph: {}, draws: 0 };
+  return { on: !!q && q !== '0', flush: q === 'flush', t: 0, ph: {}, draws: 0, d0: 0, dph: {} };
 })();
 // quality tiers (§26.4 steps 3-4): 'high' = desktop, the reference look; 'phone' = the ?phone=1 / coarse-pointer caps
 const QUALITY = { tier: 'high' };
@@ -26,6 +26,7 @@ function perfMark(name, cx) {
   if (!PERF.on) return;
   if (PERF.flush) (cx || sctx).getImageData(0, 0, 1, 1);
   const t = performance.now(); PERF.ph[name] = (PERF.ph[name] || 0) + t - PERF.t; PERF.t = t;
+  PERF.dph[name] = (PERF.dph[name] || 0) + PERF.draws - PERF.d0; PERF.d0 = PERF.draws;   // draw calls per phase
 }
 const LM = makeCanvas(RW / 2, RH / 2);
 const B1 = makeCanvas(RW / 4, RH / 4), BT = makeCanvas(RW / 4, RH / 4), B2 = makeCanvas(RW / 8, RH / 8), BC = makeCanvas(RW / 4, RH / 4);
