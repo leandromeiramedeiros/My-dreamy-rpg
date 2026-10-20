@@ -1693,3 +1693,64 @@ Full feedback: `docs/meetings/2026-10-20-opening.md`.
 * **The twist is seeded by placement and silence.** The only new line is Pip's "Three days. You've been asleep three days."
   Every STORY.md line stays.
 * **Pip gets a body now:** a light parented to the hero that drifts toward each objective. The full companion stays M7.
+
+## 29. World art pass: ground, cliffs, island edges, trees, density, tall set pieces (expert level designer 2026-10-20; director-approved)
+The full report is `docs/meetings/2026-10-20-world-art.md`, with renders in `docs/meetings/world-art/`. Client complaints: the
+look of the tile maps, ugly trees, no volume or density, floaty borders. Client wants tall set pieces and vantage points.
+
+### 29.1 Diagnosis
+* **Ground speckle:** per-pixel hash jitter and "flecks" make the ground read as confetti (`maps.js:surfaceColor`).
+* **Hard joins:** there are no transition tiles between ground types.
+* **Lollipop trees:** the Vale trees are frozen PNG sheets (`sprites.js`, applied over `art.js` by `applySprites`). Each is one
+  ellipse with an outline.
+* **Cardboard cliffs:** cliffs have 1 strata row and no occlusion (shadowing at the base), overhang or cast shadow.
+* **Flat maps:** 83 % of the Vale is flat.
+* **Bald paths:** trees are spaced at 5 per 10×10 tiles, and paths are bald.
+* **North/west coasts have no thickness:** this is the biggest floaty cue. The underside curtain is uniform and ends in a line.
+
+### 29.2 Fix groups, each its own PR, in this order
+1. **Ground grammar, cliff faces v2, island edge v2, palette pass:** ~5 agent-days.
+   * Ground and cliffs:
+     * Remove the speckle.
+     * 4 variants per tile.
+     * 47-blob transitions.
+     * Lip highlights.
+     * 3-band strata with occlusion at the base, an overhang lip and baked wedge shadows.
+     * Height fog.
+   * Coasts:
+     * A raised north/west coast band.
+     * A 3-band skirt: lobes, then roots, then an alpha fade.
+     * The island's shadow on a 2-layer cloud sea.
+     * Hue-shifted 7-step ramps.
+2. **Trees v2, a canopy layer over the hero with fade, density ×2.5, 16 ground-decal kinds per zone:** ~5 agent-days.
+3. **Tall set pieces:** ~6 agent-days.
+   * New generator pieces: `stack`, `switchback`, root ladder and drop-down ledge.
+   * The Vale's *Dreamer's Cairn* (h 14) and Pinewood's *Hawk's Rest* (h 16).
+   * A vantage reveal cinematic: fog fill plus a full-map blit.
+   * Occlusion fixes: hero silhouette, cutaway, camera height bias, culling pads, sort key.
+* **Later zones** get one signature tall piece and one vantage each:
+
+  | Zone | Tall piece | Height |
+  |---|---|---|
+  | Ruins | Broken Stair | h 20 |
+  | Grotto | Tide Well, inverted | — |
+  | Caldera | Rim Walk | h 24 |
+  | Spire | 6 ledges | to h 30 |
+
+### 29.3 Process
+* Each zone gets a mood board (`docs/art/<zone>.md`).
+* Each section names one signature moment.
+* Landmark briefs, variation budgets and anti-samey generator rules are audited by `build.js`.
+* Art stays procedural in code. Approved output is frozen to sprite sheets. Props of 24 px or less are hand-written ASCII.
+* **Hero zone:** the Misty Pinewood outer section is polished to the bar first, then the rules port to the Vale.
+
+### 29.4 Acceptance bar
+Measured on 6 fixed camera shots in each PR:
+* Silhouette test at 120×68.
+* At least 5 value bands.
+* Fewer than 50 specks per frame.
+* Density per frame: at least 10 trees and 20 clutter items.
+* No edge without thickness, and at least 3 strata per cliff.
+* At least 3 height levels in 4 of the 6 shots.
+* Trees show three leaf masses and a rim light.
+* Perf gate: phone p95 ≤ 25 ms after the pass, and ≤ 20 ms before M4 ships.
