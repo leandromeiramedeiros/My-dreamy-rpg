@@ -129,7 +129,7 @@ const RING_KEYS = ['ring1', 'ring2'];
 function statRows(p, short) {
   const S = short ? { 'Crit dmg': 'CDmg', 'Skill dmg': 'SkDmg', Potions: 'Pots', Speed: 'Spd', Regen: 'Rgn' } : {};
   const sp = Math.round((p.speed / 3.7 - 1) * 100);
-  return [['Atk', Math.round(item('weapon', p.gear.weapon).basic.dmg * p.power)], ['HP', p.maxHp], ['MP', p.maxMp], ['Def', pctText(p.def)],
+  return [['Atk', Math.round(weaponOf(p).basic.dmg * p.power)], ['HP', p.maxHp], ['MP', p.maxMp], ['Def', pctText(p.def)],
     ['Crit dmg', signedPct(p.critDmg)], ['Crit', pctText(p.crit)], ['Skill dmg', signedPct(p.skillDmg)], ['Haste', signedPct(p.haste)],
     ['Potions', `${p.potions}/${p.maxPotions || MAX_POTIONS}`], ['CDR', signedPct(p.cdr, true)], ['Speed', signedPct(sp / 100)], ['Regen', `${+p.regen.toFixed(1)}/s`]].map(([k, v]) => [S[k] || k, v]);
 }
@@ -534,7 +534,7 @@ function setBonusLine(p) {
   return best;
 }
 function drawLoadout(ctx, p, x, y, w, emptyKey) {
-  const wp = item('weapon', p.gear.weapon), wi = p.equip.weapon, rowH = 28; let yy = y + 2;
+  const wp = weaponOf(p), wi = p.equip.weapon, rowH = 28; let yy = y + 2;   // §28: an empty slot shows no skill (slotSkill)
   HUD.loadoutT = G.t;
   UI.text(ctx, 'LOADOUT', x + 8, yy, 'body', UC.gold); yy += 24;
   const hint = emptyKey ? `Empty ${EQ_LABEL[emptyKey].toLowerCase()} slot` : (IN.device === 'touch' ? 'Tap an item to see it here' : 'Hover or select an item for details');
@@ -548,9 +548,9 @@ function drawLoadout(ctx, p, x, y, w, emptyKey) {
     UI.text(ctx, SKILLS[id].element, x + w - 8, yy + 5, 'small', UC.dim, 'right');
     yy += rowH;
   };
-  for (const k of ['q', 'e', 'r']) skillRow(k.toUpperCase(), p.wsk[wp.id] && p.wsk[wp.id][k], k === 'r' ? UC.gold : UC.stHi);
+  for (const k of ['q', 'e', 'r']) skillRow(k.toUpperCase(), slotSkill(p, k), k === 'r' ? UC.gold : UC.stHi);
   yy += 4; mnDivider(ctx, x + 8, yy, w - 16, 2); yy += 10;
-  for (const [k, slot] of [['F', 'chest'], ['C', 'head'], ['SHF', 'boots']]) skillRow(k, item(slot, p.gear[slot]).skill);
+  for (const [k, sk] of [['F', 'f'], ['C', 'c'], ['SHF', 'shift']]) skillRow(k, slotSkill(p, sk));
   yy += 4; mnDivider(ctx, x + 8, yy, w - 16, 2); yy += 10;
   const sb = setBonusLine(p);
   if (sb) {
@@ -616,9 +616,10 @@ function skillSlotBox(ctx, id, x, y, id2, fn, o = {}) {   // a 44 px skill slot,
   return r;
 }
 function drawCharacterTab(ctx, p) {
-  const u = G.ui, w = item('weapon', p.gear.weapon); let hoverId = null;
+  const u = G.ui, w = weaponOf(p); let hoverId = null;
   mnHead(ctx, `${w.name.toUpperCase()}`, COL1 + 8, 76);
-  ['q', 'e', 'r'].forEach((slot, i) => {
+  if (!p.equip.weapon) UI.text(ctx, 'No weapon: Q E R come with one.', COL1 + 8, 110, 'small', UC.dim);   // §28 bare start
+  else ['q', 'e', 'r'].forEach((slot, i) => {
     const y = 96 + i * 52;
     UI.text(ctx, slot.toUpperCase(), COL1 + 8, y + 14, 'body', slot === 'r' ? UC.gold : UC.stHi);
     w[slot].forEach((id, k) => {
@@ -631,7 +632,7 @@ function drawCharacterTab(ctx, p) {
   });
   mnHead(ctx, 'ARMOUR', COL1 + 8, 258);
   [['F', 'chest'], ['C', 'head'], ['SHF', 'boots']].forEach(([k, slot], i) => {
-    const id = item(slot, p.gear[slot]).skill, r = skillSlotBox(ctx, id, COL1 + 8 + i * 52, 278, 'ar:' + slot, () => { u.skSel = id; });
+    const id = slotSkill(p, { chest: 'f', head: 'c', boots: 'shift' }[slot]), r = skillSlotBox(ctx, id, COL1 + 8 + i * 52, 278, 'ar:' + slot, () => { if (id) u.skSel = id; });
     UI.text(ctx, k, COL1 + 30 + i * 52, 326, 'small', UC.dim, 'center');
     if (r.on) hoverId = id;
   });
@@ -643,7 +644,7 @@ function drawCharacterTab(ctx, p) {
     if (r.on) hoverId = id;
   });
   // ---- centre: the selected skill + modifier cards ----
-  const sid = hoverId || (u.skSel && SKILLS[u.skSel] ? u.skSel : p.wsk[w.id].q), sk = SKILLS[sid], info = skillInfo(p, sid);
+  const sid = hoverId || (u.skSel && SKILLS[u.skSel] ? u.skSel : slotSkill(p, 'q') || slotSkill(p, 'shift') || UNARMED.roll), sk = SKILLS[sid], info = skillInfo(p, sid);
   hudFrame(ctx, COL2 + 8, 76, 44, 44, 'slot'); ctx.drawImage(skillIcon(sid), COL2 + 14, 82, 32, 32); hudFrame(ctx, COL2 + 8, 76, 44, 44, 'slotRim', { tint: elColor(sk.element) });
   UI.text(ctx, sk.name, COL2 + 64, 78, 'body', UC.gold);
   UI.text(ctx, `${sk.element}   ${sk.mp ? sk.mp + ' MP   ' : ''}${sk.st ? sk.st + ' ST   ' : ''}CD ${sk.cd}s`, COL2 + 64, 102, 'small', UC.dim);
