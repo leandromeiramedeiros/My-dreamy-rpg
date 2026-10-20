@@ -1754,3 +1754,33 @@ Measured on 6 fixed camera shots in each PR:
 * At least 3 height levels in 4 of the 6 shots.
 * Trees show three leaf masses and a rim light.
 * Perf gate: phone p95 ≤ 25 ms after the pass, and ≤ 20 ms before M4 ships.
+
+## 30. Legendary: the spirit clone, "Echo" (client request, inspired by Dragon's Dogma "Wild Fury"; director-approved)
+* **Fantasy:** a colourful, translucent spirit of the hero appears just after you attack and repeats your attacks in
+  succession while you keep fighting.
+* **Mechanics**
+  * Every basic attack and Q/E cast is recorded as `{skillId, aimRel}`.
+  * **Position:** the clone stands where the hero was 0.4 s ago, read from a 24-frame ring buffer. It is an after-image,
+    not a pet, so it follows you through a dodge.
+  * **Timing:** it replays each recorded attack 0.4 s later through the existing cast functions, with `src:'echo'`. That
+    adds no new casts.
+  * **Queue:** at most 4 attacks; the oldest is dropped.
+  * **Lifetime:** it fades after 2 s without an attack and re-forms on the next one.
+  * **Damage:** the original hit's final damage × **k = 0.4** (a start value; balsim decides). It is **retyped to magic**:
+    the element with your highest amplification (`argmax` of the element % bonuses), arcane by default, never
+    slash/physical. Reactions apply, so a fire build's echo Burns.
+* **Exclusions** (these are the balance):
+  * **Never R.** This also stops it stacking with Pip's Lantern.
+  * No MP on hit, and ult charge at 50 %.
+  * **No on-hit procs:** an EFFECTS chain guard means echo hits can't trigger boons, affix triggers or the echo itself.
+  * Not a summon: untargetable, no aggro, and it doesn't count toward the §24 summon cap.
+  * **Hit feel:** target-only hitlag of at most 2 steps, never a global freeze. Half particles.
+* **Balance gate (balsim):** on reference gear at its drop level, an element-focused build gains +25–30 % DPS and an
+  unfocused build at most +15 %. Bramblehorn-class fights must stay inside their length band. If they don't, lower k first.
+* **Visual:** the cached layered hero, tinted, at alpha ~0.5 with additive blending and the mythic aura's hue cycle. It is
+  made of cached blits only.
+* **Engine:** one new EFFECTS hook, `when:'cast'`, in `useSkill`. It is built right after the §27 hit-feel lane, because it
+  shares that pipeline.
+* **Name and placement:** the rule id is `echo`. The story expert names it at placement (no reused character names). It
+  drops late (Act III+) as a reward for a built character.
+* **Unique budget (§19.5, 18 total):** it replaces one existing unique (see the decision log).
