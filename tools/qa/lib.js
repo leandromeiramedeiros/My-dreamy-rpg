@@ -323,7 +323,7 @@ class Bot {
     // stuck detection
     const now = Date.now(); this.posHist.push([now, p.x, p.y]); while (this.posHist.length && now - this.posHist[0][0] > 2500) this.posHist.shift();
     let stuck = false;
-    if (this.posHist.length > 20 && now - this.posHist[0][0] > 2200) { const [, ox, oy] = this.posHist[0]; if (Math.hypot(p.x - ox, p.y - oy) < 0.25 && !p.rootT && !p.casting) stuck = true; }
+    if (this.posHist.length > 20 && now - this.posHist[0][0] > 2200) { const [, ox, oy] = this.posHist[0]; if (Math.hypot(p.x - ox, p.y - oy) < 0.25 && !(p.rootT > 0) && !p.casting) stuck = true; }
     if (stuck && !g._noMove) {
       this.stuckN++; this.posHist = []; g.stuckN = (g.stuckN || 0) + 1; this.out.maps[s.map].stuck++;
       if (g.stuckN === 3 || g.stuckN === 8) { const f = await this.shot('stuck'); this.out.stuck.push({ at: +this.el(), map: s.map, pos: [p.x, p.y], goal: g.name, shot: f, n: g.stuckN }); this.log('bot stuck', { pos: [p.x, p.y], goal: g.name, n: g.stuckN }); }
