@@ -298,7 +298,7 @@ function drawScene() {
   // ---- ground decals: shadows, telegraphs, zones ----
   ctx.fillStyle = 'rgba(20,8,40,0.32)';
   const shadow = (x, y, z, r) => { const [vx, vy] = worldToView(x, y, z); ctx.beginPath(); ctx.ellipse(Math.round(vx), Math.round(vy), r, r * 0.45, 0, 0, Math.PI * 2); ctx.fill(); };
-  for (const o of viewObjs) if (o.shadow && !o.gone) shadow(o.x, o.y, o.z, o.shadow);
+  drawPropShadows(ctx, m);   // the props' static shadows, pre-rendered in 256 px tiles (was one ellipse fill per prop per frame)
   if (!p.dead) shadow(p.x, p.y, tileH(m, p.x, p.y), 6);
   const inViewE = e => { const vx = isoX(e.x, e.y) - camX + RW / 2, vy = isoY(e.x, e.y, e.z || 0) - camY + RH / 2; return vx > -90 && vx < RW + 90 && vy > -40 && vy < RH + 150; };
   const viewEnemies = G.enemies.filter(inViewE);
@@ -373,6 +373,44 @@ function drawScene() {
   perfMark('grade');
   groundTick(m, true, performance.now() - sceneT0);   // idle prefetch with what is left of the frame
   perfMark('chunks');
+}
+
+// ===== static prop shadows, pre-rendered (§26.4 step 5) =================================================================
+// Every prop with a `shadow` radius used to cost one ellipse fill a frame (~150 in the Vale view, ~6 us each in the software
+// rasteriser). They never move, so they are rastered once into 256 px world-screen tiles (the same ellipse at the same whole-pixel
+// centre, the same colour: source-over of one colour composes the same in one layer as one by one) and each visible tile is
+// one blit. A tile rebuilds when one of its props turns `gone` (an opened gate); LRU-capped at SHADOW_MAX tiles.
+const SHADOW_T = 256, SHADOW_MAX = 24, SHADOW_COL = 'rgba(20,8,40,0.32)';
+function shadowTiles(m) {
+  let S = m._shadowT;
+  if (S && S.ref === m.objects && S.len === m.objects.length) return S;
+  const tiles = new Map();
+  for (const o of m.objects) if (o.shadow) {
+    const sx = Math.round(isoX(o.x, o.y)), sy = Math.round(isoY(o.x, o.y, o.z)), rx = o.shadow + 1, ry = o.shadow * 0.45 + 1;
+    for (let ty = Math.floor((sy - ry) / SHADOW_T); ty <= Math.floor((sy + ry) / SHADOW_T); ty++) for (let tx = Math.floor((sx - rx) / SHADOW_T); tx <= Math.floor((sx + rx) / SHADOW_T); tx++) {
+      const k = tx + ',' + ty; let L = tiles.get(k); if (!L) tiles.set(k, L = { tx, ty, list: [] }); L.list.push({ o, sx, sy });
+    }
+  }
+  return (m._shadowT = { ref: m.objects, len: m.objects.length, tiles, cache: new Map(), frame: 0 });
+}
+function drawPropShadows(ctx, m) {
+  const S = shadowTiles(m), x0 = camX - RW / 2, y0 = camY - RH / 2; S.frame++;
+  for (let ty = Math.floor(y0 / SHADOW_T); ty <= Math.floor((y0 + RH - 1) / SHADOW_T); ty++) for (let tx = Math.floor(x0 / SHADOW_T); tx <= Math.floor((x0 + RW - 1) / SHADOW_T); tx++) {
+    const k = tx + ',' + ty, L = S.tiles.get(k); if (!L) continue;
+    let gone = 0; for (const e of L.list) if (e.o.gone) gone++;
+    let c = S.cache.get(k);
+    if (!c || c.gone !== gone) {
+      if (!c) {
+        if (S.cache.size >= SHADOW_MAX) { let old = null; for (const [kk, v] of S.cache) if (!old || v.last < old[1].last) old = [kk, v]; S.cache.delete(old[0]); c = old[1]; c.x.clearRect(0, 0, SHADOW_T, SHADOW_T); }
+        else c = makeCanvas(SHADOW_T, SHADOW_T);
+        S.cache.set(k, c);
+      } else c.x.clearRect(0, 0, SHADOW_T, SHADOW_T);
+      c.gone = gone; c.x.fillStyle = SHADOW_COL;
+      for (const e of L.list) if (!e.o.gone) { c.x.beginPath(); c.x.ellipse(e.sx - tx * SHADOW_T, e.sy - ty * SHADOW_T, e.o.shadow, e.o.shadow * 0.45, 0, 0, Math.PI * 2); c.x.fill(); }
+    }
+    c.last = S.frame;
+    ctx.drawImage(c.c, tx * SHADOW_T - x0, ty * SHADOW_T - y0);
+  }
 }
 
 // perf: the moon disc was ~(2r+1)^2 fillRects + value-noise calls EVERY frame (~10 % of a play frame headless); it is

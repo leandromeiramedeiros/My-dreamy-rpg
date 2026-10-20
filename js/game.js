@@ -1435,6 +1435,75 @@ function startTriggers() {
   }
   OBJ_REPLAY = null;
   setObjective();   // death / re-entry: the tracker comes from the saved objective log, not the cards' array order
+  openingOnEnter(m);
+}
+// ===== §28 the opening: a bare start, the HUD one noun at a time, Pip's light ===================================================
+// G.prog.secrets.opening = 'bare' marks a game that STARTED bare (set when a bare level-1 hero first enters the world's start map
+// with nothing settled there: New Dream). Saves from before §28 never carry it, so they keep the full HUD and every opening card
+// they settled (the opening cards' actions are also guarded by state: a filled slot never gets a pickup). Only that game's HUD
+// fades in per noun; the pieces it has shown are saved as G.prog.secrets['hud:<piece>'].
+// A bare hero dropped into a LATER map by a dev URL (?map=, ?playtest) gets the four first-kit Commons instead.
+function openingOnEnter(m) {
+  const p = G.player, S = G.prog.secrets || (G.prog.secrets = {});
+  if (!p || !G.world) return;
+  if (!S.opening && isBare(p) && p.level === 1 && m.id === G.world.start && !(G.prog.trig[m.id] || []).length) S.opening = 'bare';
+  else if (isBare(p) && m.id !== G.world.start && !S.opening) { for (const k of SLOTS) p.equip[k] = firstKitPiece(k); recalcStats(p, true); }
+  if (S.opening === 'bare' && m.id !== G.world.start) hudNoun('all');   // leaving the Vale: whatever the opening did not show, shows now
+  if (!G.pip || G.pip.map !== m.id) G.pip = { map: m.id, x: p.x - 0.7, y: p.y - 0.6, z: p.z + 2.4, goal: null };
+}
+// the HUD pieces (hud.js draws each with hudShown(piece) as its alpha): bars (portrait, HP / MP / ST / XP, status row), tracker,
+// map (minimap), lmb q e r f c shift (skill chips), skills (1 2 3), pot. Nouns map to pieces; slot chips also need their skill.
+const HUD_PIECES = ['bars', 'tracker', 'map', 'lmb', 'q', 'e', 'r', 'f', 'c', 'shift', 'skills', 'pot'];
+const HUD_NOUNS = { move: ['bars', 'tracker', 'lmb'], vale: ['map'], weapon: ['q'], dodge: ['shift'], skill: ['e'], ultimate: ['r'],
+  chest: ['f'], head: ['c'], boots: ['shift'], level: ['skills'], potion: ['pot'], all: HUD_PIECES };
+const HUD_FADE = 0.6, HUD_T = {};
+function hudNoun(noun) {
+  if (!openingActive()) return;
+  const S = G.prog.secrets, list = HUD_NOUNS[noun] || [];
+  for (const k of list) if (!S['hud:' + k]) { S['hud:' + k] = 1; HUD_T[k] = G.t; }
+}
+// 0..1: the piece's fade-in (a piece shown in an earlier session is simply on)
+function hudShown(piece) {
+  if (!openingActive() || G.state === 'title') return 1;
+  if (!G.prog.secrets['hud:' + piece]) return 0;
+  const t0 = HUD_T[piece]; return t0 == null ? 1 : clamp((G.t - t0) / HUD_FADE, 0, 1);
+}
+// nouns read from play state each step (the ones no single call site owns)
+function hudWatch(p) {
+  if (!openingActive()) return;
+  const T = G.trig, S = G.prog.secrets;
+  if (T && T.fired.wake && !S['hud:bars']) hudNoun('move');
+  if (p.equip.weapon && !S['hud:q']) hudNoun('weapon');
+  if (p.equip.chest && !S['hud:f']) hudNoun('chest');
+  if (p.equip.head && !S['hud:c']) hudNoun('head');
+  if (p.equip.boots && !S['hud:shift']) hudNoun('boots');
+  if (p.equip.weapon && (p.ult || 0) >= ultNeed(p) && !S['hud:r']) hudNoun('ultimate');
+  if (p.level >= 2 && !S['hud:skills']) hudNoun('level');
+  if (p.level >= 3) hudNoun('all');
+  if (p.hp < p.maxHp - 0.5 && T && T.fired.garden_ambush && !S['hud:pot']) hudNoun('potion');
+}
+// Pip (§28): a small warm light parented to the hero (offset up-left, a slow bob). An objective card with x / y sends it drifting
+// up to 2 tiles toward that point for ~1 s, then it returns. No AI, not interactable (the full companion is M7). hud.js draws it;
+// pipLight() is the lights-pass record for render.js (render lane).
+const PIP = { ox: -0.7, oy: -0.6, oz: 2.4, bob: 0.18, lead: 2, leadT: 1, follow: 5 };
+function pipPoint(x, y) { if (G.pip && isFinite(x) && isFinite(y)) G.pip.goal = { x, y, t: G.t }; }
+function updatePip(dt) {
+  const p = G.player, P = G.pip; if (!p || !P) return;
+  let tx = p.x + PIP.ox, ty = p.y + PIP.oy;
+  const g = P.goal;
+  if (g) {
+    const age = G.t - g.t, k = age < PIP.leadT ? Math.sin(Math.min(1, age / PIP.leadT) * Math.PI / 2) : Math.max(0, 1 - (age - PIP.leadT) / 0.6);
+    const dx = g.x - p.x, dy = g.y - p.y, l = Math.hypot(dx, dy) || 1, d = Math.min(PIP.lead, l);
+    tx += dx / l * d * k; ty += dy / l * d * k;
+    if (age > PIP.leadT + 0.6) P.goal = null;
+  }
+  const f = 1 - Math.exp(-dt * PIP.follow);
+  P.x += (tx - P.x) * f; P.y += (ty - P.y) * f;
+  P.z += (p.z + PIP.oz + Math.sin(G.t * 2.2) * PIP.bob - P.z) * f;
+}
+function pipLight() {
+  const P = G.pip; if (!P || !G.player || G.player.dead) return null;
+  return { sx: isoX(P.x, P.y), sy: isoY(P.x, P.y, P.z), r: 40 + 4 * Math.sin(G.t * 3.1), col: '#ffd9a0', a: 0.75 };
 }
 // ===== retries: once-per-save presentation, and the objective from progress (QA m1 / m2) =====================
 // G.prog.once['zone:<map>' | 'dlg:<id>' | 'dlg:<map>:<card>' | 'banner:<map>:<card>'] = 1: zone banners (main.js
@@ -1514,6 +1583,7 @@ function triggerCandidates(m, T) {
 function updateTriggers(dt) {
   const m = G.map, T = G.trig; if (!T) return;
   T.t += dt;
+  updatePip(dt); if (G.player) hudWatch(G.player);
   updateWarp(dt);
   updateDiscovery(m, T);
   let prev = -1;
@@ -1578,7 +1648,9 @@ function runAction(a) {
     case 'banner': { const k = onceKey('banner', a); if (k && onceSeen(k)) break; }
       G.banner = { s: a.title || '', sub: a.sub || '', t: a.boss ? 3.4 : 2.6, max: a.boss ? 3.4 : 2.6, boss: !!a.boss }; if (a.boss) { sfx('roar'); shake(6); } break;
     case 'message': say(a.text || ''); break;
-    case 'objective': recordObjective(a.text); if (!OBJ_REPLAY) setObjective(); break;
+    case 'objective': recordObjective(a.text); if (!OBJ_REPLAY) { setObjective(); if (a.x != null && a.x !== '') pipPoint(+a.x, +a.y); } break;
+    case 'gear': gearAction(a); break;   // §28 a first-kit piece lying in the world (items.js)
+    case 'noun': hudNoun(a.noun); break;   // §28 a HUD piece fades in (game.js hudNoun)
     case 'heal': healPlayer(p, p.maxHp * (+a.pct || 0) / 100); break;
     case 'open_portal': case 'close_portal': {
       const byId = a.id != null && a.id !== '';
