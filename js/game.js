@@ -16,6 +16,7 @@ const G = {
   seen: {},   // bestiary hooks: seen[type] = { kills, res: { el: tier } } — set on first sight, saved
   prompt: null,   // nearest interactable { kind: chest|shrine|tablet, obj, text } (items.js updateLoot); Interact acts on it
   stats: { playtime: 0, deaths: 0 },
+  saveSlot: typeof LAST_SLOT !== 'undefined' ? LAST_SLOT : 1,   // 1..SAVE_SLOTS (items.js)
 
 };
 
