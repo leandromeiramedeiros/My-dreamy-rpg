@@ -617,7 +617,7 @@ function fogDecode(str, W, H) {
 }
 function fogSaveData() {
   const out = Object.assign({}, G.prog.fog || {});
-  for (const id in G.maps) { const m = G.maps[id]; if (m && m.mini && m.mini.vis) out[id] = fogEncode(m.mini.vis, m.W, m.H); }
+  for (const id in G.maps) { const m = G.maps[id]; if (m && m.mini && m.mini.vis && m.mini.prog === G.prog) out[id] = fogEncode(m.mini.vis, m.W, m.H); }   // never another run's fog
   return out;
 }
 function clearSave(slot = G.saveSlot || 1) { try { localStorage.removeItem(saveKey(slot)); writeSlotIndex(); } catch (e) { /* ignore */ } }

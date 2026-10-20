@@ -47,7 +47,8 @@ const PHONE = (() => {
   try { const q = new URLSearchParams(location.search).get('phone'); if (q != null) return q !== '0'; } catch (e) { /* no location */ }
   return !!(typeof window !== 'undefined' && window.matchMedia && matchMedia('(pointer: coarse)').matches);
 })();
-const CHUNK = { size: PHONE ? 256 : 512, max: PHONE ? 12 : 24, cache: new Map(), jobs: new Map(), frame: 0, built: 0, evicted: 0 };
+// thrash = a chunk rebuilt within 120 frames of its eviction (the LRU fighting the prefetch ring); should stay 0
+const CHUNK = { size: PHONE ? 256 : 512, max: PHONE ? 12 : 24, cache: new Map(), jobs: new Map(), frame: 0, built: 0, evicted: 0, thrash: 0, gone: new Map() };
 const GRID_B = 8;
 const THEMES = {
   vale: {
@@ -344,6 +345,8 @@ function buildChunkStep(m, idx, ms) {
   while (job.col < cols.length) { const k = cols[job.col++]; if (!k.img) k.img = rasterColumn(m, k.i, k.j).img; if (performance.now() - t0 > ms) return false; }
   CHUNK.jobs.delete(key);
   CHUNK.cache.set(key, { m, idx, c: job.c, last: CHUNK.frame }); CHUNK.built++;
+  if (CHUNK.gone.has(key) && CHUNK.frame - CHUNK.gone.get(key) < 120) CHUNK.thrash++;
+  CHUNK.gone.delete(key);
   chunkEvict(m);
   return true;
 }
@@ -364,6 +367,7 @@ function chunkEvict(cur) {
     }
     if (!worst) break;
     const ch = CHUNK.cache.get(worst.k); CHUNK.cache.delete(worst.k); CHUNK.evicted++;
+    CHUNK.gone.set(worst.k, CHUNK.frame); if (CHUNK.gone.size > 256) CHUNK.gone.delete(CHUNK.gone.keys().next().value);
     ch.c.width = 0;
     for (const k of chunkGrid(ch.m).cols[ch.idx]) k.img = null;   // the chunk's columns go with it
   }

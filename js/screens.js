@@ -166,7 +166,7 @@ function openFullMap() {
   if (G.state !== 'play' || G.ui.open || G.ui.pause || G.ui.help || G.warp) return false;
   const here = typeof shrineHere === 'function' ? shrineHere() : null;
   G.ui.map = { mode: here && shrineFound(G.map, here.shrineId) ? 'shrine' : 'view', sel: 0, t0: G.t };
-  if (!G.map.mini && typeof miniBuild === 'function') miniBuild(G.map);
+  if ((!G.map.mini || G.map.mini.prog !== G.prog) && typeof miniBuild === 'function') miniBuild(G.map);
   G.map.mini.fullKey = null; sfx('pickup');
   return true;
 }

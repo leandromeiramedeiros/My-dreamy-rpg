@@ -142,7 +142,10 @@ function groundTick(m, idle, sceneMs = 0) {
   let allowPre = Math.max(0, CHUNK.max - 1 - visTotal - ringRes);
   let ema = 16.7; try { ema = frameEma; } catch (e) { /* main.js not loaded (editor) */ }
   if (!idle && !vis) { GROUND_STATS.lastTickMs = performance.now() - t0; return; }
-  const budget = !idle ? (G.fade > 0.3 ? 14 : PHONE ? 6 : 8) : ema > 17.2 ? 0 : clamp(14 - sceneMs, 0, IDLE_MS);   // idle = the frame rate is holding
+  // idle = the frame rate is holding AND this frame has slack: the work since the frame began (main.js `last`, the rAF
+  // timestamp: update steps + this scene) leaves room before ~12.5 ms (the HUD and the blit still follow)
+  let spent = sceneMs; try { spent = Math.max(sceneMs, performance.now() - last); } catch (e) { /* no main loop */ }
+  const budget = !idle ? (G.fade > 0.3 ? 14 : PHONE ? 6 : 8) : ema > 17.2 ? 0 : clamp(12.5 - spent, 0, IDLE_MS);
   want.sort((a, b) => a.pri - b.pri);
   const keep = new Set(want.map(w => chunkKey(m, w.idx)));
   for (const [k, job] of CHUNK.jobs) if (!keep.has(k) && (job.m !== m || CHUNK.frame - (job.touch || 0) > 60)) dropChunkJob(k, job);   // stale partial builds

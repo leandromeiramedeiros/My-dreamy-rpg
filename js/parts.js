@@ -39,6 +39,8 @@
 //   teleport   { range: 7, cd: 4, wind: 0.6, near: 2.5, far: 5 }      fades out and reappears around the hero
 //   stationary {}                                                     never moves (turrets, totems)
 //   sleep      { wakeRadius: 3, wakeOn: 'proximity' | 'hit', then: 'chase' }   dormant until woken, then `then` moves it
+//              (e.asleep; NOT the engine's distance sleep e.dormant, game.js SLEEP: a part-asleep enemy within 18 tiles
+//              still ticks its parts, so it can wake; a dormant one runs no parts at all until the hero is near)
 //   mimic      { wakeRadius: 1.6, then: 'chase' }                     looks like a chest until the hero is close
 // attack (1-2): every attack has { range, wind, cd, rec } (rec = the open window after it)
 //   brute      { shape: 'cone' | 'circle', r: 1.8, arc: 1.9, wind: 0.6, cd: 1.5, range: 1.5, strike: 0.15, rec: 0.6,

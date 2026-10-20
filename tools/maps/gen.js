@@ -831,11 +831,11 @@ class MapGen {
   // sorted arclengths of the points of interest (kinds filter) within `lat` tiles of a path, always including both ends of the path
   spine(name, kinds, lat = 11) {
     const out = [];
-    for (const q of this.pois) { if (kinds && !kinds.includes(q.kind)) continue; const j = this.pathProject(name, q.x, q.y); if (j.d <= lat) out.push(j.s); }
+    for (const q of this.pois) { if (kinds && !kinds.includes(q.kind)) continue; if (q.path === name && q.s != null) { out.push(q.s); continue; } const j = this.pathProject(name, q.x, q.y); if (j.d <= lat) out.push(j.s); }
     return out.sort((a, b) => a - b);
   }
   // a small themed set-piece (counts as a point of interest). set: 'forest' | 'cave'
-  dress(set, k, x, y, side = 1) {
+  dress(set, k, x, y, side = 1, poiOpts = {}) {
     const put = (t, dx, dy, o = {}) => { const q = this.nearWalkable(x + dx, y + dy, 0.9); if (!this.free(q.x, q.y, 0.5) && !o.force) return; this.addObj(t, q.x, q.y, Object.assign({ sp: 0.6, force: true }, o)); };
     if (set === 'cave') {
       const kk = ['crystals', 'shrooms', 'rubble'][k % 3];
@@ -850,20 +850,28 @@ class MapGen {
       else if (kk === 'post') { put('sign', 0, 0, { text: ['Mind the roots.', 'Ogres ahead. Keep to the road.', 'The animals went this way.', 'Do not feed the boars.'][k % 4] }); put('lantern', 1.1 * side, -0.4); put('stump', -1.2, 0.8); }
       else { put('log', 0, 0, { f: 1 }); put('stump', 1.4, -0.5); put('moss', -0.8, 0.9); put('mushroom_red', 0.6, 1.2); put('mushroom_red', 0.9, 1.4); }
     }
-    this.poi('wayside', x, y);
+    this.poi('wayside', x, y, poiOpts);
   }
-  // fill every gap longer than `max` tiles along a path with a set-piece, beside the path (points of interest every 12-15 tiles)
+  // fill every gap longer than `max` tiles along a path with a set-piece, beside the path (points of interest every 12-15 tiles).
+  // Set-pieces never land in a fight room (ZONE.fight: rooms keep their own dressing); the spot slides along the road to the nearest clear one.
   fillWaysides(name, o = {}) {
     const p = this.pathBy[name], max = o.max || 13.5, lat = o.lat || 2.9, L = this.pathLength(name); let k = o.k0 || 0, guard = 0;
+    const sampleAt = target => { let bi = 0, bd = 1e9; p.samples.forEach((q, i) => { const d = Math.abs(q.s - target); if (d < bd) { bd = d; bi = i; } }); return bi; };
     for (;;) {
       const sp = [0, ...this.spine(name, o.kinds, o.reach || 9), L];
       let gi = -1, gm = max; for (let i = 1; i < sp.length; i++) if (sp[i] - sp[i - 1] > gm) { gm = sp[i] - sp[i - 1]; gi = i; }
-      if (gi < 0 || guard++ > 200) break;
-      const target = (sp[gi] + sp[gi - 1]) / 2;
-      let bi = 0, bd = 1e9; p.samples.forEach((q, i) => { const d = Math.abs(q.s - target); if (d < bd) { bd = d; bi = i; } });
-      const a = p.samples[Math.max(0, bi - 1)], b = p.samples[Math.min(p.samples.length - 1, bi + 1)], ang = Math.atan2(b.y - a.y, b.x - a.x), side = k % 2 ? 1 : -1;
-      const sm = p.samples[bi], hw = p.hw[bi];
-      this.dress(o.set || 'forest', k++, sm.x + Math.sin(ang) * side * (hw + lat), sm.y - Math.cos(ang) * side * (hw + lat), side);
+      if (gi < 0 || guard++ > 300) break;
+      const target = (sp[gi] + sp[gi - 1]) / 2, pref = k % 2 ? 1 : -1; let placed = false;
+      for (const off of [0, 2, -2, 4, -4, 6, -6]) {
+        if (placed) break;
+        const bi = sampleAt(target + off), a = p.samples[Math.max(0, bi - 1)], b = p.samples[Math.min(p.samples.length - 1, bi + 1)], ang = Math.atan2(b.y - a.y, b.x - a.x), sm = p.samples[bi], hw = p.hw[bi];
+        for (const side of [pref, -pref]) {
+          const px = sm.x + Math.sin(ang) * side * (hw + lat), py = sm.y - Math.cos(ang) * side * (hw + lat);
+          if (!this.walkTile(px, py) || this.inVoid(px, py) || (this.zoneAt(px, py) & ZONE.fight) || this.pathClear(px, py, q => q !== p) < 0.6) continue;
+          this.dress(o.set || 'forest', k++, px, py, side, { path: name, s: sm.s }); placed = true; break;
+        }
+      }
+      if (!placed) { const sm = p.samples[sampleAt(target)]; this.poi('wayside', sm.x, sm.y, { path: name, s: target }); }   // inside a room: its own dressing is the point of interest
     }
     return k;
   }
@@ -871,7 +879,7 @@ class MapGen {
   landmark(x, y, set = 'forest') {
     if (set === 'cave') { this.addObj('brazier', x, y, { force: true, sp: 2 }); for (const [dx, dy] of [[-1.5, -1], [1.6, -0.8], [0.2, 1.7]]) this.addObj('crystal_violet', x + dx, y + dy, { force: true, sp: 1 }); }
     else {
-      for (const [dx, dy] of [[-2, -2], [2.2, -1.4], [0.3, 2.4]]) { const px = x + dx, py = y + dy, tt = this.tileAt(px, py); if ('gfd'.includes(tt) && this.pathClear(px, py) > 1.0) this.addObj('pine_giant', px, py, { v: 1, force: true, sp: 2.5 }); }
+      for (const [dx, dy] of [[-2, -2], [2.2, -1.4], [0.3, 2.4]]) { const px = x + dx, py = y + dy, tt = this.tileAt(px, py); if ('gfd'.includes(tt) && !(this.zoneAt(px, py) & ZONE.fight) && this.pathClear(px, py) > 1.0) this.addObj('pine_giant', px, py, { v: 1, force: true, sp: 2.5 }); }
       this.addObj('sunbeam', x, y, { force: true, sp: 2 });
     }
     this.poi('landmark', x, y);
@@ -886,7 +894,7 @@ class MapGen {
       const target = Math.min(sp[gi - 1] + every * 0.95, (sp[gi] + sp[gi - 1]) / 2 + 0.01);
       let bi = 0, bd = 1e9; p.samples.forEach((q, i) => { const d = Math.abs(q.s - target); if (d < bd) { bd = d; bi = i; } });
       const a = p.samples[Math.max(0, bi - 1)], b = p.samples[Math.min(p.samples.length - 1, bi + 1)], ang = Math.atan2(b.y - a.y, b.x - a.x), side = k++ % 2 ? 1 : -1, sm = p.samples[bi];
-      let q = null; for (const sd of [side, -side]) for (const oo of [off, off * 0.7, off * 1.3]) { const c = { x: sm.x + Math.sin(ang) * sd * oo, y: sm.y - Math.cos(ang) * sd * oo }; if (this.walkTile(c.x, c.y) && this.pathClear(c.x, c.y) > 2.5 && !this.inVoid(c.x, c.y)) { q = c; break; } if (q) break; }
+      let q = null; for (const sd of [side, -side]) for (const oo of [off, off * 0.7, off * 1.3]) { const c = { x: sm.x + Math.sin(ang) * sd * oo, y: sm.y - Math.cos(ang) * sd * oo }; if (this.walkTile(c.x, c.y) && this.pathClear(c.x, c.y) > 2.5 && !this.inVoid(c.x, c.y) && !(this.zoneAt(c.x, c.y) & ZONE.fight)) { q = c; break; } if (q) break; }
       if (!q) q = this.nearWalkable(sm.x + Math.sin(ang) * side * off, sm.y - Math.cos(ang) * side * off, 3);
       this.landmark(q.x, q.y, o.set || 'forest');
     }

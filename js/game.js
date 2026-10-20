@@ -747,7 +747,8 @@ function playerIn(shape) {
 // `e.asleep`, which is the dormant-until-woken movement part): it runs no parts, moves, attacks or animation, only a
 // 1 Hz heartbeat (status timers, spawn-in, burn ticks, cooldowns). The distance ranking itself is O(n) per frame, so
 // waking is seamless: an enemy wakes the step the hero comes within range, with its state as it was. At most SLEEP.cap
-// are awake (16 on phones): beyond that the farthest sleep. Enemies of the running arena fight never sleep.
+// are awake (16 on phones): beyond that the farthest sleep. Enemies of the running arena fight never sleep; a hit
+// enemy stays awake 3 s wherever it is.
 // Off-screen projectiles and zones farther than SLEEP.cull tiles from the hero are dropped.
 // enemyAwake(e) is the one "is it awake?" predicate (shrine warp, settling, all_enemies_dead).
 const SLEEP = { dist: 18, hyst: 1.5, cap: (typeof PHONE !== 'undefined' && PHONE) ? 16 : 24, hb: 1, cull: 20, awake: 0, dormant: 0 };
@@ -761,7 +762,8 @@ function enemySleepPass() {
     if (e.dead) continue;
     if (e.boss || e.dummy || (G.arena && !G.arena.done && e.arena === G.arena.id)) { e.dormant = false; continue; }
     e._d = dist(e.x, e.y, p.x, p.y);
-    if (e._d <= SLEEP.dist + (e.dormant ? 0 : SLEEP.hyst)) cand.push(e);
+    if (e.flash > 0) e.hitWake = G.t + 3;   // a hit (a long shot, a DoT) keeps it awake for 3 s wherever it is
+    if (e._d <= SLEEP.dist + (e.dormant ? 0 : SLEEP.hyst) || e.hitWake > G.t) cand.push(e);
     else if (!e.dormant) { e.dormant = true; e.hbT = Math.random() * SLEEP.hb; }
   }
   if (cand.length > SLEEP.cap) {
@@ -780,7 +782,7 @@ function enemyHeartbeat(e, dt) {
   if (e.spawnT > 0) e.spawnT = Math.max(0, e.spawnT - s);
   e.cd = Math.max(0, (e.cd || 0) - s); e.slowT -= s;
   if (e.stunT > 0) { e.stunT -= s; if (e.stunT <= 0) e.frozen = 0; }
-  if (e.burnT > 0) { const n = Math.min(Math.ceil(e.burnT / 0.5), Math.round(s / 0.5)); e.burnT -= s; for (let k = 0; k < n && !e.dead; k++) damageEnemy(e, 14, { dot: true, cast: e.burnCast || null }); }
+  if (e.burnT > 0) { const n = Math.min(Math.ceil(e.burnT / 0.5), Math.round(s / 0.5)); e.burnT -= s; for (let k = 0; k < n && !e.dead; k++) damageEnemy(e, 14, { dot: true, cast: e.burnCast || null }); e.flash = 0; }   // its own DoT does not wake it
 }
 function cullFar() {
   const p = G.player, R = SLEEP.cull;
@@ -909,8 +911,10 @@ function applyTuning(t) {
 //     (breakPillar(i, j) is the API a boss move uses), and the arena's enter trigger re-arms (it never settled).
 //   Spawned enemies remember their trigger (e.trig; their summons / splits inherit it). all_enemies_dead on a card with
 //   `requires` waits only for enemies spawned by those triggers (plus pending spawns); without `requires` it waits for
-//   every AWAKE enemy (enemyAwake: a far dormant pack in another section does not block it). Settling likewise needs
-//   only the awake enemies gone.
+//   every AWAKE enemy (enemyAwake: a far dormant pack in another section does not block it). Settling needs the awake
+//   enemies gone, and settles a fired card only if none of ITS spawns is still alive (a dormant pack you walked away
+//   from stays unsettled, so dying respawns it instead of clearing it). Known gap: spawns scheduled through delay()
+//   by a part / boss move (not inline in its tick) do not inherit e.trig.
 //   enter_area cards live in 8x8-tile buckets (by their circle): each step tests only the cards in the hero's bucket
 //   plus any the hero is still inside; other cards are tested every step as before.
 //   Each step also records discovery: G.prog.sections[map] (the hero's section) and G.prog.shrines[map] (shrines
@@ -923,6 +927,7 @@ let TRIG_SRC = null;   // the trigger whose actions are running (spawns are tagg
 function startTriggers() {
   const m = G.map, settled = G.prog.trig[m.id] || [];
   if (G.arena && !G.arena.done) resetArena(G.arena);
+  if (G.warp && !G.fadeDir) G.fade = 0;   // a warp cut short by a map change never leaves its veil up
   G.arena = null; G.warp = null;
   G.trig = { fired: {}, at: {}, t: 0, inside: {}, cp: G.checkpoint, sec: null }; G.kills = {}; G.pendingSpawns = 0; G.objective = m.objective;
   G.shrink = null; G.talk = [];
@@ -936,7 +941,9 @@ function startTriggers() {
 function settleTriggers() {
   const T = G.trig, m = G.map;
   if (G.pendingSpawns || G.enemies.some(enemyAwake)) return;
-  const ids = m.triggers.filter(tr => T.fired[tr.id] && tr.once !== false && (tr.when || {}).type !== 'map_enter').map(tr => tr.id);
+  // per trigger: a card whose spawns are still alive (dormant far away, or part-asleep) is not settled, so dying cannot clear it
+  const live = new Set(); for (const e of G.enemies) if (!e.dead && !e.dummy && e.trig) live.add(e.trig);
+  const ids = m.triggers.filter(tr => T.fired[tr.id] && tr.once !== false && (tr.when || {}).type !== 'map_enter' && !live.has(tr.id)).map(tr => tr.id);
   if (ids.length !== (G.prog.trig[m.id] || []).length) G.prog.trig[m.id] = ids;
 }
 // enter_area cards bucketed by their circle (every bucket it overlaps); other cards stay on the per-step list
@@ -1027,7 +1034,7 @@ function runAction(a) {
       m.portals.forEach((pt, i) => { if (byId ? pt.id === a.id : (a.index == null || a.index === '' || +a.index === -1 || +a.index === i)) pt.open = a.type === 'open_portal'; }); break;
     }
     case 'dialogue': talk(a); break;
-    case 'openGate': if (typeof openGate === 'function') openGate(a.id, true); if (G.arena && !G.arena.done && G.arena.gates.includes(a.id)) G.arena.done = true; break;
+    case 'openGate': if (typeof openGate === 'function') openGate(a.id, true); if (G.arena && !G.arena.done && G.arena.gates.includes(a.id)) { G.arena.done = true; G.arena = null; } break;   // won: the fight is over
     case 'closeGate': if (typeof closeGate === 'function') closeGate(a.id); break;
     case 'warp': startWarp(a.to != null ? a.to : { x: a.x, y: a.y }); break;
     case 'arena': startArena(a); break;
@@ -1124,7 +1131,8 @@ function updateWarp(dt) {
 }
 // ===== discovery: sections + shrines (saved per map) ============================================================
 const progList = (k, id) => { const P = G.prog[k] || (G.prog[k] = {}); return P[id] || (P[id] = []); };
-const shrinesOf = m => m._shrines || (m._shrines = m.objects.filter(o => o.shrineId && !(o.src && o.src.warp === false)));
+const shrinesOf = m => m._shrines || (m._shrines = m.objects.filter(o => o.shrineId));   // every shrine (discovery, markers)
+const warpShrine = o => !(o.src && o.src.warp === false);   // warp: false = a plain checkpoint, never a warp end
 const shrineFound = (m, id) => progList('shrines', m.id).includes(id);
 function discoverShrine(m, o) {
   const L = progList('shrines', m.id); if (L.includes(o.shrineId)) return false;
@@ -1143,14 +1151,14 @@ function updateDiscovery(m, T) {
   }
   if ((T.shT = (T.shT || 0) - 1) <= 0) { T.shT = 15; for (const o of shrinesOf(m)) if (dist(o.x, o.y, p.x, p.y) < SHRINE_SEE) discoverShrine(m, o); }
 }
-const shrineHere = (m = G.map, p = G.player) => shrinesOf(m).find(o => dist(o.x, o.y, p.x, p.y) < SHRINE_USE_R) || null;
+const shrineHere = (m = G.map, p = G.player) => shrinesOf(m).find(o => warpShrine(o) && dist(o.x, o.y, p.x, p.y) < SHRINE_USE_R) || null;
 // the shrines the full-map screen offers: discovered, same map, not the one you stand at
-function shrineTargets(m = G.map) { const here = shrineHere(m); return shrinesOf(m).filter(o => o !== here && shrineFound(m, o.shrineId)); }
+function shrineTargets(m = G.map) { const here = shrineHere(m); return shrinesOf(m).filter(o => o !== here && warpShrine(o) && shrineFound(m, o.shrineId)); }
 function shrineWarp(id) {
   const m = G.map, p = G.player, here = shrineHere(m, p);
   if (!here || !shrineFound(m, here.shrineId)) { say('Stand at a shrine you have found to warp.'); return false; }
   const to = shrinesOf(m).find(o => o.shrineId === id);
-  if (!to || to === here || !shrineFound(m, id)) { say('That shrine is not attuned yet.'); return false; }
+  if (!to || to === here || !warpShrine(to) || !shrineFound(m, id)) { say('That shrine is not attuned yet.'); return false; }
   if (anyEnemyAwake()) { say('Enemies are awake nearby: the shrine will not answer.'); sfx('hurt'); return false; }
   return startWarp(id);
 }

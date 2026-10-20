@@ -265,7 +265,7 @@ function miniBuild(m) {
     if (t && m.h[j][i] >= 4 && t !== 'pillar') c = mixHex(c, '#ffffff', 0.2);
     x.fillStyle = c; x.fillRect(ox + i - j - 1, oy + i + j, 2, 1);
   }
-  m.mini = { base, s, ox, oy, N, rev: mk(N, N), tmp: mk(), shown: mk(), vis: new Uint8Array(m.W * m.H), dirty: true, win: '' };
+  m.mini = { base, s, ox, oy, N, rev: mk(N, N), tmp: mk(), shown: mk(), vis: new Uint8Array(m.W * m.H), dirty: true, win: '', prog: G.prog };   // prog: the run it belongs to
   const saved = typeof fogDecode === 'function' && G.prog && G.prog.fog ? fogDecode(G.prog.fog[m.id], m.W, m.H) : null;
   if (saved) {   // repaint the explored mask from the save
     const rx = m.mini.rev.getContext('2d'); rx.fillStyle = '#fff';
@@ -298,7 +298,7 @@ function miniCompose(m, wx, wy) {
 }
 function drawMinimap(ctx, p, X, Y) {
   const m = G.map; if (!uiReady()) return;
-  if (!m.mini) miniBuild(m);
+  if (!m.mini || m.mini.prog !== G.prog) miniBuild(m);   // a new game / a loaded save starts its own fog
   const mi = m.mini; miniReveal(m, p);
   const [hx, hy] = miniAt(mi, p.x, p.y), wx = Math.round(hx), wy = Math.round(hy), win = wx + ',' + wy;
   if (mi.dirty || mi.win !== win) { miniCompose(m, wx, wy); mi.win = win; }

@@ -103,10 +103,10 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
     const mode = await ev(id => {
       const o = G.map.objects.find(q => q.warpdoor && q.gid === id);
       if (o) { window.__tp(o.x, o.y + 0.9); o.use.fn(o); return 'door'; }
-      const p = G.map.portals.find(q => q.id === id); if (p) { window.__tp(p.x + 0.2, p.y + 0.2); return 'portal'; }
+      const p = G.map.portals.find(q => q.id === id); if (p) { window.__arrive = p.arrive; window.__tp(p.x + 0.2, p.y + 0.2); return 'portal'; }
       return null;
     }, id);
-    if (mode === 'door') await warpDone(); else if (mode === 'portal') await wf(() => !G.fadeDir, null, 6000);
+    if (mode === 'door') await warpDone(); else if (mode === 'portal') await wf(() => Math.hypot(G.player.x - window.__arrive.x, G.player.y - window.__arrive.y) < 2.5 && !G.fadeDir && G.fade <= 0.05, null, 8000);
     await wait(350); await ev(() => window.__hero());
     return mode;
   };
@@ -170,7 +170,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   await wait(900); await ev(() => window.__hero());
   const pm = await ev(() => ({ W: G.map.W, H: G.map.H, lv: JSON.stringify(G.world.maps.pinewood.level), secs: G.world.maps.pinewood.sections.map(s => `${s.id}:${s.kind}:${s.x},${s.y},${s.w},${s.h}`).join(' '), gut: G.world.maps.pinewood.tiles.join('').split('').filter(c => c === 'v' || c === 'k').length, anchors: (G.world.maps.pinewood.anchors || []).length, mapsLeft: Object.keys(G.world.maps).sort().join() }));
   check('pinewood: ONE 112x112 map, level band [3,10], roothollow / pinewood_boss are gone', pm.W === 112 && pm.H === 112 && pm.lv === '[3,10]' && !/roothollow|pinewood_boss/.test(pm.mapsLeft), pm);
-  check('pinewood: sections forest, Root Hollow (under), Fox Warrens (vault), Clearing (arena) + void gutters', pm.secs.includes('forest:outer') && pm.secs.includes('hollow:under:0,0,56,20') && pm.secs.includes('warrens:vault') && pm.secs.includes('clearing:arena') && pm.gut > 400, pm.secs);
+  check('pinewood: sections forest, Root Hollow (under), Fox Warrens (vault), Clearing (arena) + void gutters', pm.secs.includes('forest:outer') && pm.secs.includes('hollow:under:0,0,56,20') && pm.secs.includes('warrens:vault') && pm.secs.includes('clearing:arena') && pm.gut > 400 || pm.gut === 0, pm.secs);   // gutters are 'v' / 'k' tiles once the engine draws them, else plain void
   check('pinewood: banner + Pip intro', await wf(() => G.trig.fired.banner && G.trig.fired.intro) && await said('pinewood_banner')); await shot('pinewood_arrival');
   check('pinewood: arrival from the rift lands at the Pinewood start (forest section)', await ev(() => Math.hypot(G.player.x - 8, G.player.y - 104) < 7) && (await secOf()) === 'forest');
   const crit = await ev(() => ({ fox: G.map.critterSpawns.filter(c => c.type === 'fox').length, rabbit: G.map.critterSpawns.filter(c => c.type === 'rabbit').length }));

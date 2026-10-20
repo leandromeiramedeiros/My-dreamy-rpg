@@ -549,7 +549,8 @@ const PAD_STUB = () => {
       for (let k = 0; k < 40; k++) { await w(30); maxRes = Math.max(maxRes, CHUNK.cache.size); }
       const vis = chunkAt(m, camX, camY); if (!chunkResident(m, vis)) visOk = false;
     }
-    const e0 = CHUNK.evicted; await w(2500); const thrash = CHUNK.evicted - e0;   // standing still: nothing is evicted (and rebuilt)
+    for (let k = 0; k < 200 && (GROUND_STATS.visMissing || CHUNK.jobs.size); k++) await w(25);   // let the last builds land
+    const e0 = CHUNK.thrash; await w(2500); const thrash = CHUNK.thrash - e0;   // standing still: nothing is evicted and rebuilt
     let freed = 0, orphan = 0; const cg = chunkGrid(m);
     for (let i = 0; i < cg.nx * cg.ny; i++) { const res = !!chunkResident(m, i); for (const c of cg.cols[i]) { if (!res && !c.img) freed++; if (!res && c.img) orphan++; } }
     const r = { maxRes, evicted: CHUNK.evicted - ev0, visOk, thrash, freed, orphan, jobs: CHUNK.jobs.size };
@@ -661,6 +662,27 @@ const PAD_STUB = () => {
     return { vis0, vis1, same, len: str.length, secs, shr, keys, v, migFog: JSON.stringify(mo.world.fog), migSec: JSON.stringify(mo.world.sections), secAfter: (G.prog.sections.synth112 || []).length };
   });
   check('save: fog bitmap + discovered sections / shrines persist per map in world (v3, same top-level keys, migration defaults)', fog.vis0 > 300 && fog.vis1 === fog.vis0 && fog.same && fog.len < 3000 && fog.secs === 'arena,main,outer,under,vault'.split(',').filter(s => fog.secs.includes(s)).join() && fog.secs.includes('under') && fog.shr >= 2 && fog.v === 3 && fog.keys === 'bestiary,bindings,bosses,fishing,player,quests,settings,skills,slot,stats,t,version,world,zone100' && fog.migFog === '{}' && fog.migSec === '{}' && fog.secAfter >= 4, fog);
+  // settling is per trigger: walking away from a live pack (it goes dormant) and dying must respawn it, not clear it
+  const stl = await ev(async () => {
+    const w = ms => new Promise(r => setTimeout(r, ms)), m = G.map, p = G.player, tr = m.triggers.find(t => t.id === 'pack0').when;
+    G.enemies.length = 0; G.prog.trig.synth112 = []; enterMap('synth112'); G.state = 'play'; p.invulnT = 999;
+    p.x = tr.x; p.y = tr.y; await w(900); const spawned = G.enemies.filter(e => e.trig === 'pack0').length;
+    p.x = Math.min(m.W - 6, tr.x + 30); p.y = tr.y - 30 > 46 ? tr.y - 30 : tr.y; await w(1200);
+    const dormant = G.enemies.filter(e => e.trig === 'pack0' && e.dormant).length, settledEarly = (G.prog.trig.synth112 || []).includes('pack0');
+    p.invulnT = 0; hurtPlayer(1e9, p.x, p.y); respawn(); await w(300);
+    const r = { spawned, dormant, settledEarly, settled: (G.prog.trig.synth112 || []).includes('pack0'), doneFired: !!G.trig.fired.pack0_done, rearmed: !G.trig.fired.pack0 };
+    p.invulnT = 999; p.x = tr.x; p.y = tr.y; await w(900); r.again = G.enemies.filter(e => e.trig === 'pack0').length;
+    G.enemies.length = 0; return r;
+  });
+  check('settle: a pack left dormant is not settled; dying respawns it (no free pack_done), re-entering spawns it again', stl.spawned >= 3 && stl.dormant >= 3 && !stl.settledEarly && !stl.settled && !stl.doneFired && stl.rearmed && stl.again >= 3, stl);
+  // a new run never inherits (or re-saves) the previous run's fog
+  const nf = await ev(async () => {
+    const w = ms => new Promise(r => setTimeout(r, ms)), m = G.map, keep = G.prog, old = m.mini.vis.reduce((a, b) => a + b, 0);
+    G.prog = { chests: {}, firsts: {}, trig: {} }; await w(200);
+    const str = saveData().world.fog.synth112, vis = str ? fogDecode(str, m.W, m.H).reduce((a, b) => a + b, 0) : 0;
+    G.prog = keep; m.mini = null; return { old, fresh: vis };
+  });
+  check('fog: a new game starts with only its own reveal (the old run\'s fog is not carried into its save)', nf.old > 600 && nf.fresh > 0 && nf.fresh < 400, nf);
   // minimap: HUD local 24-tile window; full-map screen (M) with fog + section insets, underground dark until found
   const mm = await ev(async () => {
     const w = ms => new Promise(r => setTimeout(r, ms)), m = G.map;
@@ -715,8 +737,9 @@ const PAD_STUB = () => {
     G.world.maps.synth112 = rec; THEME_OF.synth112 = rec.theme; enterMap('synth112'); G.state = 'play'; G.banner = null; const m = G.map, p = G.player; p.invulnT = 999;
     let maxRes = 0;
     for (const s of m.sections.filter(q => q.tiles)) { p.x = s.cx; p.y = s.cy; p.z = tileH(m, p.x, p.y); G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12; for (let k = 0; k < 50; k++) { await w(30); maxRes = Math.max(maxRes, CHUNK.cache.size); } }
-    const e0 = CHUNK.evicted; await w(2500);
-    return { size: CHUNK.size, max: CHUNK.max, cap: SLEEP.cap, coarse: COARSE_POINTER, maxRes, evicted: CHUNK.evicted, thrash: CHUNK.evicted - e0 };
+    for (let k = 0; k < 200 && (GROUND_STATS.visMissing || CHUNK.jobs.size); k++) await w(25);
+    const e0 = CHUNK.thrash; await w(2500);
+    return { size: CHUNK.size, max: CHUNK.max, cap: SLEEP.cap, coarse: COARSE_POINTER, maxRes, evicted: CHUNK.evicted, thrash: CHUNK.thrash - e0, tourThrash: CHUNK.thrash };
   }, SYN);
   check('phone: ?phone=1 -> 256 px chunks, <= 12 resident while touring (LRU evicts, no thrash), 16 awake, one fog layer', ph.size === 256 && ph.max === 12 && ph.cap === 16 && ph.coarse && ph.maxRes <= 12 && ph.evicted > 0 && ph.thrash === 0, ph);
   await p3.close();

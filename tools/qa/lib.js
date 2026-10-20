@@ -44,20 +44,21 @@ function installHooks() {
 
   // ---------- grid pathfinder over the real walkable() / colliders (planning only; the bot still has to walk it with keys)
   const RES = 0.5;
-  let grid = null;
+  let grid = null; Q.avoid = [];
   function buildGrid(margin) {
     const m = G.map, W = Math.ceil(m.W / RES), H = Math.ceil(m.H / RES), pass = new Uint8Array(W * H), hh = new Float32Array(W * H);
     const cols = m.colliders.filter(c => c.r > 0);
     for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
       const x = (i + 0.5) * RES, y = (j + 0.5) * RES, h = tileH(m, x, y); hh[j * W + i] = h;
-      const rr = 0.24 + margin * 0.0;
+      const rr = margin > 0 ? 0.36 : 0.24;
       let ok = walkable(m, x, y, h) && walkable(m, x + rr, y, h) && walkable(m, x - rr, y, h) && walkable(m, x, y + rr, h) && walkable(m, x, y - rr, h);
       if (ok) for (const c of cols) { if (Math.abs(c.z - h) > 1.5) continue; if (Math.hypot(x - c.x, y - c.y) < c.r + 0.28 + margin) { ok = false; break; } }
+      if (ok) for (const a of Q.avoid) if (a.map === m.id && Math.hypot(x - a.x, y - a.y) < 0.9) { ok = false; break; }
       pass[j * W + i] = ok ? 1 : 0;
     }
-    return { W, H, pass, hh, key: m.id + '|' + m.colliders.length + '|' + margin, margin };
+    return { W, H, pass, hh, key: m.id + '|' + m.colliders.length + '|' + margin + '|' + Q.avoid.length, margin };
   }
-  function getGrid(margin) { const k = G.map.id + '|' + G.map.colliders.length + '|' + margin; if (!grid || grid.key !== k) grid = buildGrid(margin); return grid; }
+  function getGrid(margin) { const k = G.map.id + '|' + G.map.colliders.length + '|' + margin + '|' + Q.avoid.length; if (!grid || grid.key !== k) grid = buildGrid(margin); return grid; }
   function stepOK(g, i, j, ni, nj) {
     if (ni < 0 || nj < 0 || ni >= g.W || nj >= g.H || !g.pass[nj * g.W + ni]) return false;
     if (Math.abs(g.hh[nj * g.W + ni] - g.hh[j * g.W + i]) > 1.0) return false;
@@ -130,6 +131,15 @@ function installHooks() {
     return o;
   };
   // mouse/display coordinate of a world point (display space = 960x540)
+  // true when the engine's own movement probes reject every direction (a real wedge, not just a collider or a goal we already reached)
+  Q.isWedged = () => {
+    const p = G.player, m = G.map, h0 = tileH(m, p.x, p.y), r = p.r * 0.8;
+    const ok = (x, y) => walkable(m, x + r, y, h0) && walkable(m, x - r, y, h0) && walkable(m, x, y + r, h0) && walkable(m, x, y - r, h0);
+    let freeDirs = 0;
+    for (let a = 0; a < 16; a++) { const dx = Math.cos(a * 0.3927) * 0.06, dy = Math.sin(a * 0.3927) * 0.06; if (ok(p.x + dx, p.y) && dx !== 0 || ok(p.x, p.y + dy) && dy !== 0) freeDirs++; }
+    return { wedged: freeDirs === 0, freeDirs, h0 };
+  };
+  Q.restore = (x, y) => { const p = G.player; Q.avoid.push({ map: G.map.id, x: p.x, y: p.y }); p.x = x; p.y = y; p.z = tileH(G.map, x, y); p.dash = null; };
   // TESTER ASSIST (logged as a finding every time): nudges a wedged hero to the nearest spot where the engine's own edge probes pass
   Q.unwedge = () => {
     const p = G.player, m = G.map, r = p.r * 0.8; let best = null, bd = 9;
@@ -137,6 +147,7 @@ function installHooks() {
       const x = p.x + Math.cos(ang) * d, y = p.y + Math.sin(ang) * d, h = tileH(m, x, y);
       if (walkable(m, x, y, h) && walkable(m, x + r, y, h) && walkable(m, x - r, y, h) && walkable(m, x, y + r, h) && walkable(m, x, y - r, h) && walkable(m, x + r * 1.5, y, h) && walkable(m, x - r * 1.5, y, h) && walkable(m, x, y + r * 1.5, h) && walkable(m, x, y - r * 1.5, h)) { if (d < bd) { bd = d; best = [x, y]; } }
     }
+    Q.avoid.push({ map: m.id, x: p.x, y: p.y });
     if (best) { const from = [p.x, p.y]; p.x = best[0]; p.y = best[1]; return { from, to: best }; }
     return null;
   };
@@ -335,13 +346,21 @@ class Bot {
     const now = Date.now(); this.posHist.push([now, p.x, p.y]); while (this.posHist.length && now - this.posHist[0][0] > 2500) this.posHist.shift();
     let stuck = false;
     if (this.posHist.length > 20 && now - this.posHist[0][0] > 2200) { const [, ox, oy] = this.posHist[0]; if (Math.hypot(p.x - ox, p.y - oy) < 0.25 && !(p.rootT > 0) && !p.casting) stuck = true; }
+    if (!this.trail) this.trail = [];
+    if (!this.trail.length || Math.hypot(this.trail[this.trail.length - 1][1] - p.x, this.trail[this.trail.length - 1][2] - p.y) > 0.3) { this.trail.push([now, p.x, p.y]); if (this.trail.length > 60) this.trail.shift(); }
+    if (stuck && !g._noMove) {
+      const wd = await this.page.evaluate(() => window.__qa.isWedged());
+      if (!wd.wedged) { stuck = false; this.posHist = []; g.softStuck = (g.softStuck || 0) + 1; this.pathCache = null; const ang = Math.random() * 6.28; const [sx, sy] = Bot.scr(Math.cos(ang), Math.sin(ang)); await this.setMove(sx, sy); await sleep(350); return; }
+    }
     if (stuck && !g._noMove) {
       this.stuckN++; this.posHist = []; g.stuckN = (g.stuckN || 0) + 1; this.out.maps[s.map].stuck++;
       if (g.stuckN === 3 || g.stuckN === 8) { const f = await this.shot('stuck'); this.out.stuck.push({ at: +this.el(), map: s.map, pos: [p.x, p.y], goal: g.name, shot: f, n: g.stuckN }); this.log('bot stuck', { pos: [p.x, p.y], goal: g.name, n: g.stuckN }); }
       this.pathCache = null;
-      if (g.stuckN >= 8 && g.stuckN % 4 === 0) {
+      if (g.stuckN >= 3 && g.stuckN % 2 === 1) {
         const f = await this.shot('wedged');
-        const r = await this.page.evaluate(() => window.__qa.unwedge());
+        let back = null; for (let k = this.trail.length - 1; k >= 0; k--) { const t = this.trail[k]; if (now - t[0] > 1500 && Math.hypot(t[1] - p.x, t[2] - p.y) > 0.6) { back = t; break; } }
+        const r = back ? await this.page.evaluate(([x, y]) => { window.__qa.restore(x, y); return { to: [x, y] }; }, [back[1], back[2]]) : await this.page.evaluate(() => window.__qa.unwedge());
+        this.trail = [];
         this.find('blocker', 'Hero is wedged: zero movement in all 8 directions and Dodge does not free it (needed a tester nudge)', { map: s.map, pos: [p.x, p.y], nudgedTo: r && r.to, goal: g.name, escape: 'only the pause menu TO HUB, or dying, would free a real player' }, f);
       }
       // wiggle sideways
