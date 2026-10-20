@@ -180,7 +180,7 @@ var BOSS_DATA = {
       { hpBelow: 1.0, moves: { stomp: 3, rootGrab: 2, trunkSwipe: 2 }, onEnter: [] },
       // bar 2: new move saplings (turrets; the root wall closes the ring); cunning: trunkSwipe -> a short 0.35 s beat, then the
       // BACKHAND (delayed second hit, re-aimed, 0.68 s wind); windMul 0.85, gaps x0.8
-      { hpBelow: 0.64, moves: { stomp: 2, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1 }, windMul: 0.85, cdMul: 0.8,
+      { hpBelow: 0.64, moves: { stomp: 1.5, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1 }, windMul: 0.85, cdMul: 0.8,
         forms: { trunkSwipe: { open: 0.35, then: 'backhand' } },
         onEnter: [{ type: 'arenaShrink', pattern: 'roots_inward', k: 0.75, rMin: 5.5 }, { type: 'roar', banner: 'The roots wake', dur: 1.2 }] },   // ring >= 5.5 tiles: room to walk out of a 3-tile stomp, and the card's saplings (<= 5.4 from the centre) stay inside
       // bar 3: new move trample (charge); cunning: rootGrab LEAD-AIMS 0.45 s ahead of a moving hero (+ bar 2's backhand); windMul 0.7, gaps x0.65
