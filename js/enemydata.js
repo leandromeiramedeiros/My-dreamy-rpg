@@ -155,7 +155,7 @@ var BOSS_DATA = {
       // bar 1: the hound learns you
       { hpBelow: 1.0, moves: { lunge: 3, rootSpit: 2, burrow: 2 }, onEnter: [] },
       // bar 2: new move howl (2 shadehounds); cunning: the lunge FEINTS (0.4 s fake crouch, then the real 0.64 s lunge, re-aimed); windMul 0.85, gaps x0.75
-      { hpBelow: 0.5, moves: { lunge: 3, rootSpit: 2, burrow: 2, howl: 2 }, windMul: 0.85, cdMul: 0.75, speedMul: 1.15,
+      { hpBelow: 0.5, moves: { lunge: 3, rootSpit: 2, burrow: 2, howl: 3 }, windMul: 0.85, cdMul: 0.5, speedMul: 1.2,
         forms: { lunge: { feint: 0.4 } },
         onEnter: [{ type: 'roar', banner: 'Mossjaw rears up', dur: 1.2 }] }
     ],

@@ -295,7 +295,8 @@ for (const id of BOSS_IDS) {
 // note; the -1 tier median is a note (losses are expected there). The fight lengths themselves are enforced on the frozen table above.
 const LIVE = { mossjaw: { L: 7, max: 90, red: 120 }, bramblehorn: { L: 9, max: 240, red: 300 } };   // L: lowest arrival level (REPORT: 7-9 / 9-11)
 const REACT = 0.3, MISTAKES = [3, 12], MISS_EVERY = +arg('miss', 0), LIVE_POTIONS = 2, LIVE_TRIALS = 6, LIVE_UNDER = [3, 4];
-const LIVE_ROWS = [{ k: 'under', label: '-1 tier', diff: 'normal' }, { k: 'reference', label: 'reference', diff: 'normal' }, { k: 'under2', label: '-2 Story', diff: 'story' }];
+const LIVE_ROWS = [{ k: 'under', label: '-1 tier', diff: 'normal', n: +arg('under-trials', 12) }, { k: 'reference', label: 'reference', diff: 'normal', n: LIVE_TRIALS }, { k: 'under2', label: '-2 Story', diff: 'story', n: LIVE_TRIALS }];
+const ONLY = arg('only', '');
 ev(`const ADD_R = 3;
 function simBossFight(id, L, maxT, react, mistakes, potions, card, every) {
   const p = G.player, cx = G.map.cx, cy = G.map.cy; if (card.arena) G.arena = { id: 'sim', map: G.map.id, gates: [], x: cx, y: cy, r: card.arena.r, pillars: [], broken: [], done: false };
@@ -404,7 +405,8 @@ for (const id in LIVE) {
   for (const G_ of LIVE_ROWS) {
     const runs = [];
     ev(`setSetting('difficulty', '${G_.diff}')`);
-    for (let k = 0; k < LIVE_TRIALS; k++) {
+    if (ONLY && !ONLY.split(',').includes(G_.k)) continue;
+    for (let k = 0; k < G_.n; k++) {
       ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', '${G_.k}')`);
       runs.push(ev(`simBossFight('${id}', ${L}, ${redMax * 1.5}, ${REACT}, ${JSON.stringify(MISTAKES)}, ${LIVE_POTIONS}, ${card}, ${MISS_EVERY})`));
     }
