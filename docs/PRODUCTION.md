@@ -109,3 +109,53 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * Nightshade: Tanner's Leathers · Nightshade · Hemlock Harness · Aurora Venom · Blight Eternal · Mossjaw's Skin
 * Mirage: Trickster Leathers · Mirage · Glass Harness · Aurora Mirage · Mirror Eternal · The Unmade's Skin
 * Visual rule: each tier = class palette ramp + trim, crest/pauldron, hem/glow part swaps; T5 = made of light.
+
+## §25 Pinewood 112×112 zone recipe (expert draft for the level designer)
+Sections:
+* **forest:** outer stamp at bounds [0,20,112,112].
+* **hollow:** dungeon stamp at bounds [0,0,56,20], cave patch {f:2,d:0.62}, ambient 0.45.
+  * Entered by warpdoor `hollow_door` at (44,36), which needs `key_roothollow`.
+  * Left by warpdoor `hollow_exit` from the den to forest shrine3.
+* **warrens:** vault at [60,0,112,20], entered from the env secret at (100,46). Noise sleepers ×3; the gold chest holds a
+  socket rune.
+* **clearing:** boss at [88,20,112,44]. Arena at (100,30), r 9, 4 pillars, closed by `arena_gate`. Bramblehorn with
+  saplings.
+
+Forest rooms:
+| Room | Position | Details |
+|---|---|---|
+| start | (8,104) | |
+| r1 | (40,92) | clearing, lvl 2 |
+| r2 | (26,58) | plaza, lvl 4 |
+| r3 | (70,52) | walled chamber |
+| elite | (96,84) | nook |
+| tablet | (30,108) | |
+| fish | (52,70), (84,62) | two spots |
+| crack | (22,78) | |
+| env | (100,46) | |
+| islet | (10,30) | isolated |
+| shrines | (44,86), (66,60), (84,36) | |
+
+Forest routes:
+* Main path: start → (16,98) → (28,94) → r1 → (52,84) → (60,72) → (48,64) → r2 → (36,48) → (52,46) → r3 → (84,44)
+  → shrine3 → (96,34) → arena gate.
+* Shortcut loops: r2 → (14,66) → (10,84) → (12,96); and r3 → (76,70) → (60,80) → shrine1.
+* Creek from (0,60) to (112,56); landmark at (60,70).
+
+Hollow rooms: start (6,14) · r1 chamber (16,12) · shrine (26,8) · r2 chamber (36,12) · lever (44,6) · den arena (50,12)
+with 6 pillars · crack (30,16).
+
+Packs:
+* r1: hound + slime + shaman
+* r2: an ogre pair + shaman + slimes
+* r3: boar + hounds + shaman
+* elite: a Shielded ogre
+* hollow: as in the current recipe
+* warrens: sleepers only
+
+Secrets (5):
+* forest crack → a gem
+* env (pond) → the Warrens door
+* lever bridge to the islet → a tablet + a Skill Rune
+* hollow crack → a Socket Rune
+* cross-section: the hollow ceiling under r2 drops a chest key

@@ -1471,3 +1471,68 @@ the schedule:
 * The weapon and armour **parts kit** is built in M3, before any variant art.
 * Art runs as a continuous lane: one art agent on variants and one on enemies, in parallel with maps.
 * The cut orders in §23.6 and §24 stay on file as emergency levers only.
+
+## 25. Fewer, bigger maps: 4× area (client decision; expert plan; director-approved; supersedes §22's map list, keeps every hook)
+
+**27 maps become 8.** Each zone is now one big map divided into **sections** (outer, underground/interior, vault,
+arena). The sections share one grid and are separated by 3-tile void gutters (drawn as cliffs or darkness). You move
+between them through **warp doors**: a 0.4 s fade within the same map, with no load and no lost trigger state.
+Underground is a palette and lighting look, not a separate layer. Guardian arenas are inline walled rooms with gates.
+Morrow keeps his own map.
+
+| # | Map | Size | Sections (absorbs) |
+|---|---|---|---|
+| 1 | Whispering Vale | 80×80 | hub · Moon Pond (night fishing, pearl ritual; opens after Act IV) · Pip's Lanterns islet (opened by the Spire key) · Dream Arena islet |
+| 2 | Misty Pinewood | 112×112 | forest (animal trail, fishing debut) · Root Hollow (underground SW: key door, lever, boars, sleeper, Mossjaw) · Fox Warrens (vault, noise) · Bramblehorn's Clearing (inline arena, NE) |
+| 3 | Gloomspire Ruins | 112×112 | plaza (pillar names) · Warden Crypt (darkness) · Warden's Hall (arena) · Oath Reliquary (vault, mimics, Oathless) |
+| 4 | Sunken Grotto | 112×112 | caves (tide) · Drowned Vault (airlocks, Brinemother) · Mirelle's Basin (arena) · Glowfin Shallows (vault) · Starlit Shoals (north coast, no combat, Moonmaw) |
+| 5 | Emberfall Caldera | 112×112 | rim (lava platforms) · Forge Deep (wind) · The Anvil (arena) · Slag Chambers (vault, Slagheart) |
+| 6 | The Sleepless Spire | 96×128 | ascent (5 ledges, Twin Vigils) · Sleepless Court (void rhythm) · Vigil Walk (optional vault) |
+| 7 | Morrow's Throne | 28×28 | separate finale map |
+| 8 | The Drifting Isles | 96×96 | isles (rift-hop, Sorrel's Echo) · The Gloaming Below (post-game, underground, the Unwaking Child) |
+
+### 25.1 Pacing rules per big map
+* **Points of interest:** one every 12–15 tiles, and a landmark every ~30 tiles, visible from the previous one.
+* **Shrines:** 3 per map, with **shrine-to-shrine warp**. You can only warp while no enemy is awake (director-approved
+  rule).
+* **Routes:** 2 shortcut loops back to the shrines, and 15–25 s between fights.
+* **Fights:** 8–9 per map (outer 3 rooms + an elite, underground 2 rooms + the mini-boss, vault 1–2 rooms, the arena).
+* **Secrets:** 5 per map: one per section, plus one that crosses between sections.
+* **Times:**
+  * Main path ≈ **130 min**. The client accepts the extra minutes that come with bigger maps.
+  * **Hard cap: any map that measures over 24 min on the timed run loses a room**, not a corridor.
+  * Merged dungeons stay at 2 rooms, and vault sections stay optional.
+  * 100 % ≈ 4.5 h.
+* **Boss deaths:** dying in an inline arena respawns you at the nearest shrine. The arena resets its adds and pillars.
+
+### 25.2 Tech (required)
+* **Ground:** a chunked ground raster.
+  * 512 px chunks rendered lazily over idle frames, with ≤ 24 resident and LRU eviction. Phones use 256 px chunks with
+    12 resident.
+  * Only the start chunk is rendered behind the fade.
+* **Spatial grid:** 8×8-tile buckets for objects, columns, colliders and area triggers.
+* **Enemy sleep:** enemies sleep beyond 18 tiles (a 1 Hz heartbeat). At most 24 are awake (16 on phones). Off-screen
+  projectiles and zones beyond 20 tiles are culled.
+* **Minimap:**
+  * On the HUD, a local 24-tile window.
+  * A full-map screen (M / D-pad down) with fog of war and section insets.
+  * The fog bitmap is stored in the save.
+* **Save:** adds per-map `sections` and `shrines` discovered.
+* **Budgets:** at most 40 visible lights. Phone p95 ≤ 20 ms on the engine-check tour of every section.
+* **Generator:** a `zone` stamp that composes the outer, dungeon, vault and boss sub-stamps with offsets, plus auto void
+  gutters, `warpdoor` objects, the `warp` trigger action, and per-section ambient/palette. Until the stamp lands, a zone
+  can be built as merged recipes placed by offset.
+
+### 25.3 Act I (rebuilt before the slice ships)
+* **Vale:** 80×80. Sections: pond, lanterns, arena islet. 2 shrines. The dummies and the Stone are within 15 tiles of the
+  start, the first chest at 10 tiles.
+* **Pinewood:** 112×112, using the expert's zone recipe (kept in docs/PRODUCTION.md).
+  * The forest has 3 shrines, a creek, 2 shortcut loops, the elite, and the tablet.
+  * The Hollow is underground SW, entered by warp door with the key and left by a root-stair up to shrine 3.
+  * The Warrens vault is behind the pond secret.
+  * The Clearing arena sits behind a gate.
+* **Fallback:** if `warp` isn't ready, the Hollow stays a separate 56×20 map for the slice and merges in M4.
+
+**Flags:**
+* If the client later wants *more* maps at this size, the art lane breaks first.
+* Eight full rasters must never be resident at once. The chunk cache is mandatory on phones.
