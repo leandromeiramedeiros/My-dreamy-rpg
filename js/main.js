@@ -68,7 +68,7 @@ function update(dt, rdt) {
   if (G.banner) G.banner.t -= rdt;
   if (G.msg) G.msg.t -= rdt;
   if (G.lastCast) G.lastCast.t -= rdt;
-  if (G.ui.open || G.ui.help || G.ui.pause) { updateCamera(rdt); return; }
+  if (G.ui.open || G.ui.help || G.ui.pause || G.ui.map) { updateCamera(rdt); return; }   // G.ui.map: full-map screen (screens.js)
 
   if (G.fadeDir) {
     G.fade += rdt * 1.6 * G.fadeDir;
@@ -201,6 +201,7 @@ function handleInput() {
     return;
   }
   if (G.state !== 'play' || G.fadeDir) return;
+  if (typeof fullMapInput === 'function' && fullMapInput()) { used(); return; }   // M / D-pad down: full map + shrine warp (screens.js)
   const tabKey = [['inventory', 'inv'], ['character', 'skills'], ['bestiary', 'bestiary'], ['quests', 'quests']].find(([a]) => IN.pressed(a));
   if (tabKey) { openInv(tabKey[1]); used(); return; }
   if (IN.pressed('pause')) { G.ui.pause = true; UI.focus.set(null); used(); return; }   // Esc and pad Start open the pause screen
