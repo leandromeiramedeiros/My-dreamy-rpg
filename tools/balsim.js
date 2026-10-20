@@ -301,7 +301,7 @@ const REACT = 0.3, MISTAKES = [3, 12], MISS_EVERY = +arg('miss', 10), LIVE_POTIO
 const LIVE_ROWS = [{ k: 'under', label: '-1 tier', diff: 'normal', n: +arg('under-trials', 48) }, { k: 'reference', label: 'reference', diff: 'normal', n: +arg('ref-trials', LIVE_TRIALS) }, { k: 'under2', label: '-2 Story', diff: 'story', n: LIVE_TRIALS }];
 const ONLY = arg('only', '');
 // --qa: also replay the QA bot's arrival hero (tools/qa/gear-mossjaw.json, written by run-big.js at the den) in the Mossjaw fight
-const QA_GEAR = process.argv.includes('--qa') && fs.existsSync(path.join(ROOT, 'tools/qa/gear-mossjaw.json')) ? JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/qa/gear-mossjaw.json'), 'utf8')) : null;
+const QA_FILE = arg('qa-gear', path.join(ROOT, 'tools/qa/gear-mossjaw.json')), QA_GEAR = process.argv.includes('--qa') && fs.existsSync(QA_FILE) ? JSON.parse(fs.readFileSync(QA_FILE, 'utf8')) : null;
 if (QA_GEAR) LIVE_ROWS.push({ k: 'qa', label: 'QA bot', diff: 'normal', n: +arg('qa-trials', 12), boss: 'mossjaw', L: QA_GEAR.level });
 ev(`function simHeroQA(g) { const p = makePlayer(); p.level = g.level; p.equip = JSON.parse(JSON.stringify(g.equip)); if (g.weapon) p.gear.weapon = g.weapon; recalcStats(p, true); G.player = p; p.x = 24; p.y = 24; p.z = 0; p.invulnT = 0; return p; }`);
 ev(`const ADD_R = 3;

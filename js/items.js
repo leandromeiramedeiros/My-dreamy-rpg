@@ -512,7 +512,6 @@ function rollLoot(cls, lvl, unique, pool) {
   }
   return out;
 }
-// the Vale's first chest: try another weapon family, an armour upgrade and a first gem
 // The Vale's first chest (the tutorial chest, `starter: true`, ~2:00; director ruling M3): a fixed Common Iron Mail with
 // 1 socket, the Origin ring for the starting class (§17.1 / §19.4: the Origin passive is that ring's boon) and a Chipped gem.
 function starterLoot(p = G.player) {
@@ -629,9 +628,16 @@ function sortBag(p) {
   p.bag = list.concat(new Array(BAG_SIZE - list.length).fill(null));
 }
 // trigger action `loot`: N items of at least `rarity` at x,y (default: beside the hero) — room-clear rewards
+// item: '<gear base>' (§28, the garden ambush's Iron Boots): that fixed piece (Common unless `rarity`), no random roll (count 0
+// by default); it is put on if its slot is empty. A hero who already wears that slot (a save from before §28) gets the old
+// room-clear roll instead: one item of `fallback` (default Uncommon).
 function lootAction(a) {
-  const p = G.player, [lo, hi] = zoneLevel(), L = clamp(p.level, lo, hi), min = RARITY[a.rarity] ? a.rarity : 'uncommon', list = [];
-  for (let i = 0; i < clamp(+a.count || 1, 1, 12); i++) { let r = rollRarity('elite', L); if (!rarityAtLeast(r, min)) r = min; const it = rollItem(L, r); if (+a.sockets > 0) it.sockets = Array(Math.min(3, +a.sockets)).fill(null); list.push({ kind: 'item', it }); }
+  const p = G.player, [lo, hi] = zoneLevel(), L = clamp(p.level, lo, hi), list = [];
+  const gearBase = a.item && BASES[a.item] ? a.item : null, gearFree = gearBase && !p.equip[BASES[gearBase].slot];
+  const min = RARITY[a.rarity] ? a.rarity : 'uncommon', rmin = gearBase && !gearFree ? (RARITY[a.fallback] ? a.fallback : 'uncommon') : min;
+  const n = gearBase ? (gearFree ? (+a.count || 0) : Math.max(1, +a.count || 0)) : clamp(+a.count || 1, 1, 12);
+  if (gearFree) list.push({ kind: 'item', it: makeItem(gearBase, RARITY[a.rarity] ? a.rarity : 'common', 1, { sockets: 0, affixes: [] }), equip: true });
+  for (let i = 0; i < clamp(n, 0, 12); i++) { let r = rollRarity('elite', L); if (!rarityAtLeast(r, rmin)) r = rmin; const it = rollItem(L, r); if (+a.sockets > 0) it.sockets = Array(Math.min(3, +a.sockets)).fill(null); list.push({ kind: 'item', it }); }
   // generator extras: gem: true · chest: 'gold' | 'silver' (one more item, a better gem) · item: key_* | socket_rune | unique id
   if (a.gem) list.push({ kind: 'gem', gem: rollGem(L) });
   if (a.chest === 'gold' || a.chest === 'silver') { list.push({ kind: 'item', it: rollItem(L, a.chest === 'gold' ? 'epic' : 'rare') }); if (a.chest === 'gold') list.push({ kind: 'gem', gem: rollGem(L + 5) }); }
@@ -639,11 +645,25 @@ function lootAction(a) {
     if (/^key_/.test(a.item)) { const S = G.prog.secrets || (G.prog.secrets = {}); S['key:' + a.item] = true; text(p.x, p.y, p.z + 3.4, 'Key found', '#ffd35a', true); if (typeof UI !== 'undefined') UI.toast({ text: 'Key: ' + a.item.replace(/^key_/, '').replace(/_/g, ' '), col: '#ffd35a' }); sfx('loot'); }
     else if (UNIQUES[a.item]) list.push({ kind: 'item', it: makeUnique(a.item, L) });
     else if (trinketBases()[a.item] && trinketBases()[a.item].unique) list.push({ kind: 'item', it: makeTrinketUnique(a.item, L) });   // vault / world uniques (§19.5)
+    else if (gearBase) { /* the fixed piece above */ }
     else { (p.runes = p.runes || []).push(a.item); if (typeof UI !== 'undefined') UI.toast({ text: a.item.replace(/_/g, ' '), col: '#b48aff' }); }
   }
   const has = v => v != null && v !== '', x = has(a.x) ? +a.x : p.x + 1, y = has(a.y) ? +a.y : p.y + 1;
-  fx({ type: 'pillar', x, y, col: rarityCol(min), life: 0.6, r: 0.8 });
+  fx({ type: 'pillar', x, y, col: rarityCol(gearBase ? (list[0] ? list[0].it.rarity : rmin) : min), life: 0.6, r: 0.8 });
   dropLoot(x, y, list);
+}
+// trigger action `gear` (§28 opening): a first-kit piece lying in the world at x, y (the sword standing in the grass at 0:45, the
+// Iron Cap on the cottage step at 3:50). Placed by a map_enter card, so it lies there again after a reload until it is taken;
+// skipped once found (G.prog.secrets['found:<item>']) or when the hero already wears that slot (every save from before §28).
+// Walking over it puts it on (pickup: `equip`). Exact position, no scatter, never evicted.
+function gearAction(a) {
+  const p = G.player, b = BASES[a.item]; if (!b || !p) return false;
+  const S = G.prog.secrets || (G.prog.secrets = {});
+  if (S['found:' + a.item] || p.equip[b.slot] || G.drops.some(d => d.found === a.item)) return false;
+  const it = makeItem(a.item, RARITY[a.rarity] ? a.rarity : 'common', 1, { sockets: +a.sockets || 0, affixes: [] }), m = G.map;
+  const x = +a.x, y = +a.y, z = tileH(m, x, y);
+  G.drops.push({ kind: 'item', it, sx: x, sy: y, x, y, z, t: 0.5, rar: it.rarity, name: itemName(it), found: a.item, equip: true, keep: true, line: a.line || null, ground: true });
+  return true;
 }
 
 // ===== inventory actions (input-agnostic: mouse, touch and later gamepad/ui.js drive these) =================
@@ -749,9 +769,35 @@ function openChest(o) {
   const floor = { silver: 'uncommon', gold: 'rare' }[o.src.tier], list = o.src.starter ? starterLoot() : rollLoot('chest', L);
   if (o.src.tier === 'gold') list.push({ kind: 'item', it: rollItem(L, rollRarity('elite', L)) }, { kind: 'gem', gem: rollGem(L + 5) });
   if (floor) for (const d of list) if (d.kind === 'item' && !rarityAtLeast(d.it.rarity, floor)) d.it = rollItem(L, floor, isTrinket(d.it) ? d.it.slot : undefined);
+  guaranteeRarity(list, o.src.guaranteed, L);
   list.push(...chestTrinket(o.src, L));
+  const legacy = legacyOriginRing(o.src); if (legacy) list.push({ kind: 'item', it: legacy });
+  // §28 the first chest (~2:00): its kit flies to the hero; the Origin ring goes on (ring slot 1 means something from here),
+  // the mail and the gem go into the bag, which then opens on the mail with EQUIP focused (pickup)
+  if (o.src.starter) for (const d of list) { d.auto = true; if (d.kind === 'item' && isTrinket(d.it)) d.equip = true; else if (d.kind === 'item') d.teach = true; }
   dropLoot(o.x, o.y, list);
   gainXp(p, Math.round(xpToNext(L) * (o.src.starter ? 0.8 : 0.5)));
+}
+// chest marker `guaranteed: '<rarity>'` (level lane contract, e.g. the mini-boss and Warrens chests: 'epic'): at least one GEAR item
+// of that rarity or better. If none rolled it, the best gear item is re-rolled at that rarity in its own slot. The marker's trinket
+// (`loot`) is never touched: amulets and belts stay Rare by the §19.4 contract.
+function guaranteeRarity(list, min, L) {
+  if (!RARITY[min]) return;
+  const gear = list.filter(d => d.kind === 'item' && !isTrinket(d.it));
+  if (gear.some(d => rarityAtLeast(d.it.rarity, min))) return;
+  const d = gear.sort((a, b) => RARITY[b.it.rarity].i - RARITY[a.it.rarity].i)[0];
+  if (d) d.it = rollItem(L, min, d.it.slot); else list.unshift({ kind: 'item', it: rollItem(L, min) });
+}
+// a save from before §28 that opened the tutorial chest when it held no ring (the ring sat in the ledge chest, now moved): the
+// next Vale chest it opens carries the Origin ring, once, if the hero owns no ring at all
+function legacyOriginRing(src) {
+  const p = G.player, S = G.prog && (G.prog.secrets || (G.prog.secrets = {}));
+  if (!S || src.starter || !G.map || G.map.id !== 'vale' || S['trinket:ring']) return null;
+  const tut = G.map.objects.find(o => o.chest && o.src && o.src.starter);
+  if (!tut || !G.prog.chests[chestKey(tut.src)]) return null;
+  if (EQUIP_SLOTS.some(k => p.equip[k] && p.equip[k].slot === 'ring') || p.bag.some(e => e && e.slot === 'ring')) return null;
+  S['trinket:ring'] = true;
+  return originRing(p.equip.weapon ? p.equip.weapon.base : 'rustyblade');
 }
 // CHEST CONTRACT (level lane, §19.4 placements): a chest marker may carry `loot: 'ring' | 'amulet' | 'belt'`. Opening it drops,
 // IN ADDITION to the normal loot, one trinket of that slot: a ring Uncommon+ (the chest's rarity roll, floored), an amulet or
@@ -761,6 +807,8 @@ const TRINKET_CHEST_FLOOR = { ring: 'uncommon', amulet: 'rare', belt: 'rare' };
 const trinketSlotOf = src => (src && TRINKET_KINDS.includes(src.loot) ? src.loot : null);   // a chest marker's `loot` slot, or null
 function chestTrinket(src, L) {
   const slot = trinketSlotOf(src); if (!slot) return [];
+  // §28: the tutorial chest's `loot: 'ring'` IS the Origin ring starterLoot already holds; it records the source, adds no second ring
+  if (src.starter && slot === 'ring') { if (G.prog) (G.prog.secrets || (G.prog.secrets = {}))['trinket:ring'] = true; return []; }
   let r = rollRarity('chest', L); if (!rarityAtLeast(r, TRINKET_CHEST_FLOOR[slot])) r = TRINKET_CHEST_FLOOR[slot];
   if (slot !== 'ring' && RARITY[r].i > RARITY.rare.i) r = 'rare';   // amulet / belt: Rare exactly (§19.4 placements)
   if (G.prog) (G.prog.secrets || (G.prog.secrets = {}))['trinket:' + slot] = true;
@@ -961,7 +1009,9 @@ function applySave(p, s) {
   for (const slot of EQUIP_SLOTS) {
     const it = (P.equip || {})[slot];
     if (validItem(it) && equipKeysFor(baseOf(it.base).slot).includes(slot)) { it.sockets = it.sockets.map(g => gemParse(g) ? g : null); p.equip[slot] = compatItem(it); }
-    else if (!SLOTS.includes(slot)) p.equip[slot] = null;
+    // §28 null gear slots: an empty saved slot stays empty (a bare hero mid-opening); a gear slot holding an item this build
+    // cannot read gets the slot's first-kit Common (the old starter-kit fallback), so an existing save never loses a slot
+    else p.equip[slot] = it && SLOTS.includes(slot) ? firstKitPiece(slot) : null;
   }
   p.bag = Array(BAG_SIZE).fill(null);
   (P.bag || []).slice(0, BAG_SIZE).forEach((e, i) => { if (validItem(e)) p.bag[i] = compatItem(e); else if (e && gemParse(e.gem) && e.n > 0) p.bag[i] = { gem: e.gem, n: e.n | 0 }; });
@@ -1001,12 +1051,20 @@ function applySave(p, s) {
 }
 
 // ===== starter + showcase kits ====================================================================================
+// §28: the hero starts BARE (nightshirt, empty-handed, no ring): every EQUIP_SLOTS key null, bag empty. The kit is found in the
+// Vale (FIRST_KIT): the Rusty Blade in the grass (0:45), the first chest's Iron Mail + Origin ring + gem (~2:00), the Iron Cap
+// in the cottage (3:50), the Iron Boots from the garden ambush (4:50). p.gear keeps each slot's DEFAULT family id while the slot
+// is empty (render.js reads item('weapon', p.gear.weapon).kind for the pose); behaviour is gated on p.equip (game.js).
 function starterKit(p) {
-  p.equip = { weapon: makeItem('rustyblade', 'common', 1, { sockets: 0 }), head: makeItem('ironcap', 'common', 1, { sockets: 0 }),
-    chest: makeItem('ironmail', 'common', 1, { sockets: 1 }), boots: makeItem('ironboots', 'common', 1, { sockets: 0 }),
-    ring1: null, ring2: null, amulet: null, belt: null };   // the Origin ring comes from the first Vale chest (starterLoot)
+  p.equip = {}; for (const k of EQUIP_SLOTS) p.equip[k] = null;
   p.bag = Array(BAG_SIZE).fill(null);
 }
+// the four Commons the Vale hands out (§28 table); FIRST_KIT_GEAR is also the fallback piece for a save whose gear slot holds an
+// item this build cannot read (applySave: an existing save never loses a slot), and the dev kit for a bare hero dropped into a
+// later map by ?map= (game.js startTriggers)
+const FIRST_KIT = { weapon: 'rustyblade', head: 'ironcap', chest: 'ironmail', boots: 'ironboots' };
+const firstKitPiece = slot => makeItem(FIRST_KIT[slot], 'common', 1, { sockets: slot === 'chest' ? 1 : 0, affixes: [] });
+const isBare = p => !!p && SLOTS.every(k => !p.equip[k]);
 // ?scene=... showcases: a mid-level hero (L16) with rare/epic tier-2 gear of the chosen weapon variant (legacy ids accepted)
 function showcaseKit(p, wfam = 'sword') {
   wfam = FAMILY_TIERS[variantId(wfam)] && item('weapon', variantId(wfam)) ? variantId(wfam) : 'sword';

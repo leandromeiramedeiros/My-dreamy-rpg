@@ -219,20 +219,20 @@ function drawScene() {
   // ---- sky & distant world ----
   const pxs = clamp(-80 - camX * 0.02, -160, 0), pys = clamp(-50 - camY * 0.02, -90, 0);
   ctx.drawImage(bg.sky.c, Math.round(pxs), Math.round(pys));
-  if (!th.moon.sun) for (const s of bg.sky.stars) {
+  if (!th.moon.sun) for (const s of bg.sky.stars) {   // 140 twinkling stars: fill strings from a 256-step table (no per-frame strings)
     const a = 0.35 + 0.65 * Math.max(0, Math.sin(G.t * s.s * 2 + s.p));
-    ctx.fillStyle = `rgba(255,248,255,${a * 0.9})`;
+    ctx.fillStyle = STAR_FILL[0][Math.round(a * 0.9 * 255)];
     const x = Math.round(s.x + pxs), y = Math.round(s.y + pys);
     ctx.fillRect(x, y, 1, 1);
-    if (s.big) { ctx.fillStyle = `rgba(255,230,250,${a * 0.45})`; ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3); }
+    if (s.big) { ctx.fillStyle = STAR_FILL[1][Math.round(a * 0.45 * 255)]; ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3); }
   }
+  perfMark('sky.base');
   const mo = th.moon, mx = mo.x + pxs * 0.5, my = mo.y + pys * 0.5;
-  const mg = ctx.createRadialGradient(mx, my, mo.r * 0.6, mx, my, mo.r * 3.2);
-  mg.addColorStop(0, rgba(mo.glow, 0.45)); mg.addColorStop(1, rgba(mo.glow, 0));
-  ctx.fillStyle = mg; ctx.fillRect(mx - mo.r * 4, my - mo.r * 4, mo.r * 8, mo.r * 8);
+  ctx.drawImage(moonGlow(mo), Math.round(mx - mo.r * 4), Math.round(my - mo.r * 4));
   if (mo.sun) { ctx.fillStyle = mo.col; ctx.beginPath(); ctx.arc(Math.round(mx), Math.round(my), mo.r, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff6e0'; ctx.beginPath(); ctx.arc(Math.round(mx), Math.round(my), mo.r * 0.7, 0, Math.PI * 2); ctx.fill(); }
   else drawMoon(ctx, mx, my, mo.r, mo.col);
   if (m.themeId === 'vale') drawMoon(ctx, mx - 70, my + 22, 7, '#d6e6ff');
+  perfMark('sky.moon');
   const farY = RH * 0.5 - 120 - camY * 0.04, nearY = RH * 0.55 - 100 - camY * 0.08;
   ctx.drawImage(bg.far, Math.round(-200 - camX * 0.05), Math.round(farY));
   // distant floating islets
@@ -245,6 +245,7 @@ function drawScene() {
     const x = ((i * 170 - camX * 0.15 + G.t * (4 + i * 1.5)) % 760) - 140, y = 40 + i * 30 - camY * 0.1;
     ctx.globalAlpha = 0.85; ctx.drawImage(c, Math.round(x), Math.round(y)); ctx.globalAlpha = 1;
   });
+  perfMark('sky.mtn');
   // god rays: dawn shafts from the low sun, slanting down to the right through the mist
   if (th.rays) {
     ctx.globalCompositeOperation = 'lighter';
@@ -341,8 +342,10 @@ function drawScene() {
   perfMark('fx');
   // ---- fog & mist ----
   const forest = m.themeId === 'forest', fk = 1 - look.dark * 0.7;
+  perfMark('fx');
   drawFog(ctx, bg.fog, 256, 0.5, 7, 2.5, (forest ? 0.24 : m.themeId === 'vale' ? 0.15 : 0.18) * fk);
   if (!COARSE_POINTER) {   // §16.6.6: one fog layer on touch devices
+    perfMark('fog.1');
     drawFog(ctx, bg.fog2, 384, 0.8, -4, 1.2, (forest ? 0.09 : m.themeId === 'vale' ? 0.07 : 0.1) * fk);
     if (forest) drawFog(ctx, bg.fog, 512, 1.1, 3, 0.6, 0.14 * fk);   // heavy low mist banks
   }
@@ -362,6 +365,7 @@ function drawScene() {
   perfMark('bloom');
   ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.22; ctx.drawImage(GRADE[m.themeId], 0, 0);
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  perfMark('grade.soft');
   if (p.buffs.dreamveil) { ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = 'rgba(255,140,220,0.25)'; ctx.fillRect(0, 0, RW, RH); ctx.globalCompositeOperation = 'source-over'; }
   ctx.drawImage(VIGNETTE, 0, 0);
   if (p.hurtT > 0) { ctx.fillStyle = `rgba(255,40,90,${p.hurtT * 0.6})`; ctx.fillRect(0, 0, RW, RH); }
@@ -373,6 +377,18 @@ function drawScene() {
 // perf: the moon disc was ~(2r+1)^2 fillRects + value-noise calls EVERY frame (~10 % of a play frame headless); it is
 // now rastered once per (radius, colour) into a canvas and blitted (same pixels: x, y snap to whole pixels as before)
 const MOON_CACHE = new Map();
+const STAR_FILL = [0, 1].map(k => Array.from({ length: 256 }, (_, i) => k ? `rgba(255,230,250,${i / 255})` : `rgba(255,248,255,${i / 255})`));
+// the moon / sun halo: a radial gradient rastered once per theme moon (it was a new gradient + an 8r x 8r gradient fill each frame)
+function moonGlow(mo) {
+  const k = 'glow|' + mo.r + '|' + mo.glow;
+  let c = MOON_CACHE.get(k);
+  if (!c) {
+    const S = Math.ceil(mo.r * 8), v = makeCanvas(S, S), g = v.x.createRadialGradient(mo.r * 4, mo.r * 4, mo.r * 0.6, mo.r * 4, mo.r * 4, mo.r * 3.2);
+    g.addColorStop(0, rgba(mo.glow, 0.45)); g.addColorStop(1, rgba(mo.glow, 0));
+    v.x.fillStyle = g; v.x.fillRect(0, 0, S, S); MOON_CACHE.set(k, c = v.c);
+  }
+  return c;
+}
 function drawMoon(ctx, x, y, r, col) {
   const R = Math.round(r), k = R + '|' + col;
   let mc = MOON_CACHE.get(k);
@@ -1264,11 +1280,23 @@ function drawParticles(ctx, lights) {
   ctx.globalCompositeOperation = 'source-over';
 }
 
+// perf (§26.4 step 5): each fog layer used to upscale the 128 px texture with smoothing on every tile, every frame (a smoothed
+// scale is ~5x a 1:1 blit in the software rasteriser). The texture is now scaled once per (texture, size) with the same
+// smoothing into a cached canvas and blitted 1:1 at the same whole-pixel offsets, starting at the first tile that can show
+// (ox, oy are in (-size, 0], so the old extra row / column above and left of them was always fully off screen).
+const FOG_SCALED = new WeakMap();
+function fogTile(tex, size) {
+  let m = FOG_SCALED.get(tex); if (!m) FOG_SCALED.set(tex, m = {});
+  let c = m[size];
+  if (!c) { const v = makeCanvas(size, size); v.x.imageSmoothingEnabled = true; v.x.drawImage(tex, 0, 0, size, size); c = m[size] = v.c; }
+  return c;
+}
 function drawFog(ctx, tex, size, par, spx, spy, alpha) {
   const ox = -(((camX * par + G.t * spx) % size) + size) % size, oy = -(((camY * par + G.t * spy) % size) + size) % size;
-  ctx.globalAlpha = alpha; ctx.imageSmoothingEnabled = true;
-  for (let y = oy - size; y < RH; y += size) for (let x = ox - size; x < RW; x += size) ctx.drawImage(tex, Math.round(x), Math.round(y), size, size);
-  ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false;
+  const t = fogTile(tex, size), x0 = Math.round(ox), y0 = Math.round(oy);
+  ctx.globalAlpha = alpha;
+  for (let y = y0; y < RH; y += size) for (let x = x0; x < RW; x += size) ctx.drawImage(t, x, y);
+  ctx.globalAlpha = 1;
 }
 
 // §16.6.1: one cached 64x64 radial sprite per light colour (alpha 1 -> 0), drawn scaled with globalAlpha = L.a.
@@ -1283,6 +1311,20 @@ function lightSprite(col) {
     g.addColorStop(0, rgba(col, 1)); g.addColorStop(1, rgba(col, 0));
     v.x.fillStyle = g; v.x.fillRect(0, 0, 64, 64);
     c = v.c; if (LIGHT_SPR.size > 64) LIGHT_SPR.clear(); LIGHT_SPR.set(col, c);
+  }
+  return c;
+}
+// perf: every light used to be a smoothed scale of the 64 px sprite (twice: lightmap + halo); the scaled sprite is now cached per
+// (colour, whole-pixel diameter) and blitted 1:1 at a whole-pixel spot (<= 0.5 px from the old sub-pixel placement; a flickering
+// light's diameter moves through a dozen sizes). The cache is dropped whole past LIGHT_SIZED_MAX entries.
+const LIGHT_SIZED = new Map(), LIGHT_SIZED_MAX = 384;
+function lightSized(col, d) {
+  const k = col + '|' + d;
+  let c = LIGHT_SIZED.get(k);
+  if (!c) {
+    if (LIGHT_SIZED.size >= LIGHT_SIZED_MAX) LIGHT_SIZED.clear();
+    const v = makeCanvas(d, d); v.x.imageSmoothingEnabled = true; v.x.drawImage(lightSprite(col), 0, 0, d, d);
+    LIGHT_SIZED.set(k, c = v.c);
   }
   return c;
 }
@@ -1302,15 +1344,17 @@ function applyLighting(ctx, lights, th, ambient) {
     vis = vis.sort((a, b) => sc(b) - sc(a)).slice(0, LIGHT_MAX);
   }
   LIGHT_STATS.drawn = vis.length;
-  for (const [vx, vy, L] of vis) { x.globalAlpha = clamp(L.a, 0, 1); x.drawImage(lightSprite(L.col), vx / 2 - L.r / 2, vy / 2 - L.r / 2, L.r, L.r); }
+  for (const [vx, vy, L] of vis) { const d = Math.max(1, Math.round(L.r)); x.globalAlpha = clamp(L.a, 0, 1); x.drawImage(lightSized(L.col, d), Math.round(vx / 2 - d / 2), Math.round(vy / 2 - d / 2)); }
   x.globalAlpha = 1;
+  perfMark('lights.lm');
   ctx.globalCompositeOperation = 'multiply'; ctx.imageSmoothingEnabled = true;
   ctx.drawImage(LM.c, 0, 0, RW, RH);
+  perfMark('lights.mul');
   // additive halos — the "fake light" glow
   ctx.globalCompositeOperation = 'lighter';
   for (const [vx, vy, L] of vis) {
-    const r = L.r * 0.55;
-    ctx.globalAlpha = clamp(L.a * 0.32 * fc, 0, 1); ctx.drawImage(lightSprite(L.col), vx - r, vy - r, r * 2, r * 2);
+    const d = Math.max(1, Math.round(L.r * 1.1));
+    ctx.globalAlpha = clamp(L.a * 0.32 * fc, 0, 1); ctx.drawImage(lightSized(L.col, d), Math.round(vx - d / 2), Math.round(vy - d / 2));
   }
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
 }
