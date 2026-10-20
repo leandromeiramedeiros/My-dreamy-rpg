@@ -407,7 +407,7 @@ function placeBarrier(m, o, kind) {
   for (let i = 0; i < n; i++) {
     const t = n === 1 ? 0 : i / (n - 1) - 0.5, x = +o.x + Math.cos(a) * len * t, y = +o.y + Math.sin(a) * len * t;
     const img = L.img(), ob = addProp(m, img, x, y, { r: L.r, shadow: 5, src: o, light: L.light && i === (n >> 1) ? Object.assign({}, L.light) : undefined });
-    ob.barrier = kind; ob.gid = id; ob.key = o.key || null;
+    ob.barrier = kind; ob.gid = id; ob.doorKey = o.key || null;
     if (kind === 'keydoor' && i === (n >> 1)) ob.use = KEYDOOR_USE;
   }
 }
@@ -447,7 +447,7 @@ function openGate(id, fromTrigger) {
 }
 const LEVER_USE = { kind: 'lever', reach: 1.4, on: o => !o.pulled, text: () => 'Pull lever',
   fn(o) { const id = leverGate(G.map, o); o.pulled = true; sfx('trap'); if (id) openGate(id); else say('The lever clicks. Somewhere, something moved.'); } };
-const KEYDOOR_USE = { kind: 'keydoor', reach: 1.8, on: o => !o.gone, text: o => (hasKey(o.key) ? 'Unlock' : 'Locked'),
-  fn(o) { if (hasKey(o.key)) { openGate(o.gid); say('The key turns. The roots let go.'); } else { say('Locked. It needs a key.'); sfx('hurt'); } } };
+const KEYDOOR_USE = { kind: 'keydoor', reach: 1.8, on: o => !o.gone, text: o => (hasKey(o.doorKey) ? 'Unlock' : 'Locked'),
+  fn(o) { if (hasKey(o.doorKey)) { openGate(o.gid); say('The key turns. The roots let go.'); } else { say('Locked. It needs a key.'); sfx('hurt'); } } };
 const FISH_USE = { kind: 'fishspot', reach: 1.6, on: () => true, text: () => 'Fish (coming soon)',
   fn(o) { say('The water ripples. Fishing arrives in a later dream.'); fx({ type: 'ring', x: o.x, y: o.y, r: 0.8, col: '#9fe8ff', life: 0.6 }); sfx('blink'); } };
