@@ -36,8 +36,9 @@ class Img {
 
 const COL = {
   '.': [18, 16, 30], g: [74, 120, 58], f: [112, 150, 78], d: [40, 72, 52], p: [170, 130, 84], s: [190, 190, 200], w: [48, 104, 176],
-  b: [140, 96, 52], x: [128, 130, 146], r: [150, 100, 220], c: [60, 56, 76],
+  b: [140, 96, 52], x: [128, 130, 146], r: [150, 100, 220], c: [60, 56, 76], v: [40, 34, 56], k: [6, 5, 12],
 };
+const isVoid = t => t === '.' || t === 'v' || t === 'k';
 const OBJC = {
   pine_giant: [10, 50, 30], pine: [20, 80, 44], pine_young: [60, 120, 70], tree_round: [20, 90, 40], tree_poplar: [30, 100, 50], tree_teal: [20, 110, 100], tree_blossom: [220, 130, 170], tree_dead: [90, 70, 60],
   rock: [150, 150, 160], rock_dark: [90, 90, 110], log: [110, 70, 40], stump: [130, 90, 50], bush: [50, 130, 60],
@@ -49,13 +50,13 @@ const OBJC = {
 function shade(c, h) { const k = 0.78 + h * 0.065; return [Math.min(255, c[0] * k), Math.min(255, c[1] * k), Math.min(255, c[2] * k)]; }
 
 function tileColor(m, x, y) {
-  const t = m.tiles[y][x]; if (t === '.') return COL['.'];
+  const t = m.tiles[y][x]; if (t === '.' || t === 'v' || t === 'k') return COL[t];
   const h = parseInt(m.heights[y][x], 36) || 0;
   let c = shade(COL[t] || [255, 0, 255], h);
   // cliff edge: darken where a neighbour (+x or +y; front faces in-game) is >=2 lower
   for (const [dx, dy] of [[1, 0], [0, 1]]) {
     const nx = x + dx, ny = y + dy; if (nx >= m.W || ny >= m.H) continue;
-    if (m.tiles[ny][nx] !== '.' && h - (parseInt(m.heights[ny][nx], 36) || 0) >= 2) c = [c[0] * 0.55, c[1] * 0.55, c[2] * 0.55];
+    if (!isVoid(m.tiles[ny][nx]) && h - (parseInt(m.heights[ny][nx], 36) || 0) >= 2) c = [c[0] * 0.55, c[1] * 0.55, c[2] * 0.55];
   }
   return c;
 }
@@ -66,9 +67,9 @@ function render(id, m, meta, outDir) {
   for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) im.rect(x * T, top + y * T, T, T, tileColor(m, x, y));
   // cliff lines (stronger) between tiles with |dh|>=2
   for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) {
-    if (m.tiles[y][x] === '.') continue; const h = parseInt(m.heights[y][x], 36) || 0;
-    if (x + 1 < m.W && m.tiles[y][x + 1] !== '.' && Math.abs(h - (parseInt(m.heights[y][x + 1], 36) || 0)) >= 2) im.rect((x + 1) * T - 1, top + y * T, 2, T, [0, 0, 0]);
-    if (y + 1 < m.H && m.tiles[y + 1][x] !== '.' && Math.abs(h - (parseInt(m.heights[y + 1][x], 36) || 0)) >= 2) im.rect(x * T, top + (y + 1) * T - 1, T, 2, [0, 0, 0]);
+    if (isVoid(m.tiles[y][x])) continue; const h = parseInt(m.heights[y][x], 36) || 0;
+    if (x + 1 < m.W && !isVoid(m.tiles[y][x + 1]) && Math.abs(h - (parseInt(m.heights[y][x + 1], 36) || 0)) >= 2) im.rect((x + 1) * T - 1, top + y * T, 2, T, [0, 0, 0]);
+    if (y + 1 < m.H && !isVoid(m.tiles[y + 1][x]) && Math.abs(h - (parseInt(m.heights[y + 1][x], 36) || 0)) >= 2) im.rect(x * T, top + (y + 1) * T - 1, T, 2, [0, 0, 0]);
   }
   for (const o of m.objects) {
     const c = OBJC[o.t]; const role = o.role || (o.marker && o.t);
@@ -78,6 +79,8 @@ function render(id, m, meta, outDir) {
     const rr = o.t === 'pine_giant' ? 3 : o.t === 'pine' || o.t.startsWith('tree') ? 2 : 1;
     im.disc(Math.round(o.x * T), top + Math.round(o.y * T), rr, c, o.t === 'sunbeam' ? 0.5 : 0.9);
   }
+  for (const sc of m.sections || []) { const X0 = sc.x * T, Y0 = top + sc.y * T; for (let i = 0; i < sc.w * T; i += 3) { im.px(X0 + i, Y0, [255, 210, 80]); im.px(X0 + i, Y0 + sc.h * T - 1, [255, 210, 80]); } for (let j = 0; j < sc.h * T; j += 3) { im.px(X0, Y0 + j, [255, 210, 80]); im.px(X0 + sc.w * T - 1, Y0 + j, [255, 210, 80]); } im.text(sc.name, X0 + 4, Y0 + 3, [255, 210, 80], 1); }
+  for (const o of m.objects) if (o.t === 'warpdoor') { im.ring(Math.round(o.x * T), top + Math.round(o.y * T), 6, [160, 255, 255]); im.text(o.id || 'door', Math.round(o.x * T) + 8, top + Math.round(o.y * T) - 3, [160, 255, 255], 1); }
   for (const tr of m.triggers) if (tr.when.type === 'enter_area') { im.ring(Math.round(tr.when.x * T), top + Math.round(tr.when.y * T), Math.round(tr.when.r * T), [255, 70, 70]); }
   for (const tr of m.triggers) for (const a of tr.actions) if (a.type === 'spawn' && a.x != null) im.disc(Math.round(a.x * T), top + Math.round(a.y * T), 2, a.enemy === 'troll' ? [255, 0, 0] : [255, 120, 0]);
   for (const p of m.portals) { im.ring(Math.round(p.x * T), top + Math.round(p.y * T), 7, [255, 60, 255]); im.ring(Math.round(p.x * T), top + Math.round(p.y * T), 5, [255, 60, 255]); im.text(p.to, Math.round(p.x * T) + 9, top + Math.round(p.y * T) - 3, [255, 150, 255], 1); }
@@ -109,7 +112,7 @@ function render(id, m, meta, outDir) {
   order.sort((a, b) => (a[0] + a[1]) - (b[0] + b[1]));
   const sx = (x, y) => ox + (x - y) * 16, sy = (x, y, h) => oy + (x + y) * 8 - h * Z;
   for (const [x, y] of order) {
-    const t = m.tiles[y][x]; if (t === '.') continue; const h = parseInt(m.heights[y][x], 36) || 0, c = COL[t] || [255, 0, 255];
+    const t = m.tiles[y][x]; if (isVoid(t)) continue; const h = parseInt(m.heights[y][x], 36) || 0, c = COL[t] || [255, 0, 255];
     const cx = sx(x, y), cy = sy(x, y, h) + 8;
     if (h > 0) { // side faces
       for (let k = 0; k < h * Z; k++) { diamond(cx, cy + k + 1, shade(COL.d, 0)); }
@@ -120,7 +123,7 @@ function render(id, m, meta, outDir) {
   }
   for (const o of m.objects) {
     const col = OBJC[o.t]; const role = o.role;
-    const z = (() => { const tx = Math.floor(o.x), ty = Math.floor(o.y); return m.tiles[ty] && m.tiles[ty][tx] !== '.' ? parseInt(m.heights[ty][tx], 36) || 0 : 0; })();
+    const z = (() => { const tx = Math.floor(o.x), ty = Math.floor(o.y); return m.tiles[ty] && !isVoid(m.tiles[ty][tx]) ? parseInt(m.heights[ty][tx], 36) || 0 : 0; })();
     const X = Math.round(sx(o.x, o.y)), Y = Math.round(sy(o.x, o.y, z)) + 8;
     if (role && /chest|cache/.test(role)) { iso.rect(X - 3, Y - 6, 7, 6, [255, 200, 0]); continue; }
     if (role === 'tablet') { iso.rect(X - 2, Y - 8, 5, 8, [255, 255, 255]); continue; }

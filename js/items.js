@@ -62,8 +62,8 @@ function baseStats(b) {
 
 // ===== affixes + uniques =========================================================
 // value at item level L = (a + b*L) * roll(0.6..1)
-const AFFIX = { hp: [25, 6], mp: [15, 3], def: [0.02, 0.002], power: [0.03, 0.004], crit: [0.02, 0.0015], haste: [0.03, 0.003],
-  regen: [1, 0.25], mpRegen: [0.8, 0.15], speed: [0.1, 0.01], critDmg: [0.08, 0.008], cdr: [0.02, 0.002], skillDmg: [0.04, 0.004] };
+const AFFIX = { hp: [25, 6], mp: [15, 3], def: [0.02, 0.002], power: [0.045, 0.004], crit: [0.02, 0.0015], haste: [0.03, 0.003],
+  regen: [1, 0.25], mpRegen: [0.8, 0.15], speed: [0.1, 0.01], critDmg: [0.1, 0.007], cdr: [0.02, 0.002], skillDmg: [0.04, 0.004] };
 for (const el of RES_ELS) AFFIX[resKey(el)] = 'res';   // resistance affixes roll 10-20%, not by level; resAll is legendary-only
 const STAT_NAME = { dmg: 'Damage', hp: 'HP', mp: 'MP', def: 'Armour', power: 'Damage', crit: 'Crit chance', haste: 'Attack speed', regen: 'HP/s',
   mpRegen: 'MP/s', speed: 'Move speed', critDmg: 'Crit damage', cdr: 'Cooldowns', skillDmg: 'Skill damage', resAll: 'All res' };
@@ -98,13 +98,15 @@ function makeUnique(id, ilvl) {
 // ===== gems (DESIGN §4.3) ==========================================================
 const GEM_GRADES = ['Chipped', 'Clear', 'Radiant'], GEM_MAX = 3;
 const G5 = a => g => a[g - 1];   // per-grade value table (grade 1..3)
-const GR = g => [0.1, 0.2, 0.3][g - 1];   // armour gem resist (diamond: half, to everything)
+// §20.4 gem budget (M2b balsim): Chipped 4 pp, Clear 8, Radiant 14 on the stronger side (1 pp = 1 % DPS or eHP;
+// resist 0.01 = 1 pp, hp priced against the L20 base HP). Was Chipped Ruby 12.6 / Clear 28.7 pp.
+const GR = g => [0.02, 0.04, 0.07][g - 1];   // armour gem resist (diamond: half, to everything)
 const GEMS = {
-  ruby: { name: 'Ruby', col: '#ff4a5a', el: 'fire', arm: g => ({ hp: G5([30, 100, 240])(g), resFire: GR(g) }), wpn: g => ({ power: G5([0.04, 0.1, 0.2])(g) }), amp: 'Fire skills' },
-  sapphire: { name: 'Sapphire', col: '#4a8cff', el: 'frost', arm: g => ({ mp: G5([20, 55, 110])(g), mpRegen: G5([0.5, 1.5, 3])(g), resFrost: GR(g) }), wpn: g => ({ cdr: G5([0.02, 0.05, 0.1])(g) }), amp: 'Frost skills' },
-  emerald: { name: 'Emerald', col: '#3ad67a', el: 'nature', arm: g => ({ regen: G5([1, 3.5, 7])(g), resNature: GR(g) }), wpn: g => ({ haste: G5([0.03, 0.08, 0.15])(g) }), amp: 'Nature skills, heals' },
-  topaz: { name: 'Topaz', col: '#ffc83a', el: 'lightning', arm: g => ({ crit: G5([0.01, 0.03, 0.06])(g), resLightning: GR(g) }), wpn: g => ({ critDmg: G5([0.08, 0.2, 0.4])(g) }), amp: 'Lightning skills, +chain' },
-  amethyst: { name: 'Amethyst', col: '#b46aff', el: 'arcane', arm: g => ({ power: G5([0.02, 0.06, 0.12])(g), resArcane: GR(g), resGloom: GR(g) }), wpn: g => ({ skillDmg: G5([0.04, 0.1, 0.2])(g) }), amp: 'Arcane skills' },
+  ruby: { name: 'Ruby', col: '#ff4a5a', el: 'fire', arm: g => ({ hp: G5([23, 46, 80])(g), resFire: GR(g) }), wpn: g => ({ power: G5([0.04, 0.08, 0.14])(g) }), amp: 'Fire skills' },
+  sapphire: { name: 'Sapphire', col: '#4a8cff', el: 'frost', arm: g => ({ mp: G5([20, 55, 110])(g), mpRegen: G5([0.5, 1.5, 3])(g), resFrost: GR(g) }), wpn: g => ({ cdr: G5([0.02, 0.05, 0.08])(g) }), amp: 'Frost skills' },
+  emerald: { name: 'Emerald', col: '#3ad67a', el: 'nature', arm: g => ({ regen: G5([1, 3.5, 7])(g), resNature: GR(g) }), wpn: g => ({ haste: G5([0.03, 0.06, 0.1])(g) }), amp: 'Nature skills, heals' },
+  topaz: { name: 'Topaz', col: '#ffc83a', el: 'lightning', arm: g => ({ crit: G5([0.01, 0.03, 0.06])(g), resLightning: GR(g) }), wpn: g => ({ critDmg: G5([0.04, 0.08, 0.14])(g) }), amp: 'Lightning skills, +chain' },
+  amethyst: { name: 'Amethyst', col: '#b46aff', el: 'arcane', arm: g => ({ power: G5([0.01, 0.02, 0.04])(g), resArcane: G5([0.015, 0.03, 0.05])(g), resGloom: G5([0.015, 0.03, 0.05])(g) }), wpn: g => ({ skillDmg: G5([0.04, 0.08, 0.14])(g) }), amp: 'Arcane skills' },
   diamond: { name: 'Diamond', col: '#e8f4ff', el: null, arm: g => ({ def: G5([0.01, 0.03, 0.06])(g), resAll: GR(g) / 2 }),
     wpn: g => { const v = G5([0.01, 0.02, 0.04])(g); return { power: v, def: v, crit: v / 2, haste: v }; }, amp: 'Ultimate cooldown' },
 };
@@ -166,7 +168,11 @@ function statsOf(it) {
   return s;
 }
 const itemName = it => it.unique && UNIQUES[it.unique] ? UNIQUES[it.unique].name : BASES[it.base].name;
-const salvageValue = it => Math.round([1, 3, 8, 20, 50, 120][RARITY[it.rarity].i] * (1 + it.ilvl / 10));
+// §20.6: main-path Dust ~900-1,200. sheets.js modelled ~2,820 (50 drops/zone) and suggested / 2.4; balsim's main path
+// (40 kills + 3 chests + 2 elites + 7 trigger loot cards per band + bosses, 80 % salvaged) gives ~2,470 at / 1, so
+// / 2.3 lands on ~1,080
+const SALVAGE_DIV = 2.3;
+const salvageValue = it => Math.max(1, Math.round([1, 3, 8, 20, 50, 120][RARITY[it.rarity].i] * (1 + it.ilvl / 10) / SALVAGE_DIV));
 // renderer hook for M2: what the hero visibly wears in a slot
 function equippedVisual(slot, p = G.player) {
   const it = p && p.equip[slot]; if (!it) return null;
@@ -211,19 +217,30 @@ function levelUpFx(p) {
 // ===== zone + enemy levels ===================================================================
 // world map records may carry "level": [min, max]; editor-made maps without it default to the full range
 const zoneLevel = (id = G.map && G.map.id) => { const l = G.world && G.world.maps[id] && G.world.maps[id].level; return Array.isArray(l) ? [+l[0] || 1, +l[1] || MAX_LEVEL] : [1, MAX_LEVEL]; };
-function enemyClass(type) { const d = ENEMY[type] || {}; return d.ai === 'boss' ? 'boss' : (d.elite || d.hp >= 1000) ? 'elite' : 'normal'; }
+function enemyClass(type) { const d = ENEMY[type] || {}; return d.ai === 'boss' ? 'boss' : (d.cls === 'elite' || d.elite || (d.cls == null && d.hp >= 1000)) ? 'elite' : 'normal'; }
+// an instance: elite spawns (parts.js makeElite) count as elites
+const enemyClassOf = e => (e.elite && !e.boss ? 'elite' : enemyClass(e.type));
 // enemies track the hero inside the zone band; elites +2, bosses sit at the top of the band
 function enemyLevel(type) {
-  const [a, b] = zoneLevel(), c = enemyClass(type), L = G.player ? G.player.level : a;
+  const [a, b] = zoneLevel(), c = enemyClass(type), L = G.player ? G.player.level : a, d = ENEMY[type] || {};
+  if (c === 'boss' && d.level) return clamp(+d.level, 1, MAX_LEVEL);   // bosses.js rows carry their story level
   return clamp(c === 'boss' ? b : L + (c === 'elite' ? 2 : 0), a, b);
 }
-const enemyHpMul = L => 0.6 * Math.pow(1.1, L - 1);
-const enemyDmgMul = L => 0.7 * Math.pow(1.06, L - 1);
-// kill XP as a fraction of the enemy level's bar: hp/1300 (capped), bosses two full levels
+// §20.3 (M2b balsim): ~1.09 per level tracks the measured reference-hero DPS (L1 -> L38 x23); was 0.6 x 1.1^(L-1)
+const enemyHpMul = L => Math.pow(1.09, L - 1);
+// §20.3 survival (M2b balsim): standing in 3 commons on Normal kills the reference hero in 10-14 s -> x ENEMY_DMG_K
+const ENEMY_DMG_K = 4;   // M2a damage x4: ~12 s in 3 commons at Pinewood L7 and Ruins L13 (was ~50 s)
+const enemyDmgMul = L => ENEMY_DMG_K * 0.7 * Math.pow(1.06, L - 1);
+// kill XP (§20.3): a common gives row.xp (default hp/1300, capped) of its level's bar, an elite spawn x ELITE_XP;
+// a guardian gives one full level of the HERO's bar and a mini-boss half (row xp overrides). Band ceiling: once the
+// hero is 3+ levels above the zone band's top, commons give 10 %.
+const ELITE_XP = 3, XP_CEILING_GAP = 3, XP_CEILING_MUL = 0.1;
 function killXp(e) {
-  const d = ENEMY[e.type] || {}, c = enemyClass(e.type), k = c === 'boss' ? 2 : clamp((d.hp || 100) / 1300, 0.06, 1.2);
-  const gap = (G.player.level - e.lvl);   // grey-ish enemies give less
-  return Math.max(1, Math.round(xpToNext(e.lvl) * k * (gap > 2 ? Math.max(0.2, 1 - (gap - 2) * 0.2) : 1)));
+  const d = ENEMY[e.type] || {}, c = enemyClassOf(e), p = G.player;
+  if (c === 'boss') return Math.max(1, Math.round(xpToNext(p.level) * (d.xp != null ? +d.xp : d.kind === 'mini' ? 0.5 : 1)));
+  const k = (d.xp != null ? +d.xp : clamp((d.hp || 100) / 1300, 0.06, 1.2)) * (e.elite && enemyClass(e.type) !== 'elite' ? ELITE_XP : 1);
+  const top = zoneLevel()[1], ceil = p.level >= top + XP_CEILING_GAP ? XP_CEILING_MUL : 1;
+  return Math.max(1, Math.round(xpToNext(e.lvl) * k * ceil));
 }
 
 // ===== loot rolls ===============================================================================
@@ -342,7 +359,15 @@ function sortBag(p) {
 // trigger action `loot`: N items of at least `rarity` at x,y (default: beside the hero) — room-clear rewards
 function lootAction(a) {
   const p = G.player, [lo, hi] = zoneLevel(), L = clamp(p.level, lo, hi), min = RARITY[a.rarity] ? a.rarity : 'uncommon', list = [];
-  for (let i = 0; i < clamp(+a.count || 1, 1, 12); i++) { let r = rollRarity('elite', L); if (!rarityAtLeast(r, min)) r = min; list.push({ kind: 'item', it: rollItem(L, r) }); }
+  for (let i = 0; i < clamp(+a.count || 1, 1, 12); i++) { let r = rollRarity('elite', L); if (!rarityAtLeast(r, min)) r = min; const it = rollItem(L, r); if (+a.sockets > 0) it.sockets = Array(Math.min(3, +a.sockets)).fill(null); list.push({ kind: 'item', it }); }
+  // generator extras: gem: true · chest: 'gold' | 'silver' (one more item, a better gem) · item: key_* | socket_rune | unique id
+  if (a.gem) list.push({ kind: 'gem', gem: rollGem(L) });
+  if (a.chest === 'gold' || a.chest === 'silver') { list.push({ kind: 'item', it: rollItem(L, a.chest === 'gold' ? 'epic' : 'rare') }); if (a.chest === 'gold') list.push({ kind: 'gem', gem: rollGem(L + 5) }); }
+  if (a.item) {
+    if (/^key_/.test(a.item)) { const S = G.prog.secrets || (G.prog.secrets = {}); S['key:' + a.item] = true; text(p.x, p.y, p.z + 3.4, 'Key found', '#ffd35a', true); if (typeof UI !== 'undefined') UI.toast({ text: 'Key: ' + a.item.replace(/^key_/, '').replace(/_/g, ' '), col: '#ffd35a' }); sfx('loot'); }
+    else if (UNIQUES[a.item]) list.push({ kind: 'item', it: makeUnique(a.item, L) });
+    else { (p.runes = p.runes || []).push(a.item); if (typeof UI !== 'undefined') UI.toast({ text: a.item.replace(/_/g, ' '), col: '#b48aff' }); }
+  }
   const has = v => v != null && v !== '', x = has(a.x) ? +a.x : p.x + 1, y = has(a.y) ? +a.y : p.y + 1;
   fx({ type: 'pillar', x, y, col: rarityCol(min), life: 0.6, r: 0.8 });
   dropLoot(x, y, list);
@@ -400,10 +425,17 @@ function spawnDrop(x, y, d) {
 function dropLoot(x, y, list) { list.forEach((d, i) => delay(i * 0.08, () => spawnDrop(x, y, d))); }
 function onEnemyKilled(e) {
   if (e.dummy || !G.player) return;
-  const p = G.player, c = enemyClass(e.type);
+  const p = G.player, c = enemyClassOf(e);
   gainXp(p, killXp(e));
   let uq = null;
-  if (c === 'boss') { const k = G.map.id + ':' + e.type; if (!G.prog.firsts[k]) uq = uniqueFor(k); G.prog.firsts[k] = true; }
+  if (c === 'boss') {
+    const k = G.map.id + ':' + e.type, d = ENEMY[e.type] || {}, B = typeof BOSSES !== 'undefined' ? BOSSES[d.boss || e.type] : null;
+    if (!G.prog.firsts[k]) {
+      uq = uniqueFor(k) || (B && B.unique && UNIQUES[B.unique] ? B.unique : null) || Object.keys(UNIQUES).find(u => UNIQUES[u].boss.split(':')[1] === e.type) || null;
+      if (B && B.rune) { (p.runes = p.runes || []).push('skill_rune'); if (typeof UI !== 'undefined') UI.toast({ text: 'Skill Rune', col: '#b48aff' }); }   // Mossjaw: guaranteed rune
+    }
+    G.prog.firsts[k] = true;
+  }
   dropLoot(e.x, e.y, rollLoot(c, e.lvl, uq));
   if (c === 'boss') delay(1.5, saveGame);
 }
@@ -442,6 +474,7 @@ function setCheckpoint(x, y, label) {
   p.potions = MAX_POTIONS;
   say(`${label || 'Checkpoint'} — potions refilled`); sfx('heal'); fx({ type: 'ring', x, y, r: 1.4, col: '#9ef0ff', life: 0.5 }); saveGame();
 }
+const INTERACT_R = 2.5, LOOT_NEAR = [];
 function updateLoot(dt) {
   const p = G.player; if (!p || p.dead || G.state !== 'play') return;
   for (const d of G.drops) {
@@ -454,16 +487,21 @@ function updateLoot(dt) {
   G.drops = G.drops.filter(d => !d.done);
   // chests, shrines and lore tablets wait for the Interact action (Space / A / the touch context button);
   // pickups above stay automatic. G.prompt = the nearest one in reach, for the HUD prompt and interact().
+  // perf: only the objects in the spatial-grid buckets around the hero (maps.js gridQuery), not every prop of the map;
+  // INTERACT_R covers the largest reach (keydoor 1.8)
   let best = null, bd = 9;
-  for (const o of G.map.objects) {
-    const kind = o.chest && !o.opened ? 'chest' : o.checkpoint ? 'shrine' : o.tablet ? 'tablet' : null; if (!kind) continue;
-    const d = dist(p.x, p.y, o.x, o.y), reach = kind === 'chest' ? 1.3 : kind === 'shrine' ? 1.4 : 1.5;
+  LOOT_NEAR.length = 0;
+  const near = typeof gridQuery === 'function' ? gridQuery(G.map, 'objs', p.x - INTERACT_R, p.y - INTERACT_R, p.x + INTERACT_R, p.y + INTERACT_R, LOOT_NEAR) : G.map.objects;
+  for (const o of near) {
+    // o.use = { kind, reach, on(o), text(o), fn(o) }: map-engine interactables (maps.js: keydoor, lever, fishspot)
+    const kind = o.chest && !o.opened ? 'chest' : o.checkpoint ? 'shrine' : o.tablet ? 'tablet' : o.use && o.use.on(o) ? o.use.kind : null; if (!kind) continue;
+    const d = dist(p.x, p.y, o.x, o.y), reach = o.use && kind === o.use.kind ? o.use.reach : kind === 'chest' ? 1.3 : kind === 'shrine' ? 1.4 : 1.5;
     if (d < reach && d < bd) { bd = d; best = { kind, obj: o }; }
   }
   if (G.tablet && (!best || best.obj !== G.tablet)) G.tablet = null;   // walking away closes the tablet
   if (best) {
     const o = best.obj, cpHere = G.checkpoint && G.checkpoint.map === G.map.id && dist(G.checkpoint.x, G.checkpoint.y, o.x, o.y) < 2.5;
-    best.text = best.kind === 'chest' ? 'Open' : best.kind === 'tablet' ? (G.tablet === o ? 'Close' : 'Read') : cpHere ? 'Rest (refill potions)' : 'Rest (set checkpoint)';
+    best.text = o.use && best.kind === o.use.kind ? o.use.text(o) : best.kind === 'chest' ? 'Open' : best.kind === 'tablet' ? (G.tablet === o ? 'Close' : 'Read') : cpHere ? 'Rest (refill potions)' : 'Rest (set checkpoint)';
     best.x = o.x; best.y = o.y; best.z = o.z || 0;
   }
   G.prompt = best;
@@ -474,6 +512,7 @@ function interact(p) {
   if (q.kind === 'chest' && !o.opened) openChest(o);
   else if (q.kind === 'shrine') setCheckpoint(p.x, p.y);
   else if (q.kind === 'tablet') { G.tablet = G.tablet === o ? null : o; if (G.tablet) sfx('pickup'); }
+  else if (o.use && q.kind === o.use.kind) o.use.fn(o);
   return true;
 }
 
@@ -487,8 +526,25 @@ function drinkPotion(p) {
   burst(p.x, p.y, p.z + 1, 16, ['#ff8aa8', '#ffffff', '#ffd6ec'], 2); sfx('heal');
 }
 
-// ===== save / load (localStorage 'dreamy.save.v1') ===========================================================
-const SAVE_KEY = 'dreamy.save.v1';
+// ===== save / load: 3 slots ===================================================================================
+// Slot 1 keeps the original key 'dreamy.save.v1' (old saves load as slot 1); slots 2-3 use 'dreamy.save.v1.s2|s3'.
+// 'dreamy.slots' = the slots array [{ slot, level, map, t, playtime } | null] x SAVE_SLOTS for the title screen, and
+// 'dreamy.slot' the last slot used. Every save is the v3 shape below with its own `slot` field.
+const SAVE_SLOTS = 3, SAVE_KEY_BASE = 'dreamy.save.v1';
+const saveKey = (slot = G.saveSlot || 1) => slot > 1 ? `${SAVE_KEY_BASE}.s${slot}` : SAVE_KEY_BASE;
+const SAVE_KEY = SAVE_KEY_BASE;   // slot 1 (legacy name)
+const LAST_SLOT = (() => { try { const n = +localStorage.getItem('dreamy.slot'); return n >= 1 && n <= SAVE_SLOTS ? n : 1; } catch (e) { return 1; } })();   // G.saveSlot starts here (game.js)
+function saveSlots() {
+  const out = [];
+  for (let i = 1; i <= SAVE_SLOTS; i++) {
+    let s = null; try { s = migrate(JSON.parse(localStorage.getItem(saveKey(i)))); } catch (e) { s = null; }
+    out.push(s && s.player ? { slot: i, level: s.player.level, map: s.world && s.world.map, t: s.t, playtime: (s.stats && s.stats.playtime) || 0 } : null);
+  }
+  return out;
+}
+function writeSlotIndex() { try { localStorage.setItem('dreamy.slots', JSON.stringify(saveSlots())); localStorage.setItem('dreamy.slot', String(G.saveSlot || 1)); } catch (e) { /* ignore */ } }
+// title: pick a slot; G.save then holds that slot's save (or null = empty slot)
+function selectSlot(n) { G.saveSlot = clamp(n | 0, 1, SAVE_SLOTS); G.save = SAVE_ON ? readSave() : null; try { localStorage.setItem('dreamy.slot', String(G.saveSlot)); } catch (e) { /* ignore */ } return G.save; }
 // showcase / play-test / ?map= runs never touch the real save
 const SAVE_ON = (() => { try { const q = new URLSearchParams(location.search); return !q.get('scene') && !q.get('playtest') && !q.get('map'); } catch (e) { return false; } })();
 // Save shape v3 (DESIGN §16.5): { version, slot, player, skills, world, bosses, bestiary, fishing, quests, zone100,
@@ -505,7 +561,8 @@ function saveData() {
     version: SAVE_VERSION, t: Date.now(), slot: G.saveSlot || 1,
     player: { level: p.level, xp: Math.floor(p.xp), equip: p.equip, bag: p.bag, dust: p.dust, potions: p.potions, tool: p.tool || null, uid: UID },
     skills: { byId, runes: p.runes || [], tomes: p.tomes || [], wsk: p.wsk, csk: p.csk },
-    world: { map: G.map.id, checkpoint: G.checkpoint, trig: G.prog.trig, chests: G.prog.chests, secrets: G.prog.secrets || {}, gates: G.prog.gates || {} },
+    world: { map: G.map.id, checkpoint: G.checkpoint, trig: G.prog.trig, chests: G.prog.chests, secrets: G.prog.secrets || {}, gates: G.prog.gates || {},
+      fog: fogSaveData(), sections: G.prog.sections || {}, shrines: G.prog.shrines || {}, once: G.prog.once || {}, obj: G.prog.obj || {} },
     bosses, bestiary: seenOut, fishing: G.prog.fishing || {}, quests: G.prog.quests || {}, zone100: G.prog.zone100 || {},
     settings: typeof settingsData === 'function' ? settingsData() : {},
     bindings: typeof IN !== 'undefined' ? IN.getBindings() : null,
@@ -514,10 +571,10 @@ function saveData() {
 }
 function saveGame() {
   const p = G.player; if (!SAVE_ON || !p || !G.map || G.state === 'title') return false;
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(saveData())); return true; } catch (e) { return false; }
+  try { localStorage.setItem(saveKey(), JSON.stringify(saveData())); writeSlotIndex(); return true; } catch (e) { return false; }
 }
-function readSave() {
-  try { const s = migrate(JSON.parse(localStorage.getItem(SAVE_KEY))); return s && s.player && s.player.equip ? s : null; } catch (e) { return null; }
+function readSave(slot = G.saveSlot || 1) {
+  try { const s = migrate(JSON.parse(localStorage.getItem(saveKey(slot)))); return s && s.player && s.player.equip ? s : null; } catch (e) { return null; }
 }
 // the ONE place old saves are upgraded; add a step per schema change (bestiary, quests, secrets, mastery...)
 const SAVE_VERSION = 3;
@@ -538,13 +595,39 @@ function migrate(s) {
       version: 3, t: s.t || Date.now(), slot: 1,
       player: { level: s.level, xp: s.xp, equip: s.equip, bag: s.bag, dust: s.dust, potions: s.potions, tool: null, uid: s.uid },
       skills: { byId: {}, runes: [], tomes: [], wsk: s.wsk, csk: s.csk },
-      world: { map: s.map, checkpoint: s.cp || null, trig: prog.trig || {}, chests: prog.chests || {}, secrets: {}, gates: {} },
+      world: { map: s.map, checkpoint: s.cp || null, trig: prog.trig || {}, chests: prog.chests || {}, secrets: {}, gates: {}, fog: {}, sections: {}, shrines: {} },
       bosses, bestiary, fishing: {}, quests: {}, zone100: {}, settings: null, bindings: null, stats: { playtime: 0, deaths: 0 },
     };
   }
+  // v3 plus (§25 big maps, no version bump): world.fog / world.sections / world.shrines / world.once (once-per-save banners,
+  // dialogue) / world.obj (the objective log, game.js) default to empty
+  if (s.version === SAVE_VERSION && s.world && typeof s.world === 'object') for (const k of ['fog', 'sections', 'shrines', 'once', 'obj']) if (!s.world[k] || typeof s.world[k] !== 'object') s.world[k] = {};
   return s.version === SAVE_VERSION ? s : null;
 }
-function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
+// ===== fog of war in the save: world.fog[mapId] = 'WxH:' + base64 of the explored-tile bitfield (1 bit per tile,
+// row-major, LSB first; ~2 KB for 112x112). Every map built this session writes its live bitmap (m.mini.vis, hud.js);
+// maps not visited this session keep the string they were loaded with (G.prog.fog).
+function fogEncode(vis, W, H) {
+  const n = W * H, bytes = new Uint8Array((n + 7) >> 3);
+  for (let i = 0; i < n; i++) if (vis[i]) bytes[i >> 3] |= 1 << (i & 7);
+  let bin = ''; for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+  return W + 'x' + H + ':' + btoa(bin);
+}
+function fogDecode(str, W, H) {
+  if (typeof str !== 'string') return null;
+  const m = /^(\d+)x(\d+):(.*)$/.exec(str); if (!m || +m[1] !== W || +m[2] !== H) return null;
+  let bin; try { bin = atob(m[3]); } catch (e) { return null; }
+  const vis = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) vis[i] = (bin.charCodeAt(i >> 3) >> (i & 7)) & 1;
+  return vis;
+}
+function fogSaveData() {
+  const out = Object.assign({}, G.prog.fog || {});
+  for (const id in G.maps) { const m = G.maps[id]; if (m && m.mini && m.mini.vis && m.mini.prog === G.prog) out[id] = fogEncode(m.mini.vis, m.W, m.H); }   // never another run's fog
+  return out;
+}
+function clearSave(slot = G.saveSlot || 1) { try { localStorage.removeItem(saveKey(slot)); writeSlotIndex(); } catch (e) { /* ignore */ } }
+const hasKey = id => !!(G.prog && G.prog.secrets && G.prog.secrets['key:' + id]);
 const validItem = it => it && BASES[it.base] && RARITY[it.rarity] && Array.isArray(it.affixes) && Array.isArray(it.sockets);
 function applySave(p, s) {
   const P = s.player || {}, K = s.skills || {}, W = s.world || {};
@@ -567,11 +650,13 @@ function applySave(p, s) {
   p.runes = Array.isArray(K.runes) ? K.runes : []; p.tomes = Array.isArray(K.tomes) ? K.tomes : [];
   const firsts = {}; for (const k in s.bosses || {}) if (s.bosses[k] && s.bosses[k].firstKill) firsts[k] = true;
   G.prog = { chests: W.chests || {}, firsts, trig: W.trig || {}, secrets: W.secrets || {}, gates: W.gates || {},
-    fishing: s.fishing || {}, quests: s.quests || {}, zone100: s.zone100 || {} };
+    fishing: s.fishing || {}, quests: s.quests || {}, zone100: s.zone100 || {},
+    fog: W.fog || {}, sections: W.sections || {}, shrines: W.shrines || {}, once: W.once || {}, obj: W.obj || {} };
+  for (const id in G.maps) if (G.maps[id]) G.maps[id].mini = null;   // minimaps re-seed their fog from the loaded save
   G.seen = {};
   for (const k in s.bestiary || {}) { const b = s.bestiary[k] || {}; G.seen[k] = { kills: +b.kills || 0, res: b.res || {}, reactions: b.reactions || {} }; }
   G.checkpoint = W.checkpoint || null;
-  G.saveSlot = s.slot || 1;
+  G.saveSlot = clamp(+(G.saveSlot || s.slot) || 1, 1, SAVE_SLOTS);
   G.stats = { playtime: +(s.stats && s.stats.playtime) || 0, deaths: +(s.stats && s.stats.deaths) || 0 };
   if (s.settings && typeof applySettings === 'function') applySettings(s.settings);
   if (s.bindings && typeof IN !== 'undefined') IN.setBindings(s.bindings);

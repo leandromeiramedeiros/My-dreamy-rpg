@@ -18,11 +18,22 @@ const STAT_ELS = RES_ELS;
 
 // ---- shared helpers -------------------------------------------------------------------------------------------------
 // hit region + focus target + hover in one call; returns { hover, focus, on }
+// the pointer's resting position must not steal the default focus (the title opened with focus on SLOT 2 because
+// the idle cursor sits at the screen centre): hover only moves focus once the mouse has actually moved this session
+const MN_MOUSE = { x: null, y: null, moved: false, t: -1 };
+function mnMouseMoved() {
+  if (MN_MOUSE.t !== G.t && G.mouse) {
+    MN_MOUSE.t = G.t;
+    if (MN_MOUSE.x === null) { MN_MOUSE.x = G.mouse.dx; MN_MOUSE.y = G.mouse.dy; }
+    else if (G.mouse.dx !== MN_MOUSE.x || G.mouse.dy !== MN_MOUSE.y) { MN_MOUSE.moved = true; MN_MOUSE.x = G.mouse.dx; MN_MOUSE.y = G.mouse.dy; }
+  }
+  return MN_MOUSE.moved;
+}
 function mnRegion(x, y, w, h, id, fn, o = {}) {
   UI.hit(x, y, w, h, fn, { alt: o.alt, id });
   UI.focus.register({ x, y, w, h }, id, { fn, alt: o.alt, def: o.def });
-  const hover = UI.mouseIn(x, y, w, h), focus = UI.focus.is(id) && UI.focus.showing();
-  if (hover && !UI.focus.nav) UI.focus.set(id);
+  const hover = UI.mouseIn(x, y, w, h), focus = UI.focus.is(id) && UI.focus.showing(), moved = mnMouseMoved();
+  if (hover && !UI.focus.nav && moved) UI.focus.set(id);
   return { hover, focus, on: hover || focus };
 }
 function fitText(s, w, size = 'small') {
@@ -246,7 +257,7 @@ function drawItemPanel(ctx, p, x, y, w, what, hov, gemPick) {
   // skills with icons
   yy += 6; mnDivider(ctx, x + 8, yy, w - 16, 2); yy += 10;
   const fam = item(b.slot, b.family);
-  if (b.slot === 'weapon') for (const k of ['q', 'e', 'r']) { ctx.drawImage(skillIcon(fam[k][0]), x + 8, yy, 32, 32); UI.text(ctx, k.toUpperCase(), x + 46, yy + 2, 'small', UC.dim); UI.text(ctx, fitText(fam[k].map(id => SKILLS[id].name).join(' / '), w - 76), x + 84, yy + 2, 'small', UC.text); yy += 36; }
+  if (b.slot === 'weapon') for (const k of ['q', 'e', 'r']) { ctx.drawImage(skillIcon(fam[k][0]), x + 8, yy, 32, 32); UI.text(ctx, k.toUpperCase(), x + 46, yy + 2, 'small', UC.dim); yy = Math.max(yy + 36, UI.wrap(ctx, fam[k].map(id => SKILLS[id].name).join(' / '), x + 84, yy + 2, w - 92, 'small', UC.text) + 4); }
   else { ctx.drawImage(skillIcon(fam.skill), x + 8, yy, 32, 32); UI.text(ctx, { chest: 'F', head: 'C', boots: 'SHF' }[b.slot], x + 46, yy + 2, 'small', UC.dim); UI.text(ctx, SKILLS[fam.skill].name, x + 84, yy + 2, 'small', UC.text); yy += 36; }
   if (what.eq || eq === it) UI.text(ctx, 'Equipped', x + 8, 432, 'small', UC.gold);
   else if (what.bi != null && what.bi >= 0) {

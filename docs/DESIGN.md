@@ -1200,3 +1200,339 @@ with its common-enemy version.
   * **Build captain** (Haiku): runs every check and keeps the README.
 * **Director ruling:** agents still never commit. The director commits after the checks pass.
 
+
+## 23. Weapon classes and variants: 5 classes × 3 variants (client request; expert-designed; director-approved; supersedes §15.5's multi-option slots and §17's family lists where they conflict)
+
+**Principle:** a **class** owns the rhythm (basic combo, MP generation, class passive, aim grammar). A **variant** owns its
+damage type, the status it reinforces, its three skills, its decision, and a unique look at every tier. Each variant has
+exactly **one Q/E/R plus one Skill Rune alternate per slot** (a rune now reads "Rapier: Q → Flèche"). Alternates are
+sidegrades (±10 % DPS, a different shape or status). Existing casts are re-homed onto variants. **Origins** give the T1 of
+one variant; the other variants drop from zone 1. Armour stays class-agnostic (F/C/Shift).
+
+### 23.1 Classes and passives
+| Class | Rhythm | Passive | Variants |
+|---|---|---|---|
+| Blades | 3-hit, 0.42 s, 8 MP/hit | 3rd hit is a wide sweep, cancel-friendly | Sword · Rapier · Mace |
+| Greatarms | 2-hit, 0.62 s, 14 MP, charge 1 s ×1.8 | poise | Axe · Hammer · Halberd |
+| Shots | 1 shot, 0.36 s | **Focus**: still for 0.6 s → next shot crits | Bow · Crossbow · Chakram |
+| Foci | bolt, 0.48 s, builds MP | reactions refund 10 % MP | Staff · Spellbook · Orb |
+| Shadows | 4-hit (§17) | backstab + Marks | Daggers · Claws · Fans |
+
+### 23.2 Roster (Q / E / R · runes · status · decision)
+* **Sword**: the measured blade, slash.
+  * Skills: Q Sunslash, E Dash Strike, R Radiant Judgement.
+  * Runes: Heroic Strike, Whirling Blade, Dawn Wave.
+  * Reinforces Shatter and holy.
+  * Decision: when to commit the dash.
+* **Rapier**: the duelist's needle, pierce. 4 quick thrusts.
+  * Skills:
+    * Q Flèche: a line, +25 % crit.
+    * E **Riposte**: a 1 s parry; a block staggers the attacker 3 and refunds the cooldown (ICD 1 s).
+    * R Perforate: 5 hits; staggered targets take guaranteed crits.
+  * Runes: Lunge-step, Feint, Coup de Grâce (execute).
+  * Reinforces Rupture and Shock.
+  * Decision: parry timing.
+* **Mace**: the warden's hammerlet. Every hit staggers 1.
+  * Skills:
+    * Q Crush.
+    * E Shield Bash: reflects projectiles mid-dash.
+    * R Consecrate: a holy zone that heals and primes Purify.
+  * Runes: Quake, Rally, Hammerfall.
+  * Reinforces Stagger, Detonate and holy.
+  * Decision: break bars or zone control.
+* **Axe**: the splitter.
+  * Skills: Q Cleave, E Shoulder Charge, R Colossus Strike (held).
+  * Runes: Cinder Cleave, Whirlwind, Avalanche.
+  * Reinforces Detonate and Wildfire.
+  * Decision: charge or release.
+* **Hammer**: the earthshaker, stagger 3. Basic hit 2 is a slam.
+  * Skills:
+    * Q Earthbreaker: persistent cracks.
+    * E Seismic Leap.
+    * R Aftershock: 3 rings that re-stagger and guarantee a break on staggerMax ≤ 9.
+  * Runes: Ice Quake, Tremor, Meteor Hammer.
+  * Reinforces Shatter and Rupture.
+  * Decision: where your cracks are.
+* **Halberd**: the reach, 1.5× range. Basics alternate thrust and sweep.
+  * Skills:
+    * Q Sweep: knockback.
+    * E **Brace**: a spear-wall counter.
+    * R Skewer: pins a boss-class enemy for 1.5 s.
+  * Runes: Storm Sweep, Vault, Pike Square.
+  * Reinforces Conduct and Rupture.
+  * Decision: spacing at 2–3 tiles.
+* **Bow**: the volley.
+  * Skills: Q Multishot, E Tumble, R Rain of Arrows.
+  * Runes: Venom Volley, Snare, Moonbeam.
+  * Reinforces Poison, Wildfire and Chill zones.
+  * Decision: spread or focus.
+* **Crossbow**: the bolt, stagger 2. A **4-bolt clip with a 1 s reload** (dodge-cancellable; reloading while still gives
+  Focus).
+  * Skills: Q Piercing Bolt, E Bolas (root + Mark), R Ballista (1.2 s channel, ≤ 25 % of boss HP).
+  * Runes: Explosive Bolt, Grapple, Hail.
+  * Reinforces Rupture and Shock.
+  * Decision: manage the clip.
+* **Chakram**: the return, ranged slash. A thrown disc that returns, hitting twice.
+  * Skills: Q Ricochet, E Orbit Disc, R Guillotine.
+  * Runes: Split, Blade Dance, Eclipse.
+  * Reinforces Shatter at range and Conduct.
+  * Decision: line up the return.
+* **Staff**: the elementalist.
+  * Skills: Q Firebolt, E Gravity Well, R Meteor.
+  * Runes: Static Field, Blink-cast, Starstorm.
+  * Reinforces Burn, Detonate and Wildfire.
+  * Decision: place the circle.
+* **Spellbook**: the ritualist. **Pages**: each skill cast adds a page (max 3), and basics consume pages to grow (bolt →
+  3 bolts → beam).
+  * Skills:
+    * Q Frost Shards.
+    * E Arcane Barrage: +1 missile per page.
+    * R Rune of Binding: freezes on its 3rd pulse.
+  * Runes: Hex, Ward, Tome Burst.
+  * Reinforces Chill → Shatter and Overload.
+  * Decision: spend pages or save them.
+* **Orb**: the channeler. **Channel**: hold for a beam that drains 6 MP/s; tap for a bolt that builds MP. Beam DPS ≤ bolt
+  DPS +15 %.
+  * Skills: Q Chain Lightning, E Lightning Orb, R Tempest.
+  * Runes: Ball Lightning, Mirror Orb, Singularity.
+  * Reinforces Shock, Conduct and Overload.
+  * Decision: beam or build.
+* **Daggers**: as in §17.2. Poison and Rupture.
+* **Claws**: the beast. **Frenzy**: +5 % attack speed per consecutive hit, max +50 %, decays after 1.5 s.
+  * Skills: Q Rend, E Pounce, R Savage.
+  * Runes: Maul, Shadow Pounce, Bloodmoon.
+  * Reinforces Burn and stagger.
+  * Decision: never stop hitting.
+* **Fans**: the dancer, mid-range. Returning fans; Marks on any hit, each Mark slows 10 %.
+  * Skills: Q Veil Dance (Chill), E Mirage Step (taunting decoy), R Thousand Petals (freezes on its last tick).
+  * Runes: Ice Fans, Flourish, Silk Storm.
+  * Reinforces Chill, Shatter and control.
+  * Decision: control the room from mid-range.
+
+Every variant uses at least 3 aim shapes. The new shape is the channel-beam.
+
+### 23.3 Tier names (T1 → T5 → Mythic)
+The look on the hero escalates through the tiers: grey → ornate → sun- or moon-etched → glowing → made of light.
+
+| Variant | T1 | T2 | T3 | T4 | T5 | Mythic |
+|---|---|---|---|---|---|---|
+| Sword | Rusty Blade | Dawnblade | Sunforged Blade | Aurora Edge | Dawn Eternal | Morrowbane |
+| Rapier | Tin Needle | Moonpoint | Silver Estoc | Starpoint | Needle Eternal | *Sorrel's Needle* |
+| Mace | Iron Cudgel | Dawnmace | Sunwarden Mace | Aurora Maul | Vow Eternal | *Lamplighter* |
+| Axe | Splitting Axe | Dawnbreaker | Sunforged Axe | Aurora Cleaver | Dawn Colossus | Kharzul's Anvil-Axe |
+| Hammer | Sledge | Sunhammer | Mountain Maul | Aurora Anvil | Hammer Eternal | The Unmaking |
+| Halberd | Pike | Dawnglaive | Sun Halberd | Aurora Partisan | Reach Eternal | Vigil's Pole |
+| Bow | Hunter's Bow | Moonbow | Silverwing | Eclipse Longbow | Moon Eternal | Sorrel's Bow |
+| Crossbow | Hand Crossbow | Dawn Arbalest | Sunbolt | Aurora Ballista | Bolt Eternal | Morrow's Quiet |
+| Chakram | Rim | Moon Chakram | Silverring | Eclipse Ring | Ring Eternal | Aerin's Halo |
+| Staff | Willow Wand | Starfall Staff | Comet Rod | Nebula Sceptre | Night Eternal | Morrow's Lullaby |
+| Spellbook | Primer | Dreambook | Sun Codex | Aurora Grimoire | Book Eternal | The Names on the Pillars |
+| Orb | Glass Bauble | Starfall Orb | Comet Orb | Nebula Sphere | Orb Eternal | *Last Light* |
+| Daggers | (§17 tiers) | | | | | |
+| Claws | Bone Claws | Nightclaws | Silvertalon | Eclipse Claws | Claws Eternal | Bramblehorn's Roots |
+| Fans | Paper Fans | Moonfans | Silverplume | Eclipse Fans | Fans Eternal | Mirelle's Tide |
+
+Director renames are in italics. Pip's Lantern and Sorrel's Vow are already existing uniques, and "Last Light" honours Pip
+without making the hero wield it.
+
+### 23.4 Balance (balsim gets a variant loop)
+* DPS parity across all 15 variants is **±15 % at equal tier**.
+* Each variant's utility score (i-frames, control and sustain per minute) stays within 0.8–1.2× of its class mean.
+* Rune alternates stay within ±10 % of the base skill; balsim flags anything over 15 %.
+* A variant's status bonus is +15 % `statusChance`, additive and never a multiplier.
+* Caps per variant:
+  * the Riposte has a 1 s ICD
+  * a Ballista bolt deals ≤ 25 % of boss HP
+  * Aftershock only guarantees a break on staggerMax ≤ 9
+  * the Chakram sim assumes 60 % return uptime
+  * Frenzy caps at +50 %
+  * pages reset on swap
+
+### 23.5 Mastery, swapping, story
+* **Variant mastery** has 5 ranks earned by kills and replaces weapon mastery. At rank 3 you get the rune alternate free.
+  At rank 5 a **hybrid twist** unlocks, e.g.:
+  * the Sword's Judgement staggers
+  * the Rapier's Riposte reflects projectiles
+  * the Hammer's cracks last 6 s
+  * the Orb's beam Conducts
+  * the Crossbow's clip holds 6
+* **Two weapon slots.** Swap with a 1 s cooldown. Swapping triggers the **Changeover** Duo (the next skill costs 0 MP),
+  at most once per 8 s, and it counts in parity. This lands in M5.
+* **Story:** every Mythic is a story object found on the 27 maps. Each variant appears first as an **enemy weapon**
+  (halberd knights, crossbow archers, orb-channelling chanters).
+
+### 23.6 Cost, code, migration, schedule
+* **Art: a parts kit per class**, built first in **M3** with the hero wiring (director ruling: the expert said M4).
+  * Each variant gets one silhouette template. Each tier is a palette plus 2–3 part swaps.
+  * 90 weapon layers + ~105 icons ≈ 6–7 Sonnet-weeks, staged by milestone.
+  * One new attack pose per class: thrust, channel, throw.
+* **Code:**
+  * 8 new mechanics: channel-beam, returning projectile, parry, reload clip, pages, frenzy, decoy-taunt, persistent
+    cracks.
+  * At most **36 new cast functions**. The existing 42 are reused.
+* **Data and saves:**
+  * `WEAPONS[class].variants[id]`, with FAMILY_TIERS keyed by variant.
+  * Save migration: dawnblade→sword, starfall→staff, moonbow→bow, nightfang→daggers, dawnbreaker→axe.
+  * Runes are stored as `variant:slot`.
+* **Schedule:**
+  * M3: the structure refactor, migration and parts kit.
+  * M4: Rapier, Mace and Crossbow, **plus prototypes of the Orb beam and the Crossbow reload on touch** before the rest
+    is committed.
+  * M5: Spellbook, Orb, Chakram and weapon swap.
+  * M6: Hammer, Halberd and Claws.
+  * M7: Fans and all Mythics.
+  * M8: mastery twists.
+* **Cut order if behind:** Fans → Halberd → Chakram → Claws → Mace. Never cut Rapier, Crossbow, Spellbook, Orb or Hammer;
+  they carry the new mechanics.
+* **Risk:** the art collides with the 27 maps and 28 enemies in M4–M7. The parts kit must land in M3, or one of the three
+  slips.
+
+## 24. Armour classes × 3 suits (client request; expert-designed; director-approved; supersedes §15.5's armour option lists and §17.4)
+
+**Structure:** 4 armour classes, each with 3 **suits**. A suit is a variant that spans chest, helm and boots. Pieces mix
+freely.
+* **The class owns:**
+  * the ±25 % chest resist profile
+  * the stat shape
+  * the class 3-piece tag rule:
+    * Heavy: melee skills gain poise
+    * Caster: zones follow you
+    * Medium: projectiles pierce once
+    * Shadow: dashes leave decoys
+* **The suit owns:**
+  * its F/C/Shift skills
+  * the status it reinforces
+  * its implicits
+  * its look
+  * a **suit twist** that applies when you wear all 3 matching pieces
+* **Skill Runes:** for armour these exist on the chest only, as F alternates. Helms and boots get none (the anti-bloat
+  line).
+* **Boots:** every boots skill keeps i-frames, but each moves differently: dash, leap, blink, slide, sidestep, carry,
+  roll, pass-through.
+* **Origins:** each Origin gives the T1 chest of its suit (Knight → Warden, Mystic → Dreamweave, Ranger → Stalker,
+  Thief → Shade, Warrior → Juggernaut).
+* **Merged:**
+  * Thornmail becomes the Thornwarden chest.
+  * The Shade set becomes the Shade suit twist.
+  * Sprint is cut.
+  * Dreamveil moves to the Mirage helm.
+  * The belt's gem-wrap now reads "chest and boots of the same class".
+
+| Class (profile) | Suit — F / C / Shift · reinforces · decision |
+|---|---|
+| **Heavy** (HP/def; slash/pierce +25, lightning −25) | **Warden**: Bulwark (projectile reflect is baseline at T3+) / War Cry / Charge · Stagger, Rupture · face the volley. **Crusader**: Consecrated Guard (holy zone) / Judgement Bell / Vault · Purify, holy · zone or chase. **Juggernaut**: Brace (poise, then shove) / Ground Slam (cracks) / Bull Rush (carries an enemy, 0.25 s of i-frames) · Stagger, Shatter, Detonate · tank the hit on purpose |
+| **Caster** (MP/power; arcane +25, physical −25) | **Dreamweave**: Mana Surge / Arcane Ward (a shield that pops into a nova) / Blink · Overload · shield or nova. **Frostweave**: Winter's Veil / Frost Nova / Glide (leaves a frost trail) · Chill → Shatter · where you leave ice. **Stormweave**: Static Cloak / Stormcall / Flash Step (leaves a lightning line) · Shock, Conduct · take hits to charge |
+| **Medium** (crit/haste; pierce +25, fire −25) | **Stalker**: Shadow Veil / Hunter's Mark / Tumble · Rupture, Focus · open from stealth. **Thornwarden**: Briar Mantle / Mend (Bloom) / Root Vault (leaves a snare) · Poison → Wildfire · kite through snares. **Duelist**: En Garde (parry; shares an ICD with the Rapier's Riposte) / Taunt / Side-step (cd 3) · Rupture, Shock · parry or dodge |
+| **Shadow** (speed/crit; pierce +25, nature −25) | **Shade**: Fade Step / Smoke Bomb / Shadowstep (leaves a decoy) · Marks, Overload · where the decoy stands. **Nightshade**: Venom Coat / Toxin Flask / Slink (backstab from any angle) · Poison → Wildfire · spread or stack. **Mirage**: Mirror Image / Dreamveil / Phase (pass through enemies) · control, summons · images as decoys or damage |
+
+Tier names and per-tier visuals follow the expert's table, kept in the production log.
+* Examples:
+  * Warden: Iron Mail → Knight Plate → Sunforged Plate → Aurora Plate → Aegis of Dawn
+  * Duelist: Swordsman's Coat → … → Blade Eternal, Mythic *Aerin's Coat*
+* **Director ruling on Mythic names:** there are too many "Sorrel's" and "Pip's" items, and "Warden's Lantern" collides
+  with the Lantern Plate. All Mythic names get one naming pass across §23 and §24 before M7, so each story name is used
+  once.
+* **Combos** use tags, never slot checks. Examples:
+  * Rapier + Duelist: two parries sharing one ICD
+  * Hammer + Juggernaut: the "Faultline" Duo; their cracks share a tag
+  * Chakram + Stormweave: Conduct both ways
+  * Crossbow + Stalker: crits while reloading
+  * Spellbook + Dreamweave: double glyphs
+  * Fans + Mirage: images that throw fans
+  * Mace + Crusader: the "Sanctuary" Duo, with one zone and no stacking
+* **Suit twists:** for example, Juggernaut: poise never breaks below 25 % HP; Stormweave: Conduct +1 jump. All of them are
+  `EFFECTS src:'suit'`.
+* **Balance (balsim armour loop):**
+  * eHP within ±10 % inside a class.
+  * Utility within 0.8–1.2× of the slot mean.
+  * No slot variant above a 60 % pick rate in the optimal-build search.
+  * Total i-frame uptime ≤ 50 %.
+  * Poise capped at 75 %.
+  * One summon cap of 3 covering images, decoys and summons.
+  * Suit resists shift at most ±10 % toward the suit's element, and the hero clamp still applies.
+* **Cost:**
+  * 216 overlays + 216 icons ≈ 13 Sonnet-weeks with the parts kit (36 silhouettes, tiers made of palette + part swaps).
+  * At most 5 new mechanics: parry-for-all, glide trail, phase, carry-dash, mirror images.
+  * At most 36 new casts.
+  * Save v4 migration: knightplate→warden, dreamrobe→dreamweave, stalkerjacket→stalker.
+* **Schedule (to be confirmed by the scope decision below):**
+  * M4: the structure and the 4 Origin suits, plus the Juggernaut chest.
+  * M5: Frostweave, Thornwarden.
+  * M6: Crusader, Duelist, Nightshade.
+  * M7: Stormweave, Mirage and the Mythics.
+* **Cut order:** Mirage → Stormweave → Crusader → Nightshade → Duelist.
+* **Scope warning:** §23 and §24 together do not fit M4–M7 alongside the 27 maps and 28 enemies. The client chooses
+  (§24.1).
+
+### 24.1 Scope decision (client)
+**Everything stays:** 15 weapon variants (§23), 12 armour suits (§24), 27 maps (§22), 28 enemies (§21). The client
+accepts that the finale arrives roughly 8 studio-weeks later. Every tier is fully drawn; no placeholder tiers. To protect
+the schedule:
+* The weapon and armour **parts kit** is built in M3, before any variant art.
+* Art runs as a continuous lane: one art agent on variants and one on enemies, in parallel with maps.
+* The cut orders in §23.6 and §24 stay on file as emergency levers only.
+
+## 25. Fewer, bigger maps: 4× area (client decision; expert plan; director-approved; supersedes §22's map list, keeps every hook)
+
+**27 maps become 8.** Each zone is now one big map divided into **sections** (outer, underground/interior, vault,
+arena). The sections share one grid and are separated by 3-tile void gutters (drawn as cliffs or darkness). You move
+between them through **warp doors**: a 0.4 s fade within the same map, with no load and no lost trigger state.
+Underground is a palette and lighting look, not a separate layer. Guardian arenas are inline walled rooms with gates.
+Morrow keeps his own map.
+
+| # | Map | Size | Sections (absorbs) |
+|---|---|---|---|
+| 1 | Whispering Vale | 80×80 | hub · Moon Pond (night fishing, pearl ritual; opens after Act IV) · Pip's Lanterns islet (opened by the Spire key) · Dream Arena islet |
+| 2 | Misty Pinewood | 112×112 | forest (animal trail, fishing debut) · Root Hollow (underground SW: key door, lever, boars, sleeper, Mossjaw) · Fox Warrens (vault, noise) · Bramblehorn's Clearing (inline arena, NE) |
+| 3 | Gloomspire Ruins | 112×112 | plaza (pillar names) · Warden Crypt (darkness) · Warden's Hall (arena) · Oath Reliquary (vault, mimics, Oathless) |
+| 4 | Sunken Grotto | 112×112 | caves (tide) · Drowned Vault (airlocks, Brinemother) · Mirelle's Basin (arena) · Glowfin Shallows (vault) · Starlit Shoals (north coast, no combat, Moonmaw) |
+| 5 | Emberfall Caldera | 112×112 | rim (lava platforms) · Forge Deep (wind) · The Anvil (arena) · Slag Chambers (vault, Slagheart) |
+| 6 | The Sleepless Spire | 96×128 | ascent (5 ledges, Twin Vigils) · Sleepless Court (void rhythm) · Vigil Walk (optional vault) |
+| 7 | Morrow's Throne | 28×28 | separate finale map |
+| 8 | The Drifting Isles | 96×96 | isles (rift-hop, Sorrel's Echo) · The Gloaming Below (post-game, underground, the Unwaking Child) |
+
+### 25.1 Pacing rules per big map
+* **Points of interest:** one every 12–15 tiles, and a landmark every ~30 tiles, visible from the previous one.
+* **Shrines:** 3 per map, with **shrine-to-shrine warp**. You can only warp while no enemy is awake (director-approved
+  rule).
+* **Routes:** 2 shortcut loops back to the shrines, and 15–25 s between fights.
+* **Fights:** 8–9 per map (outer 3 rooms + an elite, underground 2 rooms + the mini-boss, vault 1–2 rooms, the arena).
+* **Secrets:** 5 per map: one per section, plus one that crosses between sections.
+* **Times:**
+  * Main path ≈ **130 min**. The client accepts the extra minutes that come with bigger maps.
+  * **Hard cap: any map that measures over 24 min on the timed run loses a room**, not a corridor.
+  * Merged dungeons stay at 2 rooms, and vault sections stay optional.
+  * 100 % ≈ 4.5 h.
+* **Boss deaths:** dying in an inline arena respawns you at the nearest shrine. The arena resets its adds and pillars.
+
+### 25.2 Tech (required)
+* **Ground:** a chunked ground raster.
+  * 512 px chunks rendered lazily over idle frames, with ≤ 24 resident and LRU eviction. Phones use 256 px chunks with
+    12 resident.
+  * Only the start chunk is rendered behind the fade.
+* **Spatial grid:** 8×8-tile buckets for objects, columns, colliders and area triggers.
+* **Enemy sleep:** enemies sleep beyond 18 tiles (a 1 Hz heartbeat). At most 24 are awake (16 on phones). Off-screen
+  projectiles and zones beyond 20 tiles are culled.
+* **Minimap:**
+  * On the HUD, a local 24-tile window.
+  * A full-map screen (M / D-pad down) with fog of war and section insets.
+  * The fog bitmap is stored in the save.
+* **Save:** adds per-map `sections` and `shrines` discovered.
+* **Budgets:** at most 40 visible lights. Phone p95 ≤ 20 ms on the engine-check tour of every section.
+* **Generator:** a `zone` stamp that composes the outer, dungeon, vault and boss sub-stamps with offsets, plus auto void
+  gutters, `warpdoor` objects, the `warp` trigger action, and per-section ambient/palette. Until the stamp lands, a zone
+  can be built as merged recipes placed by offset.
+
+### 25.3 Act I (rebuilt before the slice ships)
+* **Vale:** 80×80. Sections: pond, lanterns, arena islet. 2 shrines. The dummies and the Stone are within 15 tiles of the
+  start, the first chest at 10 tiles.
+* **Pinewood:** 112×112, using the expert's zone recipe (kept in docs/PRODUCTION.md).
+  * The forest has 3 shrines, a creek, 2 shortcut loops, the elite, and the tablet.
+  * The Hollow is underground SW, entered by warp door with the key and left by a root-stair up to shrine 3.
+  * The Warrens vault is behind the pond secret.
+  * The Clearing arena sits behind a gate.
+* **Fallback:** if `warp` isn't ready, the Hollow stays a separate 56×20 map for the slice and merges in M4.
+
+**Flags:**
+* If the client later wants *more* maps at this size, the art lane breaks first.
+* Eight full rasters must never be resident at once. The chunk cache is mandatory on phones.

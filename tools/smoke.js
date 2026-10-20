@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Smoke test: opens every game/editor page in headless Chromium, pokes some input,
-// saves a screenshot and fails on any console error or uncaught page exception.
+// saves a screenshot and fails on any console error or uncaught page exception, then runs tools/balsim.js --quiet
+// and fails on any of its red flags (DESIGN §20.7).
 // Usage: node tools/smoke.js [extra-scene-name ...]
 const http = require('http');
 const fs = require('fs');
@@ -88,5 +89,8 @@ async function smokeOne(browser, base, rel) {
     server.close();
   }
   console.log(failed ? `\n${failed}/${PAGES.length} pages failed` : `\nAll ${PAGES.length} pages passed`);
-  process.exit(failed ? 1 : 0);
+  // §20.7: the balance sim's CI red flags fail the smoke run too
+  const sim = require('child_process').spawnSync(process.execPath, [path.join(__dirname, 'balsim.js'), '--quiet'], { stdio: 'inherit' });
+  console.log(sim.status === 0 ? 'balsim: no red flags' : `balsim: RED FLAGS (exit ${sim.status})`);
+  process.exit(failed || sim.status !== 0 ? 1 : 0);
 })();

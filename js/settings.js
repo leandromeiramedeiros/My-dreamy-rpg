@@ -13,13 +13,19 @@
 //                                 'dreamy.settings.v1' so they hold on the title screen and across New Dream)
 //   onSettingsChange(fn)          fn(key, value) after every change
 //   Getters used by the game:  sfxVol() musicVol() shakeMul() hitstopOn() flashCap() damageNumbersOn()
-//     damageTakenMul() (Story 0.6, Normal 1) aimAssistCone() (radians half-angle; off 0 / low 6° / high 10° = the
+//     damageTakenMul() (Story 0.6, Normal 1) bossHitCap() (max share of max HP per telegraphed boss hit: Story 0.30, Normal 0.45) aimAssistCone() (radians half-angle; off 0 / low 6° / high 10° = the
 //     20° cone) attackToggle() textPx() (body px 14/18/22) moveDeadzone() aimDeadzone()
 // ---------------------------------------------------------------------------
 const SETTINGS_SCHEMA = [
   { key: 'music', label: 'Music', group: 'audio', type: 'slider', min: 0, max: 1, step: 0.25, def: 0.75 },
   { key: 'sfx', label: 'Sound effects', group: 'audio', type: 'slider', min: 0, max: 1, step: 0.25, def: 0.75 },
   { key: 'muted', label: 'Mute all', group: 'audio', type: 'toggle', def: false },
+  { key: 'captions', label: 'Sound captions', group: 'audio', type: 'toggle', def: false },
+  { key: 'master', label: 'Master volume', group: 'audio', type: 'slider', min: 0, max: 1, step: 0.25, def: 0.75 },
+  { key: 'ui', label: 'UI sounds', group: 'audio', type: 'slider', min: 0, max: 1, step: 0.25, def: 0.75 },
+  { key: 'ambient', label: 'Ambience', group: 'audio', type: 'slider', min: 0, max: 1, step: 0.25, def: 0.75 },
+  { key: 'mono', label: 'Mono audio', group: 'audio', type: 'toggle', def: false },
+  { key: 'reduceBass', label: 'Reduce bass', group: 'audio', type: 'toggle', def: false },
   { key: 'difficulty', label: 'Difficulty', group: 'game', type: 'choice', def: 'normal', options: [{ v: 'story', label: 'Story' }, { v: 'normal', label: 'Normal' }] },
   { key: 'shake', label: 'Screen shake', group: 'display', type: 'slider', min: 0, max: 100, step: 25, def: 100 },
   { key: 'hitstop', label: 'Hitstop', group: 'display', type: 'toggle', def: true },
@@ -33,7 +39,9 @@ const SETTINGS_SCHEMA = [
   { key: 'deadzone', label: 'Stick deadzone', group: 'controls', type: 'slider', min: 0.1, max: 0.4, step: 0.02, def: 0.22 },
   { key: 'doubleTapDodge', label: 'Double-tap dodge (touch)', group: 'controls', type: 'toggle', def: true },
   { key: 'leftHanded', label: 'Left-handed touch', group: 'controls', type: 'toggle', def: false },
-  { key: 'vibration', label: 'Vibration', group: 'controls', type: 'toggle', def: true },
+  { key: 'vibration', label: 'Vibration (haptics)', group: 'controls', type: 'toggle', def: true },
+  { key: 'groundIndicators', label: 'Ground indicators', group: 'controls', type: 'choice', def: 'auto', options: [{ v: 'auto', label: 'Auto' }, { v: 'off', label: 'Off' }, { v: 'hold', label: 'On hold' }, { v: 'always', label: 'Always' }] },
+  { key: 'showAll9', label: 'Show all 9 skills (tablets)', group: 'controls', type: 'toggle', def: false },
 ];
 const SETTINGS = {};
 const SETTINGS_KEY = 'dreamy.settings.v1';
@@ -70,6 +78,8 @@ const hitstopOn = () => SETTINGS.hitstop;
 const flashCap = () => SETTINGS.flashReduce ? 0.5 : 1;                     // render.js: bloom + light flash multiplier
 const damageNumbersOn = () => SETTINGS.damageNumbers;
 const damageTakenMul = () => SETTINGS.difficulty === 'story' ? 0.6 : 1;
+// DESIGN §20.3 "one mistake never kills": no single telegraphed boss hit takes more than this share of the hero's ACTUAL max HP
+const bossHitCap = () => SETTINGS.difficulty === 'story' ? 0.30 : 0.45;
 const aimAssistCone = () => ({ off: 0, low: 6, high: 10 }[SETTINGS.aimAssist] || 0) * Math.PI / 180;
 const attackToggle = () => SETTINGS.attackMode === 'toggle';
 const textPx = () => ({ S: 14, M: 18, L: 22 }[SETTINGS.textSize] || 18);

@@ -1,6 +1,9 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// Game state, player, combat helpers, enemies, boss, waves, audio.
+// Game state, player, combat helpers, the enemy runtime shell, triggers, audio.
+// Enemies are data: the table ENEMY, behaviour parts and elite mods live in js/parts.js, bosses and BOSS_MOVES in
+// js/bosses.js (both load before this file). This file owns spawnEnemy / damageEnemy / killEnemy / updateEnemies and
+// the trigger actions (header of the triggers section lists them).
 // ---------------------------------------------------------------------------
 const G = {
   t: 0, map: null, maps: {}, player: null,
@@ -13,66 +16,16 @@ const G = {
   seen: {},   // bestiary hooks: seen[type] = { kills, res: { el: tier } } — set on first sight, saved
   prompt: null,   // nearest interactable { kind: chest|shrine|tablet, obj, text } (items.js updateLoot); Interact acts on it
   stats: { playtime: 0, deaths: 0 },
+  saveSlot: typeof LAST_SLOT !== 'undefined' ? LAST_SLOT : 1,   // 1..SAVE_SLOTS (items.js)
 
 };
 
-// ===== audio (tiny synth) ======================================================
-let AC = null;
-function initAudio() { if (!AC) try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } }
-function tone(f0, f1, dur, type = 'sine', vol = 0.08, noise = false, at = 0) {
-  if (!AC || G.muted) return;
-  vol *= typeof sfxVol === 'function' ? sfxVol() : 1; if (vol <= 0) return;
-  const t = AC.currentTime + at, g = AC.createGain();
-  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  let src;
-  if (noise) {
-    const b = AC.createBuffer(1, Math.floor(AC.sampleRate * dur), AC.sampleRate), d = b.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    src = AC.createBufferSource(); src.buffer = b;
-    const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(40, f1), t + dur);
-    src.connect(f); f.connect(g);
-  } else {
-    src = AC.createOscillator(); src.type = type; src.frequency.setValueAtTime(f0, t); src.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
-    src.connect(g);
-  }
-  g.connect(AC.destination); src.start(t); src.stop(t + dur);
-}
-function sfx(k) {
-  switch (k) {
-    case 'swing': tone(1800, 500, 0.12, 0, 0.05, true); break;
-    case 'slash': tone(2400, 400, 0.18, 0, 0.07, true); break;
-    case 'heavy': tone(900, 80, 0.3, 0, 0.12, true); tone(140, 50, 0.3, 'square', 0.05); break;
-    case 'dash': tone(600, 2400, 0.18, 0, 0.06, true); break;
-    case 'boom': tone(300, 40, 0.6, 0, 0.18, true); tone(90, 30, 0.5, 'sine', 0.15); break;
-    case 'fire': tone(500, 1500, 0.25, 0, 0.07, true); break;
-    case 'frost': tone(2600, 1800, 0.25, 'triangle', 0.04); break;
-    case 'arcane': tone(500, 1100, 0.25, 'triangle', 0.05); tone(750, 1650, 0.25, 'sine', 0.03); break;
-    case 'bow': tone(300, 900, 0.1, 'triangle', 0.05); break;
-    case 'zap': tone(3000, 300, 0.25, 'sawtooth', 0.03); break;
-    case 'heal': tone(520, 1040, 0.4, 'sine', 0.05); tone(780, 1560, 0.4, 'sine', 0.03); break;
-    case 'hit': tone(220, 90, 0.08, 'square', 0.04); break;
-    case 'hurt': tone(160, 60, 0.2, 'sawtooth', 0.07); break;
-    case 'shout': tone(180, 90, 0.4, 'sawtooth', 0.06); break;
-    case 'shield': tone(400, 600, 0.3, 'triangle', 0.06); break;
-    case 'blink': tone(2000, 400, 0.15, 'sine', 0.05); break;
-    case 'trap': tone(800, 200, 0.1, 'square', 0.04); break;
-    case 'beam': tone(200, 1200, 0.5, 'sawtooth', 0.04); break;
-    case 'veil': tone(300, 150, 0.8, 'sine', 0.07); tone(450, 225, 0.8, 'sine', 0.04); break;
-    case 'wave': tone(400, 1600, 0.3, 'triangle', 0.05); break;
-    case 'portal': tone(200, 800, 1.2, 'sine', 0.08); tone(300, 1200, 1.2, 'triangle', 0.04); break;
-    case 'die': tone(400, 60, 0.4, 0, 0.08, true); break;
-    case 'roar': tone(120, 40, 1.0, 'sawtooth', 0.1); tone(400, 80, 1.0, 0, 0.08, true); break;
-    case 'levelup': [523, 659, 784, 1047].forEach((f, i) => tone(f, f * 1.01, 0.32, 'triangle', 0.06, false, i * 0.09)); tone(1568, 2093, 0.6, 'sine', 0.03, false, 0.36); break;
-    case 'pickup': tone(880, 1320, 0.09, 'sine', 0.04); break;
-    case 'loot': tone(660, 1320, 0.25, 'triangle', 0.05); tone(990, 1980, 0.3, 'sine', 0.03, false, 0.06); break;
-    case 'chest': tone(180, 420, 0.22, 'square', 0.04); tone(2000, 600, 0.2, 0, 0.04, true); break;
-    default: if (/^drop\d$/.test(k)) {   // drop chime: one more, higher note per rarity step
-      const n = +k[4];
-      for (let i = 0; i < n; i++) tone(660 * Math.pow(1.26, i), 660 * Math.pow(1.26, i) * 1.01, 0.22 + n * 0.04, 'triangle', 0.035 + n * 0.006, false, i * 0.07);
-      if (n >= 3) tone(2640, 3520, 0.5, 'sine', 0.02, false, n * 0.07);
-    }
-  }
-}
+// ===== audio ===================================================================
+// js/audio.js is the engine (buses, voice pool, music director, captions). These two wrappers keep every call site.
+//   initAudio()          create / resume the AudioContext from a user gesture (also automatic on the first gesture)
+//   sfx(id, pos?)        play an SFX_RECIPES id; pos = { x, y } world tiles for pan + distance (optional)
+function initAudio() { if (typeof AUDIO !== 'undefined') AUDIO.unlock(); }
+function sfx(k, pos) { if (typeof AUDIO !== 'undefined') AUDIO.sfx(k, pos); }
 
 // ===== generic helpers ==========================================================
 // CAST = the skill being resolved ({ skill, el }); delays/projectiles/zones/dashes capture it so gem
@@ -307,6 +260,7 @@ function useSkill(p, slot) {
   if (p.dash && p.dash.cast === c) dur = Math.max(dur, p.dash.t);
   p.cast = dodge ? null : { c, id, slot, age: 0, dur: Math.min(1.5, dur), mp };
   G.lastCast = { slot, t: 0.25 };
+  if (!dodge && typeof aimFlash === 'function' && (G.touch || (IN.aimMode && IN.aimMode() !== 'off'))) aimFlash(id, slot);   // quick-cast: 1-frame flash of the shape at the target
   return true;
 }
 function say(s) { G.msg = { s, t: 1.6 }; }
@@ -376,7 +330,7 @@ function chainLightning(p, tx, ty) {
 function nearestEnemy(x, y, maxd, exclude) {
   let best = null, bd = maxd;
   for (const e of G.enemies) {
-    if (e.dead || e.spawnT > 0 || (exclude && exclude.has(e))) continue;
+    if (e.dead || e.spawnT > 0 || e.under || (exclude && exclude.has(e))) continue;
     const d = dist(x, y, e.x, e.y); if (d < bd) { bd = d; best = e; }
   }
   return best;
@@ -387,13 +341,30 @@ function currentPlayerSprite(p) {
   return set[f];
 }
 
-// movement with tile + collider collision
+// movement with tile + collider collision (colliders come from the 8x8-tile buckets, maps.js nearColliders)
+const MOVE_NEAR = [];
+// Probes: 4 points at 0.8 r (E, W, S, N), tested against h0 = the height of the tile under the centre.
+// B1 (QA wedge): h0 changes when the centre crosses a tile edge, so on a stair (0 -> 1 -> 2) an entity can legally stand
+// on the 1-high step with a probe over a 2-high bank, step down to 0, and find that probe now "illegal" (|2 - 0| > 1).
+// The old rule (every probe must pass at the NEW position) then refused every direction, the dodge included: a wedge.
+// Rule now: a move may not make a passing probe fail, and may not push a probe that already fails further into its tile;
+// sliding along or backing away from such an edge is allowed, so an entity can always walk out of the overlap.
+const probeMask = (m, x, y, r, h0) => (walkable(m, x + r, y, h0) ? 1 : 0) | (walkable(m, x - r, y, h0) ? 2 : 0) | (walkable(m, x, y + r, h0) ? 4 : 0) | (walkable(m, x, y - r, h0) ? 8 : 0);
+function moveOk(m, ox, oy, x, y, r, h0) {
+  if (!walkable(m, x, y, h0) && walkable(m, ox, oy, h0)) return false;
+  const base = probeMask(m, ox, oy, r, h0), k = probeMask(m, x, y, r, h0);
+  if ((k & base) !== base) return false;
+  if (base === 15) return true;
+  const dx = x - ox, dy = y - oy;
+  return !((!(base & 1) && dx > 0) || (!(base & 2) && dx < 0) || (!(base & 4) && dy > 0) || (!(base & 8) && dy < 0));
+}
 function moveEntity(o, dx, dy, h0) {
   const m = G.map, r = o.r * 0.8;
-  const ok = (x, y) => walkable(m, x + r, y, h0) && walkable(m, x - r, y, h0) && walkable(m, x, y + r, h0) && walkable(m, x, y - r, h0);
-  if (ok(o.x + dx, o.y)) o.x += dx;
-  if (ok(o.x, o.y + dy)) o.y += dy;
-  for (const c of m.colliders) {
+  const ok = (x, y) => moveOk(m, o.x, o.y, x, y, r, h0);
+  if (dx && ok(o.x + dx, o.y)) o.x += dx;
+  if (dy && ok(o.x, o.y + dy)) o.y += dy;
+  MOVE_NEAR.length = 0;
+  for (const c of (typeof nearColliders === 'function' ? nearColliders(m, o.x, o.y, o.r + Math.abs(dx) + Math.abs(dy), MOVE_NEAR) : m.colliders)) {   // spatial grid (maps.js)
     if (Math.abs(c.z - (o.z || 0)) > 1.5) continue;
     const d = dist(o.x, o.y, c.x, c.y), min = c.r + o.r;
     if (d < min && d > 0.0001) {
@@ -403,11 +374,50 @@ function moveEntity(o, dx, dy, h0) {
   }
 }
 
+// Unstick safety (B1 follow-up): movement input held for UNSTICK_T s with zero displacement AND no direction that would
+// move the hero (a probe step in 8 directions; pushing into a plain wall still leaves the other directions open) ->
+// nudge to the nearest tile centre where the hero fits (4 probes at that tile's height, no collider).
+const UNSTICK_T = 1.5;
+function canBudge(o, h0) {
+  for (let k = 0; k < 8; k++) {
+    const a = k * Math.PI / 4, q = { x: o.x, y: o.y, z: o.z, r: o.r };
+    moveEntity(q, Math.cos(a) * 0.08, Math.sin(a) * 0.08, h0);
+    if (Math.abs(q.x - o.x) + Math.abs(q.y - o.y) > 1e-4) return true;
+  }
+  return false;
+}
+function nearestFreeTile(m, x, y, r, R = 5) {
+  const fits = (cx, cy) => {
+    const h = tileH(m, cx, cy);
+    if (!walkable(m, cx, cy, h) || probeMask(m, cx, cy, r * 0.8, h) !== 15) return false;
+    for (const c of nearColliders(m, cx, cy, r)) if (Math.abs(c.z - h) <= 1.5 && dist(cx, cy, c.x, c.y) < c.r + r) return false;
+    return true;
+  };
+  let best = null, bd = 1e9;
+  const i0 = Math.floor(x), j0 = Math.floor(y);
+  for (let j = j0 - R; j <= j0 + R; j++) for (let i = i0 - R; i <= i0 + R; i++) {
+    const cx = i + 0.5, cy = j + 0.5, d = (cx - x) ** 2 + (cy - y) ** 2;
+    if (d < bd && fits(cx, cy)) { bd = d; best = { x: cx, y: cy }; }
+  }
+  return best;
+}
+function unstickPlayer(p, moved, dt, h0) {
+  if (moved > 1e-4) { p.stuckT = 0; return false; }
+  p.stuckT = (p.stuckT || 0) + dt;
+  if (p.stuckT < UNSTICK_T) return false;
+  p.stuckT = 0;
+  if (canBudge(p, h0)) return false;   // just walking into a wall
+  const t = nearestFreeTile(G.map, p.x, p.y, p.r); if (!t) return false;
+  p.x = t.x; p.y = t.y; p.z = tileH(G.map, t.x, t.y); p.unstuck = (p.unstuck || 0) + 1;
+  burst(p.x, p.y, p.z + 0.5, 10, ['#e7e0ff', '#ffffff'], 2);
+  return true;
+}
+
 function updatePlayer(p, dt) {
   const m = G.map;
   for (const k in p.cds) if (p.cds[k] > 0) p.cds[k] -= dt;
   for (const k in p.buffs) { p.buffs[k].t -= dt; if (p.buffs[k].t <= 0) delete p.buffs[k]; }
-  p.atkT -= dt; p.invulnT -= dt; p.hurtT -= dt; p.castT -= dt; p.rootT -= dt; p.slowT -= dt; p.spin -= dt;
+  p.atkT -= dt; p.invulnT -= dt; p.hurtT -= dt; p.castT -= dt; p.rootT -= dt; p.slowT -= dt; p.spin -= dt; if (p.dreadT > 0) p.dreadT -= dt;
   if (p.dead) return;
   p.hp = Math.min(p.maxHp, p.hp + p.regen * dt + (p.buffs.mend ? p.maxHp * 0.25 / 4 * dt * healMul(p) : 0));
   p.mp = Math.min(p.maxMp, p.mp + p.mpRegen * dt);
@@ -438,10 +448,12 @@ function updatePlayer(p, dt) {
       let wx = sx + sy, wy = sy - sx;
       const l = Math.hypot(wx, wy); wx /= l; wy /= l;
       const sp = mag * p.speed * (p.buffs.sprint ? 1.8 : 1) * (p.buffs.veil ? 1.4 : 1) * (p.slowT > 0 ? 0.6 : 1) * (p.castT > 0 ? 0.75 : 1) * (1 + 0.3 * Math.abs(sy) / Math.hypot(sx, sy));
+      const bx = p.x, by = p.y;
       moveEntity(p, wx * sp * dt, wy * sp * dt, h0);
+      unstickPlayer(p, Math.abs(p.x - bx) + Math.abs(p.y - by), dt, h0);
       p.walkT += dt;
       if (Math.random() < dt * 6) addPart({ x: p.x, y: p.y, z: p.z, vx: frand(-0.3, 0.3), vy: frand(-0.3, 0.3), vz: 0.6, life: 0.4, t: 0, col: '#e8e0f8', grav: 1, size: 1, glow: false });
-    }
+    } else p.stuckT = 0;
   }
   const th = tileH(m, p.x, p.y);
   p.z = lerp(p.z, th, Math.min(1, dt * 14));
@@ -503,12 +515,12 @@ function viewDirToWorld(sx, sy) { const [wx, wy] = toWorld(sx, sy), l = Math.hyp
 function autoTarget(p, range, dir, cone) {
   let best = null, bs = 1e9;
   for (const e of G.enemies) {
-    if (e.dead || e.spawnT > 0) continue;
+    if (e.dead || e.spawnT > 0 || e.under) continue;
     const d = dist(p.x, p.y, e.x, e.y); if (d > range) continue;
     let s = d / range;
     if (dir) { const da = Math.abs(angDiff(Math.atan2(dir[1], dir[0]), Math.atan2(e.y - p.y, e.x - p.x))); if (da > cone + Math.atan2(e.r, Math.max(d, 0.1))) continue; s += da / Math.max(cone, 0.01); }
     if (e === G.lastHit) s -= 0.35;
-    if (e.boss || enemyClass(e.type) === 'elite') s -= 0.2;
+    if (e.boss || enemyClassOf(e) === 'elite') s -= 0.2;
     if (s < bs) { bs = s; best = e; }
   }
   return best;
@@ -541,21 +553,27 @@ function resolveAim(p) {
 }
 // gameplay actions, read once per step after the aim is resolved (keyboard/mouse, pad and touch alike)
 const SKILL_ACTIONS = [['skillQ', 'q'], ['skillE', 'e'], ['skillR', 'r'], ['skillF', 'f'], ['skillC', 'c'], ['dodge', 'shift'], ['s1', '1'], ['s2', '2'], ['s3', '3']];
+// Hold-to-aim (input.js IN.aimMode): 'off' casts on press (M2a); 'hold' / 'always' cast the skill keys on RELEASE so the
+// ground indicator can show while held (IN.aimCasts lists this step's releases). Dodge and potion stay instant.
 function playerActions(p, dt) {
-  if (typeof IN === 'undefined' || G.ui.open || G.state !== 'play' || G.fadeDir > 0) return;
+  if (typeof IN === 'undefined' || G.ui.open || G.state !== 'play' || G.fadeDir > 0) { if (typeof IN !== 'undefined' && IN.clearAimHold) IN.clearAimHold(); return; }
   if (p.dodgeBuf > 0) { p.dodgeBuf -= dt; if (!castActive(p) || p.cast.age >= CANCEL_AFTER) { p.dodgeBuf = 0; useSkill(p, 'shift'); } }
-  for (const [a, slot] of SKILL_ACTIONS) if (IN.pressed(a)) useSkill(p, slot);
+  const hold = IN.aimMode && IN.aimMode() !== 'off';
+  for (const [a, slot] of SKILL_ACTIONS) if (IN.pressed(a) && (!hold || slot === 'shift')) useSkill(p, slot);
+  if (hold) for (const a of IN.aimCasts) { const sa = SKILL_ACTIONS.find(q => q[0] === a); if (sa) useSkill(p, sa[1]); }
   if (typeof attackToggle === 'function' && attackToggle()) { if (IN.pressed('attack')) p.autoAtk = !p.autoAtk; } else p.autoAtk = false;
   if (IN.held('attack') || p.autoAtk) basicAttack(p);
   if (IN.pressed('potion')) drinkPotion(p);
   if (IN.pressed('interact')) interact(p);
 }
 // el = damage type of the hit (§5b); the hero's resist applies on top of defence (arcane ignores half of it)
-function hurtPlayer(dmg, srcX, srcY, el = 'slash') {
+// o.boss: a telegraphed boss hit (bosses.js bossHit): hard-capped at bossHitCap() of the hero's max HP (§20.3)
+function hurtPlayer(dmg, srcX, srcY, el = 'slash', o) {
   const p = G.player;
-  if (p.dead || p.invulnT > 0 || (p.dash && p.dash.opt.invuln) || G.state !== 'play') return;
+  if (p.dead || p.invulnT > 0 || (p.dash && p.dash.opt.invuln) || G.state !== 'play') return false;
   const r = (p.res && p.res[el]) || 0;
   let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1) * (typeof damageTakenMul === 'function' ? damageTakenMul() : 1);
+  if (o && o.boss) d = Math.min(d, p.maxHp * (typeof bossHitCap === 'function' ? bossHitCap() : 0.45));
   p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2;
   text(p.x, p.y, p.z + 3, Math.round(d), '#ff5a7a');
   shake(4); sfx('hurt');
@@ -564,11 +582,12 @@ function hurtPlayer(dmg, srcX, srcY, el = 'slash') {
     p.hp = 0; p.dead = true; G.state = 'dead'; G.deadT = 0; sfx('die'); G.stats.deaths++;
     burst(p.x, p.y, p.z + 1, 40, ['#ffb0e0', '#c7a8ff', '#ffffff'], 3);
   }
+  return true;
 }
 
 // ===== hit tests ===================================================================
 function damageEnemy(e, base, o = {}) {
-  if (e.dead || e.spawnT > 0) return false;
+  if (e.dead || e.spawnT > 0 || e.under) return false;
   const p = G.player, c = o.cast !== undefined ? o.cast : CAST;
   // damage type: explicit > the skill's element > the weapon's (sword slash, staff arcane, bow pierce); burn ticks are fire
   const el = o.el || (o.dot ? 'fire' : c ? c.el : item('weapon', p.gear.weapon).element) || 'slash';
@@ -576,14 +595,17 @@ function damageEnemy(e, base, o = {}) {
   // one additive sum: gear damage % (+ skill damage % and the element's gem amplification for skill hits)
   // skill rank (+6 %/rank above 1) joins the same additive sum; modifier ctx.dmg multiplies (numbers only)
   const cx = c && c.ctx;
-  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (sk ? p.skillDmg + elementAmp(p, el) + skillRankBonus(p, sk) : 0)) * buffMul(p) * (cx ? cx.dmg : 1);
+  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (sk ? p.skillDmg + elementAmp(p, el) + skillRankBonus(p, sk) : 0)) * buffMul(p) * (cx ? cx.dmg : 1) * (p.dreadT > 0 ? 0.85 : 1);
   const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
   dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
   const st = o.stagger != null ? o.stagger : cx ? cx.stagger || 0 : sk && SKILLS[sk] ? SKILLS[sk].stagger || 0 : 0;
   if (st) {   // the boss stagger bar (hud.js): fills with heavy hits, BREAK flash when full, then empties
-    e.stagger = (e.stagger || 0) + st;
-    if (e.boss && e.stagger >= STAGGER_CAP) { e.stagger = 0; e.breakT = G.t; }
+    // per-boss staggerMax (bosses.js) rescales the points so the bar's 0..STAGGER_CAP fraction stays right
+    e.stagger = (e.stagger || 0) + st * (e.staggerCap ? STAGGER_CAP / e.staggerCap : 1);
+    if (e.boss && e.stagger >= STAGGER_CAP) { e.stagger = 0; e.breakT = G.t; if (typeof bossBreak === 'function') bossBreak(e); }
+    else if (!e.boss) partsStagger(e, st);
   }
+  if (e.parts && e.parts.length || e.mods) dmg = partsHurt(e, dmg, o);   // shield-front, sleepers waking, elite shields
   let crit = Math.random() < p.crit;
   if (p.buffs.veil && !o.dot) { crit = true; delete p.buffs.veil; }
   if (crit) dmg *= 1 + p.critDmg;
@@ -606,7 +628,8 @@ function damageEnemy(e, base, o = {}) {
   const fxx = o.fx != null ? o.fx : p.x, fyy = o.fy != null ? o.fy : p.y;
   if (o.knock && !e.boss && !e.dummy) {
     const d = dist(fxx, fyy, e.x, e.y) || 1;
-    e.kx += (e.x - fxx) / d * o.knock * 9; e.ky += (e.y - fyy) / d * o.knock * 9;
+    const kk = e.knockK != null ? e.knockK : 1;   // swarm members barely budge (parts.js), so a cleave keeps them together
+    e.kx += (e.x - fxx) / d * o.knock * 9 * kk; e.ky += (e.y - fyy) / d * o.knock * 9 * kk;
   }
   if (o.stun) e.stunT = Math.max(e.stunT, o.stun * (cx ? cx.stun : 1) * (e.boss ? 0.25 : 1));
   if (o.freeze) e.frozen = o.stun;
@@ -684,7 +707,11 @@ function updateProjs(dt) {
       }
     } else {
       const pl = G.player;
-      if (!pl.dead && dist(p.x, p.y, pl.x, pl.y) < p.r + pl.r) { hurtPlayer(p.dmg, p.x, p.y, p.el); p.dead = true; burst(p.x, p.y, p.z, 8, [p.col, '#ffffff'], 2); }
+      if (!pl.dead && dist(p.x, p.y, pl.x, pl.y) < p.r + pl.r) {
+        // an enemy's own shot (p.src) runs its elite on-hit mods (vampiric, frozen) like a melee hit
+        if (hurtPlayer(p.dmg, p.x, p.y, p.el) && p.src && p.src.mods) for (const m of p.src.mods) if (ELITE_MODS[m] && ELITE_MODS[m].onHit) ELITE_MODS[m].onHit(p.src, p.dmg);
+        p.dead = true; burst(p.x, p.y, p.z, 8, [p.col, '#ffffff'], 2);
+      }
     }
   }
   G.projs = G.projs.filter(p => !p.dead);
@@ -700,6 +727,10 @@ function updateZones(dt) {
   for (const z of G.zones) {
     z.t += dt; z.tickT -= dt;
     if (z.t > z.life) { z.dead = true; continue; }
+    if (z.hostile) {   // enemy ground zones (parts.js hostileZone): hurt / slow the hero on each tick
+      if (z.tickT <= 0) { z.tickT = z.tick || 0.5; if (playerIn({ kind: 'circle', x: z.x, y: z.y, r: z.r })) { if (z.slow) G.player.slowT = Math.max(G.player.slowT, 0.8); if (z.dmg) hurtPlayer(z.dmg, z.x, z.y, z.el || 'nature'); } }
+      continue;
+    }
     if (z.pull) for (const e of G.enemies) {
       if (e.dead || e.boss || e.dummy || e.spawnT > 0) continue;
       const d = dist(z.x, z.y, e.x, e.y);
@@ -720,41 +751,47 @@ function updateZones(dt) {
 }
 
 // ===== enemies ========================================================================
+// ENEMY (the table), PARTS, ELITE_MODS: js/parts.js · BOSSES, BOSS_MOVES: js/bosses.js
 const STAGGER_CAP = 12, STAGGER_DECAY = 1.2;   // boss stagger bar: heavy hits add 2-3, it drains 1.2/s
-const ENEMY = {
-  // element = what its attacks deal; res = hand-authored tiers (-0.5 weak, 0.5 resist, 1 immune); tags: archetype (§5b)
-  slime: { name: 'Gloom slime', ai: 'hopper', hp: 170, r: 0.38, speed: 2.0, dmg: 32, range: 1.0, wind: 0.55, cd: 1.1, aoe: 1.15, hgt: 1.8, blood: '#8b7cf6',
-    element: 'gloom', res: { pierce: 0.5, slash: -0.5 }, tags: ['amorphous', 'gloom'] },
-  wisp: { name: 'Wisp', ai: 'shooter', hp: 120, r: 0.32, speed: 1.9, dmg: 34, range: 6, wind: 0.6, cd: 2.1, hgt: 3.2, blood: '#9ef0ff',
-    element: 'arcane', res: { slash: 0.5, pierce: 0.5, holy: -0.5, lightning: -0.5 }, tags: ['ethereal'] },
-  hound: { name: 'Shade hound', ai: 'charger', hp: 240, r: 0.42, speed: 3.2, dmg: 46, range: 3.2, wind: 0.48, cd: 1.6, hgt: 2.0, blood: '#ff6b9a',
-    element: 'slash', res: { fire: -0.5 }, tags: ['beast', 'gloom'] },
-  boss: { name: 'The Gloam Warden', ai: 'boss', hp: 7200, r: 0.95, speed: 1.6, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 9, blood: '#c78bff',
-    element: 'gloom', res: { arcane: 0.5, gloom: 0.5, holy: -0.5 }, tags: ['gloom'] },
-  dummy: { name: 'Training dummy', ai: 'dummy', hp: 9999, r: 0.35, speed: 0, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 3, blood: '#e7c9a0' },
-};
-function spawnEnemy(type, x, y, spawnT = 0.9) {
-  const d = ENEMY[type], dummy = type === 'dummy', lvl = dummy ? 1 : enemyLevel(type), hp = dummy ? d.hp : Math.round(d.hp * enemyHpMul(lvl));
-  const e = { type, x, y, z: 0, r: d.r || 0.4, hp, maxHp: hp, lvl, dm: dummy ? 1 : enemyDmgMul(lvl), el: d.element || 'slash', res: d.res || {}, tags: d.tags || [], hgt: d.hgt || 3, blood: d.blood || '#c7a8ff', kx: 0, ky: 0, flash: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss: type === 'boss', dummy: type === 'dummy' };
+// the bare instance (no parts): swarm members and twins are made with this, then initParts()
+function spawnEnemyRaw(type, x, y, spawnT = 0.9) {
+  const d = ENEMY[type], dummy = d.ai === 'dummy', boss = d.ai === 'boss', lvl = dummy ? 1 : enemyLevel(type), hp = dummy ? d.hp : Math.round(d.hp * enemyHpMul(lvl));
+  const e = { type, def: d, x, y, z: 0, r: d.r || 0.4, hp, maxHp: hp, lvl, dm: dummy ? 1 : enemyDmgMul(lvl), el: d.element || 'slash', res: d.res || {}, tags: d.tags || [], hgt: d.hgt || 3, blood: d.blood || '#c7a8ff', kx: 0, ky: 0, flash: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss, dummy, parts: [], acts: [], pp: {}, pcd: {} };
+  if (SPAWN_TRIG) e.trig = SPAWN_TRIG;
+  if (G.arena && !G.arena.done && G.arena.map === (G.map && G.map.id)) e.arena = G.arena.id;
   G.enemies.push(e);
   if (!dummy) sighting(type);
-  if (spawnT > 0) fx({ type: 'summon', x, y, life: spawnT, col: type === 'boss' ? '#ff5aa0' : '#b36bff', r: type === 'boss' ? 2.4 : 0.9 });
+  if (spawnT > 0) fx({ type: 'summon', x, y, life: spawnT, col: boss ? '#ff5aa0' : '#b36bff', r: boss ? 2.4 : 0.9 });
+  return e;
+}
+// o = { elite: true | mod id | [ids] } (trigger spawn cards). A boss row starts the boss fight (G.boss).
+function spawnEnemy(type, x, y, spawnT = 0.9, o = {}) {
+  type = enemyId(type);
+  if (!ENEMY[type]) return null;
+  const e = spawnEnemyRaw(type, x, y, spawnT);
+  if (e.boss) { bossInit(e); if (!G.boss || G.boss.dead) G.boss = e; return e; }
+  if (!e.dummy) initParts(e, e.def);
+  if (o.elite && !e.dummy) makeElite(e, o.elite === true ? null : o.elite);
   return e;
 }
 function killEnemy(e) {
   e.dead = true; sfx('die');
-  onEnemyKilled(e);   // XP + loot (items.js)
-  G.kills[e.type] = (G.kills[e.type] || 0) + 1; G.kills.any = (G.kills.any || 0) + 1;
-  if (!e.dummy) sighting(e.type).kills++;
+  if (e.boss && typeof AUDIO !== 'undefined') AUDIO.onBossKilled(e);   // victory stinger, the boss song bows out
+  const was = SPAWN_TRIG; SPAWN_TRIG = e.trig || null;
+  const counts = e.dummy || partsDeath(e);   // split / zone-on-death; a swarm or twin counts once, on its last member
+  SPAWN_TRIG = was;
+  if (counts && !e.noXp) onEnemyKilled(e);   // XP + loot (items.js)
+  if (counts) { G.kills[e.type] = (G.kills[e.type] || 0) + 1; G.kills.any = (G.kills.any || 0) + 1; if (!e.dummy) sighting(e.type).kills++; }
   burst(e.x, e.y, e.z + e.hgt * 0.5, e.boss ? 120 : 24, [e.blood, '#ffffff', '#ffb0e0'], e.boss ? 7 : 3.5);
   fx({ type: 'ring', x: e.x, y: e.y, r: e.boss ? 4 : 1.2, col: e.blood, life: 0.4 });
   // spirit motes drift up toward the player — a little healing
   if (!e.boss) delay(0.2, () => { healPlayer(G.player, 14); G.player.mp = Math.min(G.player.maxMp, G.player.mp + 10); });
-  if (e.boss) { shake(14); hitstop(0.25); G.slowmo = 1.4; }
+  if (e.boss) { shake(14); hitstop(0.25); G.slowmo = 1.4; G.shrink = null; }
 }
 const enemyTimeScale = () => G.player.buffs.dreamveil ? 0.35 : 1;
 
-function tele(o) { o.type = 'tele'; return fx(o); }
+// telegraphs are tagged with the enemy that made them (PART_SRC) so a stagger or a phase change can clear them
+function tele(o) { o.type = 'tele'; if (!o.src && typeof PART_SRC !== 'undefined' && PART_SRC) o.src = PART_SRC; return fx(o); }
 function playerIn(shape) {
   const p = G.player;
   if (shape.kind === 'circle') return dist(p.x, p.y, shape.x, shape.y) < shape.r + p.r;
@@ -763,11 +800,63 @@ function playerIn(shape) {
   return false;
 }
 
+// ===== enemy sleep (DESIGN §25.2) ======================================================================
+// Every non-boss, non-dummy enemy farther than SLEEP.dist tiles from the hero is DORMANT (e.dormant; not parts.js
+// `e.asleep`, which is the dormant-until-woken movement part): it runs no parts, moves, attacks or animation, only a
+// 1 Hz heartbeat (status timers, spawn-in, burn ticks, cooldowns). The distance ranking itself is O(n) per frame, so
+// waking is seamless: an enemy wakes the step the hero comes within range, with its state as it was. At most SLEEP.cap
+// are awake (16 on phones): beyond that the farthest sleep. Enemies of the running arena fight never sleep; a hit
+// enemy stays awake 3 s wherever it is.
+// Off-screen projectiles and zones farther than SLEEP.cull tiles from the hero are dropped.
+// enemyAwake(e) is the one "is it awake?" predicate (shrine warp, settling, all_enemies_dead).
+const SLEEP = { dist: 18, hyst: 1.5, cap: (typeof PHONE !== 'undefined' && PHONE) ? 16 : 24, hb: 1, cull: 20, awake: 0, dormant: 0 };
+const enemyAwake = e => !e.dead && !e.dummy && !e.dormant && !e.asleep;
+const anyEnemyAwake = () => G.pendingSpawns > 0 || G.enemies.some(enemyAwake);
+let SPAWN_TRIG = null;   // the trigger id an enemy's spawns inherit (summons, splits, boss adds)
+function enemySleepPass() {
+  const p = G.player, cand = [];
+  let dormant = 0;
+  for (const e of G.enemies) {
+    if (e.dead) continue;
+    if (e.boss || e.dummy || (G.arena && !G.arena.done && e.arena === G.arena.id)) { e.dormant = false; continue; }
+    e._d = dist(e.x, e.y, p.x, p.y);
+    if (e.flash > 0) e.hitWake = G.t + 3;   // a hit (a long shot, a DoT) keeps it awake for 3 s wherever it is
+    if (e._d <= SLEEP.dist + (e.dormant ? 0 : SLEEP.hyst) || e.hitWake > G.t) cand.push(e);
+    else if (!e.dormant) { e.dormant = true; e.hbT = Math.random() * SLEEP.hb; }
+  }
+  if (cand.length > SLEEP.cap) {
+    cand.sort((a, b) => a._d - b._d);
+    for (let i = SLEEP.cap; i < cand.length; i++) if (!cand[i].dormant) { cand[i].dormant = true; cand[i].hbT = Math.random() * SLEEP.hb; }
+    cand.length = SLEEP.cap;
+  }
+  for (const e of cand) if (e.dormant) e.dormant = false;   // wake: state untouched, no spawn fx re-run
+  for (const e of G.enemies) if (e.dormant) dormant++;
+  SLEEP.dormant = dormant; SLEEP.awake = cand.length;
+}
+// the sleeper's 1 Hz tick: timers only (accumulated dt is never dumped into an AI step)
+function enemyHeartbeat(e, dt) {
+  e.hbT = (e.hbT || 0) + dt; if (e.hbT < SLEEP.hb) return;
+  const s = e.hbT; e.hbT = 0; e.hbs = (e.hbs || 0) + 1;
+  if (e.spawnT > 0) e.spawnT = Math.max(0, e.spawnT - s);
+  e.cd = Math.max(0, (e.cd || 0) - s); e.slowT -= s;
+  if (e.stunT > 0) { e.stunT -= s; if (e.stunT <= 0) e.frozen = 0; }
+  if (e.burnT > 0) { const n = Math.min(Math.ceil(e.burnT / 0.5), Math.round(s / 0.5)); e.burnT -= s; for (let k = 0; k < n && !e.dead; k++) damageEnemy(e, 14, { dot: true, cast: e.burnCast || null }); e.flash = 0; }   // its own DoT does not wake it
+}
+function cullFar() {
+  const p = G.player, R = SLEEP.cull;
+  if (G.projs.some(q => Math.abs(q.x - p.x) > R || Math.abs(q.y - p.y) > R)) G.projs = G.projs.filter(q => dist(q.x, q.y, p.x, p.y) <= R);
+  if (G.zones.some(z => Math.abs(z.x - p.x) > R + (z.r || 0) || Math.abs(z.y - p.y) > R + (z.r || 0))) G.zones = G.zones.filter(z => dist(z.x, z.y, p.x, p.y) <= R + (z.r || 0));
+}
 function updateEnemies(dt) {
   const p = G.player;
   const ts = enemyTimeScale();
+  if (typeof updateArena === 'function') updateArena(dt);
+  enemySleepPass();
+  cullFar();
   for (const e of G.enemies) {
     if (e.dead) continue;
+    if (e.dormant) { enemyHeartbeat(e, dt); continue; }
+    SPAWN_TRIG = e.trig || null;
     e.flash -= dt; e.anim += dt;
     if (e.stagger > 0) e.stagger = Math.max(0, e.stagger - dt * STAGGER_DECAY);
     if (e.spawnT > 0) { e.spawnT -= dt; continue; }
@@ -779,158 +868,29 @@ function updateEnemies(dt) {
     if (Math.abs(e.kx) + Math.abs(e.ky) > 0.05) { moveEntity(e, e.kx * dt, e.ky * dt, tileH(G.map, e.x, e.y)); e.kx *= Math.pow(0.002, dt); e.ky *= Math.pow(0.002, dt); }
     if (e.stunT > 0) { e.stunT -= dt; if (e.stunT <= 0) e.frozen = 0; continue; }
     e.cd -= edt;
-    if (!e.boss) e.st -= edt;   // the boss counts its attack timer up in updateBoss
     const d = dist(e.x, e.y, p.x, p.y), ang = Math.atan2(p.y - e.y, p.x - e.x);
     const hidden = !!p.buffs.veil || p.dead || G.state !== 'play';
     e.face = isoX(p.x, p.y) >= isoX(e.x, e.y) ? 1 : -1;
-    const def = ENEMY[e.type];
-    if (e.boss) { updateBoss(e, edt, d, ang, hidden); continue; }
-    if (e.state === 'chase') {
-      let mx = 0, my = 0;
-      if (hidden) { e.wander = (e.wander || Math.random() * 6) + edt * 0.5; mx = Math.cos(e.wander); my = Math.sin(e.wander); }
-      else if (def.ai === 'shooter') {
-        if (d < 3.6) { mx = -Math.cos(ang); my = -Math.sin(ang); }
-        else if (d > 6) { mx = Math.cos(ang); my = Math.sin(ang); }
-        else { mx = Math.cos(ang + Math.PI / 2) * 0.6; my = Math.sin(ang + Math.PI / 2) * 0.6; }
-      } else { mx = Math.cos(ang); my = Math.sin(ang); }
-      // separation
-      for (const o of G.enemies) {
-        if (o === e || o.dead) continue;
-        const dd = dist(e.x, e.y, o.x, o.y);
-        if (dd < e.r + o.r + 0.2 && dd > 0.001) { mx += (e.x - o.x) / dd * 1.2; my += (e.y - o.y) / dd * 1.2; }
-      }
-      let sp = def.speed;
-      if (def.ai === 'hopper') sp *= Math.max(0, Math.sin(e.anim * 6)) * 1.8;
-      const l = Math.hypot(mx, my) || 1;
-      if (!(def.ai !== 'shooter' && d < def.range * (def.ai === 'brute' ? 0.65 : 0.8) && !hidden)) moveEntity(e, mx / l * sp * edt, my / l * sp * edt, tileH(G.map, e.x, e.y));
-      if (!hidden && e.cd <= 0 && d < def.range) {
-        e.state = 'wind'; e.st = def.wind; e.aimA = ang;
-        if (def.ai === 'hopper') tele({ kind: 'circle', x: e.x, y: e.y, r: def.aoe || 1.15, life: def.wind, col: '#ff5aa0' });
-        if (def.ai === 'charger') tele({ kind: 'line', x: e.x, y: e.y, ang, len: def.range + 0.4, w: 0.5, life: def.wind, col: '#ff5aa0' });
-        if (def.ai === 'brute') {
-          e.hit = def.shape === 'circle' ? { kind: 'circle', x: e.x, y: e.y, r: def.aoe || 2 } : { kind: 'cone', x: e.x, y: e.y, ang, arc: 1.9, r: def.aoe || 1.8 };
-          tele(Object.assign({ life: def.wind, col: '#ff5a3a' }, e.hit));
-        }
-      }
-    } else if (e.state === 'wind') {
-      if (e.st <= 0) {
-        if (def.ai === 'hopper') { if (playerIn({ kind: 'circle', x: e.x, y: e.y, r: def.aoe || 1.15 })) hurtPlayer(def.dmg * e.dm, e.x, e.y, e.el); e.squash = 0.3; burst(e.x, e.y, 0.2, 8, [e.blood, '#e2dbff'], 2); e.state = 'rec'; e.st = 0.4; }
-        else if (def.ai === 'charger') { e.state = 'lunge'; e.st = 0.3; e.hitP = false; }
-        else if (def.ai === 'brute') {
-          const H = e.hit;
-          if (H && playerIn(H)) hurtPlayer(def.dmg * e.dm, e.x, e.y, e.el);
-          if (H && H.kind === 'circle') { fx({ type: 'ring', x: e.x, y: e.y, r: H.r, col: '#ffb070', life: 0.45 }); burst(e.x, e.y, 0.2, 30, ['#8a6a4a', '#c8b090', '#5a4a3a'], 5, { glow: false }); }
-          else if (H) fx({ type: 'slash', x: e.x, y: e.y, z: 0.6, ang: H.ang, arc: H.arc, r: H.r, col: '#ffcf9a', life: 0.25, w: 6 });
-          shake(def.aoe > 2 ? 9 : 4); sfx('heavy');
-          e.state = 'strike'; e.st = 0.15;
-        }
-        else if (def.ai === 'shooter') {
-          spawnProj({ x: e.x, y: e.y, z: 2.2, ang: Math.atan2(p.y - e.y, p.x - e.x), speed: 5.5, r: 0.35, dmg: def.dmg * e.dm, el: e.el, life: 2.5, kind: 'orb', col: '#9ef0ff', friendly: false });
-          e.state = 'rec'; e.st = 0.3; sfx('arcane');
-        }
-        e.cd = def.cd * rand(0.8, 1.3);
-      }
-    } else if (e.state === 'lunge') {
-      moveEntity(e, Math.cos(e.aimA) * 12 * edt, Math.sin(e.aimA) * 12 * edt, tileH(G.map, e.x, e.y));
-      if (!e.hitP && dist(e.x, e.y, p.x, p.y) < e.r + p.r + 0.3) { e.hitP = true; hurtPlayer(def.dmg * e.dm, e.x, e.y, e.el); }
-      if (e.st <= 0) { e.state = 'rec'; e.st = 0.5; }
-    } else if (e.state === 'strike') { if (e.st <= 0) { e.state = 'rec'; e.st = 0.6; } }
-    else if (e.state === 'rec') { if (e.st <= 0) e.state = 'chase'; }
+    if (e.boss) { bossUpdate(e, edt, d, ang, hidden); continue; }
+    updatePartsEnemy(e, edt, { p, d, ang, hidden, dt: edt });
     if (e.squash > 0) e.squash -= dt;
-    e.z = lerp(e.z, tileH(G.map, e.x, e.y), Math.min(1, dt * 12));
+    if (!e.under) e.z = lerp(e.z, tileH(G.map, e.x, e.y), Math.min(1, dt * 12));
   }
+  SPAWN_TRIG = null;
   G.enemies = G.enemies.filter(e => !e.dead);
 }
 
-// ===== boss: the Gloam Warden ==========================================================
-function updateBoss(b, dt, d, ang, hidden) {
-  b.z = 0.6 + Math.sin(G.t * 2) * 0.25;
-  const p = G.player;
-  if (!b.phase2 && b.hp < b.maxHp * 0.5) {
-    b.phase2 = true; b.state = 'roar'; b.st = 1.6;
-    say('The Warden calls upon the nightmare!'); sfx('roar'); shake(10);
-    fx({ type: 'ring', x: b.x, y: b.y, r: 6, col: '#ff5aa0', life: 0.8 });
-    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + 0.4; spawnAt(k % 2 ? 'wisp' : 'slime', b.x + Math.cos(a) * 3.5, b.y + Math.sin(a) * 3.5, 1); }
-    return;
-  }
-  const spd = b.phase2 ? 1.35 : 1;
-  if (b.state === 'chase') {
-    if (!hidden && d > 2.2) moveEntity(b, Math.cos(ang) * ENEMY.boss.speed * spd * dt, Math.sin(ang) * ENEMY.boss.speed * spd * dt, tileH(G.map, b.x, b.y));
-    if (b.cd <= 0 && !hidden) {
-      const opts = d < 3.6 ? ['cleave', 'cleave', 'slam', 'volley'] : ['charge', 'volley', 'charge'];
-      if (b.phase2) opts.push('voidrain', 'voidrain');
-      let atk = pick2(opts); if (atk === b.last) atk = pick2(opts); b.last = atk;
-      b.state = atk; b.st = 0; b.step = 0;
-    }
-    return;
-  }
-  b.st += dt;
-  const W = b.phase2 ? 0.8 : 1;
-  switch (b.state) {
-    case 'cleave':
-      if (b.step === 0) { b.aimA = ang; tele({ kind: 'cone', x: b.x, y: b.y, ang, arc: 2.0, r: 3.6, life: 0.85 * W, col: '#ff3a7a' }); b.step = 1; }
-      if (b.step === 1 && b.st > 0.85 * W) {
-        if (playerIn({ kind: 'cone', x: b.x, y: b.y, ang: b.aimA, arc: 2.0, r: 3.6 })) hurtPlayer(120 * b.dm, b.x, b.y, 'slash');
-        fx({ type: 'slash', x: b.x, y: b.y, z: 1, ang: b.aimA, arc: 2.0, r: 3.6, col: '#ff7ae0', life: 0.3, w: 8 }); shake(6); sfx('heavy');
-        b.step = 2;
-      }
-      if (b.st > 1.4 * W) endBossAtk(b, 0.9);
-      break;
-    case 'slam':
-      if (b.step === 0) { tele({ kind: 'circle', x: b.x, y: b.y, r: 3.4, life: 1.1 * W, col: '#ff3a7a' }); b.step = 1; }
-      if (b.step === 1 && b.st > 1.1 * W) {
-        if (playerIn({ kind: 'circle', x: b.x, y: b.y, r: 3.4 })) hurtPlayer(150 * b.dm, b.x, b.y, 'gloom');
-        fx({ type: 'ring', x: b.x, y: b.y, r: 3.6, col: '#ff7ae0', life: 0.5 }); burst(b.x, b.y, 0.2, 50, ['#c78bff', '#ff7ae0', '#2a1c38'], 6); shake(12); hitstop(0.08); sfx('boom');
-        b.step = 2;
-      }
-      if (b.st > 1.7 * W) endBossAtk(b, 0.8);
-      break;
-    case 'volley':
-      if (b.step < 3 && b.st > 0.35 + b.step * 0.45) {
-        const n = 16;
-        for (let k = 0; k < n; k++) spawnProj({ x: b.x, y: b.y, z: 3, ang: k / n * Math.PI * 2 + b.step * 0.2, speed: 4.6, r: 0.35, dmg: 38 * b.dm, el: 'arcane', life: 3.2, kind: 'orb', col: '#ff7ae0', friendly: false });
-        sfx('arcane'); b.step++;
-      }
-      if (b.st > 1.8) endBossAtk(b, 1.0);
-      break;
-    case 'charge':
-      if (b.step === 0) { b.aimA = ang; tele({ kind: 'line', x: b.x, y: b.y, ang, len: 8, w: 1.1, life: 0.75 * W, col: '#ff3a7a' }); b.step = 1; b.hitP = false; }
-      if (b.step === 1 && b.st > 0.75 * W) { b.step = 2; sfx('dash'); }
-      if (b.step === 2) {
-        moveEntity(b, Math.cos(b.aimA) * 15 * dt, Math.sin(b.aimA) * 15 * dt, tileH(G.map, b.x, b.y));
-        if (Math.random() < 0.6) fx({ type: 'ghost', x: b.x, y: b.y, z: b.z, life: 0.3, spr: b.face < 0 ? ART.boss.f : ART.boss.n, col: '#ff5aa0' });
-        if (!b.hitP && dist(b.x, b.y, p.x, p.y) < b.r + p.r + 0.3) { b.hitP = true; hurtPlayer(110 * b.dm, b.x, b.y, 'slash'); }
-        if (b.st > 0.75 * W + 0.5) { b.step = 3; shake(5); }
-      }
-      if (b.st > 0.75 * W + 1.1) endBossAtk(b, 0.8);
-      break;
-    case 'voidrain':
-      if (b.step === 0) {
-        for (let k = 0; k < 6; k++) {
-          const a = Math.random() * 6.28, r = k === 0 ? 0 : 1 + Math.random() * 3, x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r;
-          tele({ kind: 'circle', x, y, r: 1.3, life: 1.0, col: '#ff3a7a', onDone: o => {
-            if (playerIn({ kind: 'circle', x: o.x, y: o.y, r: 1.3 })) hurtPlayer(85 * b.dm, o.x, o.y, 'gloom');
-            fx({ type: 'pillar', x: o.x, y: o.y, col: '#ff5aa0', life: 0.4, r: 1.3 }); burst(o.x, o.y, 0, 12, ['#ff7ae0', '#2a1c38'], 3); shake(3);
-          } });
-        }
-        sfx('veil'); b.step = 1;
-      }
-      if (b.st > 1.5) endBossAtk(b, 0.6);
-      break;
-    case 'roar':
-      if (b.st > 1.6) endBossAtk(b, 0.5);
-      break;
-  }
-}
-function endBossAtk(b, cd) { b.state = 'chase'; b.cd = cd * rand(0.8, 1.3) * (b.phase2 ? 0.75 : 1); }
-
 // ===== enemies from world data (editor's Enemies tab) ==============================
 // world.enemies[type] = { name, ai: hopper|shooter|charger|brute, hp, speed, dmg, range, cd, wind, r, aoe, shape, sprite }
+// or a full part row (js/parts.js header). These override ENEMY_DATA and the built-in rows.
 const ENEMY_AI = { hopper: 'Hops in and splats around itself', shooter: 'Keeps its distance and shoots orbs', charger: 'Telegraphs a line, then lunges', brute: 'Winds up a heavy smash (cone or circle)' };
 function applyWorldEnemies(list) {
   for (const k in list || {}) {
     const src = list[k], base = ENEMY[k] || { name: k, ai: 'brute', hp: 300, r: 0.45, speed: 2, dmg: 30, range: 1.5, wind: 0.6, cd: 1.5, aoe: 1.8, shape: 'cone', hgt: 3, blood: '#c7a8ff' };
     ENEMY[k] = Object.assign({}, base, src);
+    // a legacy row (ai, no parts) re-derives its parts from ai + these numbers at spawn (parts.js partsFromAi)
+    if (src.ai && !src.parts) { delete ENEMY[k].parts; delete ENEMY[k].params; }
+    if (src.element) ENEMY[k].dmgType = src.element;
     for (const f of ['hp', 'r', 'speed', 'dmg', 'range', 'wind', 'cd', 'aoe']) if (ENEMY[k][f] != null) ENEMY[k][f] = +ENEMY[k][f];
   if (ENEMY[k].res) for (const el in ENEMY[k].res) ENEMY[k].res[el] = +ENEMY[k].res[el] || 0;
     const img = ENEMY[k].sprite && ART.custom[ENEMY[k].sprite];
@@ -976,7 +936,7 @@ function updateCritters(dt) {
 // ===== tuning (numbers editable in the editor's Tuning tab) ==============================
 // mpRegen was 7/s before §15.3 (basic attacks now build mpOnHit per hit); ultRate = charge per point of
 // pre-multiplier damage (0.01 -> ~50 s of basic hits on one target, ~30-40 s with skills; reactions x2 in M4)
-G.tune = { player: { hp: 650, mp: 260, stamina: 100, speed: 3.7, regen: 2, mpRegen: 2, crit: 0.08, damage: 1, mpOnHit: 8, ultRate: 0.01 } };
+G.tune = { player: { hp: 650, mp: 260, stamina: 100, speed: 3.7, regen: 2, mpRegen: 2, crit: 0.08, damage: 1, mpOnHit: 8, ultRate: 0.015 } };   // ultRate (M2b balsim): one ultimate per ~40 s in the reference rotation (0.01 measured ~77 s)
 const TUNE_ENEMY_KEYS = ['hp', 'speed', 'dmg', 'range', 'cd'];
 function applyTuning(t) {
   if (!t) return;
@@ -990,25 +950,140 @@ function applyTuning(t) {
 // Trigger state persists (G.prog.trig[map], saved): whenever the map is calm (no live enemies, nothing pending)
 // every fired one-shot trigger is SETTLED. Re-entering or respawning restores settled triggers and replays only their
 // lasting effects (portals, objective), so just the encounter you died in resets. map_enter triggers re-run each entry.
-const LASTING_ACTIONS = { open_portal: 1, close_portal: 1, objective: 1 };
+// Actions: spawn { enemy, count, x, y, radius, instant, elite } (a boss row starts the boss fight) · spawn_boss (the Warden)
+//   banner · message · objective · heal · open_portal / close_portal { index | id } · clear_enemies · shake · sound ·
+//   teleport · checkpoint { x, y, text } · loot { rarity, count, x, y, + extras: gem, chest: tier, sockets, item } ·
+//   dialogue { id: DIALOGUE key } or { speaker, lines } · openGate { id } (gate / keydoor / hidden wall; levers flip) ·
+//   quest { id, step | done, title, text } -> G.prog.quests[id] = { step } | 'done' (the Quests tab reads it)
+//   spawnPack { id, at: { x, y } | 'x,y', radius = 1.5, elite } spawns an ENCOUNTERS pack (js/enemydata.js) by id, its
+//     members ringed around `at` (default: beside the hero), tagged e.pack = id. A pack's `after` rule is NOT checked
+//     here: the trigger's own `requires` gates it.
+// Big maps (DESIGN §25; contract in the maps.js header):
+//   warp { to: { x, y } | '<anchorId>' }  a 0.4 s fade warp inside this map (startWarp): no load, trigger state, enemies
+//     and the arena all stay; the hero is rooted for the fade and the camera snaps at its peak.
+//   closeGate { id }  shut a barrier (an arena gate placed with open: true) for a fight; never saved.
+//   arena { id, gate?, x, y, r }  start an inline arena fight: closes `gate`, G.arena = { id, map, gate, x, y, r,
+//     pillars }, every enemy spawned while it runs is tagged e.arena and never sleeps. openGate on its gate (the
+//     victory card) ends it. If the hero dies first, the respawn's startTriggers resets it: the gate reopens (it was
+//     never saved shut), adds are gone with the map's enemies, pillar tiles broken during the fight return
+//     (breakPillar(i, j) is the API a boss move uses), and the arena's enter trigger re-arms (it never settled).
+//   Spawned enemies remember their trigger (e.trig; their summons / splits inherit it). all_enemies_dead on a card with
+//   `requires` waits only for enemies spawned by those triggers (plus pending spawns); without `requires` it waits for
+//   every AWAKE enemy (enemyAwake: a far dormant pack in another section does not block it). Settling needs the awake
+//   enemies gone, and settles a fired card only if none of ITS spawns is still alive (a dormant pack you walked away
+//   from stays unsettled, so dying respawns it instead of clearing it). Known gap: spawns scheduled through delay()
+//   by a part / boss move (not inline in its tick) do not inherit e.trig.
+//   enter_area cards live in 8x8-tile buckets (by their circle): each step tests only the cards in the hero's bucket
+//   plus any the hero is still inside; other cards are tested every step as before.
+//   Each step also records discovery: G.prog.sections[map] (the hero's section) and G.prog.shrines[map] (shrines
+//   within SHRINE_SEE tiles or rested at); both are saved (items.js world.sections / world.shrines).
+//   shrineWarp(id): from a discovered shrine (within 2.5 tiles) to another discovered shrine of the same map, refused
+//   (say + false) while anyEnemyAwake(). The full-map screen (screens.js) calls it.
+const LASTING_ACTIONS = { open_portal: 1, close_portal: 1, objective: 1, openGate: 1 };
+const WARP_FADE = 0.4, SHRINE_SEE = 3, SHRINE_USE_R = 2.5;
+let TRIG_SRC = null;   // the trigger whose actions are running (spawns are tagged with it)
 function startTriggers() {
   const m = G.map, settled = G.prog.trig[m.id] || [];
-  G.trig = { fired: {}, at: {}, t: 0, inside: {} }; G.kills = {}; G.pendingSpawns = 0; G.objective = m.objective;
+  if (G.arena && !G.arena.done) resetArena(G.arena);
+  if (G.warp && !G.fadeDir) G.fade = 0;   // a warp cut short by a map change never leaves its veil up
+  G.arena = null; G.warp = null;
+  G.trig = { fired: {}, at: {}, t: 0, inside: {}, cp: G.checkpoint, sec: null }; G.kills = {}; G.pendingSpawns = 0; G.objective = m.objective;
+  G.shrink = null; G.talk = [];
+  triggerBuckets(m);
+  if (typeof syncGates === 'function') syncGates(m);
+  OBJ_REPLAY = objectiveLog(m.id).length ? 'skip' : 'seed';   // a save from before the log: seed it from the settled cards
   for (const tr of m.triggers) if (settled.includes(tr.id)) {
     G.trig.fired[tr.id] = true; G.trig.at[tr.id] = 0;
-    for (const a of tr.actions || []) if (LASTING_ACTIONS[a.type]) runAction(a);
+    TRIG_SRC = tr.id;
+    try { for (const a of tr.actions || []) if (LASTING_ACTIONS[a.type]) runAction(a); } finally { TRIG_SRC = null; }
   }
+  OBJ_REPLAY = null;
+  setObjective();   // death / re-entry: the tracker comes from the saved objective log, not the cards' array order
 }
+// ===== retries: once-per-save presentation, and the objective from progress (QA m1 / m2) =====================
+// G.prog.once['zone:<map>' | 'dlg:<id>' | 'dlg:<map>:<card>' | 'banner:<map>:<card>'] = 1: zone banners (main.js
+// enterMap), trigger dialogue (boss intros, hints) and boss / map_enter banners play once per save, so a retry after a
+// death does not replay them. Saved as world.once.
+function onceSeen(key) { const S = G.prog.once || (G.prog.once = {}); if (S[key]) return true; S[key] = 1; return false; }
+let TRIG_CARD = null;   // the card whose actions are running (fireTrigger), for the once-per-save keys
+// G.prog.obj[map] = [{ id: setter card, text, done }] in fire order (saved as world.obj). An entry is CLOSED when a
+// completion card (all_enemies_dead / enemy_killed) that transitively `requires` its setter fires, unless the setter is
+// itself a completion card (its line is the "what next" after a fight). currentObjective() = the newest open entry,
+// else the active main quest step of this zone, else the map's own line. Recomputed (setObjective) on map entry /
+// respawn, on every objective action and whenever a completion card fires (a section cleared).
+let OBJ_REPLAY = null;
+const COMPLETION_WHEN = { all_enemies_dead: 1, enemy_killed: 1 };
+function objectiveLog(mid) { const O = G.prog.obj || (G.prog.obj = {}); return O[mid] || (O[mid] = []); }
+function recordObjective(text) {
+  if (OBJ_REPLAY === 'skip' || !G.map) return;
+  const L = objectiveLog(G.map.id), id = TRIG_SRC || null;
+  if (id) { const i = L.findIndex(e => e.id === id); if (i >= 0) L.splice(i, 1); }
+  L.push({ id, text: text || '' });
+  if (L.length > 48) L.shift();
+}
+function closeObjectives(tr) {
+  const m = G.map, L = objectiveLog(m.id); if (!L.length || !(tr.requires || []).length) return;
+  const req = new Set(), stack = (tr.requires || []).slice();
+  while (stack.length) { const id = stack.pop(); if (req.has(id)) continue; req.add(id); const t = m.triggers.find(q => q.id === id); if (t) stack.push(...(t.requires || [])); }
+  for (const e of L) if (e.id && req.has(e.id)) { const t = m.triggers.find(q => q.id === e.id); if (!t || !COMPLETION_WHEN[(t.when || {}).type]) e.done = true; }
+}
+function questObjective(mid) {
+  if (typeof QUESTS === 'undefined') return '';
+  const Q = G.prog.quests || {};
+  for (const d of QUESTS) { const st = Q[d.id]; if (d.main && d.zone === mid && st && st !== 'done' && d.steps && d.steps[st.step]) return d.steps[st.step]; }
+  return '';
+}
+function currentObjective() {
+  const m = G.map; if (!m || !G.prog) return G.objective || '';
+  if (G.objective !== G._objAuto) return G.objective || '';   // written directly (a scene, a test): show that
+  return objectiveFromProgress(m);
+}
+function objectiveFromProgress(m) {
+  const L = (G.prog.obj || {})[m.id] || [];
+  for (let i = L.length - 1; i >= 0; i--) if (!L[i].done) return L[i].text;
+  return L.length ? questObjective(m.id) || m.objective || '' : m.objective || questObjective(m.id) || '';
+}
+function setObjective() { if (!G.map || !G.prog) return; G.objective = G._objAuto = objectiveFromProgress(G.map); }
 function settleTriggers() {
   const T = G.trig, m = G.map;
-  if (G.pendingSpawns || G.enemies.some(e => !e.dummy)) return;
-  const ids = m.triggers.filter(tr => T.fired[tr.id] && tr.once !== false && (tr.when || {}).type !== 'map_enter').map(tr => tr.id);
+  if (G.pendingSpawns || G.enemies.some(enemyAwake)) return;
+  // per trigger: a card whose spawns are still alive (dormant far away, or part-asleep) is not settled, so dying cannot clear it
+  const live = new Set(); for (const e of G.enemies) if (!e.dead && !e.dummy && e.trig) live.add(e.trig);
+  const ids = m.triggers.filter(tr => T.fired[tr.id] && tr.once !== false && (tr.when || {}).type !== 'map_enter' && !live.has(tr.id)).map(tr => tr.id);
   if (ids.length !== (G.prog.trig[m.id] || []).length) G.prog.trig[m.id] = ids;
+}
+// enter_area cards bucketed by their circle (every bucket it overlaps); other cards stay on the per-step list
+function triggerBuckets(m) {
+  if (m._tb && m._tb.ref === m.triggers && m._tb.len === m.triggers.length) return m._tb;
+  const B = typeof GRID_B !== 'undefined' ? GRID_B : 8, cells = new Map(), other = [];
+  m.triggers.forEach((tr, i) => {
+    const w = tr.when || {};
+    if (w.type !== 'enter_area' || !isFinite(+w.x) || !isFinite(+w.y)) { other.push(i); return; }
+    const r = +w.r || 1;
+    for (let by = Math.floor((+w.y - r) / B); by <= Math.floor((+w.y + r) / B); by++) for (let bx = Math.floor((+w.x - r) / B); bx <= Math.floor((+w.x + r) / B); bx++) {
+      const k = bx + ',' + by; let q = cells.get(k); if (!q) cells.set(k, q = []); q.push(i);
+    }
+  });
+  return (m._tb = { B, cells, other, ref: m.triggers, len: m.triggers.length });
+}
+function triggerCandidates(m, T) {
+  const tb = triggerBuckets(m), p = G.player, list = tb.other.slice();
+  const here = tb.cells.get(Math.floor(p.x / tb.B) + ',' + Math.floor(p.y / tb.B));
+  if (here) for (const i of here) list.push(i);
+  for (const id in T.inside) if (T.inside[id]) { const i = m.triggers.findIndex(t => t.id === id); if (i >= 0) list.push(i); }
+  list.sort((a, b) => a - b);
+  T.checked = list.length;
+  return list;
 }
 function updateTriggers(dt) {
   const m = G.map, T = G.trig; if (!T) return;
   T.t += dt;
-  for (const tr of m.triggers) {
+  updateWarp(dt);
+  updateDiscovery(m, T);
+  let prev = -1;
+  for (const i of triggerCandidates(m, T)) {
+    if (i === prev) continue; prev = i;
+    const tr = m.triggers[i];
     if (tr.disabled) continue;
     const once = tr.once !== false;
     if (once && T.fired[tr.id]) continue;
@@ -1024,7 +1099,11 @@ function triggerCondition(tr) {
     case 'map_enter': return true;
     case 'timer': { const base = w.after && w.after !== 'map' ? T.at[w.after] : 0; return base != null && T.t - base >= (+w.seconds || 0); }
     case 'enter_area': { const inside = dist(p.x, p.y, +w.x, +w.y) < (+w.r || 1); const was = T.inside[tr.id]; T.inside[tr.id] = inside; return inside && !was; }
-    case 'all_enemies_dead': return !G.pendingSpawns && !G.enemies.some(e => !e.dummy);
+    case 'all_enemies_dead': {
+      if (G.pendingSpawns) return false;
+      const req = tr.requires || [];
+      return req.length ? !G.enemies.some(e => !e.dead && !e.dummy && req.includes(e.trig)) : !G.enemies.some(enemyAwake);
+    }
     case 'enemy_killed': return (G.kills[w.enemy || 'any'] || 0) >= (+w.count || 1);
     case 'boss_hp_below': return !!(G.boss && !G.boss.dead && G.boss.hp / G.boss.maxHp * 100 < +w.pct);
     case 'player_hp_below': return p.hp / p.maxHp * 100 < +w.pct;
@@ -1034,26 +1113,48 @@ function triggerCondition(tr) {
 function fireTrigger(tr) {
   const T = G.trig; T.fired[tr.id] = true; T.at[tr.id] = T.t;
   let d = 0;
+  if (COMPLETION_WHEN[(tr.when || {}).type]) closeObjectives(tr);   // a section / fight cleared: its objective closes
+  const run = a => { const was = TRIG_SRC, wc = TRIG_CARD; TRIG_SRC = tr.id; TRIG_CARD = tr; try { runAction(a); } finally { TRIG_SRC = was; TRIG_CARD = wc; } };
   for (const a of tr.actions || []) {
     if (a.type === 'wait') { d += +a.seconds || 0; continue; }
-    if (d > 0) { G.pendingSpawns++; delay(d, () => { G.pendingSpawns--; runAction(a); }); } else runAction(a);
+    if (d > 0) { G.pendingSpawns++; delay(d, () => { G.pendingSpawns--; run(a); }); } else run(a);
   }
+  setObjective();
 }
+// once-per-save keys for a card's banner / dialogue (null = always plays: repeating cards, NPC talk outside triggers)
+function onceKey(kind, a) {
+  const tr = TRIG_CARD; if (!tr || tr.once === false || !G.map) return null;
+  if (kind === 'dlg') return a.id ? 'dlg:' + a.id : `dlg:${G.map.id}:${tr.id}`;
+  return a.boss || (tr.when || {}).type === 'map_enter' ? `banner:${G.map.id}:${tr.id}:${a.title || ''}` : null;
+}
+// spawns made by trigger cards carry the card id (e.trig) and the running arena (e.arena)
+function tagSpawn(e, src) { if (e && src) e.trig = src; return e; }
 function runAction(a) {
   const m = G.map, p = G.player;
   switch (a.type) {
     case 'spawn': {
       const n = Math.max(1, +a.count || 1);
-      for (let i = 0; i < n; i++) { G.pendingSpawns++; delay(0.15 * i, () => { G.pendingSpawns--; spawnAt(a.enemy || 'slime', a.x === '' ? null : a.x, a.y === '' ? null : a.y, a.radius, a.instant); }); }
+      const src = TRIG_SRC;
+      for (let i = 0; i < n; i++) { G.pendingSpawns++; delay(0.15 * i, () => { G.pendingSpawns--; tagSpawn(spawnAt(a.enemy || 'slime', a.x === '' ? null : a.x, a.y === '' ? null : a.y, a.radius, a.instant, a.elite), src); }); }
       break;
     }
-    case 'spawn_boss': G.boss = spawnEnemy('boss', a.x != null && a.x !== '' ? +a.x : m.cx + 1.5, a.y != null && a.y !== '' ? +a.y : m.cy - 1.5, 1.6); break;
-    case 'banner': G.banner = { s: a.title || '', sub: a.sub || '', t: a.boss ? 3.4 : 2.6, max: a.boss ? 3.4 : 2.6, boss: !!a.boss }; if (a.boss) { sfx('roar'); shake(6); } break;
+    case 'spawn_boss': G.boss = tagSpawn(spawnEnemy('boss', a.x != null && a.x !== '' ? +a.x : m.cx + 1.5, a.y != null && a.y !== '' ? +a.y : m.cy - 1.5, 1.6), TRIG_SRC); break;
+    case 'banner': { const k = onceKey('banner', a); if (k && onceSeen(k)) break; }
+      G.banner = { s: a.title || '', sub: a.sub || '', t: a.boss ? 3.4 : 2.6, max: a.boss ? 3.4 : 2.6, boss: !!a.boss }; if (a.boss) { sfx('roar'); shake(6); } break;
     case 'message': say(a.text || ''); break;
-    case 'objective': G.objective = a.text || ''; break;
+    case 'objective': recordObjective(a.text); if (!OBJ_REPLAY) setObjective(); break;
     case 'heal': healPlayer(p, p.maxHp * (+a.pct || 0) / 100); break;
-    case 'open_portal': case 'close_portal':
-      m.portals.forEach((pt, i) => { if (a.index == null || a.index === '' || +a.index === -1 || +a.index === i) pt.open = a.type === 'open_portal'; }); break;
+    case 'open_portal': case 'close_portal': {
+      const byId = a.id != null && a.id !== '';
+      m.portals.forEach((pt, i) => { if (byId ? pt.id === a.id : (a.index == null || a.index === '' || +a.index === -1 || +a.index === i)) pt.open = a.type === 'open_portal'; }); break;
+    }
+    case 'dialogue': { const k = onceKey('dlg', a); if (k && onceSeen(k)) break; talk(a); break; }
+    case 'openGate': if (typeof openGate === 'function') openGate(a.id, true); if (G.arena && !G.arena.done && G.arena.gates.includes(a.id)) { G.arena.done = true; G.arena = null; } break;   // won: the fight is over
+    case 'closeGate': if (typeof closeGate === 'function') closeGate(a.id); break;
+    case 'warp': startWarp(a.to != null ? a.to : { x: a.x, y: a.y }); break;
+    case 'arena': startArena(a); break;
+    case 'quest': questAction(a); break;
+    case 'spawnPack': spawnPack(a); break;
     case 'clear_enemies': for (const e of G.enemies.slice()) if (!e.dummy && !e.dead) killEnemy(e); break;
     case 'shake': shake(+a.power || 6); break;
     case 'sound': sfx(a.name || 'portal'); break;
@@ -1063,13 +1164,140 @@ function runAction(a) {
   }
 }
 // x/y given: scatter around that point; otherwise somewhere on the island away from the player
-function spawnAt(type, x, y, radius, instant) {
-  const m = G.map; if (!ENEMY[type]) return;
+function spawnAt(type, x, y, radius, instant, elite) {
+  const m = G.map; type = enemyId(type); if (!ENEMY[type]) return;
   const R = Math.max(2, Math.min(m.W, m.H) / 2 - 1.5);
   for (let tries = 0; tries < 40; tries++) {
     let nx, ny;
     if (x != null) { const a = Math.random() * 6.28, r = Math.sqrt(Math.random()) * (radius != null && radius !== '' ? +radius : (tries ? 1.5 : 0)); nx = +x + Math.cos(a) * r; ny = +y + Math.sin(a) * r; }
     else { const a = Math.random() * 6.28, r = rand(R * 0.55, R); nx = m.cx + Math.cos(a) * r; ny = m.cy + Math.sin(a) * r; }
-    if (walkable(m, nx, ny, tileH(m, nx, ny)) && (x != null || dist(nx, ny, G.player.x, G.player.y) > 3.5)) { const e = spawnEnemy(type, nx, ny, instant ? 0 : 0.9); e.z = 0; return e; }
+    if (walkable(m, nx, ny, tileH(m, nx, ny)) && (x != null || dist(nx, ny, G.player.x, G.player.y) > 3.5)) { const e = spawnEnemy(type, nx, ny, instant ? 0 : ENEMY[type].ai === 'boss' ? 1.6 : 0.9, { elite: ENEMY[type].ai === 'boss' ? null : elite }); e.z = 0; return e; }
   }
+}
+// dialogue: lines queue on the say line, ~2.4 s each (DIALOGUE ids from js/dialogue.js, or inline speaker + lines)
+function talk(a) {
+  const D = a.id && typeof DIALOGUE !== 'undefined' ? DIALOGUE[a.id] : null, src = D || a;
+  if (src.banner) { G.banner = { s: src.banner, sub: src.sub || '', t: 2.6, max: 2.6 }; return; }
+  const lines = (src.lines || (src.text ? [src.text] : [])).map(l => (src.speaker ? src.speaker + ': ' : '') + l);
+  G.lastDialogue = { id: a.id || null, speaker: src.speaker || '', lines };
+  const q = G.talk || (G.talk = []), wasIdle = !q.length;
+  q.push(...lines);
+  if (wasIdle) nextTalk();
+}
+function nextTalk() {
+  const q = G.talk; if (!q || !q.length) return;
+  const s = q[0]; G.msg = { s, t: 2.4 };
+  delay(2.4, () => { if (G.talk && G.talk[0] === s) { G.talk.shift(); nextTalk(); } });
+}
+// quests: G.prog.quests[id] = { step } while active (0 = the first step) or 'done'; a card without step/done advances it
+function questAction(a) {
+  if (!a.id) return;
+  const Q = G.prog.quests || (G.prog.quests = {}), cur = Q[a.id];
+  if (cur === 'done') return;
+  const def = typeof QUESTS !== 'undefined' ? QUESTS.find(q => q.id === a.id) : null, title = a.title || (def && def.title) || a.id;
+  if (a.done) Q[a.id] = 'done';
+  else Q[a.id] = { step: a.step != null && a.step !== '' ? +a.step : cur ? (cur.step || 0) + 1 : 0 };
+  const msg = a.done ? `Quest complete: ${title}` : cur ? `Quest updated: ${title}` : `New quest: ${title}`;
+  if (typeof UI !== 'undefined' && UI.toast) UI.toast({ text: msg, col: '#ffd35a' }); else say(msg);
+  sfx(a.done ? 'levelup' : 'pickup');
+}
+function encounterPack(id) {
+  if (typeof ENCOUNTERS === 'undefined' || !id) return null;
+  for (const zone in ENCOUNTERS) { const f = (ENCOUNTERS[zone] || []).find(q => q.id === id); if (f) return f; }
+  return null;
+}
+function spawnPack(a) {
+  const pk = encounterPack(a.id); if (!pk) { if (typeof console !== 'undefined') console.warn('spawnPack: no ENCOUNTERS pack ' + a.id); return; }
+  let at = a.at; if (typeof at === 'string') { const [x, y] = at.split(',').map(Number); at = { x, y }; }
+  const p = G.player, cx = at && isFinite(+at.x) ? +at.x : p.x + 3, cy = at && isFinite(+at.y) ? +at.y : p.y, R = a.radius != null && a.radius !== '' ? +a.radius : 1.5;
+  const src = TRIG_SRC;
+  pk.members.forEach((type, i) => {
+    const ang = i / pk.members.length * Math.PI * 2 + 0.3;
+    G.pendingSpawns++;
+    delay(0.15 * i, () => { G.pendingSpawns--; const e = tagSpawn(spawnAt(type, cx + Math.cos(ang) * R, cy + Math.sin(ang) * R, 0.4, a.instant, i === 0 ? a.elite : null), src); if (e) e.pack = pk.id; });
+  });
+}
+// ===== warps (same map, 0.4 s fade) ===========================================================================
+// startWarp(to, { door }) -> false when the target does not resolve or a warp is already running. G.warp = { t, dur,
+// dst, done }; G.fade is written directly (G.fadeDir stays 0, so main.js never reloads the map).
+function startWarp(to, o = {}) {
+  const m = G.map, p = G.player; if (!m || !p || p.dead || G.warp) return false;
+  const dst = typeof resolveWarp === 'function' ? resolveWarp(m, to) : null;
+  if (!dst) { if (typeof console !== 'undefined') console.warn('warp: no target ' + JSON.stringify(to)); return false; }
+  G.warp = { t: 0, dur: WARP_FADE, dst, done: false, from: { x: p.x, y: p.y }, door: o.door || null };
+  p.dash = null;
+  if (typeof IN !== 'undefined' && IN.clearAimHold) IN.clearAimHold();
+  sfx('portal');
+  return true;
+}
+function updateWarp(dt) {
+  const W = G.warp; if (!W) return;
+  const p = G.player, m = G.map, half = W.dur / 2;
+  W.t += dt; p.rootT = Math.max(p.rootT, 0.05); p.invulnT = Math.max(p.invulnT, 0.2);
+  if (!W.done && W.t >= half) {
+    W.done = true; p.x = W.dst.x; p.y = W.dst.y; p.z = tileH(m, p.x, p.y);
+    G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
+    G.projs = G.projs.filter(q => q.friendly);
+    if (typeof ensureChunkAt === 'function') ensureChunkAt(m, p.x, p.y);   // the arrival chunk, behind the fade
+    if (typeof HUD !== 'undefined') HUD.fogTile = null;
+  }
+  G.fade = W.t < half ? W.t / half : Math.max(0, 1 - (W.t - half) / half);
+  if (W.t >= W.dur) { G.fade = 0; G.warp = null; }
+}
+// ===== discovery: sections + shrines (saved per map) ============================================================
+const progList = (k, id) => { const P = G.prog[k] || (G.prog[k] = {}); return P[id] || (P[id] = []); };
+const shrinesOf = m => m._shrines || (m._shrines = m.objects.filter(o => o.shrineId));   // every shrine (discovery, markers)
+const warpShrine = o => !(o.src && o.src.warp === false);   // warp: false = a plain checkpoint, never a warp end
+const shrineFound = (m, id) => progList('shrines', m.id).includes(id);
+function discoverShrine(m, o) {
+  const L = progList('shrines', m.id); if (L.includes(o.shrineId)) return false;
+  L.push(o.shrineId); return true;
+}
+function updateDiscovery(m, T) {
+  const p = G.player; if (!p || p.dead) return;
+  const sec = typeof sectionAt === 'function' ? sectionAt(m, p.x, p.y) : null;
+  if (sec && sec !== T.sec) {
+    T.sec = sec; const L = progList('sections', m.id);
+    if (!L.includes(sec.id)) { L.push(sec.id); if (sec.id !== 'main' && T.t > 0.5 && typeof UI !== 'undefined' && UI.toast) UI.toast({ text: 'Discovered: ' + (sec.name || sec.id), col: '#9ef0ff' }); }
+  }
+  if (G.checkpoint !== T.cp) {   // rested at a shrine: it is discovered too
+    T.cp = G.checkpoint;
+    if (G.checkpoint && G.checkpoint.map === m.id) for (const o of shrinesOf(m)) if (dist(o.x, o.y, G.checkpoint.x, G.checkpoint.y) < SHRINE_USE_R) discoverShrine(m, o);
+  }
+  if ((T.shT = (T.shT || 0) - 1) <= 0) { T.shT = 15; for (const o of shrinesOf(m)) if (dist(o.x, o.y, p.x, p.y) < SHRINE_SEE) discoverShrine(m, o); }
+}
+const shrineHere = (m = G.map, p = G.player) => shrinesOf(m).find(o => warpShrine(o) && dist(o.x, o.y, p.x, p.y) < SHRINE_USE_R) || null;
+// the shrines the full-map screen offers: discovered, same map, not the one you stand at
+function shrineTargets(m = G.map) { const here = shrineHere(m); return shrinesOf(m).filter(o => o !== here && warpShrine(o) && shrineFound(m, o.shrineId)); }
+function shrineWarp(id) {
+  const m = G.map, p = G.player, here = shrineHere(m, p);
+  if (!here || !shrineFound(m, here.shrineId)) { say('Stand at a shrine you have found to warp.'); return false; }
+  const to = shrinesOf(m).find(o => o.shrineId === id);
+  if (!to || to === here || !warpShrine(to) || !shrineFound(m, id)) { say('That shrine is not attuned yet.'); return false; }
+  if (anyEnemyAwake()) { say('Enemies are awake nearby: the shrine will not answer.'); sfx('hurt'); return false; }
+  return startWarp(id);
+}
+// ===== inline arena ===========================================================================================
+function startArena(a) {
+  const m = G.map, id = a.id || 'arena', gates = [].concat(a.gate || a.gates || []);
+  if (G.arena && !G.arena.done && G.arena.id === id) return;
+  const x = +a.x, y = +a.y, r = +a.r || 6, pillars = [];
+  for (let j = Math.max(0, Math.floor(y - r)); j <= Math.min(m.H - 1, Math.ceil(y + r)); j++) for (let i = Math.max(0, Math.floor(x - r)); i <= Math.min(m.W - 1, Math.ceil(x + r)); i++)
+    if (m.type[j][i] === 'pillar' && dist(i + 0.5, j + 0.5, x, y) <= r) pillars.push([i, j]);
+  G.arena = { id, map: m.id, gates, x, y, r, pillars, broken: [], done: false };
+  for (const g of gates) if (typeof closeGate === 'function') closeGate(g);
+}
+// a boss move breaks a pillar tile: it becomes floor until the arena resets
+function breakPillar(i, j) {
+  const m = G.map; if (!m || m.type[j] == null || m.type[j][i] !== 'pillar') return false;
+  m.type[j][i] = 'x'; m.block[j][i] = false;
+  for (const c of m.columns) if (c.i === i && c.j === j) c.gone = true;
+  if (G.arena && !G.arena.done) G.arena.broken.push([i, j]);
+  burst(i + 0.5, j + 0.5, 1, 14, ['#8a80b0', '#ffffff'], 3); shake(4);
+  return true;
+}
+function resetArena(A) {
+  const m = G.maps[A.map]; if (!m) return;
+  for (const [i, j] of A.broken) { m.type[j][i] = 'pillar'; m.block[j][i] = true; for (const c of m.columns) if (c.i === i && c.j === j) c.gone = false; }
+  A.broken = [];
 }

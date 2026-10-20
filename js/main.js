@@ -35,14 +35,49 @@ function enterMap(id, at) {
   p.x = at ? at.x : m.start.x; p.y = at ? at.y : m.start.y; p.z = tileH(m, p.x, p.y); p.dash = null;
   syncChests(m);
   G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
-  G.banner = { s: m.name, sub: m.sub, t: 3.2, max: 3.2 };
+  if (!(typeof onceSeen === 'function' && onceSeen('zone:' + id))) G.banner = { s: m.name, sub: m.sub, t: 3.2, max: 3.2 };   // once per save: a respawn never replays it
   startTriggers();
   spawnCritters(m);
   if (G.state === 'play') saveGame();   // autosave on zone entry
 }
+// ===== map preload (perf, QA: a 950 ms frame on the rift into Pinewood) ==========================================
+// transition() starts it; loop() gives it what is left of a PRELOAD_FRAME ms frame after update + render (at most
+// PRELOAD_MS) during the fade-in. The work is a time-sliced generator: the map record (buildMapStages, groundPrep a row
+// at a time), the theme backdrop (normally prebuilt at boot), the low-res ground preview, the spatial / collider /
+// trigger grids, the minimap, then the chunk under the arrival camera. The fade holds at its peak until it is done
+// (at most PRELOAD_HOLD s), so enterMap finds everything cached. Anything not preloaded still builds synchronously in
+// enterMap (boot, the editor, tests).
+let PRELOAD = null;
+const PRELOAD_MS = 16, PRELOAD_FRAME = 34, PRELOAD_HOLD = 2;
+function startPreload(id, at) { PRELOAD = G.world.maps[id] ? { id, at, gen: null, left: () => 0 } : null; }
+function* preloadGen(P) {
+  if (!G.maps[P.id]) { const g = buildMapStages(P.id, G.world.maps[P.id]); let r; while (!(r = g.next()).done) yield; G.maps[P.id] = r.value; }
+  const m = G.maps[P.id];
+  while (!prepThemeStep(m)) yield;
+  yield* groundPreviewGen(m); yield;   // the stand-in drawn for chunks still building
+  gridOf(m); yield; colliderGrid(m); triggerBuckets(m); yield;
+  if (typeof miniBuild === 'function' && !m.mini) { miniBuild(m); yield; }
+  const x = P.at ? P.at.x : m.start.x, y = P.at ? P.at.y : m.start.y, idx = chunkAt(m, isoX(x, y), isoY(x, y, tileH(m, x, y)) - 12);
+  if (!chunkGrid(m).empty[idx]) while (!buildChunkStep(m, idx, Math.max(1, P.left()))) yield;   // the other visible chunks stream in behind the fade-out
+}
+function preloadStep(budget = PRELOAD_MS) {
+  const P = PRELOAD; if (!P) return true;
+  const t0 = performance.now(); P.left = () => budget - (performance.now() - t0);
+  P.gen = P.gen || preloadGen(P);
+  while (P.left() > 0) if (P.gen.next().done) { PRELOAD = null; return true; }
+  return false;
+}
+// the death screen's spare frame time rasters the chunk the respawn camera lands on (no sync build after respawn)
+function prebuildRespawn(ms) {
+  const cp = G.checkpoint, m = cp && G.maps[cp.map] ? G.maps[cp.map] : G.map; if (!m || !m.cg) return;
+  const x = cp && G.maps[cp.map] ? cp.x : m.start.x, y = cp && G.maps[cp.map] ? cp.y : m.start.y, idx = chunkAt(m, isoX(x, y), isoY(x, y, tileH(m, x, y)) - 12);
+  if (!m.cg.empty[idx] && !chunkResident(m, idx)) buildChunkStep(m, idx, ms);
+}
 function transition(to, at) {
   if (G.fadeDir) return;
   G.fadeDir = 1; G.fadeTo = to; G.fadeAt = at || null; sfx('portal');
+  startPreload(to, at); G.fadeHold = 0; G.preloadLog = null;
+  if (typeof AUDIO !== 'undefined') AUDIO.onTransition(to);   // the zone song fades over 1 bar during the rift fade
 }
 // death: lose 10% of this level's bar (never a level), wake at the last checkpoint (or this map's start) with
 // full HP and potions; settled triggers survive, so only the encounter you died in resets
@@ -67,11 +102,12 @@ function update(dt, rdt) {
   if (G.banner) G.banner.t -= rdt;
   if (G.msg) G.msg.t -= rdt;
   if (G.lastCast) G.lastCast.t -= rdt;
-  if (G.ui.open || G.ui.help || G.ui.pause) { updateCamera(rdt); return; }
+  if (G.ui.open || G.ui.help || G.ui.pause || G.ui.map) { updateCamera(rdt); return; }   // G.ui.map: full-map screen (screens.js)
 
   if (G.fadeDir) {
     G.fade += rdt * 1.6 * G.fadeDir;
-    if (G.fade >= 1 && G.fadeTo) { enterMap(G.fadeTo, G.fadeAt); G.fadeTo = null; G.fadeAt = null; G.fadeDir = -1; G.fade = 1; }
+    if (G.fade >= 1 && G.fadeTo && PRELOAD && PRELOAD.id === G.fadeTo && (G.fadeHold = (G.fadeHold || 0) + rdt) < PRELOAD_HOLD) G.fade = 1;   // hold the veil while the preload finishes
+    else if (G.fade >= 1 && G.fadeTo) { G.preloadLog = { done: !PRELOAD, hold: +(G.fadeHold || 0).toFixed(2) }; PRELOAD = null; enterMap(G.fadeTo, G.fadeAt); G.fadeTo = null; G.fadeAt = null; G.fadeDir = -1; G.fade = 1; }
     if (G.fade <= 0 && G.fadeDir < 0) { G.fade = 0; G.fadeDir = 0; }
   }
   if (G.state === 'play' || G.state === 'dead') {
@@ -109,6 +145,7 @@ function render() {
   dctx.drawImage(SCN.c, 0, 0, DW, DH);
   UI.begin();
   drawHUD(dctx);   // draws its own toasts and focus ring per screen
+  if (typeof AUDIO !== 'undefined') AUDIO.drawCaptions(dctx);   // sound captions (setting), bottom-left
   G.ui.wheel = 0;
   if (G.fade > 0) {
     const g = dctx.createRadialGradient(DW / 2, DH / 2, 0, DW / 2, DH / 2, DW * 0.7);
@@ -128,6 +165,7 @@ function loop(now) {
   // particle budget follows the measured frame time: shed motes first when a device struggles
   PART.budget = clamp(PART.budget + (frameEma > 20 ? -0.02 : frameEma < 17.5 ? 0.01 : 0), 0.35, 1);
   acc += fdt;
+  const frameT0 = performance.now();
   let n = 0;
   while (acc >= STEP && n < 5) {
     let rdt = STEP;
@@ -139,6 +177,9 @@ function loop(now) {
   }
   if (n === 5) acc = 0;   // spiral-of-death guard after a long stall
   render();
+  if (PRELOAD) preloadStep(clamp(PRELOAD_FRAME - (performance.now() - frameT0), 2, PRELOAD_MS));   // a portal fade's map load (see transition)
+  else if (G.state === 'dead') prebuildRespawn(clamp(PRELOAD_FRAME - (performance.now() - frameT0), 2, PRELOAD_MS));
+  if (typeof AUDIO !== 'undefined') AUDIO.frame(fdt);   // music director: song / stems / intensity / ducking (notes are timed by its 25 ms audio-clock tick)
   requestAnimationFrame(loop);
 }
 // pause the loop while the tab is hidden; resume without a time jump
@@ -198,6 +239,7 @@ function handleInput() {
     return;
   }
   if (G.state !== 'play' || G.fadeDir) return;
+  if (typeof fullMapInput === 'function' && fullMapInput()) { used(); return; }   // M / D-pad down: full map + shrine warp (screens.js)
   const tabKey = [['inventory', 'inv'], ['character', 'skills'], ['bestiary', 'bestiary'], ['quests', 'quests']].find(([a]) => IN.pressed(a));
   if (tabKey) { openInv(tabKey[1]); used(); return; }
   if (IN.pressed('pause')) { G.ui.pause = true; UI.focus.set(null); used(); return; }   // Esc and pad Start open the pause screen
@@ -251,6 +293,9 @@ async function boot() {
   buildCustomSprites(G.world.sprites);
   applyTuning(G.world.tuning);
   applyWorldEnemies(G.world.enemies);
+  // perf: every zone's sky / mountain / cloud backdrop is built here, behind the loading screen (~0.1 s a theme),
+  // instead of in the frame a portal lands in (prepTheme in enterMap then finds it cached)
+  for (const id in G.world.maps) { const t = G.world.maps[id].theme, th = THEMES[t]; if (th && !th._bg) prepTheme({ theme: th, themeId: t }); }
   G.player = makePlayer();
   // ?map=<id> (play-test / showcase), ?scene=play|arena|boss|loadout|portal|inventory, &weapon=starfall|moonbow
   // showcase scenes get a mid-level (L14) kit; they never read or write the real save

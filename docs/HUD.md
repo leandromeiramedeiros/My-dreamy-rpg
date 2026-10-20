@@ -132,3 +132,80 @@ All Tab screens: 920×500 panel at (20,20), scene behind dimmed to 35 %, play HU
   parts per frame. `imageSmoothingEnabled = false` everywhere; integer drawImage targets.
 * Inventory/menu **interaction logic is separate from drawing**: a table of hit regions + a focus model shared by mouse,
   touch and gamepad (see the controls section of DESIGN.md).
+
+## Touch v2: circular wheel + Albion-style ground aiming (expert spec; director-approved; supersedes "Touch" above)
+
+### Layout (960×540, 24 px safe area, C = attack centre (860,436); angles from +x, y up; mirror x about 480 for left-handed)
+* **Attack:** a Ø 96 circle at C. Its rim doubles as the **ultimate charge ring** (gold sweep, pulsing at 100 %). Hold to
+  attack. Double-tap to dodge, which is a setting.
+* **Inner arc, r 124, Ø 60:** Q at 200°, E at 235°, R at 270° (the ultimate is farthest away, so it is hard to
+  fat-finger).
+* **Outer arc, r 196, Ø 52:** F at 190°, C at 215°, **Dodge** at 240°, and the **Potion** at 265° with 3 pips on its rim.
+  Nothing goes above y 240.
+* **Page toggle** (Ø 40 at 160° on the outer arc, "◐"): swaps the inner arc between [Q E R] and [1 2 3] with a 120 ms
+  rotation. Hidden skills keep ticking, and a dot appears on the toggle when one is ready.
+  * There is **no radial sub-menu**. The setting "Show all 9" (tablets ≥ 1024 px) puts 1/2/3 on the outer arc instead.
+  * Director ruling: **no rim double-tap shortcut**, because it would clash with double-tap dodge.
+* **Interact:** Ø 56 at 150° on the inner arc, shown only when a prompt is near.
+* **Ring visuals:**
+  * Cooldown is a clockwise radial wipe at 70 % dark, with the seconds left at the centre and a 2 px flash on ready.
+  * MP-short means a desaturated icon with a blue rim.
+  * The two-hander **charge ring** sits inside the rim and goes white → gold over 1 s, with a haptic click when full.
+  * Frame: 2 px dark outline + a 2 px rim in the element colour + `#15102a` fill at 80 %.
+  * The shared helper is `UI.ring(ctx,x,y,r,frac,col)` in ui.js; desktop slots use it too.
+* **Joystick:** unchanged (Ø 112 base, Ø 48 knob, 8 px dead zone, 56 px max throw). The last direction is kept for 0.4 s
+  after release.
+
+### Aiming (every skill has `aim:{shape:'cone'|'circle'|'line'|'proj'|'self'|'dash', range, r, arc, len, w}`)
+* **Tap = quick-cast.** It auto-targets using the CONTROLS chain with a 20° assist. There is no indicator, only a
+  1-frame flash of the shape at the target.
+* **Drag past 12 px = aimed cast.** The indicators show while you drag and the skill casts on release.
+  * Releasing over the button cancels, as does releasing on the Ø 64 ✕ at (480,500). The ✕ fades in after a 40 px
+    drag. A cancelled cast costs nothing and starts no cooldown.
+* **Drag distance → range:** 12–96 px maps onto 0–100 % of range with an ease-out, so 40 px covers 60 %. Beyond that the
+  range is clamped.
+  * The direction is the drag vector from the button.
+  * While dragging, projectiles and lines get a 10° snap; circles and cones never snap.
+  * The dragged button lifts 4 px and its rim brightens.
+* **Ground indicators** are drawn on the 480×270 scene in the decal pass (`kind:'aim'`), under the sprites:
+  * **Range circle:** an iso ellipse, 1 px dashed (4/3), with the dashes moving 1 px every 100 ms. Element colour at
+    55 %, with a soft glow. Not shown for self skills.
+  * **Cone:** a wedge at 25 % fill with a 1 px edge.
+  * **Circle:** a reticle (22 % disc, 1 px ring, 4 ticks) that is **clamped to the range circle**. Its centre dot turns
+    white while it is clamped.
+  * **Line / dash:** a w×len rectangle at 25 % fill with an arrowhead. A dash also shows a ghost of the hero at the
+    landing point.
+  * **Projectile:** a line with a chevron every 12 px, plus parallel lines showing the projectile's radius. Curved
+    projectiles show their curve.
+  * **Self:** a breathing ring at r.
+  * The reticle ring is drawn again *after* the sprites at 35 %, so it shows on top of a boss.
+* **Anti-confusion rule** (two style tables in render.js, `AIM_STYLE` and `TELE_STYLE`):
+  * **Player** indicators are thin, dashed, low-alpha and cool-toned. Their fill never animates; only the dashes move.
+  * **Enemy** telegraphs are thick, solid, hot and high-alpha, with a filling countdown.
+  * If an enemy telegraph overlaps the reticle, the player's fill drops to 10 %.
+* **Desktop and pad:** the setting "Ground indicators: off / on hold (default) / always". On a pad they show whenever
+  the right stick is deflected.
+* **Haptics** (a setting): 8 ms on drag start, 15 ms on cast, 25 ms on cancel and on a full charge, 40 ms on dodge.
+* **Performance:**
+  * Cache range ellipses per (range, element), about 15 of them.
+  * Cache shape sprites per equipped skill (≤ 12).
+  * Rotate the cone rather than rebuilding it.
+  * Only one indicator is active at a time.
+* **Balance:**
+  * Tap keeps the 20° assist, so touch-only quick-cast play stays viable and the game can be cleared one-thumbed.
+  * Reaction skills on page 2 cost one extra tap; check their cooldowns.
+
+### Build split
+* **Sonnet:** touch.js (layout, page toggle, cancel, mapping, haptics, charge ring), hud.js and the settings entries.
+* **Haiku:** the `aim` blocks in data.js, plus a validate-ids check that every skill has one.
+* **Opus:** render.js `AIM_STYLE`/`TELE_STYLE`, `drawAimIndicator(aim, from, to)`, `UI.ring`, and the hold-to-aim hook
+  in input.js.
+* **Tests:** play.js touch routes:
+  * a tap-cast lands on the enemy
+  * a drag past range clamps
+  * releasing on the cancel zone costs nothing
+  * page toggle → cast 1/2/3
+  * the left-handed hit-test
+  * two pointers at once
+* **Screenshots:** touch-layout-circular, touch-aim-cone, touch-aim-circle-clamped, touch-aim-line, touch-cancel,
+  touch-page-123, touch-vs-boss-telegraph, aim-on-hold.

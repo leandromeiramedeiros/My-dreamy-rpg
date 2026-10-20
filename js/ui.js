@@ -18,6 +18,7 @@
 //        o: { shadow:true, outline:(heading), alpha }  — 2 px #0b0716 shadow at +2,+2; heading gets a 2 px outline.
 //        Bitmap glyphs from FONT_ART (tinted per colour, cached); canvas-text fallback until the sheets decode.
 //   UI.measure(s, size)        -> width in px.   UI.lineH(size) -> recommended line pitch in px.
+//   UI.ring(ctx, x, y, r, frac, col, w=2)  clockwise arc from 12 o'clock over frac (0..1) of the circle.
 //   UI.wrap(ctx, s, x, y, w, size, col, lh) -> y after the last line (word wrap; '\n' breaks).
 //
 //   UI.frame(ctx, x, y, w, h, kind='plain', o)
@@ -432,8 +433,15 @@ const UI = (() => {
 
   function begin() { hits = []; focus.begin(); }
 
+  // ring(ctx,x,y,r,frac,col[,w=2]): a clockwise arc from 12 o'clock covering frac of the circle (touch wheel rims,
+  // cooldown / charge rings; docs/HUD.md "Touch v2"). Not grid-snapped: rings are round.
+  function ring(ctx, x, y, r, frac, col, w = 2) {
+    frac = Math.max(0, Math.min(1, frac)); if (frac <= 0) return;
+    ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'butt';
+    ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2); ctx.stroke(); ctx.restore();
+  }
   return {
-    S, snap, C, theme: C, SIZES: { small: 14, body: 18, heading: 27 }, el: elCol, rarityCol: rarCol, RARITY_SHAPE,
+    S, snap, C, theme: C, SIZES: { small: 14, body: 18, heading: 27 }, el: elCol, rarityCol: rarCol, RARITY_SHAPE, ring,
     text, measure, lineH, wrap, frame, sprite, pad, bar, barReset, sweep, toast, toasts, drawToasts, tooltip, button,
     hit, click, mouseIn, begin, focus, image,
     // legacy colour keys some older call sites expect (hud.js keeps its own palette as HC until the rebuild)

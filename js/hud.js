@@ -97,22 +97,60 @@ function drawDamageNumbers(ctx) {
     UI.text(ctx, t.s, x, y, size, col, 'center', { alpha: clamp(a, 0, 1) });
   }
 }
-// rarity-coloured names over ground loot
+// rarity-coloured names over ground loot. De-overlapped: labels are placed best rarity first (then nearest to the hero),
+// each pushed up a line until it clears the ones already placed; at most DROP_LABELS show near the hero, and Common
+// labels fade 2 s after the drop. Hold Alt (or press L3 on a pad) to show every label.
+const DROP_LABELS = 6;
+const dropAll = { alt: false };
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('keydown', e => { if (e.code === 'AltLeft' || e.code === 'AltRight') { dropAll.alt = true; e.preventDefault(); } });
+  window.addEventListener('keyup', e => { if (e.code === 'AltLeft' || e.code === 'AltRight') dropAll.alt = false; });
+  window.addEventListener('blur', () => { dropAll.alt = false; });
+}
+function dropShowAll() {
+  if (dropAll.alt) return true;
+  try { const gp = navigator.getGamepads && navigator.getGamepads(); for (const g of gp || []) if (g && g.buttons[10] && g.buttons[10].pressed) return true; } catch (e) { /* no pad */ }
+  return false;
+}
 function drawDropNames(ctx) {
   const p = G.player; if (!G.drops || !p) return;
+  const all = dropShowAll(), cand = [];
   for (const d of G.drops) {
     if (d.t < 0.5) continue;
-    const i = RARITY[d.rar].i, dd = dist(p.x, p.y, d.x, d.y), range = i >= 2 ? 9 : 5;
+    const i = RARITY[d.rar].i, dd = dist(p.x, p.y, d.x, d.y), range = all ? 12 : i >= 2 ? 9 : 5;
     if (dd > range) continue;
-    const [vx, vy] = worldToView(d.x, d.y, d.z), h = DROP_FX[i].h * Math.min(1, (d.t - 0.3) * 2.5);
-    UI.text(ctx, d.name, vx * 2, (vy - Math.max(10, h) - 5) * 2, 'small', rarityCol(d.rar), 'center', { alpha: clamp(Math.min((d.t - 0.5) * 3, range - dd), 0, 1) });
+    let fade = 1;
+    if (!all && i === 0 && dd > 1.6) fade = clamp(2.5 - d.t, 0, 1);   // Common: gone 2.5 s after the drop (fully fading from 1.5 s)
+    if (fade <= 0) continue;
+    cand.push({ d, i, dd, range, fade });
+  }
+  const groups = new Map();   // duplicates merge into one label: "Knight Helm ×2" (anchored on the nearest copy)
+  for (const c of cand.sort((a, b) => a.dd - b.dd)) { const g = groups.get(c.d.name + '|' + c.d.rar); if (g) g.n++; else { c.n = 1; groups.set(c.d.name + '|' + c.d.rar, c); } }
+  cand.length = 0; for (const g of groups.values()) cand.push(g);
+  cand.sort((a, b) => b.i - a.i || a.dd - b.dd);
+  const lh = UI.lineH('small') + 6, placed = []; HUD.dropLabels = placed;
+  let shown = 0;
+  for (const c of cand) {
+    if (!all && shown >= DROP_LABELS) break;
+    const d = c.d, [vx, vy] = worldToView(d.x, d.y, d.z), h = DROP_FX[c.i].h * Math.min(1, (d.t - 0.3) * 2.5);
+    const label = c.n > 1 ? `${d.name} ×${c.n}` : d.name, w = UI.measure(label, 'small') + 8, x = vx * 2;
+    let y = (vy - Math.max(10, h) - 5) * 2;
+    for (let guard = 0; guard < 24; guard++) {
+      const hit = placed.find(r => Math.abs(r.x - x) < (r.w + w) / 2 + 4 && Math.abs(r.y - y) < lh);
+      if (!hit) break;
+      y = hit.y - lh;   // stack upward
+    }
+    placed.push({ x, y, w, name: label, rar: d.rar }); shown++;
+    const al = clamp(Math.min((d.t - 0.5) * 3, c.range - c.dd) * c.fade, 0, 1);
+    ctx.save(); ctx.globalAlpha = 0.75 * al; ctx.fillStyle = '#15102a'; ctx.fillRect(Math.round(x - w / 2), Math.round(y - 2), w, lh - 2); ctx.restore();
+    UI.text(ctx, label, x, y, 'small', rarityCol(d.rar), 'center', { alpha: al });
   }
 }
 // nameplates on the 480 grid: a 20x3 scene-pixel bar (40x6 here) 2 scene px above the sprite
 function drawNameplates(ctx) {
   for (const e of G.enemies) {
     if (e.dead || e.dummy || e.boss || e.spawnT > 0) continue;
-    const elite = enemyClass(e.type) === 'elite';
+    const elite = enemyClassOf(e) === 'elite';
     if (e.hp >= e.maxHp && !elite) { if (e.uid) UI.barReset('np' + e.uid); continue; }
     if (!e.uid) e.uid = ++HUD.uid;
     const [vx, vy] = worldToView(e.x, e.y, e.z);
@@ -202,6 +240,7 @@ function drawSkillBar(ctx, p, inert) {
   if (drawSkillSlot(ctx, p, 'pot', POTION_X, SLOT_Y)) hover = { slot: 'pot', x: POTION_X };
   // potion charge pips
   for (let k = 0; k < MAX_POTIONS; k++) UI.sprite(ctx, k < p.potions ? 'pipFull' : 'pipEmpty', POTION_X + 5 + k * 12, 530, { scale: 2 });
+  HUD.hoverSlot = hover && !inert && IN.device === 'kbm' ? hover.slot : null;   // render.js: faint range ring
   if (hover && !inert && (IN.device === 'kbm')) skillTooltip(ctx, p, hover);
 }
 function drawSkillSlot(ctx, p, slot, x, y) {
@@ -247,56 +286,75 @@ function skillTooltip(ctx, p, h) {
 }
 
 // ===== minimap: rounded diamond, fog of war, hero arrow, enemies as 4 px dots =========================================================
+// Big maps (DESIGN §25.2): the HUD shows a LOCAL window of MINI_WIN (24) tiles around the hero. m.mini.base is the whole map at
+// 1 px per tile step ((W + H) + 2 * pad square; tile (i, j) at (ox + i - j, oy + i + j), 2x1 px); m.mini.rev the explored mask
+// at the same scale; m.mini.vis the explored bitfield (saved: items.js world.fog, seeded here from G.prog.fog). The full-map
+// screen (screens.js drawFullMap) reuses base / rev. Gutter tiles draw dark; tapping / clicking the minimap opens the full map.
+const MINI_WIN = 24, MINI_PAD = 30, MINI_REVEAL = 9;
+const MINI_COL = { g: '#4a9a63', f: '#6db56a', p: '#cbc4e4', w: '#4a8fd0', b: '#a87a5c', s: '#9a92c0', x: '#4d4570', r: '#7a5ab0', d: '#2d5647', pillar: '#8a80b0' };
 function miniBuild(m) {
-  const mk = () => { const c = document.createElement('canvas'); c.width = c.height = 56; c.getContext('2d').imageSmoothingEnabled = false; return c; };
-  const base = mk(), x = base.getContext('2d'), s = 46 / (m.W + m.H), ox = 28 - (m.W - m.H) / 2 * s, oy = 5;
-  const rw = Math.max(2, Math.ceil(2 * s)), rh = Math.max(1, Math.ceil(s));
-  const col = (i, j) => {
-    const t = m.type[j][i]; if (!t) return null;
-    if (m.block[j][i] && t !== 'w' && t !== 'pillar') return '#b98a6a';
-    return { g: '#4a9a63', f: '#6db56a', p: '#cbc4e4', w: '#4a8fd0', b: '#a87a5c', s: '#9a92c0', x: '#4d4570', r: '#7a5ab0', d: '#2d5647', pillar: '#8a80b0' }[t] || '#888';
-  };
+  const s = 46 / (MINI_WIN * 2), N = m.W + m.H + MINI_PAD * 2;
+  const mk = (w = 56, h = 56) => { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').imageSmoothingEnabled = false; return c; };
+  const base = mk(N, N), x = base.getContext('2d'), ox = MINI_PAD + m.H, oy = MINI_PAD;
   for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) {
-    let c = col(i, j); if (!c) continue;
-    if (m.h[j][i] >= 4 && m.type[j][i] !== 'pillar') c = mixHex(c, '#ffffff', 0.2);
-    x.fillStyle = c; x.fillRect(Math.round(ox + (i - j) * s) - (rw >> 1), Math.round(oy + (i + j) * s), rw, rh);
+    const t = m.type[j][i], gt = m.gutter ? m.gutter[j * m.W + i] : 0;
+    let c = t ? (m.block[j][i] && t !== 'w' && t !== 'pillar' ? '#b98a6a' : MINI_COL[t] || '#888') : gt ? (gt === 1 ? '#1c142c' : '#0a0612') : null;
+    if (!c) continue;
+    if (t && m.h[j][i] >= 4 && t !== 'pillar') c = mixHex(c, '#ffffff', 0.2);
+    x.fillStyle = c; x.fillRect(ox + i - j - 1, oy + i + j, 2, 1);
   }
-  m.mini = { base, s, ox, oy, rw, rh, rev: mk(), tmp: mk(), shown: mk(), vis: new Uint8Array(m.W * m.H), dirty: true };
+  m.mini = { base, s, ox, oy, N, rev: mk(N, N), tmp: mk(), shown: mk(), vis: new Uint8Array(m.W * m.H), dirty: true, win: '', prog: G.prog };   // prog: the run it belongs to
+  const saved = typeof fogDecode === 'function' && G.prog && G.prog.fog ? fogDecode(G.prog.fog[m.id], m.W, m.H) : null;
+  if (saved) {   // repaint the explored mask from the save
+    const rx = m.mini.rev.getContext('2d'); rx.fillStyle = '#fff';
+    for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) if (saved[j * m.W + i]) { m.mini.vis[j * m.W + i] = 1; rx.fillRect(ox + i - j - 2, oy + i + j - 1, 4, 3); }
+  }
+  HUD.fogTile = '';
 }
+// mini-map pixel of a world point
+const miniAt = (mi, x, y) => [mi.ox + (x - y), mi.oy + (x + y)];
 function miniReveal(m, p) {
   const mi = m.mini, tx = Math.floor(p.x), ty = Math.floor(p.y), key = tx + ',' + ty + m.id;
   if (key === HUD.fogTile) return; HUD.fogTile = key;
   const rx = mi.rev.getContext('2d'); rx.fillStyle = '#fff';
-  const R = 9;
+  const R = MINI_REVEAL;
   for (let j = Math.max(0, ty - R); j <= Math.min(m.H - 1, ty + R); j++) for (let i = Math.max(0, tx - R); i <= Math.min(m.W - 1, tx + R); i++) {
     if (Math.hypot(i - p.x, j - p.y) > R || mi.vis[j * m.W + i]) continue;
     mi.vis[j * m.W + i] = 1; mi.dirty = true;
-    rx.fillRect(Math.round(mi.ox + (i - j) * mi.s) - (mi.rw >> 1) - 1, Math.round(mi.oy + (i + j) * mi.s) - 1, mi.rw + 2, mi.rh + 2);
+    rx.fillRect(mi.ox + i - j - 2, mi.oy + i + j - 1, 4, 3);
   }
 }
-function miniCompose(m) {
-  const mi = m.mini, t = mi.tmp.getContext('2d'), s = mi.shown.getContext('2d');
-  t.globalCompositeOperation = 'source-over'; t.clearRect(0, 0, 56, 56); t.drawImage(mi.base, 0, 0);
-  t.globalCompositeOperation = 'destination-in'; t.drawImage(mi.rev, 0, 0);
+// the 56x56 local window (2x on screen = 112 px), recomposed when the hero crosses a pixel or the fog grows
+function miniCompose(m, wx, wy) {
+  const mi = m.mini, t = mi.tmp.getContext('2d'), s = mi.shown.getContext('2d'), sx = wx - 28, sy = wy - 28;
+  t.globalCompositeOperation = 'source-over'; t.clearRect(0, 0, 56, 56); t.drawImage(mi.base, sx, sy, 56, 56, 0, 0, 56, 56);
+  t.globalCompositeOperation = 'destination-in'; t.drawImage(mi.rev, sx, sy, 56, 56, 0, 0, 56, 56);
   s.globalCompositeOperation = 'source-over'; s.clearRect(0, 0, 56, 56);
-  s.globalAlpha = 0.18; s.drawImage(mi.base, 0, 0); s.globalAlpha = 1; s.drawImage(mi.tmp, 0, 0);
+  s.globalAlpha = 0.18; s.drawImage(mi.base, sx, sy, 56, 56, 0, 0, 56, 56); s.globalAlpha = 1; s.drawImage(mi.tmp, 0, 0);
   s.globalCompositeOperation = 'destination-in'; UI.sprite(s, 'minimapMask', 0, 0, { scale: 1 });
   s.globalCompositeOperation = 'source-over'; mi.dirty = false;
 }
 function drawMinimap(ctx, p, X, Y) {
   const m = G.map; if (!uiReady()) return;
-  if (!m.mini) miniBuild(m);
-  const mi = m.mini; miniReveal(m, p); if (mi.dirty) miniCompose(m);
+  if (!m.mini || m.mini.prog !== G.prog) miniBuild(m);   // a new game / a loaded save starts its own fog
+  const mi = m.mini; miniReveal(m, p);
+  const [hx, hy] = miniAt(mi, p.x, p.y), wx = Math.round(hx), wy = Math.round(hy), win = wx + ',' + wy;
+  if (mi.dirty || mi.win !== win) { miniCompose(m, wx, wy); mi.win = win; }
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(mi.shown, X, Y, 112, 112);
   UI.sprite(ctx, 'minimap', X, Y, { scale: 2 });
-  const mp = (x, y) => [X + (mi.ox + (x - y) * mi.s) * 2, Y + (mi.oy + (x + y) * mi.s) * 2];
+  if (G.state === 'play' && !G.ui.map && !G.ui.open && !G.ui.pause && typeof openFullMap === 'function') UI.hit(X, Y, 112, 112, () => openFullMap(), { id: 'hud-minimap' });
+  const mp = (x, y) => { const [a, b] = miniAt(mi, x, y); return [X + (a - wx + 28) * 2, Y + (b - wy + 28) * 2]; };
   const inside = (px, py) => Math.abs(px - (X + 56)) + Math.abs(py - (Y + 56)) < 46;
   for (const e of G.enemies) {
     if (e.dummy || e.dead) continue;
     const [ex, ey] = mp(e.x, e.y), d = e.boss ? 6 : 4; if (!inside(ex, ey)) continue;
     ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(ex) - d / 2 - 2, UI.snap(ey) - d / 2 - 2, d + 4, d + 4);
     ctx.fillStyle = e.boss ? UC.danger : UC.hpHi; ctx.fillRect(UI.snap(ex) - d / 2, UI.snap(ey) - d / 2, d, d);
+  }
+  if (typeof shrinesOf === 'function') for (const o of shrinesOf(m)) if (shrineFound(m, o.shrineId)) {   // attuned shrines
+    const [qx, qy] = mp(o.x, o.y); if (!inside(qx, qy)) continue;
+    ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(qx) - 3, UI.snap(qy) - 3, 6, 6); ctx.fillStyle = '#9ef0ff'; ctx.fillRect(UI.snap(qx) - 1, UI.snap(qy) - 1, 2, 2);
   }
   for (const pt of m.portals) if (pt.open) {   // objective = a pulsing diamond
     const [qx, qy] = mp(pt.x, pt.y); if (!inside(qx, qy)) continue;
@@ -319,17 +377,45 @@ function questLines() {
   for (const d of QUESTS) { const st = q[d.id]; if (st && !(st === 'done' || st.done) && (d.zone === G.map.id || st.active)) out.push(d.title); }
   return out.slice(0, 2);
 }
+// word-wrap `s` into at most `maxLines` lines of width `w`; the last line is ellipsized when text remains
+function hudWrapLines(s, w, size, maxLines) {
+  const words = String(s).split(' '), out = []; let line = '', start = 0;
+  for (let i = 0; i < words.length; i++) {
+    const t = line ? line + ' ' + words[i] : words[i];
+    if (UI.measure(t, size) > w && line) {
+      if (out.length === maxLines - 1) return out.concat([fitText(words.slice(start).join(' '), w, size)]);
+      out.push(line); line = words[i]; start = i;
+    } else line = t;
+  }
+  if (line) out.push(fitText(line, w, size));
+  return out;
+}
+// a boss fight is up: the bar is drawn (bossBarUp), or the boss entry banner / spawn-in is still playing (bossIntro)
+const bossBarUp = () => { const b = G.boss; return !!(b && !b.dead && !(b.spawnT > 0.8)); };
+const bossIntro = () => { const b = G.boss, bn = G.banner; return !!((bn && bn.boss && bn.t > 0) || (b && !b.dead && b.spawnT > 0)); };
+function currentObjectiveText() { return (typeof currentObjective === 'function' ? currentObjective() : G.objective) || ''; }
 function drawTracker(ctx, x, y) {
-  const m = G.map, obj = G.objective || '', ql = questLines(), key = m.id + '|' + obj + '|' + ql.join();
+  const m = G.map, obj = currentObjectiveText(), ql = questLines(), key = m.id + '|' + obj + '|' + ql.join();
   if (HUD.trk.key !== key) { HUD.trk.key = key; HUD.trk.t0 = G.t; }
+  const bar = bossBarUp(), touch = G.touch;
   const age = G.t - HUD.trk.t0, a = age < 6 ? 1 : Math.max(0.45, 1 - (age - 6) * 2);
-  ctx.globalAlpha = a;
-  UI.text(ctx, m.name, x, y, 'body', UC.gold);
+  // boss bar up: desktop moves the tracker below it (bar ends at y 84); touch keeps the corner but shrinks to the column left of the bar
+  if (bar && !touch) y = Math.max(y, 96);
+  const colW = bar && touch ? 240 - x - 12 : 784 - x - 20;
+  ctx.globalAlpha = bar && touch ? Math.min(a, 0.7) : a;
+  UI.text(ctx, fitText(m.name, colW + 20, 'body'), x, y, 'body', UC.gold);
   let yy = y + 24;
-  if (obj) { UI.text(ctx, '◆', x, yy, 'body', UC.gold); UI.text(ctx, obj, x + 20, yy, 'body', UC.text); yy += 24; }
-  const wave = G.pendingSpawns > 0 || (G.arena && G.enemies.some(e => !e.dummy));
-  if (wave) { const n = G.enemies.filter(e => !e.dummy && !e.dead).length; UI.text(ctx, `Foes left ${n}`, x + 20, yy, 'small', UC.hpHi); yy += 18; }
-  for (const t of ql) { UI.text(ctx, t, x + 20, yy, 'small', UC.dim); yy += 18; }
+  if (obj) {
+    const L = hudWrapLines(obj, colW, 'body', bar && touch ? 2 : 2), lh = UI.lineH('body') + 4;
+    UI.text(ctx, '◆', x, yy, 'body', UC.gold);
+    for (const l of L) { UI.text(ctx, l, x + 20, yy, 'body', UC.text); yy += lh; }
+    yy += 24 - lh;
+  }
+  if (!(bar && touch)) {
+    const wave = G.pendingSpawns > 0 || (G.arena && G.enemies.some(e => !e.dummy));
+    if (wave && !bossIntro()) { const n = G.enemies.filter(e => !e.dummy && !e.dead).length; UI.text(ctx, `Foes left ${n}`, x + 20, yy, 'small', UC.hpHi); yy += 18; }
+    for (const t of ql) { UI.text(ctx, fitText(t, colW, 'small'), x + 20, yy, 'small', UC.dim); yy += 18; }
+  }
   ctx.globalAlpha = 1;
   return yy;
 }
@@ -366,10 +452,11 @@ function drawBanner(ctx, p) {
     return;
   }
   ctx.globalAlpha = a;   // zone / boss entry: a 960x64 letterbox strip at y=112
-  ctx.fillStyle = UC.edge; ctx.globalAlpha = a * 0.78; ctx.fillRect(0, 112, DW, 64); ctx.globalAlpha = a;
-  ctx.fillStyle = bn.boss ? UC.danger : UC.line; ctx.fillRect(0, 112, DW, 2); ctx.fillRect(0, 174, DW, 2);
-  UI.text(ctx, bn.s, 480, 118, 'heading', bn.boss ? UC.danger : UC.gold, 'center');
-  if (bn.sub) UI.text(ctx, bn.sub, 480, 152, 'body', UC.text, 'center');
+  const by = G.touch ? 164 : 112;   // touch: below the tracker and the three top-left buttons (they end at y 152)
+  ctx.fillStyle = UC.edge; ctx.globalAlpha = a * 0.78; ctx.fillRect(0, by, DW, 64); ctx.globalAlpha = a;
+  ctx.fillStyle = bn.boss ? UC.danger : UC.line; ctx.fillRect(0, by, DW, 2); ctx.fillRect(0, by + 62, DW, 2);
+  UI.text(ctx, bn.s, 480, by + 6, 'heading', bn.boss ? UC.danger : UC.gold, 'center');
+  if (bn.sub) UI.text(ctx, bn.sub, 480, by + 40, 'body', UC.text, 'center');
   ctx.globalAlpha = 1;
 }
 function drawSay(ctx) {
@@ -420,7 +507,10 @@ function hudHelpButton(ctx, x, y, inert) {
 }
 function drawPlayHud(ctx, p, inert) {
   const touch = G.touch;
+  const mirror = touch && leftHanded();   // the thumb cluster sits bottom-left, so the portrait + bars move to the other corner
+  if (mirror) { ctx.save(); ctx.translate(DW - 24 - 340, 0); }
   drawPortrait(ctx, p);
+  if (mirror) ctx.restore();
   drawStatusRow(ctx, p, touch ? DW - 24 : 100, touch ? 148 : 428, touch);
   if (!touch) drawSkillBar(ctx, p, inert);
   drawMinimap(ctx, p, touch ? DW - 24 - 112 : 832, touch ? 24 : 16);
@@ -446,10 +536,153 @@ function drawHUD(ctx) {
     drawTabScreen(ctx);
     return;
   }
-  const modal = u.help || u.pause || G.state === 'dead';
+  const modal = u.help || u.pause || u.map || G.state === 'dead';
+  if (TOUCH_AIM) updateTouchAim();   // drops a stale drag when a menu opens or the hero dies
   drawPlayHud(ctx, p, modal);
   if (G.touch && G.state === 'play' && !modal) drawTouchControls(ctx);
+  if (u.map && typeof drawFullMap === 'function') drawFullMap(ctx);   // full-map screen (screens.js)
   if (u.pause) drawPause(ctx);
   if (u.help) drawHelp(ctx);
   if (G.state === 'dead') drawDeath(ctx);
+}
+
+
+// ===== touch v2: circular wheel (docs/HUD.md "Touch v2"; layout + input in touch.js) ===========================================
+// ring arcs: UI.ring(ctx,x,y,r,frac,col[,w]) in ui.js
+const TB = { flash: {}, wasCd: {} };
+// one round button: 2 px dark outline + 2 px rim in `col` + #15102a at 80 %, icon, cooldown wipe, seconds
+function touchBtn(ctx, x, y, r, col, o = {}) {
+  ctx.save(); ctx.globalAlpha *= o.alpha == null ? 1 : o.alpha;
+  if (o.lift) { ctx.fillStyle = '#05030c'; ctx.globalAlpha *= 0.4; ctx.beginPath(); ctx.arc(x, y + 2, r, 0, 7); ctx.fill(); ctx.globalAlpha /= 0.4; y -= o.lift; }
+  ctx.fillStyle = '#15102a'; ctx.globalAlpha *= 0.8; ctx.beginPath(); ctx.arc(x, y, r - 2, 0, 7); ctx.fill(); ctx.globalAlpha /= 0.8;
+  ctx.lineWidth = 2; ctx.strokeStyle = '#0b0716'; ctx.beginPath(); ctx.arc(x, y, r - 1, 0, 7); ctx.stroke();
+  if (o.icon) hudIcon(ctx, o.icon, x - 16, y - 16, { gray: o.gray, size: o.iconSize || 32 });
+  if (o.cdFrac > 0) {   // clockwise radial wipe at 70 % dark
+    ctx.save(); ctx.beginPath(); ctx.arc(x, y, r - 4, 0, 7); ctx.clip();
+    ctx.fillStyle = '#0b0716'; ctx.globalAlpha *= 0.7; ctx.beginPath(); ctx.moveTo(x, y);
+    ctx.arc(x, y, r, -Math.PI / 2 + (1 - o.cdFrac) * Math.PI * 2, Math.PI * 1.5); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  if (o.held) { ctx.fillStyle = '#ffffff'; ctx.globalAlpha *= 0.2; ctx.beginPath(); ctx.arc(x, y, r - 4, 0, 7); ctx.fill(); ctx.globalAlpha /= 0.2; }
+  ctx.lineWidth = 2; ctx.strokeStyle = o.lift || o.held ? mixHex(col, '#ffffff', 0.55) : col; ctx.beginPath(); ctx.arc(x, y, r - 3, 0, 7); ctx.stroke();
+  if (o.flash > 0) { ctx.globalAlpha *= o.flash; ctx.strokeStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x, y, r + 1, 0, 7); ctx.stroke(); }
+  ctx.restore();
+  if (o.label) UI.text(ctx, o.label, x, y - 7, 'small', UC.text, 'center');
+}
+// a skill slot button; returns nothing. `b` from touchButtons()/touchInner(), `a` = alpha for the page swap
+function touchSkillBtn(ctx, p, b, held, aiming, a = 1) {
+  const st = skillSlotState(p, b.slot), ult = b.slot === 'r', now = touchNow();
+  const cd = st.id ? (ult ? 0 : st.cd) : 0;
+  if (TB.wasCd[b.slot] > 0 && cd === 0 && st.id) TB.flash[b.slot] = now;
+  TB.wasCd[b.slot] = cd;
+  const fl = Math.max(0, 1 - (now - (TB.flash[b.slot] || -9)) / 0.25);
+  const short = !!(st.mpShort || st.stShort), rim = !st.id ? UC.bevel : short ? UC.mp : ult ? UC.gold : elColor(st.element);
+  let icon = st.id ? skillIcon(st.id) : (b.slot === 'shift' ? miscIcon('dust') : null);
+  const lock = st.unavailable ? 0.5 : 1;
+  touchBtn(ctx, b.x, b.y, b.r, rim, { icon, gray: short, cdFrac: ult ? (st.charge < 1 ? 1 - st.charge : 0) : st.cdFrac, held, lift: aiming ? 4 : 0, flash: fl, alpha: a * lock });
+  if (st.id && a > 0.5) {
+    const y = b.y - (aiming ? 4 : 0);
+    if (ult && st.charge < 1) UI.text(ctx, Math.floor(st.charge * 100) + '', b.x, y - 7, 'small', UC.text, 'center');
+    else if (cd > 0) UI.text(ctx, cd >= 1 ? Math.ceil(cd) + '' : cd.toFixed(1), b.x, y - 7, 'small', UC.text, 'center');
+  }
+}
+function drawTouchToggle(ctx, p, b, u) {
+  const hidden = TOUCH.page ? TOUCH_PAGES[0] : TOUCH_PAGES[1];
+  const ready = hidden.some(sl => { const st = skillSlotState(p, sl); return st.id && st.ready && !st.mpShort && !st.stShort && !st.unavailable; });
+  touchBtn(ctx, b.x, b.y, b.r, UC.line, {});
+  ctx.save(); ctx.translate(b.x, b.y); ctx.rotate((TOUCH.page + u - 1) * Math.PI);   // "◐" turns half a turn per swap
+  ctx.fillStyle = UC.bright; ctx.beginPath(); ctx.arc(0, 0, b.r - 8, Math.PI / 2, Math.PI * 1.5); ctx.fill();
+  ctx.strokeStyle = UC.bright; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, b.r - 8, 0, 7); ctx.stroke(); ctx.restore();
+  if (ready) {   // a skill on the other page is ready
+    const k = 4 + Math.sin(touchNow() * 8) * 0.8, dx = b.x + b.r * 0.72, dy = b.y - b.r * 0.72;
+    ctx.fillStyle = '#0b0716'; ctx.beginPath(); ctx.arc(dx, dy, k + 2, 0, 7); ctx.fill();
+    ctx.fillStyle = UC.gold; ctx.beginPath(); ctx.arc(dx, dy, k, 0, 7); ctx.fill();
+  }
+}
+function drawTouchControls(ctx) {
+  const p = G.player, now = touchNow();
+  updateTouchAim();
+  // floating joystick: frames on the 2x grid, no thin lines
+  for (const t of Object.values(TOUCH.ptrs)) if (t.kind === 'stick') {
+    UI.frame(ctx, UI.snap(t.sx) - 56, UI.snap(t.sy) - 56, 112, 112, 'plain', { alpha: 0.4 });
+    const l = Math.hypot(t.x - t.sx, t.y - t.sy), k = l > 56 ? 56 / l : 1;
+    UI.frame(ctx, UI.snap(t.sx + (t.x - t.sx) * k) - 24, UI.snap(t.sy + (t.y - t.sy) * k) - 24, 48, 48, 'slot', { alpha: 0.85 });
+  }
+  drawTouchAimTemp(ctx, p);
+  const heldSlots = new Set(), aimSlot = TOUCH_AIM && TOUCH_AIM.slot;
+  for (const t of Object.values(TOUCH.ptrs)) if (t.kind === 'btn') heldSlots.add(t.b.slot);
+  const u = clamp((now - TOUCH.pageAt) / 0.12, 0, 1), anim = u < 1 && !touchShowAll9();
+  let toggle = null;
+  for (const b of touchButtons()) {
+    const held = heldSlots.has(b.slot), aiming = aimSlot === b.slot;
+    if (b.slot === 'toggle') { toggle = b; continue; }
+    if (b.slot === 'pot') {
+      const st = skillSlotState(p, 'pot'), n = p.potions || 0;
+      touchBtn(ctx, b.x, b.y, b.r, UC.hp, { icon: miscIcon('potion'), gray: !n, cdFrac: st.cd > 0 ? st.cd / 1 : 0, held });
+      for (let i = 0; i < MAX_POTIONS; i++) {   // one pip per potion on the rim
+        const a = (270 + (i - (MAX_POTIONS - 1) / 2) * 24) * TDEG, px = b.x + Math.cos(a) * (b.r - 3), py = b.y + Math.sin(a) * (b.r - 3);
+        ctx.fillStyle = '#0b0716'; ctx.beginPath(); ctx.arc(px, py, 4, 0, 7); ctx.fill();
+        ctx.fillStyle = i < n ? UC.hpHi : UC.bevel; ctx.beginPath(); ctx.arc(px, py, 2.5, 0, 7); ctx.fill();
+      }
+      continue;
+    }
+    if (b.slot === 'interact') { touchBtn(ctx, b.x, b.y, b.r, UC.gold, { held, label: G.prompt ? G.prompt.text.split(' ')[0].toUpperCase() : 'USE' }); continue; }
+    if (b.slot === 'atk') {
+      touchBtn(ctx, b.x, b.y, b.r, UC.line, { held, icon: itemIcon(p.equip.weapon), iconSize: 48 });
+      const ch = ultCharge(p);
+      UI.ring(ctx, b.x, b.y, b.r - 2, 1, UC.edge, 3);   // the rim doubles as the ultimate charge ring
+      UI.ring(ctx, b.x, b.y, b.r - 2, ch, UC.gold, 3);
+      if (ch >= 1) { ctx.save(); ctx.globalAlpha = 0.35 + 0.35 * Math.sin(now * 8); UI.ring(ctx, b.x, b.y, b.r + 1, 1, UC.gold, 3); ctx.restore(); }
+      continue;
+    }
+    if (anim && TOUCH_INNER[b.slot] != null) continue;   // drawn rotating below
+    touchSkillBtn(ctx, p, b, held, aiming);
+  }
+  if (anim) {   // 120 ms swap: the old page swings out one way, the new one in from the other
+    const ease = easeOut(u), dir = leftHanded() ? -1 : 1;
+    TOUCH_PAGES[TOUCH.page ^ 1].forEach(id => { const b = touchInner(id, dir * ease * 35); touchSkillBtn(ctx, p, b, false, false, 1 - ease); });
+    TOUCH_PAGES[TOUCH.page].forEach(id => { const b = touchInner(id, -dir * (1 - ease) * 35); touchSkillBtn(ctx, p, b, heldSlots.has(id), aimSlot === id, ease); });
+  }
+  if (toggle) drawTouchToggle(ctx, p, toggle, u);
+  // two-hander charge ring inside the rim of the held skill button: white -> gold over 1 s (hook: p.holdCharge)
+  const cf = touchChargeFrac(p), hb = activeAimPtr();
+  if (cf > 0 && hb) UI.ring(ctx, hb.b.x, hb.b.y - (TOUCH_AIM ? 4 : 0), hb.b.r - 7, cf, mixHex('#ffffff', UC.gold, cf), 3);
+  drawTouchCancel(ctx);
+  // bag / help / fullscreen
+  for (const m of touchMenu()) {
+    UI.frame(ctx, m.x, m.y, 40, 40, 'plain');
+    if (m.id === 'gear') ctx.drawImage(miscIcon('chest'), m.x + 4, m.y + 4, 32, 32);
+    else if (m.id === 'help') UI.sprite(ctx, 'help', m.x + 8, m.y + 8, { scale: 2 });
+    else { ctx.fillStyle = UC.text; for (const [cx, cy, dx, dy] of [[10, 10, 1, 1], [30, 10, -1, 1], [10, 30, 1, -1], [30, 30, -1, -1]]) { ctx.fillRect(m.x + cx - (dx < 0 ? 6 : 0), m.y + cy - (dy < 0 ? 2 : 0), 6, 2); ctx.fillRect(m.x + cx - (dx < 0 ? 2 : 0), m.y + cy - (dy < 0 ? 6 : 0), 2, 6); } }
+  }
+}
+// the Ø64 cancel zone at (480,500): fades in after a 40 px drag, lights up under the finger
+function drawTouchCancel(ctx) {
+  const a = TOUCH_AIM; if (!a) return;
+  const k = clamp((a.d - 40) / 24, 0, 1); if (k <= 0) return;
+  const on = a.cancel, x = 480, y = 500;
+  ctx.save(); ctx.globalAlpha = k;
+  ctx.fillStyle = on ? '#6a1c34' : '#15102a'; ctx.globalAlpha = k * 0.85; ctx.beginPath(); ctx.arc(x, y, 32, 0, 7); ctx.fill(); ctx.globalAlpha = k;
+  ctx.strokeStyle = on ? UC.hpHi : UC.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 31, 0, 7); ctx.stroke();
+  ctx.strokeStyle = on ? '#ffffff' : UC.text; ctx.lineWidth = 4; ctx.lineCap = 'square'; ctx.beginPath();
+  ctx.moveTo(x - 10, y - 10); ctx.lineTo(x + 10, y + 10); ctx.moveTo(x + 10, y - 10); ctx.lineTo(x - 10, y + 10); ctx.stroke();
+  ctx.restore();
+}
+// TEMPORARY ground indicator in HUD space until render.js gets drawAimIndicator(aim, from, to): a dashed range circle around
+// the hero (an iso ellipse) and a target dot. Skipped as soon as the real one exists.
+function drawTouchAimTemp(ctx, p) {
+  const a = TOUCH_AIM;
+  if (!a || typeof drawAimIndicator !== 'undefined' || (typeof SETTINGS !== 'undefined' && SETTINGS.groundIndicators === 'off')) return;
+  const sk = SKILLS[a.skill], col = (sk && sk.color) || '#ffffff', range = a.aim.range || 6, wv = (x, y) => { const v = worldToView(x, y, p.z); return [v[0] * 2, v[1] * 2]; };
+  const poly = (cx, cy, R, n = 40) => { ctx.beginPath(); for (let i = 0; i <= n; i++) { const t = i / n * Math.PI * 2, v = wv(cx + Math.cos(t) * R, cy + Math.sin(t) * R); i ? ctx.lineTo(v[0], v[1]) : ctx.moveTo(v[0], v[1]); } };
+  ctx.save(); ctx.globalAlpha = a.cancel ? 0.3 : 1; ctx.lineWidth = 2;
+  if (a.aim.shape !== 'self') {
+    ctx.strokeStyle = col; ctx.globalAlpha *= 0.55; ctx.setLineDash([8, 6]); ctx.lineDashOffset = -Math.floor(touchNow() * 10) * 2; poly(a.from.x, a.from.y, range); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha /= 0.55;
+    const f = wv(a.from.x, a.from.y), t = wv(a.to.x, a.to.y);
+    ctx.globalAlpha *= 0.5; ctx.beginPath(); ctx.moveTo(f[0], f[1]); ctx.lineTo(t[0], t[1]); ctx.stroke(); ctx.globalAlpha /= 0.5;
+    if (a.aim.shape === 'circle' && a.aim.r) { ctx.strokeStyle = col; poly(a.to.x, a.to.y, a.aim.r, 24); ctx.stroke(); }
+    ctx.fillStyle = a.clamped ? '#ffffff' : col; ctx.strokeStyle = '#0b0716';
+    ctx.beginPath(); ctx.arc(t[0], t[1], 6, 0, 7); ctx.fill(); ctx.stroke();
+  } else { ctx.strokeStyle = col; const f = wv(a.from.x, a.from.y); poly(a.from.x, a.from.y, a.aim.r || 2); ctx.stroke(); }
+  ctx.restore();
 }
