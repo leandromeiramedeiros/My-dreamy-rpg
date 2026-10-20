@@ -1,23 +1,27 @@
 // Enemy, boss and encounter data (DESIGN §21, STORY.md "Bosses").
 // Plain data. Loaded as a classic script; everything is a global `var`.
 //
+// HP values are first drafts; tools/balsim.js owns final tuning.
+//
 // Conventions
 // * res: positive = resists (takes less), negative = weak (takes more), 1 = immune. Same sign as data.js.
-// * hp: base value at L1. Enemies scale by level elsewhere (enemyHpMul ~1.08 per level, §20.3).
-//   Common enemies: hp = TTK * refDPS(mid) / 1.08^(midL - 1), TTK = 3 s unless noted.
-//   Pinewood mid = L6.5 (refDPS 165, 1.08^5.5 = 1.527)  -> hp = TTK * 108
-//   Vale mid = L2 (refDPS 60, 1.08^1 = 1.08)            -> hp = TTK * 55.6
+// * hp is the L1 BASE. The engine scales it by level with enemyHpMul(L) = 0.6 * 1.1^(L-1) (js/items.js),
+//   so the value at level L is hp * enemyHpMul(L). Never pre-scale hp to a zone level.
+//   Common enemies: hp = TTK * refDPS(midL) / enemyHpMul(midL), TTK = 3 s unless noted.
+//   Pinewood mid = L6.5: enemyHpMul = 1.014, refDPS 165 -> base = TTK * 162.8
+//   Vale mid = L2:       enemyHpMul = 0.66,  refDPS 60  -> base = TTK * 90.9
 // * Healer: heals 25 % of the target's max HP, 4 s telegraph (§21.2 says <= 30 %; the spec here says 25 %).
 // * Movement parts (one per enemy): chase, hop, kite, charge, burrow, sleep, stationary, orbit.
-//   A pack never holds two enemies with the same movement part (§21.4). Gloom Slime's `hop` is kept from the
-//   spec example and is not a listed movement part; the slime's movement is `chase`.
+//   A pack never holds two enemies with the same movement part (§21.4), except in Pinewood, which is exempt
+//   (director ruling: Pinewood is the first zone, so repeated compositions are fine there).
+//   Gloom Slime's `hop` is kept from the spec example and is not a listed movement part; its movement is `chase`.
 // * xp: a swarm is one enemy for XP (the whole Dream Moth swarm gives one entry's xp). Split children give 0.
 
 var ENEMY_DATA = {
 
   // ---- Vale (L1-3, mid L2) ----------------------------------------------------------------
   dreammoth: {
-    name: 'Dream Moth', sprite: 'moth', hp: 167, speed: 36, dmg: 5, el: 'arcane', dmgType: 'arcane', stagger: 1,
+    name: 'Dream Moth', sprite: 'moth', hp: 273, speed: 36, dmg: 5, el: 'arcane', dmgType: 'arcane', stagger: 1,
     res: { slash: 0, pierce: 0, fire: 0, frost: 0, nature: 0, lightning: 0, arcane: 0.5, holy: -0.5 },
     tags: ['flying', 'swarm'],
     parts: ['orbit', 'swarm'],
@@ -27,16 +31,16 @@ var ENEMY_DATA = {
 
   // ---- Pinewood (L3-10, mid L6.5, ref DPS 165) -----------------------------------------------
   gloomslime: {
-    name: 'Gloom Slime', sprite: 'slime', hp: 325, speed: 30, dmg: 8, el: 'gloom', dmgType: 'gloom', stagger: 2,
+    name: 'Gloom Slime', sprite: 'slime', hp: 488, speed: 30, dmg: 8, el: 'gloom', dmgType: 'gloom', stagger: 2,
     res: { slash: -0.5, pierce: 0.5 },
     tags: ['amorphous'],
     parts: ['chase', 'hop', 'split'],
     params: { split: { n: 2, type: 'gloomslime_small' } },
     xp: 6, loot: 'common_pinewood'
   },
-  // Child spawned by Gloom Slime's split: 1 s to kill at Pinewood mid (108 hp), no XP of its own.
+  // Child spawned by Gloom Slime split: 1 s to kill at Pinewood mid (163 base hp), no XP of its own.
   gloomslime_small: {
-    name: 'Gloom Slime (small)', sprite: 'slime', hp: 108, speed: 36, dmg: 5, el: 'gloom', dmgType: 'gloom', stagger: 1,
+    name: 'Gloom Slime (small)', sprite: 'slime', hp: 163, speed: 36, dmg: 5, el: 'gloom', dmgType: 'gloom', stagger: 1,
     res: { slash: -0.5, pierce: 0.5 },
     tags: ['amorphous', 'child'],
     parts: ['chase'],
@@ -44,7 +48,7 @@ var ENEMY_DATA = {
     xp: 0, loot: null
   },
   shadehound: {
-    name: 'Shade Hound', sprite: 'hound', hp: 270, speed: 52, dmg: 12, el: 'gloom', dmgType: 'slash', stagger: 1,
+    name: 'Shade Hound', sprite: 'hound', hp: 407, speed: 52, dmg: 12, el: 'gloom', dmgType: 'slash', stagger: 1,
     res: { arcane: 0.5, holy: -0.5 },
     tags: ['beast'],
     parts: ['charge'],
@@ -52,7 +56,7 @@ var ENEMY_DATA = {
     xp: 6, loot: 'common_pinewood'
   },
   brambleshaman: {
-    name: 'Bramble Shaman', sprite: 'shaman', hp: 270, speed: 22, dmg: 6, el: 'nature', dmgType: 'nature', stagger: 1,
+    name: 'Bramble Shaman', sprite: 'shaman', hp: 407, speed: 22, dmg: 6, el: 'nature', dmgType: 'nature', stagger: 1,
     res: { nature: 0.5, fire: -0.5 },
     tags: ['caster', 'support'],
     parts: ['kite', 'zone-caster', 'healer'],
@@ -63,7 +67,7 @@ var ENEMY_DATA = {
     xp: 9, loot: 'common_pinewood'
   },
   ogre: {
-    name: 'Ogre', sprite: 'ogre', hp: 379, speed: 18, dmg: 16, el: 'none', dmgType: 'slash', stagger: 3,
+    name: 'Ogre', sprite: 'ogre', hp: 570, speed: 18, dmg: 16, el: 'none', dmgType: 'slash', stagger: 3,
     res: { slash: 0.5, pierce: 0, fire: 0, holy: -0.5 },
     tags: ['brute'],
     parts: ['stationary', 'brute'],
@@ -71,7 +75,7 @@ var ENEMY_DATA = {
     xp: 10, loot: 'common_pinewood'
   },
   thornbackboar: {
-    name: 'Thornback Boar', sprite: 'boar', hp: 325, speed: 40, dmg: 14, el: 'nature', dmgType: 'pierce', stagger: 3,
+    name: 'Thornback Boar', sprite: 'boar', hp: 488, speed: 40, dmg: 14, el: 'nature', dmgType: 'pierce', stagger: 3,
     res: { slash: 0.5, pierce: 0, nature: 0.5, fire: -0.5 },
     tags: ['beast', 'armoured'],
     parts: ['burrow', 'brute'],
@@ -80,7 +84,7 @@ var ENEMY_DATA = {
   },
   // Sleeper: appears in Root Hollow only (§21.1, §21.4: sleepers appear once per map, after a shrine).
   mountaintroll: {
-    name: 'Mountain Troll', sprite: 'troll', hp: 379, speed: 14, dmg: 22, el: 'none', dmgType: 'slash', stagger: 4,
+    name: 'Mountain Troll', sprite: 'troll', hp: 570, speed: 14, dmg: 22, el: 'none', dmgType: 'slash', stagger: 4,
     res: { slash: 0.5, pierce: 0.5, frost: -0.5 },
     tags: ['brute', 'sleeper'],
     parts: ['sleep', 'brute'],
@@ -122,30 +126,30 @@ var ENCOUNTERS = {
 // Mini-bosses: 60-90 s, 3 moves, +1 move at 50 %.
 // Guardians: 150-240 s, 2 phases.
 //
-// HP formula (DESIGN §20.3): hp = lengthSec * refDPS(L) * uptime, then base at L1 = hp / 1.08^(L-1).
+// HP formula (DESIGN §20.3): hp = lengthSec * refDPS(L) * uptime, then L1 base = that / enemyHpMul(L).
 //   refDPS(L) = Pinewood curve, 110 + (L-3)/7 * 110 for L in 3..10 (L5 = 141, L8 = 189).
-//   Mossjaw   (L5, length 75 s mid of 60-90, uptime 0.7): 75 * 141.4 * 0.7 = 7419; 7419 / 1.08^4 = 5453 -> 5450
-//   Bramblehorn (L8, length 195 s mid of 150-240, uptime 0.6): 195 * 188.6 * 0.6 = 22052; / 1.08^7 = 12866 -> 12870
+//   Mossjaw (L5, length 75 s mid of 60-90, uptime 0.7): 75 * 141.4 * 0.7 = 7419; / enemyHpMul(5)=0.878 -> 8450
+//   Bramblehorn (L8, length 195 s mid of 150-240, uptime 0.6): 195 * 188.6 * 0.6 = 22052; / enemyHpMul(8)=1.169 -> 18860
 var BOSS_DATA = {
   mossjaw: {
     name: 'Mossjaw', sprite: 'mossjaw', kind: 'mini', level: 5, zone: 'rootHollow',
-    type: 'beast', el: 'nature', hp: 5450, lengthSec: [60, 90], staggerMax: 4,
+    type: 'beast', el: 'nature', hp: 8450, lengthSec: [60, 90], staggerMax: 4,
     res: { nature: 0.5, fire: -0.5 },        // weak fire, resists nature (STORY.md)
     moveDefs: {
       lunge:   { type: 'line', len: 6, wind: 0.6, open: 1.2, stagger: 1 },
       rootSpit:{ type: 'rain', count: 3, r: 1.2, at: 'player', wind: 0.8, open: 1.0 },
       burrow:  { type: 'vanish', dur: 1.5, then: { type: 'circle', r: 2, at: 'self' }, wind: 0.8, open: 1.2 },
-      charge:  { type: 'charge', len: 5, speed: 9, hitOnce: true, wind: 0.8, open: 1.0 }  // 4th move: STORY says "adds a move", not which; placeholder
+      howl:    { type: 'summon', kind: 'shadehound', n: 2, wind: 0.8, open: 1.0 }  // phase-2 move (director ruling): teaches target priority
     },
     phases: [
       { hpBelow: 1.0, moves: { lunge: 3, rootSpit: 2, burrow: 2 }, onEnter: [] },
-      { hpBelow: 0.5, moves: { lunge: 3, rootSpit: 2, burrow: 2, charge: 2 }, onEnter: [{ type: 'roar', banner: 'Mossjaw rears up', dur: 1.2 }] }
+      { hpBelow: 0.5, moves: { lunge: 3, rootSpit: 2, burrow: 2, howl: 2 }, onEnter: [{ type: 'roar', banner: 'Mossjaw rears up', dur: 1.2 }] }
     ],
     xp: 0.5, loot: 'mossjaw_skill_rune_guaranteed'
   },
   bramblehorn: {
     name: 'Old Bramblehorn', sprite: 'bramblehorn', kind: 'guardian', level: 8, zone: 'pinewood',
-    type: 'beast', el: 'nature', hp: 12870, lengthSec: [150, 240], staggerMax: 5,
+    type: 'beast', el: 'nature', hp: 18860, lengthSec: [150, 240], staggerMax: 5,
     res: { nature: 0.5, fire: -0.5 },        // STORY.md gives no weak/resist for Bramblehorn; assumed to match the beast-nature type
     moveDefs: {
       stomp:     { type: 'circle', r: 3, at: 'self', wind: 0.9, open: 1.5, stagger: 1 },
