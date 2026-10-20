@@ -159,3 +159,12 @@ Secrets (5):
 * lever bridge to the islet → a tablet + a Skill Rune
 * hollow crack → a Socket Rune
 * cross-section: the hollow ceiling under r2 drops a chest key
+
+## Backlog after big maps
+* Perf: phone under 4× CPU throttle = 53–66 ms p95 (budget 20). Needs a real-device check and an Opus perf pass in M3
+  (updateLoot loops all objects; column draw cost).
+* Keys with no source yet: `key_act4` (Moon Pond), `key_spire` (Pip's Lanterns) — add a quest-state trigger condition.
+* Warrens noise mechanic + an ENCOUNTERS sleeper pack (sleepers are proximity-only today).
+* Pad: D-pad down both opens the map and moves down in menus; shrine resting should open the warp picker.
+* Spawns scheduled via delay() don't inherit trigger tags.
+* tools/engine-tour.js (Opus) vs tools/maps/engine-check.js (level designer) — two tools, keep both.
