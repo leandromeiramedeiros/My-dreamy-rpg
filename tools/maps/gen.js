@@ -462,7 +462,7 @@ class MapGen {
   _coast() {
     const W = this.W, H = this.H, srcs = [];
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      if (this.cor[y][x] && this.paths[this.cor[y][x].p].kind !== 'bridge') srcs.push({ i: x, j: y, d0: 0 });
+      if (this.cor[y][x] && this.paths[this.cor[y][x].p].kind !== 'bridge' && !this.paths[this.cor[y][x].p].stack) srcs.push({ i: x, j: y, d0: 0 });   // §29 G3: a switchback grows no coast
     }
     for (const rm of this.rooms) {
       if (rm.isolated) continue;
