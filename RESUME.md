@@ -3,7 +3,7 @@
 > Paused 2026-10-20 at the client's request. Development resumes Friday.
 
 ## 1. How to resume (client)
-Open a new Claude Code session on this repo (branch `claude/m3-items`; M3 is NOT merged yet) and say:
+Open a new Claude Code session on this repo (the default branch `claude/dreamy-rpg-concept`; M3 is merged there) and say:
 
 > **"Resume from RESUME.md. You are the game director."**
 
@@ -51,20 +51,27 @@ Two checks are known to flake: the play.js warp-fade check, and the perf check w
 - Build: plain JS, no build step; open `index.html`. Pages deploys from the default branch.
 
 ## 5. State at pause (2026-10-20), and what happens on Friday
-**Shipped on `claude/m3-items` (PR #4, draft, not merged):**
+**Shipped: M3 is merged into the default branch (PR #4) and live on Pages:**
 - all of M3: items, hit feel, boss phases, Echo, the opening, elite pockets, phone perf, world art G1–G3 (G3: Hawk's Rest, the Dreamer's Cairn, ladders, drop-downs, vantage reveal, occlusion cutaway);
 - the pixel-FX prototype (`js/elfx.js`, `tools/fx-board.js`), approved by the client and not yet wired into the game.
 
 **The one open M3 item is a QA blocker.**
 - In the full bot run (`node tools/qa/run-big.js kbm all`), Act I was clean up to Mossjaw (level 10, 0 deaths).
 - After that, the Hollow root-stair landed the hero on the new Hawk's Rest summit and the run stalled. The objective stayed on "Climb the root-stair to the Clearing", and the shrine 3, Bramblehorn and return goals timed out.
-- An Opus lane (world art G3) was fixing it at the pause. It touched world.js, the pinewood recipe, zone.js and tools/qa/*. Its handoff note is `docs/meetings/2026-10-20-g3-qa-handoff.md`; if that file is missing, start from the bot log by re-running the bot.
+- Partial fix shipped with M3. Root cause: the bot's pathing didn't know about one-way drop-downs, and it walked to the old shrine 3 spot. In-game, the objective text after the root-stair was stale.
+- Changes:
+  - `tools/qa/lib.js`: the bot paths through drop landings.
+  - `run-big.js`: reads the shrine 3 position from objectives.
+  - Pinewood recipe and zone.js: a new summit objective, "Drop from Hawk's Rest onto the Clearing road", and the giant pine moved off the path.
+- smoke, play.js and act1-route pass on the shipped build.
+- **Not yet re-verified with the full bot.** A re-run stalled earlier, at Pinewood r2 ("Find the root door of the Hollow", after a shrine warp). Investigate that first.
 
 **Friday order (do these in sequence):**
-1. **Finish the M3 blocker.** Deploy an Opus lane with the handoff note. Acceptance:
+1. **M3 hot-fix lane (Opus), on a new branch from the default branch.** Acceptance:
    - `run-big.js kbm all` reaches the end of Act I with no blockers;
    - smoke, play.js and act1-route pass.
-2. **Ship M3.** Mark PR #4 ready, merge it into `claude/dreamy-rpg-concept` (the default branch, "main"), and check that Pages deploys.
+   Then merge the fix.
+2. (M3 is already shipped.)
 3. **Three Fable expert meetings, in parallel** (minutes go to `docs/meetings/`):
    - **a. Environmental and gameplay systems designer: wind as a force.** Ambient wind pushes and pulls trees and small objects, and wind spells (Gale, §33) push and pull them harder. Build on the canopy gust sway, `tilePatch` and the §33 Wind/Drift rules.
    - **b. Lighting director: a cohesive lighting pass.** Cover:
