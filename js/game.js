@@ -1,6 +1,9 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// Game state, player, combat helpers, enemies, boss, waves, audio.
+// Game state, player, combat helpers, the enemy runtime shell, triggers, audio.
+// Enemies are data: the table ENEMY, behaviour parts and elite mods live in js/parts.js, bosses and BOSS_MOVES in
+// js/bosses.js (both load before this file). This file owns spawnEnemy / damageEnemy / killEnemy / updateEnemies and
+// the trigger actions (header of the triggers section lists them).
 // ---------------------------------------------------------------------------
 const G = {
   t: 0, map: null, maps: {}, player: null,
@@ -376,7 +379,7 @@ function chainLightning(p, tx, ty) {
 function nearestEnemy(x, y, maxd, exclude) {
   let best = null, bd = maxd;
   for (const e of G.enemies) {
-    if (e.dead || e.spawnT > 0 || (exclude && exclude.has(e))) continue;
+    if (e.dead || e.spawnT > 0 || e.under || (exclude && exclude.has(e))) continue;
     const d = dist(x, y, e.x, e.y); if (d < bd) { bd = d; best = e; }
   }
   return best;
@@ -407,7 +410,7 @@ function updatePlayer(p, dt) {
   const m = G.map;
   for (const k in p.cds) if (p.cds[k] > 0) p.cds[k] -= dt;
   for (const k in p.buffs) { p.buffs[k].t -= dt; if (p.buffs[k].t <= 0) delete p.buffs[k]; }
-  p.atkT -= dt; p.invulnT -= dt; p.hurtT -= dt; p.castT -= dt; p.rootT -= dt; p.slowT -= dt; p.spin -= dt;
+  p.atkT -= dt; p.invulnT -= dt; p.hurtT -= dt; p.castT -= dt; p.rootT -= dt; p.slowT -= dt; p.spin -= dt; if (p.dreadT > 0) p.dreadT -= dt;
   if (p.dead) return;
   p.hp = Math.min(p.maxHp, p.hp + p.regen * dt + (p.buffs.mend ? p.maxHp * 0.25 / 4 * dt * healMul(p) : 0));
   p.mp = Math.min(p.maxMp, p.mp + p.mpRegen * dt);
@@ -503,7 +506,7 @@ function viewDirToWorld(sx, sy) { const [wx, wy] = toWorld(sx, sy), l = Math.hyp
 function autoTarget(p, range, dir, cone) {
   let best = null, bs = 1e9;
   for (const e of G.enemies) {
-    if (e.dead || e.spawnT > 0) continue;
+    if (e.dead || e.spawnT > 0 || e.under) continue;
     const d = dist(p.x, p.y, e.x, e.y); if (d > range) continue;
     let s = d / range;
     if (dir) { const da = Math.abs(angDiff(Math.atan2(dir[1], dir[0]), Math.atan2(e.y - p.y, e.x - p.x))); if (da > cone + Math.atan2(e.r, Math.max(d, 0.1))) continue; s += da / Math.max(cone, 0.01); }
@@ -553,7 +556,7 @@ function playerActions(p, dt) {
 // el = damage type of the hit (§5b); the hero's resist applies on top of defence (arcane ignores half of it)
 function hurtPlayer(dmg, srcX, srcY, el = 'slash') {
   const p = G.player;
-  if (p.dead || p.invulnT > 0 || (p.dash && p.dash.opt.invuln) || G.state !== 'play') return;
+  if (p.dead || p.invulnT > 0 || (p.dash && p.dash.opt.invuln) || G.state !== 'play') return false;
   const r = (p.res && p.res[el]) || 0;
   let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1) * (typeof damageTakenMul === 'function' ? damageTakenMul() : 1);
   p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2;
@@ -564,11 +567,12 @@ function hurtPlayer(dmg, srcX, srcY, el = 'slash') {
     p.hp = 0; p.dead = true; G.state = 'dead'; G.deadT = 0; sfx('die'); G.stats.deaths++;
     burst(p.x, p.y, p.z + 1, 40, ['#ffb0e0', '#c7a8ff', '#ffffff'], 3);
   }
+  return true;
 }
 
 // ===== hit tests ===================================================================
 function damageEnemy(e, base, o = {}) {
-  if (e.dead || e.spawnT > 0) return false;
+  if (e.dead || e.spawnT > 0 || e.under) return false;
   const p = G.player, c = o.cast !== undefined ? o.cast : CAST;
   // damage type: explicit > the skill's element > the weapon's (sword slash, staff arcane, bow pierce); burn ticks are fire
   const el = o.el || (o.dot ? 'fire' : c ? c.el : item('weapon', p.gear.weapon).element) || 'slash';
@@ -576,14 +580,17 @@ function damageEnemy(e, base, o = {}) {
   // one additive sum: gear damage % (+ skill damage % and the element's gem amplification for skill hits)
   // skill rank (+6 %/rank above 1) joins the same additive sum; modifier ctx.dmg multiplies (numbers only)
   const cx = c && c.ctx;
-  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (sk ? p.skillDmg + elementAmp(p, el) + skillRankBonus(p, sk) : 0)) * buffMul(p) * (cx ? cx.dmg : 1);
+  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (sk ? p.skillDmg + elementAmp(p, el) + skillRankBonus(p, sk) : 0)) * buffMul(p) * (cx ? cx.dmg : 1) * (p.dreadT > 0 ? 0.85 : 1);
   const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
   dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
   const st = o.stagger != null ? o.stagger : cx ? cx.stagger || 0 : sk && SKILLS[sk] ? SKILLS[sk].stagger || 0 : 0;
   if (st) {   // the boss stagger bar (hud.js): fills with heavy hits, BREAK flash when full, then empties
-    e.stagger = (e.stagger || 0) + st;
-    if (e.boss && e.stagger >= STAGGER_CAP) { e.stagger = 0; e.breakT = G.t; }
+    // per-boss staggerMax (bosses.js) rescales the points so the bar's 0..STAGGER_CAP fraction stays right
+    e.stagger = (e.stagger || 0) + st * (e.staggerCap ? STAGGER_CAP / e.staggerCap : 1);
+    if (e.boss && e.stagger >= STAGGER_CAP) { e.stagger = 0; e.breakT = G.t; if (typeof bossBreak === 'function') bossBreak(e); }
+    else if (!e.boss) partsStagger(e, st);
   }
+  if (e.parts && e.parts.length || e.mods) dmg = partsHurt(e, dmg, o);   // shield-front, sleepers waking, elite shields
   let crit = Math.random() < p.crit;
   if (p.buffs.veil && !o.dot) { crit = true; delete p.buffs.veil; }
   if (crit) dmg *= 1 + p.critDmg;
@@ -700,6 +707,10 @@ function updateZones(dt) {
   for (const z of G.zones) {
     z.t += dt; z.tickT -= dt;
     if (z.t > z.life) { z.dead = true; continue; }
+    if (z.hostile) {   // enemy ground zones (parts.js hostileZone): hurt / slow the hero on each tick
+      if (z.tickT <= 0) { z.tickT = z.tick || 0.5; if (playerIn({ kind: 'circle', x: z.x, y: z.y, r: z.r })) { if (z.slow) G.player.slowT = Math.max(G.player.slowT, 0.8); if (z.dmg) hurtPlayer(z.dmg, z.x, z.y, z.el || 'nature'); } }
+      continue;
+    }
     if (z.pull) for (const e of G.enemies) {
       if (e.dead || e.boss || e.dummy || e.spawnT > 0) continue;
       const d = dist(z.x, z.y, e.x, e.y);
@@ -720,41 +731,42 @@ function updateZones(dt) {
 }
 
 // ===== enemies ========================================================================
+// ENEMY (the table), PARTS, ELITE_MODS: js/parts.js · BOSSES, BOSS_MOVES: js/bosses.js
 const STAGGER_CAP = 12, STAGGER_DECAY = 1.2;   // boss stagger bar: heavy hits add 2-3, it drains 1.2/s
-const ENEMY = {
-  // element = what its attacks deal; res = hand-authored tiers (-0.5 weak, 0.5 resist, 1 immune); tags: archetype (§5b)
-  slime: { name: 'Gloom slime', ai: 'hopper', hp: 170, r: 0.38, speed: 2.0, dmg: 32, range: 1.0, wind: 0.55, cd: 1.1, aoe: 1.15, hgt: 1.8, blood: '#8b7cf6',
-    element: 'gloom', res: { pierce: 0.5, slash: -0.5 }, tags: ['amorphous', 'gloom'] },
-  wisp: { name: 'Wisp', ai: 'shooter', hp: 120, r: 0.32, speed: 1.9, dmg: 34, range: 6, wind: 0.6, cd: 2.1, hgt: 3.2, blood: '#9ef0ff',
-    element: 'arcane', res: { slash: 0.5, pierce: 0.5, holy: -0.5, lightning: -0.5 }, tags: ['ethereal'] },
-  hound: { name: 'Shade hound', ai: 'charger', hp: 240, r: 0.42, speed: 3.2, dmg: 46, range: 3.2, wind: 0.48, cd: 1.6, hgt: 2.0, blood: '#ff6b9a',
-    element: 'slash', res: { fire: -0.5 }, tags: ['beast', 'gloom'] },
-  boss: { name: 'The Gloam Warden', ai: 'boss', hp: 7200, r: 0.95, speed: 1.6, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 9, blood: '#c78bff',
-    element: 'gloom', res: { arcane: 0.5, gloom: 0.5, holy: -0.5 }, tags: ['gloom'] },
-  dummy: { name: 'Training dummy', ai: 'dummy', hp: 9999, r: 0.35, speed: 0, dmg: 0, range: 0, wind: 0, cd: 0, hgt: 3, blood: '#e7c9a0' },
-};
-function spawnEnemy(type, x, y, spawnT = 0.9) {
-  const d = ENEMY[type], dummy = type === 'dummy', lvl = dummy ? 1 : enemyLevel(type), hp = dummy ? d.hp : Math.round(d.hp * enemyHpMul(lvl));
-  const e = { type, x, y, z: 0, r: d.r || 0.4, hp, maxHp: hp, lvl, dm: dummy ? 1 : enemyDmgMul(lvl), el: d.element || 'slash', res: d.res || {}, tags: d.tags || [], hgt: d.hgt || 3, blood: d.blood || '#c7a8ff', kx: 0, ky: 0, flash: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss: type === 'boss', dummy: type === 'dummy' };
+// the bare instance (no parts): swarm members and twins are made with this, then initParts()
+function spawnEnemyRaw(type, x, y, spawnT = 0.9) {
+  const d = ENEMY[type], dummy = d.ai === 'dummy', boss = d.ai === 'boss', lvl = dummy ? 1 : enemyLevel(type), hp = dummy ? d.hp : Math.round(d.hp * enemyHpMul(lvl));
+  const e = { type, def: d, x, y, z: 0, r: d.r || 0.4, hp, maxHp: hp, lvl, dm: dummy ? 1 : enemyDmgMul(lvl), el: d.element || 'slash', res: d.res || {}, tags: d.tags || [], hgt: d.hgt || 3, blood: d.blood || '#c7a8ff', kx: 0, ky: 0, flash: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss, dummy, parts: [], acts: [], pp: {}, pcd: {} };
   G.enemies.push(e);
   if (!dummy) sighting(type);
-  if (spawnT > 0) fx({ type: 'summon', x, y, life: spawnT, col: type === 'boss' ? '#ff5aa0' : '#b36bff', r: type === 'boss' ? 2.4 : 0.9 });
+  if (spawnT > 0) fx({ type: 'summon', x, y, life: spawnT, col: boss ? '#ff5aa0' : '#b36bff', r: boss ? 2.4 : 0.9 });
+  return e;
+}
+// o = { elite: true | mod id | [ids] } (trigger spawn cards). A boss row starts the boss fight (G.boss).
+function spawnEnemy(type, x, y, spawnT = 0.9, o = {}) {
+  type = enemyId(type);
+  if (!ENEMY[type]) return null;
+  const e = spawnEnemyRaw(type, x, y, spawnT);
+  if (e.boss) { bossInit(e); if (!G.boss || G.boss.dead) G.boss = e; return e; }
+  if (!e.dummy) initParts(e, e.def);
+  if (o.elite && !e.dummy) makeElite(e, o.elite === true ? null : o.elite);
   return e;
 }
 function killEnemy(e) {
   e.dead = true; sfx('die');
-  onEnemyKilled(e);   // XP + loot (items.js)
-  G.kills[e.type] = (G.kills[e.type] || 0) + 1; G.kills.any = (G.kills.any || 0) + 1;
-  if (!e.dummy) sighting(e.type).kills++;
+  const counts = e.dummy || partsDeath(e);   // split / zone-on-death; a swarm or twin counts once, on its last member
+  if (counts && !e.noXp) onEnemyKilled(e);   // XP + loot (items.js)
+  if (counts) { G.kills[e.type] = (G.kills[e.type] || 0) + 1; G.kills.any = (G.kills.any || 0) + 1; if (!e.dummy) sighting(e.type).kills++; }
   burst(e.x, e.y, e.z + e.hgt * 0.5, e.boss ? 120 : 24, [e.blood, '#ffffff', '#ffb0e0'], e.boss ? 7 : 3.5);
   fx({ type: 'ring', x: e.x, y: e.y, r: e.boss ? 4 : 1.2, col: e.blood, life: 0.4 });
   // spirit motes drift up toward the player — a little healing
   if (!e.boss) delay(0.2, () => { healPlayer(G.player, 14); G.player.mp = Math.min(G.player.maxMp, G.player.mp + 10); });
-  if (e.boss) { shake(14); hitstop(0.25); G.slowmo = 1.4; }
+  if (e.boss) { shake(14); hitstop(0.25); G.slowmo = 1.4; G.shrink = null; }
 }
 const enemyTimeScale = () => G.player.buffs.dreamveil ? 0.35 : 1;
 
-function tele(o) { o.type = 'tele'; return fx(o); }
+// telegraphs are tagged with the enemy that made them (PART_SRC) so a stagger or a phase change can clear them
+function tele(o) { o.type = 'tele'; if (!o.src && typeof PART_SRC !== 'undefined' && PART_SRC) o.src = PART_SRC; return fx(o); }
 function playerIn(shape) {
   const p = G.player;
   if (shape.kind === 'circle') return dist(p.x, p.y, shape.x, shape.y) < shape.r + p.r;
@@ -766,6 +778,7 @@ function playerIn(shape) {
 function updateEnemies(dt) {
   const p = G.player;
   const ts = enemyTimeScale();
+  if (typeof updateArena === 'function') updateArena(dt);
   for (const e of G.enemies) {
     if (e.dead) continue;
     e.flash -= dt; e.anim += dt;
@@ -779,158 +792,28 @@ function updateEnemies(dt) {
     if (Math.abs(e.kx) + Math.abs(e.ky) > 0.05) { moveEntity(e, e.kx * dt, e.ky * dt, tileH(G.map, e.x, e.y)); e.kx *= Math.pow(0.002, dt); e.ky *= Math.pow(0.002, dt); }
     if (e.stunT > 0) { e.stunT -= dt; if (e.stunT <= 0) e.frozen = 0; continue; }
     e.cd -= edt;
-    if (!e.boss) e.st -= edt;   // the boss counts its attack timer up in updateBoss
     const d = dist(e.x, e.y, p.x, p.y), ang = Math.atan2(p.y - e.y, p.x - e.x);
     const hidden = !!p.buffs.veil || p.dead || G.state !== 'play';
     e.face = isoX(p.x, p.y) >= isoX(e.x, e.y) ? 1 : -1;
-    const def = ENEMY[e.type];
-    if (e.boss) { updateBoss(e, edt, d, ang, hidden); continue; }
-    if (e.state === 'chase') {
-      let mx = 0, my = 0;
-      if (hidden) { e.wander = (e.wander || Math.random() * 6) + edt * 0.5; mx = Math.cos(e.wander); my = Math.sin(e.wander); }
-      else if (def.ai === 'shooter') {
-        if (d < 3.6) { mx = -Math.cos(ang); my = -Math.sin(ang); }
-        else if (d > 6) { mx = Math.cos(ang); my = Math.sin(ang); }
-        else { mx = Math.cos(ang + Math.PI / 2) * 0.6; my = Math.sin(ang + Math.PI / 2) * 0.6; }
-      } else { mx = Math.cos(ang); my = Math.sin(ang); }
-      // separation
-      for (const o of G.enemies) {
-        if (o === e || o.dead) continue;
-        const dd = dist(e.x, e.y, o.x, o.y);
-        if (dd < e.r + o.r + 0.2 && dd > 0.001) { mx += (e.x - o.x) / dd * 1.2; my += (e.y - o.y) / dd * 1.2; }
-      }
-      let sp = def.speed;
-      if (def.ai === 'hopper') sp *= Math.max(0, Math.sin(e.anim * 6)) * 1.8;
-      const l = Math.hypot(mx, my) || 1;
-      if (!(def.ai !== 'shooter' && d < def.range * (def.ai === 'brute' ? 0.65 : 0.8) && !hidden)) moveEntity(e, mx / l * sp * edt, my / l * sp * edt, tileH(G.map, e.x, e.y));
-      if (!hidden && e.cd <= 0 && d < def.range) {
-        e.state = 'wind'; e.st = def.wind; e.aimA = ang;
-        if (def.ai === 'hopper') tele({ kind: 'circle', x: e.x, y: e.y, r: def.aoe || 1.15, life: def.wind, col: '#ff5aa0' });
-        if (def.ai === 'charger') tele({ kind: 'line', x: e.x, y: e.y, ang, len: def.range + 0.4, w: 0.5, life: def.wind, col: '#ff5aa0' });
-        if (def.ai === 'brute') {
-          e.hit = def.shape === 'circle' ? { kind: 'circle', x: e.x, y: e.y, r: def.aoe || 2 } : { kind: 'cone', x: e.x, y: e.y, ang, arc: 1.9, r: def.aoe || 1.8 };
-          tele(Object.assign({ life: def.wind, col: '#ff5a3a' }, e.hit));
-        }
-      }
-    } else if (e.state === 'wind') {
-      if (e.st <= 0) {
-        if (def.ai === 'hopper') { if (playerIn({ kind: 'circle', x: e.x, y: e.y, r: def.aoe || 1.15 })) hurtPlayer(def.dmg * e.dm, e.x, e.y, e.el); e.squash = 0.3; burst(e.x, e.y, 0.2, 8, [e.blood, '#e2dbff'], 2); e.state = 'rec'; e.st = 0.4; }
-        else if (def.ai === 'charger') { e.state = 'lunge'; e.st = 0.3; e.hitP = false; }
-        else if (def.ai === 'brute') {
-          const H = e.hit;
-          if (H && playerIn(H)) hurtPlayer(def.dmg * e.dm, e.x, e.y, e.el);
-          if (H && H.kind === 'circle') { fx({ type: 'ring', x: e.x, y: e.y, r: H.r, col: '#ffb070', life: 0.45 }); burst(e.x, e.y, 0.2, 30, ['#8a6a4a', '#c8b090', '#5a4a3a'], 5, { glow: false }); }
-          else if (H) fx({ type: 'slash', x: e.x, y: e.y, z: 0.6, ang: H.ang, arc: H.arc, r: H.r, col: '#ffcf9a', life: 0.25, w: 6 });
-          shake(def.aoe > 2 ? 9 : 4); sfx('heavy');
-          e.state = 'strike'; e.st = 0.15;
-        }
-        else if (def.ai === 'shooter') {
-          spawnProj({ x: e.x, y: e.y, z: 2.2, ang: Math.atan2(p.y - e.y, p.x - e.x), speed: 5.5, r: 0.35, dmg: def.dmg * e.dm, el: e.el, life: 2.5, kind: 'orb', col: '#9ef0ff', friendly: false });
-          e.state = 'rec'; e.st = 0.3; sfx('arcane');
-        }
-        e.cd = def.cd * rand(0.8, 1.3);
-      }
-    } else if (e.state === 'lunge') {
-      moveEntity(e, Math.cos(e.aimA) * 12 * edt, Math.sin(e.aimA) * 12 * edt, tileH(G.map, e.x, e.y));
-      if (!e.hitP && dist(e.x, e.y, p.x, p.y) < e.r + p.r + 0.3) { e.hitP = true; hurtPlayer(def.dmg * e.dm, e.x, e.y, e.el); }
-      if (e.st <= 0) { e.state = 'rec'; e.st = 0.5; }
-    } else if (e.state === 'strike') { if (e.st <= 0) { e.state = 'rec'; e.st = 0.6; } }
-    else if (e.state === 'rec') { if (e.st <= 0) e.state = 'chase'; }
+    if (e.boss) { bossUpdate(e, edt, d, ang, hidden); continue; }
+    updatePartsEnemy(e, edt, { p, d, ang, hidden, dt: edt });
     if (e.squash > 0) e.squash -= dt;
-    e.z = lerp(e.z, tileH(G.map, e.x, e.y), Math.min(1, dt * 12));
+    if (!e.under) e.z = lerp(e.z, tileH(G.map, e.x, e.y), Math.min(1, dt * 12));
   }
   G.enemies = G.enemies.filter(e => !e.dead);
 }
 
-// ===== boss: the Gloam Warden ==========================================================
-function updateBoss(b, dt, d, ang, hidden) {
-  b.z = 0.6 + Math.sin(G.t * 2) * 0.25;
-  const p = G.player;
-  if (!b.phase2 && b.hp < b.maxHp * 0.5) {
-    b.phase2 = true; b.state = 'roar'; b.st = 1.6;
-    say('The Warden calls upon the nightmare!'); sfx('roar'); shake(10);
-    fx({ type: 'ring', x: b.x, y: b.y, r: 6, col: '#ff5aa0', life: 0.8 });
-    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + 0.4; spawnAt(k % 2 ? 'wisp' : 'slime', b.x + Math.cos(a) * 3.5, b.y + Math.sin(a) * 3.5, 1); }
-    return;
-  }
-  const spd = b.phase2 ? 1.35 : 1;
-  if (b.state === 'chase') {
-    if (!hidden && d > 2.2) moveEntity(b, Math.cos(ang) * ENEMY.boss.speed * spd * dt, Math.sin(ang) * ENEMY.boss.speed * spd * dt, tileH(G.map, b.x, b.y));
-    if (b.cd <= 0 && !hidden) {
-      const opts = d < 3.6 ? ['cleave', 'cleave', 'slam', 'volley'] : ['charge', 'volley', 'charge'];
-      if (b.phase2) opts.push('voidrain', 'voidrain');
-      let atk = pick2(opts); if (atk === b.last) atk = pick2(opts); b.last = atk;
-      b.state = atk; b.st = 0; b.step = 0;
-    }
-    return;
-  }
-  b.st += dt;
-  const W = b.phase2 ? 0.8 : 1;
-  switch (b.state) {
-    case 'cleave':
-      if (b.step === 0) { b.aimA = ang; tele({ kind: 'cone', x: b.x, y: b.y, ang, arc: 2.0, r: 3.6, life: 0.85 * W, col: '#ff3a7a' }); b.step = 1; }
-      if (b.step === 1 && b.st > 0.85 * W) {
-        if (playerIn({ kind: 'cone', x: b.x, y: b.y, ang: b.aimA, arc: 2.0, r: 3.6 })) hurtPlayer(120 * b.dm, b.x, b.y, 'slash');
-        fx({ type: 'slash', x: b.x, y: b.y, z: 1, ang: b.aimA, arc: 2.0, r: 3.6, col: '#ff7ae0', life: 0.3, w: 8 }); shake(6); sfx('heavy');
-        b.step = 2;
-      }
-      if (b.st > 1.4 * W) endBossAtk(b, 0.9);
-      break;
-    case 'slam':
-      if (b.step === 0) { tele({ kind: 'circle', x: b.x, y: b.y, r: 3.4, life: 1.1 * W, col: '#ff3a7a' }); b.step = 1; }
-      if (b.step === 1 && b.st > 1.1 * W) {
-        if (playerIn({ kind: 'circle', x: b.x, y: b.y, r: 3.4 })) hurtPlayer(150 * b.dm, b.x, b.y, 'gloom');
-        fx({ type: 'ring', x: b.x, y: b.y, r: 3.6, col: '#ff7ae0', life: 0.5 }); burst(b.x, b.y, 0.2, 50, ['#c78bff', '#ff7ae0', '#2a1c38'], 6); shake(12); hitstop(0.08); sfx('boom');
-        b.step = 2;
-      }
-      if (b.st > 1.7 * W) endBossAtk(b, 0.8);
-      break;
-    case 'volley':
-      if (b.step < 3 && b.st > 0.35 + b.step * 0.45) {
-        const n = 16;
-        for (let k = 0; k < n; k++) spawnProj({ x: b.x, y: b.y, z: 3, ang: k / n * Math.PI * 2 + b.step * 0.2, speed: 4.6, r: 0.35, dmg: 38 * b.dm, el: 'arcane', life: 3.2, kind: 'orb', col: '#ff7ae0', friendly: false });
-        sfx('arcane'); b.step++;
-      }
-      if (b.st > 1.8) endBossAtk(b, 1.0);
-      break;
-    case 'charge':
-      if (b.step === 0) { b.aimA = ang; tele({ kind: 'line', x: b.x, y: b.y, ang, len: 8, w: 1.1, life: 0.75 * W, col: '#ff3a7a' }); b.step = 1; b.hitP = false; }
-      if (b.step === 1 && b.st > 0.75 * W) { b.step = 2; sfx('dash'); }
-      if (b.step === 2) {
-        moveEntity(b, Math.cos(b.aimA) * 15 * dt, Math.sin(b.aimA) * 15 * dt, tileH(G.map, b.x, b.y));
-        if (Math.random() < 0.6) fx({ type: 'ghost', x: b.x, y: b.y, z: b.z, life: 0.3, spr: b.face < 0 ? ART.boss.f : ART.boss.n, col: '#ff5aa0' });
-        if (!b.hitP && dist(b.x, b.y, p.x, p.y) < b.r + p.r + 0.3) { b.hitP = true; hurtPlayer(110 * b.dm, b.x, b.y, 'slash'); }
-        if (b.st > 0.75 * W + 0.5) { b.step = 3; shake(5); }
-      }
-      if (b.st > 0.75 * W + 1.1) endBossAtk(b, 0.8);
-      break;
-    case 'voidrain':
-      if (b.step === 0) {
-        for (let k = 0; k < 6; k++) {
-          const a = Math.random() * 6.28, r = k === 0 ? 0 : 1 + Math.random() * 3, x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r;
-          tele({ kind: 'circle', x, y, r: 1.3, life: 1.0, col: '#ff3a7a', onDone: o => {
-            if (playerIn({ kind: 'circle', x: o.x, y: o.y, r: 1.3 })) hurtPlayer(85 * b.dm, o.x, o.y, 'gloom');
-            fx({ type: 'pillar', x: o.x, y: o.y, col: '#ff5aa0', life: 0.4, r: 1.3 }); burst(o.x, o.y, 0, 12, ['#ff7ae0', '#2a1c38'], 3); shake(3);
-          } });
-        }
-        sfx('veil'); b.step = 1;
-      }
-      if (b.st > 1.5) endBossAtk(b, 0.6);
-      break;
-    case 'roar':
-      if (b.st > 1.6) endBossAtk(b, 0.5);
-      break;
-  }
-}
-function endBossAtk(b, cd) { b.state = 'chase'; b.cd = cd * rand(0.8, 1.3) * (b.phase2 ? 0.75 : 1); }
-
 // ===== enemies from world data (editor's Enemies tab) ==============================
 // world.enemies[type] = { name, ai: hopper|shooter|charger|brute, hp, speed, dmg, range, cd, wind, r, aoe, shape, sprite }
+// or a full part row (js/parts.js header). These override ENEMY_DATA and the built-in rows.
 const ENEMY_AI = { hopper: 'Hops in and splats around itself', shooter: 'Keeps its distance and shoots orbs', charger: 'Telegraphs a line, then lunges', brute: 'Winds up a heavy smash (cone or circle)' };
 function applyWorldEnemies(list) {
   for (const k in list || {}) {
     const src = list[k], base = ENEMY[k] || { name: k, ai: 'brute', hp: 300, r: 0.45, speed: 2, dmg: 30, range: 1.5, wind: 0.6, cd: 1.5, aoe: 1.8, shape: 'cone', hgt: 3, blood: '#c7a8ff' };
     ENEMY[k] = Object.assign({}, base, src);
+    // a legacy row (ai, no parts) re-derives its parts from ai + these numbers at spawn (parts.js partsFromAi)
+    if (src.ai && !src.parts) { delete ENEMY[k].parts; delete ENEMY[k].params; }
+    if (src.element) ENEMY[k].dmgType = src.element;
     for (const f of ['hp', 'r', 'speed', 'dmg', 'range', 'wind', 'cd', 'aoe']) if (ENEMY[k][f] != null) ENEMY[k][f] = +ENEMY[k][f];
   if (ENEMY[k].res) for (const el in ENEMY[k].res) ENEMY[k].res[el] = +ENEMY[k].res[el] || 0;
     const img = ENEMY[k].sprite && ART.custom[ENEMY[k].sprite];
@@ -990,10 +873,17 @@ function applyTuning(t) {
 // Trigger state persists (G.prog.trig[map], saved): whenever the map is calm (no live enemies, nothing pending)
 // every fired one-shot trigger is SETTLED. Re-entering or respawning restores settled triggers and replays only their
 // lasting effects (portals, objective), so just the encounter you died in resets. map_enter triggers re-run each entry.
-const LASTING_ACTIONS = { open_portal: 1, close_portal: 1, objective: 1 };
+// Actions: spawn { enemy, count, x, y, radius, instant, elite } (a boss row starts the boss fight) · spawn_boss (the Warden)
+//   banner · message · objective · heal · open_portal / close_portal { index | id } · clear_enemies · shake · sound ·
+//   teleport · checkpoint { x, y, text } · loot { rarity, count, x, y, + extras: gem, chest: tier, sockets, item } ·
+//   dialogue { id: DIALOGUE key } or { speaker, lines } · openGate { id } (gate / keydoor / hidden wall; levers flip) ·
+//   quest { id, step | done, title, text } -> G.prog.quests[id] = { step } | 'done' (the Quests tab reads it)
+const LASTING_ACTIONS = { open_portal: 1, close_portal: 1, objective: 1, openGate: 1 };
 function startTriggers() {
   const m = G.map, settled = G.prog.trig[m.id] || [];
   G.trig = { fired: {}, at: {}, t: 0, inside: {} }; G.kills = {}; G.pendingSpawns = 0; G.objective = m.objective;
+  G.shrink = null; G.talk = [];
+  if (typeof syncGates === 'function') syncGates(m);
   for (const tr of m.triggers) if (settled.includes(tr.id)) {
     G.trig.fired[tr.id] = true; G.trig.at[tr.id] = 0;
     for (const a of tr.actions || []) if (LASTING_ACTIONS[a.type]) runAction(a);
@@ -1044,7 +934,7 @@ function runAction(a) {
   switch (a.type) {
     case 'spawn': {
       const n = Math.max(1, +a.count || 1);
-      for (let i = 0; i < n; i++) { G.pendingSpawns++; delay(0.15 * i, () => { G.pendingSpawns--; spawnAt(a.enemy || 'slime', a.x === '' ? null : a.x, a.y === '' ? null : a.y, a.radius, a.instant); }); }
+      for (let i = 0; i < n; i++) { G.pendingSpawns++; delay(0.15 * i, () => { G.pendingSpawns--; spawnAt(a.enemy || 'slime', a.x === '' ? null : a.x, a.y === '' ? null : a.y, a.radius, a.instant, a.elite); }); }
       break;
     }
     case 'spawn_boss': G.boss = spawnEnemy('boss', a.x != null && a.x !== '' ? +a.x : m.cx + 1.5, a.y != null && a.y !== '' ? +a.y : m.cy - 1.5, 1.6); break;
@@ -1052,8 +942,13 @@ function runAction(a) {
     case 'message': say(a.text || ''); break;
     case 'objective': G.objective = a.text || ''; break;
     case 'heal': healPlayer(p, p.maxHp * (+a.pct || 0) / 100); break;
-    case 'open_portal': case 'close_portal':
-      m.portals.forEach((pt, i) => { if (a.index == null || a.index === '' || +a.index === -1 || +a.index === i) pt.open = a.type === 'open_portal'; }); break;
+    case 'open_portal': case 'close_portal': {
+      const byId = a.id != null && a.id !== '';
+      m.portals.forEach((pt, i) => { if (byId ? pt.id === a.id : (a.index == null || a.index === '' || +a.index === -1 || +a.index === i)) pt.open = a.type === 'open_portal'; }); break;
+    }
+    case 'dialogue': talk(a); break;
+    case 'openGate': if (typeof openGate === 'function') openGate(a.id, true); break;
+    case 'quest': questAction(a); break;
     case 'clear_enemies': for (const e of G.enemies.slice()) if (!e.dummy && !e.dead) killEnemy(e); break;
     case 'shake': shake(+a.power || 6); break;
     case 'sound': sfx(a.name || 'portal'); break;
@@ -1063,13 +958,40 @@ function runAction(a) {
   }
 }
 // x/y given: scatter around that point; otherwise somewhere on the island away from the player
-function spawnAt(type, x, y, radius, instant) {
-  const m = G.map; if (!ENEMY[type]) return;
+function spawnAt(type, x, y, radius, instant, elite) {
+  const m = G.map; type = enemyId(type); if (!ENEMY[type]) return;
   const R = Math.max(2, Math.min(m.W, m.H) / 2 - 1.5);
   for (let tries = 0; tries < 40; tries++) {
     let nx, ny;
     if (x != null) { const a = Math.random() * 6.28, r = Math.sqrt(Math.random()) * (radius != null && radius !== '' ? +radius : (tries ? 1.5 : 0)); nx = +x + Math.cos(a) * r; ny = +y + Math.sin(a) * r; }
     else { const a = Math.random() * 6.28, r = rand(R * 0.55, R); nx = m.cx + Math.cos(a) * r; ny = m.cy + Math.sin(a) * r; }
-    if (walkable(m, nx, ny, tileH(m, nx, ny)) && (x != null || dist(nx, ny, G.player.x, G.player.y) > 3.5)) { const e = spawnEnemy(type, nx, ny, instant ? 0 : 0.9); e.z = 0; return e; }
+    if (walkable(m, nx, ny, tileH(m, nx, ny)) && (x != null || dist(nx, ny, G.player.x, G.player.y) > 3.5)) { const e = spawnEnemy(type, nx, ny, instant ? 0 : ENEMY[type].ai === 'boss' ? 1.6 : 0.9, { elite: ENEMY[type].ai === 'boss' ? null : elite }); e.z = 0; return e; }
   }
+}
+// dialogue: lines queue on the say line, ~2.4 s each (DIALOGUE ids from js/dialogue.js, or inline speaker + lines)
+function talk(a) {
+  const D = a.id && typeof DIALOGUE !== 'undefined' ? DIALOGUE[a.id] : null, src = D || a;
+  if (src.banner) { G.banner = { s: src.banner, sub: src.sub || '', t: 2.6, max: 2.6 }; return; }
+  const lines = (src.lines || (src.text ? [src.text] : [])).map(l => (src.speaker ? src.speaker + ': ' : '') + l);
+  G.lastDialogue = { id: a.id || null, speaker: src.speaker || '', lines };
+  const q = G.talk || (G.talk = []), wasIdle = !q.length;
+  q.push(...lines);
+  if (wasIdle) nextTalk();
+}
+function nextTalk() {
+  const q = G.talk; if (!q || !q.length) return;
+  const s = q[0]; G.msg = { s, t: 2.4 };
+  delay(2.4, () => { if (G.talk && G.talk[0] === s) { G.talk.shift(); nextTalk(); } });
+}
+// quests: G.prog.quests[id] = { step } while active (0 = the first step) or 'done'; a card without step/done advances it
+function questAction(a) {
+  if (!a.id) return;
+  const Q = G.prog.quests || (G.prog.quests = {}), cur = Q[a.id];
+  if (cur === 'done') return;
+  const def = typeof QUESTS !== 'undefined' ? QUESTS.find(q => q.id === a.id) : null, title = a.title || (def && def.title) || a.id;
+  if (a.done) Q[a.id] = 'done';
+  else Q[a.id] = { step: a.step != null && a.step !== '' ? +a.step : cur ? (cur.step || 0) + 1 : 0 };
+  const msg = a.done ? `Quest complete: ${title}` : cur ? `Quest updated: ${title}` : `New quest: ${title}`;
+  if (typeof UI !== 'undefined' && UI.toast) UI.toast({ text: msg, col: '#ffd35a' }); else say(msg);
+  sfx(a.done ? 'levelup' : 'pickup');
 }
