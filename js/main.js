@@ -68,7 +68,7 @@ function enterMap(id, at) {
   G.boss = null; G.tablet = null;
   if (typeof resetCorpses === 'function') resetCorpses();   // R1 corpse records (pooled) and the hitlag clock
   if (typeof hitlagReset === 'function') hitlagReset();
-  p.x = at ? at.x : m.start.x; p.y = at ? at.y : m.start.y; p.z = tileH(m, p.x, p.y); p.dash = null;
+  p.x = at ? at.x : m.start.x; p.y = at ? at.y : m.start.y; p.z = tileH(m, p.x, p.y); p.dash = null; p.climb = null; p.fall = null; G.vantage = null; G.camBias = null;
   syncChests(m);
   G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
   if (!(typeof onceSeen === 'function' && onceSeen('zone:' + id))) G.banner = { s: m.name, sub: m.sub, t: 3.2, max: 3.2 };   // once per save: a respawn never replays it
@@ -167,10 +167,30 @@ function update(dt, rdt) {
   G.shakeA = Math.max(0, G.shakeA - rdt * 30);
   updateCamera(rdt);
 }
+// §29 G3 camera height bias (world-art minutes §3.3 fix 3): on a summit the camera leads down-slope (up to 36 px toward the lowest
+// ground within 6 tiles in the facing direction) so you see the view, not your own mountain; at a wall's foot it leads up by half the
+// wall's height (max 24 px) so the wall does not fill the frame. The bias eases on its own (~0.6 s), then the usual lerp follows.
+function cameraBias(p, dt) {
+  const m = G.map, B = G.camBias || (G.camBias = { x: 0, y: 0 });
+  let bx = 0, by = 0;
+  if (m && G.state === 'play' && !p.dead) {
+    const a = p.moving && IN && IN.move && IN.move.mag ? Math.atan2(IN.move.y - IN.move.x, IN.move.x + IN.move.y) : p.aim || 0;   // facing, in world axes
+    const fx = Math.cos(a), fy = Math.sin(a), z = p.climb || p.fall ? tileH(m, p.x, p.y) : p.z;
+    let lo = z, hi = z;
+    for (let d = 1; d <= 6; d++) { const x = p.x + fx * d, y = p.y + fy * d; if (!typeAt(m, Math.floor(x), Math.floor(y))) continue; const h = tileH(m, x, y); if (h < lo) lo = h; if (d <= 3 && h > hi) hi = h; }
+    const down = Math.min(36, (z - lo) * 2), up = Math.min(24, (hi - z) * ZS * 0.5);
+    if (down > 4) { const sx = (fx - fy) * 16, sy = (fx + fy) * 8, l = Math.hypot(sx, sy) || 1; bx = sx / l * down; by = sy / l * down; }
+    if (up > 6) by -= up;
+  }
+  if (G.vantage && G.vantage.lead) { bx += G.vantage.lead[0]; by += G.vantage.lead[1]; }   // the reveal's 40 px ease down-slope (screens.js)
+  const k = 1 - Math.exp(-dt * 1.8); B.x += (bx - B.x) * k; B.y += (by - B.y) * k;
+  return B;
+}
 function updateCamera(dt) {
   const p = G.player;
   let tx = isoX(p.x, p.y), ty = isoY(p.x, p.y, p.z) - 12;
   if (G.state === 'title') { tx += Math.sin(G.t * 0.25) * 40 + 40; ty += -10 + Math.cos(G.t * 0.2) * 12; }
+  else { const B = cameraBias(p, dt); tx += B.x; ty += B.y; }
   const k = 1 - Math.exp(-dt * 6);
   G.cam.x += (tx - G.cam.x) * k; G.cam.y += (ty - G.cam.y) * k;
 }
@@ -182,6 +202,7 @@ function render() {
   perfMark('blit', dctx);
   UI.begin();
   drawHUD(dctx);   // draws its own toasts and focus ring per screen
+  if (G.vantage && typeof drawVantage === 'function') drawVantage(dctx);   // §29 G3 the vantage reveal cinematic, over the HUD (screens.js)
   if (typeof AUDIO !== 'undefined') AUDIO.drawCaptions(dctx);   // sound captions (setting), bottom-left
   perfMark('hud', dctx);
   G.ui.wheel = 0;

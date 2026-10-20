@@ -728,6 +728,7 @@ function updatePlayer(p, dt) {
   for (const k of ['slowT', 'rootT']) { if (p[k] > 0) { if (!(p.stMax[k] > 0) || p[k] > p.stMax[k]) p.stMax[k] = p[k]; } else p.stMax[k] = 0; }
 
   resolveAim(p);
+  if (p.climb) { updateClimb(p, dt); return; }   // §29 G3 root ladder: a scripted 0.6 s climb
 
   const h0 = tileH(m, p.x, p.y);
   if (p.dash) {
@@ -757,7 +758,7 @@ function updatePlayer(p, dt) {
     } else p.stuckT = 0;
   }
   const th = tileH(m, p.x, p.y);
-  p.z = lerp(p.z, th, Math.min(1, dt * 14));
+  updateFall(p, th, dt);   // §29 G3: a drop-down ledge falls with gravity (and lands with dust); small steps keep the old ease
   playerActions(p, dt);
   updateEcho(p, dt);   // §30 spirit clone (no-op without the 'echo' rule)
 
@@ -1670,6 +1671,7 @@ function runAction(a) {
     case 'teleport': if (G.world.maps[a.map]) transition(a.map); break;
     case 'checkpoint': { const has = v => v != null && v !== ''; setCheckpoint(has(a.x) ? +a.x : p.x, has(a.y) ? +a.y : p.y, a.text); break; }
     case 'loot': lootAction(a); break;
+    case 'vantage': if (typeof startVantage === 'function') startVantage(a); break;   // §29 G3 the vantage reveal (screens.js)
   }
 }
 // x/y given: scatter around that point; otherwise somewhere on the island away from the player
@@ -1725,6 +1727,39 @@ function spawnPack(a) {
     G.pendingSpawns++;
     delay(0.15 * i, () => { G.pendingSpawns--; const e = tagSpawn(spawnAt(type, cx + Math.cos(ang) * R, cy + Math.sin(ang) * R, 0.4, a.instant, i === 0 ? a.elite : null), src); if (e) e.pack = pk.id; });
   });
+}
+// ===== §29 G3 root ladders + drop-down ledges ===================================================================================
+// startClimb(o): o = a root_ladder object (maps.js). Up: rise along the roots at the foot, then step onto the top; down: step to the
+// lip, then sink down the roots. p.climb = { t, dur, a, b, z0, z1, up } (the hero is rooted and untouchable meanwhile).
+const CLIMB_T = 0.6, FALL_G = 70;
+function startClimb(o) {
+  const p = G.player, m = G.map; if (!p || p.dead || p.climb || p.dash || G.warp || !o || !o.src || !o.src.to) return false;
+  const to = { x: +o.src.to.x, y: +o.src.to.y }, up = (+o.src.h || 0) > 0;
+  p.climb = { t: 0, dur: CLIMB_T, a: { x: o.x, y: o.y }, b: to, z0: tileH(m, o.x, o.y), z1: tileH(m, to.x, to.y), up };
+  p.x = o.x; p.y = o.y; p.z = p.climb.z0; p.fall = null;
+  sfx('pickup');
+  return true;
+}
+function updateClimb(p, dt) {
+  const c = p.climb, foot = c.up ? c.a : c.b;
+  c.t += dt; const k = clamp(c.t / c.dur, 0, 1);
+  p.rootT = Math.max(p.rootT, 0.05); p.invulnT = Math.max(p.invulnT, 0.1); p.moving = true; p.walkT += dt; p.back = c.up;
+  if (c.up) { const kz = clamp(k / 0.8, 0, 1), kx = clamp((k - 0.8) / 0.2, 0, 1); p.z = lerp(c.z0, c.z1, kz * kz * (3 - 2 * kz)); p.x = lerp(foot.x, c.b.x, kx); p.y = lerp(foot.y, c.b.y, kx); }
+  else { const kx = clamp(k / 0.2, 0, 1), kz = clamp((k - 0.2) / 0.8, 0, 1); p.x = lerp(c.a.x, foot.x, kx); p.y = lerp(c.a.y, foot.y, kx); p.z = lerp(c.z0, c.z1, kz * kz * (3 - 2 * kz)); }
+  if (Math.random() < dt * 10) burst(p.x, p.y, p.z + 0.4, 1, ['#8a7a5a', '#c8b090'], 1);
+  if (k >= 1) { p.x = c.b.x; p.y = c.b.y; p.z = tileH(G.map, p.x, p.y); p.climb = null; p.moving = false; }
+}
+// a drop: once the ground is more than 1.6 levels below the hero, gravity takes over (FALL_G levels / s^2; 9 levels ~ 0.5 s)
+function updateFall(p, th, dt) {
+  if (!p.fall && p.z - th > 1.6) p.fall = { vz: 0, from: p.z };
+  if (!p.fall) { p.z = lerp(p.z, th, Math.min(1, dt * 14)); return; }
+  p.fall.vz -= FALL_G * dt; p.z += p.fall.vz * dt; p.invulnT = Math.max(p.invulnT, 0.15);
+  if (p.z <= th) {
+    const h = p.fall.from - th; p.z = th; p.fall = null; p.landT = 0.18; p.rootT = Math.max(p.rootT, 0.12);
+    burst(p.x, p.y, th + 0.1, Math.min(22, 8 + Math.round(h)), ['#c8b090', '#e8dcc0', '#8a7a5a'], 2.4);
+    for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; addPart({ x: p.x + Math.cos(a) * 0.3, y: p.y + Math.sin(a) * 0.3, z: th + 0.1, vx: Math.cos(a) * 2.2, vy: Math.sin(a) * 2.2, vz: 0.4, life: 0.5, t: 0, col: '#e8dcc0', grav: 0.6, size: 2, glow: false }); }
+    shake(Math.min(5, 1.5 + h * 0.25)); sfx('boom');
+  }
 }
 // ===== warps (same map, 0.4 s fade) ===========================================================================
 // startWarp(to, { door }) -> false when the target does not resolve or a warp is already running. G.warp = { t, dur,

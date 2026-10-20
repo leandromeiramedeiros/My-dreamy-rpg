@@ -327,7 +327,7 @@ function* groundPrepGen(m) {
   const top = new Int32Array(W).fill(-1), edge = new Int32Array(W).fill(-1);
   let hMax = 0; const hCount = new Int32Array(40);
   for (let j = 0; j < m.H; j++, yield) for (let i = 0; i < m.W; i++) {
-    if (!m.type[j][i]) continue;
+    if (!m.type[j][i] || isSpan(m, i, j)) continue;   // §29 G3: a span (fallen log) has nothing under it
     if (m.h[j][i] > hMax) hMax = m.h[j][i];
     hCount[Math.min(39, m.h[j][i])]++;
     const cx = (i - j) * 16 - minSX, a = Math.max(0, cx - 17), b = Math.min(W - 1, cx + 17);
@@ -377,6 +377,7 @@ function* groundPrepGen(m) {
   m.gp = { W, H, GB, minSX, top, edge, len, bot, root, lobe, mist };
 }
 const isGutter = (m, x, y) => !!(m.gutter && x >= 0 && y >= 0 && x < m.W && y < m.H && m.gutter[y * m.W + x]);
+const isSpan = (m, x, y) => !!(m.span && x >= 0 && y >= 0 && x < m.W && y < m.H && m.span[y * m.W + x]);   // §29 G3 log bridge over the void
 // a gutter pixel: 'v' = a chasm whose north lip shows a cliff face, 'k' = darkness
 function gutterColor(m, wx, wy, px, py) {
   const th = m.theme, g = m.gutter[Math.floor(wy) * m.W + Math.floor(wx)];
@@ -418,6 +419,7 @@ function rasterRect(m, out, ox, oy, x0, y0, w, h) {
     const SX = px + minSX + 0.5, SY = py + 0.5, [wx, wy] = toWorld(SX, SY);
     const tx = Math.floor(wx), ty = Math.floor(wy), t = typeAt(m, tx, ty);
     if (!t) { if (isGutter(m, tx, ty)) put(px, py, gutterColor(m, wx, wy, px, py)); continue; }
+    if (m.span && m.span[ty * m.W + tx]) continue;   // §29 G3: the void under a log bridge
     if (m.h[ty][tx] > 0) { put(px, py, th.earth[1]); continue; }   // under a column sprite (game and editor draw it): never seen
     put(px, py, topColor(m, t === 'pillar' ? 'x' : t, 0, wx, wy, px, py, SX, SY));
   }
@@ -723,15 +725,20 @@ function ensureChunkAt(m, x, y) { const idx = chunkAt(m, isoX(x, y), isoY(x, y, 
 // The top gets the full tile grammar (topColor), plus a 1 px dark rim above back edges that meet the sky or lower ground.
 function rasterColumn(m, i, j) {
   const th = m.theme, h = m.h[j][i], t = m.type[j][i], hz = h * ZS;
-  const W = 32, H = 16 + hz + 1;
-  const pb = new PixBuf(W, H);
+  const W = 32;
   const ox = isoX(i, j) - 16, oy = isoY(i, j, h);
   const pillar = t === 'pillar';
   const faceRamp = (t === 's' || t === 'x' || t === 'r' || pillar) ? th.stone : th.earth;
   const topT = pillar ? 'x' : t;
   // visible face depth per side: down to the lower neighbour's top when that neighbour is itself a column (drawn after this one)
-  const vis = (nx, ny) => { const hn = hAt(m, nx, ny); return hn > 0 && hn < h && m.type[ny][nx] !== 'pillar' ? (h - hn) * ZS : hn >= h && m.type[ny][nx] !== 'pillar' ? 0 : hz; };
-  const visL = vis(i, j + 1), visR = vis(i + 1, j);
+  const vis = (nx, ny) => { const hn = isSpan(m, nx, ny) ? 0 : hAt(m, nx, ny); return hn > 0 && hn < h && m.type[ny][nx] !== 'pillar' ? (h - hn) * ZS : hn >= h && m.type[ny][nx] !== 'pillar' ? 0 : hz; };
+  const span = isSpan(m, i, j), LOG = 10;   // §29 G3 a log bridge: a 10 px trunk, nothing below
+  const visL = span ? Math.min(LOG, vis(i, j + 1)) : vis(i, j + 1), visR = span ? Math.min(LOG, vis(i + 1, j)) : vis(i + 1, j);
+  if (span) return spanColumn(m, i, j, visL, visR);
+  // §29 G3 tall columns: the image ends at the deepest VISIBLE face row (the rows below it were always transparent), so a plateau
+  // interior at h 16 rasters and blits 32 x 17, not 32 x 113
+  const H = Math.min(16 + hz + 1, 17 + Math.min(hz, Math.max(visL, visR) + 1));
+  const pb = new PixBuf(W, H);
   const rimC = mixRgb(th.under[0], th.haze, 0.1);
   const backL = hAt(m, i - 1, j) < h, backR = hAt(m, i, j - 1) < h;
   // first face row per pixel column = the row right under the top diamond's last row (no 1 px hole between top and face, and the
@@ -789,6 +796,33 @@ function rasterColumn(m, i, j) {
     if (ds.length) { const set = DECALS_OF(m), x = img.getContext('2d'); x.globalCompositeOperation = 'source-atop'; for (const d of ds) { const im = set[d.k][d.v]; x.drawImage(im, Math.round(isoX(d.x, d.y) - ox - im.ax), Math.round(isoY(d.x, d.y, h) - oy - im.ay)); } x.globalCompositeOperation = 'source-over'; }
   }
   return { kind: 'column', img, sx: ox, sy: oy, key: i + j + 1, x: i + 0.5, y: j + 0.5 };
+}
+
+// §29 G3 the fallen giant pine: a span tile (map.spans) is a log lying across the void. Top = bark, cylinder-shaded across the
+// log's width, furrows along its axis, moss on the crown; sides = the log's 10 px lower half; nothing below (the void shows).
+function spanColumn(m, i, j, visL, visR) {
+  const th = m.theme, h = m.h[j][i], hz = h * ZS, W = 32, H = 17 + Math.max(visL, visR) + 1, pb = new PixBuf(W, H);
+  const ox = isoX(i, j) - 16, oy = isoY(i, j, h), R = (m.spans || []).find(r => i >= r[0] && i < r[0] + r[2] && j >= r[1] && j < r[1] + r[3]) || [i, j, 1, 1];
+  const ax = R[2] >= R[3];   // the log's axis: along x (else along y)
+  const bark = th.wood, moss = th.grass;
+  for (let cy = 0; cy < H; cy++) for (let cx = 0; cx < W; cx++) {
+    const SX = ox + cx + 0.5, SY = oy + cy + 0.5 + hz, [wx, wy] = toWorld(SX, SY);
+    if (cy < 17 && wx >= i && wx < i + 1 && wy >= j && wy < j + 1) {
+      const u = ax ? (wy - R[1]) / R[3] : (wx - R[0]) / R[2], along = ax ? wx : wy;   // across the log 0..1, along its axis
+      let v = 0.3 + 0.55 * Math.sin(Math.PI * clamp(u, 0, 1)) * (u < 0.55 ? 1 : 0.85);
+      const fur = (u * 9 + vnoise(along * 0.6, u * 3, 91) * 0.9) % 1; if (fur < 0.16) v -= 0.22;   // bark furrows along the axis
+      let c = rampQ(bark, v, cx, cy);
+      if (u > 0.25 && u < 0.7 && vnoise(along * 0.45, u * 4, 92) > 0.68) c = moss[3 + ((cx + cy) & 1)];   // moss on the crown
+      pb.set(cx, cy, c); continue;
+    }
+    if (cy < 9) continue;
+    let top, lit, vd;
+    if (cx < 16) { top = 8 + (cx + 0.5) * 0.5; lit = 1; vd = visL; } else { top = 16 - (cx - 15.5) * 0.5; lit = 0.66; vd = visR; }
+    const d = cy - top; if (d < 0 || d >= vd) continue;
+    const k = d / 10, v = (0.42 - k * 0.32) * lit - ((Math.floor(SX * 0.5) + (ax ? 0 : 1)) % 3 === 0 ? 0.08 : 0);
+    pb.set(cx, cy, d >= vd - 1 ? mulRgb(bark[0], 0.8) : rampQ(bark, v, cx, cy));
+  }
+  return { kind: 'column', img: pb.toCanvas(), sx: ox, sy: oy, key: i + j + 1, x: i + 0.5, y: j + 0.5 };
 }
 
 function finalizeMap(m) {
@@ -874,16 +908,31 @@ function tileH(m, x, y) {
   if (!typeAt(m, tx, ty)) return 0;
   return m.h[ty][tx];
 }
+// §29 G3 drop-down ledges: a landing tile (map.drops) also accepts a step DOWN of any height (one way: the climb back is a wall)
 function walkable(m, x, y, fromH) {
   const tx = Math.floor(x), ty = Math.floor(y);
   if (!typeAt(m, tx, ty) || m.block[ty][tx]) return false;
-  return Math.abs(m.h[ty][tx] - fromH) <= 1.05;
+  const h = m.h[ty][tx];
+  return Math.abs(h - fromH) <= 1.05 || (h < fromH && !!m.dropIn && m.dropIn[ty * m.W + tx] === 1);
+}
+// §29 G3 depth key for a sprite standing at (x, y, z): the old x + y + 0.35 z (it must clear its own tile's column), capped below any
+// TALLER column in front of it (+x / +y, within 4 diagonals) so a high plateau never sorts over a wall it stands behind
+function depthKey(m, x, y, z) {
+  let k = x + y + z * 0.35;
+  const i = Math.floor(x), j = Math.floor(y);
+  for (let a = 0; a <= 4; a++) for (let b = Math.max(0, a - 1); b <= Math.min(4 - a, a + 1); b++) {
+    if (!a && !b) continue;
+    const ti = i + a, tj = j + b; if (ti >= m.W || tj >= m.H || !m.type[tj][ti]) continue;
+    if (m.h[tj][ti] > z + 0.6 && ti + tj + 0.98 < k) k = ti + tj + 0.98;
+  }
+  if (typeAt(m, i, j) && m.h[j][i] > 0 && k < i + j + 1.01) k = i + j + 1.01;
+  return k;
 }
 
 function addProp(m, img, x, y, o = {}) {
   const z = o.z != null ? o.z : tileH(m, x, y);
   const obj = Object.assign({ kind: 'sprite', img, x, y, z, ax: img.width / 2, ay: img.height - 1, r: 0, key: x + y + z * 0.35, shadow: 0 }, o);
-  obj.z = z; obj.key = x + y + z * 0.35 + (o.keyBias || 0);
+  obj.z = z; obj.key = depthKey(m, x, y, z) + (o.keyBias || 0);
   if (o.light) obj.lights = [Object.assign({ sx: isoX(x, y), sy: isoY(x, y, z) - (o.light.h || 0) }, o.light)];
   m.objects.push(obj);
   if (obj.r > 0) m.colliders.push(obj);
@@ -940,6 +989,7 @@ const OBJ_TYPES = {
   lever: { label: 'Lever (id, gate?)', img: () => [ART.sign], r: 0.15, shadow: 4, lever: true, light: { r: 24, col: '#ffd35a', a: 0.6, h: 8 } },
   fishspot: { label: 'Fishing spot (pool) - stub', img: () => [ART.sunIcon], fish: true },
   warpdoor: { label: 'Warp door (id, to: {x,y} | anchor id, key?)', img: () => [warpdoorArt()], r: 0.3, shadow: 6, warpdoor: true, light: { r: 34, col: '#9ef0ff', a: 0.7, h: 14 } },
+  root_ladder: { label: 'Root ladder (to: {x,y}, h): Interact climbs', img: () => [ART.sunIcon], ladder: true, shadow: 0 },   // §29 G3 (img: ladderArt)
   fox: { label: 'Fox (animal)', img: () => [ART.custom.fox || ART.sunIcon], critter: 'fox' },
   rabbit: { label: 'Rabbit (animal)', img: () => [ART.custom.rabbit || ART.sunIcon], critter: 'rabbit' },
 };
@@ -975,6 +1025,9 @@ function* buildMapStages(id, d) {
     m.h[y][x] = m.type[y][x] ? (parseInt((d.heights[y] || '')[x] || '0', 36) || 0) : 0;
     if (m.type[y][x] === 'r') m.hasRunes = true;
   }
+  // §29 G3: drop-down landings (walkable) and log spans (no ground under them)
+  if (d.drops && d.drops.length) { m.dropIn = new Uint8Array(d.W * d.H); for (const [x0, y0, w, h] of d.drops) for (let y = Math.max(0, y0); y < Math.min(d.H, y0 + h); y++) for (let x = Math.max(0, x0); x < Math.min(d.W, x0 + w); x++) m.dropIn[y * d.W + x] = 1; }
+  if (d.spans && d.spans.length) { m.spans = d.spans.map(r => r.slice()); m.span = new Uint8Array(d.W * d.H); for (const [x0, y0, w, h] of d.spans) for (let y = Math.max(0, y0); y < Math.min(d.H, y0 + h); y++) for (let x = Math.max(0, x0); x < Math.min(d.W, x0 + w); x++) m.span[y * d.W + x] = 1; }
   m.cx = d.sigil ? d.sigil.x : d.W / 2; m.cy = d.sigil ? d.sigil.y : d.H / 2;
   m.start = { x: d.start.x, y: d.start.y };
   // a portal may name its arrival point: to: { map, x, y } or arrive: { x, y } (else the target map's start)
@@ -1053,6 +1106,10 @@ function placeObjects(m, d) {
     }
     if (def.barrier) { placeBarrier(m, o, def.barrier); continue; }
     if (def.critter) { m.critterSpawns.push({ type: def.critter, x: o.x, y: o.y }); if (!window.EDITOR_MODE) continue; }
+    if (def.ladder) {   // §29 G3: the foot shows the roots up the wall face, the top a knot over the lip
+      const up = (+o.h || 0) > 0, img = ladderArt(m, up ? +o.h : 0), ob = addProp(m, img, +o.x, +o.y, { src: o, ay: img.height - 2, keyBias: up ? 0.02 : 0 });
+      ob.ladder = true; ob.use = LADDER_USE; continue;
+    }
     const imgs = def.img(), img = imgs[(o.v || 0) % imgs.length];
     const ob = addProp(m, img, +o.x, +o.y, { r: def.r || 0, shadow: def.shadow || 0, flip: def.tree ? m.theme.moon.x < RW / 2 : !!o.f, tree: !!def.tree, grass: !!def.grass, sway: rand(0, 6.28), brazier: !!def.brazier, beam: !!def.beam && !window.EDITOR_MODE, chest: !!def.chest, checkpoint: !!def.checkpoint, tablet: !!def.tablet, light: def.light ? Object.assign({}, def.light) : undefined, src: o });
     if (def.lever) { ob.lever = true; ob.gid = o.gate || null; ob.use = LEVER_USE; }
@@ -1141,6 +1198,21 @@ function warpdoorArt() {
     '...KKKKKK...', '..KSSSSSSK..', '.KSsBBBBsSK.', '.KSBbbbbBSK.', 'KSsBbccbBsSK', 'KSsBbccbBsSK', 'KSsBbbbbBsSK', 'KSsBbccbBsSK',
     'KSsBbbbbBsSK', 'KSsBbbbbBsSK', 'KSsBbbbbBsSK', 'KSsBbbbbBsSK', 'KSsBbbbbBsSK', 'KSSSSSSSSSSK', 'KKKKKKKKKKKK',
   ], { K: '#1a1428', S: '#6a6290', s: '#8f86b0', B: '#2a5aa8', b: '#163064', c: '#9ef0ff' }));
+}
+// §29 G3 root ladder: Interact = a 0.6 s climb to the other end (game.js startClimb)
+const LADDER_USE = { kind: 'ladder', reach: 1.25, on: () => !(G.player && G.player.climb), text: o => ((+o.src.h || 0) > 0 ? 'Climb' : 'Climb down'),
+  fn(o) { if (typeof startClimb === 'function') startClimb(o); } };
+const LADDER_IMG = {};
+function ladderArt(m, h) {   // two twisted root strands with knotted rungs, h levels tall (h 0: the knot over the lip)
+  const th = m.theme, key = m.themeId + '|' + h; if (LADDER_IMG[key]) return LADDER_IMG[key];
+  const H = Math.max(6, h * ZS + 6), W = 14, pb = new PixBuf(W, H), root = th.root, dk = mulRgb(root, 0.55), lt = mixRgb(root, [230, 210, 170], 0.35);
+  for (let y = 0; y < H; y++) for (const side of [0, 1]) {
+    const x = Math.round((side ? 10 : 3) + Math.sin(y * 0.45 + side * 2.1) * 1.2);
+    pb.set(x - 1, y, dk); pb.set(x, y, root); pb.set(x + 1, y, side ? dk : lt);
+  }
+  for (let y = H - 5; y > 1; y -= 6) for (let x = 3; x <= 10; x++) { const yy = y + Math.round(Math.sin(x * 0.7) * 0.8); pb.set(x, yy, (x & 1) ? root : lt); pb.set(x, yy + 1, dk); }
+  for (let k = 0; k < Math.floor(H / 9); k++) { const y = 3 + ((k * 37) % Math.max(1, H - 6)), x = (k & 1) ? 12 : 1; pb.set(x, y, th.grass[4]); pb.set(x, y + 1, th.grass[3]); }   // leaves
+  return (LADDER_IMG[key] = pb.toCanvas());
 }
 const LEVER_USE = { kind: 'lever', reach: 1.4, on: o => !o.pulled, text: () => 'Pull lever',
   fn(o) { const id = leverGate(G.map, o); o.pulled = true; sfx('trap'); if (id) openGate(id); else say('The lever clicks. Somewhere, something moved.'); } };

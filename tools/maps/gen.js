@@ -224,6 +224,8 @@ const T = {
   enemy(name) { return this.mode === 'future' ? name : (COMPAT_ENEMY[name] || name); },
   dialogue(speaker, lines) { return this.mode === 'future' ? { type: 'dialogue', speaker, lines } : { type: 'message', text: speaker + ': ' + lines.join(' ') }; },
   openGate(id) { return this.mode === 'future' ? { type: 'openGate', id } : { type: 'sound', name: 'portal' }; },
+  // §29 G3 the vantage reveal (screens.js startVantage): the camera eases down-slope, the fog lifts in r tiles, a 2.5 s map cinematic
+  vantage: (id, r, o) => Object.assign({ type: 'vantage', id, r: r || 24 }, o || {}),
   timer: (id, name, seconds, after, actions, requires) => Object.assign({ id, name, when: { type: 'timer', seconds, after } }, requires ? { requires } : {}, { actions }),
 };
 
@@ -246,6 +248,7 @@ class MapGen {
     this.objs = []; this.portals = []; this.triggers = []; this.markers = []; this.notes = [];
     this.sections = []; this.voids = []; this.warps = []; this.anchors = {}; this.pois = []; this.dead = [];
     this.startPos = null; this.sigil = null;
+    this.stacks = []; this.climbs = []; this.drops = []; this.spans = [];   // §29 G3 tall set pieces
     this.type = grid(this.W, this.H, '.'); this.h = grid(this.W, this.H, 0);
     this.land = grid(this.W, this.H, false); this.zone = grid(this.W, this.H, 0);   // zone: ZONE bits below
     this.occ = grid(this.W, this.H, null);
@@ -290,6 +293,40 @@ class MapGen {
   poi(kind, x, y, o = {}) { this.pois.push(Object.assign({ kind, x, y }, o)); }
   bridge(o) { this.bridges.push(Object.assign({ axis: 'x', len: 4, w: 2 }, o)); }
 
+  // ---------------------------- §29 G3 tall set pieces ----------------------------------
+  // stack(id, o): leaning stacked plateaus (world-art minutes §3.1.2). o = { x, y, levels: [4, 9, 14], r: [10, 7, 4.5],
+  //   lean (tiles of centre shift per tile of radius lost, default 0.6), ang (lean direction, rad), spin (rad the lean turns per ring),
+  //   rough (blob radius noise 0..0.3), centres: [[x, y] | null per ring] (explicit ring centres), land: true = ring 0 IS the land
+  //   (void stays void around it; else ring 0 is added as a lobe and the coast grows around it), bare: [ring indices without
+  //   colliding props], floor: [tile type per ring | null] }. Written in _tiles after the rooms (where walled rooms already go) and
+  //   before the corridors, so a switchback cuts its ramp through the rings. A tile is ring k when it lies inside rings 0..k.
+  stack(id, o) {
+    const s = Object.assign({ id, lean: 0.6, ang: 0, spin: 0.5, rough: 0.16, bare: [], floor: [], land: false }, o);
+    s.rings = s.levels.map((lvl, k) => {
+      const sh = s.lean * (s.r[0] - s.r[k]), a = s.ang + s.spin * k, c = s.centres && s.centres[k];
+      return { k, lvl, r: s.r[k], x: c ? c[0] : s.x + Math.cos(a) * sh, y: c ? c[1] : s.y + Math.sin(a) * sh, ph: 13.7 * (k + 1) + id.length * 3.1 };
+    });
+    this.stacks.push(s);
+    if (!s.land) this.lobe(s.rings[0].x, s.rings[0].y, s.r[0] + 1.2, s.levels[0]);
+    return s;
+  }
+  ringD(s, rg, x, y) {   // signed distance to a ring's blob edge (< 0 inside)
+    const dx = x - rg.x, dy = y - rg.y, a = Math.atan2(dy, dx);
+    return Math.hypot(dx, dy) - rg.r * (1 + s.rough * (this.n2.v(Math.cos(a) * 1.3 + rg.ph, Math.sin(a) * 1.3 + rg.ph * 0.7) - 0.5) * 2);
+  }
+  stackRing(s, x, y) { let k = -1; for (const rg of s.rings) { if (this.ringD(s, rg, x, y) > 0) break; k = rg.k; } return k; }
+  // switchback(id, o): a climbing path of `legs` with 180-degree turns (minutes §3.1.3). o = { from (as path), pts: [[x, y, lvl, hold], ...]
+  //   (the leg ends and turn landings), w }. No meander: the legs follow the control points; _pathsPass's Lipschitz profile + _stairs
+  //   emit the ramps and 's' tiles. Its own RNG stream (side), so the rest of the map rolls as before.
+  switchback(id, o) { return this.path(id, Object.assign({ kind: 'branch', w: 2, meander: 0, every: 99, step: 0.4, side: true, stack: true }, o)); }
+  // climb(id, o): a root ladder up a wall (minutes §3.1.4): Interact at either end = a 0.6 s climb (game.js startClimb). o = { x, y (the foot,
+  //   on the low side, in front of a S / E facing wall), to: { x, y } (the top) }. Emitted as a root_ladder object pair.
+  climb(id, o) { const c = Object.assign({ id }, o); this.climbs.push(c); return c; }
+  // drop(id, o): a drop-down ledge (minutes §3.1.5): the landing tiles [x0, y0, x1, y1) accept a step DOWN of any height from a neighbour
+  //   (maps.js walkable, one-way). Emitted as map.drops [[x, y, w, h], ...].
+  drop(id, o) { const d = Object.assign({ id }, o); this.drops.push(d); return d; }
+  inDrop(x, y) { for (const d of this.drops) { const [a, b, c, e] = d.rect; if (x >= a && x < c && y >= b && y < e) return true; } return false; }
+
   // ------------------------------- build ---------------------------------------
   build() {
     if (this.built) return this; this.built = true;
@@ -303,6 +340,7 @@ class MapGen {
     this._bridges();
     this._relax();
     this._stairs();
+    for (const d of this.drops) { const [a, b, c, e] = d.rect; for (let y = Math.max(0, b); y < Math.min(this.H, e); y++) for (let x = Math.max(0, a); x < Math.min(this.W, c); x++) this.zone[y][x] |= ZONE.drop; }
     this._finalizeFields();
     return this;
   }
@@ -500,7 +538,7 @@ class MapGen {
       while (st.length) { const [cx, cy] = st.pop(); n++; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = cx + dx, ny = cy + dy; if (isLand(nx, ny) && comp[ny * W + nx] < 0) { comp[ny * W + nx] = id; st.push([nx, ny]); } } }
       size.push(n);
     }
-    const bad = grid(W, H, false), Z = ZONE.path | ZONE.room | ZONE.fight | ZONE.water | ZONE.bridge | ZONE.stairs;
+    const bad = grid(W, H, false), Z = ZONE.path | ZONE.room | ZONE.fight | ZONE.water | ZONE.bridge | ZONE.stairs | ZONE.stack | ZONE.drop;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       if (!isLand(x, y)) continue;
       if ((this.zone[y][x] & Z) || (this.cor && this.cor[y][x]) || !'gfd'.includes(this.type[y][x])) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (y + dy >= 0 && x + dx >= 0 && y + dy < H && x + dx < W) bad[y + dy][x + dx] = true;
@@ -609,6 +647,17 @@ class MapGen {
         this.sigil = { x: rm.x, y: rm.y };
       }
     }
+    // §29 G3 stacked plateaus (after the rooms, before the corridors: a switchback cuts its ramp through the rings)
+    for (const s of this.stacks) {
+      const R = s.r[0] * 1.4 + 2, r0 = s.rings[0];
+      for (let y = Math.max(0, Math.floor(r0.y - R)); y <= Math.min(H - 1, r0.y + R); y++) for (let x = Math.max(0, Math.floor(r0.x - R)); x <= Math.min(W - 1, r0.x + R); x++) {
+        const k = this.stackRing(s, x + 0.5, y + 0.5); if (k < 0 || this.inVoid(x + 0.5, y + 0.5)) continue;
+        if (!this.land[y][x]) { if (!s.land) continue; this.land[y][x] = true; this.type[y][x] = 'g'; }
+        this.h[y][x] = s.levels[k]; this.zone[y][x] |= ZONE.stack | (s.bare.includes(k) ? ZONE.bare : 0);
+        if (s.floor[k]) this.type[y][x] = s.floor[k];
+        (this.stackK || (this.stackK = grid(W, H, -1)))[y][x] = k;
+      }
+    }
     // corridors (owner path decides height and tile type)
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const c = this.cor[y][x]; if (!c) continue;
@@ -699,6 +748,8 @@ class MapGen {
         this.type[y][x] = 'b'; this.h[y][x] = lvl; this.land[y][x] = true; this.zone[y][x] |= ZONE.bridge | ZONE.path;
       }
       b.tiles = tiles; b.lvl = lvl;
+      // §29 G3 span: a bridge with nothing under it (the fallen giant pine): maps.js draws a log, no ground, no skirt below it
+      if (b.span) { const x0 = Math.min(...tiles.map(t => t[0])), y0 = Math.min(...tiles.map(t => t[1])); this.spans.push([x0, y0, Math.max(...tiles.map(t => t[0])) - x0 + 1, Math.max(...tiles.map(t => t[1])) - y0 + 1]); }
     }
   }
 
@@ -715,6 +766,7 @@ class MapGen {
           const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H || !this.land[ny][nx]) continue;
           if (!isFix(nx, ny) && !(this.zone[ny][nx] & ZONE.room)) continue;
           if (this.type[ny][nx] === 'w') continue;
+          if (this.farLeg(x, y, nx, ny)) continue;   // §29 G3: two legs of one switchback side by side are separate lanes
           const d = this.h[y][x] - this.h[ny][nx];
           if (Math.abs(d) > 1 && !(this.zone[y][x] & ZONE.bridge)) { this.h[y][x] -= Math.sign(d) * (Math.abs(d) - 1); ch++; }
         }
@@ -723,6 +775,10 @@ class MapGen {
     }
   }
 
+  farLeg(x, y, nx, ny) {
+    const a = this.cor[y][x], b = this.cor[ny][nx]; if (!a || !b || a.p !== b.p) return false;
+    const p = this.paths[a.p]; return !!p.stack && Math.abs(p.samples[a.i].s - p.samples[b.i].s) > 3.5;
+  }
   _stairs() {
     const W = this.W, H = this.H;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -730,7 +786,7 @@ class MapGen {
       const p = this.paths[c.p]; if (!p.stairs || !(this.zone[y][x] & ZONE.path) || (this.zone[y][x] & ZONE.room)) continue;
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
-        if (this.cor[ny][nx] && this.h[ny][nx] !== this.h[y][x] && this.type[ny][nx] !== 'w' && this.type[ny][nx] !== 'b') { this.type[y][x] = 's'; this.zone[y][x] |= ZONE.stairs; break; }
+        if (this.cor[ny][nx] && this.h[ny][nx] !== this.h[y][x] && this.type[ny][nx] !== 'w' && this.type[ny][nx] !== 'b' && !this.farLeg(x, y, nx, ny)) { this.type[y][x] = 's'; this.zone[y][x] |= ZONE.stairs; break; }
       }
     }
     // arena pillars (standing stones) ringing the arena floor, leaving the entrances open
@@ -814,7 +870,9 @@ class MapGen {
       const pc = ctx ? ctx.dPath : this.pathClear(x, y);
       if (pc < def.r + (def.r <= 0.22 ? 0.15 : 0.55)) return false;   // §29 G2: small props (r <= 0.22) may stand in the corridor verge
       const z = this.zoneAt(x, y);
-      if (z & ZONE.fight) return false;
+      if (z & (ZONE.fight | ZONE.bare)) return false;
+      // §29 G3: no collider (tree / rock) on a plateau with a higher ring within 3 tiles in front (+x / +y): it would sort over that wall
+      if (z & ZONE.stack) { const h0 = this.hAt(x, y); for (let b = 0; b <= 3; b++) for (let a = 0; a <= 3; a++) if ((a || b) && this.hAt(x + a, y + b) > h0 + 1) return false; }
     }
     return true;
   }
@@ -989,6 +1047,11 @@ class MapGen {
   // ---------------------------------- output ------------------------------------
   toMap() {
     const portals = this.portals.map(p => Object.assign({}, p)), objects = this.objs.map(o => this._emitObj(o)).filter(Boolean);
+    for (const c of this.climbs) {   // §29 G3 root ladder pair: the foot climbs up, the top climbs down (game.js startClimb)
+      const h0 = this.hAt(c.x, c.y), h1 = this.hAt(c.to.x, c.to.y);
+      objects.push({ t: 'root_ladder', id: c.id, x: r2(c.x), y: r2(c.y), to: { x: r2(c.to.x), y: r2(c.to.y) }, h: h1 - h0 });
+      objects.push({ t: 'root_ladder', id: c.id + '_top', x: r2(c.to.x), y: r2(c.to.y), to: { x: r2(c.x), y: r2(c.y) }, h: h0 - h1 });
+    }
     for (const w of this.warps) {
       if (T.warpMode === 'door') objects.push(Object.assign({ t: 'warpdoor', id: w.id, x: r2(w.x), y: r2(w.y), to: { x: r2(w.to.x), y: r2(w.to.y) } }, w.key ? { key: w.key } : {}, w.label ? { label: w.label } : {}, w.open === false ? { open: false } : {}, w.boss ? { boss: w.boss } : {}));   // boss: the door's prompt shows "Recommended ilvl" (items.js); open:false = sealed until a trigger openGate { id }
       else portals.push(Object.assign({ x: r2(w.x), y: r2(w.y), to: this.id, open: w.open !== false, marker: !!w.marker, id: w.id, arrive: { x: r2(w.to.x), y: r2(w.to.y) } }, w.label ? { label: w.label } : {}));
@@ -1007,6 +1070,8 @@ class MapGen {
     // M2c: sections (bounds, kind, ambient light, palette name), void gutters and warp anchors ride along as plain map fields
     if (this.sections.length) m.sections = this.sections.map(sc => { const b = sc.bounds, o = { id: sc.id, name: sc.name, kind: sc.kind, x: b[0], y: b[1], w: b[2] - b[0], h: b[3] - b[1] }; for (const k of ['ambient', 'dark']) if (sc[k] != null) o[k] = sc[k]; return o; });
     if (Object.keys(this.anchors).length) m.anchors = Object.values(this.anchors).map(a => Object.assign({}, a));
+    if (this.drops.length) m.drops = this.drops.map(d => [d.rect[0], d.rect[1], d.rect[2] - d.rect[0], d.rect[3] - d.rect[1]]);   // §29 G3 maps.js walkable
+    if (this.spans.length) m.spans = this.spans.map(r => r.slice());   // §29 G3 log bridges with nothing under them
     if (this.levelAreas && this.levelAreas.length) m.levelAreas = this.levelAreas.map(z => Object.assign({}, z));   // §26.2 pockets: items.js enemyLevel
     m.triggers = this.triggers;
     return m;
@@ -1052,14 +1117,18 @@ class MapGen {
       if (!seen[k0]) { seen[k0] = 1; q.push(k0); }
     }
     const hOf = k => this.h[((k / W) | 0) / S | 0][((k % W) / S) | 0];
+    const dropOf = k => this.drops.length && (this.zone[((k / W) | 0) / S | 0][((k % W) / S) | 0] & ZONE.drop);
+    const climbAt = []; for (const c of this.climbs) for (const [a, b] of [[c, c.to], [c.to, c]]) climbAt.push({ k: Math.floor(a.y * S) * W + Math.floor(a.x * S), x: a.x, y: a.y, to: b });
     for (let qi = 0; qi < q.length; qi++) {
       const k = q[qi], cx = k % W, cy = (k / W) | 0, h0 = hOf(k);
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
         const nk = ny * W + nx; if (seen[nk] || blocked[nk]) continue;
-        if (Math.abs(hOf(nk) - h0) > 1.05) continue;
+        if (Math.abs(hOf(nk) - h0) > 1.05 && !(dropOf(nk) && hOf(nk) < h0)) continue;   // a drop-down ledge: one way, down
         seen[nk] = 1; q.push(nk);
       }
+      // a root ladder: within 0.7 tiles of either end, the other end is reachable
+      for (const c of climbAt) if (Math.hypot((cx + 0.5) / S - c.x, (cy + 0.5) / S - c.y) < 0.7) { const tk = Math.floor(c.to.y * S) * W + Math.floor(c.to.x * S); if (tk >= 0 && tk < W * H && !seen[tk]) { blocked[tk] = 0; seen[tk] = 1; q.push(tk); } }
     }
     return { has: (x, y) => { const cx = Math.floor(x * S), cy = Math.floor(y * S); return cx >= 0 && cy >= 0 && cx < W && cy < H && !!seen[cy * W + cx]; }, count: q.length, seen, S, W, H };
   }
@@ -1106,6 +1175,19 @@ class MapGen {
       if (tr.when.type === 'enter_area') chk('enter_area ' + tr.id, tr.when.x, tr.when.y);
       for (const a of tr.actions) if (a.type === 'spawn' || a.type === 'spawn_boss') { if (a.x != null) chk(`spawn ${tr.id}`, a.x, a.y); } else if (a.type === 'spawnPack') chk(`spawnPack ${tr.id}`, a.at.x, a.at.y);
     }
+    // §29 G3: climbs and drops are on real walls; no fight room directly north of (behind) a wall taller than 4 levels
+    for (const c of this.climbs) { const d = this.hAt(c.to.x, c.to.y) - this.hAt(c.x, c.y); if (d < 2) errs.push(`climb ${c.id}: the top is not above the foot (dh ${d})`); if (!this.walkTile(c.x, c.y) || !this.walkTile(c.to.x, c.to.y)) errs.push(`climb ${c.id}: an end is not walkable`); }
+    for (const d of this.drops) { let lip = 0; const [a, b, c, e] = d.rect; for (let y = b; y < e; y++) for (let x = a; x < c; x++) for (const [dx, dy] of [[-1, 0], [0, -1], [1, 0], [0, 1]]) if (this.walkTile(x + dx, y + dy) && this.hAt(x + dx, y + dy) >= this.hAt(x, y) + 2) lip++; if (!lip) errs.push(`drop ${d.id}: no higher ground beside the landing`); }
+    this.tallBehind = [];
+    const spawnAt = []; for (const tr of this.triggers) for (const a of tr.actions || []) if (a.type === 'spawn' && a.x != null) spawnAt.push([a.x, a.y]); else if (a.type === 'spawnPack') spawnAt.push([a.at.x, a.at.y]);
+    for (const rm of this.rooms) if (rm.kind !== 'flat' && !rm.isolated && spawnAt.some(([x, y]) => this.roomD(rm, x, y) < 1)) {
+      let worst = 0;
+      for (let y = Math.floor(rm.y - rm.r); y <= rm.y + rm.r; y++) for (let x = Math.floor(rm.x - rm.r); x <= rm.x + rm.r; x++) {
+        if (this.roomD(rm, x + 0.5, y + 0.5) > 0) continue;
+        for (let k = 1; k <= 3; k++) for (const [a, b] of [[k, 0], [0, k], [k, k]]) { const t = this.tileAt(x + a, y + b); if (t !== '.' && t !== 'v' && t !== 'k') worst = Math.max(worst, this.hAt(x + a, y + b) - rm.lvl); }
+      }
+      if (worst > 4) { this.tallBehind.push(`${rm.id} (+${worst})`); if (this.stacks.length) errs.push(`fight room ${rm.id} sits behind a wall ${worst} levels taller (cutaway fight)`); }
+    }
     for (const p of this.portals) if (Math.hypot(p.x - m.start.x, p.y - m.start.y) < 2) warns.push(`portal ${p.to} within 2 tiles of start (instant bounce risk)`);
     // secrets: reachable but off the main route
     for (const p of this.paths) if (p.kind === 'secret') {
@@ -1127,7 +1209,7 @@ class MapGen {
   }
 }
 
-const ZONE = { path: 1, room: 2, fight: 4, water: 8, bridge: 16, side: 32, secret: 64, stairs: 128 };
+const ZONE = { path: 1, room: 2, fight: 4, water: 8, bridge: 16, side: 32, secret: 64, stairs: 128, stack: 256, bare: 512, drop: 1024 };
 
 // generate(recipe, opts) -> { gen, map, report }
 function generate(recipe, opts = {}) {
