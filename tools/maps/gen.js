@@ -1020,7 +1020,7 @@ class MapGen {
       else if (si) { out.role = o.t; }
       if (this.kinds === 'future' && ENGINE_KIND[o.t]) { const ek = ENGINE_KIND[o.t]; out.role = o.t; out.t = ek.t; for (const k of Object.keys(ek)) if (k !== 't' && o[k] == null) out[k] = ek[k]; }
     }
-    for (const k of Object.keys(o)) if (!['t', 'x', 'y', 'v', 'f', 'sp', 'marker'].includes(k) && out[k] == null) out[k] = o[k];
+    for (const k of Object.keys(o)) if (!['t', 'x', 'y', 'v', 'f', 'sp', 'marker', '_sc'].includes(k) && out[k] == null) out[k] = o[k];
     return out;
   }
 
