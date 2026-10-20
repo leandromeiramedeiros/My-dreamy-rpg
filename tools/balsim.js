@@ -69,7 +69,8 @@ function simStep(rdt) {
 }`);
 
 // ---------------------------------------------------------------- builds
-const FAMS = { sword: ['dawnblade', 'knighthelm', 'knightplate', 'knightgreaves'], staff: ['starfall', 'arcanecowl', 'dreamrobe', 'clothsandals'], bow: ['moonbow', 'wardenhood', 'stalkerjacket', 'stalkershoes'] };
+// FAMILY_TIERS keys (v4: weapon variant / chest suit / helm + boots piece family)
+const FAMS = { sword: ['sword', 'knighthelm', 'warden', 'knightgreaves'], staff: ['staff', 'arcanecowl', 'dreamweave', 'clothsandals'], bow: ['bow', 'wardenhood', 'stalker', 'stalkershoes'] };
 const SLOTS = ['weapon', 'head', 'chest', 'boots'];
 const BANDS = [
   { name: 'Vale', lo: 1, hi: 3, ttk: [2, 2], refs: ['dreammoth', 'slime'] },
@@ -98,9 +99,9 @@ function simGear(fams, L, rarity, kind) {
   ['weapon', 'head', 'chest', 'boots'].forEach((slot, i) => {
     const base = FAMILY_TIERS[fams[i]][tier].split(':')[0], rar = kind === 'under' ? UNDER[slot] : rarity;
     const it = makeItem(base, rar, L, { sockets: kind === 'under' ? 0 : slot === 'weapon' || slot === 'chest' ? 1 : 0 });
-    if (kind === 'under') it.affixes = (slot === 'weapon' ? REF.weapon : REF.armour).slice(0, RARITY[rar].affixes).map(stat => ({ stat, v: simAffix(stat, L, rar, 0.8) }));
-    if (kind === 'reference') it.affixes = (slot === 'weapon' ? REF.weapon : REF.armour).slice(0, RARITY[rarity].affixes).map(stat => ({ stat, v: simAffix(stat, L, rarity, 0.8) }));
-    if (kind === 'optimal') it.affixes = (slot === 'weapon' ? ['power', 'critDmg', 'crit'] : slot === 'head' ? ['crit', 'critDmg', 'power'] : slot === 'chest' ? ['power', 'skillDmg', 'crit'] : ['haste', 'power', 'crit']).slice(0, RARITY[rarity].affixes).map(stat => ({ stat, v: simAffix(stat, L, rarity, 1) }));
+    if (kind === 'under') it.affixes = (slot === 'weapon' ? REF.weapon : REF.armour).slice(0, RARITY[rar].affixes).map(stat => mkAffix(stat, simAffix(stat, L, rar, 0.8), L));
+    if (kind === 'reference') it.affixes = (slot === 'weapon' ? REF.weapon : REF.armour).slice(0, RARITY[rarity].affixes).map(stat => mkAffix(stat, simAffix(stat, L, rarity, 0.8), L));
+    if (kind === 'optimal') it.affixes = (slot === 'weapon' ? ['power', 'critDmg', 'crit'] : slot === 'head' ? ['crit', 'critDmg', 'power'] : slot === 'chest' ? ['power', 'skillDmg', 'crit'] : ['haste', 'power', 'crit']).slice(0, RARITY[rarity].affixes).map(stat => mkAffix(stat, simAffix(stat, L, rarity, 1), L));
     // reference gems are diamonds (element-neutral: a ruby would amplify only fire skills and skew weapon parity)
     if (it.sockets.length && kind !== 'under') it.sockets[0] = kind === 'random' ? pick2(GEM_TYPES) + '_' + g : kind === 'optimal' ? (slot === 'weapon' ? 'ruby_' + g : 'amethyst_' + g) : 'diamond_' + g;
     p.equip[slot] = it;

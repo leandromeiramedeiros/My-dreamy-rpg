@@ -99,9 +99,9 @@ function dmgText(x, y, z, s, col, big, o) {
 function makePlayer() {
   const p = {
     x: 0, y: 0, z: 0, r: 0.28, aim: 0, face: 1, back: false, walkT: 0, moving: false,
-    gear: { weapon: 'dawnblade', head: 'knighthelm', chest: 'knightplate', boots: 'knightgreaves' },   // family ids, derived from p.equip
+    gear: { weapon: 'sword', head: 'knighthelm', chest: 'warden', boots: 'knightgreaves' },   // variant / family ids (data.js), derived from p.equip
     equip: {}, bag: [], dust: 0, potions: 3, xp: 0, cdm: {},
-    wsk: { dawnblade: { q: 'sunslash', e: 'dashstrike', r: 'judgement' }, starfall: { q: 'firebolt', e: 'barrage', r: 'meteor' }, moonbow: { q: 'multishot', e: 'tumble', r: 'arrowrain' } },
+    wsk: { sword: { q: 'sunslash', e: 'dashstrike', r: 'judgement' }, staff: { q: 'firebolt', e: 'barrage', r: 'meteor' }, bow: { q: 'multishot', e: 'tumble', r: 'arrowrain' } },   // per weapon variant (§23)
     csk: ['secondwind', 'chain', 'shootingstar'],
     cds: {}, buffs: {}, atkT: 0, combo: 0, swing: null, dash: null, invulnT: 0, hurtT: 0, rootT: 0, slowT: 0, castT: 0, spin: 0,
     name: 'Aerin', level: 1, dead: false,

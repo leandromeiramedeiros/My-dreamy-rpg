@@ -1,12 +1,55 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// Items, loot, gems, XP and save (DESIGN §3–4). ITEMS (data.js) stay the gear
-// FAMILIES that decide skills + sprites; BASES are their tiers. An equipped or
-// dropped thing is an item INSTANCE:
-//   { uid, base, slot, rarity, ilvl, reqLvl, affixes: [{ stat, v }], sockets: [null, 'ruby_2'], unique? }
-// Loaded by index.html and editor.html right after data.js: no hud/render/main deps at load time.
+// Items, loot, gems, XP and save (DESIGN §3–4, §19, §23, §24). ITEMS (data.js) are the live gear FAMILIES (weapon
+// variants, armour pieces) that decide skills + sprites; BASES are their tiers. Loaded by index.html and editor.html
+// right after data.js (js/itemdata.js follows it): no hud/render/main deps at load time.
+//
+// ===== ITEM v2: the ONE item object (save v4; FINAL for M3 — the UI, art and level lanes build against this) =========
+// Every gear piece and trinket, equipped, in the bag or on the ground, is this plain JSON object (saved as is):
+// {
+//   id: 'i_42',               instance id, unique per save (newUid). Save v3 called it `uid`.
+//   base: 'sunforged',        base id: a BASES key (gear) or a TRINKET_BASES / trinket-unique id (itemdata.js). Never renamed.
+//   variant: 'sword',         the family the base belongs to (a FAMILY_TIERS key):
+//                               weapon -> variant (§23)  sword | staff | bow      (planned: rapier mace axe hammer halberd
+//                                                                                  crossbow chakram spellbook orb daggers claws fans)
+//                               chest  -> suit id (§24)  warden | dreamweave | stalker
+//                               head / boots -> piece family  knighthelm arcanecowl wardenhood / knightgreaves clothsandals stalkershoes
+//                               trinket -> its slot      ring | amulet | belt
+//   class: 'blades',          weapon class  blades | greatarms | shots | foci | shadows
+//                             armour class  heavy | caster | medium | shadow          trinket: 'trinket'
+//   suit: 'warden' | null,    armour only: the §24 suit this piece counts toward (helm/boots too), else null
+//   slot: 'weapon',           weapon | head | chest | boots | ring | amulet | belt. Equip keys (player.equip):
+//                               weapon head chest boots ring1 ring2 amulet belt  (a 'ring' item goes in ring1 or ring2)
+//   tier: 1,                  BASES tier INDEX 0..4 (= design T1..T5; hero.js clamps 0..4). Trinkets 0..2 (= T1..T3).
+//                             Mythic is a rarity, not a tier.
+//   rarity: 'rare',           common | uncommon | rare | epic | legendary | mythic (RARITY)
+//   ilvl: 16,                 item level 1..40
+//   req: 14,                  required hero level = max(base req, ilvl - 2) (Mythic >= 36)
+//   implicit: { id: 'holyDmg', v: 0.06, text: '+6% holy damage' } | null,
+//                             fixed per base (IMPLICITS / TRINKET_BASES, itemdata.js); id = a stat key.
+//                             DATA ONLY in M3: not added by statsOf() until the CAPS step (step 2).
+//   affixes: [{ id: 'power', tier: 2, v: 0.07, kind: 'P' }, { id: 'hp', tier: 1, v: 40, kind: 'S' }],
+//                             id = stat key (AFFIX_V2), tier 1..3 (ilvl gates: T1 1+, T2 14+, T3 28+), v = rolled value in
+//                             AFFIX units (percent stats are fractions), kind 'P' prefix | 'S' suffix; prefixes first.
+//                             Ring = P only, belt = S only, amulet 1P+1S (§19.4).
+//   sockets: [null, 'ruby_2'],  gem ids '<type>_<grade 1..3>' or null (empty). Rings never have sockets.
+//   boon: null | { id: 'fireBurn', grade: 'minor'|'major', text: '...' },   trinkets only (BOONS, itemdata.js)
+//   rule: null | 'rootcrown', the unique rule id a Legendary/Mythic carries (hook: hasUnique / hasRule); null on others
+//   unique: null | 'rootcrown',  the named unique this is (UNIQUES / trinket uniques): it keeps its own name
+//   hist: { found: 'pinewood' | null, kills: 0, bossKills: 0 },   §19.3 history; kills count on the equipped weapon only
+//   tempered: null | { affix: 'power' },   §19.2: the one affix raised a tier at the Elder Stone (truthy = tempered)
+//   name: { prefix: 'Fierce' | null, suffix: 'of the Fox' | null },   §19.3 name parts. Display name (itemName):
+//                             unique ? its name : [prefix, BASES name, suffix].join(' '). Mythic suffix from MYTHIC_NAMES.
+// }
+// M3 compat mirrors (NOT saved, non-enumerable, removed in step 2): it.reqLvl -> it.req, affix.stat -> affix.id, it.uid -> it.id,
+// for readers not yet on v2 (menus.js tooltip / bag). New code reads the v2 names. makeTestItem(opts) builds a valid v2
+// item for UI / art work (deterministic, no RNG); makeItem() still rolls the M2 way until step 2 (affix rolling).
 // ---------------------------------------------------------------------------
-const SLOTS = ['weapon', 'head', 'chest', 'boots'];
+const SLOTS = ['weapon', 'head', 'chest', 'boots'];                 // gear slots (they grant skills; recalc + gems read these)
+const TRINKET_SLOTS = ['ring1', 'ring2', 'amulet', 'belt'];          // §19.4 equip keys (passive only; stats land in step 2)
+const EQUIP_SLOTS = SLOTS.concat(TRINKET_SLOTS);                      // every player.equip key (save v4)
+const TRINKET_KINDS = ['ring', 'amulet', 'belt'];                     // item.slot of a trinket
+const equipKeysFor = slot => slot === 'ring' ? ['ring1', 'ring2'] : [slot];
 const MAX_LEVEL = 40;
 const RARITY = {
   common:    { i: 0, name: 'Common',    col: '#d8d8d8', mult: 1.00, affixes: 0, sockets: [0, 1] },
@@ -21,19 +64,20 @@ function mixHex(a, b, k) { const A = hexToRgb(a), B = hexToRgb(b); return '#' + 
 // mythic colour-cycles; everything else is its table colour
 const rarityCol = (r, t = G.t) => r === 'mythic' ? mixHex('#ff4f7a', '#ffb0f0', 0.5 + 0.5 * Math.sin(t * 3)) : RARITY[r].col;
 
-// ===== bases: 12 families x 5 tiers (tier 0..4). Existing family ids sit at tier 1 (L8). =====
+// ===== bases: 12 live families x 5 tiers (tier 0..4), FAMILY_TIERS keyed by variant / suit / piece family (§23.6).
+// Base ids never change (the M2 family names sit at tier 1, L8: 'dawnblade' is the Sword's T2 base). =====
 const TIER_REQ = [1, 8, 16, 24, 32], MYTHIC_REQ = 36, TIER_DMG = [0.7, 1, 1.5, 2.1, 2.8];
 const TIER_PCT = [0.6, 1, 1.25, 1.5, 1.8], TIER_FLAT = [0.5, 1, 2, 3.2, 4.5];
 const FAMILY_TIERS = {
-  dawnblade: ['rustyblade:Rusty Blade', 'dawnblade', 'sunforged:Sunforged Blade', 'auroraedge:Aurora Edge', 'dawneternal:Dawn Eternal'],
-  starfall: ['willowwand:Willow Wand', 'starfall', 'cometrod:Comet Rod', 'nebulasceptre:Nebula Sceptre', 'nighteternal:Night Eternal'],
-  moonbow: ['hunterbow:Hunter\'s Bow', 'moonbow', 'silverwing:Silverwing Bow', 'eclipsebow:Eclipse Longbow', 'mooneternal:Moon Eternal'],
+  sword: ['rustyblade:Rusty Blade', 'dawnblade', 'sunforged:Sunforged Blade', 'auroraedge:Aurora Edge', 'dawneternal:Dawn Eternal'],
+  staff: ['willowwand:Willow Wand', 'starfall', 'cometrod:Comet Rod', 'nebulasceptre:Nebula Sceptre', 'nighteternal:Night Eternal'],
+  bow: ['hunterbow:Hunter\'s Bow', 'moonbow', 'silverwing:Silverwing Bow', 'eclipsebow:Eclipse Longbow', 'mooneternal:Moon Eternal'],
   knighthelm: ['ironcap:Iron Cap', 'knighthelm', 'sunguard:Sunguard Helm', 'auroravisor:Aurora Visor', 'crownofdawn:Crown of Dawn'],
   arcanecowl: ['novicehood:Novice Hood', 'arcanecowl', 'starweave:Starweave Cowl', 'astralcirclet:Astral Circlet', 'crownofstars:Crown of Stars'],
   wardenhood: ['rangercap:Ranger Cap', 'wardenhood', 'mossmantle:Mossmantle Hood', 'thornwarden:Thornwarden Hood', 'crownofroots:Crown of Roots'],
-  knightplate: ['ironmail:Iron Mail', 'knightplate', 'sunplate:Sunforged Plate', 'auroraplate:Aurora Plate', 'dawnaegis:Aegis of Dawn'],
-  dreamrobe: ['linenrobe:Linen Robe', 'dreamrobe', 'starwoven:Starwoven Robe', 'nebularobe:Nebula Vestments', 'dreamshroud:Eternal Dreamshroud'],
-  stalkerjacket: ['jerkin:Leather Jerkin', 'stalkerjacket', 'nightcoat:Nightstalker Coat', 'shadowweave:Shadowweave Jacket', 'eclipsegarb:Eclipse Garb'],
+  warden: ['ironmail:Iron Mail', 'knightplate', 'sunplate:Sunforged Plate', 'auroraplate:Aurora Plate', 'dawnaegis:Aegis of Dawn'],
+  dreamweave: ['linenrobe:Linen Robe', 'dreamrobe', 'starwoven:Starwoven Robe', 'nebularobe:Nebula Vestments', 'dreamshroud:Eternal Dreamshroud'],
+  stalker: ['jerkin:Leather Jerkin', 'stalkerjacket', 'nightcoat:Nightstalker Coat', 'shadowweave:Shadowweave Jacket', 'eclipsegarb:Eclipse Garb'],
   knightgreaves: ['ironboots:Iron Boots', 'knightgreaves', 'sungreaves:Sunforged Greaves', 'auroragreaves:Aurora Greaves', 'dawnstriders:Dawnstriders'],
   clothsandals: ['ropesandals:Rope Sandals', 'clothsandals', 'mistwalkers:Mistwalkers', 'skystep:Skystep Sandals', 'cloudsteps:Eternal Cloudsteps'],
   stalkershoes: ['softshoes:Soft Shoes', 'stalkershoes', 'quietstep:Quietstep Boots', 'shadowstep:Shadowstep Boots', 'eclipsetreads:Eclipse Treads'],
@@ -41,9 +85,27 @@ const FAMILY_TIERS = {
 const BASES = {};
 for (const slot of SLOTS) for (const fam of ITEMS[slot]) FAMILY_TIERS[fam.id].forEach((s, tier) => {
   const [id, name] = s.includes(':') ? s.split(':') : [s, fam.name];
-  BASES[id] = { id, name, slot, family: fam.id, tier, reqLvl: TIER_REQ[tier], icon: fam.icon, color: fam.color, kind: fam.kind };
+  // family === variant (kept: older readers use b.family); suit = the §24 suit an armour piece counts toward
+  BASES[id] = { id, name, slot, family: fam.id, variant: fam.id, class: fam.class, suit: fam.suit || null, tier, reqLvl: TIER_REQ[tier], icon: fam.icon, color: fam.color, kind: fam.kind };
 });
-const familyOf = base => (BASES[base] || {}).family;
+const familyOf = base => (baseOf(base) || {}).family;
+// trinket bases live in itemdata.js (loaded after this file): resolved lazily, never put in BASES (the gear-only tables)
+let TRK_BASES = null;
+function trinketBases() {
+  if (TRK_BASES) return TRK_BASES;
+  if (typeof TRINKET_BASES === 'undefined') return {};
+  TRK_BASES = {};
+  const add = (t, tier, req) => { TRK_BASES[t.id] = { id: t.id, name: t.name, slot: t.slot, family: t.slot, variant: t.slot, class: 'trinket', suit: null,
+    tier, reqLvl: req, icon: t.slot, color: '#d8c8a0', kind: t.slot, implicit: t.implicit || null, unique: t.unique || null, rule: t.rule || null, boon: t.boon || null }; };
+  for (const t of TRINKET_BASES) add(t, clamp((t.tier | 0) - 1, 0, 2), t.reqLvl || 1);
+  for (const u of (typeof TRINKET_UNIQUES !== 'undefined' ? TRINKET_UNIQUES : []).concat(typeof WORLD_UNIQUES !== 'undefined' ? WORLD_UNIQUES : []))
+    add(Object.assign({}, u, { unique: u.id, rule: u.id }), 1, 16);
+  for (const o of typeof ORIGIN_RINGS !== 'undefined' ? ORIGIN_RINGS : []) add(o, 0, 1);
+  return TRK_BASES;
+}
+// any base id -> its base row (gear BASES first, then trinkets)
+const baseOf = id => BASES[id] || trinketBases()[id] || null;
+const isTrinket = it => !!it && TRINKET_KINDS.includes(it.slot);
 // damage types (§5b): the hero resists these; enemies resist all of them + holy
 const RES_ELS = ['slash', 'pierce', 'fire', 'frost', 'nature', 'lightning', 'arcane', 'gloom'];
 const RES_SHORT = { slash: 'Sl', pierce: 'Pi', fire: 'Fi', frost: 'Fr', nature: 'Na', lightning: 'Li', arcane: 'Ar', gloom: 'Gl' };
@@ -52,7 +114,7 @@ const resKey = el => 'res' + el[0].toUpperCase() + el.slice(1);
 const PCT_STATS = { def: 1, power: 1, crit: 1, haste: 1, speed: 1, critDmg: 1, cdr: 1, skillDmg: 1, resAll: 1 };
 for (const el of RES_ELS) PCT_STATS[resKey(el)] = 1;
 function baseStats(b) {
-  const fam = item(b.slot, b.family);
+  const fam = item(b.slot, b.family); if (!fam) return {};   // trinkets: no base stats (their implicit is data until step 2)
   if (b.slot === 'weapon') return { dmg: fam.basic.dmg * TIER_DMG[b.tier] };
   const s = {};
   for (const k in fam.stats) s[k] = fam.stats[k] * (PCT_STATS[k] ? TIER_PCT : TIER_FLAT)[b.tier];
@@ -88,11 +150,12 @@ const UNIQUES = {
   cinderstride: { name: 'Cinderstride Boots', base: 'sungreaves', boss: 'caldera:kharzul', desc: 'Boots skill leaves a fire trail; lava immunity 2s.' },
   morrowbane: { name: 'Morrowbane', base: 'dawneternal', boss: 'spire:morrow', mythic: true, desc: 'R ultimate resets on boss phase change.' },
 };
-const hasUnique = (p, id) => SLOTS.some(s => p.equip[s] && p.equip[s].unique === id);
+const hasUnique = (p, id) => EQUIP_SLOTS.some(s => p.equip[s] && p.equip[s].unique === id);
+const hasRule = (p, id) => EQUIP_SLOTS.some(s => p.equip[s] && p.equip[s].rule === id);
 const uniqueFor = key => Object.keys(UNIQUES).find(k => UNIQUES[k].boss === key);
 function makeUnique(id, ilvl) {
   const U = UNIQUES[id], it = makeItem(U.base, U.mythic ? 'mythic' : 'legendary', Math.max(ilvl, BASES[U.base].reqLvl));
-  it.unique = id; it.affixes.push({ stat: 'resAll', v: 0.1 }); return it;
+  it.unique = id; it.rule = id; it.affixes.push(mkAffix('resAll', 0.1, it.ilvl)); return it;
 }
 
 // ===== gems (DESIGN §4.3) ==========================================================
@@ -129,33 +192,65 @@ const ultChargeBonus = p => 0.05 * ((p.amp && p.amp.diamond) || 0);
 const chainBonus = p => Math.floor(((p.amp && p.amp.topaz) || 0) / 2);
 const healMul = p => 1 + 0.06 * ((p.amp && p.amp.emerald) || 0);
 
-// ===== instances ====================================================================
+// ===== instances (the v2 item object: see the shape block at the top) ================
 let UID = 0;
 const newUid = () => 'i_' + (++UID);
 const rarityAtLeast = (r, min) => RARITY[r].i >= RARITY[min].i;
+// §19.1 affix tiers are gated by item level: T1 1+, T2 14+, T3 28+
+const AFFIX_TIER_ILVL = [1, 14, 28];
+const affixTier = ilvl => ilvl >= AFFIX_TIER_ILVL[2] ? 3 : ilvl >= AFFIX_TIER_ILVL[1] ? 2 : 1;
+// prefix (offence / utility) or suffix (defence / sustain), from AFFIX_V2 when itemdata.js is loaded; M2's `mp` is a suffix
+const AFFIX_P = ['power', 'crit', 'critDmg', 'haste', 'skillDmg', 'cdr', 'statusChance', 'markCap', 'chargeSpeed'];
+const affixKind = id => (typeof AFFIX_V2 !== 'undefined' && AFFIX_V2.prefix[id]) || AFFIX_P.includes(id) || /^[a-z]+Dmg$/.test(id) ? 'P' : 'S';
+const mkAffix = (id, v, ilvl, tier) => compatAffix({ id, tier: tier || affixTier(ilvl), v, kind: affixKind(id) });
+// the base's fixed implicit (IMPLICITS / trinket rows in itemdata.js), as { id, v, text } — data only until step 2
+function implicitOf(base) {
+  const t = trinketBases()[base], r = t ? t.implicit : typeof IMPLICITS !== 'undefined' ? IMPLICITS[base] : null;
+  return r ? { id: r.stat, v: r.v, text: r.text } : null;
+}
+const newHist = () => ({ found: null, kills: 0, bossKills: 0 });
+// M3 compat mirrors (non-enumerable, so never saved): reqLvl / uid on the item, stat on each affix
+function compatAffix(a) { if (a && !Object.getOwnPropertyDescriptor(a, 'stat')) Object.defineProperty(a, 'stat', { get() { return this.id; }, set(v) { this.id = v; }, enumerable: false, configurable: true }); return a; }
+function compatItem(it) {
+  if (!it || it.gem) return it;
+  if (!Object.getOwnPropertyDescriptor(it, 'reqLvl')) Object.defineProperty(it, 'reqLvl', { get() { return this.req; }, set(v) { this.req = v; }, enumerable: false, configurable: true });
+  if (!Object.getOwnPropertyDescriptor(it, 'uid')) Object.defineProperty(it, 'uid', { get() { return this.id; }, set(v) { this.id = v; }, enumerable: false, configurable: true });
+  (it.affixes || []).forEach(compatAffix);
+  return it;
+}
+// the canonical v2 key order (save files diff cleanly); fills every v2 field a partial item lacks
+function v2Item(o) {
+  const b = baseOf(o.base) || {};
+  return compatItem({ id: o.id, base: o.base, variant: o.variant || b.variant || null, class: o.class || b.class || null, suit: o.suit !== undefined ? o.suit : b.suit || null,
+    slot: o.slot || b.slot, tier: o.tier != null ? o.tier : b.tier != null ? b.tier : 0, rarity: o.rarity, ilvl: o.ilvl, req: o.req,
+    implicit: o.implicit !== undefined ? o.implicit : implicitOf(o.base), affixes: (o.affixes || []).map(compatAffix), sockets: o.sockets || [],
+    boon: o.boon || null, rule: o.rule || null, unique: o.unique || null, hist: o.hist || newHist(), tempered: o.tempered || null,
+    name: o.name || { prefix: null, suffix: null } });
+}
 function makeItem(base, rarity = 'common', ilvl, o = {}) {
   const b = BASES[base], R = RARITY[rarity];
   ilvl = clamp(Math.round(ilvl || b.reqLvl), 1, MAX_LEVEL);
   const req = Math.max(b.reqLvl, ilvl - 2, rarity === 'mythic' ? MYTHIC_REQ : 0);
-  const it = { uid: newUid(), base, slot: b.slot, rarity, ilvl, reqLvl: clamp(req, 1, MAX_LEVEL), affixes: [], sockets: [] };
+  const it = v2Item({ id: newUid(), base, rarity, ilvl, req: clamp(req, 1, MAX_LEVEL), affixes: [], sockets: [] });
   const pool = Object.keys(AFFIX).filter(k => AFFIX[k] !== 'res' && !(b.slot !== 'weapon' && k === 'skillDmg' && Math.random() < 0.5));
   for (let n = 0; n < 2; n++) pool.push(resKey(pick2(RES_ELS)));   // two resist candidates per roll (dupes are skipped)
   for (let n = 0; n < R.affixes && pool.length; n++) {
     const k = pool.splice((Math.random() * pool.length) | 0, 1)[0];
-    if (it.affixes.some(a => a.stat === k)) { n--; continue; }
-    if (AFFIX[k] === 'res') { it.affixes.push({ stat: k, v: Math.round(10 + Math.random() * 10) / 100 }); continue; }
+    if (it.affixes.some(a => a.id === k)) { n--; continue; }
+    if (AFFIX[k] === 'res') { it.affixes.push(mkAffix(k, Math.round(10 + Math.random() * 10) / 100, ilvl)); continue; }
     const [a, pl] = AFFIX[k];
     let v = (a + pl * ilvl) * (0.6 + Math.random() * 0.4) * (1 + 0.08 * R.i);
     v = PCT_STATS[k] ? Math.round(v * 1000) / 1000 : (v < 10 ? Math.round(v * 10) / 10 : Math.round(v));
-    it.affixes.push({ stat: k, v });
+    it.affixes.push(mkAffix(k, v, ilvl));
   }
+  it.affixes.sort((a, c) => (a.kind === 'P' ? 0 : 1) - (c.kind === 'P' ? 0 : 1));   // prefixes first (stable)
   const [s0, s1] = R.sockets, ns = o.sockets != null ? o.sockets : (rarity === 'common' ? (Math.random() < 0.25 ? 1 : 0) : s0 + ((Math.random() * (s1 - s0 + 1)) | 0));
   for (let i = 0; i < ns; i++) it.sockets.push(null);
   return it;
 }
 // base + affix + unique + gem stats of one instance (summed)
 function itemBase(it) {
-  const b = BASES[it.base], R = RARITY[it.rarity], k = R.mult * (1 + 0.015 * Math.max(0, it.ilvl - b.reqLvl)), base = {};
+  const b = baseOf(it.base), R = RARITY[it.rarity], k = R.mult * (1 + 0.015 * Math.max(0, it.ilvl - b.reqLvl)), base = {};
   const bs = baseStats(b); for (const st in bs) base[st] = st === 'dmg' ? Math.round(bs[st] * k) : st.startsWith('res') ? bs[st] : bs[st] * k;
   return base;
 }
@@ -163,25 +258,31 @@ function itemBase(it) {
 function statsOf(it) {
   const s = {}, add = (k, v) => { s[k] = (s[k] || 0) + v; }, base = itemBase(it);
   for (const k in base) add(k, base[k]);
-  for (const a of it.affixes) add(a.stat, a.v);
+  for (const a of it.affixes) add(a.id, a.v);
   for (const g of it.sockets) if (g) { const gs = gemStats(g, it.slot); for (const k in gs) add(k, gs[k]); }
   return s;
 }
-const itemName = it => it.unique && UNIQUES[it.unique] ? UNIQUES[it.unique].name : BASES[it.base].name;
+// display name (§19.3): a unique keeps its own name, everything else is [prefix] base [suffix]
+function itemName(it) {
+  if (it.unique && UNIQUES[it.unique]) return UNIQUES[it.unique].name;
+  const b = baseOf(it.base), n = it.name || {};
+  return [n.prefix, b ? b.name : it.base, n.suffix].filter(Boolean).join(' ');
+}
 // §20.6: main-path Dust ~900-1,200. sheets.js modelled ~2,820 (50 drops/zone) and suggested / 2.4; balsim's main path
 // (40 kills + 3 chests + 2 elites + 7 trigger loot cards per band + bosses, 80 % salvaged) gives ~2,470 at / 1, so
 // / 2.3 lands on ~1,080
 const SALVAGE_DIV = 2.3;
 const salvageValue = it => Math.max(1, Math.round([1, 3, 8, 20, 50, 120][RARITY[it.rarity].i] * (1 + it.ilvl / 10) / SALVAGE_DIV));
 // renderer hook for M2: what the hero visibly wears in a slot
+// slot: any EQUIP_SLOTS key. family === variant (hero.js reads `family`).
 function equippedVisual(slot, p = G.player) {
   const it = p && p.equip[slot]; if (!it) return null;
-  const b = BASES[it.base];
-  return { family: b.family, tier: b.tier, rarity: it.rarity, gems: it.sockets.filter(Boolean) };
+  const b = baseOf(it.base); if (!b) return null;
+  return { family: b.variant, variant: b.variant, class: b.class, suit: b.suit, tier: b.tier, rarity: it.rarity, gems: it.sockets.filter(Boolean), tempered: !!it.tempered, element: it.implicit && /Dmg$/.test(it.implicit.id) ? it.implicit.id.slice(0, -3) : null };
 }
 
 // ===== icon routing: the ONE place to swap in js/icons.js (ICONS.*) later =============
-const itemIcon = it => icon(BASES[it.base].icon, BASES[it.base].color);
+const itemIcon = it => { const b = baseOf(it.base) || { icon: 'chest', color: '#ffffff' }; return icon(b.icon, b.color); };
 const gemIcon = (type, grade) => icon('gem', GEMS[type].col);
 const miscIcon = name => icon(name, { potion: '#ff6a8a', dust: '#c7a8ff', chest: '#c08a5e', xp: '#b48aff' }[name] || '#ffffff');
 const skillIcon = id => icon(SKILLS[id].icon, SKILLS[id].color);
@@ -289,7 +390,7 @@ function rollLoot(cls, lvl, unique) {
 }
 // the Vale's first chest: try another weapon family, an armour upgrade and a first gem
 function starterLoot() {
-  const fam = pick2(['starfall', 'moonbow']), arm = pick2(['head', 'chest', 'boots']);
+  const fam = pick2(['staff', 'bow']), arm = pick2(['head', 'chest', 'boots']);
   return [{ kind: 'item', it: makeItem(FAMILY_TIERS[fam][0].split(':')[0], 'uncommon', 1, { sockets: 1 }) },
     { kind: 'item', it: makeItem(FAMILY_TIERS[pick2(ITEMS[arm]).id][0].split(':')[0], 'uncommon', 2, { sockets: 1 }) },
     { kind: 'gem', gem: 'ruby_1' }];
@@ -307,14 +408,17 @@ const bagFull = (p, gem) => !p.bag.some(b => !b) && !(gem && p.bag.some(b => b &
 function takeGem(p, i) { const s = p.bag[i]; if (!s || !s.gem) return null; const id = s.gem; if (--s.n <= 0) p.bag[i] = null; return id; }
 
 // ===== the inventory seams: each returns '' on success or the reason it refused ======================
-const isEquipped = (p, it) => SLOTS.some(s => p.equip[s] === it);
-function equipItem(p, inst) {
-  if (!inst || !BASES[inst.base]) return 'Nothing to equip';
-  if (inst.reqLvl > p.level) return `Requires level ${inst.reqLvl}`;
-  const i = p.bag.indexOf(inst), old = p.equip[inst.slot];
+const isEquipped = (p, it) => EQUIP_SLOTS.some(s => p.equip[s] === it);
+// the equip key an item goes to: its slot, or for a ring the empty ring slot (else ring1)
+function equipKey(p, it) { const ks = equipKeysFor(it.slot); if (ks.some(k => p.equip[k] === it)) return ks.find(k => p.equip[k] === it); return ks.find(k => !p.equip[k]) || ks[0]; }
+function equipItem(p, inst, key) {
+  if (!inst || !baseOf(inst.base)) return 'Nothing to equip';
+  if (inst.req > p.level) return `Requires level ${inst.req}`;
+  key = key && equipKeysFor(inst.slot).includes(key) ? key : equipKey(p, inst);
+  const i = p.bag.indexOf(inst), old = p.equip[key];
   if (old === inst) return '';
-  p.equip[inst.slot] = inst;
-  if (i >= 0) p.bag[i] = old || null; else if (old && !bagAdd(p, old)) { p.equip[inst.slot] = old; return 'Bag full'; }
+  p.equip[key] = inst;
+  if (i >= 0) p.bag[i] = old || null; else if (old && !bagAdd(p, old)) { p.equip[key] = old; return 'Bag full'; }
   recalcStats(p, false); return '';
 }
 // gem from bag stack `bi` into socket `si` of `it` (first empty when si is null); a filled socket swaps
@@ -428,6 +532,7 @@ function onEnemyKilled(e) {
   const p = G.player, c = enemyClassOf(e);
   gainXp(p, killXp(e));
   let uq = null;
+  const w = p.equip.weapon; if (w && w.hist) { w.hist.kills++; if (c === 'boss') w.hist.bossKills++; }   // §19.3: equipped weapon only
   if (c === 'boss') {
     const k = G.map.id + ':' + e.type, d = ENEMY[e.type] || {}, B = typeof BOSSES !== 'undefined' ? BOSSES[d.boss || e.type] : null;
     if (!G.prog.firsts[k]) {
@@ -443,7 +548,7 @@ function pickup(p, d) {
   if (d.kind === 'potion') {
     if (p.potions < MAX_POTIONS) { p.potions++; text(p.x, p.y, p.z + 3, '+1 Potion', '#ff8aa8'); } else healPlayer(p, p.maxHp * 0.15);
   } else if (d.kind === 'gem') { if (!bagAdd(p, { gem: d.gem })) return false; text(p.x, p.y, p.z + 3, gemName(d.gem), gemParse(d.gem).def.col); }
-  else { if (!bagAdd(p, d.it)) return false; text(p.x, p.y, p.z + 3, itemName(d.it), RARITY[d.it.rarity].col, RARITY[d.it.rarity].i >= 3); }
+  else { if (!bagAdd(p, d.it)) return false; if (d.it.hist && !d.it.hist.found && G.map) d.it.hist.found = G.map.id; text(p.x, p.y, p.z + 3, itemName(d.it), RARITY[d.it.rarity].col, RARITY[d.it.rarity].i >= 3); }
   sfx(RARITY[d.rar].i >= 3 ? 'loot' : 'pickup');
   if (typeof UI !== 'undefined' && d.kind !== 'potion') {   // loot toast on the right edge (HUD.md)
     if (d.kind === 'gem') UI.toast({ text: gemName(d.gem), icon: gemIcon(gemParse(d.gem).type), col: gemParse(d.gem).def.col });
@@ -529,7 +634,7 @@ function drinkPotion(p) {
 // ===== save / load: 3 slots ===================================================================================
 // Slot 1 keeps the original key 'dreamy.save.v1' (old saves load as slot 1); slots 2-3 use 'dreamy.save.v1.s2|s3'.
 // 'dreamy.slots' = the slots array [{ slot, level, map, t, playtime } | null] x SAVE_SLOTS for the title screen, and
-// 'dreamy.slot' the last slot used. Every save is the v3 shape below with its own `slot` field.
+// 'dreamy.slot' the last slot used. Every save is the v4 shape below with its own `slot` field (the key name stays .v1).
 const SAVE_SLOTS = 3, SAVE_KEY_BASE = 'dreamy.save.v1';
 const saveKey = (slot = G.saveSlot || 1) => slot > 1 ? `${SAVE_KEY_BASE}.s${slot}` : SAVE_KEY_BASE;
 const SAVE_KEY = SAVE_KEY_BASE;   // slot 1 (legacy name)
@@ -547,8 +652,11 @@ function writeSlotIndex() { try { localStorage.setItem('dreamy.slots', JSON.stri
 function selectSlot(n) { G.saveSlot = clamp(n | 0, 1, SAVE_SLOTS); G.save = SAVE_ON ? readSave() : null; try { localStorage.setItem('dreamy.slot', String(G.saveSlot)); } catch (e) { /* ignore */ } return G.save; }
 // showcase / play-test / ?map= runs never touch the real save
 const SAVE_ON = (() => { try { const q = new URLSearchParams(location.search); return !q.get('scene') && !q.get('playtest') && !q.get('map'); } catch (e) { return false; } })();
-// Save shape v3 (DESIGN §16.5): { version, slot, player, skills, world, bosses, bestiary, fishing, quests, zone100,
-// settings, bindings, stats }. The ultimate charge is not saved. migrate() upgrades older flat saves losslessly.
+// Save shape v4 (DESIGN §16.5, §19.7): { version, slot, player, skills, world, bosses, bestiary, fishing, quests, zone100,
+// settings, bindings, stats }. player.equip has every EQUIP_SLOTS key (null = empty), items are the v2 shape (top of file),
+// skills.wsk is keyed by weapon variant, skills.runes holds rune tokens ('skill_rune' = unbound) and bound runes as
+// 'variant:slot' (e.g. 'sword:q' = the Sword's Q rune alternate, §23). The ultimate charge is not saved.
+// migrate() upgrades older saves losslessly.
 function saveData() {
   const p = G.player, seenOut = {};
   for (const k in G.seen) seenOut[k] = Object.assign({ seen: true, reactions: {} }, G.seen[k]);
@@ -577,7 +685,20 @@ function readSave(slot = G.saveSlot || 1) {
   try { const s = migrate(JSON.parse(localStorage.getItem(saveKey(slot)))); return s && s.player && s.player.equip ? s : null; } catch (e) { return null; }
 }
 // the ONE place old saves are upgraded; add a step per schema change (bestiary, quests, secrets, mastery...)
-const SAVE_VERSION = 3;
+const SAVE_VERSION = 4;
+// v3 -> v4 item: v2 fields filled from the base (implicit) and the item level (old affix tiers); prefixes first
+function migrateItem(it) {
+  if (!it || typeof it !== 'object' || it.gem || !BASES[it.base]) return it;   // gem stacks; unknown bases stay (applySave drops them)
+  const ilvl = +it.ilvl || 1, aff = (Array.isArray(it.affixes) ? it.affixes : []).map(a => ({ id: a.id || a.stat, tier: a.tier || affixTier(ilvl), v: a.v, kind: a.kind || affixKind(a.id || a.stat) }));
+  aff.sort((a, c) => (a.kind === 'P' ? 0 : 1) - (c.kind === 'P' ? 0 : 1));
+  const out = v2Item({ id: it.id || it.uid, base: it.base, rarity: it.rarity, ilvl, req: it.req != null ? it.req : it.reqLvl, affixes: aff,
+    sockets: Array.isArray(it.sockets) ? it.sockets : [], boon: it.boon, rule: it.rule || it.unique || null, unique: it.unique, hist: it.hist, tempered: it.tempered, name: it.name });
+  return JSON.parse(JSON.stringify(out));   // plain data (the compat mirrors are added by applySave)
+}
+// a bound Skill Rune (§23): 'variant:slot', e.g. runeKey('sword', 'q') === 'sword:q' = the Sword's Q alternate unlocked
+const runeKey = (variant, slot) => variantId(variant) + ':' + slot;
+const hasRune = (p, variant, slot) => (p.runes || []).includes(runeKey(variant, slot));
+const renameRune = r => { const m = /^([a-z]+):(q|e|r|f|c|shift)$/.exec(r); return m ? variantId(m[1]) + ':' + m[2] : r; };
 function migrate(s) {
   if (!s || typeof s !== 'object') return null;
   if (!s.version) s.version = s.v === 1 ? 1 : 0;            // v1 = the first M1 builds
@@ -601,7 +722,16 @@ function migrate(s) {
   }
   // v3 plus (§25 big maps, no version bump): world.fog / world.sections / world.shrines / world.once (once-per-save banners,
   // dialogue) / world.obj (the objective log, game.js) default to empty
-  if (s.version === SAVE_VERSION && s.world && typeof s.world === 'object') for (const k of ['fog', 'sections', 'shrines', 'once', 'obj']) if (!s.world[k] || typeof s.world[k] !== 'object') s.world[k] = {};
+  if (s.version >= 3 && s.world && typeof s.world === 'object') for (const k of ['fog', 'sections', 'shrines', 'once', 'obj']) if (!s.world[k] || typeof s.world[k] !== 'object') s.world[k] = {};
+  if (s.version === 3) {                                      // v4 (§19.7, §23.6, §24): items v2, trinket slots, variant ids
+    const P = s.player = s.player || {}, K = s.skills = s.skills || {}, eq = P.equip && typeof P.equip === 'object' ? P.equip : {};
+    P.equip = {};
+    for (const k of EQUIP_SLOTS) P.equip[k] = eq[k] ? migrateItem(eq[k]) : null;
+    if (Array.isArray(P.bag)) P.bag = P.bag.map(migrateItem);
+    if (K.wsk && typeof K.wsk === 'object') { const w = {}; for (const f in K.wsk) { const v = variantId(f); if (!w[v] || v === f) w[v] = K.wsk[f]; } K.wsk = w; }
+    if (Array.isArray(K.runes)) K.runes = K.runes.map(renameRune);
+    s.version = 4;
+  }
   return s.version === SAVE_VERSION ? s : null;
 }
 // ===== fog of war in the save: world.fog[mapId] = 'WxH:' + base64 of the explored-tile bitfield (1 bit per tile,
@@ -628,16 +758,20 @@ function fogSaveData() {
 }
 function clearSave(slot = G.saveSlot || 1) { try { localStorage.removeItem(saveKey(slot)); writeSlotIndex(); } catch (e) { /* ignore */ } }
 const hasKey = id => !!(G.prog && G.prog.secrets && G.prog.secrets['key:' + id]);
-const validItem = it => it && BASES[it.base] && RARITY[it.rarity] && Array.isArray(it.affixes) && Array.isArray(it.sockets);
+const validItem = it => it && baseOf(it.base) && RARITY[it.rarity] && Array.isArray(it.affixes) && Array.isArray(it.sockets);
 function applySave(p, s) {
   const P = s.player || {}, K = s.skills || {}, W = s.world || {};
   p.level = clamp(+P.level || 1, 1, MAX_LEVEL); p.xp = Math.max(0, +P.xp || 0); p.dust = +P.dust || 0;
   p.potions = clamp(P.potions != null ? +P.potions : MAX_POTIONS, 0, MAX_POTIONS);
-  for (const slot of SLOTS) { const it = (P.equip || {})[slot]; if (validItem(it) && BASES[it.base].slot === slot) { it.sockets = it.sockets.map(g => gemParse(g) ? g : null); p.equip[slot] = it; } }
+  for (const slot of EQUIP_SLOTS) {
+    const it = (P.equip || {})[slot];
+    if (validItem(it) && equipKeysFor(baseOf(it.base).slot).includes(slot)) { it.sockets = it.sockets.map(g => gemParse(g) ? g : null); p.equip[slot] = compatItem(it); }
+    else if (!SLOTS.includes(slot)) p.equip[slot] = null;
+  }
   p.bag = Array(BAG_SIZE).fill(null);
-  (P.bag || []).slice(0, BAG_SIZE).forEach((e, i) => { if (validItem(e)) p.bag[i] = e; else if (e && gemParse(e.gem) && e.n > 0) p.bag[i] = { gem: e.gem, n: e.n | 0 }; });
+  (P.bag || []).slice(0, BAG_SIZE).forEach((e, i) => { if (validItem(e)) p.bag[i] = compatItem(e); else if (e && gemParse(e.gem) && e.n > 0) p.bag[i] = { gem: e.gem, n: e.n | 0 }; });
   p.tool = P.tool || null;
-  if (K.wsk) for (const f in p.wsk) for (const k of ['q', 'e', 'r']) if (K.wsk[f] && SKILLS[K.wsk[f][k]] && item('weapon', f)[k].includes(K.wsk[f][k])) p.wsk[f][k] = K.wsk[f][k];
+  if (K.wsk) for (const f in p.wsk) for (const k of ['q', 'e', 'r']) if (K.wsk[f] && SKILLS[K.wsk[f][k]] && item('weapon', f)[k].includes(K.wsk[f][k])) p.wsk[f][k] = K.wsk[f][k];   // keyed by variant (v4)
   if (Array.isArray(K.csk)) p.csk = K.csk.filter(id => CHAR_SKILLS.includes(id)).slice(0, 3);
   p.ranks = {}; p.mods = {};
   for (const id in K.byId || {}) {
@@ -660,19 +794,27 @@ function applySave(p, s) {
   G.stats = { playtime: +(s.stats && s.stats.playtime) || 0, deaths: +(s.stats && s.stats.deaths) || 0 };
   if (s.settings && typeof applySettings === 'function') applySettings(s.settings);
   if (s.bindings && typeof IN !== 'undefined') IN.setBindings(s.bindings);
-  UID = Math.max(UID, +P.uid || 0);
+  // the uid counter resumes exactly where the save left it (a load -> save round trip is byte-identical); a starter-kit
+  // piece that stayed because its saved slot was invalid gets a fresh id above every loaded one
+  const idNum = it => +(/^i_(\d+)$/.exec(it && it.id) || [0, 0])[1];
+  const loaded = new Set();
+  for (const k of EQUIP_SLOTS) if (p.equip[k] && P.equip && P.equip[k] === p.equip[k]) loaded.add(p.equip[k]);
+  UID = Math.max(+P.uid || 0, ...[...loaded, ...p.bag].map(idNum));
+  for (const k of SLOTS) if (p.equip[k] && !loaded.has(p.equip[k])) p.equip[k].id = newUid();
   recalcStats(p, true);
 }
 
 // ===== starter + showcase kits ====================================================================================
 function starterKit(p) {
   p.equip = { weapon: makeItem('rustyblade', 'common', 1, { sockets: 0 }), head: makeItem('ironcap', 'common', 1, { sockets: 0 }),
-    chest: makeItem('ironmail', 'common', 1, { sockets: 1 }), boots: makeItem('ironboots', 'common', 1, { sockets: 0 }) };
+    chest: makeItem('ironmail', 'common', 1, { sockets: 1 }), boots: makeItem('ironboots', 'common', 1, { sockets: 0 }),
+    ring1: null, ring2: null, amulet: null, belt: null };   // §19.4 trinket slots: empty until the first Vale chest (step 2)
   p.bag = Array(BAG_SIZE).fill(null);
 }
-// ?scene=... showcases: a mid-level hero (L16) with rare/epic tier-2 gear of the chosen weapon family
-function showcaseKit(p, wfam = 'dawnblade') {
-  const set = { dawnblade: ['knighthelm', 'knightplate', 'knightgreaves'], starfall: ['arcanecowl', 'dreamrobe', 'clothsandals'], moonbow: ['wardenhood', 'stalkerjacket', 'stalkershoes'] }[wfam] || ['knighthelm', 'knightplate', 'knightgreaves'];
+// ?scene=... showcases: a mid-level hero (L16) with rare/epic tier-2 gear of the chosen weapon variant (legacy ids accepted)
+function showcaseKit(p, wfam = 'sword') {
+  wfam = FAMILY_TIERS[variantId(wfam)] && item('weapon', variantId(wfam)) ? variantId(wfam) : 'sword';
+  const set = { sword: ['knighthelm', 'warden', 'knightgreaves'], staff: ['arcanecowl', 'dreamweave', 'clothsandals'], bow: ['wardenhood', 'stalker', 'stalkershoes'] }[wfam];
   const t2 = f => FAMILY_TIERS[f][2].split(':')[0];
   p.level = 16; p.xp = Math.round(xpToNext(16) * 0.4); p.dust = 140;
   p.equip.weapon = makeItem(t2(wfam), 'epic', 16, { sockets: 2 }); p.equip.weapon.sockets[0] = 'ruby_3';
@@ -687,4 +829,62 @@ function sampleBag(p) {
   for (let k = 0; k < 6; k++) put(rollItem(L - 4 + k, pick2(['common', 'uncommon', 'rare'])));
   GEM_TYPES.forEach((t, i) => put({ gem: `${t}_${1 + (i % 3)}`, n: 1 + (i % 3) }));
   put({ gem: 'amethyst_3', n: 1 });
+}
+
+// ===== makeTestItem(opts): a valid, deterministic v2 item for UI / art work (no RNG; the game never drops these) ===========
+// opts (all optional): base | slot ('weapon'|'head'|'chest'|'boots'|'ring'|'amulet'|'belt', default 'weapon') + variant (a
+//   FAMILY_TIERS key, default the slot's first family) + tier (0..4, trinkets 0..2) · rarity ('rare') · ilvl (the base req)
+//   · affixes: a count or [{ id, tier?, v?, kind? }] (default: the §19.1 count for the rarity, ring P only, belt S only,
+//   amulet 1P+1S; v = the tier's mid-range) · sockets: a count or an array of gem ids / null · boon: a BOONS id, an object
+//   or false · unique: a UNIQUES / trinket-unique id (sets base, rule and name) · rule · tempered: true | affix id · hist · name
+// e.g. makeTestItem({ slot: 'chest', variant: 'warden', tier: 2, rarity: 'epic', sockets: ['ruby_2', null], tempered: true })
+//      makeTestItem({ slot: 'ring', rarity: 'rare', boon: 'fireBurn' })     makeTestItem({ unique: 'rootcrown' })
+const AFFIX_COUNT = { common: [0, 0], uncommon: [1, 0], rare: [1, 1], epic: [2, 1], legendary: [2, 2], mythic: [3, 2] };   // [P, S]
+function makeTestItem(opts = {}) {
+  const uq = opts.unique || null, trk = trinketBases();
+  let base = opts.base || (uq && (UNIQUES[uq] ? UNIQUES[uq].base : trk[uq] ? uq : null));
+  if (!base) {
+    const slot = opts.slot || 'weapon';
+    if (TRINKET_KINDS.includes(slot)) {
+      const list = Object.values(trk).filter(t => t.slot === slot && !t.unique && !t.boon);
+      base = (list.find(t => t.tier === (opts.tier | 0)) || list[0] || {}).id;
+    } else {
+      const fam = FAMILY_TIERS[opts.variant ? variantId(opts.variant) : ITEMS[slot][0].id];
+      base = fam && fam[clamp(opts.tier | 0, 0, 4)].split(':')[0];
+    }
+  }
+  const b = baseOf(base); if (!b) throw new Error('makeTestItem: unknown base / variant ' + (base || opts.variant));
+  const rarity = RARITY[opts.rarity] ? opts.rarity : uq ? (UNIQUES[uq] && UNIQUES[uq].mythic ? 'mythic' : 'legendary') : 'rare';
+  const ilvl = clamp(Math.round(opts.ilvl || b.reqLvl), 1, MAX_LEVEL);
+  const req = clamp(Math.max(b.reqLvl, ilvl - 2, rarity === 'mythic' ? MYTHIC_REQ : 0), 1, MAX_LEVEL);
+  const A = typeof AFFIX_V2 !== 'undefined' ? AFFIX_V2 : { prefix: { power: [{ name: 'Keen', r: [0.03, 0.05] }] }, suffix: { hp: [{ name: '', r: [20, 30] }] } };
+  const tier = affixTier(ilvl), legend = RARITY[rarity].i >= 4;
+  const pool = kind => Object.keys(kind === 'P' ? A.prefix : A.suffix).filter(id => !/^on[A-Z]/.test(id) && (legend || id !== 'resAll'));
+  const mid = (id, kind, t) => { const row = (kind === 'P' ? A.prefix : A.suffix)[id]; const r = row && row[t - 1] && row[t - 1].r; return r ? +((r[0] + r[1]) / 2).toFixed(3) : 0.05; };
+  let affixes;
+  if (Array.isArray(opts.affixes)) affixes = opts.affixes.map(a => { const kind = a.kind || affixKind(a.id), t = a.tier || tier; return { id: a.id, tier: t, v: a.v != null ? a.v : mid(a.id, kind, t), kind }; });
+  else {
+    let [np, ns] = AFFIX_COUNT[rarity];
+    if (typeof opts.affixes === 'number') { const n = opts.affixes; np = Math.ceil(n / 2); ns = n - np; }
+    if (b.slot === 'ring') { np += ns; ns = 0; } else if (b.slot === 'belt') { ns += np; np = 0; } else if (b.slot === 'amulet') { np = Math.min(np, 1); ns = Math.min(ns, 1); }
+    affixes = pool('P').slice(0, np).map(id => ({ id, tier, v: mid(id, 'P', tier), kind: 'P' })).concat(pool('S').slice(0, ns).map(id => ({ id, tier, v: mid(id, 'S', tier), kind: 'S' })));
+  }
+  affixes.sort((a, c) => (a.kind === 'P' ? 0 : 1) - (c.kind === 'P' ? 0 : 1));
+  const maxSock = b.slot === 'ring' ? 0 : TRINKET_KINDS.includes(b.slot) ? 1 : RARITY[rarity].sockets[1];
+  const sockets = Array.isArray(opts.sockets) ? opts.sockets.slice(0, Math.max(maxSock, opts.sockets.length)) : Array(opts.sockets != null ? clamp(opts.sockets | 0, 0, 3) : maxSock).fill(null);
+  let boon = null;
+  if (TRINKET_KINDS.includes(b.slot) && opts.boon !== false && rarity !== 'common') {
+    const rows = typeof BOONS !== 'undefined' ? BOONS[b.slot] || [] : [], row = b.boon || (typeof opts.boon === 'object' ? opts.boon : rows.find(r => r.id === opts.boon) || rows[0]);
+    if (row) boon = { id: row.id, grade: rarity === 'uncommon' ? 'minor' : 'major', text: row.text };
+  }
+  let name = opts.name || { prefix: null, suffix: null };
+  if (!opts.name && !uq && !b.unique && RARITY[rarity].i >= 1) {
+    const P = affixes.find(a => a.kind === 'P'), S = affixes.find(a => a.kind === 'S');
+    const pre = P && A.prefix[P.id] && A.prefix[P.id][P.tier - 1] ? A.prefix[P.id][P.tier - 1].name : null;
+    const suf = rarity === 'mythic' && typeof MYTHIC_NAMES !== 'undefined' ? MYTHIC_NAMES[0] : S && typeof SUFFIX_NOUN !== 'undefined' && SUFFIX_NOUN[S.id] ? 'of the ' + SUFFIX_NOUN[S.id] : null;
+    name = rarity === 'uncommon' ? { prefix: pre, suffix: pre ? null : suf } : { prefix: pre, suffix: suf };
+  }
+  const temp = opts.tempered ? { affix: typeof opts.tempered === 'string' ? opts.tempered : (affixes[0] || {}).id || null } : null;
+  return v2Item({ id: newUid(), base, rarity, ilvl, req, affixes, sockets, boon, rule: opts.rule || uq || b.rule || null, unique: uq || b.unique || null,
+    hist: opts.hist || newHist(), tempered: temp, name });
 }

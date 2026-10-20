@@ -103,7 +103,7 @@ const HERO = (function () {
   }
 
   // ---- shared tables -------------------------------------------------------
-  const CAPEC = { knightplate: '#b02a42', dreamrobe: '#5648c0', stalkerjacket: '#4a7a3c' };
+  const CAPEC = { warden: '#b02a42', dreamweave: '#5648c0', stalker: '#4a7a3c' };
   const M_STEEL = mapT(['#7d8494', '#98a6bd', '#b4c4dc', '#c9d6ec', '#dfe8f8']);
   const FUR = [{ h: '#f4f0e6', m: '#e4e0d4', l: '#bdb8a8' }][0];
 
@@ -161,10 +161,10 @@ const HERO = (function () {
 
   // ---- CHEST ---------------------------------------------------------------
   const CHEST = {
-    knightplate: {
+    warden: {
       anc: [[11, 17], [5, 15], [17, 15]],
       draw(g, P, back, T) {
-        const R = M_STEEL[T], tab = RP(CAPEC.knightplate);
+        const R = M_STEEL[T], tab = RP(CAPEC.warden);
         g.oy = P.bob;
         if (back) { g.b(8, 15, 8, 8, R); g.r(11, 16, 1, 6, R.h); g.r(12, 16, 1, 6, R.l); }
         else {
@@ -191,7 +191,7 @@ const HERO = (function () {
         if (!back) g.gems(this.anc);
       }
     },
-    dreamrobe: {
+    dreamweave: {
       anc: [[11, 16], [11, 20], [11, 26]],
       draw(g, P, back, T) {
         const R = mapT(['#8a86b8', '#7664c4', '#5c46b8', '#46369c', '#30287c'])[T];
@@ -223,7 +223,7 @@ const HERO = (function () {
         if (!back) g.gems(this.anc);
       }
     },
-    stalkerjacket: {
+    stalker: {
       anc: [[11, 18], [9, 16], [13, 20]],
       draw(g, P, back, T) {
         const R = mapT(['#8c6a44', '#76593a', '#5e6b3c', '#3f5a3a', '#2c3430'])[T], ST = RP('#3a2818');

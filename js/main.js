@@ -297,11 +297,11 @@ async function boot() {
   // instead of in the frame a portal lands in (prepTheme in enterMap then finds it cached)
   for (const id in G.world.maps) { const t = G.world.maps[id].theme, th = THEMES[t]; if (th && !th._bg) prepTheme({ theme: th, themeId: t }); }
   G.player = makePlayer();
-  // ?map=<id> (play-test / showcase), ?scene=play|arena|boss|loadout|portal|inventory, &weapon=starfall|moonbow
+  // ?map=<id> (play-test / showcase), ?scene=play|arena|boss|loadout|portal|inventory, &weapon=staff|bow (pre-v4 ids starfall|moonbow work too)
   // showcase scenes get a mid-level (L14) kit; they never read or write the real save
-  const w = PARAMS.get('weapon'), wf = w && ITEMS.weapon.some(i => i.id === w) ? w : null;
+  const w = PARAMS.get('weapon') && variantId(PARAMS.get('weapon')), wf = w && ITEMS.weapon.some(i => i.id === w) ? w : null;
   const scene = PARAMS.get('scene');
-  if (scene) showcaseKit(G.player, wf || 'dawnblade');
+  if (scene) showcaseKit(G.player, wf || 'sword');
   else if (wf) { G.player.equip.weapon = makeItem(FAMILY_TIERS[wf][0].split(':')[0], 'common', 1, { sockets: 0 }); recalcStats(G.player, true); }
   if (scene === 'inventory') sampleBag(G.player);
   let start = PARAMS.get('map') || G.world.start;

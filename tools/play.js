@@ -174,7 +174,7 @@ const PAD_STUB = () => {
   check('combat: ultimate gated by the charge bar (0..100), consumed on cast', ultGate.r1 === false && ultGate.r2 === true && ultGate.after === 0, ultGate);
   await wait(800);
   const cancel = await ev(() => {
-    const p = G.player; p.wsk.dawnblade.e = 'whirl'; recalcStats(p); p.cds = {}; p.mp = 200; p.st = p.maxSt; p.dash = null;
+    const p = G.player; p.wsk.sword.e = 'whirl'; recalcStats(p); p.cds = {}; p.mp = 200; p.st = p.maxSt; p.dash = null;
     useSkill(p, 'e'); return { mpAfterCast: p.mp, dur: p.cast && p.cast.dur };
   });
   await page.keyboard.down('ShiftLeft'); await wait(40); await page.keyboard.up('ShiftLeft');   // within 0.1 s: buffered
@@ -203,9 +203,9 @@ const PAD_STUB = () => {
       wsk: { dawnblade: { q: 'heroic', e: 'dashstrike', r: 'judgement' } }, csk: ['orbit', 'chain'], prog: { chests: { 'vale:4.5,17.2': true }, firsts: { 'ruins:boss': true }, trig: { vale: ['t1'] } },
       seen: { slime: { kills: 4, res: { slash: -0.5 } } }, cp: { map: 'vale', x: 2, y: 3 }, uid: 99 };
     const s = migrate(JSON.parse(JSON.stringify(v2))); const q = makePlayer(); applySave(q, s);
-    return { v: s.version, level: q.level, xp: q.xp, dust: q.dust, q: q.wsk.dawnblade.q, csk: q.csk.join(), chest: !!G.prog.chests['vale:4.5,17.2'], boss: !!G.prog.firsts['ruins:boss'], trig: G.prog.trig.vale.join(), slime: G.seen.slime.kills, res: G.seen.slime.res.slash, cp: G.checkpoint.x, bag: q.bag.filter(Boolean).length === p.bag.filter(Boolean).length };
+    return { v: s.version, level: q.level, xp: q.xp, dust: q.dust, q: q.wsk.sword.q, csk: q.csk.join(), chest: !!G.prog.chests['vale:4.5,17.2'], boss: !!G.prog.firsts['ruins:boss'], trig: G.prog.trig.vale.join(), slime: G.seen.slime.kills, res: G.seen.slime.res.slash, cp: G.checkpoint.x, bag: q.bag.filter(Boolean).length === p.bag.filter(Boolean).length };
   });
-  check('save: v2 -> v3 migration keeps everything', mig.v === 3 && mig.level === 7 && mig.xp === 120 && mig.dust === 33 && mig.q === 'heroic' && mig.csk === 'orbit,chain' && mig.chest && mig.boss && mig.trig === 't1' && mig.slime === 4 && mig.res === -0.5 && mig.cp === 2 && mig.bag, mig);
+  check('save: v2 -> v4 migration keeps everything (pre-v4 wsk key dawnblade -> sword)', mig.v === 4 && mig.level === 7 && mig.xp === 120 && mig.dust === 33 && mig.q === 'heroic' && mig.csk === 'orbit,chain' && mig.chest && mig.boss && mig.trig === 't1' && mig.slime === 4 && mig.res === -0.5 && mig.cp === 2 && mig.bag, mig);
   const st = await ev(() => { const a = setSetting('difficulty', 'story'), b = setSetting('shake', 999), c = damageTakenMul(); setSetting('difficulty', 'normal'); setSetting('shake', 100); return { a, b, c }; });
   check('settings: validated setters + Story difficulty x0.6', st.a === 'story' && st.b === 100 && st.c === 0.6, st);
   // ---------- 3b. §20.5 MP builder: once per swing, 40 MP/s cap; ultimate gain cap ----------
@@ -382,7 +382,7 @@ const PAD_STUB = () => {
   check('aim: circle reticle clamped to the range circle (clamped flag, |to-from| = range)', circ && circ.shape === 'circle' && circ.clamped && Math.abs(circ.d - circ.range) < 1e-6, circ);
   await aimShot('touch-aim-circle-clamped'); await endAim();
   // line: equip the Moonbow ultimate (moonbeam)
-  await ev(() => { __reset(); const p = G.player; p.equip.weapon = makeItem('moonbow', 'rare', p.level, { sockets: 0 }); recalcStats(p); p.wsk.moonbow.r = 'moonbeam'; p.ult = 100; });
+  await ev(() => { __reset(); const p = G.player; p.equip.weapon = makeItem('moonbow', 'rare', p.level, { sockets: 0 }); recalcStats(p); p.wsk.bow.r = 'moonbeam'; p.ult = 100; });
   await dragAim('r', -120, -40);
   const line = await ev(() => { const a = currentAim(); return a && a.aim.shape; });
   check('aim: line indicator (Moonbeam)', line === 'line', line);
@@ -663,7 +663,7 @@ const PAD_STUB = () => {
     const old = JSON.parse(JSON.stringify(d)); delete old.world.fog; delete old.world.sections; delete old.world.shrines; const mo = migrate(old);
     return { vis0, vis1, same, len: str.length, secs, shr, keys, v, migFog: JSON.stringify(mo.world.fog), migSec: JSON.stringify(mo.world.sections), secAfter: (G.prog.sections.synth112 || []).length };
   });
-  check('save: fog bitmap + discovered sections / shrines persist per map in world (v3, same top-level keys, migration defaults)', fog.vis0 > 300 && fog.vis1 === fog.vis0 && fog.same && fog.len < 3000 && fog.secs === 'arena,main,outer,under,vault'.split(',').filter(s => fog.secs.includes(s)).join() && fog.secs.includes('under') && fog.shr >= 2 && fog.v === 3 && fog.keys === 'bestiary,bindings,bosses,fishing,player,quests,settings,skills,slot,stats,t,version,world,zone100' && fog.migFog === '{}' && fog.migSec === '{}' && fog.secAfter >= 4, fog);
+  check('save: fog bitmap + discovered sections / shrines persist per map in world (v4, same top-level keys, migration defaults)', fog.vis0 > 300 && fog.vis1 === fog.vis0 && fog.same && fog.len < 3000 && fog.secs === 'arena,main,outer,under,vault'.split(',').filter(s => fog.secs.includes(s)).join() && fog.secs.includes('under') && fog.shr >= 2 && fog.v === 4 && fog.keys === 'bestiary,bindings,bosses,fishing,player,quests,settings,skills,slot,stats,t,version,world,zone100' && fog.migFog === '{}' && fog.migSec === '{}' && fog.secAfter >= 4, fog);
   // settling is per trigger: walking away from a live pack (it goes dormant) and dying must respawn it, not clear it
   const stl = await ev(async () => {
     const w = ms => new Promise(r => setTimeout(r, ms)), m = G.map, p = G.player, tr = m.triggers.find(t => t.id === 'pack0').when;

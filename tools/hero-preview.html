@@ -22,12 +22,12 @@ function cv(id, w, h, sc) { const c = document.getElementById(id); c.width = w; 
 function label(x, s, px, py, col) { x.fillStyle = col || TXT; x.font = '11px monospace'; x.fillText(s, px, py); }
 function cell(x, px, py, w, h) { x.fillStyle = '#26223a'; x.fillRect(px, py, w, h); x.fillStyle = '#2f2a48'; x.fillRect(px, py + h - 14, w, 1); }
 const SC = 4, CW = 96, CH = 152;
-const FULL = { head: { family: 'knighthelm', tier: 3 }, chest: { family: 'knightplate', tier: 3 }, boots: { family: 'knightgreaves', tier: 3 }, weapon: { family: 'sword', tier: 3 } };
+const FULL = { head: { family: 'knighthelm', tier: 3 }, chest: { family: 'warden', tier: 3 }, boots: { family: 'knightgreaves', tier: 3 }, weapon: { family: 'sword', tier: 3 } };
 function sprite(x, cvs, px, py, sc) { x.drawImage(cvs, 0, 0, cvs.width, cvs.height, px, py, cvs.width * sc, cvs.height * sc); }
 
 // ---- gear grid
 (function () {
-  const slots = [['head', ['knighthelm', 'arcanecowl', 'wardenhood']], ['chest', ['knightplate', 'dreamrobe', 'stalkerjacket']], ['boots', ['knightgreaves', 'clothsandals', 'stalkershoes']]];
+  const slots = [['head', ['knighthelm', 'arcanecowl', 'wardenhood']], ['chest', ['warden', 'dreamweave', 'stalker']], ['boots', ['knightgreaves', 'clothsandals', 'stalkershoes']]];
   const rows = []; slots.forEach(([s, fs]) => fs.forEach(f => rows.push([s, f])));
   const W = 130 + 10 * (CW + 4), H = rows.length * (CH + 6) + 4, x = cv('gear', W, H);
   rows.forEach(([slot, fam], r) => {
@@ -55,11 +55,11 @@ function sprite(x, cvs, px, py, sc) { x.drawImage(cvs, 0, 0, cvs.width, cvs.heig
 })();
 // ---- mixed outfits
 const MIX = [
-  ['Knight T4 + gems', { head: { family: 'knighthelm', tier: 4, gems: ['ruby', 'topaz', 'sapphire'] }, chest: { family: 'knightplate', tier: 4, gems: ['diamond', 'ruby', 'ruby'] }, boots: { family: 'knightgreaves', tier: 4, gems: ['topaz', null, 'emerald'] }, weapon: { family: 'sword', tier: 4, gems: ['ruby', 'sapphire', 'diamond'] } }],
-  ['Arcanist T3', { head: { family: 'arcanecowl', tier: 3, gems: ['amethyst', null] }, chest: { family: 'dreamrobe', tier: 3, gems: ['sapphire', 'amethyst', 'diamond'] }, boots: { family: 'clothsandals', tier: 3 }, weapon: { family: 'staff', tier: 3, gems: ['amethyst', 'topaz'] } }],
-  ['Warden T4', { head: { family: 'wardenhood', tier: 4, gems: ['emerald', 'topaz'] }, chest: { family: 'stalkerjacket', tier: 4, gems: ['emerald', 'topaz', null] }, boots: { family: 'stalkershoes', tier: 4 }, weapon: { family: 'bow', tier: 4, gems: ['emerald', 'diamond', 'topaz'] } }],
-  ['Hybrid T1/T2', { head: { family: 'arcanecowl', tier: 2 }, chest: { family: 'knightplate', tier: 1 }, boots: { family: 'stalkershoes', tier: 2 }, weapon: { family: 'bow', tier: 2 } }],
-  ['Rookie T0', { head: { family: 'wardenhood', tier: 0 }, chest: { family: 'stalkerjacket', tier: 0 }, boots: { family: 'clothsandals', tier: 0 }, weapon: { family: 'sword', tier: 0 } }],
+  ['Knight T4 + gems', { head: { family: 'knighthelm', tier: 4, gems: ['ruby', 'topaz', 'sapphire'] }, chest: { family: 'warden', tier: 4, gems: ['diamond', 'ruby', 'ruby'] }, boots: { family: 'knightgreaves', tier: 4, gems: ['topaz', null, 'emerald'] }, weapon: { family: 'sword', tier: 4, gems: ['ruby', 'sapphire', 'diamond'] } }],
+  ['Arcanist T3', { head: { family: 'arcanecowl', tier: 3, gems: ['amethyst', null] }, chest: { family: 'dreamweave', tier: 3, gems: ['sapphire', 'amethyst', 'diamond'] }, boots: { family: 'clothsandals', tier: 3 }, weapon: { family: 'staff', tier: 3, gems: ['amethyst', 'topaz'] } }],
+  ['Warden T4', { head: { family: 'wardenhood', tier: 4, gems: ['emerald', 'topaz'] }, chest: { family: 'stalker', tier: 4, gems: ['emerald', 'topaz', null] }, boots: { family: 'stalkershoes', tier: 4 }, weapon: { family: 'bow', tier: 4, gems: ['emerald', 'diamond', 'topaz'] } }],
+  ['Hybrid T1/T2', { head: { family: 'arcanecowl', tier: 2 }, chest: { family: 'warden', tier: 1 }, boots: { family: 'stalkershoes', tier: 2 }, weapon: { family: 'bow', tier: 2 } }],
+  ['Rookie T0', { head: { family: 'wardenhood', tier: 0 }, chest: { family: 'stalker', tier: 0 }, boots: { family: 'clothsandals', tier: 0 }, weapon: { family: 'sword', tier: 0 } }],
   ['Bare (no gear)', {}]
 ];
 (function () {
@@ -80,7 +80,7 @@ function grass(x, w, h) {
 }
 // ---- rarity (animated): dark 5x, grass 5x, grass 2x
 const RW6 = 6 * 190, rarX = cv('rar', RW6, 800), parts = [0, 1, 2].map(() => HERO.RARITIES.map(() => []));
-const RLOOK = { head: { family: 'knighthelm', tier: 3, gems: ['ruby'] }, chest: { family: 'knightplate', tier: 3 }, boots: { family: 'knightgreaves', tier: 3 }, weapon: { family: 'sword', tier: 3 } };
+const RLOOK = { head: { family: 'knighthelm', tier: 3, gems: ['ruby'] }, chest: { family: 'warden', tier: 3 }, boots: { family: 'knightgreaves', tier: 3 }, weapon: { family: 'sword', tier: 3 } };
 const gbuf = makeCanvas(RW6, 320); grass(gbuf.x, RW6, 320);
 function rarRow(row, t, dt, y0, RS, bg) {
   const b = HERO.build(RLOOK);
@@ -103,7 +103,7 @@ function rarRow(row, t, dt, y0, RS, bg) {
   document.getElementById('scalehere').appendChild(sc);
   const x = sc.getContext('2d'); x.imageSmoothingEnabled = false; grass(x, 480, 150);
   label(x, 'old 16px hero | new hero 1x idle, walk 4f, attack | new 2x', 4, 10, '#fff');
-  let old = null; try { old = buildPlayerSprites({ weapon: 'dawnblade', head: 'knighthelm', chest: 'knightplate', boots: 'knightgreaves' }); } catch (e) { old = null; }
+  let old = null; try { old = buildPlayerSprites({ weapon: 'sword', head: 'knighthelm', chest: 'warden', boots: 'knightgreaves' }); } catch (e) { old = null; }
   if (old) { x.drawImage(old.front[0], 12, 40); x.drawImage(old.back[0], 36, 40); }
   const b = HERO.build(FULL), b2 = HERO.build(MIX[1][1]), b3 = HERO.build(MIX[2][1]);
   [b, b2, b3].forEach((bb, k) => {
@@ -114,7 +114,7 @@ function rarRow(row, t, dt, y0, RS, bg) {
 
 // ---- trinkets (animated): belts, amulets, ring glint, tempered
 const TRX = cv('trk', 1280, 1000);
-const KN = { head: { family: 'knighthelm', tier: 3 }, chest: { family: 'knightplate', tier: 3 }, boots: { family: 'knightgreaves', tier: 3 }, weapon: { family: 'sword', tier: 3 } };
+const KN = { head: { family: 'knighthelm', tier: 3 }, chest: { family: 'warden', tier: 3 }, boots: { family: 'knightgreaves', tier: 3 }, weapon: { family: 'sword', tier: 3 } };
 const TR = [];
 ['rope_sash', 'mistwoven_belt', 'moonlit_girdle'].forEach((f, i) => TR.push([f.replace(/_/g, ' ') + ' (bare)', { belt: { family: f, tier: i + 1, rarity: ['uncommon', 'rare', 'epic'][i] } }, 'front', 0, 'belt']));
 ['cindersash', 'quietgirdle', 'tidewovenclasp', 'hollowbell'].forEach((f, i) => TR.push([f + ' T3', Object.assign({}, KN, { belt: { family: f, tier: 3, rarity: ['rare', 'epic', 'legendary', 'mythic'][i] } }), 'front', 0, 'belt']));
@@ -122,9 +122,9 @@ const TR = [];
 TR.push(['belt back T1', Object.assign({}, KN, { belt: { family: 'rope_sash', tier: 1, rarity: 'rare' } }), 'back', 0, 'belt']);
 TR.push(['belt back T3', Object.assign({}, KN, { belt: { family: 'moonlit_girdle', tier: 3, rarity: 'epic' } }), 'back', 0, 'belt']);
 ['rare', 'epic', 'legendary', 'mythic'].forEach(r => TR.push(['ring ' + r + ' attack', Object.assign({}, KN, { ring: { tier: 3, element: 'fire', rarity: r } }), 'front', 6, 'ring']));
-TR.push(['tempered gear', { head: { family: 'knighthelm', tier: 3, tempered: true }, chest: { family: 'knightplate', tier: 3, tempered: true }, boots: { family: 'knightgreaves', tier: 3, tempered: true }, weapon: { family: 'sword', tier: 3, tempered: true },
+TR.push(['tempered gear', { head: { family: 'knighthelm', tier: 3, tempered: true }, chest: { family: 'warden', tier: 3, tempered: true }, boots: { family: 'knightgreaves', tier: 3, tempered: true }, weapon: { family: 'sword', tier: 3, tempered: true },
   belt: { family: 'moonlit_girdle', tier: 3, rarity: 'legendary', tempered: true }, amulet: { tier: 3, element: 'holy', rarity: 'epic', tempered: true }, ring: { tier: 3, rarity: 'epic', tempered: true } }, 'front', 6, 'all']);
-TR.push(['tempered vs plain', { head: { family: 'arcanecowl', tier: 3, tempered: true }, chest: { family: 'dreamrobe', tier: 3 }, boots: { family: 'clothsandals', tier: 3, tempered: true }, belt: { family: 'mistwoven_belt', tier: 2, tempered: true } }, 'front', 0, 'all']);
+TR.push(['tempered vs plain', { head: { family: 'arcanecowl', tier: 3, tempered: true }, chest: { family: 'dreamweave', tier: 3 }, boots: { family: 'clothsandals', tier: 3, tempered: true }, belt: { family: 'mistwoven_belt', tier: 2, tempered: true } }, 'front', 0, 'all']);
 function trkDraw(t) {
   TRX.fillStyle = '#1d1a2a'; TRX.fillRect(0, 0, 1280, 1000);
   TR.forEach(([name, look, view, fi], i) => {

@@ -1,0 +1,224 @@
+{
+ "level": 1,
+ "xp": 0,
+ "maxHp": 760,
+ "maxMp": 260,
+ "maxSt": 100,
+ "power": 0.7,
+ "dmgBase": 0.7,
+ "wdmg": 35,
+ "bonus": 0,
+ "def": 0.16527545909849747,
+ "crit": 0.08,
+ "critDmg": 0.8,
+ "haste": 0,
+ "cdr": 0,
+ "skillDmg": 0,
+ "regen": 2,
+ "mpRegen": 2,
+ "speed": 3.7,
+ "dust": 0,
+ "potions": 3,
+ "res": {
+  "slash": 0.25,
+  "pierce": 0.25,
+  "fire": 0,
+  "frost": 0,
+  "nature": 0,
+  "lightning": -0.25,
+  "arcane": 0,
+  "gloom": 0
+ },
+ "amp": {
+  "ruby": 0,
+  "sapphire": 0,
+  "emerald": 0,
+  "topaz": 0,
+  "amethyst": 0,
+  "diamond": 0
+ },
+ "gear": {
+  "weapon": "dawnblade",
+  "head": "knighthelm",
+  "chest": "knightplate",
+  "boots": "knightgreaves"
+ },
+ "slots": {
+  "1": "secondwind",
+  "2": "chain",
+  "3": "shootingstar",
+  "q": "sunslash",
+  "e": "dashstrike",
+  "r": "judgement",
+  "f": "bulwark",
+  "c": "warcry",
+  "shift": "charge"
+ },
+ "equip": {
+  "weapon": {
+   "uid": "i_5",
+   "base": "rustyblade",
+   "rarity": "common",
+   "ilvl": 1,
+   "reqLvl": 1,
+   "affixes": [],
+   "sockets": [],
+   "unique": null,
+   "stats": {
+    "dmg": 35
+   }
+  },
+  "head": {
+   "uid": "i_6",
+   "base": "ironcap",
+   "rarity": "common",
+   "ilvl": 1,
+   "reqLvl": 1,
+   "affixes": [],
+   "sockets": [],
+   "unique": null,
+   "stats": {
+    "def": 0.048
+   }
+  },
+  "chest": {
+   "uid": "i_7",
+   "base": "ironmail",
+   "rarity": "common",
+   "ilvl": 1,
+   "reqLvl": 1,
+   "affixes": [],
+   "sockets": [
+    null
+   ],
+   "unique": null,
+   "stats": {
+    "def": 0.12,
+    "hp": 110,
+    "resSlash": 0.25,
+    "resPierce": 0.25,
+    "resLightning": -0.25
+   }
+  },
+  "boots": {
+   "uid": "i_8",
+   "base": "ironboots",
+   "rarity": "common",
+   "ilvl": 1,
+   "reqLvl": 1,
+   "affixes": [],
+   "sockets": [],
+   "unique": null,
+   "stats": {
+    "def": 0.03
+   }
+  }
+ },
+ "bag": [
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null
+ ],
+ "wsk": {
+  "dawnblade": {
+   "q": "sunslash",
+   "e": "dashstrike",
+   "r": "judgement"
+  },
+  "starfall": {
+   "q": "firebolt",
+   "e": "barrage",
+   "r": "meteor"
+  },
+  "moonbow": {
+   "q": "multishot",
+   "e": "tumble",
+   "r": "arrowrain"
+  }
+ },
+ "csk": [
+  "secondwind",
+  "chain",
+  "shootingstar"
+ ],
+ "runes": [],
+ "ranks": {},
+ "mods": {},
+ "map": "vale",
+ "checkpoint": {
+  "map": "vale",
+  "x": 30.36977705423411,
+  "y": 55.630222945765766
+ },
+ "prog": {
+  "quests": {},
+  "chests": 0,
+  "firsts": [],
+  "trig": {
+   "vale": [
+    "wake"
+   ]
+  },
+  "secrets": {},
+  "gates": {},
+  "sections": {
+   "vale": [
+    "hub"
+   ]
+  },
+  "shrines": {
+   "vale": [
+    "shrine_start"
+   ]
+  },
+  "once": {
+   "zone:vale": 1,
+   "dlg:vale_banner": 1,
+   "dlg:vale_wake": 1,
+   "dlg:vale:wake": 1
+  },
+  "obj": {
+   "vale": [
+    {
+     "id": "wake",
+     "text": "Hit the training dummies"
+    }
+   ]
+  },
+  "fogMaps": [
+   "vale"
+  ]
+ },
+ "seen": 0,
+ "stats": {
+  "playtime": 95,
+  "deaths": 0
+ }
+}

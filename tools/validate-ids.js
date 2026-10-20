@@ -144,6 +144,7 @@ function main() {
   const DIALOGUE = get('DIALOGUE'), QUESTS = get('QUESTS'), BESTIARY_LORE = get('BESTIARY_LORE');
   const SFX_RECIPES = get('SFX_RECIPES'), WARN_SFX = get('WARN_SFX'), SFX_CAPTIONS = get('SFX_CAPTIONS');
   const MUSIC = get('MUSIC'), MUSIC_PATCHES = get('MUSIC_PATCHES');
+  const WEAPONS = get('WEAPONS'), ARMOUR = get('ARMOUR'), VARIANT_RENAME = get('VARIANT_RENAME'), FAMILY_TIERS = get('FAMILY_TIERS') || {};
 
   const skillIds = new Set(Object.keys(SKILLS || {}));
   const baseIds = new Set(Object.keys(BASES || {}));
@@ -190,7 +191,24 @@ function main() {
   for (const b of Object.values(BASES || {})) {
     const fams = (ITEMS && ITEMS[b.slot]) || [];
     if (!fams.some((f) => f.id === b.family)) fail(F.items, 'base', b.id, `family "${b.family}" in slot "${b.slot}"`);
+    if (b.variant !== b.family || !b.class) fail(F.items, 'base', b.id, `variant "${b.variant}" + class "${b.class}"`);
   }
+  // ---- §23 / §24 variant structure: live rows have 5 FAMILY_TIERS; planned rows are name-only (nothing can drop them);
+  // every pre-v4 rename target exists
+  const variantRows = [];
+  for (const [cls, C] of Object.entries(WEAPONS || {})) for (const [id, v] of Object.entries(C.variants || {})) variantRows.push({ id, v, cls, where: `WEAPONS.${cls}.variants.${id}` });
+  for (const [cls, C] of Object.entries(ARMOUR || {})) for (const [sid, S] of Object.entries(C.suits || {})) {
+    variantRows.push({ id: sid, v: { planned: S.planned }, cls, where: `ARMOUR.${cls}.suits.${sid}`, suit: true });
+    for (const [slot, pc] of Object.entries(S.pieces || {})) if (pc) variantRows.push({ id: pc.id, v: pc, cls, where: `ARMOUR.${cls}.suits.${sid}.pieces.${slot}` });
+  }
+  for (const r of variantRows) {
+    if (r.v.id !== undefined && r.v.id !== r.id) fail(F.data, 'variant', r.where, `id "${r.v.id}"`);
+    if (r.suit) continue;
+    if (r.v.planned) { if (FAMILY_TIERS[r.id] || r.v.q || r.v.basic) fail(F.data, 'planned variant', r.where, 'name-only (no tiers / skills)'); }
+    else if (!FAMILY_TIERS[r.id] || FAMILY_TIERS[r.id].length !== 5) fail(F.items, 'FAMILY_TIERS', r.id, `5 tiers for ${r.where}`);
+  }
+  for (const [from, to] of Object.entries(VARIANT_RENAME || {})) if (!variantRows.some((r) => r.id === to)) fail(F.data, 'VARIANT_RENAME', from, `target "${to}"`);
+  for (const id of Object.keys(FAMILY_TIERS || {})) if (!Object.values(ITEMS).some((l) => l.some((f) => f.id === id))) fail(F.items, 'FAMILY_TIERS', id, 'live family in ITEMS');
 
   // ---- IMPLICITS and FLAVOR versus base ids (and unique ids for FLAVOR)
   for (const k of Object.keys(IMPLICITS || {})) if (!baseIds.has(k)) fail(F.itemdata, 'IMPLICITS', k, 'base id');
