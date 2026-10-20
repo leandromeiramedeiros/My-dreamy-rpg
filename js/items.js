@@ -481,8 +481,8 @@ function rollItem(lvl, rarity, slot) {
 const rollGem = lvl => `${pick2(GEM_TYPES)}_${clamp(1 + Math.floor((lvl + frand(-3, 4)) / 10), 1, GEM_MAX)}`;
 // what an enemy leaves behind: [{ kind:'item'|'gem'|'potion', it?, gem? }]
 // `unique`: named legendary id for a boss's first kill
-function rollLoot(cls, lvl, unique) {
-  const out = [], itm = r => out.push({ kind: 'item', it: rollItem(lvl, r) });
+function rollLoot(cls, lvl, unique, pool) {
+  const P = LOOT_POOLS[pool], out = [], itm = r => { let it = rollItem(lvl, r); for (let k = 0; P && P.exclude && P.exclude.includes(it.base) && k < 8; k++) it = rollItem(lvl, r); out.push({ kind: 'item', it }); };
   if (cls === 'boss') {
     if (unique) out.push({ kind: 'item', it: makeUnique(unique, lvl) });
     itm(rollRarity('boss', lvl)); itm(rollRarity('boss', lvl)); itm(rollRarity('elite', lvl));
@@ -503,12 +503,16 @@ function rollLoot(cls, lvl, unique) {
   return out;
 }
 // the Vale's first chest: try another weapon family, an armour upgrade and a first gem
-function starterLoot() {
-  const fam = pick2(['staff', 'bow']), arm = pick2(['head', 'chest', 'boots']);
-  return [{ kind: 'item', it: makeItem(FAMILY_TIERS[fam][0].split(':')[0], 'uncommon', 1, { sockets: 1 }) },
-    { kind: 'item', it: makeItem(FAMILY_TIERS[pick2(ITEMS[arm]).id][0].split(':')[0], 'uncommon', 2, { sockets: 1 }) },
-    { kind: 'gem', gem: 'ruby_1' }];
+// The Vale's first chest (the tutorial chest, `starter: true`, ~2:00; director ruling M3): a fixed Common Iron Mail with
+// 1 socket, the Origin ring for the starting class (§17.1 / §19.4: the Origin passive is that ring's boon) and a Chipped gem.
+function starterLoot(p = G.player) {
+  const w = p && p.equip && p.equip.weapon, ring = originRing(w ? w.base : 'rustyblade');
+  return [{ kind: 'item', it: makeItem('ironmail', 'common', 1, { sockets: 1, affixes: [] }) }].concat(ring ? [{ kind: 'item', it: ring }] : [], [{ kind: 'gem', gem: 'ruby_1' }]);
 }
+// Enemy loot pools (enemydata.js `loot`): a common's item drops re-roll any base in `exclude` (the starter kit's bases, so a
+// slime never drops a duplicate Rusty Blade). Rows naming an unknown pool fall back to the plain table (validate-ids flags them).
+const STARTER_BASES = ['rustyblade', 'ironcap', 'ironmail', 'ironboots'];
+const LOOT_POOLS = { common_vale: { exclude: STARTER_BASES }, common_pinewood: { exclude: STARTER_BASES } };
 
 // ===== bag ==========================================================================================
 const BAG_SIZE = 30, MAX_POTIONS = 3;
@@ -696,7 +700,7 @@ function onEnemyKilled(e) {
     }
     G.prog.firsts[k] = true;
   }
-  dropLoot(e.x, e.y, rollLoot(c, e.lvl, uq));
+  dropLoot(e.x, e.y, rollLoot(c, e.lvl, uq, (ENEMY[e.type] || {}).loot));
   if (c === 'boss') delay(1.5, saveGame);
 }
 function pickup(p, d) {
@@ -734,8 +738,9 @@ function openChest(o) {
 // a belt Rare (+ the chest tier floor: gold -> at least Rare anyway). It also records G.prog.secrets['trinket:<slot>'] (saved),
 // which unlocks random trinket drops once the amulet's chest is open (trinketDropsOn).
 const TRINKET_CHEST_FLOOR = { ring: 'uncommon', amulet: 'rare', belt: 'rare' };
+const trinketSlotOf = src => (src && TRINKET_KINDS.includes(src.loot) ? src.loot : null);   // a chest marker's `loot` slot, or null
 function chestTrinket(src, L) {
-  const slot = src && src.loot; if (!TRINKET_KINDS.includes(slot)) return [];
+  const slot = trinketSlotOf(src); if (!slot) return [];
   let r = rollRarity('chest', L); if (!rarityAtLeast(r, TRINKET_CHEST_FLOOR[slot])) r = TRINKET_CHEST_FLOOR[slot];
   if (slot !== 'ring' && RARITY[r].i > RARITY.rare.i) r = 'rare';   // amulet / belt: Rare exactly (§19.4 placements)
   if (G.prog) (G.prog.secrets || (G.prog.secrets = {}))['trinket:' + slot] = true;
@@ -980,7 +985,6 @@ function starterKit(p) {
   p.equip = { weapon: makeItem('rustyblade', 'common', 1, { sockets: 0 }), head: makeItem('ironcap', 'common', 1, { sockets: 0 }),
     chest: makeItem('ironmail', 'common', 1, { sockets: 1 }), boots: makeItem('ironboots', 'common', 1, { sockets: 0 }),
     ring1: null, ring2: null, amulet: null, belt: null };
-  p.equip.ring1 = originRing(p.equip.weapon.base);   // §17.1 / §19.4: the free Origin starter ring (Knight for the Rusty Blade)
   p.bag = Array(BAG_SIZE).fill(null);
 }
 // ?scene=... showcases: a mid-level hero (L16) with rare/epic tier-2 gear of the chosen weapon variant (legacy ids accepted)
