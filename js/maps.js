@@ -231,22 +231,39 @@ function groundBase(m, t, wx, wy, px, py, dc, rx, ry, line, lipped) {
   }
   return [255, 0, 255];
 }
+// per-tile flags, cached per map (computed on first use): bits 0-7 = neighbour k (N8 order) is a lower-priority type on the same
+// level (a tongue source); bit 8 = some neighbour is lower / void (lip); bit 9 = an AO or wedge-shadow caster (N / W / NW higher, or
+// a column N within 2 tiles). Interior pixels of plain tiles then skip every neighbour lookup.
+function tileFlags(m, t, h, tx, ty) {
+  const F = m._tf || (m._tf = new Int16Array(m.W * m.H).fill(-1)), k0 = ty * m.W + tx;
+  if (F[k0] >= 0) return F[k0];
+  let f = 0;
+  const pr = TPRI[t] || 0;
+  for (let k = 0; k < 8; k++) {
+    const nx = tx + N8[k][0], ny = ty + N8[k][1], u = typeAt(m, nx, ny), hn = hAt(m, nx, ny);
+    if (hn < h) f |= 256;
+    if (pr > 1 && u && TPRI[u] && TPRI[u] < pr && Math.abs(hn - h) <= 1) f |= 1 << k;
+  }
+  if (hAt(m, tx, ty - 1) > h || hAt(m, tx - 1, ty) > h || hAt(m, tx - 1, ty - 1) > h || hAt(m, tx, ty - 2) > h) f |= 512;
+  return (F[k0] = f);
+}
 // the colour of a TOP-surface pixel of tile type t at height h (the flat raster, and column tops). (wx, wy) = its world point,
 // (px, py) = raster / sprite pixel (dither phase), (SX, SY) = its point on the tile's own height plane in world-screen space
 // projected to z = 0 (toWorld(SX, SY) = (wx, wy)); the lip test looks 1-2 px up / down that plane.
 function topColor(m, t, h, wx, wy, px, py, SX, SY) {
   const th = m.theme, tx = Math.floor(wx), ty = Math.floor(wy), fx = wx - tx, fy = wy - ty;
   let tt = t, line = 0;
+  const tf = tileFlags(m, t, h, tx, ty);
   // (c) 47-blob transition: the nearest lower-priority same-level neighbour (edge or corner) whose scalloped tongue reaches here.
   // Decided at the centre of the pixel's horizontal PAIR (screen x & ~1): iso edges run 2:1, so tongues and their lines come out in
   // 2 px runs and never leave an isolated pixel.
   const pr = TPRI[t] || 0;
-  if (pr > 1 && (fx < 0.45 || fx > 0.55 || fy < 0.45 || fy > 0.55)) {
+  if ((tf & 255) && (fx < 0.4 || fx > 0.6 || fy < 0.4 || fy > 0.6)) {
     const [qx, qy] = toWorld(SX - (px & 1) + 0.5, SY), fx = qx - tx, fy = qy - ty, wx = qx, wy = qy;
     let best = 9, bu = null;
     for (let k = 0; k < 8; k++) {
-      const dx = N8[k][0], dy = N8[k][1], nx = tx + dx, ny = ty + dy, u = typeAt(m, nx, ny), pu = u ? TPRI[u] : 0;
-      if (!pu || pu >= pr || Math.abs(m.h[ny][nx] - h) > 1) continue;
+      if (!(tf & (1 << k))) continue;
+      const dx = N8[k][0], dy = N8[k][1], nx = tx + dx, ny = ty + dy, u = m.type[ny][nx];
       let d, s, key;
       if (dy === 0) { d = dx < 0 ? fx : 1 - fx; s = wy; key = tx + (dx > 0 ? 1 : 0); }
       else if (dx === 0) { d = dy < 0 ? fy : 1 - fy; s = wx; key = 977 + ty + (dy > 0 ? 1 : 0); }
@@ -260,7 +277,7 @@ function topColor(m, t, h, wx, wy, px, py, SX, SY) {
   }
   // (d) lip: a lower / void tile within 2 px straight above or below on this plane
   let lip = 0;
-  if (t !== 'w' && (fx < 0.13 || fy < 0.13 || fx > 0.87 || fy > 0.87)) {
+  if ((tf & 256) && t !== 'w' && (fx < 0.13 || fy < 0.13 || fx > 0.87 || fy > 0.87)) {
     for (const dir of [1, -1]) for (let k = 1; k <= 2; k++) {
       const [nx, ny] = toWorld(SX, SY + dir * k), ix = Math.floor(nx), iy = Math.floor(ny);
       if (ix === tx && iy === ty) continue;
@@ -272,14 +289,14 @@ function topColor(m, t, h, wx, wy, px, py, SX, SY) {
   let c = groundBase(m, tt, wx, wy, px, py, tileDeco(m, tx, ty), rx, ry, line, lip);
   // AO at a higher neighbour's wall foot (N / W / NW, within 4 px) and the SW wedge shadow of a column N of this tile
   let mul = 1;
-  if (fx < 0.3 || fy < 0.3) {
+  if ((tf & 512) && (fx < 0.3 || fy < 0.3)) {
     let d = 9;
     if (hAt(m, tx, ty - 1) > h) d = fy;
     if (hAt(m, tx - 1, ty) > h && fx < d) d = fx;
     if (d > 0.28 && hAt(m, tx - 1, ty - 1) > h) d = Math.min(d, Math.sqrt(fx * fx + fy * fy));
     if (d < 0.28) mul = 0.8 + 0.2 * d / 0.28;
   }
-  for (let k = 1; k <= 2; k++) { const hc = hAt(m, tx, ty - k); if (hc > h) { if (fy + k - 1 < 0.2 * (hc - h) * (0.4 + 0.6 * fx)) mul *= 0.75; break; } }
+  if (tf & 512) for (let k = 1; k <= 2; k++) { const hc = hAt(m, tx, ty - k); if (hc > h) { if (fy + k - 1 < 0.2 * (hc - h) * (0.4 + 0.6 * fx)) mul *= 0.75; break; } }
   if (mul < 1) c = mulRgb(c, mul);
   // (e) height fog
   const fog = Math.min(0.2, 0.05 * (m.hMax - h));
