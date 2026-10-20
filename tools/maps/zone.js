@@ -278,7 +278,7 @@ function populate(S, g, T) {
   void wk;
 
   // ============================================================== timing (the required route): feeds build.js
-  g.timing = buildTiming(S, g);
+  g.timing = buildTiming(S.route, g, S.capMinutes || 24, S._ambushAt || {});
 }
 
 function fightIn(T, g, tr, k, cfg, requires) {
@@ -289,10 +289,10 @@ function fightIn(T, g, tr, k, cfg, requires) {
 
 // ---- timing: walk the spec's route (stops with an optional fight / pause / warp) at 3.7 tiles/s -------------------
 const SPEED = 3.7;
-function buildTiming(S, g) {
-  const R = g.roomBy, stops = [], at = st => (typeof st.at === 'string' ? (R[st.at] ? { x: R[st.at].x, y: R[st.at].y } : S._ambushAt[st.at]) : { x: st.at[0], y: st.at[1] });
+function buildTiming(route, g, cap, ambushAt) {
+  const R = g.roomBy, stops = [], at = st => (typeof st.at === 'string' ? (R[st.at] ? { x: R[st.at].x, y: R[st.at].y } : ambushAt[st.at]) : { x: st.at[0], y: st.at[1] });
   let prev = null;
-  for (const st of S.route) {
+  for (const st of route) {
     const p = at(st); let walk = 0, how = 'start';
     if (prev) {
       if (st.warp) { walk = 0; how = 'warp'; }
@@ -302,7 +302,7 @@ function buildTiming(S, g) {
     stops.push({ sec: st.sec, label: st.label || st.at, walk: Math.round(walk), how, fight: st.fight || 0, pause: st.pause || 0, warp: !!st.warp, x: p.x, y: p.y });
     prev = { st, p };
   }
-  return { speed: SPEED, stops, cap: S.capMinutes || 24 };
+  return { speed: SPEED, stops, cap };
 }
 
-module.exports = { zone };
+module.exports = { zone, buildTiming };
