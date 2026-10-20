@@ -547,6 +547,8 @@ const PAD_STUB = () => {
     for (const s of m.sections.filter(q => q.tiles)) {
       p.x = s.cx; p.y = s.cy; p.z = tileH(m, p.x, p.y); G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
       for (let k = 0; k < 40; k++) { await w(30); maxRes = Math.max(maxRes, CHUNK.cache.size); }
+      // the camera chunk is budgeted (render.js CAM_CHUNK_MS a frame, the low-res preview meanwhile; QA perf): resident within ~2 s
+      for (let k = 0; k < 70 && !chunkResident(m, chunkAt(m, camX, camY)); k++) { await w(30); maxRes = Math.max(maxRes, CHUNK.cache.size); }
       const vis = chunkAt(m, camX, camY); if (!chunkResident(m, vis)) visOk = false;
     }
     for (let k = 0; k < 200 && (GROUND_STATS.visMissing || CHUNK.jobs.size); k++) await w(25);   // let the last builds land
@@ -556,7 +558,7 @@ const PAD_STUB = () => {
     const r = { maxRes, evicted: CHUNK.evicted - ev0, visOk, thrash, freed, orphan, jobs: CHUNK.jobs.size };
     CHUNK.max = keep; return r;
   });
-  check('chunks: LRU eviction keeps <= cap resident, the camera chunk always resident, evicted chunks free their columns, no rebuild thrash standing still', lru.maxRes <= 6 && lru.evicted > 0 && lru.visOk && lru.thrash === 0 && lru.freed > 0 && lru.orphan === 0, lru);
+  check('chunks: LRU eviction keeps <= cap resident, the camera chunk resident within ~2 s of a jump, evicted chunks free their columns, no rebuild thrash standing still', lru.maxRes <= 6 && lru.evicted > 0 && lru.visOk && lru.thrash === 0 && lru.freed > 0 && lru.orphan === 0, lru);
   // spatial grid: drawScene + movement + triggers query buckets
   const grid = await ev(async () => {
     const w = ms => new Promise(r => setTimeout(r, ms)), m = G.map, p = G.player; p.x = m.start.x; p.y = m.start.y; await w(200);
@@ -737,7 +739,7 @@ const PAD_STUB = () => {
   const rt = await ev(async () => {
     const w = ms => new Promise(r => setTimeout(r, ms)), m = G.map, card = id => m.triggers.find(t => t.id === id), out = {}, talks = [];
     const tk = window.talk; window.talk = a => { talks.push(a.id || 'inline'); return tk(a); };
-    const keep = { prog: G.prog, cp: G.checkpoint }; G.prog = { chests: {}, firsts: {}, trig: {}, quests: {} };
+    const keep = { prog: G.prog, cp: G.checkpoint }; G.prog = { chests: {}, firsts: {}, trig: {}, quests: {}, once: { 'zone:pinewood': 1 } };   // already arrived once
     G.player.invulnT = 999;
     for (const id of ['h_intro', 'h_r1_done', 'h_r2_done', 'h_boss']) fireTrigger(card(id));
     out.boss = currentObjective(); G.enemies.length = 0; await w(50);

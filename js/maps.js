@@ -353,7 +353,7 @@ function buildChunkStep(m, idx, ms) {
   CHUNK.cache.set(key, { m, idx, c: job.c, last: CHUNK.frame }); CHUNK.built++;
   if (CHUNK.gone.has(key) && CHUNK.frame - CHUNK.gone.get(key) < 120) CHUNK.thrash++;
   CHUNK.gone.delete(key);
-  chunkEvict(m);
+  chunkEvict(m, key);
   return true;
 }
 // a partial build abandoned (the camera moved on): its ImageData and the column images it already made are freed
@@ -364,11 +364,13 @@ function dropChunkJob(key, job) {
   if (job.c) job.c.width = 0;
 }
 // LRU across every map; chunks of the current map drawn this frame are never evicted
-function chunkEvict(cur) {
+// protected: the chunk just built (keep) and chunks DRAWN this frame or the last (ch.seen, render.js drawGround). A
+// prefetched / budgeted build is not protected merely for being new, so the cap holds while builds land frame by frame.
+function chunkEvict(cur, keep) {
   while (CHUNK.cache.size > CHUNK.max) {
     let worst = null;
     for (const [k, ch] of CHUNK.cache) {
-      if (ch.m === cur && ch.last >= CHUNK.frame - 1) continue;   // drawn this frame or the last one: visible
+      if (ch.m === cur && (k === keep || ch.seen >= CHUNK.frame - 1)) continue;   // just built, or visible
       if (!worst || (ch.m !== cur) > (worst.m !== cur) || ((ch.m !== cur) === (worst.m !== cur) && ch.last < worst.last)) worst = Object.assign({ k }, ch);
     }
     if (!worst) break;

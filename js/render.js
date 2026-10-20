@@ -116,7 +116,7 @@ function drawGround(ctx, m) {
   for (let cj = cj0; cj <= cj1; cj++) for (let ci = ci0; ci <= ci1; ci++) {
     const idx = cj * cg.nx + ci; if (cg.empty[idx]) continue;
     const ch = chunkResident(m, idx), dx = Math.round(ci * S + g.minSX - camX + RW / 2), dy = Math.round(cj * S - camY + RH / 2);
-    if (ch) { ch.last = CHUNK.frame; ctx.drawImage(ch.c, dx, dy); continue; }
+    if (ch) { ch.last = ch.seen = CHUNK.frame; ctx.drawImage(ch.c, dx, dy); continue; }
     missing.push(idx);
     const pv = groundPreview(m), Q = S / 4;
     ctx.drawImage(pv, ci * Q, cj * Q, Q, Q, dx, dy, S, S);
@@ -131,6 +131,7 @@ const IDLE_MS = PHONE ? 1.5 : 2.5, CAM_CHUNK_MS = PHONE ? 12 : 16;
 const preloadOwns = job => { try { return !!(PRELOAD && job.m.id === PRELOAD.id); } catch (e) { return false; } };   // main.js PRELOAD
 function groundTick(m, idle, sceneMs = 0) {
   const cg = chunkGrid(m), g = m.gp, S = cg.S, t0 = performance.now();
+  if (CHUNK.cache.size > CHUNK.max) chunkEvict(m);   // the cap holds between builds too (it was lowered, or builds now land over several frames)
   const c0 = chunkAt(m, camX, camY);   // the chunk under the camera: always built now (start, respawn, warp arrival)
   // perf (QA: 290-450 ms frames on a warp / section arrival): never Infinity; CAM_CHUNK_MS a frame, the low-res
   // groundPreview fills in for the few frames it takes (under the warp / respawn fade on most arrivals)

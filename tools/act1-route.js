@@ -58,7 +58,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
     window.__loot = [];
     const dl = dropLoot; window.dropLoot = (x, y, list) => { window.__loot.push(...list.map(d => d.kind === 'item' ? 'item:' + d.it.slot + '/' + d.it.rarity + (d.it.unique ? '/unique:' + d.it.unique : '') : d.kind === 'gem' ? 'gem' : d.kind)); return dl(x, y, list); };
     window.__hero();
-    G.prog.trig = {};   // fresh profile (the first load already settled `wake`)
+    G.prog.trig = {}; G.prog.once = {}; G.prog.obj = {};   // fresh profile (the first load already settled `wake` and saw its once-per-save banner / dialogue)
     window.__fired = {};
     enterMap('vale');   // re-enter so the map_enter beats (banner) run under the recorder
   });
