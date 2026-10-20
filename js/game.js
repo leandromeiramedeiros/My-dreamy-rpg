@@ -767,6 +767,7 @@ function damageEnemy(e, base, o = {}) {
   if (p.buffs.veil && !o.dot) { crit = true; delete p.buffs.veil; }
   if (crit) dmg *= 1 + p.critDmg;
   dmg *= frand(0.9, 1.1);
+  if (e.boss && typeof bossClampDmg === 'function') { dmg = bossClampDmg(e, dmg); if (!(dmg > 0)) return false; }   // §26.1 boss bars (bosses.js): clamp at the bar's end, invulnerable between bars
   if (e.dummy) { e.hp = e.maxHp; }
   else e.hp -= dmg;
   e.flash = 0.1;

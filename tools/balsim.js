@@ -92,7 +92,7 @@ const gemGrade = L => (L < 10 ? 1 : L < 24 ? 2 : 3);
 // reference without trinkets beyond the starter ring (trinket power share). 'random' rolls every affix, boon and gem.
 ev(`const SIM_RING_BOON = { sword: 'holyPower', staff: 'fireBurn', bow: 'projPierce' };
 function simTrinkets(p, L, rarity, kind, fam) {
-  if (kind === 'under' || kind === 'notrk') return;
+  if (kind === 'under' || kind === 'under2' || kind === 'notrk') return;
   const rnd = kind === 'random', q = kind === 'optimal' ? 1 : 0.5;
   const tierBase = slot => { const list = Object.values(trinketBases()).filter(t => t.slot === slot && !t.unique && !t.origin).sort((a, c) => a.tier - c.tier); let k = 0; list.forEach((t, i) => { if (t.reqLvl <= L) k = i; }); return list[k].id; };
   const rr = L < 17 ? 'rare' : rarity;
@@ -103,9 +103,12 @@ function simTrinkets(p, L, rarity, kind, fam) {
 }
 function simGear(fams, L, rarity, kind) {
   const p = makePlayer(); p.level = L; let tier = 0; for (let t = 0; t < 5; t++) if (TIER_REQ[t] <= L) tier = t; if (tier === 4) tier = 3;
-  // 'under' (QA M1 / B2): one tier below the band, Uncommon weapon + chest, Common head + boots, no gems, starter ring only
-  const UNDER = { weapon: 'uncommon', head: 'common', chest: 'uncommon', boots: 'common' };
-  if (kind === 'under') tier = Math.max(0, tier - 1);
+  // 'under' (QA M1 / B2; §26.2 "-1 gear tier"): one tier below the band, Uncommon weapon + chest, Common head + boots, no gems,
+  // starter ring only. 'under2' (§26.2 "-2 tiers", Story): two tiers below, every slot Common, no gems. Below L8 the band is
+  // tier 0 already, so there both are a rarity / gem drop (the tier clamps at 0).
+  const UNDER = { weapon: 'uncommon', head: 'common', chest: 'uncommon', boots: 'common' }, UNDER2 = { weapon: 'common', head: 'common', chest: 'common', boots: 'common' };
+  const under = kind === 'under' || kind === 'under2';
+  if (under) tier = Math.max(0, tier - (kind === 'under2' ? 2 : 1));
   const q = kind === 'optimal' ? 1 : 0.5;
   // [P ids, S ids] per slot; the item's §19.1 counts take from the front (Epic: weapon 2P+1S, armour 1P+2S; optimal always 2P+1S)
   const REF = { weapon: [['power', 'crit', 'critDmg'], ['hp', 'def']], armour: [['crit', 'power'], ['hp', 'def']] };
@@ -113,15 +116,15 @@ function simGear(fams, L, rarity, kind) {
   const OPT = { weapon: ['power', 'critDmg', 'crit'], head: ['power', 'crit', 'critDmg'], chest: ['power', 'skillDmg', 'crit'], boots: ['power', 'haste', 'crit'] };
   const g = L < 10 ? 1 : L < 24 ? 2 : 3, fam = fams[0];
   ['weapon', 'head', 'chest', 'boots'].forEach((slot, i) => {
-    const base = FAMILY_TIERS[fams[i]][tier].split(':')[0], rar = kind === 'under' ? UNDER[slot] : rarity;
-    const socks = kind === 'under' ? 0 : slot === 'weapon' || slot === 'chest' ? 1 : 0;
+    const base = FAMILY_TIERS[fams[i]][tier].split(':')[0], rar = kind === 'under2' ? UNDER2[slot] : kind === 'under' ? UNDER[slot] : rarity;
+    const socks = under ? 0 : slot === 'weapon' || slot === 'chest' ? 1 : 0;
     let [np, ns] = AFFIX_COUNT[rar];
     if (rar === 'uncommon' && slot !== 'weapon') { np = 0; ns = 1; }
     if (rar === 'epic' && slot !== 'weapon' && kind !== 'optimal') { np = 1; ns = 2; }
     const ids = kind === 'optimal' ? OPT[slot].slice(0, np).concat(['hp', 'def'].slice(0, ns)) : (([P, S]) => P.slice(0, np).concat(S.slice(0, ns)))(REF[slot === 'weapon' ? 'weapon' : 'armour']);
     const it = kind === 'random' ? makeItem(base, rar, L, { sockets: socks }) : makeItem(base, rar, L, { sockets: socks, affixes: ids, q });
     // reference gems are diamonds (element-neutral: a ruby would amplify only fire skills and skew weapon parity)
-    if (it.sockets.length && kind !== 'under') it.sockets[0] = kind === 'random' ? pick2(GEM_TYPES) + '_' + g : kind === 'optimal' ? (slot === 'weapon' ? 'ruby_' + g : 'amethyst_' + g) : 'diamond_' + g;
+    if (it.sockets.length && !under) it.sockets[0] = kind === 'random' ? pick2(GEM_TYPES) + '_' + g : kind === 'optimal' ? (slot === 'weapon' ? 'ruby_' + g : 'amethyst_' + g) : 'diamond_' + g;
     // optimal uses the Elder Stone (§19.2): temper the first affix once, imbue one socket (where the rarity allows), matching gems
     if (kind === 'optimal') { p.dust = 1e6; if (it.affixes.length) temperItem(it, it.affixes[0].id, p); imbueItem(it, p); it.sockets = it.sockets.map(() => (slot === 'weapon' ? 'ruby_' : 'amethyst_') + g); }
     p.equip[slot] = it;
@@ -259,7 +262,7 @@ for (const id of BOSS_IDS) {
     if (!mini && (v < 100 || v > 300)) red(`guardian ${id} length ${Math.round(v)} s (${fam}) outside 100-300`);
   }
   for (const f of ev(`bossFairness('${ENEMY[id].boss || id}')`)) {
-    const s = `${id}.${f.move}: ${f.rule} (got ${f.got} s)`;
+    const s = `${id}.${f.move}: ${f.rule} (got ${f.got}${/walk-out/.test(f.rule) ? ' tiles' : ' s'}${f.phase ? ', bar/phase ' + f.phase : ''})`;
     if (f.legacy) explained.push(s + ' — M2a Warden timing kept on purpose (acceptance: plays like today); retime in the M4 Warden pass');
     else red('fairness ' + s);
   }
@@ -274,26 +277,27 @@ for (const id of BOSS_IDS) {
   }
 }
 
-// 3b. live boss fights, under-geared (QA M1 / B2; §20.3 "three mistakes kill, one never does")
-// The boss runs its real AI and BOSS_MOVES (not frozen). The hero: 'under' gear (one tier below the band, Uncommon
-// weapon + chest, Common head + boots, no gems) at the lowest level a QA run arrived at, a sword, MELEE ONLY and NO
-// KITING: it walks back into reach after every step aside, never uses the boots dodge to gain distance (Charge: 4 tiles + i-frames would
+// 3b. live boss fights (§26.2 the gear loop: farm until you can beat the boss; QA M1 / B2; §20.3 "three mistakes kill, one never does")
+// The boss runs its real AI, BOSS_MOVES, bars and cunning forms (not frozen). The hero, a sword at the lowest level a QA run
+// arrived at (LIVE[id].L), in three gear rows: 'under' (-1 gear tier: one tier below the band, Uncommon weapon + chest, Common
+// head + boots, no gems), 'reference' (the band's reference gear) and, on Story, 'under2' (-2 tiers: every slot Common, no gems).
+// It plays MELEE ONLY and NO KITING: it walks back into reach after every step aside, never uses the boots dodge to gain distance (Charge: 4 tiles + i-frames would
 // be kiting) EXCEPT as an emergency escape from a telegraph it cannot walk out of in the time left (a burrow surfacing
 // under it), basic x3 -> skill (Q / E alternating, R when charged). Telegraph discipline: REACT s after a telegraph
 // appears it walks out of it if it stands inside (circle: outward, line: sideways, cone: the shorter way out), except
-// for a per-fight budget of MISTAKES (the 3rd and the 12th telegraph it stands in: it eats those hits; "three mistakes
-// kill, one never does" + 2 potions = room for about two). The arena card's own adds (js/world.js: Mossjaw's ogres,
+// for MISTAKES: the 3rd and the 12th telegraph it stands in, then every MISS_EVERY-th (it eats those hits; a busier pattern
+// costs more, so the phases' aggression reaches it: feints and lead-aim alone never would, it reads every shape anew). The arena card's own adds (js/world.js: Mossjaw's ogres,
 // Bramblehorn's saplings) spawn on the card's schedule, relative to the boss. It stays inside a shrinking
 // root ring. Turret shots (saplings) are not dodged; boss and ogre / hound telegraphs are. Potions: 2, drunk below 50 % HP (one heals 40 %). Target priority: an add within 6 tiles (hounds, saplings) first, then the boss.
-// Red: any trial lost (dead or still fighting at 1.5x the length cap), the median kill slower than the §20.3 maximum
-// (mini 90 s, guardian 240 s), or a single boss hit above bossHitCap() of the hero's max HP.
-// M3 step 2 (director sign-off pending): the live median's RED limit is the §20.7 red band (mini 120 s / guardian 300 s), the
-// §20.3 target max (90 / 240) is a NOTE. With v2 gear the reference lengths must sit in 60-90 / 150-240 for all three families
-// and the under-geared melee sword is ~1.65x slower than the reference sword, so both cannot hold at one HP (step-2 report).
+// RED (§26.2): the -1 tier row outside LIVE_UNDER (3-4) of 6 wins, the reference row under 6 / 6, the Story -2 row at 0 / 6, a
+// single boss hit above bossHitCap() of max HP. A trial is lost when the hero dies or the fight runs past 1.5x the red length.
+// Lengths: the reference row's median over the §20.7 red band (mini 120 / guardian 300 s) is red, over the §20.3 target a
+// note; the -1 tier median is a note (losses are expected there). The fight lengths themselves are enforced on the frozen table above.
 const LIVE = { mossjaw: { L: 7, max: 90, red: 120 }, bramblehorn: { L: 9, max: 240, red: 300 } };   // L: lowest arrival level (REPORT: 7-9 / 9-11)
-const REACT = 0.3, MISTAKES = [3, 12], LIVE_POTIONS = 2, LIVE_TRIALS = Math.max(TRIALS, 6);
+const REACT = 0.3, MISTAKES = [3, 12], MISS_EVERY = 0, LIVE_POTIONS = 2, LIVE_TRIALS = 6, LIVE_UNDER = [3, 4];
+const LIVE_ROWS = [{ k: 'under', label: '-1 tier', diff: 'normal' }, { k: 'reference', label: 'reference', diff: 'normal' }, { k: 'under2', label: '-2 Story', diff: 'story' }];
 ev(`const ADD_R = 3;
-function simBossFight(id, L, maxT, react, mistakes, potions, card) {
+function simBossFight(id, L, maxT, react, mistakes, potions, card, every) {
   const p = G.player, cx = G.map.cx, cy = G.map.cy; if (card.arena) G.arena = { id: 'sim', map: G.map.id, gates: [], x: cx, y: cy, r: card.arena.r, pillars: [], broken: [], done: false };
   const b = spawnEnemy(id, cx + card.bx, cy + card.by, 0); G.boss = b; p.potions = potions; p.hp = p.maxHp;
   { const a = Math.atan2(cy - b.y, cx - b.x) || 0; p.x = b.x + Math.cos(a) * 3; p.y = b.y + Math.sin(a) * 3; }   // the hero walks in from the arena side
@@ -332,7 +336,7 @@ function simBossFight(id, L, maxT, react, mistakes, potions, card) {
       if (e.type !== 'tele' || (e.src && e.src.move === 'stationary') || !(e.kind === 'circle' || e.kind === 'line' || e.kind === 'cone')) continue;   // turret chip shots (saplings) are not dodged
       let s = seen.get(e); if (!s) seen.set(e, s = { t, counted: false, miss: false });
       if (t - s.t < react || !inShape(e, 0.35)) continue;
-      if (!s.counted) { s.counted = true; out.tele++; s.miss = mistakes.includes(out.tele); if (s.miss) out.mistakes++; }
+      if (!s.counted) { s.counted = true; out.tele++; s.miss = mistakes.includes(out.tele) || (every > 0 && out.tele > mistakes[mistakes.length - 1] && (out.tele - mistakes[mistakes.length - 1]) % every === 0); if (s.miss) out.mistakes++; }
       const pri = q => (q.src === b ? 0 : 10) + q.life - q.t;   // the boss's own telegraphs first, then the most urgent
       if (!s.miss && (!threat || pri(e) < pri(threat))) threat = e;
     }
@@ -369,12 +373,12 @@ function simBossFight(id, L, maxT, react, mistakes, potions, card) {
   }
   hurtPlayer = hp0;
   out.addsLeft = G.enemies.filter(e => !e.dead && e !== b).length;
-  out.won = b.dead && !p.dead; out.t = t; out.hpLeft = p.dead ? 0 : p.hp / p.maxHp; out.bossLeft = b.dead ? 0 : b.hp / b.maxHp; out.maxHp = p.maxHp;
+  out.bars = b.bk ? b.bk.phase + 1 : 1; out.won = b.dead && !p.dead; out.t = t; out.hpLeft = p.dead ? 0 : p.hp / p.maxHp; out.bossLeft = b.dead ? 0 : b.hp / b.maxHp; out.maxHp = p.maxHp;
   return out;
 }`);
-log('\nLIVE BOSS FIGHTS, UNDER-GEARED (QA M1/B2: tier -1, Common/Uncommon, no gems; sword, melee only, no kiting, boots dodge only as an escape;');
-log(`  steps out of telegraphs ${REACT} s after they show; mistakes: it eats telegraphs no. ${MISTAKES.join(' and ')}; ${LIVE_POTIONS} potions; the arena card's adds; ${LIVE_TRIALS} seeded trials; cap ${Math.round(ev("bossHitCap()") * 100)} % max HP)`);
-log('  boss          L   hero HP  won   length s (median / max)   potions   mistakes  max boss hit  hp left   target');
+log('\nLIVE BOSS FIGHTS (§26.2 gear loop: -1 tier 3-4/6 wins, reference 6/6, Story -2 tiers > 0/6; sword, melee only, no kiting, boots dodge only as an escape;');
+log(`  steps out of telegraphs ${REACT} s after they show; mistakes: it eats telegraphs no. ${MISTAKES.join(' and ')}${MISS_EVERY ? ' then every ' + MISS_EVERY + 'th' : ''}; ${LIVE_POTIONS} potions; the arena card's adds; ${LIVE_TRIALS} seeded trials; cap ${Math.round(ev("bossHitCap()") * 100)} % max HP, Story 30 %)`);
+log('  boss          gear       L   hero HP  won   length s (median / max)   potions   mistakes  max boss hit  hp left   target');
 // the arena card that spawns the boss (js/world.js): its later spawns, timed from the boss spawn, placed relative to it
 function arenaAdds(id) {
   const maps = ev('WORLD_DATA.maps');
@@ -396,22 +400,33 @@ function arenaAdds(id) {
 const liveRows = [];
 for (const id in LIVE) {
   if (!ENEMY[id]) continue;
-  const { L, max, red: redMax } = LIVE[id], B = ev(`BOSSES['${ENEMY[id].boss || id}']`), runs = [];
-  for (let k = 0; k < LIVE_TRIALS; k++) {
-    ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); simHero(${JSON.stringify(FAMS.sword)}, ${L}, 'rare', 'under')`);
-    runs.push(ev(`simBossFight('${id}', ${L}, ${redMax * 1.5}, ${REACT}, ${JSON.stringify(MISTAKES)}, ${LIVE_POTIONS}, ${JSON.stringify(arenaAdds(id))})`));
+  const { L, max, red: redMax } = LIVE[id], card = JSON.stringify(arenaAdds(id));
+  for (const G_ of LIVE_ROWS) {
+    const runs = [];
+    ev(`setSetting('difficulty', '${G_.diff}')`);
+    for (let k = 0; k < LIVE_TRIALS; k++) {
+      ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', '${G_.k}')`);
+      runs.push(ev(`simBossFight('${id}', ${L}, ${redMax * 1.5}, ${REACT}, ${JSON.stringify(MISTAKES)}, ${LIVE_POTIONS}, ${card}, ${MISS_EVERY})`));
+    }
+    const cap = ev('bossHitCap()');
+    ev(`setSetting('difficulty', 'normal')`);
+    const won = runs.filter(r => r.won), lens = won.map(r => r.t).sort((a, b) => a - b), med = lens.length ? lens[Math.floor(lens.length / 2)] : Infinity;
+    const row = { id, gear: G_.k, diff: G_.diff, L, hp: Math.round(runs[0].maxHp), won: won.length, trials: runs.length, med, maxLen: lens.length ? lens[lens.length - 1] : Infinity, potions: Math.max(...runs.map(r => r.potions)),
+      mistakes: Math.max(...runs.map(r => r.mistakes)), tele: Math.round(runs.reduce((a, r) => a + r.tele, 0) / runs.length), maxBossHit: Math.max(...runs.map(r => r.maxBossHit)), hpLeft: won.length ? Math.min(...won.map(r => r.hpLeft)) : 0, bossLeft: Math.max(...runs.map(r => r.bossLeft)),
+      bars: Math.max(...runs.map(r => r.bars || 0)), cap };
+    liveRows.push(row);
+    const target = G_.k === 'under' ? `${LIVE_UNDER.join('-')}/6 wins` : G_.k === 'reference' ? `6/6 wins, <= ${max} s (red ${redMax})` : '> 0/6 wins (Story)';
+    log(`  ${id.padEnd(13)} ${G_.label.padEnd(10)} ${String(L).padEnd(3)} ${String(row.hp).padEnd(8)} ${(row.won + '/' + row.trials).padEnd(5)} ${((lens.length ? Math.round(med) : '-') + ' / ' + (lens.length ? Math.round(row.maxLen) : '-')).padEnd(25)} ${String(row.potions).padEnd(9)} ${(row.mistakes + ' of ' + row.tele).padEnd(9)} ${(Math.round(row.maxBossHit * 100) + ' %').padEnd(13)} ${(Math.round(row.hpLeft * 100) + ' %').padEnd(9)} ${target}`);
+    const by = {}; for (const r of runs) for (const k in r.by || {}) by[k.replace('(rooted)', '')] = (by[k.replace('(rooted)', '')] || 0) + r.by[k] / runs.length;
+    log(`    damage taken per fight, in hero max HP (mean): ${Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v.toFixed(2)).join(', ')}${runs.some(r => !r.won) ? `; lost fights ended at boss ${runs.filter(r => !r.won).map(r => Math.round(r.bossLeft * 100) + ' %').join(', ')}` : ''}`);
+    const tag = `live ${id} (${G_.label}, L${L}, melee, ${LIVE_POTIONS} potions)`;
+    if (G_.k === 'under' && (row.won < LIVE_UNDER[0] || row.won > LIVE_UNDER[1])) red(`${tag}: won ${row.won}/${row.trials}, §26.2 target ${LIVE_UNDER.join('-')}/6`);
+    if (G_.k === 'reference' && row.won < row.trials) red(`${tag}: won ${row.won}/${row.trials}, §26.2 target 6/6 at reference gear (boss left at up to ${Math.round(row.bossLeft * 100)} %)`);
+    if (G_.k === 'under2' && row.won === 0) red(`${tag}: won 0/${row.trials} on Story at -2 tiers (§26.2)`);
+    if (G_.k === 'reference' && lens.length && med > redMax) red(`${tag}: median kill ${Math.round(med)} s over the ${redMax} s red limit (§20.7)`);
+    else if (G_.k !== 'under2' && lens.length && med > max) notes.push(`${tag}: median kill ${Math.round(med)} s over the §20.3 ${max} s target`);
+    if (row.maxBossHit > cap + 0.005) red(`live ${id} (${G_.label}): one boss hit took ${Math.round(row.maxBossHit * 100)} % of max HP (cap ${Math.round(cap * 100)} %)`);
   }
-  const won = runs.filter(r => r.won), lens = won.map(r => r.t).sort((a, b) => a - b), med = lens.length ? lens[Math.floor(lens.length / 2)] : Infinity;
-  const row = { id, L, hp: Math.round(runs[0].maxHp), won: won.length, trials: runs.length, med, maxLen: lens.length ? lens[lens.length - 1] : Infinity, potions: Math.max(...runs.map(r => r.potions)),
-    mistakes: Math.max(...runs.map(r => r.mistakes)), maxBossHit: Math.max(...runs.map(r => r.maxBossHit)), hpLeft: won.length ? Math.min(...won.map(r => r.hpLeft)) : 0, bossLeft: Math.max(...runs.map(r => r.bossLeft)) };
-  liveRows.push(row);
-  log(`  ${id.padEnd(13)} ${String(L).padEnd(3)} ${String(row.hp).padEnd(8)} ${(row.won + '/' + row.trials).padEnd(5)} ${(Math.round(med) + ' / ' + Math.round(row.maxLen)).padEnd(25)} ${String(row.potions).padEnd(9)} ${String(row.mistakes).padEnd(9)} ${(Math.round(row.maxBossHit * 100) + ' %').padEnd(13)} ${(Math.round(row.hpLeft * 100) + ' %').padEnd(9)} <= ${max} s (red ${redMax}), won`);
-  const by = {}; for (const r of runs) for (const k in r.by || {}) by[k.replace('(rooted)', '')] = (by[k.replace('(rooted)', '')] || 0) + r.by[k] / runs.length;
-  log(`    damage taken per fight, in hero max HP (mean): ${Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v.toFixed(2)).join(', ')}`);
-  if (row.won < row.trials) red(`live ${id} (under-geared L${L}, melee, ${LIVE_POTIONS} potions): lost ${row.trials - row.won} of ${row.trials} (boss left at up to ${Math.round(row.bossLeft * 100)} %)`);
-  if (med > redMax) red(`live ${id} (under-geared L${L}): median kill ${Math.round(med)} s over the ${redMax} s red limit (§20.7)`);
-  else if (med > max) notes.push(`live ${id} (under-geared L${L}): median kill ${Math.round(med)} s over the §20.3 ${max} s target (red limit ${redMax} s)`);
-  if (row.maxBossHit > ev('bossHitCap()') + 0.005) red(`live ${id}: one boss hit took ${Math.round(row.maxBossHit * 100)} % of max HP (cap ${Math.round(ev('bossHitCap()') * 100)} %)`);
 }
 
 // 4. builds: optimal / random, reactions, ultimate, caps
