@@ -49,7 +49,10 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
     window.__live = () => G.enemies.filter(e => !e.dummy && !e.dead).map(e => e.type);
     window.__trg = id => G.map.triggers.find(t => t.id === id);
     window.__at = id => { const t = window.__trg(id); return t && t.when.type === 'enter_area' ? [t.when.x, t.when.y] : null; };
+    window.__loot = [];
+    const dl = dropLoot; window.dropLoot = (x, y, list) => { window.__loot.push(...list.map(d => d.kind === 'item' ? 'item:' + d.it.slot + '/' + d.it.rarity + (d.it.unique ? '/unique:' + d.it.unique : '') + (d.it.uid ? '' : '') : d.kind === 'gem' ? 'gem' : d.kind)); return dl(x, y, list); };
     window.__hero();
+    enterMap('vale');   // re-enter so the map_enter beats (banner) run under the recorder
   });
   const wf = async (fn, arg, ms = 12000) => { try { await page.waitForFunction(fn, arg, { timeout: ms }); return true; } catch (e) { return false; } };
   const fired = id => ev(id => !!G.trig.fired[id], id);
@@ -87,9 +90,9 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('vale: Elder Stone is a visible tablet object', await objectsOf("o.tablet && o.src && o.src.title === 'Elder Stone'") === 1); await shot('vale_elder_stone');
   // first chest: the engine rolls the starter kit (weapon + armour + gem) when the chest is opened
   check('vale: first chest trigger fires, Pip says "That glow? Keep it. Gear remembers you."', await goto('chest') && await wf(() => window.__log.talks.some(t => t.id === 'vale_chest'), null, 9000));
-  const ch = await ev(() => { const o = G.map.objects.find(q => q.chest && q.src.starter); if (!o) return null; G.drops.length = 0; openChest(o); return { tier: o.src.tier, opened: o.opened }; });
+  const ch = await ev(() => { const o = G.map.objects.find(q => q.chest && q.src.starter); if (!o) return null; window.__loot.length = 0; openChest(o); return { tier: o.src.tier, opened: o.opened }; });
   await wait(900);
-  const kit = await ev(() => G.drops.map(d => d.kind + ':' + (d.kind === 'item' ? d.it.slot + '/' + d.it.rarity : d.gem)));
+  const kit = await ev(() => window.__loot.slice());
   check('vale: starter chest exists, opens, drops weapon + armour + gem (rings: not wired, see report)', !!ch && ch.opened && kit.length >= 3 && kit.some(k => k.startsWith('gem')), kit); await shot('vale_first_chest');
   check('vale: fishing stub beside the chest (visible, interactable)', await objectsOf('o.fish') >= 1 && await goto('fish_hint'));
   check('vale: cottage tablet', await goto('tablet') && await said('vale_tablet'));
@@ -106,7 +109,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('vale: lantern returned -> quest done + reward', await goto('lantern_return') && (await quest('vale_lantern')) === 'done' && await ranAction("a.type === 'loot' && a.item === 'socket_rune'"));
   check('vale: hidden gem cache', await goto('gems'));
   // take the real rift
-  await ev(() => { const p = G.map.portals.find(q => q.to === 'pinewood'); window.__tp(p.x - 0.4, p.y + 0.9); });
+  await ev(() => { const p = G.map.portals.find(q => q.to === 'pinewood'); window.__tp(p.x + 0.2, p.y + 0.2); });
   check('vale: stepping into the rift enters the Pinewood', await wf(() => G.map.id === 'pinewood', null, 12000));
 
   // =================================================================== MISTY PINEWOOD
@@ -152,7 +155,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('pinewood: gold chest waits on the islet', await objectsOf("o.chest && o.src.tier === 'gold'") === 1);
   check('pinewood: detour chest (lantern-lit, off the road)', await objectsOf("o.chest && o.src.label === 'detour-chest'") === 1 && await goto('env_hint')); await shot('pinewood_detour_chest');
   // down the rift
-  await ev(() => { const p = G.map.portals.find(q => q.to === 'roothollow'); window.__tp(p.x - 0.4, p.y + 0.9); });
+  await ev(() => { const p = G.map.portals.find(q => q.to === 'roothollow'); window.__tp(p.x + 0.2, p.y + 0.2); });
   check('pinewood: rift down enters Root Hollow', await wf(() => G.map.id === 'roothollow', null, 12000));
 
   // =================================================================== ROOT HOLLOW
@@ -191,7 +194,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   await fight('boss_done', 8);
   check('hollow: Mossjaw falls -> exit rift opens, quest step 3', await wf(() => G.trig.fired.boss_done) && (await portalOpen('pinewood_boss')) === true && (await quest('shard_root')) === 3, bossHp);
   await shot('hollow_exit_rift');
-  await ev(() => { const p = G.map.portals.find(q => q.to === 'pinewood_boss'); window.__tp(p.x, p.y + 0.9); });
+  await ev(() => { const p = G.map.portals.find(q => q.to === 'pinewood_boss'); window.__tp(p.x + 0.2, p.y + 0.2); });
   check('hollow: rift down enters Bramblehorn\'s court', await wf(() => G.map.id === 'pinewood_boss', null, 12000));
 
   // =================================================================== BRAMBLEHORN
@@ -199,13 +202,13 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('court: level band [6,10]', await ev(() => JSON.stringify(G.world.maps.pinewood_boss.level) === '[6,10]'));
   check('court: shrine + Pip warning', await goto('intro') && await goto('shrine')); await shot('court_arrival');
   check('court: Bramblehorn intro line + boss spawns', await goto('boss') && await wf(() => window.__log.talks.some(t => t.id === 'boss_bramblehorn_intro')) && await wf(() => G.boss && G.boss.type === 'bramblehorn', null, 12000)); await shot('court_bramblehorn');
-  await ev(() => { G.drops.length = 0; });
+  await ev(() => { window.__loot.length = 0; });
   await fight('victory', 10);
   await wait(800);
-  const drops = await ev(() => G.drops.map(d => d.kind === 'item' ? (d.it.unique || d.it.uid || d.it.name || d.it.id) : d.kind));
-  check('court: death line + Root-Crown drops', await wf(() => G.trig.fired.victory) && await said('boss_bramblehorn_death') && await ev(() => G.drops.some(d => d.kind === 'item' && /rootcrown|Root-Crown|Root Crown/i.test(JSON.stringify(d.it)))), drops);
+  const drops = await ev(() => window.__loot.slice());
+  check('court: death line + Root-Crown drops', await wf(() => G.trig.fired.victory) && await said('boss_bramblehorn_death') && drops.some(d => /rootcrown/i.test(d)), drops);
   check('court: shard quest done + rift home to the Vale opens', (await quest('shard_root')) === 'done' && (await portalOpen('vale')) === true); await shot('court_victory');
-  await ev(() => { const p = G.map.portals.find(q => q.to === 'vale'); window.__tp(p.x - 0.4, p.y + 0.9); });
+  await ev(() => { const p = G.map.portals.find(q => q.to === 'vale'); window.__tp(p.x + 0.2, p.y + 0.2); });
   check('court: rift home returns to the Vale (arrives at the Pinewood rift pad)', await wf(() => G.map.id === 'vale', null, 12000) && await ev(() => Math.hypot(G.player.x - 25, G.player.y - 35.5) < 5));
   await wait(500); await shot('vale_return');
   check('vale (return): settled beats stay settled - the rift is still open', (await portalOpen('pinewood')) === true);
