@@ -489,7 +489,7 @@ function drawCrystals(m, ctx, x0, y0, w, h) {
 // source-atop). 0 ms a frame; a few ms per chunk build. The grammar is Lumina's ground-detail scatter (src/game/GroundDetail.js
 // groundDetailSteps; docs/CREDITS.md) remapped to our tiles: an fBm clump mask at 0.23 / tile drives tufts (more in clumps, 25 %
 // pale) and flowers (dense on 'f'); ferns 55 % at the forest border (a tree within 1.6 tiles) / 5 % in the open; moss on dark moss
-// and in shade; puddles in low moss hollows; cobble edges and sparse tufts on path borders; pebbles elsewhere and at cliff feet;
+// and in shade; puddles in low moss hollows and on banks by water; cobble edges and sparse tufts on path borders; pebbles elsewhere and at cliff feet;
 // leaf litter (needle mats under pines) round trunks; roots at trunk bases (p 0.5 a tree); ferns / tufts ring the roots. Nothing
 // under a collider. decalsAt(m, i, j) -> [{ k, v, x, y }] (k = DECAL_KINDS index), cached per tile.
 const DK = {}; if (typeof DECAL_KINDS !== 'undefined') DECAL_KINDS.forEach((k, i) => { DK[k] = i; });
@@ -511,7 +511,7 @@ function decalsAt(m, i, j) {
   const T = decalTrees(m), h = m.h[j][i], sd = (m.theme.seed | 0) * 131, forest = m.themeId === 'forest';
   let n = 0; const r = () => hash2(i * 61 + n, j * 37 + (n++) * 13, sd + 7);
   const free = (x, y) => !nearColliders(m, x, y, 0.5).some(c => !c.gone && Math.hypot(c.x - x, c.y - y) < c.r + 0.12);
-  const same = (x, y) => Math.floor(x) === i && Math.floor(y) === j || (h === 0 && hAt(m, Math.floor(x), Math.floor(y)) === 0 && typeAt(m, Math.floor(x), Math.floor(y)));
+  const same = (x, y) => { if (Math.floor(x) === i && Math.floor(y) === j) return true; const u = typeAt(m, Math.floor(x), Math.floor(y)); return h === 0 && !!u && !DECAL_NO.has(u) && hAt(m, Math.floor(x), Math.floor(y)) === 0; };   // never onto water / bridge / stairs / flagstones
   const add = (k, x, y, chk = true) => { if (k == null || !same(x, y) || (chk && !free(x, y))) return; const set = DECALS_OF(m)[k]; out.push({ k, v: Math.floor(r() * set.length) % set.length, x, y }); };
   const spot = () => [i + 0.18 + 0.64 * r(), j + 0.18 + 0.64 * r()];
   const clump = fbm(i * 0.23, j * 0.23, 3, sd + 101), shade = T.near[key], grassy = t === 'g' || t === 'f' || t === 'd';
@@ -522,7 +522,8 @@ function decalsAt(m, i, j) {
     for (let q = 0; q < nF; q++) add(DK.flowers, ...spot());
     if (r() < (shade ? 0.55 : 0.05)) add(DK.fern, ...spot());
     if (r() < (t === 'd' ? 0.35 : shade ? 0.12 : 0.03)) add(DK.moss, ...spot());
-    if (t === 'd' && clump < 0.32 && r() < 0.08) add(DK.puddle, ...spot());
+    const bank = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => typeAt(m, i + a, j + b) === 'w');   // wet ground by the water (Lumina: banks)
+    if ((t === 'd' && clump < 0.32 && r() < 0.08) || (bank && r() < 0.12)) add(DK.puddle, ...spot());
     if (r() < 0.04) add(DK.pebbles, ...spot());
   } else if (t === 'p') {
     const edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => { const u = typeAt(m, i + a, j + b); return u && u !== 'p'; });

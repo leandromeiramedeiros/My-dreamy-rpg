@@ -872,16 +872,17 @@ class MapGen {
     return this.free(x, y, sp);
   }
   // §29 G2 variation budget: no identical (type, variant) within 3 tiles. A random variant, then the next free one in order
-  // (one rng draw whatever happens, so the stream stays aligned); all taken -> the random one.
+  // (one rng draw whatever happens, so the stream stays aligned); all taken -> the one whose nearest copy is farthest.
   variantFor(t, x, y, n) {
     const v0 = this.rng.int(0, n - 1); if (n < 2) return v0;
-    const used = new Set(), bi = Math.floor(x), bj = Math.floor(y);
+    const near = new Array(n).fill(9), bi = Math.floor(x), bj = Math.floor(y);   // per variant: the nearest copy within 3 tiles
     for (let dj = -3; dj <= 3; dj++) for (let di = -3; di <= 3; di++) {
       const c = this.occ[bj + dj] && this.occ[bj + dj][bi + di]; if (!c) continue;
-      for (const o of c) if (o.t === t && Math.hypot(o.x - x, o.y - y) < 3) used.add(o.v);
+      for (const o of c) if (o.t === t) { const d = Math.hypot(o.x - x, o.y - y); if (d < 3 && d < near[o.v % n]) near[o.v % n] = d; }
     }
-    for (let k = 0; k < n; k++) { const v = (v0 + k) % n; if (!used.has(v)) return v; }
-    return v0;
+    let best = v0;
+    for (let k = 0; k < n; k++) { const v = (v0 + k) % n; if (near[v] >= 3) return v; if (near[v] > near[best]) best = v; }
+    return best;   // all taken (a dense grove): the variant whose nearest copy is farthest
   }
   // ring of props around a room (e.g. standing stones), skipping places that block walkways
   ring(roomId, t, n, frac, o = {}) {
@@ -957,7 +958,7 @@ class MapGen {
   landmark(x, y, set = 'forest') {
     if (set === 'cave') { this.addObj('brazier', x, y, { force: true, sp: 2 }); for (const [dx, dy] of [[-1.5, -1], [1.6, -0.8], [0.2, 1.7]]) this.addObj('crystal_violet', x + dx, y + dy, { force: true, sp: 1 }); }
     else {
-      for (const [dx, dy] of [[-2, -2], [2.2, -1.4], [0.3, 2.4]]) { const px = x + dx, py = y + dy, tt = this.tileAt(px, py); if ('gfd'.includes(tt) && !(this.zoneAt(px, py) & ZONE.fight) && this.pathClear(px, py) > 1.0) this.addObj('pine_giant', px, py, { v: 1, force: true, sp: 2.5 }); }
+      [[-2, -2], [2.2, -1.4], [0.3, 2.4]].forEach(([dx, dy], k) => { const px = x + dx, py = y + dy, tt = this.tileAt(px, py); if ('gfd'.includes(tt) && !(this.zoneAt(px, py) & ZONE.fight) && this.pathClear(px, py) > 1.0) this.addObj('pine_giant', px, py, { v: k, force: true, sp: 2.5 }); });   // §29 G2: three different giants
       this.addObj('sunbeam', x, y, { force: true, sp: 2 });
     }
     this.poi('landmark', x, y);

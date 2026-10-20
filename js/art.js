@@ -379,8 +379,6 @@ function buildBoss() {
 
 // ===== Flora ===================================================================
 const PAL_LEAF = ramp(['#16353b', '#1f4e4c', '#2b6b5a', '#3f8b63', '#62aa6c', '#94cf7f', '#d2f0a6']);
-const PAL_LEAF_TEAL = ramp(['#132f40', '#1b4a5a', '#27686f', '#3a8b84', '#5cb19a', '#95d7b6', '#d8f6e2']);
-const PAL_BLOSSOM = ramp(['#4a2348', '#7a3a6e', '#b45a92', '#e184b6', '#f6b1d2', '#ffe0ee', '#ffffff']);
 const PAL_BARK = ramp(['#24162a', '#3e2834', '#5e3d40', '#80594f']);
 const PAL_DEAD = ramp(['#120a1a', '#24172e', '#3a2747', '#56396a', '#7b5a96']);
 
@@ -560,6 +558,21 @@ function leafPasses(C, own, S, cl) {
   for (const [x, y] of shade) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.38));
   for (const [x, y] of edge) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.55));
 }
+// silhouette clean-up before the rim passes: a leaf pixel with <= 1 leaf 4-neighbour goes, a 1 px hole with >= 3 leaf 4-neighbours
+// is filled from its darkest neighbour (both read as specks against a bright sky)
+function despeckle(C, own) {
+  const W = C.w, H = C.h, o = (x, y) => x < 0 || y < 0 || x >= W || y >= H ? -1 : own[y * W + x];
+  for (let pass = 0; pass < 2; pass++) {
+    const drop = [], fill = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const nb = [o(x - 1, y), o(x + 1, y), o(x, y - 1), o(x, y + 1)], n = nb.filter(k => k >= 0).length;
+      if (o(x, y) >= 0) { if (n <= 1) drop.push([x, y]); }
+      else if (n >= 3) { let best = null, bl = 1e9, bk = -1; for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) if (o(x + dx, y + dy) >= 0) { const c = C.get(x + dx, y + dy), l = c[0] + c[1] + c[2]; if (l < bl) { bl = l; best = c; bk = o(x + dx, y + dy); } } fill.push([x, y, best, bk]); }
+    }
+    for (const [x, y] of drop) { C.set(x, y, [0, 0, 0], 0); own[y * W + x] = -1; }
+    for (const [x, y, c, k] of fill) { C.set(x, y, c); own[y * W + x] = k; }
+  }
+}
 // a highlight pixel with no 4-neighbour in its own set reads as a speck (> 60 luma off all 4 neighbours): keep runs of >= 2 only
 function runsOnly(list, W) { const k = new Set(list.map(([x, y]) => y * W + x)); return list.filter(([x, y]) => k.has(y * W + x - 1) || k.has(y * W + x + 1) || k.has((y - 1) * W + x) || k.has((y + 1) * W + x)); }
 function canopyTree(seed, S) {
@@ -615,6 +628,7 @@ function canopyTree(seed, S) {
       C.set(x, y, ramp2(S.pal, clamp(v, LO[c.mass], HI[c.mass]), x, y)); own[y * W + x] = ci;
     }
   });
+  despeckle(C, own);
   leafPasses(C, own, S, cl);
   // flecks (blossom / fruit / glints): 2 px pairs on mid / lit clusters, never a lone pixel (a lone one reads as a speck)
   if (S.flecks) for (let i = 0; i < S.flecks.n; i++) {
@@ -655,6 +669,7 @@ function pineTree2(seed, S) {
       }
     }
   }
+  despeckle(C, own);
   // rim on every tier's lit edge (x right of the trunk), dust on lit tier tops, cast shade under the tier above, shadow-side edge
   const o = (x, y) => x < 0 || y < 0 || x >= W || y >= H ? -1 : own[y * W + x], rim = [], dust = [], shade = [], edge = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -1024,44 +1039,8 @@ function buildFog(seed, hex) {
 }
 
 // ===== forest ===================================================================
-const PAL_PINE = ramp(['#0c1a16', '#132a22', '#1b3a2c', '#264c34', '#36623e', '#4f7c46']);
-const PAL_PINE_BARK = ramp(['#1e120c', '#33201a', '#4a2e22', '#64402e', '#80563c']);
-const RIM = hexToRgb('#d0904a');
-// A conifer like the reference: bare lower trunk, drooping tiers of needles with sky gaps,
-// warm sunset rim-light on the right edge.
-function pineTree(seed, W, H, bare, tierStep) {
-  seedRng(seed);
-  const pb = new PixBuf(W, H), cx = W / 2, top = 2, crownBottom = Math.floor(H * (1 - bare));
-  // trunk
-  for (let y = top; y < H; y++) {
-    const t = (y - top) / (H - top), w = Math.max(2, Math.round(1 + t * W * 0.16)) + (y > H - 4 ? (y - (H - 4)) * 2 : 0);
-    for (let x = Math.floor(cx - w / 2); x < Math.ceil(cx + w / 2); x++) {
-      const u = (x - (cx - w / 2)) / w;
-      let v = 0.25 + u * 0.55 + (vnoise(x * 0.9, y * 0.12, seed) - 0.5) * 0.45;
-      pb.set(x, y, rampDither(PAL_PINE_BARK, v, x, y));
-    }
-  }
-  // needle tiers from the top down
-  const tiers = Math.max(3, Math.floor((crownBottom - top) / tierStep));
-  for (let i = 0; i < tiers; i++) {
-    const y0 = top + i * tierStep + rand(-1, 1), k = (i + 1) / tiers;
-    const reach = (2 + k * (W / 2 - 3)) * rand(0.7, 1.05);
-    for (const s of [-1, 1]) {
-      const rx = reach * rand(0.75, 1), ry = tierStep * 0.7 + 1, ccx = cx + s * rx * 0.45, ccy = y0 + tierStep * 0.45;
-      for (let y = Math.floor(ccy - ry - 1); y <= ccy + ry + 2; y++) for (let x = Math.floor(ccx - rx); x <= ccx + rx; x++) {
-        const dx = (x - ccx) / rx, dy = (y - ccy - Math.abs(dx) * ry * 0.6) / ry;   // droop toward the tips
-        if (dx * dx + dy * dy > 1 - vnoise(x * 0.7, y * 0.7, seed + i) * 0.45) continue;
-        if (vnoise(x * 0.5, y * 0.9, seed + 7) > 0.78) continue;                     // gaps show the sky
-        const v = 0.55 - dy * 0.35 + (s > 0 ? 0.08 : -0.06) - k * 0.12 + (hash2(x, y, seed) - 0.5) * 0.2;
-        pb.set(x, y, rampDither(PAL_PINE, v, x, y));
-      }
-    }
-  }
-  // sunset rim light on right-facing edges
-  for (let y = 0; y < crownBottom + 4; y++) for (let x = Math.floor(cx); x < W; x++) if (pb.a(x, y) && !pb.a(x + 1, y) && hash2(x, y, seed + 3) < 0.55) pb.set(x, y, mixRgb(pb.get(x, y), RIM, 0.55));
-  pb.outline(0.4);
-  return pb.toCanvas();
-}
+const PAL_PINE_BARK = ramp(['#1e120c', '#33201a', '#4a2e22', '#64402e', '#80563c']);   // logs / stumps
+// (pine v1, pineTree: mirror-symmetric tiers with a hard-coded right rim, is replaced by pineTree2 above, §29 G2)
 function buildForest() {
   buildTreesV2();   // §29 G2: canopyTree broadleaves + pine v2 (ART.trees.*, ART.pines.*)
   ART.mushroomRed = asciiSprite([

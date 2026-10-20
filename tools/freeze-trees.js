@@ -7,7 +7,7 @@
 //   pine_<kind>_NN      (ART.pines.<kind>: giant 3, tall 6, young 6)
 //   bush2_NN            (ART.bushV2 -> ART.bush: 4 cluster bushes, no trunk)
 // art.js frozenTrees() rebuilds the composite and the 3 sway frames from the two parts at load. The old one-ellipse lollipop
-// sheets (tree_round_0 .. tree_teal_3) are removed; tree_dead_* and every other sprite are kept as they are.
+// sheets (tree_round_0 .. tree_teal_3) and the outlined blob bushes (bush_0 .. bush_2, replaced by bush2_NN) are removed; tree_dead_* and every other sprite are kept as they are.
 // Usage: node tools/freeze-trees.js [--check]   (--check: report sizes and whether js/sprites.js is up to date, write nothing)
 const http = require('http'), fs = require('fs'), path = require('path'), vm = require('vm');
 const { chromium } = require('playwright');
@@ -40,7 +40,7 @@ const srv = http.createServer((q, r) => {
   const old = ctx.SPRITE_ART, next = {};
   const dropped = [];
   for (const [k, v] of Object.entries(old)) {
-    if (/^tree_(round|poplar|blossom|teal)_\d$/.test(k) || /^(tree|pine)_[a-z]+_\d\d$/.test(k) || /^bush2_\d\d$/.test(k)) { dropped.push(k); continue; }
+    if (/^(tree_(round|poplar|blossom|teal)|bush)_\d$/.test(k) || /^(tree|pine)_[a-z]+_\d\d$/.test(k) || /^bush2_\d\d$/.test(k)) { dropped.push(k); continue; }
     next[k] = v;
   }
   Object.assign(next, sheets);

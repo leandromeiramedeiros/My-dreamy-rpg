@@ -943,6 +943,65 @@ const PAD_STUB = () => {
     check("chest contract: loot 'ring' drops a ring >= Uncommon with a boon, 'amulet' a Rare amulet; trinket drops unlock", ['uncommon', 'rare', 'epic'].includes(v2.chest.ring) && v2.chest.ringBoon && v2.chest.amulet === 'rare' && v2.chest.gate, v2.chest);
     check(`drops: trinkets are ~15 % of item drops after Act I (${(v2.share * 100).toFixed(1)} %)`, v2.share > 0.12 && v2.share < 0.18, v2.share);
   }
+  // ---------- 4g. §29 G2 world art: trees v2, canopy over the hero, sway, directional shadows, ground decals ----------
+  {
+    const tp = await br.newPage({ viewport: { width: 960, height: 540 } }); tp.on('pageerror', e => errs.push('pageerror(g2): ' + e.message));
+    await tp.goto(`${base}/index.html?map=vale`, { waitUntil: 'load' });
+    await tp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    const T = await tp.evaluate(() => {
+      const kinds = ['round', 'poplar', 'blossom', 'teal', 'oak', 'birch'], pk = ['giant', 'tall', 'young'];
+      const ok = c => !!(c && c.trunk && c.canopy && c.canopyF && c.canopyF.length === 3 && c.swayF && c.swayF[1] === c && c.cbox && c.cbox[3] > c.cbox[1]);
+      const sheets = kinds.map(k => ART.trees[k]).concat(pk.map(k => ART.pines[k]));
+      const m = G.map, trees = m.objects.filter(o => o.tree);
+      return {
+        frozen: !TREES_LIVE && kinds.every(k => SPRITE_ART['tree_' + k + '_00']) && pk.every(k => SPRITE_ART['pine_' + k + '_00']) && !SPRITE_ART.tree_round_0,
+        counts: kinds.map(k => ART.trees[k].length).concat(pk.map(k => ART.pines[k].length)), allSplit: sheets.every(a => a.every(ok)),
+        bush: ART.bush.length && !!ART.bush[0].canopy, trees: trees.length, flipped: trees.filter(o => o.flip).length,
+        litRight: m.theme.moon.x >= RW / 2, ruinsLeft: THEMES.ruins.moon.x < RW / 2,
+        sway: trees.filter(o => o.img.swayF).length ? trees.filter(o => hash2(Math.floor(o.x * 7), Math.floor(o.y * 7), 77) < 0.25).length / trees.length : 0,
+      };
+    });
+    check('trees v2: frozen sheets (js/sprites.js, 2 frames trunk|canopy; the old lollipop tree_*_0..3 gone) load as composites with trunk / canopy / 3 sway frames / canopy box; 12 sheets a broadleaf, 3 / 6 / 6 pines; bushes v2', T.frozen && T.allSplit && T.counts.join() === '12,12,12,12,12,12,3,6,6' && T.bush, T);
+    check('trees v2: lit-side sheets, no random flip (the Vale is right-lit: 0 mirrored trees; the left-lit ruins theme mirrors them)', T.litRight && T.ruinsLeft && T.trees > 300 && T.flipped === 0, { trees: T.trees, flipped: T.flipped });
+    check('sway: about 1 tree in 4 is in the swaying subset', T.sway > 0.2 && T.sway < 0.3, +T.sway.toFixed(3));
+    // the hero steps under a wide canopy beside its trunk: the canopy splits off, fades 1 -> 0.35 within ~0.2 s, and fades back after
+    const F = await tp.evaluate(async () => {
+      const m = G.map, p = G.player, raf = () => new Promise(r => requestAnimationFrame(r));
+      const place = (x, y) => { p.x = x; p.y = y; p.z = tileH(m, x, y); p.dash = null; p.invulnT = 9999; G.cam.x = isoX(x, y); G.cam.y = isoY(x, y, p.z) - 12; G.enemies.length = 0; G.state = 'play'; };
+      let pick = null;
+      for (const o of m.objects.filter(o => o.tree && o.img.swayF && o.img.width >= 30).sort((a, b) => Math.hypot(a.x - m.start.x, a.y - m.start.y) - Math.hypot(b.x - m.start.x, b.y - m.start.y))) {
+        for (const [dx, dy] of [[0.3, -0.55], [-0.55, 0.3], [0.2, -0.6]]) { const x = o.x + dx, y = o.y + dy; if (walkable(m, x, y, tileH(m, x, y)) && Math.abs(tileH(m, x, y) - o.z) < 0.1 && !nearColliders(m, x, y, 0.5).some(c => c !== o && dist(x, y, c.x, c.y) < c.r + 0.3)) { pick = { o, x, y }; break; } }
+        if (pick) break;
+      }
+      if (!pick) return { pick: false };
+      place(pick.o.x + 1.6, pick.o.y + 1.6); for (let k = 0; k < 20; k++) await raf();
+      const front = pick.o._fade;
+      place(pick.x, pick.y); const t0 = G.t; let tReach = null;
+      for (let k = 0; k < 40; k++) { await raf(); if (tReach == null && pick.o._fade <= TREE_FADE + 0.001) tReach = G.t - t0; }
+      const under = { fade: pick.o._fade, split: pick.o._split };
+      place(pick.o.x + 2.2, pick.o.y + 2.2); for (let k = 0; k < 40; k++) await raf();
+      return { pick: true, front, tReach: tReach == null ? null : +tReach.toFixed(3), under, back: pick.o._fade, backSplit: pick.o._split };
+    });
+    check('canopy: in front of a tree it is one composite (fade 1); under it the canopy splits off and fades to 0.35 within ~0.2 s; walking out fades it back', F.pick && F.front === 1 && F.under.split && Math.abs(F.under.fade - 0.35) < 0.002 && F.tReach != null && F.tReach <= 0.3 && F.back === 1 && !F.backSplit, F);
+    const S = await tp.evaluate(async () => {
+      const m = G.map, raf = () => new Promise(r => requestAnimationFrame(r)), seen = new Set(); let maxN = 0;
+      for (let k = 0; k < 150; k++) { await raf(); maxN = Math.max(maxN, TREE_FRAME.n); for (const o of m.objects) if (o.tree && o._sw && o._fr) seen.add(o._fr); }
+      const ts = shadowTiles(m); let dirShadows = 0; for (const L of ts.tiles.values()) for (const e of L.list) if (e.ts) dirShadows++;
+      const g = groundPrep(m); let dec = 0, kinds = new Set();
+      for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) for (const d of decalsAt(m, i, j)) { dec++; kinds.add(d.k); }
+      return { frames: [...seen].sort(), maxN, cap: TREE_SWAY_MAX, dirShadows, decals: dec, kinds: kinds.size, set: DECALS_OF(m).length, perTile: +(dec / g.W * 32).toFixed(2) };
+    });
+    check('sway: the gust moves swaying trees to both -1 and +1 px frames; at most 60 sway a frame (near band)', S.frames.includes(-1) && S.frames.includes(1) && S.maxN <= S.cap && S.maxN > 0, S);
+    check('shadows (desktop): trees bake directional silhouettes into the static shadow tiles (0 live draws)', S.dirShadows > 300, S.dirShadows);
+    check('decals: 16 kinds per zone, all used on the Vale, baked (no objects)', S.set === 16 && S.kinds === 16 && S.decals > 2000, S);
+    await tp.close();
+    const pp = await br.newPage({ viewport: { width: 960, height: 540 } }); pp.on('pageerror', e => errs.push('pageerror(g2 phone): ' + e.message));
+    await pp.goto(`${base}/index.html?map=pinewood&phone=1`, { waitUntil: 'load' });
+    await pp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    const P = await pp.evaluate(() => { const ts = shadowTiles(G.map); let dir = 0, ell = 0; for (const L of ts.tiles.values()) for (const e of L.list) { if (e.ts) dir++; else ell++; } const sp = new Set(G.map.objects.filter(o => o.tree).map(o => o.src.t)); return { dir, ell, species: [...sp].sort() }; });
+    check('shadows (phone): trees keep the ellipse; Pinewood has >= 5 tree species (pines x3, oak, birch, dead)', P.dir === 0 && P.ell > 500 && ['pine', 'pine_giant', 'pine_young', 'tree_birch', 'tree_oak'].every(k => P.species.includes(k)), P);
+    await pp.close();
+  }
   // ---------- 5. frame time ----------
   await page.reload({ waitUntil: 'load' });
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
