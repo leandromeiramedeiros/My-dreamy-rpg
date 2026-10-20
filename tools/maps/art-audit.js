@@ -2,7 +2,9 @@
 'use strict';
 // tools/maps/art-audit.js -- the DESIGN §29.4 acceptance numbers for the world-art pass, on 6 FIXED camera shots per map.
 // For each shot it renders the real game (headless Chromium), reads the 480x270 scene canvas (SCN: the world frame, no HUD) and computes
-//   specks    isolated pixels whose luminance differs by > 60 from ALL 4 neighbours (per 480x270 frame; target < 50)
+//   specks    isolated pixels whose luminance differs by > 60 from ALL 4 neighbours (per 480x270 frame; target < 50); groundSpecks =
+//             the same excluding the sky above the island's silhouette (render.js stars / clouds); terrainSpecks = the same frame
+//             re-rendered with every prop and critter hidden (ground, cliffs, skirt, sky: what group 1 owns)
 //   clusters  luminance clusters (value bands): peaks of the smoothed 32-bin luma histogram holding >= 1 % of the frame per bin,
 //             split by a valley >= 15 % below the smaller peak (target >= 5); plus the 5/50/95 % luma percentiles
 //   flatBackEdge  "top surface touching the sky without thickness": frame columns where the island's back (north / west) edge meets the
@@ -54,10 +56,10 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 function pageMetrics() {
   const W = SCN.c.width, H = SCN.c.height, d = SCN.x.getImageData(0, 0, W, H).data, Y = new Float32Array(W * H);
   for (let i = 0; i < W * H; i++) Y[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
-  let specks = 0; const at = [];
+  let specks = 0; const at = [], allSp = [];
   for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
     const i = y * W + x, v = Y[i];
-    if (Math.abs(v - Y[i - 1]) > 60 && Math.abs(v - Y[i + 1]) > 60 && Math.abs(v - Y[i - W]) > 60 && Math.abs(v - Y[i + W]) > 60) { specks++; if (at.length < 400) at.push([x, y, [-2, -1, 0, 1, 2].map(dy => [-2, -1, 0, 1, 2].map(dx => Math.round(Y[i + dy * W + dx])).join(' ')).join(' | '), [d[i * 4], d[i * 4 + 1], d[i * 4 + 2]].join(',')]); }
+    if (Math.abs(v - Y[i - 1]) > 60 && Math.abs(v - Y[i + 1]) > 60 && Math.abs(v - Y[i - W]) > 60 && Math.abs(v - Y[i + W]) > 60) { specks++; allSp.push([x, y]); if (at.length < 400) at.push([x, y, [-2, -1, 0, 1, 2].map(dy => [-2, -1, 0, 1, 2].map(dx => Math.round(Y[i + dy * W + dx])).join(' ')).join(' | '), [d[i * 4], d[i * 4 + 1], d[i * 4 + 2]].join(',')]); }
   }
   // luminance clusters (value bands): peaks of the 32-bin luma histogram (8 levels a bin, smoothed 1-2-1) holding >= 1 % of the frame
   // in their bin, merged with the previous peak unless the valley between them dips >= 15 % below the smaller of the two
@@ -72,6 +74,7 @@ function pageMetrics() {
     const q = merged[merged.length - 1]; let valley = Infinity; for (let b = q; b <= p; b++) valley = Math.min(valley, sm[b]);
     if (valley > 0.85 * Math.min(sm[p], sm[q])) { if (sm[p] > sm[q]) merged[merged.length - 1] = p; } else merged.push(p);
   }
+  const h64 = new Float64Array(64); for (let i = 0; i < W * H; i++) h64[Math.min(63, Y[i] >> 2)]++;
   // value spread: luma of the 5th / 50th / 95th percentile
   const sorted = Float32Array.from(Y).sort(), pct = k => Math.round(sorted[Math.floor(k * (sorted.length - 1))]);
   // silhouette 120x68 (box filter), luma
@@ -104,7 +107,8 @@ function pageMetrics() {
     if (Math.max(a, b1) > c + 6) lipped++;
     if (!rim) skyTop++;
   }
-  return { specks, speckAt: at, clusters: merged.length, clusterPeaks: merged.map(b => b * 8), luma: [pct(0.05), pct(0.5), pct(0.95)], sil, skyTop, edgeCols, lipped };
+  let groundSpecks = 0; for (const [x, y] of allSp) if (own[x] >= 0 && y >= Math.round(best[x]) - 1) groundSpecks++;
+  return { specks, groundSpecks, speckAt: at, clusters: merged.length, clusterPeaks: merged.map(b => b * 8), luma: [pct(0.05), pct(0.5), pct(0.95)], h64: Array.from(h64, v => +(v / (W * H) * 100).toFixed(2)), sil, skyTop, edgeCols, lipped };
 }
 function pageChunkCost() {
   const m = G.map, cg = chunkGrid(m), out = [];
@@ -172,11 +176,22 @@ async function savePng(page, file, kind, sil) {
       const file = `${mapId}_${n}_${name}`;
       await savePng(page, path.join(OUT, file + '.png'), 'frame');
       await savePng(page, path.join(OUT, file + '_sil.png'), 'sil', met.sil);
-      delete met.sil; if (!flags.includes('--speck-xy')) delete met.speckAt;
+      // terrain only: the same frame with every prop / critter hidden (trees are group 2's sprites), to attribute the specks
+      if (flags.includes('--speck-xy')) await page.evaluate(() => { window.__tsAt = []; });
+      met.terrainSpecks = await page.evaluate(() => new Promise(res => {
+        const m = G.map, objs = m.objects, cr = G.critters; m.objects = []; G.critters = [];
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          const W = SCN.c.width, H = SCN.c.height, d = SCN.x.getImageData(0, 0, W, H).data, Y = new Float32Array(W * H); let n = 0;
+          for (let i = 0; i < W * H; i++) Y[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+          for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) { const i = y * W + x, v = Y[i]; if (Math.abs(v - Y[i - 1]) > 60 && Math.abs(v - Y[i + 1]) > 60 && Math.abs(v - Y[i - W]) > 60 && Math.abs(v - Y[i + W]) > 60) { n++; if (window.__tsAt && window.__tsAt.length < 300) window.__tsAt.push([x, y, [-1, 0, 1].map(dy => [-2, -1, 0, 1, 2].map(dx => Math.round(Y[i + dy * W + dx])).join(' ')).join(' | '), [d[i * 4], d[i * 4 + 1], d[i * 4 + 2]].join(',')]); } }
+          m.objects = objs; G.critters = cr; res(n);
+        }));
+      }));
+      delete met.sil; if (!flags.includes('--speck-xy')) delete met.speckAt; else met.terrainAt = await page.evaluate(() => window.__tsAt);
       R.shots.push(Object.assign({ name, x, y, file: file + '.png' }, met));
-      console.log(`${mapId.padEnd(9)} ${String(n)} ${name.padEnd(16)} specks ${String(met.specks).padStart(5)}  clusters ${met.clusters}  flatBackEdge ${met.skyTop}/${met.edgeCols} lipped ${met.lipped}  luma5/50/95 ${met.luma.join('/')}`);
+      console.log(`${mapId.padEnd(9)} ${String(n)} ${name.padEnd(16)} specks ${String(met.specks).padStart(5)} (ground ${String(met.groundSpecks).padStart(4)}, terrain ${String(met.terrainSpecks).padStart(4)})  clusters ${met.clusters}  flatBackEdge ${met.skyTop}/${met.edgeCols} lipped ${met.lipped}  luma5/50/95 ${met.luma.join('/')}`);
     }
-    R.specksMax = Math.max(...R.shots.map(s => s.specks)); R.specksMean = Math.round(R.shots.reduce((a, s) => a + s.specks, 0) / R.shots.length);
+    R.specksMax = Math.max(...R.shots.map(s => s.specks)); R.groundSpecksMax = Math.max(...R.shots.map(s => s.groundSpecks)); R.terrainSpecksMax = Math.max(...R.shots.map(s => s.terrainSpecks)); R.specksMean = Math.round(R.shots.reduce((a, s) => a + s.specks, 0) / R.shots.length);
     R.clustersMin = Math.min(...R.shots.map(s => s.clusters));
     if (CHUNKS) {
       R.chunkDesktop = await page.evaluate(pageChunkCost);

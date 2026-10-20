@@ -148,7 +148,7 @@ var BOSS_DATA = {
     moveDefs: {
       lunge:   { type: 'line', len: 6, wind: 0.75, open: 1.2, stagger: 1 },   // wind 0.6 -> 0.75 (QA M1: a 0.3 s reaction + 1.1-tile sidestep must fit); bar 2: 0.64
       rootSpit:{ type: 'rain', count: 3, r: 1.2, at: 'player', wind: 0.9, open: 1.0 },   // wind 0.8 -> 0.9: walk-out of a 1.2 circle on the hero in bar 2 (0.77 s)
-      burrow:  { type: 'vanish', dur: 1.5, then: { type: 'circle', r: 1.6, at: 'self' }, wind: 1.0, open: 1.2 },   // r 2 / wind 0.8 -> 1.6 / 1.0: it surfaces under the hero, who must be able to walk out (balsim live)
+      burrow:  { type: 'vanish', dur: 1.5, then: { type: 'circle', r: 1.6, at: 'self' }, wind: 1.15, open: 1.2 },  // r 2 / wind 0.8 -> 1.6 / 1.0 -> 1.15 (§26.2: 0.98 s in bar 2, a 2-tile walk-out after a 0.3 s reaction): it surfaces under the hero
       howl:    { type: 'summon', kind: 'shadehound', n: 2, wind: 0.8, open: 1.0 }  // bar-2 move (director ruling): teaches target priority
     },
     phases: [
@@ -177,7 +177,7 @@ var BOSS_DATA = {
     },
     phases: [
       // bar 1: the old troll's three verbs
-      { hpBelow: 1.0, moves: { stomp: 3, rootGrab: 2, trunkSwipe: 2 }, onEnter: [] },
+      { hpBelow: 1.0, moves: { stomp: 2, rootGrab: 2, trunkSwipe: 2 }, onEnter: [] },
       // bar 2: new move saplings (turrets; the root wall closes the ring); cunning: trunkSwipe -> a short 0.35 s beat, then the
       // BACKHAND (delayed second hit, re-aimed, 0.68 s wind); windMul 0.85, gaps x0.8
       { hpBelow: 0.62, moves: { stomp: 1.5, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1 }, windMul: 0.85, cdMul: 0.8,

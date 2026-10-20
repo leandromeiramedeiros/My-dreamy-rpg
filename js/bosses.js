@@ -87,8 +87,8 @@ const BOSS_FILL = {
     moves: { lunge: { hit: 'big', dmgPct: 0.4, el: 'slash', w: 0.7, dash: true, cd: 0.6, scale: 'wind', why: 'QA M1: 0.6 -> 0.4 x REF_EHP; with the 45 % max-HP cap (bossHitCap) two lunges no longer end a weak-gear hero' }, rootSpit: { hit: 'chip', el: 'nature', spread: [0.8, 2.6], cd: 0.6 },
       burrow: { hit: 'big', el: 'nature', cd: 0.6, scale: 'wind' }, howl: { cd: 0.8, max: 3 } } },
   bramblehorn: { look: 'troll', scale: 1.35, r: 1.0, hgt: 5.2, speed: 1.5, keep: 2.4, blood: '#9ab06a', breakOpen: 2, tags: ['beast'], unique: 'rootcrown',
-    moves: { stomp: { hit: 'big', el: 'nature', hitstop: 0.06, cd: 0.7, scale: 'none', why: 'self-centred r3: 0.9 s in every bar (x0.7 = 0.63 s leaves 1.2 tiles of walk after a 0.3 s reaction; it needs 1.5 from melee range)' }, rootGrab: { hit: 'chip', el: 'nature', w: 0.6, cd: 0.7 }, trunkSwipe: { hit: 'chip', dmgPct: 0.14, el: 'slash', cd: 0.6 },
-      backhand: { hit: 'chip', dmgPct: 0.14, el: 'slash', cd: 0.6 }, trample: { hit: 'big', el: 'nature', cd: 0.7, scale: 'wind' },
+    moves: { stomp: { hit: 'big', el: 'nature', hitstop: 0.06, cd: 1.5, scale: 'none', why: 'self-centred r3: 0.9 s in every bar (x0.7 = 0.63 s leaves 1.2 tiles of walk after a 0.3 s reaction; it needs 1.5 from melee range)' }, rootGrab: { hit: 'chip', el: 'nature', w: 0.6, cd: 1.5 }, trunkSwipe: { hit: 'chip', dmgPct: 0.14, el: 'slash', cd: 1.4 },
+      backhand: { hit: 'chip', dmgPct: 0.14, el: 'slash', cd: 1.4 }, trample: { hit: 'big', el: 'nature', cd: 1.5, scale: 'wind' },   // §26.2: base gaps +0.8 s (bar 1 calm, cdMul 0.8 / 0.65 tighten bars 2-3)
       rootWall: { k: 0.75, rMin: 5.5, dur: 2, wind: 0.8, open: 1.2, cd: 0.6 }, saplings: { kind: 'sapling', max: 3, cd: 0.8 } } },
 };
 const BOSSES = {};

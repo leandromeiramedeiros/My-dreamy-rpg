@@ -183,8 +183,8 @@ function groundBase(m, t, wx, wy, px, py, dc, rx, ry, line, lipped) {
     for (let q = 0; q < dc.n; q++) if (ry === dc.y[q] && (rx === dc.x[q] || rx === dc.x[q] + 1)) return dc.c[q] < 0.5 ? rampH(th.stone, 0.62 + (rx - dc.x[q]) * 0.12) : rampH(th.grass, 0.4);
     return lipped ? rampH(th.path, v) : rampQ(th.path, v, px, py);
   }
-  if (t === 'p') {   // cobbles (Voronoi), no per-pixel jitter; grass in some gaps
-    const s = 3.2, X = wx * s, Y = wy * s, gx = Math.floor(X), gy = Math.floor(Y);
+  if (t === 'p') {   // cobbles (Voronoi), no per-pixel jitter; grass in some gaps; evaluated per 2 px pair (no broken 1 px joints)
+    const dS = 0.5 - (px & 1), s = 3.2, X = (wx + dS / 32) * s, Y = (wy - dS / 32) * s, gx = Math.floor(X), gy = Math.floor(Y);
     let f1 = 9, f2 = 9, fx = 0, fy = 0, cid = 0;
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
       const hx = hash2(gx + dx, gy + dy, 11), cx = gx + dx + hx, cy = gy + dy + hash2(gx + dx, gy + dy, 12);
@@ -213,12 +213,13 @@ function groundBase(m, t, wx, wy, px, py, dc, rx, ry, line, lipped) {
     const v = 0.55 + nAt(nField(m, 'md', NF_MED), wx, wy) * 0.4 - ((wy % 1) < 0.08 ? 0.3 : 0) - (line ? 0.17 : 0) + (lipped ? 0.2 : 0);
     return rampQ(th.stone, v, px, py);
   }
-  if (t === 'x' || t === 'r') {
-    const row = Math.floor(wy * 2), X = wx * 2 + (row % 2) * 0.5;
-    const gx = Math.floor(X), fx = X - gx, fy = wy * 2 - row;
-    if (fx < 0.06 || fy < 0.08) return th.gap;
+  if (t === 'x' || t === 'r') {   // joints and cracks evaluated per 2 px pair
+    const dS = 0.5 - (px & 1), qx = wx + dS / 32, qy = wy - dS / 32;
+    const row = Math.floor(qy * 2), X = qx * 2 + (row % 2) * 0.5;
+    const gx = Math.floor(X), fx = X - gx, fy = qy * 2 - row;
+    if (fx < 0.06 || fy < 0.09) return th.gap;
     let v = 0.3 + hash2(gx, row, 26) * 0.3 + (0.5 - fy) * 0.25 + nAt(nField(m, 'md', NF_MED), wx, wy) * 0.4 - (line ? 0.17 : 0) + (lipped ? 0.2 : 0);
-    if (Math.abs(nAt(nField(m, 'ck', NF_CRACK), wx, wy) - 0.5) < 0.012) return th.gap;   // cracks
+    if (Math.abs(nAt(nField(m, 'ck', NF_CRACK), qx, qy) - 0.5) < 0.016) return th.gap;   // cracks
     if (t === 'r') {
       v -= 0.1;
       const d = Math.hypot(wx - m.cx, wy - m.cy), a = Math.atan2(wy - m.cy, wx - m.cx);
@@ -615,6 +616,14 @@ function rasterColumn(m, i, j) {
   const visL = vis(i, j + 1), visR = vis(i + 1, j);
   const rimC = mixRgb(th.under[0], th.haze, 0.1);
   const backL = hAt(m, i - 1, j) < h, backR = hAt(m, i, j - 1) < h;
+  // first face row per pixel column = the row right under the top diamond's last row (no 1 px hole between top and face, and the
+  // lip and underline hang off it in every column)
+  const face0 = new Int16Array(W);
+  for (let cx = 0; cx < W; cx++) {
+    let last = -1;
+    for (let cy = 0; cy < 17; cy++) { const [wx, wy] = toWorld(ox + cx + 0.5, oy + cy + 0.5 + hz); if (wx >= i && wx < i + 1 && wy >= j && wy < j + 1) last = cy; }
+    face0[cx] = last + 1;
+  }
   for (let cy = 0; cy < H; cy++) for (let cx = 0; cx < W; cx++) {
     const SX = ox + cx + 0.5, SY = oy + cy + 0.5 + hz, [wx, wy] = toWorld(SX, SY);
     if (cy < 17 && wx >= i && wx < i + 1 && wy >= j && wy < j + 1) {
@@ -630,9 +639,10 @@ function rasterColumn(m, i, j) {
     }
     let top, lit, u, vd;
     if (cx < 16) { top = 8 + (cx + 0.5) * 0.5; lit = 1; u = cx / 16; vd = visL; } else { top = 16 - (cx - 15.5) * 0.5; lit = 0.66; u = (cx - 16) / 16; vd = visR; }
-    const d = cy - top;
-    if (d < 0 || d >= hz || d >= vd + 1) continue;
-    const di = Math.floor(d), lvh = h - d / ZS;   // pixel row, and the height level it shows
+    if (cy < face0[cx]) continue;
+    const d = Math.max(0, cy - top);
+    if (d >= hz || d >= vd + 1) continue;
+    const di = cy - face0[cx], lvh = h - d / ZS;   // face row (0 = the lip), and the height level it shows
     let c;
     if (t === 'w' && cx < 16) c = rampQ(th.water, 0.5, cx, cy);
     else if (di === 0) c = isGrassy(t) ? rampH(th.grass, 0.62) : rampH(faceRamp, 0.72);   // 1 px overhang lip

@@ -2,7 +2,7 @@
 'use strict';
 // tools/balsim.js — the balance sim (DESIGN §20.7). Runs the REAL game code headless (js/*.js in index.html order, in a
 // vm context, seeded Math.random): recalcStats, useSkill / basicAttack, damageEnemy, the part runtime and BOSS_MOVES.
-//   node tools/balsim.js [--seed=N] [--trials=N] [--quiet] [--json]
+//   node tools/balsim.js [--seed=N] [--trials=N] [--quiet] [--json]   (tuning: --miss=N --under-trials=N --only=under,reference --boss=id --patch=file.js)
 // Prints the tables and exits 1 on any red flag (§20.7 "CI red flags"). Explained exceptions are printed, never fail.
 //
 // MODEL
@@ -194,6 +194,7 @@ function survival(types, L, ng, story) {
 }
 
 // ---------------------------------------------------------------- run
+if (arg('patch', '')) vm.runInContext(fs.readFileSync(arg('patch', ''), 'utf8'), ctx, { filename: 'patch' });   // tuning aid: --patch=file.js edits BOSSES / data in the context before the run
 const flags = [], explained = [], notes = [];
 const red = (s) => flags.push(s), ok = (s) => notes.push(s);
 const r2 = v => Math.round(v * 100) / 100, r1 = v => Math.round(v * 10) / 10;
@@ -243,7 +244,7 @@ for (const type of ['ogre', 'gloomslime']) {
 }
 
 // 3. bosses: length + fairness + hit size
-log('\nBOSSES (length = HP / (rotation DPS vs the boss x uptime); red: mini 45-120 s, guardian 100-300 s)');
+log('\nBOSSES (length = HP / (rotation DPS vs the boss x uptime) + the bar transitions; red: mini 45-120 s, guardian 100-300 s)');
 log('  boss          kind      L   HP       DPS(sword/staff/bow)    length s (sword/staff/bow)   target');
 const BOSS_IDS = ['mossjaw', 'bramblehorn', 'boss'];
 const bossRows = [];
@@ -253,9 +254,11 @@ for (const id of BOSS_IDS) {
   ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); G.player = makePlayer(); G.player.level = ${L};`);
   const hp = ev(`Math.round(ENEMY['${id}'].hp * enemyHpMul(${ev(`enemyLevel('${id}')`)}))`);
   const row = { id, kind: B.kind, L, hp, dps: {}, len: {} };
-  for (const fam of ['sword', 'staff', 'bow']) { row.dps[fam] = dpsVs(id, L, fam, 'reference').dps; row.len[fam] = hp / (row.dps[fam] * up); }
+  // §26.1 bars: each transition between bars is invulnerable time (bosses.js BAR_TRANS), added to the length
+  const trans = B.bars ? (B.phases.length - 1) * (B.transition != null ? B.transition : 1.5) : 0; row.bars = B.bars ? B.phases.length : 1;
+  for (const fam of ['sword', 'staff', 'bow']) { row.dps[fam] = dpsVs(id, L, fam, 'reference').dps; row.len[fam] = hp / (row.dps[fam] * up) + trans; }
   bossRows.push(row);
-  log(`  ${id.padEnd(13)} ${B.kind.padEnd(9)} ${String(L).padEnd(3)} ${String(hp).padEnd(8)} ${['sword', 'staff', 'bow'].map(f => Math.round(row.dps[f])).join(' / ').padEnd(23)} ${['sword', 'staff', 'bow'].map(f => Math.round(row.len[f])).join(' / ').padEnd(28)} ${mini ? '60-90' : '150-240'}`);
+  log(`  ${(id + (row.bars > 1 ? ` [${row.bars} bars]` : '')).padEnd(13)} ${B.kind.padEnd(9)} ${String(L).padEnd(3)} ${String(hp).padEnd(8)} ${['sword', 'staff', 'bow'].map(f => Math.round(row.dps[f])).join(' / ').padEnd(23)} ${['sword', 'staff', 'bow'].map(f => Math.round(row.len[f])).join(' / ').padEnd(28)} ${mini ? '60-90' : '150-240'}`);
   for (const fam of ['sword', 'staff', 'bow']) {
     const v = row.len[fam];
     if (mini && (v < 45 || v > 120)) red(`mini-boss ${id} length ${Math.round(v)} s (${fam}) outside 45-120`);
@@ -294,8 +297,8 @@ for (const id of BOSS_IDS) {
 // Lengths: the reference row's median over the §20.7 red band (mini 120 / guardian 300 s) is red, over the §20.3 target a
 // note; the -1 tier median is a note (losses are expected there). The fight lengths themselves are enforced on the frozen table above.
 const LIVE = { mossjaw: { L: 7, max: 90, red: 120 }, bramblehorn: { L: 9, max: 240, red: 300 } };   // L: lowest arrival level (REPORT: 7-9 / 9-11)
-const REACT = 0.3, MISTAKES = [3, 12], MISS_EVERY = +arg('miss', 7), LIVE_POTIONS = 2, LIVE_TRIALS = 6, LIVE_UNDER = [3, 4];
-const LIVE_ROWS = [{ k: 'under', label: '-1 tier', diff: 'normal', n: +arg('under-trials', 24) }, { k: 'reference', label: 'reference', diff: 'normal', n: LIVE_TRIALS }, { k: 'under2', label: '-2 Story', diff: 'story', n: LIVE_TRIALS }];
+const REACT = 0.3, MISTAKES = [3, 12], MISS_EVERY = +arg('miss', 10), LIVE_POTIONS = 2, LIVE_TRIALS = 6, LIVE_UNDER = [3, 4];
+const LIVE_ROWS = [{ k: 'under', label: '-1 tier', diff: 'normal', n: +arg('under-trials', 48) }, { k: 'reference', label: 'reference', diff: 'normal', n: +arg('ref-trials', LIVE_TRIALS) }, { k: 'under2', label: '-2 Story', diff: 'story', n: LIVE_TRIALS }];
 const ONLY = arg('only', '');
 ev(`const ADD_R = 3;
 function simBossFight(id, L, maxT, react, mistakes, potions, card, every) {

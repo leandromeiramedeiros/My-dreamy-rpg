@@ -485,7 +485,7 @@ class MapGen {
   // walls render through rasterColumn as a rim and every island reads as a bowl. Run AFTER populate (generate() below) so the scatter
   // context (cliff / height) and every object stay exactly as they were. Never raised (with a 1-tile clearance): paths, rooms, fights,
   // water, bridges, stairs and non-grass tiles, islets under `minComp` tiles, and the surroundings of the start, anchors, warps,
-  // portals, enter_area triggers (r + 1) and every non-decor object (1.5). Raised fragments under 3 tiles are dropped.
+  // portals, enter_area triggers (r + 0.5) and every non-decor object (1 tile). Raised fragments under 3 tiles are dropped.
   coastBand(o = {}) {
     const W = this.W, H = this.H, band = o.band || 3, up = o.up || this.step, minComp = o.minComp || 150;
     const isLand = (x, y) => x >= 0 && y >= 0 && x < W && y < H && this.type[y][x] !== '.';
@@ -503,12 +503,12 @@ class MapGen {
     }
     const keepOut = (cx, cy, r) => { for (let y = Math.floor(cy - r); y <= cy + r; y++) for (let x = Math.floor(cx - r); x <= cx + r; x++) if (x >= 0 && y >= 0 && x < W && y < H && Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r + 0.71) bad[y][x] = true; };
     const DECOR = /^(tree_|pine|bush$|rock|grass$|mushroom|moss$|log$|stump$|sunbeam$)/;
-    for (const ob of this.objs) if (!DECOR.test(ob.t)) keepOut(ob.x, ob.y, 1.5);
+    for (const ob of this.objs) if (!DECOR.test(ob.t)) keepOut(ob.x, ob.y, 1);
     if (this.startPos) keepOut(this.startPos.x, this.startPos.y, 3);
     for (const a of Object.values(this.anchors)) keepOut(a.x, a.y, 1.5);
     for (const w of this.warps) { keepOut(w.x, w.y, 1.5); if (w.to && w.to.x != null) keepOut(w.to.x, w.to.y, 1.5); }
     for (const p of this.portals) keepOut(p.x, p.y, 2);
-    for (const t of this.triggers) if (t.when && t.when.type === 'enter_area') keepOut(t.when.x, t.when.y, (t.when.r || 1) + 1);
+    for (const t of this.triggers) if (t.when && t.when.type === 'enter_area') keepOut(t.when.x, t.when.y, (t.when.r || 1) + 0.5);
     const add = grid(W, H, 0);
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       if (!isLand(x, y) || bad[y][x] || size[comp[y * W + x]] < minComp) continue;
