@@ -1,7 +1,7 @@
 'use strict';
 // ---------------------------------------------------------------------------
 // Scene rendering + post-processing: fake lights (lightmap multiply + additive
-// halos), bloom (cubed bright-pass at 1/4 & 1/8 res), drifting fog & mist,
+// halos), bloom (emitter-only: lights, glints, moon, VFX cores at 1/4 & 1/8 res), drifting fog & mist (a clear zone round the hero),
 // god rays, vignette.
 // Big maps (DESIGN §25.2): drawScene reads the ground from the chunk cache (maps.js CHUNK; drawGround + groundTick
 // here schedule the builds: the chunk under the camera synchronously, visible-missing chunks next with a large
@@ -1625,18 +1625,24 @@ function applyLighting(ctx, lights, th, ambient) {
 const BLOOM_LOW = 0.8, BLOOM_LIGHT = 0.75, BLOOM_CORE = 0.22, BLOOM_VFX = 0.45, BLOOM_MOON = 0.45, BLOOM_WARM = 'rgba(255,176,96,0.35)';
 const VB = makeCanvas(RW / 4, RH / 4), BLOOM_SINK = [];   // VB: the VFX pass at 1/4; BLOOM_SINK swallows the lights it pushes
 let BLOOM_MOONAT = null;   // [x, y, moon] of this frame's moon (drawScene), null when no sky was drawn
+function moonGlowQ(mo) {   // the moon halo at 1/4 scale, cached with the full one
+  const k = 'glowq|' + mo.r + '|' + mo.glow; let c = MOON_CACHE.get(k);
+  if (!c) { const g = moonGlow(mo), d = Math.max(1, Math.round(g.width / 4)), v = makeCanvas(d, d); v.x.imageSmoothingEnabled = true; v.x.drawImage(g, 0, 0, d, d); MOON_CACHE.set(k, c = v.c); }
+  return c;
+}
 function bloomEmitters() {
   const w = RW / 4, h = RH / 4, x = BT.x;
   x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, w, h);
   x.globalCompositeOperation = 'lighter'; x.imageSmoothingEnabled = true;
-  if (BLOOM_MOONAT) { const [mx, my, mo] = BLOOM_MOONAT, g = moonGlow(mo), d = g.width / 4; x.globalAlpha = BLOOM_MOON; x.drawImage(g, mx / 4 - d / 2, my / 4 - d / 2, d, d); }
+  if (BLOOM_MOONAT && BLOOM_MOONAT[2]) { const [mx, my, mo] = BLOOM_MOONAT, g = moonGlowQ(mo); x.globalAlpha = BLOOM_MOON; x.drawImage(g, Math.round(mx / 4 - g.width / 2), Math.round(my / 4 - g.height / 2)); }
   for (const [vx, vy, L, wt] of LIGHT_VIS) {
     const d = Math.max(1, Math.round(L.r * BLOOM_CORE)); x.globalAlpha = clamp(L.a * BLOOM_LIGHT * wt, 0, 1);
     x.drawImage(lightSized(L.col, d), Math.round(vx / 4 - d / 2), Math.round(vy / 4 - d / 2));
   }
   // water glints (this frame's, from drawWater's buffers): one quarter-res dot each
-  const B = GLINT_BUF, n = B.q.length;
-  for (let i = 0; i < n; i++) if (B.lv[i]) { x.globalAlpha = B.lv[i] / GLINT_LV * 0.5; x.fillStyle = '#e6faff'; x.fillRect(B.xy[i * 2] >> 2, B.xy[i * 2 + 1] >> 2, 1, 1); }
+  const B = GLINT_BUF, n = B.q.length; let gl = false;
+  for (let i = 0; i < n; i++) if (B.lv[i] > GLINT_LV / 2) { if (!gl) { x.beginPath(); gl = true; } x.rect(B.xy[i * 2] >> 2, B.xy[i * 2 + 1] >> 2, 1, 1); }   // the bright half: one path
+  if (gl) { x.globalAlpha = 0.35; x.fillStyle = '#e6faff'; x.fill(); }
   // VFX cores: the additive effects, redrawn at 1/4 into VB, laid in at the threshold
   const v = VB.x; v.setTransform(1, 0, 0, 1, 0, 0); v.globalAlpha = 1; v.globalCompositeOperation = 'source-over'; v.clearRect(0, 0, w, h);
   let any = false;

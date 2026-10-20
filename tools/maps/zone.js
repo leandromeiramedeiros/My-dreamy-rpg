@@ -130,7 +130,7 @@ function populate(S, g, T) {
   //   <id>       enter_area, once: false + a cooldown longer than any visit: it fires once per map entry (G.trig resets on entry and on
   //              respawn) and never settles, so the pocket RESPAWNS on map re-entry. 1 elite (spawn elite: mod) + 3-5 commons.
   //   <id>_done  all_enemies_dead on that card's spawns, once: true -> settles, so only the FIRST clear pays the guarantee: one Rare+ at
-  //              item level >= (boss level - 2) in slot 'upgrade' (items.js lootAction: the hero's weakest worn gear slot no earlier pocket
+  //              item level >= (boss level - 2) in slot 'upgrade' (items.js upgradeSlot: weapon > chest > head > boots, the first worn piece it beats that no earlier pocket
   //              filled, in the family worn there). Later clears drop only the elite's own rollLoot('elite') (normal elite rates).
   const BOSS_LVL = id => { const b = (require('./gamedata.js').BOSS_DATA || {})[id]; if (!b || !b.level) throw new Error('pocket boss without a level: ' + id); return b.level; };
   for (const pk of S.pockets || []) {

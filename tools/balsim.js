@@ -236,7 +236,7 @@ for (const b of BANDS) for (const type of b.refs) {
 }
 // elite spawns (makeElite) at Pinewood
 log('\nELITE SPAWN TTK (Pinewood L7, x ELITE_HP, target 12 s)');
-for (const type of ['ogre', 'gloomslime']) {
+for (const type of ['ogre', 'gloomslime', 'gnarlbrute', 'thornsow']) {   // gnarlbrute / thornsow: the §26.2 elite-pocket rows (always spawned as elites)
   if (!ENEMY[type]) continue;
   const fams = ['sword', 'staff', 'bow'].map(f => ttk(type, 7, f, 'reference', { elite: true, mod: 'storm' })), v = Math.exp(fams.reduce((a, x) => a + Math.log(x), 0) / 3);
   log(`  ${type.padEnd(12)} ${r1(v)} s (geometric mean; sword / staff / bow ${fams.map(r1).join(' / ')})`);
@@ -303,6 +303,24 @@ const ONLY = arg('only', '');
 // --qa: also replay the QA bot's arrival hero (tools/qa/gear-mossjaw.json, written by run-big.js at the den) in the Mossjaw fight
 const QA_FILE = arg('qa-gear', path.join(ROOT, 'tools/qa/gear-mossjaw.json')), QA_GEAR = process.argv.includes('--qa') && fs.existsSync(QA_FILE) ? JSON.parse(fs.readFileSync(QA_FILE, 'utf8')) : null;
 if (QA_GEAR) LIVE_ROWS.push({ k: 'qa', label: 'QA bot', diff: 'normal', n: +arg('qa-trials', 12), boss: 'mossjaw', L: QA_GEAR.level });
+// §26.2 elite pockets: the -1 tier hero (and, with --qa, the QA bot's arrival hero) after 1 / 2 pocket FIRST clears. Each clear is the
+// real guarantee path (items.js lootAction: rarity 'rare' floor, ilvl >= boss level - 2, slot 'upgrade' = items.js upgradeSlot (weapon > chest > head > boots, the first the drop beats) not
+// yet given, in the worn family, rolled by rollUpgrade with makeItem's random affixes / sockets), equipped at once. A fresh roll per trial.
+const POCKET_ROWS = arg('pockets', '1,2').split(',').filter(Boolean).map(Number);
+for (const n of POCKET_ROWS) LIVE_ROWS.push({ k: 'pk_under', hero: 'under', label: `-1 +${n}pk`, diff: 'normal', n: +arg('pocket-trials', 24), pockets: n });
+if (QA_GEAR) for (const n of POCKET_ROWS) LIVE_ROWS.push({ k: 'pk_qa', hero: 'qa', label: `QA +${n}pk`, diff: 'normal', n: +arg('qa-trials', 12), boss: 'mossjaw', L: QA_GEAR.level, pockets: n });
+ev(`function simPockets(n, boss) {
+  const p = G.player, floor = (ENEMY[boss].level || 1) - 2, got = [];
+  G.prog.secrets = G.prog.secrets || {}; delete G.prog.secrets['pocket:slots'];
+  const dl = dropLoot; dropLoot = function (x, y, list) { G.dropsLast = list; };   // capture the card's list (no ground drops in the sim)
+  for (let i = 0; i < n; i++) {
+    lootAction({ type: 'loot', rarity: 'rare', count: 1, x: p.x, y: p.y, slot: 'upgrade', ilvl: floor });
+    const it = (G.dropsLast || []).find(d => d.kind === 'item');
+    if (it) { p.equip[it.it.slot] = it.it; got.push(it.it.slot + '/' + it.it.rarity + '/i' + it.it.ilvl); }
+  }
+  dropLoot = dl; recalcStats(p, true); p.hp = p.maxHp; return got;
+}`);
+
 ev(`function simHeroQA(g) { const p = makePlayer(); p.level = g.level; p.equip = JSON.parse(JSON.stringify(g.equip)); if (g.weapon) p.gear.weapon = g.weapon; recalcStats(p, true); G.player = p; p.x = 24; p.y = 24; p.z = 0; p.invulnT = 0; return p; }`);
 ev(`const ADD_R = 3;
 function simBossFight(id, L, maxT, react, mistakes, potions, card, every) {
@@ -414,9 +432,12 @@ for (const id in LIVE) {
     const runs = [];
     ev(`setSetting('difficulty', '${G_.diff}')`);
     if (ONLY && !ONLY.split(',').includes(G_.k) || G_.boss && G_.boss !== id) continue;
+    if (G_.pockets) SMath.random = mulberry32(SEED * 977 + G_.pockets * 31 + id.length);   // pocket rows: their own seeded stream, so every other row's numbers stay as before
     const L = G_.L || LIVE[id].L;
     for (let k = 0; k < G_.n; k++) {
-      ev(`simMap(${bandOf(LIVE[id].L).lo}, ${bandOf(LIVE[id].L).hi})`); if (G_.k === 'qa') { ctx.__qg = QA_GEAR; ev('simHeroQA(__qg)'); } else ev(`simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', '${G_.k}')`);
+      const hk = G_.hero || G_.k;
+      ev(`simMap(${bandOf(LIVE[id].L).lo}, ${bandOf(LIVE[id].L).hi})`); if (hk === 'qa') { ctx.__qg = QA_GEAR; ev('simHeroQA(__qg)'); } else ev(`simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', '${hk}')`);
+      if (G_.pockets) { const got = ev(`simPockets(${G_.pockets}, '${id}')`); (G_.got || (G_.got = [])).push(got.join(' ')); }
       runs.push(ev(`simBossFight('${id}', ${L}, ${redMax * 1.5}, ${REACT}, ${JSON.stringify(MISTAKES)}, ${LIVE_POTIONS}, ${card}, ${MISS_EVERY})`));
     }
     const cap = ev('bossHitCap()');
@@ -429,7 +450,18 @@ for (const id in LIVE) {
     if (G_.k === 'qa') { const p = ev('G.player'); row.dps = dpsVs('__neutral', L, 'sword', 'reference').dps; ctx.__qg = QA_GEAR; ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); simHeroQA(__qg); ENEMY.__qad = Object.assign({}, ENEMY.__neutral)`);
       const q = ev(`(() => { const e = spawnEnemy('__neutral', 27, 24, 0); e.hp = e.maxHp = 1e9; e.stunT = 9; const r = simRotation(e, 60, 1.1); return (1e9 - e.hp) / 60; })()`);
       row.qaDps = q; log(`    QA bot hero: L${L} HP ${row.hp} (reference at L${L}: ${Math.round(ev(`simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', 'reference').maxHp`))}), rotation DPS ${Math.round(q)} vs reference ${Math.round(row.dps)}; items ${QA_GEAR.equip ? Object.values(QA_GEAR.equip).filter(Boolean).map(it => it.base + '/' + it.rarity + '/i' + it.ilvl).join(' ') : '?'}`); }
-    const target = G_.k === 'under' ? `${LIVE_UNDER.join('-')}/6 wins` : G_.k === 'reference' ? `6/6 wins, <= ${max} s (red ${redMax})` : G_.k === 'qa' ? 'info (the QA bot\'s arrival gear)' : '> 0/6 wins (Story)';
+    const target = G_.k === 'under' ? `${LIVE_UNDER.join('-')}/6 wins` : G_.k === 'reference' ? `6/6 wins, <= ${max} s (red ${redMax})` : G_.k === 'qa' ? 'info (the QA bot\'s arrival gear)' : G_.pockets ? `§26.2: ~reference after ${G_.pockets} pocket clear(s)` : '> 0/6 wins (Story)';
+    if (G_.pockets) {   // rotation DPS / HP of the pocket hero (a fresh roll) vs the reference and the unaided start, same L, vs a neutral target
+      const one = setup => { ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi})`); if (setup === 'qa') { ctx.__qg = QA_GEAR; ev('simHeroQA(__qg)'); } else ev(`simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', '${setup}')`); return ev(`simPockets(${G_.pockets}, '${id}')`); };
+      const meas = () => ev(`(() => { const p = G.player; const e = spawnEnemy('__neutral', p.x + 1.1, p.y, 0); e.hp = e.maxHp = 1e9; e.stunT = 99; simRotation(e, 60, 1.1); return { dps: (1e9 - e.hp) / 60, hp: p.maxHp }; })()`);
+      let d = 0, h = 0; const K = 8; for (let j = 0; j < K; j++) { one(G_.hero); const m = meas(); d += m.dps / K; h += m.hp / K; }
+      const ref = dpsVs('__neutral', L, 'sword', 'reference').dps, refHp = ev(`simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', 'reference').maxHp`);
+      let base = 0, baseHp = 0; if (G_.hero === 'qa') { ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi})`); ctx.__qg = QA_GEAR; ev('simHeroQA(__qg)'); const m = meas(); base = m.dps; baseHp = m.hp; } else { base = dpsVs('__neutral', L, 'sword', 'under').dps; baseHp = ev(`simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', 'under').maxHp`); }
+      row.pk = { n: G_.pockets, dps: d, hp: h, ref, refHp, base, baseHp, sample: (G_.got || []).slice(0, 3) };
+      log(`    ${G_.pockets} pocket Rare(s), e.g. ${(G_.got || []).slice(0, 2).join(' | ')}: rotation DPS ${Math.round(d)} (start ${Math.round(base)}, reference ${Math.round(ref)} = ${Math.round(d / ref * 100)} %), HP ${Math.round(h)} (start ${Math.round(baseHp)}, reference ${Math.round(refHp)})`);
+      G_.got = [];
+    }
+    SMath.random = rng;
     log(`  ${id.padEnd(13)} ${G_.label.padEnd(10)} ${String(L).padEnd(3)} ${String(row.hp).padEnd(8)} ${(row.won + '/' + row.trials + (row.trials !== 6 ? ` (${(row.won * 6 / row.trials).toFixed(1)}/6)` : '')).padEnd(5)} ${((lens.length ? Math.round(med) : '-') + ' / ' + (lens.length ? Math.round(row.maxLen) : '-')).padEnd(25)} ${String(row.potions).padEnd(9)} ${(row.mistakes + ' of ' + row.tele).padEnd(9)} ${(Math.round(row.maxBossHit * 100) + ' %').padEnd(13)} ${(Math.round(row.hpLeft * 100) + ' %').padEnd(9)} ${target}`);
     const by = {}; let rooted = 0; for (const r of runs) for (const k in r.by || {}) { by[k.replace('(rooted)', '')] = (by[k.replace('(rooted)', '')] || 0) + r.by[k] / runs.length; if (/\(rooted\)/.test(k)) rooted += r.by[k] / runs.length; }
     log(`    damage taken per fight, in hero max HP (mean): ${Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v.toFixed(2)).join(', ')}${rooted > 0.005 ? ` (taken while rooted ${rooted.toFixed(2)})` : ''}; mobile adds alive: mean ${row.addsMean.toFixed(1)}, peak ${row.addsMax}${runs.some(r => !r.won) ? `; lost fights ended at boss ${runs.filter(r => !r.won).map(r => Math.round(r.bossLeft * 100) + ' %').join(', ')}` : ''}`);
