@@ -1319,16 +1319,16 @@ The look on the hero escalates through the tiers: grey → ornate → sun- or mo
 | Sword | Rusty Blade | Dawnblade | Sunforged Blade | Aurora Edge | Dawn Eternal | Morrowbane |
 | Rapier | Tin Needle | Moonpoint | Silver Estoc | Starpoint | Needle Eternal | *Sorrel's Needle* |
 | Mace | Iron Cudgel | Dawnmace | Sunwarden Mace | Aurora Maul | Vow Eternal | *Lamplighter* |
-| Axe | Splitting Axe | Dawnbreaker | Sunforged Axe | Aurora Cleaver | Dawn Colossus | Kharzul's Anvil-Axe |
-| Hammer | Sledge | Sunhammer | Mountain Maul | Aurora Anvil | Hammer Eternal | The Unmaking |
-| Halberd | Pike | Dawnglaive | Sun Halberd | Aurora Partisan | Reach Eternal | Vigil's Pole |
-| Bow | Hunter's Bow | Moonbow | Silverwing | Eclipse Longbow | Moon Eternal | Sorrel's Bow |
-| Crossbow | Hand Crossbow | Dawn Arbalest | Sunbolt | Aurora Ballista | Bolt Eternal | Morrow's Quiet |
+| Axe | Splitting Axe | Dawnbreaker | Sunforged Axe | Aurora Cleaver | Dawn Colossus | Forgehand |
+| Hammer | Sledge | Sunhammer | Mountain Maul | Aurora Anvil | Hammer Eternal | Chainbreaker |
+| Halberd | Pike | Dawnglaive | Sun Halberd | Aurora Partisan | Reach Eternal | Vigil's Glaive |
+| Bow | Hunter's Bow | Moonbow | Silverwing | Eclipse Longbow | Moon Eternal | Moonmaw's Bow |
+| Crossbow | Hand Crossbow | Dawn Arbalest | Sunbolt | Aurora Ballista | Bolt Eternal | Four Wardens |
 | Chakram | Rim | Moon Chakram | Silverring | Eclipse Ring | Ring Eternal | Aerin's Halo |
-| Staff | Willow Wand | Starfall Staff | Comet Rod | Nebula Sceptre | Night Eternal | Morrow's Lullaby |
+| Staff | Willow Wand | Starfall Staff | Comet Rod | Nebula Sceptre | Night Eternal | Emberfall |
 | Spellbook | Primer | Dreambook | Sun Codex | Aurora Grimoire | Book Eternal | The Names on the Pillars |
 | Orb | Glass Bauble | Starfall Orb | Comet Orb | Nebula Sphere | Orb Eternal | *Last Light* |
-| Daggers | (§17 tiers) | | | | | |
+| Daggers | (§17 tiers) | | | | | Reliquary |
 | Claws | Bone Claws | Nightclaws | Silvertalon | Eclipse Claws | Claws Eternal | Bramblehorn's Roots |
 | Fans | Paper Fans | Moonfans | Silverplume | Eclipse Fans | Fans Eternal | Mirelle's Tide |
 
@@ -1427,11 +1427,11 @@ freely.
 
 Tier names and per-tier visuals follow the expert's table, kept in the production log.
 * Examples:
-  * Warden: Iron Mail → Knight Plate → Sunforged Plate → Aurora Plate → Aegis of Dawn
-  * Duelist: Swordsman's Coat → … → Blade Eternal, Mythic *Aerin's Coat*
+  * Warden: Iron Mail → Knight Plate → Sunforged Plate → Aurora Plate → Aegis of Dawn → Mythic Shardheart Plate
+  * Duelist: Swordsman's Coat → … → Blade Eternal, Mythic Oathless Jacket
 * **Director ruling on Mythic names:** there are too many "Sorrel's" and "Pip's" items, and "Warden's Lantern" collides
   with the Lantern Plate. All Mythic names get one naming pass across §23 and §24 before M7, so each story name is used
-  once.
+  once. Done: see §24.2.
 * **Combos** use tags, never slot checks. Examples:
   * Rapier + Duelist: two parries sharing one ICD
   * Hammer + Juggernaut: the "Faultline" Duo; their cracks share a tag
@@ -1471,6 +1471,41 @@ the schedule:
 * The weapon and armour **parts kit** is built in M3, before any variant art.
 * Art runs as a continuous lane: one art agent on variants and one on enemies, in parallel with maps.
 * The cut orders in §23.6 and §24 stay on file as emergency levers only.
+
+### 24.2 Mythic names (naming pass)
+Naming pass over the 15 weapon variants (§23.3) and 12 suits (§24), per the director ruling above. Each story name is used by
+one Mythic only. The director renames (*Sorrel's Needle*, *Lamplighter*, *Last Light*) and the existing uniques (Pip's
+Lantern, Sorrel's Vow, Morrowbane) are kept. No name gives away the twist (STORY.md).
+
+| Class | Variant | Mythic name | Refers to |
+|---|---|---|---|
+| Blades | Sword | Morrowbane | Morrow's boss drop at the Spire (existing unique) |
+| Blades | Rapier | *Sorrel's Needle* | Sorrel, the exiled fifth Warden (director rename) |
+| Blades | Mace | *Lamplighter* | Pip, the last light (director rename) |
+| Greatarms | Axe | Forgehand | Kharzul, who forged the Shards in Emberfall Caldera |
+| Greatarms | Hammer | Chainbreaker | Caldera tablet: "He forged the chains after." |
+| Greatarms | Halberd | Vigil's Glaive | The Twin Vigils who guard the Spire gauntlet |
+| Shots | Bow | Moonmaw's Bow | Moonmaw of the Starlit Shoals (Mythic chance) |
+| Shots | Crossbow | Four Wardens | Tablet "Four Wardens. One would not wake."; four-bolt clip |
+| Shots | Chakram | Aerin's Halo | Aerin, Morrow's daughter; the disc returns in a ring |
+| Foci | Staff | Emberfall | Emberfall Caldera; the fire the staff calls down (Meteor) |
+| Foci | Spellbook | The Names on the Pillars | Gloomspire plaza pillars; each page is a name |
+| Foci | Orb | *Last Light* | Pip's light (director rename) |
+| Shadows | Daggers | Reliquary | Oath Reliquary's mimic vault; the Thief's backstab and Marks |
+| Shadows | Claws | Bramblehorn's Roots | Bramblehorn, keeper of Misty Pinewood's roots |
+| Shadows | Fans | Mirelle's Tide | Lady Mirelle of the Sunken Grotto |
+| Heavy | Warden | Shardheart Plate | The Shards, glowing at the chest (replaces Warden's Lantern) |
+| Heavy | Crusader | Gloomspire Vestment | Gloomspire Ruins, where the Wardens swore |
+| Heavy | Juggernaut | Forge Deep Cuirass | Forge Deep, where Slagheart the armoured golem stands; the tank's chest |
+| Caster | Dreamweave | Nightlong Shroud | Spire ascent tablet: "He said: one more night." |
+| Caster | Frostweave | Brinemother's Veil | Brinemother of the Drowned Vault |
+| Caster | Stormweave | Gravewind | The Drifting Isles, the Wardens' graves; their storm lightning |
+| Medium | Stalker | Pinewood Mist | Misty Pinewood, where the trees are running |
+| Medium | Thornwarden | Briarwatch Mantle | Bramblehorn's Clearing, the briar-ringed arena at Misty Pinewood's heart |
+| Medium | Duelist | Oathless Jacket | The Oathless, the armoured knight of the Oath Reliquary |
+| Shadow | Shade | Gloamveil | Woven from the Gloaming Below, where Morrow buried his nightmares |
+| Shadow | Nightshade | Mossjaw's Skin | Mossjaw, the Root Hollow mini-boss |
+| Shadow | Mirage | Glasswarp Silk | The Unmade (Spire enemy) copies your silhouette; mirror images |
 
 ## 25. Fewer, bigger maps: 4× area (client decision; expert plan; director-approved; supersedes §22's map list, keeps every hook)
 

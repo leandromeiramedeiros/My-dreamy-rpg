@@ -106,19 +106,19 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * §23 weapon variants adopted: 5 classes × 3 variants; parts kit + refactor + save migration in M3; variants roll out M4–M7.
 
 
-## §24 suit tier names (T1 → T5 · Mythic, names pending a naming pass)
-* Warden: Iron Mail · Knight Plate · Sunforged Plate · Aurora Plate · Aegis of Dawn · Mythic (lantern at the heart)
-* Crusader: Acolyte Mail · Dawn Vestment Plate · Sun Crusader · Aurora Templar · Oath Eternal
-* Juggernaut: Scrap Plate · Bulwark Plate · Sunforged Bastion · Aurora Colossus · Mountain Eternal
-* Dreamweave: Linen Robe · Dreamweave Robe · Starwoven Robe · Nebula Vestments · Eternal Dreamshroud · The Lullaby Shroud
-* Frostweave: Woollen Robe · Frostweave · Glacier Vestment · Aurora Rime · Winter Eternal
-* Stormweave: Grey Robe · Stormweave · Thunder Vestment · Aurora Tempest · Storm Eternal
-* Stalker: Leather Jerkin · Stalker Jacket · Nightstalker Coat · Shadowweave Jacket · Eclipse Garb
-* Thornwarden: Ranger Garb · Thornwarden · Mossmantle Coat · Aurora Thorn · Root Eternal · Bramblehorn's Hide
-* Duelist: Swordsman's Coat · Duelist Jacket · Silver Fencer · Aurora Brocade · Blade Eternal · Aerin's Coat
-* Shade: Scout Leathers · Shade Leathers · Nightshade Harness · Eclipse Shade · Shadow Eternal
-* Nightshade: Tanner's Leathers · Nightshade · Hemlock Harness · Aurora Venom · Blight Eternal · Mossjaw's Skin
-* Mirage: Trickster Leathers · Mirage · Glass Harness · Aurora Mirage · Mirror Eternal · The Unmade's Skin
+## §24 suit tier names (T1 → T5 · Mythic; naming pass done, see DESIGN §24.2)
+* Warden: Iron Mail · Knight Plate · Sunforged Plate · Aurora Plate · Aegis of Dawn · Mythic: Shardheart Plate
+* Crusader: Acolyte Mail · Dawn Vestment Plate · Sun Crusader · Aurora Templar · Oath Eternal · Mythic: Gloomspire Vestment
+* Juggernaut: Scrap Plate · Bulwark Plate · Sunforged Bastion · Aurora Colossus · Mountain Eternal · Mythic: Forge Deep Cuirass
+* Dreamweave: Linen Robe · Dreamweave Robe · Starwoven Robe · Nebula Vestments · Eternal Dreamshroud · Mythic: Nightlong Shroud
+* Frostweave: Woollen Robe · Frostweave · Glacier Vestment · Aurora Rime · Winter Eternal · Mythic: Brinemother's Veil
+* Stormweave: Grey Robe · Stormweave · Thunder Vestment · Aurora Tempest · Storm Eternal · Mythic: Gravewind
+* Stalker: Leather Jerkin · Stalker Jacket · Nightstalker Coat · Shadowweave Jacket · Eclipse Garb · Mythic: Pinewood Mist
+* Thornwarden: Ranger Garb · Thornwarden · Mossmantle Coat · Aurora Thorn · Root Eternal · Mythic: Briarwatch Mantle
+* Duelist: Swordsman's Coat · Duelist Jacket · Silver Fencer · Aurora Brocade · Blade Eternal · Mythic: Oathless Jacket
+* Shade: Scout Leathers · Shade Leathers · Nightshade Harness · Eclipse Shade · Shadow Eternal · Mythic: Gloamveil
+* Nightshade: Tanner's Leathers · Nightshade · Hemlock Harness · Aurora Venom · Blight Eternal · Mythic: Mossjaw's Skin
+* Mirage: Trickster Leathers · Mirage · Glass Harness · Aurora Mirage · Mirror Eternal · Mythic: Glasswarp Silk
 * Visual rule: each tier = class palette ramp + trim, crest/pauldron, hem/glow part swaps; T5 = made of light.
 
 ## §25 Pinewood 112×112 zone recipe (expert draft for the level designer)
