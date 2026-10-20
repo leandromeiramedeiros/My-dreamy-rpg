@@ -241,16 +241,42 @@ function slotIcon(p, st) {
   if (st.slot === 'pot') return miscIcon('potion');
   return st.id ? skillIcon(st.id) : null;
 }
+// ===== §28 the HUD fades in one piece per noun (game.js hudNoun / hudShown) ======================================================
+// hudFaded(ctx, a, fn): fn draws at full alpha (a >= 1), not at all (a <= 0: no hit regions either), or, during its 0.6 s fade-in,
+// into an offscreen copy blitted at alpha a (the HUD helpers set globalAlpha absolutely, so a plain multiply would not hold).
+let HUD_FADE_C = null;
+function hudFaded(ctx, a, fn) {
+  if (a >= 1) return fn(ctx);
+  if (!(a > 0)) return undefined;
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  if (!HUD_FADE_C || HUD_FADE_C.width !== W || HUD_FADE_C.height !== H) { HUD_FADE_C = document.createElement('canvas'); HUD_FADE_C.width = W; HUD_FADE_C.height = H; }
+  const o = HUD_FADE_C.getContext('2d');
+  o.setTransform(1, 0, 0, 1, 0, 0); o.globalAlpha = 1; o.globalCompositeOperation = 'source-over'; o.clearRect(0, 0, W, H);
+  o.setTransform(ctx.getTransform()); o.imageSmoothingEnabled = false;
+  const r = fn(o);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = a; ctx.imageSmoothingEnabled = false; ctx.drawImage(HUD_FADE_C, 0, 0); ctx.restore();
+  return r;
+}
+const hudPieceOf = slot => (slot === '1' || slot === '2' || slot === '3' || slot === 1 || slot === 2 || slot === 3 ? 'skills' : String(slot));
+const hudA = piece => (typeof hudShown === 'function' ? hudShown(piece) : 1);
+// a chip's alpha: its piece's fade; in a bare opening a chip whose slot grants nothing (no weapon, no helm...) stays hidden
+function chipAlpha(p, slot) {
+  const a = hudA(hudPieceOf(slot));
+  if (a > 0 && slot !== 'lmb' && slot !== 'pot' && typeof openingActive === 'function' && openingActive() && !slotSkill(p, slot)) return 0;
+  return a;
+}
 function drawSkillBar(ctx, p, inert) {
   let hover = null;
   const flashTag = [];
   for (const grp of SLOT_GROUPS) grp.slots.forEach((slot, i) => {
     const x = grp.x + i * SLOT_PITCH;
-    if (drawSkillSlot(ctx, p, slot, x, SLOT_Y)) hover = { slot, x };
+    if (hudFaded(ctx, chipAlpha(p, slot), c => drawSkillSlot(c, p, slot, x, SLOT_Y))) hover = { slot, x };
   });
-  if (drawSkillSlot(ctx, p, 'pot', POTION_X, SLOT_Y)) hover = { slot: 'pot', x: POTION_X };
-  // potion charge pips
-  for (let k = 0; k < potionMax(p); k++) UI.sprite(ctx, k < p.potions ? 'pipFull' : 'pipEmpty', POTION_X + 5 + k * 12, 530, { scale: 2 });
+  if (hudFaded(ctx, chipAlpha(p, 'pot'), c => {
+    const h = drawSkillSlot(c, p, 'pot', POTION_X, SLOT_Y);
+    for (let k = 0; k < potionMax(p); k++) UI.sprite(c, k < p.potions ? 'pipFull' : 'pipEmpty', POTION_X + 5 + k * 12, 530, { scale: 2 });   // potion charge pips
+    return h;
+  })) hover = { slot: 'pot', x: POTION_X };
   HUD.hoverSlot = hover && !inert && IN.device === 'kbm' ? hover.slot : null;   // render.js: faint range ring
   if (hover && !inert && (IN.device === 'kbm')) skillTooltip(ctx, p, hover);
 }
@@ -290,7 +316,7 @@ function drawSkillSlot(ctx, p, slot, x, y) {
 function skillTooltip(ctx, p, h) {
   const st = skillSlotState(p, h.slot); let c;
   if (h.slot === 'pot') c = { title: 'Health Potion', titleCol: UC.hpHi, lines: [`Heal 40% of max HP. ${p.potions}/${potionMax(p)} charges, refilled at checkpoints.`] };
-  else if (h.slot === 'lmb') { const w = item('weapon', p.gear.weapon); c = { title: w.basic.name, lines: [`Basic attack of the ${w.name}. Builds MP on hit.`] }; }
+  else if (h.slot === 'lmb') { const w = weaponOf(p); c = { title: w.basic.name, lines: [p.equip.weapon ? `Basic attack of the ${w.name}. Builds MP on hit.` : 'Bare hands: a weak shove. Find a weapon.'] }; }
   else if (!st.id) return;
   else {
     const s = SKILLS[st.id];
@@ -513,7 +539,23 @@ function drawBanner(ctx, p) {
   ctx.globalAlpha = 1;
 }
 function drawSay(ctx) {
+  if (G.tablet && G.tablet.src && G.state === 'play') return;   // an open tablet panel owns that band (the Elder Stone double render, QA kbm-004)
   if (G.msg && G.msg.t > 0) UI.text(ctx, G.msg.s, 480, 404, 'body', UC.text, 'center', { alpha: Math.min(1, G.msg.t * 2) });
+}
+// ===== Pip (§28): a small warm light parented to the hero (state + drift: game.js updatePip). Drawn here, over the lit scene, as an
+// additive halo and a 3 px core; the lightmap entry (game.js pipLight) is the render lane's to add to drawScene's lights.
+function drawPip(ctx) {
+  const P = G.pip, p = G.player; if (!P || !p || p.dead || !G.map || typeof worldToView !== 'function') return;
+  const [vx, vy] = worldToView(P.x, P.y, P.z), x = Math.round(vx * 2), y = Math.round(vy * 2);
+  if (x < -60 || x > DW + 60 || y < -60 || y > DH + 60) return;
+  const fl = 0.86 + 0.14 * Math.sin(G.t * 7.3) * Math.sin(G.t * 2.9);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createRadialGradient(x, y, 0, x, y, 30);
+  g.addColorStop(0, `rgba(255,224,170,${0.55 * fl})`); g.addColorStop(0.35, `rgba(255,196,120,${0.22 * fl})`); g.addColorStop(1, 'rgba(255,180,110,0)');
+  ctx.fillStyle = g; ctx.fillRect(x - 30, y - 30, 60, 60);
+  ctx.globalAlpha = fl; ctx.fillStyle = '#ffd9a0'; ctx.fillRect(x - 3, y - 3, 6, 6);
+  ctx.fillStyle = '#fff6e6'; ctx.fillRect(x - 1, y - 2, 2, 4); ctx.fillRect(x - 2, y - 1, 4, 2);
+  ctx.restore();
 }
 function drawInteractPrompt(ctx) {
   const ip = interactPrompt(); if (!ip || G.touch) return;
@@ -566,12 +608,12 @@ function drawPlayHud(ctx, p, inert) {
   const touch = G.touch;
   const mirror = touch && leftHanded();   // the thumb cluster sits bottom-left, so the portrait + bars move to the other corner
   if (mirror) { ctx.save(); ctx.translate(DW - 24 - 340, 0); }
-  drawPortrait(ctx, p);
+  hudFaded(ctx, hudA('bars'), c => drawPortrait(c, p));
   if (mirror) ctx.restore();
-  drawStatusRow(ctx, p, touch ? DW - 24 : 100, touch ? 148 : 428, touch);
+  hudFaded(ctx, hudA('bars'), c => drawStatusRow(c, p, touch ? DW - 24 : 100, touch ? 148 : 428, touch));
   if (!touch) drawSkillBar(ctx, p, inert);
-  drawMinimap(ctx, p, touch ? DW - 24 - 112 : 832, touch ? 24 : 16);
-  drawTracker(ctx, touch ? 24 : 16, touch ? 24 : 16);
+  hudFaded(ctx, hudA('map'), c => drawMinimap(c, p, touch ? DW - 24 - 112 : 832, touch ? 24 : 16));
+  hudFaded(ctx, hudA('tracker'), c => drawTracker(c, touch ? 24 : 16, touch ? 24 : 16));
   drawBossBar(ctx);
   drawTablet(ctx);
   drawSay(ctx);
@@ -588,6 +630,7 @@ function drawHUD(ctx) {
   if (G.portrait && typeof drawRotateCard === 'function') { drawRotateCard(ctx); return; }   // R3 #2: phone held upright (screens.js)
   if (G.state === 'title') { drawTitle(ctx); return; }
   const p = G.player, u = G.ui;
+  drawPip(ctx);
   drawDamageNumbers(ctx); drawDropNames(ctx); drawNameplates(ctx);
   if (u.open) {   // Tab screens: scene dimmed to 35 %, play HUD hidden
     ctx.fillStyle = '#05030c'; ctx.globalAlpha = 0.65; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
@@ -673,6 +716,7 @@ function drawTouchControls(ctx) {
   for (const b of touchButtons()) {
     const held = heldSlots.has(b.slot), aiming = aimSlot === b.slot;
     if (b.slot === 'toggle') { toggle = b; continue; }
+    if (b.slot !== 'interact' && b.slot !== 'atk' && !(chipAlpha(p, b.slot === 'pot' ? 'pot' : b.slot) > 0)) continue;   // §28: hidden until its noun
     if (b.slot === 'pot') {
       const st = skillSlotState(p, 'pot'), n = p.potions || 0;
       touchBtn(ctx, b.x, b.y, b.r, UC.hp, { icon: miscIcon('potion'), gray: !n, cdFrac: st.cd > 0 ? st.cd / 1 : 0, held });
