@@ -184,7 +184,7 @@ var BOSS_DATA = {
         forms: { trunkSwipe: { open: 0.35, then: 'backhand' } },
         onEnter: [{ type: 'arenaShrink', pattern: 'roots_inward', k: 0.75, rMin: 5.5 }, { type: 'roar', banner: 'The roots wake', dur: 1.2 }] },   // ring >= 5.5 tiles: room to walk out of a 3-tile stomp, and the card's saplings (<= 5.4 from the centre) stay inside
       // bar 3: new move trample (charge); cunning: rootGrab LEAD-AIMS 0.45 s ahead of a moving hero (+ bar 2's backhand); windMul 0.7, gaps x0.65
-      { hpBelow: 0.34, moves: { stomp: 2, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1, trample: 2 }, windMul: 0.7, cdMul: 0.65, speedMul: 1.2,
+      { hpBelow: 0.34, moves: { stomp: 1, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1, trample: 2 }, windMul: 0.7, cdMul: 0.65, speedMul: 1.2,
         forms: { rootGrab: { lead: 0.45 } },
         onEnter: [{ type: 'roar', banner: 'Old Bramblehorn splinters into a fury', dur: 1.0 }] }
     ],

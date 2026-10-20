@@ -294,7 +294,7 @@ for (const id of BOSS_IDS) {
 // Lengths: the reference row's median over the §20.7 red band (mini 120 / guardian 300 s) is red, over the §20.3 target a
 // note; the -1 tier median is a note (losses are expected there). The fight lengths themselves are enforced on the frozen table above.
 const LIVE = { mossjaw: { L: 7, max: 90, red: 120 }, bramblehorn: { L: 9, max: 240, red: 300 } };   // L: lowest arrival level (REPORT: 7-9 / 9-11)
-const REACT = 0.3, MISTAKES = [3, 12], MISS_EVERY = +arg('miss', 0), LIVE_POTIONS = 2, LIVE_TRIALS = 6, LIVE_UNDER = [3, 4];
+const REACT = 0.3, MISTAKES = [3, 12], MISS_EVERY = +arg('miss', 7), LIVE_POTIONS = 2, LIVE_TRIALS = 6, LIVE_UNDER = [3, 4];
 const LIVE_ROWS = [{ k: 'under', label: '-1 tier', diff: 'normal', n: +arg('under-trials', 12) }, { k: 'reference', label: 'reference', diff: 'normal', n: LIVE_TRIALS }, { k: 'under2', label: '-2 Story', diff: 'story', n: LIVE_TRIALS }];
 const ONLY = arg('only', '');
 ev(`const ADD_R = 3;

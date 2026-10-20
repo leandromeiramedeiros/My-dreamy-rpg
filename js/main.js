@@ -34,6 +34,8 @@ function enterMap(id, at) {
   for (const pt of m.portals) pt.open = (G.world.maps[id].portals.find(q => q.x === pt.x && q.y === pt.y) || pt).open !== false;
   G.enemies = []; G.projs = []; G.effects = []; G.zones = []; G.parts = []; G.texts = []; G.delays = []; G.amb = []; G.drops = [];
   G.boss = null; G.tablet = null;
+  if (typeof resetCorpses === 'function') resetCorpses();   // R1 corpse records (pooled) and the hitlag clock
+  if (typeof hitlagReset === 'function') hitlagReset();
   p.x = at ? at.x : m.start.x; p.y = at ? at.y : m.start.y; p.z = tileH(m, p.x, p.y); p.dash = null;
   syncChests(m);
   G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
@@ -158,6 +160,8 @@ function render() {
 
 // Fixed-step update at 1/60 s with an accumulator (§16.6.3): deterministic reactions, hitstop and scripted
 // tests; render once per display frame. Slow-mo and hitstop scale/zero the game step, never its size.
+// Hitstop is counted in unscaled steps BEFORE slow-mo (game.js hitlagStep, DESIGN §27): a 15-step boss-death freeze is
+// 0.25 s of real time even inside the boss slow-mo (it used to stretch to ~0.7 s).
 const STEP = 1 / 60;
 let last = performance.now(), acc = 0, running = true, frameEma = 16.7;
 function loop(now) {
@@ -171,10 +175,9 @@ function loop(now) {
   let n = 0;
   while (acc >= STEP && n < 5) {
     let rdt = STEP;
+    const frozen = hitlagStep();
     if (G.slowmo > 0) { G.slowmo -= rdt; rdt *= 0.35; }
-    let dt = rdt;
-    if (G.hitstopT > 0) { G.hitstopT -= rdt; dt = 0; }
-    update(dt, rdt);
+    update(frozen ? 0 : rdt, rdt);
     acc -= STEP; n++;
   }
   if (n === 5) acc = 0;   // spiral-of-death guard after a long stall
