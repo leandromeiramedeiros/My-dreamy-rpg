@@ -806,7 +806,9 @@ const PAD_STUB = () => {
     const r = await lp.evaluate(async () => {
       const w = ms => new Promise(r => setTimeout(r, ms)), p = G.player; G.banner = null; G.enemies.length = 0; G.drops.length = 0;
       const kinds = ['common', 'common', 'common', 'uncommon', 'uncommon', 'rare', 'rare', 'epic', 'common', 'common'];
-      kinds.forEach((k, i) => { const it = rollItem ? rollItem(p.level, k) : null; spawnDrop(p.x + 0.4, p.y + 0.4, { kind: 'item', it }); });
+      // the pile sits 2.5 tiles off: spawnDrop scatters 0.5-1.4 tiles, and a drop landing within the 0.65-tile pickup radius of
+      // the hero was auto-picked after 0.5 s (the old +0.4 offset lost 0-4 of the 10 at random)
+      kinds.forEach((k, i) => { const it = rollItem ? rollItem(p.level, k) : null; spawnDrop(p.x + 2.5, p.y + 2.5, { kind: 'item', it }); });
       await w(900);
       const grab = () => (HUD.dropLabels || []).map(q => ({ x: q.x, y: q.y, w: q.w, rar: q.rar }));
       const ov = L => { let n = 0; for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) if (Math.abs(L[i].x - L[j].x) < (L[i].w + L[j].w) / 2 && Math.abs(L[i].y - L[j].y) < 15) n++; return n; };

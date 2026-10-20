@@ -12,7 +12,7 @@
 // ---------------------------------------------------------------------------
 const SCN = makeCanvas(RW, RH), sctx = SCN.x;
 const LM = makeCanvas(RW / 2, RH / 2);
-const B1 = makeCanvas(RW / 4, RH / 4), BT = makeCanvas(RW / 4, RH / 4), B2 = makeCanvas(RW / 8, RH / 8);
+const B1 = makeCanvas(RW / 4, RH / 4), BT = makeCanvas(RW / 4, RH / 4), B2 = makeCanvas(RW / 8, RH / 8), BC = makeCanvas(RW / 4, RH / 4);
 let VIGNETTE = null, GRADE = {};
 const silCache = new WeakMap();
 const silOf = (img, col) => { let m = silCache.get(img); if (!m) silCache.set(img, m = {}); return m[col] || (m[col] = silhouette(img, col)); };
@@ -335,16 +335,25 @@ function drawScene() {
   groundTick(m, true, performance.now() - sceneT0);   // idle prefetch with what is left of the frame
 }
 
+// perf: the moon disc was ~(2r+1)^2 fillRects + value-noise calls EVERY frame (~10 % of a play frame headless); it is
+// now rastered once per (radius, colour) into a canvas and blitted (same pixels: x, y snap to whole pixels as before)
+const MOON_CACHE = new Map();
 function drawMoon(ctx, x, y, r, col) {
-  const c = hexToRgb(col);
-  for (let yy = -r; yy <= r; yy++) for (let xx = -r; xx <= r; xx++) {
-    const d = (xx * xx + yy * yy) / (r * r);
-    if (d > 1) continue;
-    const n = vnoise((xx + 50) * 0.18, (yy + 50) * 0.18, 99);
-    const sh = 1 - Math.max(0, (xx + yy) / (r * 2.4)) * 0.35 - (n > 0.62 ? 0.12 : 0);
-    ctx.fillStyle = `rgb(${c[0] * sh | 0},${c[1] * sh | 0},${c[2] * sh | 0})`;
-    ctx.fillRect(Math.round(x + xx), Math.round(y + yy), 1, 1);
+  const R = Math.round(r), k = R + '|' + col;
+  let mc = MOON_CACHE.get(k);
+  if (!mc) {
+    const c = hexToRgb(col), cv = makeCanvas(2 * R + 1, 2 * R + 1);
+    for (let yy = -R; yy <= R; yy++) for (let xx = -R; xx <= R; xx++) {
+      const d = (xx * xx + yy * yy) / (r * r);
+      if (d > 1) continue;
+      const n = vnoise((xx + 50) * 0.18, (yy + 50) * 0.18, 99);
+      const sh = 1 - Math.max(0, (xx + yy) / (r * 2.4)) * 0.35 - (n > 0.62 ? 0.12 : 0);
+      cv.x.fillStyle = `rgb(${c[0] * sh | 0},${c[1] * sh | 0},${c[2] * sh | 0})`;
+      cv.x.fillRect(xx + R, yy + R, 1, 1);
+    }
+    MOON_CACHE.set(k, mc = cv.c);
   }
+  ctx.drawImage(mc, Math.round(x) - R, Math.round(y) - R);
 }
 
 function drawFall(ctx, f, edge) {
@@ -1114,8 +1123,13 @@ function applyBloom(ctx, strength) {
   BT.x.globalCompositeOperation = 'multiply'; BT.x.drawImage(B1.c, 0, 0); BT.x.drawImage(B1.c, 0, 0); BT.x.drawImage(B1.c, 0, 0);
   BT.x.globalCompositeOperation = 'source-over';
   B2.x.imageSmoothingEnabled = true; B2.x.clearRect(0, 0, RW / 8, RH / 8); B2.x.drawImage(BT.c, 0, 0, RW / 8, RH / 8);
+  // perf: the two glow layers are summed at 1/4 res (BC) so the full-res additive pass runs once, not twice
+  // (0.4 x BT + 0.6 x B2 upscaled; 'lighter' is additive, so the result matches the old two-pass blend)
+  BC.x.imageSmoothingEnabled = true; BC.x.globalCompositeOperation = 'source-over'; BC.x.clearRect(0, 0, w, h);
+  BC.x.globalAlpha = 0.4; BC.x.drawImage(BT.c, 0, 0);
+  BC.x.globalCompositeOperation = 'lighter'; BC.x.globalAlpha = 0.6; BC.x.drawImage(B2.c, 0, 0, w, h);
+  BC.x.globalAlpha = 1; BC.x.globalCompositeOperation = 'source-over';
   ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true;
-  ctx.globalAlpha = strength * 0.4; ctx.drawImage(BT.c, 0, 0, RW, RH);
-  ctx.globalAlpha = strength * 0.6; ctx.drawImage(B2.c, 0, 0, RW, RH);
+  ctx.globalAlpha = strength; ctx.drawImage(BC.c, 0, 0, RW, RH);
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
 }
