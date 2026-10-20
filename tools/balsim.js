@@ -8,7 +8,7 @@
 // MODEL
 //   Hero: three weapon families with their own armour sets; reference gear per band (Uncommon in the Vale, Rare to the
 //   Ruins, Epic after; tier = highest TIER_REQ <= level; affixes at 80 % of their roll; 2 diamonds of the band grade).
-//   Random build = the same rarity with makeItem's random rolls and random gems (mean of 12). Optimal = every affix an
+//   Random build = the same rarity with makeItem's random rolls and random gems (mean of 24). Optimal = every affix an
 //   offence stat at its best roll + matching damage gems.
 //   Rotation (§20.7): basic x3 -> skill (Q / E alternating, R whenever charged) -> dodge, against a target that stands
 //   still (its AI frozen); after a dodge the hero is put back in reach. Hitstop runs like main.js (it costs time).
@@ -207,9 +207,9 @@ for (const b of BANDS) for (const type of b.refs) {
 log('\nELITE SPAWN TTK (Pinewood L7, x ELITE_HP, target 12 s)');
 for (const type of ['ogre', 'gloomslime']) {
   if (!ENEMY[type]) continue;
-  const v = ttk(type, 7, 'sword', 'reference', { elite: true, mod: 'storm' });
-  log(`  ${type.padEnd(12)} ${r1(v)} s`);
-  if (v < 6 || v > 24) red(`elite spawn TTK ${r1(v)} s for ${type} at L7: outside 6-24`);
+  const fams = ['sword', 'staff', 'bow'].map(f => ttk(type, 7, f, 'reference', { elite: true, mod: 'storm' })), v = Math.exp(fams.reduce((a, x) => a + Math.log(x), 0) / 3);
+  log(`  ${type.padEnd(12)} ${r1(v)} s (geometric mean; sword / staff / bow ${fams.map(r1).join(' / ')})`);
+  if (v < 6 || v > 24) red(`elite spawn TTK ${r1(v)} s (geometric mean of the families) for ${type} at L7: outside 6-24`);
 }
 
 // 3. bosses: length + fairness + hit size
@@ -248,11 +248,11 @@ for (const id of BOSS_IDS) {
 }
 
 // 4. builds: optimal / random, reactions, ultimate, caps
-log('\nBUILDS (Pinewood L8 and Ruins L14, sword; DPS vs neutral; random = mean of 12 rolls)');
+log('\nBUILDS (Pinewood L8 and Ruins L14, sword; DPS vs neutral; random = mean of 24 rolls)');
 const capsRow = [];
 for (const L of [8, 14, 24]) {
   const ref = dpsVs('__neutral', L, 'sword', 'reference', null, 240), opt = dpsVs('__neutral', L, 'sword', 'optimal', null, 240);
-  let rs = 0; for (let k = 0; k < 12; k++) rs += dpsVs('__neutral', L, 'sword', 'random').dps; rs /= 12;
+  let rs = 0; for (let k = 0; k < 24; k++) rs += dpsVs('__neutral', L, 'sword', 'random').dps; rs /= 24;
   const ratio = opt.dps / rs;
   log(`  L${String(L).padEnd(3)} reference ${Math.round(ref.dps)}  random ${Math.round(rs)}  optimal ${Math.round(opt.dps)}  optimal/random ${r2(ratio)} (CI 1.3-2.2)  ultimate every ${r1(ref.ult)} s (optimal ${r1(opt.ult)} s; §20.5 ~40 s, red < 15 s)`);
   if (ref.ult > 60) notes.push(`ultimate charges every ${r1(ref.ult)} s at L${L} (reference, single target, no reactions); §20.5 baseline ~40 s`);
