@@ -178,7 +178,7 @@ function makeUnique(id, ilvl) {
   const U = UNIQUES[id];
   let base = U.base;
   if (U.anyWeapon) {   // the finder's weapon variant, at the tier the item level allows (T3..T5)
-    const p = G.player, fam = p && p.gear && FAMILY_TIERS[p.gear.weapon] ? p.gear.weapon : null;
+    const p = G.player, fam = p && p.gear && p.equip && p.equip.weapon && FAMILY_TIERS[p.gear.weapon] ? p.gear.weapon : null;
     if (fam) { let t = 2; for (let k = 2; k < 5; k++) if (TIER_REQ[k] <= ilvl) t = k; base = FAMILY_TIERS[fam][t].split(':')[0]; }
   }
   return makeItem(base, U.mythic ? 'mythic' : 'legendary', Math.max(ilvl, BASES[base].reqLvl), { unique: id });
@@ -481,7 +481,7 @@ function rollItem(lvl, rarity, slot) {
   if (TRINKET_KINDS.includes(slot) || (!slot && trinketDropsOn(p) && Math.random() < TRINKET_DROP)) return rollTrinket(lvl, rarity, slot);
   slot = slot || pick2(['weapon', 'weapon', 'head', 'chest', 'boots', 'head', 'chest', 'boots']);
   // 40% of drops stay in the families you already wear
-  const fams = ITEMS[slot].map(f => f.id), fam = p && p.gear[slot] && Math.random() < 0.4 ? p.gear[slot] : pick2(fams);
+  const fams = ITEMS[slot].map(f => f.id), fam = p && p.equip && p.equip[slot] && p.gear[slot] && Math.random() < 0.4 ? p.gear[slot] : pick2(fams);   // an empty slot (§28) biases nothing
   let tier = 0; for (let t = 0; t < 5; t++) if (TIER_REQ[t] <= lvl + 1) tier = t;
   if (tier > 0 && Math.random() < 0.25) tier--;
   if (tier === 4 && !rarityAtLeast(rarity, 'legendary')) tier = 3;   // the Eternal tier is legendary+

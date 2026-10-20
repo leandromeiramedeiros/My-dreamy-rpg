@@ -1,46 +1,68 @@
 {
- "at": "2026-10-20T12:37:53.876Z",
+ "at": "2026-10-20T12:54:01.743Z",
  "level": 8,
- "maxHp": 967,
- "def": 0.17898193760262726,
- "power": 0.847,
- "dmgBase": 0.847,
- "bonus": 0,
- "crit": 0.08,
+ "maxHp": 1004,
+ "def": 0.3032427084349438,
+ "power": 1.4611475999999999,
+ "dmgBase": 1.4036,
+ "bonus": 0.041,
+ "crit": 0.109,
  "critDmg": 0.8,
  "potions": 3,
  "weapon": "sword",
  "equip": {
   "weapon": {
-   "id": "i_5",
+   "id": "i_14",
    "base": "rustyblade",
    "variant": "sword",
    "class": "blades",
    "suit": null,
    "slot": "weapon",
    "tier": 0,
-   "rarity": "common",
-   "ilvl": 1,
+   "rarity": "epic",
+   "ilvl": 3,
    "req": 1,
    "implicit": {
     "id": "slashDmg",
     "v": 0.04,
     "text": "+4% slash damage"
    },
-   "affixes": [],
-   "sockets": [],
+   "affixes": [
+    {
+     "id": "power",
+     "tier": 1,
+     "v": 0.041,
+     "kind": "P"
+    },
+    {
+     "id": "crit",
+     "tier": 1,
+     "v": 0.029,
+     "kind": "P"
+    },
+    {
+     "id": "resPierce",
+     "tier": 1,
+     "v": 0.074,
+     "kind": "S"
+    }
+   ],
+   "sockets": [
+    null,
+    null
+   ],
    "boon": null,
    "rule": null,
    "unique": null,
    "hist": {
-    "found": null,
-    "kills": 39,
+    "found": "pinewood",
+    "kills": 33,
     "bossKills": 0
    },
    "tempered": null,
    "name": {
-    "prefix": null,
-    "suffix": null
+    "prefix": "Keen",
+    "suffix": "of the Heron"
    }
   },
   "head": {
@@ -76,22 +98,35 @@
    }
   },
   "chest": {
-   "id": "i_7",
+   "id": "i_29",
    "base": "ironmail",
    "variant": "warden",
    "class": "heavy",
    "suit": "warden",
    "slot": "chest",
    "tier": 0,
-   "rarity": "common",
-   "ilvl": 1,
-   "req": 1,
+   "rarity": "rare",
+   "ilvl": 5,
+   "req": 3,
    "implicit": {
     "id": "hp",
     "v": 15,
     "text": "+15 HP"
    },
-   "affixes": [],
+   "affixes": [
+    {
+     "id": "haste",
+     "tier": 1,
+     "v": 0.039,
+     "kind": "P"
+    },
+    {
+     "id": "resArcane",
+     "tier": 1,
+     "v": 0.065,
+     "kind": "S"
+    }
+   ],
    "sockets": [
     null
    ],
@@ -99,39 +134,86 @@
    "rule": null,
    "unique": null,
    "hist": {
-    "found": null,
+    "found": "pinewood",
     "kills": 0,
     "bossKills": 0
    },
    "tempered": null,
    "name": {
-    "prefix": null,
-    "suffix": null
+    "prefix": "Quick",
+    "suffix": "of the Moth"
    }
   },
   "boots": {
-   "id": "i_8",
-   "base": "ironboots",
+   "id": "i_42",
+   "base": "knightgreaves",
    "variant": "knightgreaves",
    "class": "heavy",
    "suit": "warden",
    "slot": "boots",
-   "tier": 0,
-   "rarity": "common",
-   "ilvl": 1,
-   "req": 1,
+   "tier": 1,
+   "rarity": "rare",
+   "ilvl": 8,
+   "req": 8,
    "implicit": {
-    "id": "hp",
-    "v": 10,
-    "text": "+10 HP"
+    "id": "poise",
+    "v": 1,
+    "text": "Charge grants poise while it lasts"
    },
-   "affixes": [],
-   "sockets": [],
+   "affixes": [
+    {
+     "id": "natureDmg",
+     "tier": 1,
+     "v": 0.047,
+     "kind": "P"
+    },
+    {
+     "id": "def",
+     "tier": 1,
+     "v": 0.028,
+     "kind": "S"
+    }
+   ],
+   "sockets": [
+    null
+   ],
    "boon": null,
    "rule": null,
    "unique": null,
    "hist": {
-    "found": null,
+    "found": "pinewood",
+    "kills": 0,
+    "bossKills": 0
+   },
+   "tempered": null,
+   "name": {
+    "prefix": "Mossy",
+    "suffix": "of the Badger"
+   }
+  },
+  "ring1": {
+   "id": "i_9",
+   "base": "origin_knight",
+   "variant": "ring",
+   "class": "trinket",
+   "suit": null,
+   "slot": "ring",
+   "tier": 0,
+   "rarity": "uncommon",
+   "ilvl": 1,
+   "req": 1,
+   "implicit": null,
+   "affixes": [],
+   "sockets": [],
+   "boon": {
+    "id": "originKnight",
+    "grade": "minor",
+    "text": "+10% defence"
+   },
+   "rule": null,
+   "unique": null,
+   "hist": {
+    "found": "vale",
     "kills": 0,
     "bossKills": 0
    },
@@ -141,7 +223,6 @@
     "suffix": null
    }
   },
-  "ring1": null,
   "ring2": null,
   "amulet": null,
   "belt": null
