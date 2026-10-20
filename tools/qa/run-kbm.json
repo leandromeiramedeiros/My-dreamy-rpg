@@ -3,13 +3,13 @@
  "maps": {
   "vale": {
    "enters": 1,
-   "ms": 608272,
+   "ms": 103245,
    "deaths": 0,
    "potions": 0,
    "kills": 0,
    "lvlIn": 1,
    "dmgTaken": 0,
-   "stuck": 198
+   "stuck": 8
   }
  },
  "deaths": [],
@@ -22,17 +22,17 @@
    "hp": 760
   },
   {
-   "at": 0.2,
+   "at": 0.1,
    "msg": "title: clicking NEW DREAM with the mouse"
   },
   {
-   "at": 1.3,
+   "at": 1.2,
    "msg": "after New Dream",
    "st": "play",
    "obj": "Hit the training dummies in the yard."
   },
   {
-   "at": 1.4,
+   "at": 1.3,
    "msg": "MARK vale-start",
    "lvl": 1
   },
@@ -41,596 +41,205 @@
    "msg": "goal: dummies"
   },
   {
-   "at": 15.1,
+   "at": 15,
    "msg": "goal dummies: ok",
-   "sec": "11.1"
+   "sec": "11.0"
   },
   {
-   "at": 15.8,
+   "at": 15.6,
    "msg": "goal: shrine"
   },
   {
-   "at": 18.1,
+   "at": 17.8,
    "msg": "goal shrine: ok",
-   "sec": "2.3"
+   "sec": "2.2"
   },
   {
-   "at": 18.1,
+   "at": 17.8,
    "msg": "goal: yard_teach"
   },
   {
-   "at": 18.1,
+   "at": 17.8,
    "msg": "goal yard_teach: ok",
    "sec": "0.0"
   },
   {
-   "at": 18.3,
+   "at": 17.9,
    "msg": "goal: elder plaza"
   },
   {
-   "at": 22,
+   "at": 21.5,
    "msg": "goal elder plaza: ok",
-   "sec": "3.7"
+   "sec": "3.6"
   },
   {
-   "at": 22,
+   "at": 21.5,
    "msg": "goal: read elder stone"
   },
   {
-   "at": 23,
+   "at": 22.4,
    "msg": "goal read elder stone: ok",
-   "sec": "0.9"
+   "sec": "1.0"
   },
   {
-   "at": 24.6,
+   "at": 24.1,
    "msg": "goal: tutorial chest"
   },
   {
-   "at": 34.3,
+   "at": 32.6,
+   "msg": "unstick: dodge",
+   "n": 2,
+   "pos": [
+    23.99,
+    18.03
+   ]
+  },
+  {
+   "at": 37.1,
    "msg": "bot stuck",
    "pos": [
-    23.98,
-    18.01
+    25.77,
+    17.46
    ],
    "goal": "tutorial chest",
    "n": 3
   },
   {
-   "at": 49.7,
+   "at": 37.4,
+   "msg": "unstick: dodge",
+   "n": 3,
+   "pos": [
+    25.77,
+    17.46
+   ]
+  },
+  {
+   "at": 40.6,
+   "msg": "unstick: dodge",
+   "n": 4,
+   "pos": [
+    25.77,
+    17.46
+   ]
+  },
+  {
+   "at": 44.6,
+   "msg": "unstick: dodge",
+   "n": 5,
+   "pos": [
+    25.74,
+    17.15
+   ]
+  },
+  {
+   "at": 48.5,
+   "msg": "unstick: dodge",
+   "n": 6,
+   "pos": [
+    25.74,
+    17.55
+   ]
+  },
+  {
+   "at": 52.4,
+   "msg": "unstick: dodge",
+   "n": 7,
+   "pos": [
+    25.7,
+    17.18
+   ]
+  },
+  {
+   "at": 56.2,
    "msg": "bot stuck",
    "pos": [
-    23.98,
-    18.01
+    26.75,
+    14.85
    ],
    "goal": "tutorial chest",
    "n": 8
   },
   {
-   "at": 66.1,
-   "msg": "goal tutorial chest: ok",
-   "sec": "41.5"
+   "at": 56.6,
+   "msg": "unstick: dodge",
+   "n": 8,
+   "pos": [
+    26.75,
+    14.85
+   ]
   },
   {
-   "at": 74.5,
+   "at": 59.5,
+   "msg": "goal tutorial chest: ok",
+   "sec": "35.5"
+  },
+  {
+   "at": 68.9,
    "msg": "goal: lantern (far NW)"
   },
   {
-   "at": 85.5,
-   "msg": "bot stuck",
-   "pos": [
-    22.99,
-    16.13
-   ],
-   "goal": "lantern (far NW)",
-   "n": 3
+   "at": 76.2,
+   "msg": "goal lantern (far NW): ok",
+   "sec": "7.4"
   },
   {
-   "at": 94.5,
-   "msg": "FINDING[minor] A drop sat on the ground >25 s without being picked up",
-   "detail": {
-    "drop": {
-     "x": 35.9,
-     "y": 17.65,
-     "rar": "uncommon",
-     "name": "Willow Wand",
-     "kind": "item",
-     "t": 25.3
-    },
-    "ppos": [
-     22.99,
-     16.13
-    ]
-   }
-  },
-  {
-   "at": 99.6,
-   "msg": "bot stuck",
-   "pos": [
-    22.99,
-    16.13
-   ],
-   "goal": "lantern (far NW)",
-   "n": 8
-  },
-  {
-   "at": 125.5,
-   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60050
-   }
-  },
-  {
-   "at": 185.9,
-   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60377
-   }
-  },
-  {
-   "at": 245.9,
-   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60014
-   }
-  },
-  {
-   "at": 274.6,
-   "msg": "goal lantern (far NW): timeout",
-   "sec": "200.1"
-  },
-  {
-   "at": 274.7,
-   "msg": "FINDING[major] Goal timed out: lantern (far NW)",
-   "detail": {
-    "after_s": 200,
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "noPath": 0,
-    "stuckN": 71
-   }
-  },
-  {
-   "at": 277.4,
+   "at": 79,
    "msg": "goal: return lantern"
   },
   {
-   "at": 285.2,
-   "msg": "bot stuck",
-   "pos": [
-    22.99,
-    16.13
-   ],
-   "goal": "return lantern",
-   "n": 3
+   "at": 83.2,
+   "msg": "goal return lantern: ok",
+   "sec": "4.1"
   },
   {
-   "at": 299.1,
-   "msg": "bot stuck",
-   "pos": [
-    22.99,
-    16.13
-   ],
-   "goal": "return lantern",
-   "n": 8
-  },
-  {
-   "at": 305.9,
-   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60063
-   }
-  },
-  {
-   "at": 366,
-   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60098
-   }
-  },
-  {
-   "at": 426.1,
-   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60016
-   }
-  },
-  {
-   "at": 477.4,
-   "msg": "goal return lantern: timeout",
-   "sec": "200.0"
-  },
-  {
-   "at": 477.6,
-   "msg": "FINDING[major] Goal timed out: return lantern",
-   "detail": {
-    "after_s": 200,
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "noPath": 0,
-    "stuckN": 72
-   }
-  },
-  {
-   "at": 480.8,
+   "at": 86.6,
    "msg": "objective after lantern return",
-   "obj": "Open the chest north-east. Then find the Stone's lantern.",
+   "obj": "Return the lantern to the Elder Stone.",
    "ambushFired": false,
    "done": false
   },
   {
-   "at": 480.8,
+   "at": 86.6,
    "msg": "goal: garden ambush"
   },
   {
-   "at": 486.4,
-   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60349
-   }
+   "at": 88.3,
+   "msg": "goal garden ambush: ok",
+   "sec": "1.7"
   },
   {
-   "at": 488.7,
-   "msg": "bot stuck",
-   "pos": [
-    22.99,
-    16.13
-   ],
-   "goal": "garden ambush",
-   "n": 3
-  },
-  {
-   "at": 502.7,
-   "msg": "bot stuck",
-   "pos": [
-    22.99,
-    16.13
-   ],
-   "goal": "garden ambush",
-   "n": 8
-  },
-  {
-   "at": 546.4,
-   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60016
-   }
-  },
-  {
-   "at": 600.8,
-   "msg": "goal garden ambush: timeout",
-   "sec": "120.0"
-  },
-  {
-   "at": 601,
-   "msg": "FINDING[major] Goal timed out: garden ambush",
-   "detail": {
-    "after_s": 120,
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "noPath": 0,
-    "stuckN": 43
-   }
-  },
-  {
-   "at": 601.1,
+   "at": 88.5,
    "msg": "goal: garden ambush clear"
   },
   {
-   "at": 603,
+   "at": 97.9,
    "msg": "goal garden ambush clear: ok",
-   "sec": "1.9"
+   "sec": "9.4"
   },
   {
-   "at": 605.7,
+   "at": 100.6,
    "msg": "after ambush",
-   "obj": "Open the chest north-east. Then find the Stone's lantern.",
-   "portalOpen": false
+   "obj": "Take the rift south into the Misty Pinewood.",
+   "portalOpen": true
   },
   {
-   "at": 606.4,
-   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60044
-   }
-  },
-  {
-   "at": 608.3,
+   "at": 103.3,
    "msg": "MARK vale-done",
    "lvl": 1
   }
  ],
- "findings": [
-  {
-   "at": 94.5,
-   "sev": "minor",
-   "title": "A drop sat on the ground >25 s without being picked up",
-   "detail": {
-    "drop": {
-     "x": 35.9,
-     "y": 17.65,
-     "rar": "uncommon",
-     "name": "Willow Wand",
-     "kind": "item",
-     "t": 25.3
-    },
-    "ppos": [
-     22.99,
-     16.13
-    ]
-   },
-   "shot": "tools/qa/shots/kbm-016-old-drop.png",
-   "map": "vale"
-  },
-  {
-   "at": 125.5,
-   "sev": "minor",
-   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60050
-   },
-   "shot": "tools/qa/shots/kbm-018-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 185.9,
-   "sev": "minor",
-   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60377
-   },
-   "shot": "tools/qa/shots/kbm-019-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 245.9,
-   "sev": "minor",
-   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60014
-   },
-   "shot": "tools/qa/shots/kbm-020-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 274.7,
-   "sev": "major",
-   "title": "Goal timed out: lantern (far NW)",
-   "detail": {
-    "after_s": 200,
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "noPath": 0,
-    "stuckN": 71
-   },
-   "shot": "tools/qa/shots/kbm-021-goal-timeout-lantern__far_NW_.png",
-   "map": "vale"
-  },
-  {
-   "at": 305.9,
-   "sev": "minor",
-   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60063
-   },
-   "shot": "tools/qa/shots/kbm-025-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 366,
-   "sev": "minor",
-   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60098
-   },
-   "shot": "tools/qa/shots/kbm-026-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 426.1,
-   "sev": "minor",
-   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60016
-   },
-   "shot": "tools/qa/shots/kbm-027-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 477.6,
-   "sev": "major",
-   "title": "Goal timed out: return lantern",
-   "detail": {
-    "after_s": 200,
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "noPath": 0,
-    "stuckN": 72
-   },
-   "shot": "tools/qa/shots/kbm-028-goal-timeout-return_lantern.png",
-   "map": "vale"
-  },
-  {
-   "at": 486.4,
-   "sev": "minor",
-   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60349
-   },
-   "shot": "tools/qa/shots/kbm-030-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 546.4,
-   "sev": "minor",
-   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60016
-   },
-   "shot": "tools/qa/shots/kbm-033-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 601,
-   "sev": "major",
-   "title": "Goal timed out: garden ambush",
-   "detail": {
-    "after_s": 120,
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "noPath": 0,
-    "stuckN": 43
-   },
-   "shot": "tools/qa/shots/kbm-034-goal-timeout-garden_ambush.png",
-   "map": "vale"
-  },
-  {
-   "at": 606.4,
-   "sev": "minor",
-   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
-   "detail": {
-    "map": "vale",
-    "pos": [
-     22.99,
-     16.13
-    ],
-    "obj": "Open the chest north-east. Then find the Stone's lantern.",
-    "sinceMs": 60044
-   },
-   "shot": "tools/qa/shots/kbm-037-deadtime.png",
-   "map": "vale"
-  }
- ],
+ "findings": [],
  "errors": [],
  "potions": {},
  "shots": [
   {
-   "at": 0.2,
+   "at": 0.1,
    "tag": "title",
    "file": "tools/qa/shots/kbm-001-title.png",
    "map": "vale"
   },
   {
-   "at": 1.4,
+   "at": 1.3,
    "tag": "vale-start",
    "file": "tools/qa/shots/kbm-002-vale-start.png",
    "map": "vale"
@@ -642,309 +251,129 @@
    "map": "vale"
   },
   {
-   "at": 15.8,
+   "at": 15.6,
    "tag": "vale-dummies",
    "file": "tools/qa/shots/kbm-004-vale-dummies.png",
    "map": "vale"
   },
   {
-   "at": 18.3,
+   "at": 17.9,
    "tag": "vale-yard-lesson",
    "file": "tools/qa/shots/kbm-005-vale-yard-lesson.png",
    "map": "vale"
   },
   {
-   "at": 24.6,
+   "at": 24.1,
    "tag": "vale-elder",
    "file": "tools/qa/shots/kbm-006-vale-elder.png",
    "map": "vale"
   },
   {
-   "at": 34.3,
+   "at": 37.1,
    "tag": "stuck",
    "file": "tools/qa/shots/kbm-007-stuck.png",
    "map": "vale"
   },
   {
-   "at": 49.7,
+   "at": 56.2,
    "tag": "stuck",
    "file": "tools/qa/shots/kbm-008-stuck.png",
    "map": "vale"
   },
   {
-   "at": 70.3,
+   "at": 63.8,
    "tag": "vale-chest-loot",
    "file": "tools/qa/shots/kbm-009-vale-chest-loot.png",
    "map": "vale"
   },
   {
-   "at": 71,
+   "at": 64.8,
    "tag": "menu-character",
    "file": "tools/qa/shots/kbm-010-menu-character.png",
    "map": "vale"
   },
   {
-   "at": 71.7,
+   "at": 65.5,
    "tag": "menu-quests",
    "file": "tools/qa/shots/kbm-011-menu-quests.png",
    "map": "vale"
   },
   {
-   "at": 72.4,
+   "at": 66.3,
    "tag": "menu-bestiary",
    "file": "tools/qa/shots/kbm-012-menu-bestiary.png",
    "map": "vale"
   },
   {
-   "at": 73.1,
+   "at": 67.3,
    "tag": "menu-bag",
    "file": "tools/qa/shots/kbm-013-menu-bag.png",
    "map": "vale"
   },
   {
-   "at": 74.1,
+   "at": 68.4,
    "tag": "menu-help",
    "file": "tools/qa/shots/kbm-014-menu-help.png",
    "map": "vale"
   },
   {
-   "at": 85.5,
-   "tag": "stuck",
-   "file": "tools/qa/shots/kbm-015-stuck.png",
-   "map": "vale"
-  },
-  {
-   "at": 94.5,
-   "tag": "old-drop",
-   "file": "tools/qa/shots/kbm-016-old-drop.png",
-   "map": "vale"
-  },
-  {
-   "at": 99.6,
-   "tag": "stuck",
-   "file": "tools/qa/shots/kbm-017-stuck.png",
-   "map": "vale"
-  },
-  {
-   "at": 125.5,
-   "tag": "deadtime",
-   "file": "tools/qa/shots/kbm-018-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 185.9,
-   "tag": "deadtime",
-   "file": "tools/qa/shots/kbm-019-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 245.9,
-   "tag": "deadtime",
-   "file": "tools/qa/shots/kbm-020-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 274.7,
-   "tag": "goal-timeout-lantern (far NW)",
-   "file": "tools/qa/shots/kbm-021-goal-timeout-lantern__far_NW_.png",
-   "map": "vale"
-  },
-  {
-   "at": 274.8,
+   "at": 76.4,
    "tag": "vale-lantern",
-   "file": "tools/qa/shots/kbm-022-vale-lantern.png",
+   "file": "tools/qa/shots/kbm-015-vale-lantern.png",
    "map": "vale"
   },
   {
-   "at": 285.2,
-   "tag": "stuck",
-   "file": "tools/qa/shots/kbm-023-stuck.png",
-   "map": "vale"
-  },
-  {
-   "at": 299.1,
-   "tag": "stuck",
-   "file": "tools/qa/shots/kbm-024-stuck.png",
-   "map": "vale"
-  },
-  {
-   "at": 305.9,
-   "tag": "deadtime",
-   "file": "tools/qa/shots/kbm-025-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 366,
-   "tag": "deadtime",
-   "file": "tools/qa/shots/kbm-026-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 426.1,
-   "tag": "deadtime",
-   "file": "tools/qa/shots/kbm-027-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 477.6,
-   "tag": "goal-timeout-return lantern",
-   "file": "tools/qa/shots/kbm-028-goal-timeout-return_lantern.png",
-   "map": "vale"
-  },
-  {
-   "at": 480.8,
+   "at": 86.6,
    "tag": "vale-lantern-return",
-   "file": "tools/qa/shots/kbm-029-vale-lantern-return.png",
+   "file": "tools/qa/shots/kbm-016-vale-lantern-return.png",
    "map": "vale"
   },
   {
-   "at": 486.4,
-   "tag": "deadtime",
-   "file": "tools/qa/shots/kbm-030-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 488.7,
-   "tag": "stuck",
-   "file": "tools/qa/shots/kbm-031-stuck.png",
-   "map": "vale"
-  },
-  {
-   "at": 502.7,
-   "tag": "stuck",
-   "file": "tools/qa/shots/kbm-032-stuck.png",
-   "map": "vale"
-  },
-  {
-   "at": 546.4,
-   "tag": "deadtime",
-   "file": "tools/qa/shots/kbm-033-deadtime.png",
-   "map": "vale"
-  },
-  {
-   "at": 601,
-   "tag": "goal-timeout-garden ambush",
-   "file": "tools/qa/shots/kbm-034-goal-timeout-garden_ambush.png",
-   "map": "vale"
-  },
-  {
-   "at": 601.1,
+   "at": 88.5,
    "tag": "vale-garden-ambush",
-   "file": "tools/qa/shots/kbm-035-vale-garden-ambush.png",
+   "file": "tools/qa/shots/kbm-017-vale-garden-ambush.png",
    "map": "vale"
   },
   {
-   "at": 605.7,
+   "at": 100.6,
    "tag": "vale-rift-open",
-   "file": "tools/qa/shots/kbm-036-vale-rift-open.png",
-   "map": "vale"
-  },
-  {
-   "at": 606.4,
-   "tag": "deadtime",
-   "file": "tools/qa/shots/kbm-037-deadtime.png",
+   "file": "tools/qa/shots/kbm-018-vale-rift-open.png",
    "map": "vale"
   }
  ],
  "dead": [],
  "stuck": [
   {
-   "at": 34.3,
+   "at": 37.1,
    "map": "vale",
    "pos": [
-    23.98,
-    18.01
+    25.77,
+    17.46
    ],
    "goal": "tutorial chest",
    "shot": "tools/qa/shots/kbm-007-stuck.png",
    "n": 3
   },
   {
-   "at": 49.7,
+   "at": 56.2,
    "map": "vale",
    "pos": [
-    23.98,
-    18.01
+    26.75,
+    14.85
    ],
    "goal": "tutorial chest",
    "shot": "tools/qa/shots/kbm-008-stuck.png",
-   "n": 8
-  },
-  {
-   "at": 85.5,
-   "map": "vale",
-   "pos": [
-    22.99,
-    16.13
-   ],
-   "goal": "lantern (far NW)",
-   "shot": "tools/qa/shots/kbm-015-stuck.png",
-   "n": 3
-  },
-  {
-   "at": 99.6,
-   "map": "vale",
-   "pos": [
-    22.99,
-    16.13
-   ],
-   "goal": "lantern (far NW)",
-   "shot": "tools/qa/shots/kbm-017-stuck.png",
-   "n": 8
-  },
-  {
-   "at": 285.2,
-   "map": "vale",
-   "pos": [
-    22.99,
-    16.13
-   ],
-   "goal": "return lantern",
-   "shot": "tools/qa/shots/kbm-023-stuck.png",
-   "n": 3
-  },
-  {
-   "at": 299.1,
-   "map": "vale",
-   "pos": [
-    22.99,
-    16.13
-   ],
-   "goal": "return lantern",
-   "shot": "tools/qa/shots/kbm-024-stuck.png",
-   "n": 8
-  },
-  {
-   "at": 488.7,
-   "map": "vale",
-   "pos": [
-    22.99,
-    16.13
-   ],
-   "goal": "garden ambush",
-   "shot": "tools/qa/shots/kbm-031-stuck.png",
-   "n": 3
-  },
-  {
-   "at": 502.7,
-   "map": "vale",
-   "pos": [
-    22.99,
-    16.13
-   ],
-   "goal": "garden ambush",
-   "shot": "tools/qa/shots/kbm-032-stuck.png",
    "n": 8
   }
  ],
  "fps": {
   "vale": {
-   "frames": 36434,
-   "sumMs": 608292.3999999651,
+   "frames": 6042,
+   "sumMs": 103251.79999999981,
    "p95s": [
     {
-     "p95": 16.70000000006985,
-     "max": 83.40000000002328
+     "p95": 16.800000000000182,
+     "max": 66.69999999999982
     }
    ]
   }
@@ -952,272 +381,592 @@
  "talks": [],
  "warns": [],
  "damage": [],
- "started": "2026-10-20T01:51:37.192Z",
- "pev": [
-  {
-   "at": 1.3,
-   "k": "action",
-   "gt": 1,
-   "map": "vale",
-   "type": "dialogue",
-   "id": "vale_banner"
-  },
-  {
-   "at": 1.3,
-   "k": "talk",
-   "gt": 1,
-   "map": "vale",
-   "id": "vale_banner",
-   "first": "Whispering Vale"
-  },
-  {
-   "at": 1.3,
-   "k": "action",
-   "gt": 1,
-   "map": "vale",
-   "type": "spawn",
-   "id": "dummy"
-  },
-  {
-   "at": 1.3,
-   "k": "action",
-   "gt": 1,
-   "map": "vale",
-   "type": "spawn",
-   "id": "dummy"
-  },
-  {
-   "at": 1.3,
-   "k": "action",
-   "gt": 1,
-   "map": "vale",
-   "type": "dialogue",
-   "id": "vale_wake"
-  },
-  {
-   "at": 1.3,
-   "k": "talk",
-   "gt": 1,
-   "map": "vale",
-   "id": "vale_wake",
-   "first": "Up. You were sleeping like you meant it."
-  },
-  {
-   "at": 1.3,
-   "k": "action",
-   "gt": 1,
-   "map": "vale",
-   "type": "dialogue"
-  },
-  {
-   "at": 1.3,
-   "k": "talk",
-   "gt": 1,
-   "map": "vale",
-   "id": null,
-   "first": "Training dummies are east. Hit one."
-  },
-  {
-   "at": 1.3,
-   "k": "action",
-   "gt": 1,
-   "map": "vale",
-   "type": "objective",
-   "text": "Hit the training dummies in the yard."
-  },
-  {
-   "at": 5,
-   "k": "action",
-   "gt": 5.53,
-   "map": "vale",
-   "type": "dialogue"
-  },
-  {
-   "at": 5,
-   "k": "talk",
-   "gt": 5.53,
-   "map": "vale",
-   "id": null,
-   "first": "Swing. Then dodge. Then try your Q skill."
-  },
-  {
-   "at": 5,
-   "k": "action",
-   "gt": 5.53,
-   "map": "vale",
-   "type": "objective",
-   "text": "Follow the path north to the Elder Plaza."
-  },
-  {
-   "at": 17.5,
-   "k": "action",
-   "gt": 17.87,
-   "map": "vale",
-   "type": "checkpoint",
-   "text": "Checkpoint: Whispering Vale"
-  },
-  {
-   "at": 17.5,
-   "k": "action",
-   "gt": 17.87,
-   "map": "vale",
-   "type": "heal"
-  },
-  {
-   "at": 22.4,
-   "k": "action",
-   "gt": 22.52,
-   "map": "vale",
-   "type": "dialogue",
-   "id": "vale_elder"
-  },
-  {
-   "at": 22.4,
-   "k": "talk",
-   "gt": 22.52,
-   "map": "vale",
-   "id": "vale_elder",
-   "first": "The Stone knows her. The Stone does not say."
-  },
-  {
-   "at": 22.4,
-   "k": "action",
-   "gt": 22.52,
-   "map": "vale",
-   "type": "dialogue"
-  },
-  {
-   "at": 22.4,
-   "k": "talk",
-   "gt": 22.52,
-   "map": "vale",
-   "id": null,
-   "first": "The Stone lost a light. Past the cottage, a path ends."
-  },
-  {
-   "at": 22.4,
-   "k": "action",
-   "gt": 22.52,
-   "map": "vale",
-   "type": "quest",
-   "id": "vale_lantern"
-  },
-  {
-   "at": 22.4,
-   "k": "action",
-   "gt": 22.52,
-   "map": "vale",
-   "type": "objective",
-   "text": "Open the chest north-east. Then find the Stone's lantern."
-  },
-  {
-   "at": 65.3,
-   "k": "action",
-   "gt": 65.85,
-   "map": "vale",
-   "type": "dialogue"
-  },
-  {
-   "at": 65.3,
-   "k": "talk",
-   "gt": 65.85,
-   "map": "vale",
-   "id": null,
-   "first": "A chest! Interact to open it."
-  },
-  {
-   "at": 66.5,
-   "k": "loot",
-   "gt": 66.2,
-   "map": "vale",
-   "n": 3,
-   "kinds": [
-    "item:weapon/uncommon",
-    "item:chest/uncommon",
-    "gem"
-   ]
-  },
-  {
-   "at": 74.5,
-   "k": "action",
-   "gt": 69.85,
-   "map": "vale",
-   "type": "dialogue",
-   "id": "vale_chest"
-  },
-  {
-   "at": 74.5,
-   "k": "talk",
-   "gt": 69.85,
-   "map": "vale",
-   "id": "vale_chest",
-   "first": "That glow? Keep it. Gear remembers you."
-  },
-  {
-   "at": 74.5,
-   "k": "action",
-   "gt": 69.85,
-   "map": "vale",
-   "type": "dialogue"
-  },
-  {
-   "at": 74.5,
-   "k": "talk",
-   "gt": 69.85,
-   "map": "vale",
-   "id": null,
-   "first": "Open your bag and equip it."
-  }
- ],
+ "started": "2026-10-20T02:03:29.458Z",
  "marks": [
   {
-   "at": 1.4,
+   "at": 1.3,
    "name": "vale-start",
    "map": "vale",
    "lvl": 1,
    "hp": 760
   },
   {
-   "at": 608.3,
+   "at": 103.3,
    "name": "vale-done",
    "map": "vale",
    "lvl": 1,
    "hp": 760
   }
  ],
- "finished": "2026-10-20T02:01:45.696Z",
- "totalSec": 608.5,
+ "pev": [
+  {
+   "at": 1.4,
+   "k": "action",
+   "gt": 0.88,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_banner"
+  },
+  {
+   "at": 1.4,
+   "k": "talk",
+   "gt": 0.88,
+   "map": "vale",
+   "id": "vale_banner",
+   "first": "Whispering Vale"
+  },
+  {
+   "at": 1.4,
+   "k": "action",
+   "gt": 0.88,
+   "map": "vale",
+   "type": "spawn",
+   "id": "dummy"
+  },
+  {
+   "at": 1.4,
+   "k": "action",
+   "gt": 0.88,
+   "map": "vale",
+   "type": "spawn",
+   "id": "dummy"
+  },
+  {
+   "at": 1.4,
+   "k": "action",
+   "gt": 0.88,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_wake"
+  },
+  {
+   "at": 1.4,
+   "k": "talk",
+   "gt": 0.88,
+   "map": "vale",
+   "id": "vale_wake",
+   "first": "Up. You were sleeping like you meant it."
+  },
+  {
+   "at": 1.4,
+   "k": "action",
+   "gt": 0.88,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 1.4,
+   "k": "talk",
+   "gt": 0.88,
+   "map": "vale",
+   "id": null,
+   "first": "Training dummies are east. Hit one."
+  },
+  {
+   "at": 1.4,
+   "k": "action",
+   "gt": 0.88,
+   "map": "vale",
+   "type": "objective",
+   "text": "Hit the training dummies in the yard."
+  },
+  {
+   "at": 5.2,
+   "k": "action",
+   "gt": 5.35,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 5.2,
+   "k": "talk",
+   "gt": 5.35,
+   "map": "vale",
+   "id": null,
+   "first": "Swing. Then dodge. Then try your Q skill."
+  },
+  {
+   "at": 5.2,
+   "k": "action",
+   "gt": 5.35,
+   "map": "vale",
+   "type": "objective",
+   "text": "Follow the path north to the Elder Plaza."
+  },
+  {
+   "at": 18.1,
+   "k": "action",
+   "gt": 17.6,
+   "map": "vale",
+   "type": "checkpoint",
+   "text": "Checkpoint: Whispering Vale"
+  },
+  {
+   "at": 18.1,
+   "k": "action",
+   "gt": 17.6,
+   "map": "vale",
+   "type": "heal"
+  },
+  {
+   "at": 21.7,
+   "k": "action",
+   "gt": 21.97,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_elder"
+  },
+  {
+   "at": 21.7,
+   "k": "talk",
+   "gt": 21.97,
+   "map": "vale",
+   "id": "vale_elder",
+   "first": "The Stone knows her. The Stone does not say."
+  },
+  {
+   "at": 21.7,
+   "k": "action",
+   "gt": 21.97,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 21.7,
+   "k": "talk",
+   "gt": 21.97,
+   "map": "vale",
+   "id": null,
+   "first": "The Stone lost a light. Past the cottage, a path ends."
+  },
+  {
+   "at": 21.7,
+   "k": "action",
+   "gt": 21.97,
+   "map": "vale",
+   "type": "quest",
+   "id": "vale_lantern"
+  },
+  {
+   "at": 21.7,
+   "k": "action",
+   "gt": 21.97,
+   "map": "vale",
+   "type": "objective",
+   "text": "Open the chest north-east. Then find the Stone's lantern."
+  },
+  {
+   "at": 59.7,
+   "k": "action",
+   "gt": 59.73,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 59.7,
+   "k": "talk",
+   "gt": 59.73,
+   "map": "vale",
+   "id": null,
+   "first": "A chest! Interact to open it."
+  },
+  {
+   "at": 59.7,
+   "k": "action",
+   "gt": 60.03,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 59.7,
+   "k": "talk",
+   "gt": 60.03,
+   "map": "vale",
+   "id": null,
+   "first": "Ripples. Fishing waits in the Pinewood."
+  },
+  {
+   "at": 63.3,
+   "k": "action",
+   "gt": 63.73,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_chest"
+  },
+  {
+   "at": 63.3,
+   "k": "talk",
+   "gt": 63.73,
+   "map": "vale",
+   "id": "vale_chest",
+   "first": "That glow? Keep it. Gear remembers you."
+  },
+  {
+   "at": 63.3,
+   "k": "action",
+   "gt": 63.73,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 63.3,
+   "k": "talk",
+   "gt": 63.73,
+   "map": "vale",
+   "id": null,
+   "first": "Open your bag and equip it."
+  },
+  {
+   "at": 75,
+   "k": "action",
+   "gt": 74.72,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_tablet"
+  },
+  {
+   "at": 75,
+   "k": "talk",
+   "gt": 74.72,
+   "map": "vale",
+   "id": "vale_tablet",
+   "first": "Four Wardens. One would not wake."
+  },
+  {
+   "at": 76.5,
+   "k": "action",
+   "gt": 76.73,
+   "map": "vale",
+   "type": "message",
+   "text": "The Stone's lantern, still warm."
+  },
+  {
+   "at": 76.5,
+   "k": "action",
+   "gt": 76.73,
+   "map": "vale",
+   "type": "quest",
+   "id": "vale_lantern"
+  },
+  {
+   "at": 76.5,
+   "k": "action",
+   "gt": 76.73,
+   "map": "vale",
+   "type": "objective",
+   "text": "Return the lantern to the Elder Stone."
+  },
+  {
+   "at": 84,
+   "k": "action",
+   "gt": 83.62,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 84,
+   "k": "talk",
+   "gt": 83.62,
+   "map": "vale",
+   "id": null,
+   "first": "The Stone is lit. The Stone remembers kindness."
+  },
+  {
+   "at": 84,
+   "k": "action",
+   "gt": 83.62,
+   "map": "vale",
+   "type": "quest",
+   "id": "vale_lantern"
+  },
+  {
+   "at": 84,
+   "k": "action",
+   "gt": 83.62,
+   "map": "vale",
+   "type": "loot"
+  },
+  {
+   "at": 84,
+   "k": "loot",
+   "gt": 83.62,
+   "map": "vale",
+   "n": 2,
+   "kinds": [
+    "item:chest/rare",
+    "gem"
+   ]
+  },
+  {
+   "at": 84,
+   "k": "action",
+   "gt": 83.62,
+   "map": "vale",
+   "type": "message",
+   "text": "Reward: a gem and a Socket Rune."
+  },
+  {
+   "at": 89.2,
+   "k": "action",
+   "gt": 88.83,
+   "map": "vale",
+   "type": "banner",
+   "text": "Gloom in the garden"
+  },
+  {
+   "at": 89.2,
+   "k": "action",
+   "gt": 88.83,
+   "map": "vale",
+   "type": "spawn",
+   "id": "gloomslime"
+  },
+  {
+   "at": 89.2,
+   "k": "action",
+   "gt": 88.83,
+   "map": "vale",
+   "type": "spawn",
+   "id": "gloomslime"
+  },
+  {
+   "at": 89.2,
+   "k": "action",
+   "gt": 88.83,
+   "map": "vale",
+   "type": "spawn",
+   "id": "gloomslime"
+  },
+  {
+   "at": 91.8,
+   "k": "kill",
+   "gt": 91.3,
+   "map": "vale",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 91.8,
+   "k": "loot",
+   "gt": 91.3,
+   "map": "vale",
+   "n": 1,
+   "kinds": [
+    "potion"
+   ]
+  },
+  {
+   "at": 91.8,
+   "k": "kill",
+   "gt": 92.17,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 91.8,
+   "k": "kill",
+   "gt": 92.17,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 93.1,
+   "k": "kill",
+   "gt": 92.72,
+   "map": "vale",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 93.1,
+   "k": "loot",
+   "gt": 92.72,
+   "map": "vale",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 94.3,
+   "k": "kill",
+   "gt": 94.25,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 94.3,
+   "k": "kill",
+   "gt": 94.25,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 95.5,
+   "k": "kill",
+   "gt": 95.5,
+   "map": "vale",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 95.5,
+   "k": "loot",
+   "gt": 95.5,
+   "map": "vale",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 96.8,
+   "k": "kill",
+   "gt": 96.45,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 96.8,
+   "k": "kill",
+   "gt": 96.45,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 96.8,
+   "k": "action",
+   "gt": 96.45,
+   "map": "vale",
+   "type": "message",
+   "text": "The garden is quiet. Something hums in the south."
+  },
+  {
+   "at": 96.8,
+   "k": "action",
+   "gt": 96.45,
+   "map": "vale",
+   "type": "heal"
+  },
+  {
+   "at": 96.8,
+   "k": "action",
+   "gt": 96.45,
+   "map": "vale",
+   "type": "loot"
+  },
+  {
+   "at": 96.8,
+   "k": "loot",
+   "gt": 96.45,
+   "map": "vale",
+   "n": 1,
+   "kinds": [
+    "item:head/rare"
+   ]
+  },
+  {
+   "at": 96.8,
+   "k": "action",
+   "gt": 96.45,
+   "map": "vale",
+   "type": "open_portal"
+  },
+  {
+   "at": 96.8,
+   "k": "action",
+   "gt": 96.45,
+   "map": "vale",
+   "type": "sound"
+  },
+  {
+   "at": 96.8,
+   "k": "action",
+   "gt": 96.45,
+   "map": "vale",
+   "type": "banner",
+   "text": "The Pinewood rift opens"
+  },
+  {
+   "at": 96.8,
+   "k": "action",
+   "gt": 96.45,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_rift"
+  },
+  {
+   "at": 96.8,
+   "k": "talk",
+   "gt": 96.45,
+   "map": "vale",
+   "id": "vale_rift",
+   "first": "The Pinewood screams. Let's be rude back."
+  },
+  {
+   "at": 96.8,
+   "k": "action",
+   "gt": 96.45,
+   "map": "vale",
+   "type": "quest",
+   "id": "shard_root"
+  },
+  {
+   "at": 96.8,
+   "k": "action",
+   "gt": 96.45,
+   "map": "vale",
+   "type": "objective",
+   "text": "Take the rift south into the Misty Pinewood."
+  }
+ ],
+ "finished": "2026-10-20T02:05:12.795Z",
+ "totalSec": 103.3,
  "seenTalk": {
   "vale:vale_banner": [
-   1.3
+   1.4
   ],
   "vale:vale_wake": [
-   1.3
+   1.4
   ],
   "vale:Training dummies are east. Hit one.": [
-   1.3
+   1.4
   ],
   "vale:Swing. Then dodge. Then try your Q skill.": [
-   5
+   5.2
   ],
   "vale:vale_elder": [
-   22.4
+   21.7
   ],
   "vale:The Stone lost a light. Past the cottage, a path ends.": [
-   22.4
+   21.7
   ],
   "vale:A chest! Interact to open it.": [
-   65.3
+   59.7
+  ],
+  "vale:Ripples. Fishing waits in the Pinewood.": [
+   59.7
   ],
   "vale:vale_chest": [
-   74.5
+   63.3
   ],
   "vale:Open your bag and equip it.": [
-   74.5
+   63.3
+  ],
+  "vale:vale_tablet": [
+   75
+  ],
+  "vale:The Stone is lit. The Stone remembers kindness.": [
+   84
+  ],
+  "vale:vale_rift": [
+   96.8
   ]
  },
  "finalSnap": {
-  "t": 609.08,
+  "t": 103.92,
   "st": "play",
   "ui": {
    "open": false,
@@ -1231,27 +980,27 @@
   "map": "vale",
   "W": 40,
   "p": {
-   "x": 22.99,
-   "y": 16.13,
-   "z": 1e-323,
+   "x": 16.4,
+   "y": 9.96,
+   "z": 3.9720758275887226e-215,
    "hp": 760,
    "maxHp": 760,
    "mp": 260,
    "maxMp": 260,
    "pot": 3,
    "lvl": 1,
-   "xp": 48,
+   "xp": 21,
    "dead": false,
-   "ult": 31,
+   "ult": 83,
    "dash": false,
-   "rootT": -603.5499999997797,
-   "slowT": -603.5499999997797,
+   "rootT": -96.94999999999578,
+   "slowT": -96.94999999999578,
    "invul": false,
-   "aim": 2.396173177315658,
+   "aim": -1.4332095903245385,
    "wk": "sword",
    "wid": "dawnblade",
    "st": 100,
-   "castT": -589.9333333331255,
+   "castT": -11.800000000000166,
    "casting": false,
    "bag": 0,
    "dust": 0
@@ -1259,19 +1008,19 @@
   "sk": {
    "1": {
     "id": "secondwind",
-    "cd": 0,
+    "cd": 12.65,
     "mp": 30,
     "st": 0
    },
    "2": {
     "id": "chain",
-    "cd": 0,
+    "cd": -0.02,
     "mp": 30,
     "st": 0
    },
    "3": {
     "id": "shootingstar",
-    "cd": 0,
+    "cd": -0.02,
     "mp": 22,
     "st": 0
    },
@@ -1295,7 +1044,7 @@
    },
    "f": {
     "id": "bulwark",
-    "cd": 0,
+    "cd": 1.02,
     "mp": 20,
     "st": 0
    },
@@ -1352,7 +1101,7 @@
   "covered": false,
   "zones": 0,
   "prompt": null,
-  "obj": "Open the chest north-east. Then find the Stone's lantern.",
+  "obj": "Take the rift south into the Misty Pinewood.",
   "msg": null,
   "pend": 0,
   "banner": null,
@@ -1363,32 +1112,46 @@
    "yard_teach",
    "shrine",
    "elder",
-   "chest"
+   "chest",
+   "fish_hint",
+   "tablet",
+   "lantern_found",
+   "lantern_return",
+   "garden_ambush",
+   "garden_done"
   ],
   "drops": [
    {
-    "x": 35.9,
-    "y": 17.65,
-    "rar": "uncommon",
-    "name": "Willow Wand",
-    "kind": "item",
-    "t": 539.5
-   },
-   {
-    "x": 36.19,
-    "y": 16.96,
-    "rar": "uncommon",
+    "x": 20.28,
+    "y": 21.65,
+    "rar": "rare",
     "name": "Iron Mail",
     "kind": "item",
-    "t": 539.4
+    "t": 19.6
    },
    {
-    "x": 36.07,
-    "y": 16.22,
+    "x": 20.81,
+    "y": 21.21,
     "rar": "rare",
     "name": "Chipped Ruby",
     "kind": "gem",
-    "t": 539.3
+    "t": 19.6
+   },
+   {
+    "x": 18.21,
+    "y": 11.37,
+    "rar": "uncommon",
+    "name": "Health Potion",
+    "kind": "potion",
+    "t": 12.1
+   },
+   {
+    "x": 17.48,
+    "y": 8.98,
+    "rar": "rare",
+    "name": "Iron Cap",
+    "kind": "item",
+    "t": 7.4
    }
   ],
   "portals": [
@@ -1429,12 +1192,13 @@
     "to": "pinewood",
     "x": 25,
     "y": 35.8,
-    "open": false,
+    "open": true,
     "ok": true
    }
   ],
   "quests": {
-   "vale_lantern": {
+   "vale_lantern": "done",
+   "shard_root": {
     "step": 0
    }
   },
@@ -1443,8 +1207,8 @@
   "col": 105,
   "checkpoint": {
    "map": "vale",
-   "x": 9.714885057286619,
-   "y": 29.627780362353427
+   "x": 9.715878078742932,
+   "y": 29.821450555514776
   },
   "talkQ": 0,
   "tablet": false,
