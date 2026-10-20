@@ -14,15 +14,92 @@
   "pinewood": {
    "enters": 1,
    "ms": 0,
-   "deaths": 0,
-   "potions": 0,
+   "deaths": 1,
+   "potions": 1,
    "kills": 0,
    "lvlIn": 2,
    "dmgTaken": 0,
    "stuck": 0
   }
  },
- "deaths": [],
+ "deaths": [
+  {
+   "at": 926.1,
+   "map": "pinewood",
+   "x": 99.71,
+   "y": 28.75,
+   "lvl": 10,
+   "boss": "bramblehorn",
+   "bossHp": 73,
+   "near": [
+    "bramblehorn",
+    "sapling",
+    "sapling",
+    "sapling"
+   ],
+   "last": [
+    {
+     "gt": 915.77,
+     "map": "pinewood",
+     "dmg": 42,
+     "el": "pierce",
+     "src": "bramblehorn",
+     "dist": 3,
+     "warn": "stomp",
+     "tele": false,
+     "hp": 526,
+     "max": 1046,
+     "x": 99.8,
+     "y": 27.7
+    },
+    {
+     "gt": 917.81,
+     "map": "pinewood",
+     "dmg": 45,
+     "el": "pierce",
+     "src": "bramblehorn",
+     "dist": 1.1,
+     "warn": null,
+     "tele": false,
+     "hp": 488,
+     "max": 1046,
+     "x": 99.7,
+     "y": 29.6
+    },
+    {
+     "gt": 918.44,
+     "map": "pinewood",
+     "dmg": 39,
+     "el": "pierce",
+     "src": "bramblehorn",
+     "dist": 0.9,
+     "warn": "stomp",
+     "tele": true,
+     "hp": 452,
+     "max": 1046,
+     "x": 99.3,
+     "y": 29.8
+    },
+    {
+     "gt": 918.76,
+     "map": "pinewood",
+     "dmg": 453,
+     "el": "nature",
+     "src": "bramblehorn",
+     "dist": 2,
+     "warn": "stomp",
+     "tele": false,
+     "hp": 0,
+     "max": 1046,
+     "x": 99.7,
+     "y": 28.7
+    }
+   ],
+   "shot": "tools/qa/shots/kbm-059-death.png",
+   "pot": 2,
+   "obj": "Defeat Old Bramblehorn"
+  }
+ ],
  "bosses": [
   {
    "type": "mossjaw",
@@ -40,6 +117,24 @@
    "dur": 37.9,
    "deaths": 0,
    "killed": true,
+   "potions": 0
+  },
+  {
+   "type": "bramblehorn",
+   "lvl": 10,
+   "bossLvl": 8,
+   "at": 886.8,
+   "t0": 1792481103106,
+   "deaths0": 0,
+   "hp": 31442,
+   "pot0": 3,
+   "map": "pinewood",
+   "maxHp": 1046,
+   "wk": "dawnblade",
+   "minHpPct": 0,
+   "dur": 40.3,
+   "deaths": 1,
+   "killed": false,
    "potions": 0
   }
  ],
@@ -2161,6 +2256,598 @@
    "deaths": 0,
    "killed": true,
    "potions": 0
+  },
+  {
+   "at": 860.4,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.34
+  },
+  {
+   "at": 861.1,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.23
+  },
+  {
+   "at": 863.2,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.37
+  },
+  {
+   "at": 864.8,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.37
+  },
+  {
+   "at": 867.8,
+   "msg": "goal mossjaw: ok",
+   "sec": "47.8"
+  },
+  {
+   "at": 872.1,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.1,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "1.0"
+  },
+  {
+   "at": 873.1,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.1,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.1,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.1,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.2,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.2,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.2,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.2,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.2,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.3,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.3,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.3,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.3,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.3,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.4,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.4,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.4,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.4,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.5,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.5,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.5,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.5,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.5,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.5,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.6,
+   "msg": "goal: pick up Clear Sapphire"
+  },
+  {
+   "at": 873.6,
+   "msg": "goal pick up Clear Sapphire: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 873.6,
+   "msg": "MARK mossjaw-done",
+   "lvl": 10,
+   "deaths": 0
+  },
+  {
+   "at": 873.7,
+   "msg": "after Mossjaw",
+   "obj": "Climb the root-stair to the Clearing",
+   "sec": "hollow"
+  },
+  {
+   "at": 873.7,
+   "msg": "goal: mini-boss chest"
+  },
+  {
+   "at": 874.9,
+   "msg": "goal mini-boss chest: ok",
+   "sec": "1.2"
+  },
+  {
+   "at": 876.4,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.4,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.4,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.4,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.4,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.5,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.5,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.5,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.5,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.5,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.6,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.6,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.6,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.6,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.6,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.6,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.7,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.7,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.7,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.7,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.7,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.7,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.8,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.8,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.8,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.8,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.9,
+   "msg": "goal: pick up Cloud Sandals"
+  },
+  {
+   "at": 876.9,
+   "msg": "goal pick up Cloud Sandals: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 876.9,
+   "msg": "goal: door hollow_exit"
+  },
+  {
+   "at": 878.9,
+   "msg": "goal door hollow_exit: ok",
+   "sec": "2.0"
+  },
+  {
+   "at": 880,
+   "msg": "MARK clearing-arrive",
+   "lvl": 10,
+   "deaths": 0
+  },
+  {
+   "at": 880.2,
+   "msg": "goal: clearing shrine3"
+  },
+  {
+   "at": 880.9,
+   "msg": "goal clearing shrine3: ok",
+   "sec": "0.7"
+  },
+  {
+   "at": 880.9,
+   "msg": "goal: arena hint"
+  },
+  {
+   "at": 883.7,
+   "msg": "goal arena hint: ok",
+   "sec": "2.8"
+  },
+  {
+   "at": 883.7,
+   "msg": "goal: bramblehorn"
+  },
+  {
+   "at": 884.3,
+   "msg": "goal bramblehorn: ok",
+   "sec": "0.6"
+  },
+  {
+   "at": 884.5,
+   "msg": "goal: bramblehorn"
+  },
+  {
+   "at": 886.8,
+   "msg": "BOSS START bramblehorn",
+   "type": "bramblehorn",
+   "lvl": 10,
+   "bossLvl": 8,
+   "t0": 1792481103106,
+   "deaths0": 0,
+   "hp": 31442,
+   "pot0": 3,
+   "map": "pinewood",
+   "maxHp": 1046,
+   "wk": "dawnblade"
+  },
+  {
+   "at": 890,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.52
+  },
+  {
+   "at": 894.1,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.37
+  },
+  {
+   "at": 896.8,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.44
+  },
+  {
+   "at": 899.8,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.32
+  },
+  {
+   "at": 902.6,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.32
+  },
+  {
+   "at": 904.8,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 906.1,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.48
+  },
+  {
+   "at": 906.8,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.22
+  },
+  {
+   "at": 909.5,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.4
+  },
+  {
+   "at": 912.5,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.48
+  },
+  {
+   "at": 915.8,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.4
+  },
+  {
+   "at": 918.8,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.54
+  },
+  {
+   "at": 919.2,
+   "msg": "drink potion",
+   "hp": 175,
+   "max": 1046,
+   "pot": 3,
+   "map": "pinewood"
+  },
+  {
+   "at": 919.4,
+   "msg": "potion drunk",
+   "hp": 595,
+   "max": 1046
+  },
+  {
+   "at": 919.9,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.33
+  },
+  {
+   "at": 920.9,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 921.9,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.49
+  },
+  {
+   "at": 923.7,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.3
+  },
+  {
+   "at": 924.4,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 925.4,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.53
+  },
+  {
+   "at": 926.1,
+   "msg": "DEATH",
+   "map": "pinewood",
+   "x": 99.71,
+   "y": 28.75,
+   "lvl": 10,
+   "boss": "bramblehorn",
+   "bossHp": 73,
+   "near": [
+    "bramblehorn",
+    "sapling",
+    "sapling",
+    "sapling"
+   ],
+   "last": [
+    {
+     "gt": 915.77,
+     "map": "pinewood",
+     "dmg": 42,
+     "el": "pierce",
+     "src": "bramblehorn",
+     "dist": 3,
+     "warn": "stomp",
+     "tele": false,
+     "hp": 526,
+     "max": 1046,
+     "x": 99.8,
+     "y": 27.7
+    },
+    {
+     "gt": 917.81,
+     "map": "pinewood",
+     "dmg": 45,
+     "el": "pierce",
+     "src": "bramblehorn",
+     "dist": 1.1,
+     "warn": null,
+     "tele": false,
+     "hp": 488,
+     "max": 1046,
+     "x": 99.7,
+     "y": 29.6
+    },
+    {
+     "gt": 918.44,
+     "map": "pinewood",
+     "dmg": 39,
+     "el": "pierce",
+     "src": "bramblehorn",
+     "dist": 0.9,
+     "warn": "stomp",
+     "tele": true,
+     "hp": 452,
+     "max": 1046,
+     "x": 99.3,
+     "y": 29.8
+    },
+    {
+     "gt": 918.76,
+     "map": "pinewood",
+     "dmg": 453,
+     "el": "nature",
+     "src": "bramblehorn",
+     "dist": 2,
+     "warn": "stomp",
+     "tele": false,
+     "hp": 0,
+     "max": 1046,
+     "x": 99.7,
+     "y": 28.7
+    }
+   ],
+   "shot": "tools/qa/shots/kbm-059-death.png",
+   "pot": 2,
+   "obj": "Defeat Old Bramblehorn"
+  },
+  {
+   "at": 886.8,
+   "msg": "BOSS END bramblehorn",
+   "type": "bramblehorn",
+   "lvl": 10,
+   "bossLvl": 8,
+   "t0": 1792481103106,
+   "deaths0": 0,
+   "hp": 31442,
+   "pot0": 3,
+   "map": "pinewood",
+   "maxHp": 1046,
+   "wk": "dawnblade",
+   "minHpPct": 0,
+   "dur": 40.3,
+   "deaths": 1,
+   "killed": false,
+   "potions": 0
   }
  ],
  "findings": [
@@ -2284,7 +2971,9 @@
   }
  ],
  "errors": [],
- "potions": {},
+ "potions": {
+  "pinewood": 1
+ },
  "shots": [
   {
    "at": 0.3,
@@ -2609,6 +3298,36 @@
    "tag": "hollow-mossjaw-start",
    "file": "tools/qa/shots/kbm-054-hollow-mossjaw-start.png",
    "map": "pinewood"
+  },
+  {
+   "at": 870.5,
+   "tag": "mossjaw-end",
+   "file": "tools/qa/shots/kbm-055-mossjaw-end.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 880,
+   "tag": "door-hollow_exit-arrived",
+   "file": "tools/qa/shots/kbm-056-door-hollow_exit-arrived.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 880.2,
+   "tag": "clearing-arrival",
+   "file": "tools/qa/shots/kbm-057-clearing-arrival.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 884.5,
+   "tag": "clearing-boss-start",
+   "file": "tools/qa/shots/kbm-058-clearing-boss-start.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 926.1,
+   "tag": "death",
+   "file": "tools/qa/shots/kbm-059-death.png",
+   "map": "pinewood"
   }
  ],
  "dead": [],
@@ -2752,6 +3471,114 @@
    "type": "summon",
    "wind": 0.8,
    "open": 1
+  },
+  {
+   "gt": 882.4899999995308,
+   "at": 889.4,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 886.6733333328604,
+   "at": 893.6,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 889.3233333328579,
+   "at": 896.2,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 892.4233333328551,
+   "at": 899.3,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 895.2399999995192,
+   "at": 902.2,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 898.5899999995162,
+   "at": 905.5,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 902.0066666661797,
+   "at": 909,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 904.9566666661771,
+   "at": 911.9,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 908.3899999995073,
+   "at": 915.3,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 911.223333332838,
+   "at": 918.1,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 914.3733333328352,
+   "at": 921.4,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 917.8566666661653,
+   "at": 924.8,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
   }
  ],
  "damage": [],
@@ -5272,6 +6099,329 @@
     "gem",
     "potion"
    ]
+  },
+  {
+   "at": 862.8,
+   "k": "kill",
+   "gt": 855.86,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 862.8,
+   "k": "loot",
+   "gt": 855.86,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 864.1,
+   "k": "kill",
+   "gt": 857.16,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 864.1,
+   "k": "loot",
+   "gt": 857.16,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "gem"
+   ]
+  },
+  {
+   "at": 864.1,
+   "k": "kill",
+   "gt": 857.36,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 864.1,
+   "k": "loot",
+   "gt": 857.36,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 866.6,
+   "k": "kill",
+   "gt": 859.69,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 866.6,
+   "k": "loot",
+   "gt": 859.69,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "gem"
+   ]
+  },
+  {
+   "at": 866.6,
+   "k": "action",
+   "gt": 859.69,
+   "map": "pinewood",
+   "type": "clear_enemies"
+  },
+  {
+   "at": 866.6,
+   "k": "action",
+   "gt": 859.69,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Mossjaw falls"
+  },
+  {
+   "at": 866.6,
+   "k": "action",
+   "gt": 859.69,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 866.6,
+   "k": "talk",
+   "gt": 859.69,
+   "map": "pinewood",
+   "id": null,
+   "first": "The roots remember the first Warden... he did not wake, and neither shall I."
+  },
+  {
+   "at": 866.6,
+   "k": "action",
+   "gt": 859.69,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 866.6,
+   "k": "action",
+   "gt": 859.69,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 866.6,
+   "k": "loot",
+   "gt": 859.69,
+   "map": "pinewood",
+   "n": 3,
+   "kinds": [
+    "item:boots/epic",
+    "item:head/epic",
+    "gem"
+   ]
+  },
+  {
+   "at": 866.6,
+   "k": "action",
+   "gt": 859.69,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "gate_h_short"
+  },
+  {
+   "at": 866.6,
+   "k": "action",
+   "gt": 859.69,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "hollow_exit"
+  },
+  {
+   "at": 866.6,
+   "k": "action",
+   "gt": 859.69,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "arena_gate"
+  },
+  {
+   "at": 866.6,
+   "k": "action",
+   "gt": 859.69,
+   "map": "pinewood",
+   "type": "quest",
+   "id": "shard_root"
+  },
+  {
+   "at": 866.6,
+   "k": "action",
+   "gt": 859.69,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Climb the root-stair to the Clearing"
+  },
+  {
+   "at": 866.6,
+   "k": "action",
+   "gt": 859.69,
+   "map": "pinewood",
+   "type": "sound"
+  },
+  {
+   "at": 880.2,
+   "k": "action",
+   "gt": 871.99,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: The Clearing gate"
+  },
+  {
+   "at": 880.2,
+   "k": "action",
+   "gt": 871.99,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 883.9,
+   "k": "action",
+   "gt": 877.06,
+   "map": "pinewood",
+   "type": "message",
+   "text": "The Clearing gate is knotted shut. Something in the Hollow holds it."
+  },
+  {
+   "at": 885.2,
+   "k": "action",
+   "gt": 877.69,
+   "map": "pinewood",
+   "type": "arena",
+   "id": "bramble_arena"
+  },
+  {
+   "at": 885.2,
+   "k": "action",
+   "gt": 877.69,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Old Bramblehorn"
+  },
+  {
+   "at": 885.2,
+   "k": "action",
+   "gt": 877.69,
+   "map": "pinewood",
+   "type": "dialogue",
+   "id": "boss_bramblehorn_intro"
+  },
+  {
+   "at": 885.2,
+   "k": "talk",
+   "gt": 877.69,
+   "map": "pinewood",
+   "id": "boss_bramblehorn_intro",
+   "first": "Little dream. You smell like him."
+  },
+  {
+   "at": 885.2,
+   "k": "action",
+   "gt": 877.69,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Defeat Old Bramblehorn"
+  },
+  {
+   "at": 885.2,
+   "k": "action",
+   "gt": 877.69,
+   "map": "pinewood",
+   "type": "shake"
+  },
+  {
+   "at": 887.7,
+   "k": "action",
+   "gt": 880.19,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "bramblehorn"
+  },
+  {
+   "at": 903.2,
+   "k": "action",
+   "gt": 895.22,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "The saplings wake!"
+  },
+  {
+   "at": 903.2,
+   "k": "action",
+   "gt": 895.22,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "sapling"
+  },
+  {
+   "at": 908.2,
+   "k": "kill",
+   "gt": 900.26,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 908.2,
+   "k": "loot",
+   "gt": 900.26,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 909.6,
+   "k": "kill",
+   "gt": 901.34,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 909.6,
+   "k": "loot",
+   "gt": 901.34,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "gem"
+   ]
+  },
+  {
+   "at": 909.6,
+   "k": "kill",
+   "gt": 901.34,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 909.6,
+   "k": "loot",
+   "gt": 901.34,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 918.4,
+   "k": "action",
+   "gt": 910.27,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "sapling"
   }
  ],
  "marks": [
@@ -5391,6 +6541,24 @@
    "lvl": 8,
    "hp": 994,
    "deaths": 0
+  },
+  {
+   "at": 873.6,
+   "name": "mossjaw-done",
+   "map": "pinewood",
+   "sec": "hollow",
+   "lvl": 10,
+   "hp": 1046,
+   "deaths": 0
+  },
+  {
+   "at": 880,
+   "name": "clearing-arrive",
+   "map": "pinewood",
+   "sec": "forest",
+   "lvl": 10,
+   "hp": 1046,
+   "deaths": 0
   }
  ],
  "warps": [
@@ -5409,5 +6577,5 @@
    "ms": 1638
   }
  ],
- "dodgeOnWarn": 6
+ "dodgeOnWarn": 18
 }
