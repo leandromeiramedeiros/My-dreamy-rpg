@@ -14,16 +14,17 @@
 //             tools/shots/world-art/<tag>/<map>_<n>_<name>_sil.png    (the 120x68 silhouette downscale, 4x nearest, luma posterised to 5)
 //             tools/shots/world-art/<tag>/audit.json                  (every number + the chunk raster cost)
 // Chunk raster cost: every non-empty chunk of the map's OUTER sections is rebuilt synchronously (buildChunkStep(.., Infinity), columns
-// included), timed per chunk: worst + mean, desktop (512 px) and phone (?phone=1, 256 px) pages.
+// included), timed per chunk (min of 3 after a warm-up): worst / p90 / mean, desktop (512 px) and phone (?phone=1, 256 px) pages.
 // Usage: node tools/maps/art-audit.js <tag=before|after|...> [maps=pinewood,vale] [--no-chunks] [--sea]
 //   --sea  hooks drawCloudSea (maps.js) into the frame exactly where the render.js sky-block line goes, to preview it before it lands
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
-const ROOT = path.join(__dirname, '..', '..');
+const rootArg = process.argv.find(a => a.startsWith('--root='));
+const ROOT = rootArg ? path.resolve(rootArg.slice(7)) : path.join(__dirname, '..', '..');   // --root=<game dir>: audit another copy (e.g. a baseline)
 const args = process.argv.slice(2), flags = args.filter(a => a.startsWith('--')), pos = args.filter(a => !a.startsWith('--'));
 const TAG = pos[0] || 'after', MAPS = (pos[1] || 'pinewood,vale').split(','), CHUNKS = !flags.includes('--no-chunks');
 const SEA_HOOK = flags.includes('--sea');   // simulate the render.js sky-block line: drawCloudSea() right before the old 'cloud sea far below' clouds
-const OUT = path.join(__dirname, '..', 'shots', 'world-art', TAG);
+const OUT = path.join(__dirname, '..', 'shots', 'world-art', TAG);   // always this repo's shots dir, whatever --root
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/png', '.json': 'application/json', '.css': 'text/css' };
 fs.mkdirSync(OUT, { recursive: true });
 // the 6 fixed shots per map (tile coordinates; the camera centres on the hero standing there). Pinewood = its outer forest section.
@@ -116,14 +117,16 @@ function pageChunkCost() {
   for (const s of m.sections) if (s.kind === 'outer') {
     for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) if (m.secAt[j * m.W + i] === s.i && m.type[j][i]) outerIdx.add(chunkAt(m, isoX(i + 0.5, j + 0.5), isoY(i + 0.5, j + 0.5, m.h[j][i])));
   }
-  for (let pass = 0; pass < 2; pass++) for (const idx of outerIdx) {   // pass 0 = JIT warm-up, pass 1 is timed
+  const best = new Map();
+  for (let pass = 0; pass < 4; pass++) for (const idx of outerIdx) {   // pass 0 = JIT warm-up; passes 1-3 timed, the minimum kept (load noise)
     if (cg.empty[idx]) continue;
     const key = chunkKey(m, idx), ch = CHUNK.cache.get(key);
     if (ch) { CHUNK.cache.delete(key); ch.c.width = 0; }
     CHUNK.jobs.delete(key);
     for (const k of cg.cols[idx]) k.img = null;
-    const t0 = performance.now(); buildChunkStep(m, idx, Infinity); if (pass) out.push(performance.now() - t0);
+    const t0 = performance.now(); buildChunkStep(m, idx, Infinity); const dt = performance.now() - t0; if (pass) best.set(idx, Math.min(best.get(idx) || 1e9, dt));
   }
+  for (const v of best.values()) out.push(v);
   out.sort((a, b) => a - b);
   return { chunks: out.length, size: CHUNK.size, worst: +out[out.length - 1].toFixed(1), p90: +out[Math.floor(out.length * 0.9)].toFixed(1), mean: +(out.reduce((a, b) => a + b, 0) / out.length).toFixed(1) };
 }
