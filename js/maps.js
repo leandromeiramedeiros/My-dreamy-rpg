@@ -56,13 +56,14 @@ const THEMES = {
     sky: ['#141238', '#221d55', '#3a2e7a', '#5d3f98', '#8a52aa', '#b968b0', '#e08ab4', '#f6b2b0', '#ffd6b8'],
     mtnFar: ['#8e7fc8', '#5a4c94', '#e7a9c0'], mtnNear: ['#6a5aa8', '#3c2f70', '#c98ab8'], snow: '#cdbbe8',
     cloud: ramp(['#6c5aa0', '#9c86c8', '#d6b2d8', '#fbd9e4', '#ffffff']),
-    grass: ramp(['#1d4a4e', '#26634f', '#2f7a57', '#43955e', '#66b067', '#97cf7c', '#cfeaa0']),
+    grass: ramp(['#22284a', '#1f4a52', '#2c6b58', '#47925e', '#74b86a', '#a6d47e', '#e0eaa4']),   // §29 palette pass: hue-shifted (shadows to violet, lights to warm)
     path: ramp(['#6a6290', '#8f86b0', '#ada4cc', '#cbc4e4', '#e6e0f4']), gap: hexToRgb('#4a4268'),
-    stone: ramp(['#3a3358', '#5a5280', '#7a72a2', '#9a92c0', '#bdb6dc']),
+    stone: ramp(['#211f2d', '#3a3556', '#54477e', '#6f59a5', '#a77cb9', '#cba1c7', '#ddc5d1']),
     water: ramp(['#1a2f6a', '#20438a', '#2a5aa8', '#3a7cc4', '#5aa8dc', '#9adff0', '#e8fbff']),
     wood: ramp(['#3e2834', '#5e3d40', '#80594f', '#a87a5c', '#c99a70']),
-    earth: ramp(['#2a1d3a', '#3d2a4a', '#563a58', '#70506a', '#8c6a7c']),
-    under: ramp(['#1e1932', '#2b2446', '#3b3160', '#4c4078', '#5e5290']),
+    earth: ramp(['#1a1924', '#332942', '#543760', '#7e447e', '#995285', '#ab6886', '#b7858e']),
+    under: ramp(['#13131b', '#201d30', '#2e2544', '#3d2d58', '#54376a', '#6e417a', '#884e88']),
+    flowers: ['#f6a6c8', '#fff1f7', '#ffe08a', '#9fd8ff'],
     haze: hexToRgb('#c6a8de'), root: hexToRgb('#3d5a4a'),
     ambient: '#cbbfec', fog: '#f6ecff', fog2: '#ffd6ec', underDepth: 150, bloom: 0.55,
     moon: { x: 470, y: 64, r: 26, col: '#fff3e6', glow: '#ffc9e6' },
@@ -72,13 +73,14 @@ const THEMES = {
     sky: ['#07040e', '#120822', '#1f0c33', '#361043', '#55164c', '#7a1f4f', '#a3334d', '#c9564a', '#e07a52'],
     mtnFar: ['#3a2050', '#1d0f30', '#6a2450'], mtnNear: ['#22122f', '#0c0716', '#41143a'], snow: null,
     cloud: ramp(['#1a0f2a', '#2e1a44', '#4a2a5e', '#6e3a70', '#a05a80']),
-    grass: ramp(['#0f1f26', '#16302f', '#1f423a', '#2d5647', '#3e6d55', '#5a8a68', '#86b08a']),
+    grass: ramp(['#0e0e15', '#1b242f', '#264448', '#2f6050', '#3b7752', '#488c4f', '#639e57']),
     path: ramp(['#2a2442', '#3a3358', '#4d4570', '#635a8a', '#7e75a6']), gap: hexToRgb('#120e1e'),
-    stone: ramp(['#1d1830', '#2a2442', '#3a3358', '#4d4570', '#635a8a', '#7e75a6']),
+    stone: ramp(['#15131b', '#292438', '#3a3254', '#4b3f70', '#6c4e8a', '#915ea2', '#ad7aad']),
     water: ramp(['#120a2a', '#1c1040', '#2a1a5a', '#3c2878', '#5a3f9a', '#8f6fd0', '#d8c4ff']),
     wood: ramp(['#21152c', '#3a2447', '#55355e', '#6e4a74', '#8a6290']),
-    earth: ramp(['#160f22', '#21172f', '#2e2140', '#3e2d54', '#503c68']),
-    under: ramp(['#0e0a18', '#181128', '#231a3a', '#30244c', '#3f3060']),
+    earth: ramp(['#0e0d12', '#1c1624', '#2c1f36', '#3f2647', '#582f58', '#66395b', '#73445c']),
+    under: ramp(['#0c0a0f', '#16121e', '#20192e', '#2b1f3c', '#39264a', '#482e57', '#573861']),
+    flowers: ['#b68cff', '#ff7aa6', '#e8d8ff'],
     haze: hexToRgb('#4a2a58'), root: hexToRgb('#2a1f3a'),
     ambient: '#8a76b4', fog: '#9a6ac0', fog2: '#ff6a9a', underDepth: 130, bloom: 0.65,
     moon: { x: 140, y: 58, r: 30, col: '#ffb08a', glow: '#ff4a6a' },
@@ -88,13 +90,14 @@ const THEMES = {
     sky: ['#b9bccb', '#cfcacb', '#e2c4b0', '#efab7e', '#f39056', '#ee7a3e', '#dc6432', '#c4502e', '#a8462e'],
     mtnFar: ['#6e7f9c', '#465676', '#c9b2b0'], mtnNear: ['#2c3c52', '#18222f', '#7f8ea8'], snow: null, pines: true,
     cloud: ramp(['#7d88a0', '#a4afc2', '#c6cedb', '#e2e7ef', '#f8faff']),
-    grass: ramp(['#1b2716', '#28391c', '#3a5022', '#516a2a', '#6c8834', '#8fa846', '#b6c868']),
+    grass: ramp(['#141c22', '#1d3330', '#2a4a2c', '#43632e', '#668236', '#93a24a', '#c8b86c']),
     path: ramp(['#2e1c14', '#45291c', '#5c3a26', '#764c30', '#90623e']), gap: hexToRgb('#24160f'), dirtPath: true,
-    stone: ramp(['#363a46', '#4e5462', '#6a7282', '#88909f', '#aab2c0']),
+    stone: ramp(['#1b1e28', '#2c3442', '#414c5c', '#5a6574', '#7a8088', '#9d9a95', '#c4b9a6']),
     water: ramp(['#14283e', '#1c3a56', '#28506e', '#386a86', '#5a90a6', '#94c4cc', '#e2f4f2']),
     wood: ramp(['#2a1a12', '#432a1c', '#5e3c28', '#7a5034', '#946642']),
-    earth: ramp(['#22160f', '#342216', '#4a301e', '#624028', '#7a5232']),
-    under: ramp(['#1a1e2a', '#262c3e', '#323a52', '#404a66', '#4e5a7a']),
+    earth: ramp(['#111019', '#311d33', '#4d2736', '#674331', '#7f583c', '#946e49', '#a78658']),
+    under: ramp(['#13151b', '#1f222e', '#282e41', '#313c54', '#3b4c65', '#475d75', '#536f83']),
+    flowers: ['#e8b04a', '#f2e2bc', '#d0704a'],
     haze: hexToRgb('#a6b2c8'), root: hexToRgb('#34421f'),
     ambient: '#d6c6c0', fog: '#e8eef8', fog2: '#ffd8b8', underDepth: 140, bloom: 0.6,
     moon: { x: 360, y: 168, r: 30, col: '#ffe8bc', glow: '#ff9850', sun: true },
@@ -109,87 +112,185 @@ function newMap(W, H, theme) {
 const typeAt = (m, x, y) => (x < 0 || y < 0 || x >= m.W || y >= m.H) ? null : m.type[y][x];
 const isGrassy = t => t === 'g' || t === 'f' || t === 'p' || t === 'd';
 
-// ---- tile surface colour (world-continuous so tiles blend organically) ------
-function surfaceColor(m, t, wx, wy, px, py) {
+// ---- tile surface grammar (DESIGN §29 group 1) ----------------------------------------------------------------------
+// No per-pixel hash: a pixel's colour comes from (a) two low-frequency noise fields, cached per map at 4 samples a tile and read
+// bilinearly (nField / nAt), (b) the tile's hashed micro-variant 0..3 (a brightness offset + 2-3 decorative pixels), (c) the 47-blob
+// transition from the 8-neighbour mask: a lower-priority neighbour laps over this tile as a scalloped 3-5 px tongue with a 1 px dark
+// line (priority water > path > stone > moss > meadow > grass; a bright wet line on water), (d) the edge grammar: a 2 px lit lip where
+// the top meets a lower height or void, ambient occlusion within 4 px of a higher neighbour's wall foot, a baked wedge shadow to the SW
+// of every column (0.6 x dh x ZS px at 25 %), and (e) height fog (5 % toward th.haze per level below the map's top, at most 20 %).
+// Ramps are quantised by rampQ: ordered 2x2 dither only between adjacent steps and only inside steps 2..5, hard steps elsewhere.
+const BAYER2 = [0.125, 0.625, 0.875, 0.375];
+function rampQ(r, v, x, y) {
+  const n = r.length - 1, f = (v < 0 ? 0 : v > 0.9999 ? 0.9999 : v) * n, i = f | 0, fr = f - i;
+  if (i < 1 || i > 3) return r[fr > 0.5 ? Math.min(i + 1, n) : i];
+  return r[(fr - 0.5) * 2.5 + 0.5 > BAYER2[((y & 1) << 1) | (x & 1)] ? i + 1 : i];   // a narrow dither band at the step
+}
+const rampH = (r, v) => r[clamp(Math.round(v * (r.length - 1)), 0, r.length - 1)];   // hard step (lips, lines)
+// cached noise fields: F.fn(wx, wy) sampled lazily on a 0.25-tile lattice, bilinear in between
+function nField(m, id, fn) {
+  const c = m._nf || (m._nf = {}); if (c[id]) return c[id];
+  const w = m.W * 4 + 2, h = m.H * 4 + 2;
+  return (c[id] = { w, h, d: new Float32Array(w * h).fill(NaN), fn });
+}
+function nAt(F, wx, wy) {
+  const X = wx * 4, Y = wy * 4; let xi = Math.floor(X), yi = Math.floor(Y);
+  const fx = X - xi, fy = Y - yi;
+  if (xi < 0) xi = 0; else if (xi > F.w - 2) xi = F.w - 2;
+  if (yi < 0) yi = 0; else if (yi > F.h - 2) yi = F.h - 2;
+  const d = F.d, i = yi * F.w + xi, j = i + F.w;
+  let a = d[i], b = d[i + 1], c = d[j], e = d[j + 1];
+  if (a !== a) a = d[i] = F.fn(xi / 4, yi / 4);
+  if (b !== b) b = d[i + 1] = F.fn((xi + 1) / 4, yi / 4);
+  if (c !== c) c = d[j] = F.fn(xi / 4, (yi + 1) / 4);
+  if (e !== e) e = d[j + 1] = F.fn((xi + 1) / 4, (yi + 1) / 4);
+  return a + (b - a) * fx + (c - a) * fy + (a - b - c + e) * fx * fy;
+}
+const NF_GRASS = (x, y) => 0.42 + (fbm(x * 0.7, y * 0.7, 3, 1) - 0.5) * 0.3 + (fbm(x * 0.14, y * 0.14, 2, 2) - 0.5) * 0.7;
+const NF_MED = (x, y) => fbm(x * 1.3, y * 1.3, 3, 61) - 0.5;
+const NF_CRACK = (x, y) => fbm(x * 1.5, y * 1.5, 3, 28);
+const NF_MOSS = (x, y) => fbm(x * 0.35, y * 0.35, 2, 29);
+const hAt = (m, x, y) => (x < 0 || y < 0 || x >= m.W || y >= m.H || !m.type[y][x]) ? -99 : m.h[y][x];
+const TPRI = { w: 6, p: 5, s: 4, x: 4, d: 3, f: 2, g: 1 };
+const N8 = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
+// per-tile decoration (the variant's 2-3 decorative pixels), memoised for the tile the raster is walking
+const DECO = { k: -1, n: 0, x: [0, 0, 0], y: [0, 0, 0], c: [0, 0, 0] };
+function tileDeco(m, tx, ty) {
+  const k = ty * m.W + tx; if (DECO.k === k && DECO.m === m) return DECO;
+  DECO.k = k; DECO.m = m; const vr = (hash2(tx, ty, 91) * 4) | 0; DECO.vr = vr; DECO.n = 2 + (vr >> 1);
+  for (let q = 0; q < 3; q++) { DECO.x[q] = Math.floor((hash2(tx, ty, 100 + q) - 0.5) * 18); DECO.y[q] = 4 + Math.floor(hash2(tx, ty, 110 + q) * 8); DECO.c[q] = hash2(tx, ty, 120 + q); }
+  return DECO;
+}
+// base colour of ground type `t` at (wx, wy); rx / ry = the pixel's offset from its tile's top vertex (decoration lookups)
+function groundBase(m, t, wx, wy, px, py, dc, rx, ry, line, lipped) {
   const th = m.theme;
-  if (isGrassy(t)) {
-    const wx2 = wx + (vnoise(wx * 2.3, wy * 2.3, 5) - 0.5) * 0.75, wy2 = wy + (vnoise(wx * 2.3 + 9, wy * 2.3, 6) - 0.5) * 0.75;
-    const t2 = typeAt(m, Math.floor(wx2), Math.floor(wy2));
-    if (isGrassy(t2)) t = t2;
-  }
   if (t === 'g' || t === 'f' || t === 'd') {
-    const n = fbm(wx * 0.7, wy * 0.7, 3, 1), lp = fbm(wx * 0.14, wy * 0.14, 2, 2);
-    let v = 0.42 + (n - 0.5) * 0.55 + (lp - 0.5) * 0.7 + (hash2(px, py >> 1, 3) - 0.5) * 0.14;
-    if (t === 'd') v -= 0.15;
-    // wet bank
-    for (const [dx, dy] of [[0.22, 0], [-0.22, 0], [0, 0.22], [0, -0.22]]) if (typeAt(m, Math.floor(wx + dx), Math.floor(wy + dy)) === 'w') { v -= 0.28; break; }
-    const hsh = hash2(px, py, 7), dens = t === 'f' ? 0.035 : 0.006;
-    if (hsh < dens) {
-      const k = Math.floor(hash2(px, py, 8) * 4);
-      return hexToRgb(['#f6a6c8', '#fff1f7', '#ffe08a', '#9fd8ff'][k]);
+    let v = nAt(nField(m, 'gr', NF_GRASS), wx, wy) + (dc.vr - 1.5) * 0.025;
+    if (t === 'd') v -= 0.15; else if (t === 'f') v += 0.03;
+    if (lipped) return rampH(th.grass, v + 0.22);
+    if (line) v -= 0.17;
+    for (let q = 0; q < dc.n; q++) if (rx === dc.x[q] || (t === 'f' && rx === dc.x[q] + 1)) {
+      const dy = ry - dc.y[q];
+      if (t === 'f' && dy === 0) return hexToRgb(th.flowers[(dc.c[q] * th.flowers.length) | 0]);   // a 2 px flower over a dark stem
+      if (dy === 0 && rx === dc.x[q]) return rampH(th.grass, v + 0.2);                              // a grass blade: lit tip ...
+      if (dy === 1 && rx === dc.x[q]) return rampH(th.grass, v - 0.12);                             // ... over its shadow
     }
-    return rampDither(th.grass, v, px, py);
+    return rampQ(th.grass, v, px, py);
   }
-  if (t === 'p' && th.dirtPath) {   // packed forest dirt with pebbles and fallen needles
-    let v = 0.42 + (fbm(wx * 1.3, wy * 1.3, 3, 61) - 0.5) * 0.5 + (hash2(px, py, 62) - 0.5) * 0.12;
-    const hs = hash2(px, py, 63);
-    if (hs < 0.012) return th.stone[3];
-    if (hs < 0.03) return th.grass[2];
-    return rampDither(th.path, v, px, py);
+  if (t === 'p' && th.dirtPath) {   // packed forest dirt; pebbles and needles are the tile's decorative pixels
+    let v = 0.42 + nAt(nField(m, 'md', NF_MED), wx, wy) * 0.5 + (dc.vr - 1.5) * 0.03 - (line ? 0.17 : 0) + (lipped ? 0.22 : 0);
+    for (let q = 0; q < dc.n; q++) if (ry === dc.y[q] && (rx === dc.x[q] || rx === dc.x[q] + 1)) return dc.c[q] < 0.5 ? rampH(th.stone, 0.62 + (rx - dc.x[q]) * 0.12) : rampH(th.grass, 0.4);
+    return lipped ? rampH(th.path, v) : rampQ(th.path, v, px, py);
   }
-  if (t === 'p') {
+  if (t === 'p') {   // cobbles (Voronoi), no per-pixel jitter; grass in some gaps
     const s = 3.2, X = wx * s, Y = wy * s, gx = Math.floor(X), gy = Math.floor(Y);
     let f1 = 9, f2 = 9, fx = 0, fy = 0, cid = 0;
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-      const cx = gx + dx + hash2(gx + dx, gy + dy, 11), cy = gy + dy + hash2(gx + dx, gy + dy, 12);
-      const d = Math.hypot(X - cx, Y - cy);
-      if (d < f1) { f2 = f1; f1 = d; fx = X - cx; fy = Y - cy; cid = hash2(gx + dx, gy + dy, 13); } else if (d < f2) f2 = d;
+      const hx = hash2(gx + dx, gy + dy, 11), cx = gx + dx + hx, cy = gy + dy + hash2(gx + dx, gy + dy, 12);
+      const d = (X - cx) * (X - cx) + (Y - cy) * (Y - cy);
+      if (d < f1) { f2 = f1; f1 = d; fx = X - cx; fy = Y - cy; cid = hx; } else if (d < f2) f2 = d;
     }
-    if (f2 - f1 < 0.13) return fbm(wx * 3, wy * 3, 1, 14) > 0.6 ? th.grass[2] : th.gap;
-    const v = 0.35 + cid * 0.35 + (fx * 0.6 + fy * 0.7) * -0.55 + (hash2(px, py, 15) - 0.5) * 0.1;
-    return rampDither(th.path, v, px, py);
+    if (Math.sqrt(f2) - Math.sqrt(f1) < 0.13) return hash2(Math.floor(X * 0.5), Math.floor(Y * 0.5), 14) > 0.6 ? th.grass[2] : th.gap;
+    const v = 0.35 + cid * 0.35 + (fx * 0.6 + fy * 0.7) * -0.55 - (line ? 0.17 : 0) + (lipped ? 0.2 : 0);
+    return rampQ(th.path, v, px, py);
   }
   if (t === 'w') {
     let depth = 0;
-    for (const r of [0.3, 0.6]) for (const [dx, dy] of [[r, 0], [-r, 0], [0, r], [0, -r]]) if (typeAt(m, Math.floor(wx + dx), Math.floor(wy + dy)) === 'w' || typeAt(m, Math.floor(wx + dx), Math.floor(wy + dy)) === 'b') depth++;
-    let v = 0.78 - depth * 0.07 + (fbm(wx * 1.2, wy * 3, 2, 21) - 0.5) * 0.3;
-    if (depth < 5 && hash2(px, py, 22) < 0.25) v += 0.25;
-    if (fbm(wx * 2, wy * 6, 2, 23) > 0.7) v += 0.3;
-    return rampDither(th.water, v, px, py);
+    for (const r of [0.3, 0.6]) for (const [dx, dy] of [[r, 0], [-r, 0], [0, r], [0, -r]]) { const u = typeAt(m, Math.floor(wx + dx), Math.floor(wy + dy)); if (u === 'w' || u === 'b') depth++; }
+    let v = 0.74 - depth * 0.07 + (fbm(wx * 1.2, wy * 3, 2, 21) - 0.5) * 0.3;
+    if (fbm(wx * 2, wy * 6, 2, 23) > 0.7) v += 0.25;
+    if (line) return rampH(th.water, 0.86);   // the wet edge under a bank
+    return mulRgb(rampQ(th.water, v, px, py), 0.92);
   }
   if (t === 'b') {
     const fr = (wy % 1 + 1) % 1, pl = wx * 5;
     if (fr < 0.1 || fr > 0.9) return th.wood[0];
     if ((pl % 1) < 0.14) return th.wood[1];
-    return rampDither(th.wood, 0.5 + hash2(Math.floor(pl), 0, 24) * 0.35 + (fr - 0.5) * -0.3, px, py);
+    return rampQ(th.wood, 0.5 + hash2(Math.floor(pl), 0, 24) * 0.35 + (fr - 0.5) * -0.3, px, py);
   }
   if (t === 's') {
-    const v = 0.55 + (fbm(wx * 3, wy * 3, 2, 25) - 0.5) * 0.4 - ((wy % 1) < 0.08 ? 0.3 : 0);
-    return rampDither(th.stone, v, px, py);
+    const v = 0.55 + nAt(nField(m, 'md', NF_MED), wx, wy) * 0.4 - ((wy % 1) < 0.08 ? 0.3 : 0) - (line ? 0.17 : 0) + (lipped ? 0.2 : 0);
+    return rampQ(th.stone, v, px, py);
   }
   if (t === 'x' || t === 'r') {
     const row = Math.floor(wy * 2), X = wx * 2 + (row % 2) * 0.5;
     const gx = Math.floor(X), fx = X - gx, fy = wy * 2 - row;
     if (fx < 0.06 || fy < 0.08) return th.gap;
-    let v = 0.25 + hash2(gx, row, 26) * 0.35 + (0.5 - fy) * 0.25 + (fbm(wx * 4, wy * 4, 2, 27) - 0.5) * 0.3;
-    if (Math.abs(fbm(wx * 1.5, wy * 1.5, 3, 28) - 0.5) < 0.012) return th.gap; // cracks
+    let v = 0.3 + hash2(gx, row, 26) * 0.3 + (0.5 - fy) * 0.25 + nAt(nField(m, 'md', NF_MED), wx, wy) * 0.4 - (line ? 0.17 : 0) + (lipped ? 0.2 : 0);
+    if (Math.abs(nAt(nField(m, 'ck', NF_CRACK), wx, wy) - 0.5) < 0.012) return th.gap;   // cracks
     if (t === 'r') {
       v -= 0.1;
       const d = Math.hypot(wx - m.cx, wy - m.cy), a = Math.atan2(wy - m.cy, wx - m.cx);
       for (const R of [1.2, 2.1, 2.8]) if (Math.abs(d - R) < 0.07) return hexToRgb('#b68cff');
       if (d > 1.2 && d < 2.1 && Math.abs(Math.sin(a * 4)) < 0.05) return hexToRgb('#9b6ee8');
     }
-    if (fbm(wx * 0.35, wy * 0.35, 2, 29) > 0.6 && hash2(px, py, 30) < 0.6) return rampDither(th.grass, v + 0.15, px, py);
-    return rampDither(th.stone, v, px, py);
+    if (nAt(nField(m, 'ms', NF_MOSS), wx, wy) > 0.6) return rampQ(th.grass, v + 0.1, px, py);   // moss patches, solid (no per-pixel hash)
+    return rampQ(th.stone, v, px, py);
   }
   return [255, 0, 255];
 }
+// the colour of a TOP-surface pixel of tile type t at height h (the flat raster, and column tops). (wx, wy) = its world point,
+// (px, py) = raster / sprite pixel (dither phase), (SX, SY) = its point on the tile's own height plane in world-screen space
+// projected to z = 0 (toWorld(SX, SY) = (wx, wy)); the lip test looks 1-2 px up / down that plane.
+function topColor(m, t, h, wx, wy, px, py, SX, SY) {
+  const th = m.theme, tx = Math.floor(wx), ty = Math.floor(wy), fx = wx - tx, fy = wy - ty;
+  let tt = t, line = 0;
+  // (c) 47-blob transition: the nearest lower-priority same-level neighbour (edge or corner) whose scalloped tongue reaches here
+  const pr = TPRI[t] || 0;
+  if (pr > 1 && (fx < 0.42 || fx > 0.58 || fy < 0.42 || fy > 0.58)) {
+    let best = 9, bu = null;
+    for (let k = 0; k < 8; k++) {
+      const dx = N8[k][0], dy = N8[k][1], nx = tx + dx, ny = ty + dy, u = typeAt(m, nx, ny), pu = u ? TPRI[u] : 0;
+      if (!pu || pu >= pr || Math.abs(m.h[ny][nx] - h) > 1) continue;
+      let d, s, key;
+      if (dy === 0) { d = dx < 0 ? fx : 1 - fx; s = wy; key = tx + (dx > 0 ? 1 : 0); }
+      else if (dx === 0) { d = dy < 0 ? fy : 1 - fy; s = wx; key = 977 + ty + (dy > 0 ? 1 : 0); }
+      else { const ax = dx < 0 ? fx : 1 - fx, ay = dy < 0 ? fy : 1 - fy; if (ax > 0.45 || ay > 0.45) continue; d = Math.sqrt(ax * ax + ay * ay); s = wx + wy; key = 1999 + nx * 7 + ny; }
+      if (d > 0.45) continue;
+      const S = s * 2.5, L = Math.floor(S), f = S - L, bump = 1 - (2 * f - 1) * (2 * f - 1);
+      const tongue = 0.08 + (0.12 + 0.1 * hash2(L, key, 94)) * Math.sqrt(bump);   // 3-5 px scallops, 2.5 per tile edge
+      if (d - tongue < best) { best = d - tongue; bu = u; }
+    }
+    if (bu) { if (best < 0) tt = bu; else if (best < 0.075) line = 1; }
+  }
+  // (d) lip: a lower / void tile within 2 px straight above or below on this plane
+  let lip = 0;
+  if (t !== 'w' && (fx < 0.13 || fy < 0.13 || fx > 0.87 || fy > 0.87)) {
+    for (const dir of [1, -1]) for (let k = 1; k <= 2; k++) {
+      const [nx, ny] = toWorld(SX, SY + dir * k), ix = Math.floor(nx), iy = Math.floor(ny);
+      if (ix === tx && iy === ty) continue;
+      if (hAt(m, ix, iy) < h) lip = 1;
+      break;
+    }
+  }
+  const rx = Math.floor((fx - fy) * 16), ry = Math.floor((fx + fy) * 8);
+  let c = groundBase(m, tt, wx, wy, px, py, tileDeco(m, tx, ty), rx, ry, line, lip);
+  // AO at a higher neighbour's wall foot (N / W / NW, within 4 px) and the SW wedge shadow of a column N of this tile
+  let mul = 1;
+  if (fx < 0.3 || fy < 0.3) {
+    let d = 9;
+    if (hAt(m, tx, ty - 1) > h) d = fy;
+    if (hAt(m, tx - 1, ty) > h && fx < d) d = fx;
+    if (d > 0.28 && hAt(m, tx - 1, ty - 1) > h) d = Math.min(d, Math.sqrt(fx * fx + fy * fy));
+    if (d < 0.28) mul = 0.8 + 0.2 * d / 0.28;
+  }
+  for (let k = 1; k <= 2; k++) { const hc = hAt(m, tx, ty - k); if (hc > h) { if (fy + k - 1 < 0.2 * (hc - h) * (0.4 + 0.6 * fx)) mul *= 0.75; break; } }
+  if (mul < 1) c = mulRgb(c, mul);
+  // (e) height fog
+  const fog = Math.min(0.2, 0.05 * (m.hMax - h));
+  return fog > 0 ? mixRgb(c, th.haze, fog) : c;
+}
+// kept for callers outside the raster (editor swatches): a top pixel of type t on the flat plane
+function surfaceColor(m, t, wx, wy, px, py) { if (m.hMax == null) groundPrep(m); return topColor(m, t, 0, wx, wy, px, py, isoX(wx, wy), isoY(wx, wy)); }
 
 // ---- ground + slab + underside ------------------------------------------------
 // groundPrep(m): per raster column, from tile geometry (no pixels): the first / last surface row (top / edge), the
 // underside length, root strands and crystal spots. Every pixel is then a pure function of (px, py), so any rect of
 // the raster (a chunk band, or the whole thing for the editor) renders identically: rasterRect().
-const SLAB = 12;
+// Island edge v2 (§29): the front skirt is 3 bands: an 18 px slab (overhang lip, dark underline, 2 strata, AO), rock LOBES
+// (4-7 rounded masses per 100 px, each lit on its left and shaded on its right, crevices between them) with hanging roots
+// (20-40 px, 2-3 forks), and an alpha fade over the last 40 % so the island dissolves into the cloud sea.
+const SLAB = 18;
 function groundPrep(m) {
   if (m.gp) return m.gp;
   const g = groundPrepGen(m); while (!g.next().done);
@@ -201,8 +302,10 @@ function* groundPrepGen(m) {
   const th = m.theme, minSX = -m.H * 16, W = (m.W + m.H) * 16, GB = (m.W + m.H) * 8;
   const H = GB + SLAB + th.underDepth + 60;
   const top = new Int32Array(W).fill(-1), edge = new Int32Array(W).fill(-1);
+  let hMax = 0;
   for (let j = 0; j < m.H; j++, yield) for (let i = 0; i < m.W; i++) {
     if (!m.type[j][i]) continue;
+    if (m.h[j][i] > hMax) hMax = m.h[j][i];
     const cx = (i - j) * 16 - minSX, a = Math.max(0, cx - 17), b = Math.min(W - 1, cx + 17);
     for (let px = a; px <= b; px++) {
       const k = (px + minSX + 0.5) / 16, lo = Math.max(2 * i - k, 2 * j + k), hi = Math.min(2 * i + 2 - k, 2 * j + 2 + k);
@@ -213,26 +316,31 @@ function* groundPrepGen(m) {
       if (y1 > edge[px]) edge[px] = y1;
     }
   }
+  m.hMax = hMax;
   let firstPx = W, lastPx = 0;
   for (let px = 0; px < W; px++) if (edge[px] >= 0) { firstPx = Math.min(firstPx, px); lastPx = Math.max(lastPx, px); }
   const cx = (firstPx + lastPx) / 2, hw = Math.max(1, (lastPx - firstPx) / 2);
-  const len = new Float32Array(W), bot = new Int32Array(W).fill(-1), root = new Float32Array(W);
+  const len = new Float32Array(W), bot = new Int32Array(W).fill(-1), root = new Float32Array(W), lobe = new Float32Array(W);
+  // lobes: consecutive rounded masses 14-25 px wide, each with its own depth
+  for (let x0 = 0, k = 0; x0 < W; k++) {
+    const w = 14 + Math.floor(hash2(k, 0, 76) * 12), dk = 0.55 + 0.45 * hash2(k, 1, 76);
+    for (let px = x0; px < Math.min(W, x0 + w); px++) { const u = (px + 0.5 - x0) / w * 2 - 1; lobe[px] = u; len[px] = dk; }
+    x0 += w;
+  }
   m.crystalSpots = [];
   for (let px = 0; px < W; px++) {
     const e = edge[px]; if (e < 0) continue;
-    const s = Math.pow(Math.max(0, 1 - Math.abs(px - cx) / hw), 0.55);
-    const k = Math.floor(px / 7), hk = hash2(k, 0, 78);
-    const spike = hk > 0.55 ? (hk - 0.55) * 2.2 * 46 * Math.max(0, 1 - Math.abs((px % 7) - 3) / 3.6) : 0;
-    const L = Math.max(2, th.underDepth * s * (0.62 + 0.55 * fbm(px * 0.025, 0, 3, 77)) + spike * s);
+    const s = Math.pow(Math.max(0, 1 - Math.abs(px - cx) / hw), 0.55), u = lobe[px], prof = Math.sqrt(Math.max(0, 1 - u * u));
+    const L = Math.max(2, th.underDepth * s * (0.7 + 0.4 * fbm(px * 0.012, 0, 3, 77)) * (0.45 + 0.55 * len[px] * prof));
     len[px] = L;
     const [wx, wy] = toWorld(px + minSX + 0.5, e - 0.5), edgeT = typeAt(m, Math.floor(wx), Math.floor(wy));
-    if (hash2(px, 0, 81) > 0.955 && edgeT !== 'w') root[px] = 8 + hash2(px, 1, 82) * 26;
+    if (hash2(px, 0, 81) > 0.955 && edgeT !== 'w' && L > 24) root[px] = 20 + hash2(px, 1, 82) * 20;
     bot[px] = Math.ceil(e + SLAB + 1 + Math.max(L, root[px]));
-    if (hash2(px, 2, 83) > 0.985 && L > 30) m.crystalSpots.push({ px, py: e + SLAB + L * (0.25 + hash2(px, 3, 84) * 0.35) });
+    if (hash2(px, 2, 83) > 0.985 && L > 30) m.crystalSpots.push({ px, py: e + SLAB + L * (0.25 + hash2(px, 3, 84) * 0.3) });
   }
   for (const s of m.crystalSpots) m.lights.push({ sx: s.px + minSX, sy: s.py + 8, r: 46, col: m.themeId === 'ruins' ? '#b36bff' : '#7fd2ff', a: 0.75 });
   m.gox = minSX; m.goy = 0;
-  m.gp = { W, H, GB, minSX, top, edge, len, bot, root };
+  m.gp = { W, H, GB, minSX, top, edge, len, bot, root, lobe };
 }
 const isGutter = (m, x, y) => !!(m.gutter && x >= 0 && y >= 0 && x < m.W && y < m.H && m.gutter[y * m.W + x]);
 // a gutter pixel: 'v' = a chasm whose north lip shows a cliff face, 'k' = darkness
@@ -240,58 +348,83 @@ function gutterColor(m, wx, wy, px, py) {
   const th = m.theme, g = m.gutter[Math.floor(wy) * m.W + Math.floor(wx)];
   if (g === 1) for (let d = 0.2; d <= 1.6; d += 0.2) {
     const t = typeAt(m, Math.floor(wx - d), Math.floor(wy - d));
-    if (t) { const v = 0.62 - d * 0.36 + (vnoise(px * 0.3, py * 0.15, 47) - 0.5) * 0.3; return mulRgb(rampDither(t === 'x' || t === 'r' || t === 's' ? th.stone : th.earth, v, px, py), Math.max(0.25, 1 - d * 0.45)); }
+    if (t) { const v = 0.62 - d * 0.36 + (vnoise(px * 0.3, py * 0.15, 47) - 0.5) * 0.3; return mulRgb(rampQ(t === 'x' || t === 'r' || t === 's' ? th.stone : th.earth, v, px, py), Math.max(0.25, 1 - d * 0.45)); }
   }
-  return mulRgb(th.under[0], 0.35 + hash2(px, py, 48) * 0.08);
+  return mulRgb(th.under[0], 0.35);
+}
+// hanging root strand from raster column x0 (length rl px from the slab foot): 2 px thick for its first 45 %, 2-3 forks
+function rootPixels(x0, rl, cb) {
+  const wob = dd => Math.round(Math.sin(dd * 0.22 + x0) * 0.9);
+  for (let dd = 0; dd < rl; dd++) { const x = x0 + wob(dd); cb(x, dd, dd / rl, 0); if (dd < rl * 0.45) cb(x + 1, dd, dd / rl, 1); }
+  const nf = 2 + (hash2(x0, 5, 85) > 0.5 ? 1 : 0);
+  for (let f = 0; f < nf; f++) {
+    const at = Math.floor(rl * (0.25 + 0.5 * hash2(x0, 6 + f, 86))), dir = hash2(x0, 9 + f, 87) > 0.5 ? 1 : -1, fl = Math.floor(rl * (0.25 + 0.3 * hash2(x0, 12 + f, 88)));
+    for (let k = 1; k <= fl; k++) cb(x0 + wob(at) + dir * Math.round(k * 0.6), at + k, (at + k) / rl, 0);
+  }
 }
 // render raster rect [x0, x0 + w) x [y0, y0 + h) into `out`, an ImageData whose pixel (0, 0) is raster (ox, oy)
 function rasterRect(m, out, ox, oy, x0, y0, w, h) {
-  const th = m.theme, G0 = groundPrep(m), { W, GB, minSX, top, edge, len, root } = G0, d = out.data, ow = out.width, oh = out.height;
-  const put = (px, py, c) => {
+  const th = m.theme, G0 = groundPrep(m), { W, GB, minSX, top, edge, len, root, lobe } = G0, d = out.data, ow = out.width, oh = out.height;
+  const put = (px, py, c, a = 255) => {
     const x = px - ox, y = py - oy; if (x < 0 || y < 0 || x >= ow || y >= oh) return;
-    const i = (y * ow + x) * 4; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255;
+    const i = (y * ow + x) * 4; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = a;
   };
-  const xa = Math.max(0, x0), xb = Math.min(W, x0 + w), y1 = y0 + h;
-  for (let py = y0; py < Math.min(y1, GB); py++) for (let px = xa; px < xb; px++) {
-    if (top[px] < 0 || py < top[px] || py > edge[px]) continue;
-    const [wx, wy] = toWorld(px + minSX + 0.5, py + 0.5);
+  const xa = Math.max(0, x0), xb = Math.min(W, x0 + w), y1 = y0 + h, rimC = mixRgb(th.under[0], th.haze, 0.1);
+  for (let py = Math.max(0, y0 - 1); py < Math.min(y1, GB); py++) for (let px = xa; px < xb; px++) {
+    if (top[px] < 0) continue;
+    if (py === top[px] - 1) {   // the 1 px dark rim above a back (north / west) edge that meets the sky
+      if (py < y0) continue;
+      const [wx, wy] = toWorld(px + minSX + 0.5, py + 1.5), tx = Math.floor(wx), ty = Math.floor(wy);
+      if (typeAt(m, tx, ty) && !m.h[ty][tx]) put(px, py, rimC);
+      continue;
+    }
+    if (py < y0 || py < top[px] || py > edge[px]) continue;
+    const SX = px + minSX + 0.5, SY = py + 0.5, [wx, wy] = toWorld(SX, SY);
     const tx = Math.floor(wx), ty = Math.floor(wy), t = typeAt(m, tx, ty);
     if (!t) { if (isGutter(m, tx, ty)) put(px, py, gutterColor(m, wx, wy, px, py)); continue; }
-    let c = surfaceColor(m, t, wx, wy, px, py);
-    if (t === 'w') c = mulRgb(c, 0.92);
-    put(px, py, c);
+    if (m.h[ty][tx] > 0) { put(px, py, th.earth[1]); continue; }   // under a column sprite (game and editor draw it): never seen
+    put(px, py, topColor(m, t === 'pillar' ? 'x' : t, 0, wx, wy, px, py, SX, SY));
   }
-  // front edge per column: slab, underside, root strands (roots spill one column either side)
-  for (let px = Math.max(0, xa - 1); px < Math.min(W, xb + 1); px++) {
+  // front edge per column: slab, underside lobes (roots after, so they draw over the skirt)
+  for (let px = xa; px < xb; px++) {
     const e = edge[px]; if (e < 0 || e + 1 >= y1 || G0.bot[px] < y0) continue;
     const slope = (edge[Math.min(W - 1, px + 2)] - edge[Math.max(0, px - 2)]);
-    const lit = slope >= 0 ? 1 : 0.68;
+    const lit = slope >= 0 ? 1 : 0.7;
     const [wx, wy] = toWorld(px + minSX + 0.5, e - 0.5);
-    const edgeT = typeAt(m, Math.floor(wx), Math.floor(wy)), inX = px >= xa && px < xb;
-    if (inX) {
-      for (let dd = 1; dd <= SLAB; dd++) {
-        const y = e + dd; if (y < y0 || y >= y1) continue;
-        let c;
-        if (edgeT === 'w') c = rampDither(th.water, 0.55 - dd / SLAB * 0.2, px, y);
-        else if (dd < 3 && isGrassy(edgeT)) c = th.grass[dd === 1 ? 3 : 1];
-        else {
-          let v = (0.75 - dd / SLAB * 0.35 + (vnoise(px * 0.2, dd * 0.6, 40) - 0.5) * 0.3) * lit;
-          if ((dd + Math.floor(vnoise(px * 0.08, 0, 41) * 3)) % 5 === 0) v -= 0.15;
-          c = rampDither(edgeT === 'x' || edgeT === 'r' || edgeT === 's' ? th.stone : th.earth, v, px, y);
-        }
-        put(px, y, c);
+    const edgeT = typeAt(m, Math.floor(wx), Math.floor(wy)), rock = edgeT === 'x' || edgeT === 'r' || edgeT === 's' || edgeT === 'pillar' ? th.stone : th.earth;
+    const sOff = Math.floor(vnoise(px * 0.08, 0, 41) * 3);
+    for (let dd = 1; dd <= SLAB; dd++) {
+      const y = e + dd; if (y < y0 || y >= y1) continue;
+      let c;
+      if (edgeT === 'w') c = rampQ(th.water, 0.55 - dd / SLAB * 0.2, px, y);
+      else if (dd === 1) c = isGrassy(edgeT) ? rampH(th.grass, 0.62) : rampH(rock, 0.7);        // overhang lip
+      else if (dd === 2) c = rock[0];                                                            // dark underline
+      else {
+        let v = (0.68 - dd / SLAB * 0.3 + (vnoise(px * 0.2, dd * 0.6, 40) - 0.5) * 0.18) * lit;
+        const r = (dd + sOff) % 8;
+        if (r === 0) v += 0.12; else if (r === 1) v -= 0.2;                                     // 2 strata courses
+        if (dd < 6) v -= (6 - dd) * 0.04;                                                        // AO under the lip
+        c = rampQ(rock, v, px, y);
       }
-      const L = len[px], ua = Math.max(0, y0 - (e + SLAB + 1)), ub = Math.min(L, y1 - (e + SLAB + 1));
-      for (let dd = ua; dd < ub; dd++) {
-        const y = e + SLAB + 1 + dd, t = dd / L;
-        let v = (0.72 - t * 0.55) * lit + (fbm(px * 0.12, y * 0.035, 3, 79) - 0.5) * 0.4 + (vnoise(px * 0.6, 0, 80) - 0.5) * 0.2;
-        let c = rampDither(th.under, v, px, y);
-        c = mixRgb(c, th.haze, clamp(t * t * 0.75, 0, 0.75));
-        put(px, y, c);
-      }
+      put(px, y, c);
     }
-    const rl = root[px];
-    for (let dd = 0; dd < rl; dd++) { const y = e + SLAB + dd; if (y >= y0 && y < y1) put(px + Math.round(Math.sin(dd * 0.3 + px) * 0.7), y, mixRgb(th.root, th.haze, dd / rl * 0.5)); }
+    const L = len[px], u = lobe[px], prof = Math.sqrt(Math.max(0, 1 - u * u)), base = e + SLAB + 1;
+    const ua = Math.max(0, y0 - base), ub = Math.min(L, y1 - base);
+    for (let dd = ua; dd < ub; dd++) {
+      const y = base + dd, t = dd / L;
+      let v = (0.62 - t * 0.42) * lit - u * 0.1 - (1 - prof) * 0.14 + (vnoise(px * 0.15, y * 0.05, 79) - 0.5) * 0.2;
+      if (dd < 3) v -= 0.12 * (3 - dd) / 3;
+      const c = mixRgb(rampQ(th.under, v, px, y), th.haze, t * 0.35);
+      put(px, y, c, t < 0.6 ? 255 : Math.round(255 * (1 - (t - 0.6) / 0.4)));
+    }
+  }
+  for (let px0 = Math.max(0, xa - 14); px0 < Math.min(W, xb + 14); px0++) {
+    const rl = root[px0]; if (!rl) continue;
+    const base = edge[px0] + SLAB - 1;
+    rootPixels(px0, rl, (x, dd, t, side) => {
+      const y = base + dd; if (y < y0 || y >= y1 || x < xa || x >= xb) return;
+      put(x, y, mixRgb(side ? mulRgb(th.root, 0.7) : th.root, th.haze, t * 0.45), t < 0.7 ? 255 : Math.round(255 * (1 - (t - 0.7) / 0.3)));
+    });
   }
 }
 function drawCrystals(m, ctx, x0, y0, w, h) {
@@ -389,16 +522,16 @@ function groundPreview(m) {
 function* groundPreviewGen(m) {   // yields every 8 preview rows (main.js preloadStep)
   if (m.preview) return;
   const g = groundPrep(m), th = m.theme, Q = 4, w = Math.ceil(g.W / Q), h = Math.ceil(g.H / Q), img = new ImageData(w, h), d = img.data;
-  const pal = { g: th.grass[3], f: th.grass[4], d: th.grass[1], p: th.path[2], w: th.water[3], b: th.wood[2], s: th.stone[2], x: th.stone[2], r: th.stone[1], pillar: th.stone[3] };
+  const pal = { g: rampH(th.grass, 0.5), f: rampH(th.grass, 0.62), d: rampH(th.grass, 0.25), p: rampH(th.path, 0.5), w: th.water[3], b: th.wood[2], s: rampH(th.stone, 0.5), x: rampH(th.stone, 0.5), r: rampH(th.stone, 0.35), pillar: rampH(th.stone, 0.7) };
   for (let qy = 0; qy < h; qy++, qy % 8 || (yield)) for (let qx = 0; qx < w; qx++) {
     const px = qx * Q + 2, py = qy * Q + 2; if (px >= g.W) continue;
     const e = g.edge[px]; if (e < 0 || py < g.top[px]) continue;
-    let c = null;
+    let c = null, a = 255;
     if (py <= e) { const [wx, wy] = toWorld(px + g.minSX + 0.5, py + 0.5), tx = Math.floor(wx), ty = Math.floor(wy), t = typeAt(m, tx, ty); c = t ? pal[t] || th.grass[3] : isGutter(m, tx, ty) ? mulRgb(th.under[0], 0.4) : null; }
-    else if (py <= e + SLAB) c = th.earth[2];
-    else if (py <= e + SLAB + g.len[px]) c = mixRgb(th.under[2], th.haze, clamp((py - e - SLAB) / g.len[px], 0, 0.75));
+    else if (py <= e + SLAB) c = rampH(th.earth, 0.45);
+    else if (py <= e + SLAB + g.len[px]) { const t = (py - e - SLAB) / g.len[px]; c = mixRgb(rampH(th.under, 0.45), th.haze, t * 0.35); a = t < 0.6 ? 255 : Math.round(255 * (1 - (t - 0.6) / 0.4)); }
     if (!c) continue;
-    const i = (qy * w + qx) * 4; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255;
+    const i = (qy * w + qx) * 4; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = a;
   }
   const { c, x } = makeCanvas(w, h); x.putImageData(img, 0, 0);
   m.preview = c;
@@ -408,39 +541,61 @@ function chunkAt(m, sx, sy) { const cg = chunkGrid(m), g = m.gp; return clamp(Ma
 function ensureChunkAt(m, x, y) { const idx = chunkAt(m, isoX(x, y), isoY(x, y, tileH(m, x, y))); if (!chunkGrid(m).empty[idx]) buildChunkStep(m, idx, Infinity); return idx; }
 
 // ---- elevated tiles become depth-sorted columns ----------------------------
+// Cliff faces v2 (§29): per 6 px level 3 strata bands (2 px light cap, 3 px mid, 1 px dark ledge), offset per tile column so
+// neighbours do not align; every 4th level a 2 px ledge under a 1 px highlight; a 1 px overhang lip (top colour) over a 1 px dark
+// underline; ambient occlusion on the bottom 3 px of the VISIBLE face (down to the lower neighbour's top); height fog per pixel
+// level. Face pixels hidden behind a neighbour column (below its top) are skipped: on a plateau most faces are never seen.
+// The top gets the full tile grammar (topColor), plus a 1 px dark rim above back edges that meet the sky or lower ground.
 function rasterColumn(m, i, j) {
   const th = m.theme, h = m.h[j][i], t = m.type[j][i], hz = h * ZS;
   const W = 32, H = 16 + hz + 1;
   const pb = new PixBuf(W, H);
   const ox = isoX(i, j) - 16, oy = isoY(i, j, h);
   const pillar = t === 'pillar';
-  const faceRamp = (t === 's' || pillar) ? th.stone : th.earth;
+  const faceRamp = (t === 's' || t === 'x' || t === 'r' || pillar) ? th.stone : th.earth;
   const topT = pillar ? 'x' : t;
+  // visible face depth per side: down to the lower neighbour's top when that neighbour is itself a column (drawn after this one)
+  const vis = (nx, ny) => { const hn = hAt(m, nx, ny); return hn > 0 && hn < h && m.type[ny][nx] !== 'pillar' ? (h - hn) * ZS : hn >= h && m.type[ny][nx] !== 'pillar' ? 0 : hz; };
+  const visL = vis(i, j + 1), visR = vis(i + 1, j);
+  const rimC = mixRgb(th.under[0], th.haze, 0.1);
+  const backL = hAt(m, i - 1, j) < h, backR = hAt(m, i, j - 1) < h;
   for (let cy = 0; cy < H; cy++) for (let cx = 0; cx < W; cx++) {
-    const [wx, wy] = toWorld(ox + cx + 0.5, oy + cy + 0.5 + hz);
-    if (wx >= i && wx < i + 1 && wy >= j && wy < j + 1 && cy < 17) {
-      let c = surfaceColor(m, topT, wx, wy, ox + cx, oy + cy);
-      if (pillar) c = rampDither(th.stone, 0.75 + (hash2(cx, cy, 9) - 0.5) * 0.2, cx, cy);
+    const SX = ox + cx + 0.5, SY = oy + cy + 0.5 + hz, [wx, wy] = toWorld(SX, SY);
+    if (cy < 17 && wx >= i && wx < i + 1 && wy >= j && wy < j + 1) {
+      let c = topColor(m, topT, h, wx, wy, ox + cx, oy + cy, SX, SY);
+      if (pillar) c = rampQ(th.stone, 0.75 + (hash2(cx, cy, 9) - 0.5) * 0.12, cx, cy);
       pb.set(cx, cy, c); continue;
     }
-    let top, lit, u;
-    if (cx < 16) { top = 8 + (cx + 0.5) * 0.5; lit = 1; u = cx / 16; } else { top = 16 - (cx - 15.5) * 0.5; lit = 0.66; u = (cx - 16) / 16; }
-    const d = cy - top;
-    if (d < 0 || d >= hz) continue;
-    let c;
-    if (t === 'w' && cx < 16) c = rampDither(th.water, 0.5, cx, cy);
-    else if (d < 2 && isGrassy(t)) c = th.grass[d < 1 ? 4 : 2];
-    else if (pillar) {
-      let v = (0.62 - d / hz * 0.3 + ((cx % 5) === 0 ? -0.22 : 0) + (vnoise(cx * 0.4, (oy + cy) * 0.3, 44) - 0.5) * 0.25) * lit;
-      if (d < 3) v += 0.15;
-      c = rampDither(th.stone, v, cx, cy);
-    } else {
-      let v = (0.7 - d / Math.max(hz, 12) * 0.35 + (vnoise((i + u) * 8, d * 0.35, 42) - 0.5) * 0.4) * lit;
-      if ((d + Math.floor(vnoise((i + u) * 3, j, 43) * 4)) % 6 === 0) v -= 0.18;
-      c = rampDither(faceRamp, v, cx, cy);
-      // hanging vines on lit faces
-      if (isGrassy(t) && cx < 16 && hash2(i * 32 + cx, j, 45) > 0.86 && d < 4 + hash2(i * 32 + cx, j, 46) * hz * 0.8) c = th.grass[2 + (Math.floor(d) % 2)];
+    if (cy < 9) {   // above the top diamond: the dark rim on a back edge (only the row just above the edge)
+      const [bx, by] = toWorld(SX, SY + 1);
+      if (bx >= i && bx < i + 1 && by >= j && by < j + 1 && (cx < 16 ? backL : backR)) pb.set(cx, cy, rimC);
+      continue;
     }
+    let top, lit, u, vd;
+    if (cx < 16) { top = 8 + (cx + 0.5) * 0.5; lit = 1; u = cx / 16; vd = visL; } else { top = 16 - (cx - 15.5) * 0.5; lit = 0.66; u = (cx - 16) / 16; vd = visR; }
+    const d = cy - top;
+    if (d < 0 || d >= hz || d >= vd + 1) continue;
+    const di = Math.floor(d), lvh = h - d / ZS;   // pixel row, and the height level it shows
+    let c;
+    if (t === 'w' && cx < 16) c = rampQ(th.water, 0.5, cx, cy);
+    else if (di === 0) c = isGrassy(t) ? rampH(th.grass, 0.62) : rampH(faceRamp, 0.72);   // 1 px overhang lip
+    else if (di === 1) c = faceRamp[0];                                                     // 1 px dark underline
+    else if (pillar) {
+      let v = (0.62 - d / hz * 0.3 + ((cx % 5) === 0 ? -0.22 : 0) + (vnoise(cx * 0.4, (oy + cy) * 0.3, 44) - 0.5) * 0.2) * lit;
+      if (d < 4) v += 0.12;
+      c = rampQ(th.stone, v, cx, cy);
+    } else {
+      const off = Math.floor(vnoise((i + u) * 1.7, j * 0.9, 43) * 2.99), dd = di + off, lv = Math.floor(dd / ZS), r = dd - lv * ZS;
+      let v = (0.66 - d / Math.max(hz, 12) * 0.3 + (vnoise((i + u) * 8, d * 0.35, 42) - 0.5) * 0.16) * lit;
+      if (lv % 4 === 3) { if (r === 3) v += 0.2; else if (r >= 4) v -= 0.24; }   // ledge every 4th level: highlight over a 2 px ledge
+      else if (r < 2) v += 0.1; else if (r === 5) v -= 0.22;                   // 3 bands: light cap, mid, dark ledge
+      c = rampQ(faceRamp, v, cx, cy);
+      if (isGrassy(t) && cx < 16 && hash2(i * 32 + cx, j, 45) > 0.86 && d < 4 + hash2(i * 32 + cx, j, 46) * hz * 0.8) c = th.grass[2 + (di % 2)];   // hanging vines on lit faces
+    }
+    const foot = Math.min(vd, hz) - d;   // AO: the bottom 3 px of the visible face
+    if (foot < 3 && di > 1) c = mulRgb(c, 0.65 + 0.1 * Math.floor(foot));
+    const fog = Math.min(0.2, 0.05 * (m.hMax - lvh));
+    if (fog > 0) c = mixRgb(c, th.haze, fog);
     pb.set(cx, cy, c);
   }
   return { kind: 'column', img: pb.toCanvas(), sx: ox, sy: oy, key: i + j + 1, x: i + 0.5, y: j + 0.5 };
@@ -460,7 +615,7 @@ function finalizeMap(m) {
   for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) {
     if (m.type[j][i] !== 'w') continue;
     const nT = typeAt(m, i, j + 1), h = m.h[j][i];
-    if (!nT) { if (!isGutter(m, i, j + 1)) m.falls.push({ x0: isoX(i, j + 1), y0: isoY(i, j + 1, 0) + 12, len: m.theme.underDepth + 80, edge: true, key: -1 }); }
+    if (!nT) { if (!isGutter(m, i, j + 1)) m.falls.push({ x0: isoX(i, j + 1), y0: isoY(i, j + 1, 0) + SLAB, len: m.theme.underDepth + 80, edge: true, key: -1 }); }
     else if (m.h[j + 1][i] < h) m.falls.push({ x0: isoX(i, j + 1), y0: isoY(i, j + 1, h), len: (h - m.h[j + 1][i]) * ZS, edge: false, key: i + j + 1.05, wx: i + 0.5, wy: j + 1.1 });
   }
   for (const o of m.objects) {

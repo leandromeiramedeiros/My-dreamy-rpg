@@ -1783,4 +1783,4 @@ Measured on 6 fixed camera shots in each PR:
   shares that pipeline.
 * **Name and placement:** the rule id is `echo`. The story expert names it at placement (no reused character names). It
   drops late (Act III+) as a reward for a built character.
-* **Unique budget (§19.5, 18 total):** it replaces one existing unique (see the decision log).
+* **Unique budget:** a **19th unique (client decision)**, on a weapon legendary that works with every weapon class. It is the one deliberate exception to the §19.5 cap of 18; the cap stays at 19 from here on.

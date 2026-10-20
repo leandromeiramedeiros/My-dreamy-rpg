@@ -173,18 +173,18 @@ var BOSS_DATA = {
       backhand:  { type: 'cone', arc: 90, r: 3.2, wind: 0.95, open: 1.2 },      // the trunk swipe's delayed second hit (bar 2+), re-aimed at the hero
       trample:   { type: 'charge', len: 7, w: 1.0, wind: 1.1, speed: 14, open: 1.3, range: 'far' },   // bar-3 move: punishes standing off; 0.77 s at x0.7 (walk-out 1.7 tiles)
       rootWall:  { type: 'arenaShrink', pattern: 'roots_inward' },
-      saplings:  { type: 'summon', kind: 'sapling', n: 3, wind: 1.0, open: 1.5 }
+      saplings:  { type: 'summon', kind: 'sapling', n: 2, wind: 1.0, open: 1.5 }   // n 3 -> 2 (§26.2 tuning: bars 2-3 carry the pressure)
     },
     phases: [
       // bar 1: the old troll's three verbs
       { hpBelow: 1.0, moves: { stomp: 3, rootGrab: 2, trunkSwipe: 2 }, onEnter: [] },
       // bar 2: new move saplings (turrets; the root wall closes the ring); cunning: trunkSwipe -> a short 0.35 s beat, then the
       // BACKHAND (delayed second hit, re-aimed, 0.68 s wind); windMul 0.85, gaps x0.8
-      { hpBelow: 0.64, moves: { stomp: 1.5, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1 }, windMul: 0.85, cdMul: 0.8,
+      { hpBelow: 0.62, moves: { stomp: 1.5, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1 }, windMul: 0.85, cdMul: 0.8,
         forms: { trunkSwipe: { open: 0.35, then: 'backhand' } },
         onEnter: [{ type: 'arenaShrink', pattern: 'roots_inward', k: 0.75, rMin: 5.5 }, { type: 'roar', banner: 'The roots wake', dur: 1.2 }] },   // ring >= 5.5 tiles: room to walk out of a 3-tile stomp, and the card's saplings (<= 5.4 from the centre) stay inside
       // bar 3: new move trample (charge); cunning: rootGrab LEAD-AIMS 0.45 s ahead of a moving hero (+ bar 2's backhand); windMul 0.7, gaps x0.65
-      { hpBelow: 0.28, moves: { stomp: 1, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1, trample: 2 }, windMul: 0.7, cdMul: 0.65, speedMul: 1.2,
+      { hpBelow: 0.25, moves: { stomp: 1, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1, trample: 2 }, windMul: 0.7, cdMul: 0.65, speedMul: 1.2,
         forms: { rootGrab: { lead: 0.45 } },
         onEnter: [{ type: 'roar', banner: 'Old Bramblehorn splinters into a fury', dur: 1.0 }] }
     ],

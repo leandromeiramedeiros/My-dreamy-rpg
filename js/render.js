@@ -633,7 +633,7 @@ const CORPSE_PROBE = { face: 1, flash: 1, hitFreeze: 0, state: 'chase', anim: 0,
 function corpseLook(e) {
   const def = ENEMY[e.type] || {}, fly = (def.tags || e.tags || []).includes('flying');
   const key = enemyArtKey(e);
-  if (key) return { img: null, sc: 1, art: key, hover: fly ? 8 / ZS : 0 };
+  if (key) return { img: ENEMY_ART.get(key, 'hit', 0), sc: 1, art: key, hover: fly ? 8 / ZS : 0 };   // img: the swarm squash-pop ghost
   const look = enemyLook(def, e.type), sc = (def.scale || 1) * LEGACY_ENEMY_K;
   let img = null, hover = 0;
   if (look.img) { img = enemyFrame(look, CORPSE_PROBE); if (def.ai === 'shooter' || fly) hover = 10 / ZS; }

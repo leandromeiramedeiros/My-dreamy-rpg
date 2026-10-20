@@ -1058,7 +1058,7 @@ function spawnCorpse(e, dmg, o) {
   if (e.dummy || e.under || e.mimic) return null;
   if (e.swarm && e.knockK != null) {   // swarm member: squash-pop, no record
     const L = typeof corpseLook === 'function' ? corpseLook(e) : null;
-    if (L && L.img) fx({ type: 'ghost', x: e.x, y: e.y, z: e.z, spr: L.img, sc: L.sc, col: e.blood, life: 0.16, sq: true });
+    if (L && L.img) fx({ type: 'ghost', x: e.x, y: e.y, z: e.z + L.hover, spr: L.img, sc: L.sc, col: e.blood, life: 0.16, sq: true });
     return null;
   }
   let c = CORPSE.pool.pop();
