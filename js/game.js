@@ -1124,7 +1124,7 @@ function updateWarp(dt) {
 }
 // ===== discovery: sections + shrines (saved per map) ============================================================
 const progList = (k, id) => { const P = G.prog[k] || (G.prog[k] = {}); return P[id] || (P[id] = []); };
-const shrinesOf = m => m._shrines || (m._shrines = m.objects.filter(o => o.shrineId));
+const shrinesOf = m => m._shrines || (m._shrines = m.objects.filter(o => o.shrineId && !(o.src && o.src.warp === false)));
 const shrineFound = (m, id) => progList('shrines', m.id).includes(id);
 function discoverShrine(m, o) {
   const L = progList('shrines', m.id); if (L.includes(o.shrineId)) return false;

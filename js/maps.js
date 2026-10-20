@@ -21,10 +21,12 @@
 //           Later rects win. Tiles in no rect belong to the implicit section { id: 'main' }. sectionAt(m, x, y).
 //   anchors: [{ id, x, y }]  named arrival points. Any object with an `id` (warpdoor, shrine, lever ...) is also an
 //           anchor. Resolution order: warpdoor ids -> anchors -> shrine ids -> other object ids.
-//   objects { t: 'warpdoor', id, x, y, to: { x, y } | '<anchorId>', key?: 'key_*', label? }  Interact = a 0.4 s fade
-//           warp inside the same map (no load, trigger state kept). Keyed doors stay locked until the hero holds the
-//           key (loot card item: 'key_*'); the unlock persists in G.prog.gates['map:id'].
-//           { t: 'shrine', id?, name?, x, y }  shrine id defaults to 'shrine_<x>_<y>'; discovered within 3 tiles;
+//   objects { t: 'warpdoor', id, x, y, to: { x, y } | '<anchorId>', key?: 'key_*', label?, open?: false }  Interact = a
+//           0.4 s fade warp inside the same map (no load, trigger state kept). Keyed doors stay locked until the hero
+//           holds the key (loot card item: 'key_*'); open: false = sealed until a trigger openGate { id: <door id> }.
+//           Either unlock persists in G.prog.gates['map:id'].
+//           { t: 'shrine', id?, name?, warp?: false, x, y }  id defaults to 'shrine_<x>_<y>'; warp: false = a plain
+//           checkpoint, never a warp end; kind 'underground' is accepted for 'under'. Discovered within 3 tiles;
 //           shrine-to-shrine warp from the full-map screen (M / D-pad down) while standing at a discovered shrine,
 //           only while no enemy is awake (game.js shrineWarp).
 //           { t: 'gate', id, open: true, ... }  an ARENA gate that starts open; the trigger action closeGate shuts it
@@ -614,7 +616,7 @@ function buildSections(m, d) {
   for (const s0 of d.sections || []) {
     if (!s0 || !s0.id) continue;
     const sec = Object.assign({}, s0, { i: m.sections.length });
-    sec.kind = sec.kind || 'outer'; sec.under = !!(sec.under || sec.kind === 'under'); sec.dark = clamp(+sec.dark || 0, 0, 1);
+    sec.kind = sec.kind || 'outer'; sec.under = !!(sec.under || sec.kind === 'under' || sec.kind === 'underground'); sec.dark = clamp(+sec.dark || 0, 0, 1);
     sec.rects = s0.rects || [[+s0.x || 0, +s0.y || 0, +s0.w || 0, +s0.h || 0]];
     if (sec.i > 255) break;
     m.sections.push(sec);
@@ -736,12 +738,13 @@ function closeGate(id) {
   return parts.length > 0;
 }
 // warp doors: Interact = a 0.4 s fade warp (game.js startWarp); a keyed door unlocks once with its key
-const doorUnlocked = (m, o) => !o.doorKey || !!(G.prog && G.prog.gates && G.prog.gates[gateKey(m.id, o.gid)]);
+const doorUnlocked = (m, o) => (!o.doorKey && o.src.open !== false) || gateOpen(m, o.gid);
 const WARPDOOR_USE = { kind: 'warpdoor', reach: 1.5, on: () => true,
-  text: o => (doorUnlocked(G.map, o) ? (o.src.label || 'Enter') : hasKey(o.doorKey) ? 'Unlock' : 'Locked'),
+  text: o => (doorUnlocked(G.map, o) ? (o.src.label || 'Enter') : o.doorKey && hasKey(o.doorKey) ? 'Unlock' : o.doorKey ? 'Locked' : 'Sealed'),
   fn(o) {
     const m = G.map;
     if (!doorUnlocked(m, o)) {
+      if (!o.doorKey) { say('Sealed. Something else opens it.'); sfx('hurt'); return; }
       if (!hasKey(o.doorKey)) { say('Locked. It needs a key.'); sfx('hurt'); return; }
       (G.prog.gates || (G.prog.gates = {}))[gateKey(m.id, o.gid)] = true; say('The key turns.'); sfx('portal');
     }

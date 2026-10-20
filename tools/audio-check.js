@@ -113,7 +113,7 @@ const pad = (s, n) => String(s).padEnd(n);
     const C = await AUDIO.renderMusic('vale', Object.assign({ events: [{ t: 3.5, fn: (en) => en.setDuck('death', true) }] }, o));
     const M = await AUDIO.renderMusic('vale', Object.assign({ mono: true }, o));
     const Q = await AUDIO.renderMusic('pinewood', Object.assign({ reduceBass: true }, o)), P = await AUDIO.renderMusic('pinewood', o);
-    const X = await AUDIO.renderMusic('vale', Object.assign({ events: [{ t: 3.5, fn: (en) => en.mix({ master: 1, music: 0.75, sfx: 0.75, ui: 0.75, ambient: 0.75, muted: true }) }] }, o));
+    const X = await AUDIO.renderMusic('vale', Object.assign({ events: [{ t: 3.5, fn: (en) => en.mix({ master: 0.75, music: 0.75, sfx: 0.75, ui: 0.75, ambient: 0.75, muted: true }) }] }, o));
     const a = AUDIO.bufferStats(A, ...W), b = AUDIO.bufferStats(B, ...W), c = AUDIO.bufferStats(C, ...W), x = AUDIO.bufferStats(X, ...W);
     let diff = 0; const l = M.getChannelData(0), r = M.getChannelData(1); for (let i = 0; i < l.length; i++) diff = Math.max(diff, Math.abs(l[i] - r[i]));
     // low band energy: one-pole low-pass at ~120 Hz

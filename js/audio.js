@@ -26,7 +26,7 @@
 //   AUDIO.setLayer(name, 0..1, fadeBars=1)   ramp a layer of the current song, starting on the next bar line.
 //   AUDIO.duck(reason, on)       manual duck: 'dialogue' -9 dB, 'fishing' -12 dB, 'death' -20 dB (the director sets
 //                                these from G.talk / G.fishing / G.state === 'dead' too). 100 ms down, 600 ms up.
-//   AUDIO.applySettings()        re-read SETTINGS (runs on onSettingsChange). Bus mapping: master (SETTINGS.master, def 1),
+//   AUDIO.applySettings()        re-read SETTINGS (runs on onSettingsChange). Bus mapping: master (SETTINGS.master, def 0.75; every slider maps v / 0.75, so 0.75 = unity),
 //                                music, sfx, ui (SETTINGS.ui, def = sfx), ambient (SETTINGS.ambient, def = sfx); mute =
 //                                SETTINGS.muted || G.muted, applied to the master bus only (scheduling never stops, so
 //                                unmuting never desyncs). SETTINGS.mono / SETTINGS.reduceBass when those keys exist.
@@ -567,7 +567,7 @@ const AUDIO = (() => {
   // ---------------------------------------------------------------- settings
   EP.mix = function (m) {
     const t = this.ctx.currentTime, set = (p, v) => { p.cancelScheduledValues(t); p.setTargetAtTime(v, t, 0.03); };
-    set(this.master.gain, m.muted ? 0 : m.master);
+    set(this.master.gain, m.muted ? 0 : m.master / 0.75);
     set(this.bus.music.gain, MUSIC_GAIN * m.music / 0.75);
     set(this.bus.sfx.gain, m.sfx / 0.75); set(this.bus.ui.gain, m.ui / 0.75); set(this.bus.ambient.gain, m.ambient / 0.75);
     if (m.mono !== this.mono) { this.mono = m.mono; try { this.out.channelCount = m.mono ? 1 : 2; this.out.channelCountMode = m.mono ? 'explicit' : 'max'; this.out.channelInterpretation = 'speakers'; } catch (e) { /* old engines */ } }
@@ -586,7 +586,7 @@ const AUDIO = (() => {
     const s = S(), g = gG(), num = (v, d) => (typeof v === 'number' && isFinite(v) ? v : d);
     const sfx = num(s.sfx, 0.75);
     return {
-      master: num(s.master, 1), music: num(s.music, 0.75), sfx, ui: num(s.ui, sfx), ambient: num(s.ambient, sfx),
+      master: num(s.master, 0.75), music: num(s.music, 0.75), sfx, ui: num(s.ui, sfx), ambient: num(s.ambient, sfx),
       muted: !!(s.muted || (g && g.muted)),
       mono: D.muteOverride.mono !== null ? D.muteOverride.mono : !!s.mono,
       reduceBass: D.muteOverride.bass !== null ? D.muteOverride.bass : !!s.reduceBass,
@@ -848,7 +848,7 @@ const AUDIO = (() => {
     const bars = Math.min(o.bars || song.bars, song.bars * 4), body = bars * plan.n * stepDur, tail = o.tail === undefined ? 3 : o.tail, lead = 0.05;
     const len = (o.seconds || lead + body + tail);
     const ctx = new OACtor(2, Math.ceil(len * sr), sr), Eo = new Engine(ctx, { offline: true, cfg: o.cfg });
-    Eo.mix({ master: 1, music: 0.75, sfx: 0.75, ui: 0.75, ambient: 0.75, muted: false, mono: !!o.mono, reduceBass: !!o.reduceBass });
+    Eo.mix({ master: 0.75, music: 0.75, sfx: 0.75, ui: 0.75, ambient: 0.75, muted: false, mono: !!o.mono, reduceBass: !!o.reduceBass });
     if (SONG_VERB[id]) Eo.setVerb(SONG_VERB[id], 0);
     const key = o.key ? MUSIC_UTIL.keyOffset(song.key, o.key) : 0;
     const kind = song.kind, dest = o.dest || (kind === 'stinger' ? 'ui' : 'zone');
@@ -862,7 +862,7 @@ const AUDIO = (() => {
     const sr = o.sampleRate || 32000, R = SFX_RECIPES[id];
     const dur = R ? Math.min(CFG.maxSfx, Math.max(...R.layers.map(l => (l.delay || 0) + l.dur))) : 0.1;
     const ctx = new OACtor(2, Math.ceil((dur + 0.3) * sr), sr), Eo = new Engine(ctx, { offline: true });
-    Eo.mix({ master: 1, music: 0.75, sfx: 0.75, ui: 0.75, ambient: 0.75, muted: false, mono: false, reduceBass: false });
+    Eo.mix({ master: 0.75, music: 0.75, sfx: 0.75, ui: 0.75, ambient: 0.75, muted: false, mono: false, reduceBass: false });
     Eo.playSfx(id, { pan: o.pan || 0, gain: 1 });
     const buf = await renderCtx(ctx);
     buf.bodySeconds = dur + 0.01;
