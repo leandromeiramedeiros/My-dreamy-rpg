@@ -149,6 +149,14 @@ const ENEMY_ART = (function () {
         this.put(x, y, R[n > 0.82 ? 2 : n < 0.22 ? 0 : 1]);
       }
     }
+    // light rim on top-facing edges (keeps dark sprites readable on dark floors)
+    rim(col, th = 200) {
+      const c = hexToRgb(col), src = this.d.slice(), w = this.w;
+      for (let y = 1; y < this.h; y++) for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        if (src[i + 3] >= th && src[i - w * 4 + 3] < 60) { this.d[i] = c[0]; this.d[i + 1] = c[1]; this.d[i + 2] = c[2]; }
+      }
+    }
     outline(col = OUT, a = 1) {
       const c = hexToRgb(col), src = this.d.slice(), w = this.w, h = this.h;
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
@@ -493,7 +501,7 @@ const ENEMY_ART = (function () {
       b.poly([[18, -3], [21, -6.5], [20.5, -2]], P.bone);
       b.raw(16, -6, OUT); b.raw(17, -5, OUT); b.raw(17, -6, OUT); b.raw(16, -5, OUT);
       b.cap(8, -7, 17, -2, 2.4, 2, R); b.ell(18, -2, 2.4, 1.6, R);
-      b.outline(); return;
+      b.rim('#b9b6dc'); b.outline(); return;
     }
     const T = (x, y) => { const c = Math.cos(lean), s = Math.sin(lean), py = y + 18; return [x * c - py * s + dx, py * c + x * s - 18 + dy]; };
     const legsY = dead === 2 ? 0 : 0;
@@ -525,19 +533,21 @@ const ENEMY_ART = (function () {
     const belly = T(5, -22); b.ell(belly[0], belly[1], 7, 7, dk(R, 1.12), 0);
     const hump = T(-6, -33); b.ell(hump[0], hump[1], 7.5, 6.5, R, 0);
     for (let i = 0; i < 4; i++) { const p = T(-9 + i * 3.6, -38 + Math.abs(i - 1.5) * 1.6); b.poly([[p[0] - 2.2, p[1] + 2], [p[0] - 0.4, p[1] - 4.6 + (i % 2)], [p[0] + 2.2, p[1] + 2]], R); }
-    b.patch(hump[0], hump[1] - 1, 6, 3, P.leaf, 5);
-    b.patch(tc[0] + 4, tc[1] + 6, 6, 3, P.leafDk, 2);
+    b.patch(hump[0] - 1, hump[1] - 2, 5, 2.4, P.leaf, 5);
+    b.patch(tc[0] + 6, tc[1] - 7, 4, 2.4, P.leaf, 2); b.patch(tc[0] - 4, tc[1] + 5, 4, 2.4, P.leafDk, 8);
     b.cap(T(-3, -17)[0], T(-3, -17)[1], T(7, -17)[0], T(7, -17)[1], 1.8, 1.8, P.bark);   // rope belt
     leg(6, 8 + (ph == null ? 0 : swing), R);
-    // head, forward of the hump
-    const hd = T(10 + hxo, -36 + hyo);
-    b.ell(hd[0], hd[1], 5.4, 5, R);
-    b.ell(hd[0] + 1, hd[1] + 3.2 + (anim === 'attack' && f === 1 ? 1.2 : 0), 3.6, 2, dk(R, 0.85));      // under-bite jaw
-    b.poly([[hd[0] + 1.6, hd[1] + 3], [hd[0] + 2.4, hd[1] - 0.6], [hd[0] + 3.4, hd[1] + 3]], P.bone);   // tusks
-    b.poly([[hd[0] + 4.2, hd[1] + 3], [hd[0] + 5, hd[1] - 0.2], [hd[0] + 5.8, hd[1] + 2.6]], P.bone);
-    b.rect(hd[0] - 1, hd[1] - 2.8, 7, 1.1, R[0]);                                                          // brow
-    if (eyes && !dead) { b.rect(hd[0] + 2.6, hd[1] - 1.4, 1.8, 1.4, C.amber); } else { b.raw(hd[0] + 3, hd[1] - 0.6, OUT); b.raw(hd[0] + 4, hd[1] - 1.4, OUT); b.raw(hd[0] + 4, hd[1] - 0.6, OUT); b.raw(hd[0] + 3, hd[1] - 1.4, OUT); }
-    b.ell(hd[0] - 2.6, hd[1] - 0.4, 1.6, 2, dk(R, 0.8)); // ear
+    // head: pushes forward from the shoulders, lighter stone, two bright eyes, low tusks
+    const hd = T(16 + hxo, -33 + hyo), HR = P.stone.map((c, i) => i < 3 ? c.map(v => Math.min(255, v * 1.18 + 8)) : c);
+    b.cap(T(7, -31)[0], T(7, -31)[1], hd[0] - 2, hd[1] + 1, 5.6, 5, R);                                  // thick neck
+    b.ell(hd[0], hd[1], 6.4, 5.6, HR);
+    b.ell(hd[0] + 1.2, hd[1] + 3.8 + (anim === 'attack' && f === 1 ? 1.4 : 0), 4.4, 2.2, dk(HR, 0.8));   // under-bite jaw
+    b.poly([[hd[0] + 0.6, hd[1] + 4.6], [hd[0] + 1.4, hd[1] + 0.4], [hd[0] + 2.8, hd[1] + 4.6]], P.bone);   // lower tusks
+    b.poly([[hd[0] + 4.4, hd[1] + 4.6], [hd[0] + 5.4, hd[1] + 0.8], [hd[0] + 6.6, hd[1] + 4.2]], P.bone);
+    b.rect(hd[0] - 1, hd[1] - 3.4, 8, 1.2, P.stone[0]);                                                      // brow ridge
+    if (eyes && !dead) { b.rect(hd[0] + 1.2, hd[1] - 1.8, 2, 1.8, C.amber); b.rect(hd[0] + 4.4, hd[1] - 1.8, 2, 1.8, C.amber); b.raw(hd[0] + 1.4, hd[1] - 1.8, C.white); b.raw(hd[0] + 4.6, hd[1] - 1.8, C.white); }
+    else { for (const x of [1.6, 4.8]) { b.raw(hd[0] + x, hd[1] - 1.4, OUT); b.raw(hd[0] + x + 1, hd[1] - 0.4, OUT); b.raw(hd[0] + x + 1, hd[1] - 1.4, OUT); b.raw(hd[0] + x, hd[1] - 0.4, OUT); } }
+    b.ell(hd[0] - 4, hd[1] - 0.4, 1.6, 2.2, dk(HR, 0.8)); // ear
     // near arm + hand + club
     const na = T(9, -29);
     b.cap(na[0], na[1], gripH[0], gripH[1], 4.2, 3.6, R);
@@ -545,7 +555,7 @@ const ENEMY_ART = (function () {
     if (!(anim === 'attack' && f === 0)) clubDraw();
     if (anim === 'attack' && f === 0) b.ell(gripH[0], gripH[1], 3.6, 3.4, dk(R, 0.92));
     if (slam) { chunks(b, [[28, -5, 1.4], [33, -8, 1.2], [36, -3, 1.4], [24, -9, 1]], P.dirt); b.line(30, 0, 38, -1, P.dirt[0]); }
-    b.fl = 0; b.outline();
+    b.fl = 0; b.rim('#b9b6dc'); b.outline();
   }
 
   function drawTrollSleep(b, f) {
@@ -565,7 +575,7 @@ const ENEMY_ART = (function () {
     b.line(11.5, -16.4 + br * 0.4, 13.5, -16.4 + br * 0.4, OUT); b.line(14, -16.4 + br * 0.4, 15.4, -16.4 + br * 0.4, OUT);   // shut eyes
     zed(b, 17, -26 - f * 2, P.bone[2]);
     if (f) zed(b, 21, -34, P.bone[1]); else b.raw(20, -31, P.bone[1]);
-    b.outline();
+    b.rim('#b9b6dc'); b.outline();
   }
 
   // =========================================================================================================
