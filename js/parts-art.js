@@ -54,9 +54,9 @@ const PARTS_ART = (function () {
   // forced tones. Upper-case of a material letter = its highlight (h). The other forced tones (m = mid, l = low, d = deep) are these
   // legend letters: the letter -> [material, tone]. A set / stamp `legend` may add or override chars.
   //   b: B h  Y m  Z l  X d      e: E h  O m  L l      t: T h  M m  Q l  D d      g: G h  J m  K l
-  //   w: W h  H m  I l  P d      a: A h  U m  V l      s: S h  R m               f: F h        n: N h
+  //   w: W h  H m  I l  P d      a: A h  U m  V l      s: S h  R m               f: F h  C m  x l      n: N h
   const LEGEND = { Y: ['b', 'm'], Z: ['b', 'l'], X: ['b', 'd'], O: ['e', 'm'], L: ['e', 'l'], M: ['t', 'm'], Q: ['t', 'l'], D: ['t', 'd'], J: ['g', 'm'], K: ['g', 'l'],
-    H: ['w', 'm'], I: ['w', 'l'], P: ['w', 'd'], U: ['a', 'm'], V: ['a', 'l'], R: ['s', 'm'] };
+    H: ['w', 'm'], I: ['w', 'l'], P: ['w', 'd'], U: ['a', 'm'], V: ['a', 'l'], R: ['s', 'm'], C: ['f', 'm'], x: ['f', 'l'] };
   const parseCell = (c, legend) => {
     const L = legend[c]; if (L) return typeof L === 'string' ? { m: L, f: null } : { m: L[0], f: L[1] };
     if (c >= 'a' && c <= 'z') return { m: c, f: null };
@@ -544,5 +544,146 @@ const PARTS_ART = (function () {
       pal: { b: LEATHER[t], e: LEATHER[t], o: dk(LEATHER[t], 0.7), t: t >= 2 ? 'gold' : '#b0b0b8' },
       parts: [{ pad: 's1' }, { pad: 's1', wrap: 'wrap' }, { pad: 's2', wrap: 'wrap' }, { pad: 's3', wrap: 'wrap', fur: 'fur' }, { pad: 's4', wrap: 'wrap', fur: 'fur' }][t],
     })),
+  };
+})();
+
+// =====================================================================================================================
+// LIVE HEADS: knighthelm / arcanecowl / wardenhood x 5 tiers.   LIVE BOOTS: knightgreaves / clothsandals / stalkershoes x 5 tiers.
+// (stamp(mx, my, cells) builds a stamp from scattered [x, y, char] cells, markers at mx,my: handy for confetti like flowers and sparkles)
+// =====================================================================================================================
+(function () {
+  const { KITS } = PARTS_ART;
+  const rep = (n, s) => Array(n).fill(s);
+  const stamp = (mx, my, cells) => {
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for (const c of cells) { x0 = Math.min(x0, c[0]); y0 = Math.min(y0, c[1]); x1 = Math.max(x1, c[0]); y1 = Math.max(y1, c[1]); }
+    const g = Array.from({ length: y1 - y0 + 1 }, () => Array(x1 - x0 + 1).fill('.'));
+    for (const c of cells) g[c[1] - y0][c[0] - x0] = c[2];
+    return { at: [mx - x0, my - y0], rows: g.map(r => r.join('')) };
+  };
+  const STEEL = ['#7d8494', '#98a6bd', '#b4c4dc', '#c9d6ec', '#dfe8f8'];
+
+  // ---- KNIGHTHELM: dome b, visor slit d + eyes a, plume p. slots: 1 crest (x11,y3) | 2 wings (x3,y16) | 3 gild (front, x3,y16) | 4 gildB (back)
+  KITS.head.knighthelm = {
+    tpl: { slots: { 1: 'crest', 2: 'wings', 3: 'gild', 4: 'gildB' }, layers: [
+      { id: 'wings', attach: 'bob', mirror: 'half', at: [3, 16], rows: ['2'] },
+      { id: 'helm', view: 'front', attach: 'bob', mirror: 'half', at: [3, 3], rows: ['......bbB', '.....bbbB', '....bbbb*', '....b%bbB', '....bZZZB', '....bdUAd', '....bZZZB', '....bbbbB', '....bbXXB', '.....bXbb', '.....ZZZZ', '......bbb', '.........', '3........'] },
+      { id: 'helm', view: 'back', attach: 'bob', mirror: 'half', at: [3, 3], rows: ['......bbB', '.....bbbB', '....bbbbB', '....bbbbB', '....bbbbB', '....ZZZZZ', '....bbbbB', '....bbbbB', '....bbbbB', '.....bbbB', '.....bbbb', '......bbb', '.........', '4........'] },
+      { id: 'crest', attach: 'bob', at: [11, 3], rows: ['1'] },
+    ] },
+    pal: { b: STEEL[0], t: 'gold', s: 'white', p: '#c8283c', d: '#0c0a16', a: '#9ae8ff' },
+    parts: {
+      crest: {
+        c0: { at: [0, 1], rows: ['bb'] }, c1: { at: [0, 2], rows: ['pp', 'pp'] },
+        c2: { at: [1, 3], rows: ['.ppp.', 'ppppp', 'ppp.p', 'ppp..'] },
+        c3: { at: [2, 3], rows: ['.ppppp...', 'ppppppp..', 'ppppp..p.', '.ppp...p.', '.ppp....p'] },
+        c4: { at: [6, 3], rows: ['....pppppp....', '...pppppppp...', '...pppppppp...', '.p..pppppp.p..', 'p....pppp...p.', 'p....ppp....p.'] },
+      },
+      wings: { wings: { at: [0, 11], rows: ['.RR.', 'T.SS', 'T.MM', '.RR.'] } },
+      gild: {
+        g1: { at: [0, 9], rows: ['.....MMMM', '.........', '.....QQQQ'] },
+        g2: { at: [0, 13], rows: ['........T', '........T', '........T', '........T', '.....MMMT', '.........', '.....QQQQ'] },
+        g3: { at: [0, 13], rows: ['........T', '........T', '.....MMMT', '........T', '.....MMMT', '.........', '.....QQQM', '........M', '........M', '.....M..M'] },
+      },
+      gildB: { gb: { at: [0, 7], rows: ['....MMMMM'] } },
+    },
+    tiers: [0, 1, 2, 3, 4].map(t => ({
+      pal: { b: STEEL[t], p: ['#c8283c', '#c8283c', '#d02e48', '#e03050', '#f03a58'][t] },
+      parts: { crest: 'c' + t, gild: [null, null, 'g1', 'g2', 'g3'][t], gildB: t >= 2 ? 'gb' : null, wings: t >= 4 ? 'wings' : null },
+    })),
+  };
+
+  // ---- ARCANECOWL: a drooping hood tip b, gold star emblem, band. slots: 1 star (x12,y5) | 2 band (x3,y16) | 3 trim (x3,y16) | 4 jewel (x16,y2)
+  const CW = ['#4a5aa8', '#4a46b8', '#5a3ec0', '#6a2ec8', '#3a1e98'];
+  KITS.head.arcanecowl = {
+    tpl: { slots: { 1: 'star', 2: 'band', 3: 'trim', 4: 'jewel' }, layers: [
+      { id: 'cowl', attach: 'bob', at: [5, 0], rows: ['..........bbb..', '.........bbb...', '......B.bbbb...', '.....B.bbbb....', '......bbbbb....', '.....bbbbbb....', '....%b*b$bb....', '...bbbbbbbbb...', '..bbbbbbbbbb...', '..bbbbbbbbbb...', '..bbbbbbbbbb...'] },
+      { id: 'face', view: 'front', attach: 'bob', mirror: 'half', at: [3, 8], rows: ['......XXX', '.....ZZZZ', '.....Z...', '....bZ...', '....bZ...', '....bZ...', '....bbbb.', '.....bbbb', '.........', '3........'] },
+      { id: 'face', view: 'back', attach: 'bob', at: [7, 3], rows: ['....Z.....', '....Z.....', '....ZX....', '....ZX....', '....ZX....', '....ZX....', '....ZX....', '....ZX....', 'bbbbZXbbbb', 'bbbbZXbbbb', '.bbbZbbbb.', '.bbbbbbbb.'] },
+      { id: 'band', attach: 'bob', mirror: 'half', at: [3, 16], rows: ['2'] },
+      { id: 'emblem', view: 'front', attach: 'bob', at: [12, 5], rows: ['1'] },
+      { id: 'crown', attach: 'bob', at: [16, 2], rows: ['4'] },
+    ] },
+    pal: { b: CW[0], t: 'gold', s: 'white', a: '#ff9ae8' },
+    parts: {
+      star: {
+        star0: { at: [0, 0], rows: ['T'] }, star1: { at: [1, 1], rows: ['.M.', 'MTM', '.M.'] },
+        star3: { at: [4, 2], rows: ['.M....M.', '..S.M...', '...MSM..', '....M...', '........', '......S.', 'T.......'] },
+        star4: { at: [4, 2], rows: ['.M....S.', '..STMT..', '...MUM..', '...TMT..', '........', '......S.', 'T.......', '........', '........', '........', 'T......T'] },
+      },
+      band: { low: { at: [0, 9], rows: ['....ZZZZZ'] }, gold: { at: [0, 9], rows: ['....MMMMM'] } },
+      trim: { gold: { at: [0, 8], rows: ['......QQQ', '....M....', '....M....', '....M....', '....M....', '....M....'] } },
+      jewel: { gem: { at: [-2, 2], rows: ['TS', 'M.'] } },
+    },
+    tiers: [0, 1, 2, 3, 4].map(t => ({
+      pal: { b: CW[t] },
+      parts: { star: ['star0', 'star1', 'star1', 'star3', 'star4'][t], band: t >= 2 ? 'gold' : 'low', trim: t >= 2 ? 'gold' : null, jewel: t >= 4 ? 'gem' : null },
+    })),
+  };
+
+  // ---- WARDENHOOD: a leafy hood b, leaves f, flowers j k, antlers w. slots: 1 decor (x3,y15) | 2 face (front, x3,y16)
+  const HD = ['#5a7a3e', '#4a8a40', '#3a9a50', '#2f8a64', '#237a6c'], LF = ['#78a840', '#68c048', '#58d060', '#60e088', '#ffd860'];
+  const leaf = (x, y) => [[x, y, 'C'], [x + 1, y, 'F'], [x, y + 1, 'x'], [x + 1, y + 1, 'C']];
+  const D0 = leaf(10, 1).concat([[11, 3, 'B']]), D1 = D0.concat(leaf(5, 5), leaf(6, 10)), D2 = D1.concat([[8, 3, 'j'], [9, 14, 'k']]);
+  const D3 = D2.concat([[7, 1, 'w'], [7, 2, 'w'], [6, 0, 'w'], [5, 0, 'F'], [8, 0, 'C']]);
+  const D4 = D3.concat([[8, 3, 'M'], [9, 3, 'M'], [10, 3, 'M'], [11, 3, 'M'], [4, 1, 'T'], [3, 3, 'M'], [3, 4, 'M'], [11, 0, 'S']]);
+  KITS.head.wardenhood = {
+    tpl: { slots: { 1: 'decor', 2: 'face' }, layers: [
+      { id: 'hood', view: 'front', attach: 'bob', mirror: 'half', at: [3, 3], rows: ['......bbb', '.....bbbb', '....bbbbb', '....b%bb*', '....bbXXX', '....bbZZZ', '....bb...', '....bb...', '....bb...', '....bb...', '.....bb..', '......bb.', '1........', '2........'] },
+      { id: 'hood', view: 'back', attach: 'bob', mirror: 'half', at: [3, 3], rows: ['......bbb', '.....bbbZ', '....bbbbZ', '....bbbbZ', '....bbbbZ', '....bbbbZ', '....bbbbZ', '....bbbbZ', '....bbbbZ', '.....bbbZ', '.....bbbb', '.........', '1........'] },
+    ] },
+    pal: { b: HD[0], f: LF[0], w: '#7a5a38', j: '#f06a8a', k: '#f0d860', t: 'gold', s: 'white' },
+    parts: {
+      decor: { d0: stamp(3, 15, D0), d1: stamp(3, 15, D1), d2: stamp(3, 15, D2), d3: stamp(3, 15, D3), d4: stamp(3, 15, D4) },
+      face: { band: stamp(3, 16, [[9, 8, 'C'], [10, 8, 'C'], [11, 8, 'C'], [8, 9, 'F']]) },
+    },
+    tiers: [0, 1, 2, 3, 4].map(t => ({ pal: { b: HD[t], f: LF[t] }, parts: { decor: 'd' + t, face: t >= 2 ? 'band' : null } })),
+  };
+
+  // ---- BOOTS: a left / right leg pair (attach 'leg'); the shape is the silhouette per tier, plus a wing stamp (knightgreaves T5).
+  // sockets: one on the left boot (the '*' at the ankle).
+  const E9 = '.........';
+  KITS.boots.knightgreaves = {
+    tpl: { slots: { 1: 'wing' }, layers: [
+      { id: 'wing', attach: 'leg', mirror: 'pair', at: [3, 25], rows: ['1'] },
+      { id: 'boot', attach: 'leg', mirror: 'pair', at: [3, 23], shapes: {
+        low: { rows: rep(5, E9).concat(['......*ZZ', '.....bbbb', '....Zbbbb']) },
+        mid: { rows: rep(4, E9).concat(['......bbb', '......*ZZ', '.....bbbb', '....Zbbbb']) },
+        cuff2: { rows: [E9, E9, '.....eeee', '.....eeee', '.....MMMM', '......*ZZ', '....Ybbbb', '....Mbbbb'] },
+        cuff3: { rows: [E9, '...Meeeee', '...Teeeee', '....MMMMM', '......bbb', '......*ZZ', '....MMMMM', '....Tbbbb'] },
+        cuff4: { rows: ['.....M...', '...MeeTTT', '...Teeeee', '....MMMMM', '......bbb', '......*ZZ', '....MMMMM', '....Tbbbb'] },
+      } },
+    ] },
+    pal: { b: STEEL[0], e: STEEL[0], t: 'gold', s: 'white' },
+    parts: { wing: { wing: { at: [0, 0], rows: ['..SSS', '.RRRR', 'SSSSS', '.MMMM', '..TT.'] } } },
+    tiers: [0, 1, 2, 3, 4].map(t => ({ shape: ['low', 'mid', 'cuff2', 'cuff3', 'cuff4'][t], pal: { b: STEEL[t], e: STEEL[t] }, parts: { wing: t >= 4 ? 'wing' : null } })),
+  };
+  const CL = ['#b8a078', '#c8a868', '#5a84c0', '#7a5cc8', '#e8e0f8'], TIE = ['#8a7050', '#a07848', '#d8c070', '#e8b830', '#ffe27a'];
+  KITS.boots.clothsandals = {
+    tpl: { layers: [
+      { id: 'boot', attach: 'leg', mirror: 'pair', at: [2, 23], shapes: {
+        s0: { rows: rep(5, '..........').concat(['.......*bZ', '......tttt', '......DDDD']) },
+        s1: { rows: rep(4, '..........').concat(['.......MMM', '.......*bZ', '......tttt', '......DDDD']) },
+        s2: { rows: rep(3, '..........').concat(['.......MMM', '.....MMbbZ', '....MQ.*UU', '......tttt', '......DDDD']) },
+        s3: { rows: ['..........', '..........', '...BBB.MMM', '..YYYY.bbZ', '.BBBBMMZbb', '..ZZMQ.*UU', '......tttt', '......DDDD'] },
+        s4: { rows: ['..........', '..........', '...BBB.UUU', 'AAYYYY.bbZ', '.BBBBMMZbb', '.UUZMQ.*UU', '......tttt', '......DDDD'] },
+      } },
+    ] },
+    pal: { b: CL[0], t: TIE[0], a: 'gold' },
+    tiers: [0, 1, 2, 3, 4].map(t => ({ shape: 's' + t, pal: { b: CL[t], t: TIE[t] }, parts: {} })),
+  };
+  const LT = ['#8a6840', '#745638', '#5e5a34', '#3e5a3a', '#2c3430'];
+  KITS.boots.stalkershoes = {
+    tpl: { layers: [
+      { id: 'boot', attach: 'leg', mirror: 'pair', at: [3, 23], shapes: {
+        s0: { rows: rep(5, E9).concat(['......*bb', '.....bbbb', '.....XXXX']) },
+        s1: { rows: rep(4, E9).concat(['......nbn', '......*nb', '.....btbb', '.....XXXX']) },
+        s2: { rows: [E9, E9, '.....eeUe', '.....LLLL', '......nbn', '......*nb', '.....Utbb', '.....XXXX'] },
+        s3: { rows: ['.....C.x.', '....FFFFF', '...ffffff', '....xLLLL', '......nbn', '......*nb', '.....Utbb', '.....XXXX'] },
+        s4: { rows: ['.....C.x.', '....FFFFF', '...ffffff', '..A.xLLLL', '...U..nbn', '...V..*nb', '....UUtbU', '...AUXXXX'] },
+      } },
+    ] },
+    pal: { b: LT[0], e: LT[0], n: '#d8c8a0', t: '#b0b0b8', a: 'gold', f: 'fur' },
+    tiers: [0, 1, 2, 3, 4].map(t => ({ shape: 's' + t, pal: { b: LT[t], e: LT[t] }, parts: {} })),
   };
 })();
