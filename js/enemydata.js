@@ -25,8 +25,8 @@ var ENEMY_DATA = {
   // ---- Vale (L1-3, mid L2) ----------------------------------------------------------------
   // hp is the WHOLE swarm (4 moths share it); XP once for the swarm
   dreammoth: {
-    name: 'Dream Moth', sprite: 'moth', look: 'wisp', hp: 400, speed: 3.0, dmg: 20, el: 'arcane', dmgType: 'arcane', stagger: 1,
-    res: { slash: 0, pierce: 0, fire: 0, frost: 0, nature: 0, lightning: 0, arcane: 0.25, holy: -0.5 },
+    name: 'Dream Moth', sprite: 'moth', look: 'wisp', hp: 450, speed: 3.0, dmg: 20, el: 'arcane', dmgType: 'arcane', stagger: 1,
+    res: { slash: 0, pierce: 0, fire: 0, frost: 0, nature: 0, lightning: 0, arcane: 0, holy: -0.5 },
     tags: ['flying', 'swarm'],
     parts: ['orbit', 'shoot', 'swarm'],
     params: { orbit: { r: 2.6 }, shoot: { range: 4.5, wind: 0.6, cd: 2.8, speed: 4.5, r: 0.25, col: '#e8d0ff' }, swarm: { n: 4, spread: 1.6, source: 'moth_nest' } },
@@ -35,7 +35,7 @@ var ENEMY_DATA = {
 
   // ---- Pinewood (L3-10, mid L6.5) -----------------------------------------------------------
   gloomslime: {
-    name: 'Gloom Slime', sprite: 'slime', look: 'slime', hp: 470, speed: 2.2, dmg: 32, el: 'gloom', dmgType: 'gloom', stagger: 2,
+    name: 'Gloom Slime', sprite: 'slime', look: 'slime', hp: 520, speed: 2.2, dmg: 32, el: 'gloom', dmgType: 'gloom', stagger: 2,
     res: { slash: -0.5, pierce: 0.25 },
     tags: ['amorphous'],
     parts: ['chase', 'brute', 'split'],

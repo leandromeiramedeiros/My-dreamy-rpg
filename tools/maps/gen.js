@@ -146,7 +146,8 @@ const PROP = {
   fishspot: { r: 0, sp: 3 }, gate: { r: 0, sp: 1.5 }, hidden: { r: 0, sp: 1.5 }, keydoor: { r: 0, sp: 1.5 }, lever: { r: 0, sp: 1 },
 };
 // Object kinds the game does not know yet are written with a stand-in 't' and the intended kind in 'role'
-// (the engine drops unknown 't', so stand-ins keep the map playable).  --kinds=future writes the real names.
+// (the engine drops unknown 't', so stand-ins keep the map playable).  Only used with --compat; the default (kinds 'future') writes the
+// real names and maps the few the engine still lacks through ENGINE_KIND below.
 const STAND_IN = {
   chest: { t: 'crystal', tier: 'wood' }, chest_silver: { t: 'crystal', tier: 'silver' }, chest_gold: { t: 'crystal_violet', tier: 'gold' },
   tablet: { t: 'sign' }, rune_cache: { t: 'crystal_violet' }, gem_cache: { t: 'crystal_violet' }, elder_stone: { t: 'crystal_violet' },

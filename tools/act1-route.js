@@ -128,11 +128,12 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('pinewood: r1 ogre pack', await goto('r1')); const r1 = await fight('r1_done');
   check('pinewood: r1 spawned ogre + gloomslime + shadehound; cleared', r1.includes('ogre') && r1.includes('gloomslime') && r1.includes('shadehound') && await fired('r1_done'), r1); await shot('pinewood_r1_ogres');
   // elite ogre with the key
+  const pre = await ev(() => window.__live());
   check('pinewood: elite ogre guards the key', await goto('elite')); await wf(() => window.__live().length >= 1, null, 5000);
   const el = await ev(() => G.enemies.filter(e => !e.dummy).map(e => ({ t: e.type, elite: !!e.elite || !!(e.mods && e.mods.length) || !!e.eliteMods })));
   await shot('pinewood_elite');
   await fight('elite_done');
-  check('pinewood: elite is an ogre (no healer with it) and drops the root key', el.length === 1 && el[0].t === 'ogre' && await ev(() => hasKey('key_roothollow')) && (await quest('shard_root')) === 1, el);
+  check('pinewood: elite is an ogre (no healer with it) and drops the root key', pre.length === 0 && el.length === 1 && el[0].t === 'ogre' && await ev(() => hasKey('key_roothollow')) && (await quest('shard_root')) === 1, { pre, el });
   // the ford ambush: the wrong-weapon pack
   check('pinewood: ford ambush (boars resist pierce)', await goto('ford')); const ford = await fight('ford_done'); check('pinewood: ford pack = boar + slime + hound', ford.includes('thornbackboar') && await fired('ford_done'), ford);
   check('pinewood: second shrine', await goto('shrine2'));

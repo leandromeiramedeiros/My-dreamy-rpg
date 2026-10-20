@@ -11,7 +11,8 @@
 //     r (body radius, tiles, default 0.42), hgt (nameplate height, tiles, default 3), blood (hit colour),
 //     cls: 'normal' | 'elite' (default: normal; elite also when hp >= 1000 like before),
 //     xp (kill XP as a FRACTION of the enemy level's XP bar, default min(1.2, hp / 1300)),
-//     look (an ENEMY id whose art is borrowed until `sprite` exists), scale (art scale), ai (legacy, see below) }
+//     art (an ENEMY_ART key, default the row id), look (an ENEMY id whose art is borrowed until `sprite` exists),
+//     scale (art scale), ai (legacy, see below) }
 //   UNITS  hp = L1 base (the engine multiplies by enemyHpMul(level), items.js) · speed = tiles/s (hero 3.7)
 //          dmg = L1 raw hit (x enemyDmgMul(level)) · times in s · distances / radii in tiles · angles: arc in
 //          DEGREES when > 6.3, else radians · res tiers: -0.5 weak, 0.5 resist, 1 immune (same as data.js)
@@ -77,7 +78,7 @@
 
 // ---------------------------------------------------------------- built-in rows (ported 1:1 from M2a game.js)
 const BUILTIN_ROWS = {
-  slime: { name: 'Gloom slime', ai: 'hopper', hp: 500, r: 0.38, speed: 2.0, dmg: 32, hgt: 1.8, blood: '#8b7cf6', xp: 0.13,
+  slime: { name: 'Gloom slime', ai: 'hopper', hp: 540, r: 0.38, speed: 2.0, dmg: 32, hgt: 1.8, blood: '#8b7cf6', xp: 0.13,
     el: 'gloom', dmgType: 'gloom', stagger: 0, res: { pierce: 0.25, slash: -0.5 }, tags: ['amorphous', 'gloom'],
     parts: ['chase', 'brute'], params: { chase: { hop: 1.8 }, brute: { shape: 'circle', r: 1.15, range: 1.0, wind: 0.55, cd: 1.1, rec: 0.4, splat: true, stopK: 0.8 } } },
   wisp: { name: 'Wisp', ai: 'shooter', hp: 235, r: 0.32, speed: 1.9, dmg: 34, hgt: 3.2, blood: '#9ef0ff', xp: 0.092,

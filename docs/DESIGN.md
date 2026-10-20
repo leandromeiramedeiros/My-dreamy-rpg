@@ -1200,3 +1200,189 @@ with its common-enemy version.
   * **Build captain** (Haiku): runs every check and keeps the README.
 * **Director ruling:** agents still never commit. The director commits after the checks pass.
 
+
+## 23. Weapon classes and variants: 5 classes × 3 variants (client request; expert-designed; director-approved; supersedes §15.5's multi-option slots and §17's family lists where they conflict)
+
+**Principle:** a **class** owns the rhythm (basic combo, MP generation, class passive, aim grammar). A **variant** owns its
+damage type, the status it reinforces, its three skills, its decision, and a unique look at every tier. Each variant has
+exactly **one Q/E/R plus one Skill Rune alternate per slot** (a rune now reads "Rapier: Q → Flèche"). Alternates are
+sidegrades (±10 % DPS, a different shape or status). Existing casts are re-homed onto variants. **Origins** give the T1 of
+one variant; the other variants drop from zone 1. Armour stays class-agnostic (F/C/Shift).
+
+### 23.1 Classes and passives
+| Class | Rhythm | Passive | Variants |
+|---|---|---|---|
+| Blades | 3-hit, 0.42 s, 8 MP/hit | 3rd hit is a wide sweep, cancel-friendly | Sword · Rapier · Mace |
+| Greatarms | 2-hit, 0.62 s, 14 MP, charge 1 s ×1.8 | poise | Axe · Hammer · Halberd |
+| Shots | 1 shot, 0.36 s | **Focus**: still for 0.6 s → next shot crits | Bow · Crossbow · Chakram |
+| Foci | bolt, 0.48 s, builds MP | reactions refund 10 % MP | Staff · Spellbook · Orb |
+| Shadows | 4-hit (§17) | backstab + Marks | Daggers · Claws · Fans |
+
+### 23.2 Roster (Q / E / R · runes · status · decision)
+* **Sword**: the measured blade, slash.
+  * Skills: Q Sunslash, E Dash Strike, R Radiant Judgement.
+  * Runes: Heroic Strike, Whirling Blade, Dawn Wave.
+  * Reinforces Shatter and holy.
+  * Decision: when to commit the dash.
+* **Rapier**: the duelist's needle, pierce. 4 quick thrusts.
+  * Skills:
+    * Q Flèche: a line, +25 % crit.
+    * E **Riposte**: a 1 s parry; a block staggers the attacker 3 and refunds the cooldown (ICD 1 s).
+    * R Perforate: 5 hits; staggered targets take guaranteed crits.
+  * Runes: Lunge-step, Feint, Coup de Grâce (execute).
+  * Reinforces Rupture and Shock.
+  * Decision: parry timing.
+* **Mace**: the warden's hammerlet. Every hit staggers 1.
+  * Skills:
+    * Q Crush.
+    * E Shield Bash: reflects projectiles mid-dash.
+    * R Consecrate: a holy zone that heals and primes Purify.
+  * Runes: Quake, Rally, Hammerfall.
+  * Reinforces Stagger, Detonate and holy.
+  * Decision: break bars or zone control.
+* **Axe**: the splitter.
+  * Skills: Q Cleave, E Shoulder Charge, R Colossus Strike (held).
+  * Runes: Cinder Cleave, Whirlwind, Avalanche.
+  * Reinforces Detonate and Wildfire.
+  * Decision: charge or release.
+* **Hammer**: the earthshaker, stagger 3. Basic hit 2 is a slam.
+  * Skills:
+    * Q Earthbreaker: persistent cracks.
+    * E Seismic Leap.
+    * R Aftershock: 3 rings that re-stagger and guarantee a break on staggerMax ≤ 9.
+  * Runes: Ice Quake, Tremor, Meteor Hammer.
+  * Reinforces Shatter and Rupture.
+  * Decision: where your cracks are.
+* **Halberd**: the reach, 1.5× range. Basics alternate thrust and sweep.
+  * Skills:
+    * Q Sweep: knockback.
+    * E **Brace**: a spear-wall counter.
+    * R Skewer: pins a boss-class enemy for 1.5 s.
+  * Runes: Storm Sweep, Vault, Pike Square.
+  * Reinforces Conduct and Rupture.
+  * Decision: spacing at 2–3 tiles.
+* **Bow**: the volley.
+  * Skills: Q Multishot, E Tumble, R Rain of Arrows.
+  * Runes: Venom Volley, Snare, Moonbeam.
+  * Reinforces Poison, Wildfire and Chill zones.
+  * Decision: spread or focus.
+* **Crossbow**: the bolt, stagger 2. A **4-bolt clip with a 1 s reload** (dodge-cancellable; reloading while still gives
+  Focus).
+  * Skills: Q Piercing Bolt, E Bolas (root + Mark), R Ballista (1.2 s channel, ≤ 25 % of boss HP).
+  * Runes: Explosive Bolt, Grapple, Hail.
+  * Reinforces Rupture and Shock.
+  * Decision: manage the clip.
+* **Chakram**: the return, ranged slash. A thrown disc that returns, hitting twice.
+  * Skills: Q Ricochet, E Orbit Disc, R Guillotine.
+  * Runes: Split, Blade Dance, Eclipse.
+  * Reinforces Shatter at range and Conduct.
+  * Decision: line up the return.
+* **Staff**: the elementalist.
+  * Skills: Q Firebolt, E Gravity Well, R Meteor.
+  * Runes: Static Field, Blink-cast, Starstorm.
+  * Reinforces Burn, Detonate and Wildfire.
+  * Decision: place the circle.
+* **Spellbook**: the ritualist. **Pages**: each skill cast adds a page (max 3), and basics consume pages to grow (bolt →
+  3 bolts → beam).
+  * Skills:
+    * Q Frost Shards.
+    * E Arcane Barrage: +1 missile per page.
+    * R Rune of Binding: freezes on its 3rd pulse.
+  * Runes: Hex, Ward, Tome Burst.
+  * Reinforces Chill → Shatter and Overload.
+  * Decision: spend pages or save them.
+* **Orb**: the channeler. **Channel**: hold for a beam that drains 6 MP/s; tap for a bolt that builds MP. Beam DPS ≤ bolt
+  DPS +15 %.
+  * Skills: Q Chain Lightning, E Lightning Orb, R Tempest.
+  * Runes: Ball Lightning, Mirror Orb, Singularity.
+  * Reinforces Shock, Conduct and Overload.
+  * Decision: beam or build.
+* **Daggers**: as in §17.2. Poison and Rupture.
+* **Claws**: the beast. **Frenzy**: +5 % attack speed per consecutive hit, max +50 %, decays after 1.5 s.
+  * Skills: Q Rend, E Pounce, R Savage.
+  * Runes: Maul, Shadow Pounce, Bloodmoon.
+  * Reinforces Burn and stagger.
+  * Decision: never stop hitting.
+* **Fans**: the dancer, mid-range. Returning fans; Marks on any hit, each Mark slows 10 %.
+  * Skills: Q Veil Dance (Chill), E Mirage Step (taunting decoy), R Thousand Petals (freezes on its last tick).
+  * Runes: Ice Fans, Flourish, Silk Storm.
+  * Reinforces Chill, Shatter and control.
+  * Decision: control the room from mid-range.
+
+Every variant uses at least 3 aim shapes. The new shape is the channel-beam.
+
+### 23.3 Tier names (T1 → T5 → Mythic)
+The look on the hero escalates through the tiers: grey → ornate → sun- or moon-etched → glowing → made of light.
+
+| Variant | T1 | T2 | T3 | T4 | T5 | Mythic |
+|---|---|---|---|---|---|---|
+| Sword | Rusty Blade | Dawnblade | Sunforged Blade | Aurora Edge | Dawn Eternal | Morrowbane |
+| Rapier | Tin Needle | Moonpoint | Silver Estoc | Starpoint | Needle Eternal | *Sorrel's Needle* |
+| Mace | Iron Cudgel | Dawnmace | Sunwarden Mace | Aurora Maul | Vow Eternal | *Lamplighter* |
+| Axe | Splitting Axe | Dawnbreaker | Sunforged Axe | Aurora Cleaver | Dawn Colossus | Kharzul's Anvil-Axe |
+| Hammer | Sledge | Sunhammer | Mountain Maul | Aurora Anvil | Hammer Eternal | The Unmaking |
+| Halberd | Pike | Dawnglaive | Sun Halberd | Aurora Partisan | Reach Eternal | Vigil's Pole |
+| Bow | Hunter's Bow | Moonbow | Silverwing | Eclipse Longbow | Moon Eternal | Sorrel's Bow |
+| Crossbow | Hand Crossbow | Dawn Arbalest | Sunbolt | Aurora Ballista | Bolt Eternal | Morrow's Quiet |
+| Chakram | Rim | Moon Chakram | Silverring | Eclipse Ring | Ring Eternal | Aerin's Halo |
+| Staff | Willow Wand | Starfall Staff | Comet Rod | Nebula Sceptre | Night Eternal | Morrow's Lullaby |
+| Spellbook | Primer | Dreambook | Sun Codex | Aurora Grimoire | Book Eternal | The Names on the Pillars |
+| Orb | Glass Bauble | Starfall Orb | Comet Orb | Nebula Sphere | Orb Eternal | *Last Light* |
+| Daggers | (§17 tiers) | | | | | |
+| Claws | Bone Claws | Nightclaws | Silvertalon | Eclipse Claws | Claws Eternal | Bramblehorn's Roots |
+| Fans | Paper Fans | Moonfans | Silverplume | Eclipse Fans | Fans Eternal | Mirelle's Tide |
+
+Director renames are in italics. Pip's Lantern and Sorrel's Vow are already existing uniques, and "Last Light" honours Pip
+without making the hero wield it.
+
+### 23.4 Balance (balsim gets a variant loop)
+* DPS parity across all 15 variants is **±15 % at equal tier**.
+* Each variant's utility score (i-frames, control and sustain per minute) stays within 0.8–1.2× of its class mean.
+* Rune alternates stay within ±10 % of the base skill; balsim flags anything over 15 %.
+* A variant's status bonus is +15 % `statusChance`, additive and never a multiplier.
+* Caps per variant:
+  * the Riposte has a 1 s ICD
+  * a Ballista bolt deals ≤ 25 % of boss HP
+  * Aftershock only guarantees a break on staggerMax ≤ 9
+  * the Chakram sim assumes 60 % return uptime
+  * Frenzy caps at +50 %
+  * pages reset on swap
+
+### 23.5 Mastery, swapping, story
+* **Variant mastery** has 5 ranks earned by kills and replaces weapon mastery. At rank 3 you get the rune alternate free.
+  At rank 5 a **hybrid twist** unlocks, e.g.:
+  * the Sword's Judgement staggers
+  * the Rapier's Riposte reflects projectiles
+  * the Hammer's cracks last 6 s
+  * the Orb's beam Conducts
+  * the Crossbow's clip holds 6
+* **Two weapon slots.** Swap with a 1 s cooldown. Swapping triggers the **Changeover** Duo (the next skill costs 0 MP),
+  at most once per 8 s, and it counts in parity. This lands in M5.
+* **Story:** every Mythic is a story object found on the 27 maps. Each variant appears first as an **enemy weapon**
+  (halberd knights, crossbow archers, orb-channelling chanters).
+
+### 23.6 Cost, code, migration, schedule
+* **Art: a parts kit per class**, built first in **M3** with the hero wiring (director ruling: the expert said M4).
+  * Each variant gets one silhouette template. Each tier is a palette plus 2–3 part swaps.
+  * 90 weapon layers + ~105 icons ≈ 6–7 Sonnet-weeks, staged by milestone.
+  * One new attack pose per class: thrust, channel, throw.
+* **Code:**
+  * 8 new mechanics: channel-beam, returning projectile, parry, reload clip, pages, frenzy, decoy-taunt, persistent
+    cracks.
+  * At most **36 new cast functions**. The existing 42 are reused.
+* **Data and saves:**
+  * `WEAPONS[class].variants[id]`, with FAMILY_TIERS keyed by variant.
+  * Save migration: dawnblade→sword, starfall→staff, moonbow→bow, nightfang→daggers, dawnbreaker→axe.
+  * Runes are stored as `variant:slot`.
+* **Schedule:**
+  * M3: the structure refactor, migration and parts kit.
+  * M4: Rapier, Mace and Crossbow, **plus prototypes of the Orb beam and the Crossbow reload on touch** before the rest
+    is committed.
+  * M5: Spellbook, Orb, Chakram and weapon swap.
+  * M6: Hammer, Halberd and Claws.
+  * M7: Fans and all Mythics.
+  * M8: mastery twists.
+* **Cut order if behind:** Fans → Halberd → Chakram → Claws → Mace. Never cut Rapier, Crossbow, Spellbook, Orb or Hammer;
+  they carry the new mechanics.
+* **Risk:** the art collides with the 27 maps and 28 enemies in M4–M7. The parts kit must land in M3, or one of the three
+  slips.

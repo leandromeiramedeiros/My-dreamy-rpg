@@ -759,7 +759,7 @@ function drawEnemyArt(ctx, e, key, vx, vy, spawnA) {
   if (!e.artHgt) { e.artHgt = true; e.hgt = Math.max(e.hgt || 0, info.ay / ZS * 0.95); }
   const [anim, frame] = enemyArtAnim(e, key);
   e.lmx = e.x; e.lmy = e.y;
-  if (e.under && !(e.state === 'wind' && e.act === 'burrow' && (e.windMax || 0) - e.st < 0.36)) { drawBurrowed(ctx, e, vx, vy); return; }
+  if (e.under && e.state !== 'erupt' && !(e.state === 'wind' && e.act === 'burrow' && (e.windMax || 0) - e.st < 0.36)) { drawBurrowed(ctx, e, vx, vy); return; }
   const fly = (ENEMY[e.type].tags || []).includes('flying'), oy = fly ? -(8 + Math.sin(e.anim * 3) * 3) : 0;
   const mods = e.elite && e.mods || [], ecol = mods[0] && ELITE_MODS[mods[0]] ? ELITE_MODS[mods[0]].col : '#ffd35a';
   let img = ENEMY_ART.get(key, anim, frame, e.elite ? { tint: ecol, amount: 0.3 } : null);
