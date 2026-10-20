@@ -237,11 +237,13 @@ for (const id of BOSS_IDS) {
     else red('fairness ' + s);
   }
   // one big hit vs the reference hero: §20.3 35-45 % of eHP; "three mistakes kill, one never does"
-  const big = ev(`(() => { const D = BOSSES['${ENEMY[id].boss || id}']; let best = null; for (const n in D.moveDefs) { const M = D.moveDefs[n]; if (M.hit === 'big' || (M.dmg || 0) >= 100) { simMap(${bandOf(L).lo}, ${bandOf(L).hi}); simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', 'reference'); const b = spawnEnemy('${id}', 30, 24, 0); const raw = moveDmg(b, M), p = G.player; const taken = raw * (1 - p.def) * (1 - ((p.res && p.res[M.el || b.el]) || 0)); const f = taken / p.maxHp; if (!best || f > best.f) best = { move: n, f }; } } return best; })()`);
+  const big = ev(`(() => { const D = BOSSES['${ENEMY[id].boss || id}']; let best = null; for (const n in D.moveDefs) { const M = D.moveDefs[n]; if (M.hit === 'big' || (M.dmg || 0) >= 100) { simMap(${bandOf(L).lo}, ${bandOf(L).hi}); simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', 'reference'); const b = spawnEnemy('${id}', 30, 24, 0); const raw = moveDmg(b, M), p = G.player; const taken = raw * (1 - p.def) * (1 - ((p.res && p.res[M.el || b.el]) || 0)); const f = taken / p.maxHp; (best = best || []).push({ move: n, f }); } } return best; })()`);
   if (big) {
-    log(`    biggest telegraphed hit: ${big.move} = ${Math.round(big.f * 100)} % of the reference hero's HP (target 35-45 %)`);
-    if (big.f >= 1) red(`${id}.${big.move} one-shots the reference hero (${Math.round(big.f * 100)} % HP)`);
-    else if (big.f < 0.3 || big.f > 0.5) notes.push(`${id}.${big.move} big hit ${Math.round(big.f * 100)} % of hero HP (target 35-45 %)`);
+    log(`    telegraphed big hits vs the reference hero: ${big.map(h => `${h.move} ${Math.round(h.f * 100)} %`).join(', ')} (target 35-45 %)`);
+    for (const h of big) {
+      if (h.f >= 1) red(`${id}.${h.move} one-shots the reference hero (${Math.round(h.f * 100)} % HP)`);
+      else if (h.f < 0.35 || h.f > 0.45) notes.push(`${id}.${h.move} big hit ${Math.round(h.f * 100)} % of hero HP (target 35-45 %)`);
+    }
   }
 }
 

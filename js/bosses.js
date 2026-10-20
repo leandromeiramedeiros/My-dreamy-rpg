@@ -46,14 +46,15 @@ function REF_EHP(L) {
 const HIT_FRAC = { big: 0.45, chip: 0.1 };   // of REF_EHP; the real reference hero takes ~36 % / 8 % of its HP (balsim)
 
 const BUILTIN_BOSSES = {
-  // the M2a fight, ported number for number (acceptance test). Phase 3 (pillars, spiral) is M4.
+  // the M2a fight, ported move for move and timing for timing (acceptance test). M2b balsim retimed its DAMAGE onto the
+  // reference eHP (big telegraphed hits 35-45 % of the hero's HP; it was ~7 %). Phase 3 (pillars, spiral) is M4.
   boss: { name: 'The Gloam Warden', kind: 'guardian', level: 17, hp: 27660, speed: 1.6, keep: 2.2, staggerMax: 4.8, breakOpen: 0, xp: 1, bob: true, nearR: 3.6,
     moveDefs: {
-      cleave: { type: 'cone', arc: 2.0, r: 3.6, wind: 0.85, open: 0.55, dmg: 120, el: 'slash', cd: 0.9, range: 'near', legacy: true },
-      slam: { type: 'circle', at: 'self', r: 3.4, wind: 1.1, open: 0.6, dmg: 150, el: 'gloom', cd: 0.8, range: 'near', hitstop: 0.08, legacy: true },
-      volley: { type: 'volley', n: 16, rings: 3, delay: 0.35, gap: 0.45, rot: 0.2, speed: 4.6, life: 3.2, dmg: 38, el: 'arcane', dur: 1.8, scale: 'none', cd: 1.0, legacy: true },
-      charge: { type: 'charge', len: 8, w: 1.1, wind: 0.75, speed: 15, dur: 0.5, open: 0.6, dmg: 110, el: 'slash', scale: 'wind', cd: 0.8, range: 'far', legacy: true },
-      voidrain: { type: 'rain', count: 6, r: 1.3, spread: [1, 4], wind: 1.0, dur: 1.5, dmg: 85, el: 'gloom', scale: 'none', cd: 0.6 },
+      cleave: { type: 'cone', arc: 2.0, r: 3.6, wind: 0.85, open: 0.55, hit: 'big', dmgPct: 0.42, el: 'slash', cd: 0.9, range: 'near', legacy: true },
+      slam: { type: 'circle', at: 'self', r: 3.4, wind: 1.1, open: 0.6, hit: 'big', dmgPct: 0.5, el: 'gloom', cd: 0.8, range: 'near', hitstop: 0.08, legacy: true },
+      volley: { type: 'volley', n: 16, rings: 3, delay: 0.35, gap: 0.45, rot: 0.2, speed: 4.6, life: 3.2, hit: 'chip', dmgPct: 0.04, el: 'arcane', dur: 1.8, scale: 'none', cd: 1.0, legacy: true },
+      charge: { type: 'charge', len: 8, w: 1.1, wind: 0.75, speed: 15, dur: 0.5, open: 0.6, hit: 'big', dmgPct: 0.4, el: 'slash', scale: 'wind', cd: 0.8, range: 'far', legacy: true },
+      voidrain: { type: 'rain', count: 6, r: 1.3, spread: [1, 4], wind: 1.0, dur: 1.5, hit: 'chip', el: 'gloom', scale: 'none', cd: 0.6 },
     },
     phases: [
       { hpBelow: 1, moves: { cleave: 2, slam: 1, volley: 1, charge: 2 } },
