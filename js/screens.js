@@ -216,8 +216,9 @@ function drawFullMap(ctx) {
   UI.text(ctx, m.name.toUpperCase(), 48, 40, 'body', UC.gold);
   UI.text(ctx, u.mode === 'shrine' ? 'SHRINE WARP' : 'MAP', 912, 40, 'small', UC.dim, 'right');
   // the map, fitted into 600 x 420
-  const MW = 600, MH = 420, MX = 44, MY = 76, k = Math.min(MW / mi.N, MH / mi.N), dw = mi.N * k, dx = MX + (MW - dw) / 2, dy = MY + (MH - dw) / 2;
-  ctx.imageSmoothingEnabled = false; ctx.drawImage(fullMapCanvas(m), Math.round(dx), Math.round(dy), Math.round(dw), Math.round(dw));
+  const MW = 600, MH = 420, MX = 44, MY = 76, P = MINI_PAD - 4, inner = mi.N - P * 2, k = Math.min(MW / inner, MH / inner), dw = inner * k;
+  const dx = MX + (MW - dw) / 2 - P * k, dy = MY + (MH - dw) / 2 - P * k;   // the pad is cropped: the map diamond fills the box
+  ctx.imageSmoothingEnabled = false; ctx.drawImage(fullMapCanvas(m), P, P, inner, inner, Math.round(dx + P * k), Math.round(dy + P * k), Math.round(dw), Math.round(dw));
   const at = (x, y) => [dx + (mi.ox + x - y) * k, dy + (mi.oy + x + y) * k];
   const targets = typeof shrineTargets === 'function' ? shrineTargets(m) : [];
   for (const o of shrinesOf(m)) if (shrineFound(m, o.shrineId)) {
