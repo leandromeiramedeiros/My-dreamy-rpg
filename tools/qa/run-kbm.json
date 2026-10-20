@@ -14,8 +14,8 @@
   "pinewood": {
    "enters": 1,
    "ms": 0,
-   "deaths": 6,
-   "potions": 15,
+   "deaths": 7,
+   "potions": 18,
    "kills": 0,
    "lvlIn": 1,
    "dmgTaken": 0,
@@ -477,6 +477,83 @@
    "shot": "tools/qa/shots/kbm-061-death.png",
    "pot": 0,
    "obj": "Defeat Mossjaw"
+  },
+  {
+   "at": 1476.3,
+   "map": "pinewood",
+   "x": 50.28,
+   "y": 12.41,
+   "lvl": 13,
+   "boss": "mossjaw",
+   "bossHp": 25,
+   "near": [
+    "mossjaw",
+    "ogre",
+    "shadehound",
+    "shadehound",
+    "shadehound"
+   ],
+   "last": [
+    {
+     "gt": 1446.75,
+     "map": "pinewood",
+     "dmg": 55,
+     "el": "slash",
+     "src": "shadehound",
+     "dist": 0.1,
+     "warn": "burrow",
+     "tele": false,
+     "hp": 685,
+     "max": 1097,
+     "x": 49,
+     "y": 12.9
+    },
+    {
+     "gt": 1449.35,
+     "map": "pinewood",
+     "dmg": 461,
+     "el": "nature",
+     "src": "mossjaw",
+     "dist": 0.8,
+     "warn": "circle",
+     "tele": false,
+     "hp": 243,
+     "max": 1097,
+     "x": 50,
+     "y": 12.8
+    },
+    {
+     "gt": 1450.83,
+     "map": "pinewood",
+     "dmg": 115,
+     "el": "slash",
+     "src": "shadehound",
+     "dist": 0.9,
+     "warn": "howl",
+     "tele": true,
+     "hp": 145,
+     "max": 1097,
+     "x": 50.8,
+     "y": 12.7
+    },
+    {
+     "gt": 1454.08,
+     "map": "pinewood",
+     "dmg": 152,
+     "el": "slash",
+     "src": "mossjaw",
+     "dist": 0.6,
+     "warn": "lunge",
+     "tele": true,
+     "hp": 0,
+     "max": 1097,
+     "x": 50.3,
+     "y": 12.4
+    }
+   ],
+   "shot": "tools/qa/shots/kbm-063-death.png",
+   "pot": 0,
+   "obj": "Defeat Mossjaw"
   }
  ],
  "bosses": [
@@ -584,6 +661,24 @@
    "wk": "sword",
    "minHpPct": 0,
    "dur": 94.9,
+   "deaths": 1,
+   "killed": false,
+   "potions": 0
+  },
+  {
+   "type": "mossjaw",
+   "lvl": 13,
+   "bossLvl": 5,
+   "at": 1417.4,
+   "t0": 1792497827513,
+   "deaths0": 6,
+   "hp": 11646,
+   "pot0": 3,
+   "map": "pinewood",
+   "maxHp": 1097,
+   "wk": "sword",
+   "minHpPct": 0,
+   "dur": 60.2,
    "deaths": 1,
    "killed": false,
    "potions": 0
@@ -4951,6 +5046,347 @@
    "deaths": 1,
    "killed": false,
    "potions": 0
+  },
+  {
+   "at": 1409,
+   "msg": "goal mossjaw: ok",
+   "sec": "96.8"
+  },
+  {
+   "at": 1411.7,
+   "msg": "Mossjaw retry #6",
+   "lvl": 13,
+   "deaths": 6,
+   "obj": "Defeat Mossjaw"
+  },
+  {
+   "at": 1411.7,
+   "msg": "goal: mossjaw retry"
+  },
+  {
+   "at": 1417.4,
+   "msg": "BOSS START mossjaw",
+   "type": "mossjaw",
+   "lvl": 13,
+   "bossLvl": 5,
+   "t0": 1792497827513,
+   "deaths0": 6,
+   "hp": 11646,
+   "pot0": 3,
+   "map": "pinewood",
+   "maxHp": 1097,
+   "wk": "sword"
+  },
+  {
+   "at": 1417.4,
+   "msg": "goal mossjaw retry: ok",
+   "sec": "5.7"
+  },
+  {
+   "at": 1417.4,
+   "msg": "goal: mossjaw"
+  },
+  {
+   "at": 1422.8,
+   "msg": "dodge on warn",
+   "move": "circle",
+   "type": "circle",
+   "age": 0.75
+  },
+  {
+   "at": 1425.6,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.41
+  },
+  {
+   "at": 1430.9,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.34
+  },
+  {
+   "at": 1434,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.35
+  },
+  {
+   "at": 1436.6,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.35
+  },
+  {
+   "at": 1437.4,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.28
+  },
+  {
+   "at": 1441.1,
+   "msg": "dodge on warn",
+   "move": "circle",
+   "type": "circle",
+   "age": 0.75
+  },
+  {
+   "at": 1443.1,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.35
+  },
+  {
+   "at": 1443.9,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.51
+  },
+  {
+   "at": 1444.2,
+   "msg": "drink potion",
+   "hp": 233,
+   "max": 1097,
+   "pot": 3,
+   "map": "pinewood"
+  },
+  {
+   "at": 1444.3,
+   "msg": "potion drunk",
+   "hp": 672,
+   "max": 1097
+  },
+  {
+   "at": 1451.1,
+   "msg": "dodge on warn",
+   "move": "circle",
+   "type": "circle",
+   "age": 0.75
+  },
+  {
+   "at": 1453.4,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.32
+  },
+  {
+   "at": 1455.1,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.35
+  },
+  {
+   "at": 1456.5,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.3
+  },
+  {
+   "at": 1457.4,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.28
+  },
+  {
+   "at": 1458.2,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.56
+  },
+  {
+   "at": 1458.3,
+   "msg": "drink potion",
+   "hp": 106,
+   "max": 1097,
+   "pot": 2,
+   "map": "pinewood"
+  },
+  {
+   "at": 1458.5,
+   "msg": "potion drunk",
+   "hp": 546,
+   "max": 1097
+  },
+  {
+   "at": 1459.3,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.33
+  },
+  {
+   "at": 1464.6,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.26
+  },
+  {
+   "at": 1465.3,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.6
+  },
+  {
+   "at": 1466,
+   "msg": "drink potion",
+   "hp": 296,
+   "max": 1097,
+   "pot": 1,
+   "map": "pinewood"
+  },
+  {
+   "at": 1466.1,
+   "msg": "potion drunk",
+   "hp": 735,
+   "max": 1097
+  },
+  {
+   "at": 1467.7,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.32
+  },
+  {
+   "at": 1469.5,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 1470.5,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.02
+  },
+  {
+   "at": 1471.2,
+   "msg": "dodge on warn",
+   "move": "circle",
+   "type": "circle",
+   "age": 0.78
+  },
+  {
+   "at": 1472.6,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.32
+  },
+  {
+   "at": 1475,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 1475.8,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.29
+  },
+  {
+   "at": 1476.3,
+   "msg": "DEATH",
+   "map": "pinewood",
+   "x": 50.28,
+   "y": 12.41,
+   "lvl": 13,
+   "boss": "mossjaw",
+   "bossHp": 25,
+   "near": [
+    "mossjaw",
+    "ogre",
+    "shadehound",
+    "shadehound",
+    "shadehound"
+   ],
+   "last": [
+    {
+     "gt": 1446.75,
+     "map": "pinewood",
+     "dmg": 55,
+     "el": "slash",
+     "src": "shadehound",
+     "dist": 0.1,
+     "warn": "burrow",
+     "tele": false,
+     "hp": 685,
+     "max": 1097,
+     "x": 49,
+     "y": 12.9
+    },
+    {
+     "gt": 1449.35,
+     "map": "pinewood",
+     "dmg": 461,
+     "el": "nature",
+     "src": "mossjaw",
+     "dist": 0.8,
+     "warn": "circle",
+     "tele": false,
+     "hp": 243,
+     "max": 1097,
+     "x": 50,
+     "y": 12.8
+    },
+    {
+     "gt": 1450.83,
+     "map": "pinewood",
+     "dmg": 115,
+     "el": "slash",
+     "src": "shadehound",
+     "dist": 0.9,
+     "warn": "howl",
+     "tele": true,
+     "hp": 145,
+     "max": 1097,
+     "x": 50.8,
+     "y": 12.7
+    },
+    {
+     "gt": 1454.08,
+     "map": "pinewood",
+     "dmg": 152,
+     "el": "slash",
+     "src": "mossjaw",
+     "dist": 0.6,
+     "warn": "lunge",
+     "tele": true,
+     "hp": 0,
+     "max": 1097,
+     "x": 50.3,
+     "y": 12.4
+    }
+   ],
+   "shot": "tools/qa/shots/kbm-063-death.png",
+   "pot": 0,
+   "obj": "Defeat Mossjaw"
+  },
+  {
+   "at": 1417.4,
+   "msg": "BOSS END mossjaw",
+   "type": "mossjaw",
+   "lvl": 13,
+   "bossLvl": 5,
+   "t0": 1792497827513,
+   "deaths0": 6,
+   "hp": 11646,
+   "pot0": 3,
+   "map": "pinewood",
+   "maxHp": 1097,
+   "wk": "sword",
+   "minHpPct": 0,
+   "dur": 60.2,
+   "deaths": 1,
+   "killed": false,
+   "potions": 0
   }
  ],
  "findings": [
@@ -5107,7 +5543,7 @@
  ],
  "errors": [],
  "potions": {
-  "pinewood": 15
+  "pinewood": 18
  },
  "shots": [
   {
@@ -5474,6 +5910,18 @@
    "at": 1406,
    "tag": "death",
    "file": "tools/qa/shots/kbm-061-death.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 1411.7,
+   "tag": "mossjaw-end",
+   "file": "tools/qa/shots/kbm-062-mossjaw-end.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 1476.3,
+   "tag": "death",
+   "file": "tools/qa/shots/kbm-063-death.png",
    "map": "pinewood"
   }
  ],
@@ -7256,6 +7704,249 @@
    "type": "circle",
    "wind": 0.9774999999999999,
    "open": 1.02
+  },
+  {
+   "gt": 1398.4666666657236,
+   "at": 1420.6,
+   "boss": "mossjaw",
+   "move": "burrow",
+   "type": "vanish",
+   "wind": 1.15,
+   "open": 1.2
+  },
+  {
+   "gt": 1399.9833333323888,
+   "at": 1422,
+   "boss": "mossjaw",
+   "move": "circle",
+   "type": "circle",
+   "wind": 1.15,
+   "open": 1.2
+  },
+  {
+   "gt": 1403.1166666657193,
+   "at": 1425.1,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.75,
+   "open": 1.2
+  },
+  {
+   "gt": 1405.8166666657169,
+   "at": 1427.9,
+   "boss": "mossjaw",
+   "move": "rootSpit",
+   "type": "rain",
+   "wind": 0.9,
+   "open": 1
+  },
+  {
+   "gt": 1408.483333332381,
+   "at": 1430.6,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.75,
+   "open": 1.2
+  },
+  {
+   "gt": 1411.4833333323784,
+   "at": 1433.5,
+   "boss": "mossjaw",
+   "move": "rootSpit",
+   "type": "rain",
+   "wind": 0.9,
+   "open": 1
+  },
+  {
+   "gt": 1414.1999999990426,
+   "at": 1436.3,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.75,
+   "open": 1.2
+  },
+  {
+   "gt": 1416.766666665707,
+   "at": 1438.8,
+   "boss": "mossjaw",
+   "move": "burrow",
+   "type": "vanish",
+   "wind": 1.15,
+   "open": 1.2
+  },
+  {
+   "gt": 1418.2833333323722,
+   "at": 1440.3,
+   "boss": "mossjaw",
+   "move": "circle",
+   "type": "circle",
+   "wind": 1.15,
+   "open": 1.2
+  },
+  {
+   "gt": 1421.2166666657029,
+   "at": 1443.2,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.75,
+   "open": 1.2
+  },
+  {
+   "gt": 1423.933333332367,
+   "at": 1446,
+   "boss": "mossjaw",
+   "move": "rootSpit",
+   "type": "rain",
+   "wind": 0.9,
+   "open": 1
+  },
+  {
+   "gt": 1426.6999999990312,
+   "at": 1448.7,
+   "boss": "mossjaw",
+   "move": "burrow",
+   "type": "vanish",
+   "wind": 1.15,
+   "open": 1.2
+  },
+  {
+   "gt": 1428.2166666656965,
+   "at": 1450.3,
+   "boss": "mossjaw",
+   "move": "circle",
+   "type": "circle",
+   "wind": 1.15,
+   "open": 1.2
+  },
+  {
+   "gt": 1431.3166666656937,
+   "at": 1453.3,
+   "boss": "mossjaw",
+   "move": "rootSpit",
+   "type": "rain",
+   "wind": 0.9,
+   "open": 1
+  },
+  {
+   "gt": 1432.4833333323593,
+   "at": 1454.5,
+   "boss": "mossjaw",
+   "move": "roar",
+   "type": "roar",
+   "wind": 0.8,
+   "open": 0.51
+  },
+  {
+   "gt": 1434.9999999990237,
+   "at": 1457,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.6375,
+   "open": 1.2
+  },
+  {
+   "gt": 1435.41666666569,
+   "at": 1457.4,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.6375,
+   "open": 1.2
+  },
+  {
+   "gt": 1437.666666665688,
+   "at": 1459.9,
+   "boss": "mossjaw",
+   "move": "rootSpit",
+   "type": "rain",
+   "wind": 0.765,
+   "open": 0.85
+  },
+  {
+   "gt": 1440.049999999019,
+   "at": 1462.2,
+   "boss": "mossjaw",
+   "move": "howl",
+   "type": "summon",
+   "wind": 0.68,
+   "open": 0.85
+  },
+  {
+   "gt": 1442.1666666656838,
+   "at": 1464.2,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.6375,
+   "open": 1.2
+  },
+  {
+   "gt": 1442.58333333235,
+   "at": 1464.6,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.6375,
+   "open": 1.2
+  },
+  {
+   "gt": 1444.7499999990148,
+   "at": 1466.8,
+   "boss": "mossjaw",
+   "move": "howl",
+   "type": "summon",
+   "wind": 0.68,
+   "open": 0.85
+  },
+  {
+   "gt": 1446.749999999013,
+   "at": 1468.9,
+   "boss": "mossjaw",
+   "move": "burrow",
+   "type": "vanish",
+   "wind": 0.9774999999999999,
+   "open": 1.2
+  },
+  {
+   "gt": 1448.3666666656782,
+   "at": 1470.4,
+   "boss": "mossjaw",
+   "move": "circle",
+   "type": "circle",
+   "wind": 0.9774999999999999,
+   "open": 1.02
+  },
+  {
+   "gt": 1450.766666665676,
+   "at": 1472.8,
+   "boss": "mossjaw",
+   "move": "howl",
+   "type": "summon",
+   "wind": 0.68,
+   "open": 0.85
+  },
+  {
+   "gt": 1453.016666665674,
+   "at": 1475.1,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.6375,
+   "open": 1.2
+  },
+  {
+   "gt": 1453.4333333323402,
+   "at": 1475.5,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.6375,
+   "open": 1.2
   }
  ],
  "damage": [],
@@ -10935,6 +11626,256 @@
    "map": "pinewood",
    "n": 0,
    "kinds": []
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Follow the animals up the road"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Take the key to the root door"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Enter the Warden's Grove"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Take the key to the root door"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Find the root door of the Hollow"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "wall_crack"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "wall_env"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Defeat Mossjaw in the Root Hollow"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Rest at the shrine, then press on"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Pull the lever to raise the gate"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "wall_h_crack"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Sneak past the sleepers to the vault"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "dialogue",
+   "id": "pinewood_banner"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: Root Hollow midpoint"
+  },
+  {
+   "at": 1407.4,
+   "k": "action",
+   "gt": 1384.92,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 1416.7,
+   "k": "action",
+   "gt": 1394.15,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Mossjaw"
+  },
+  {
+   "at": 1416.7,
+   "k": "action",
+   "gt": 1394.15,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Defeat Mossjaw"
+  },
+  {
+   "at": 1416.7,
+   "k": "action",
+   "gt": 1394.15,
+   "map": "pinewood",
+   "type": "shake"
+  },
+  {
+   "at": 1418,
+   "k": "action",
+   "gt": 1395.33,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "mossjaw"
+  },
+  {
+   "at": 1433.2,
+   "k": "action",
+   "gt": 1410.38,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "ogre"
+  },
+  {
+   "at": 1443.7,
+   "k": "kill",
+   "gt": 1420.5,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 1443.7,
+   "k": "loot",
+   "gt": 1420.5,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:head/uncommon"
+   ]
+  },
+  {
+   "at": 1446.2,
+   "k": "kill",
+   "gt": 1423.73,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 1446.2,
+   "k": "loot",
+   "gt": 1423.73,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 1447.5,
+   "k": "action",
+   "gt": 1425.55,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "ogre"
+  },
+  {
+   "at": 1460.4,
+   "k": "kill",
+   "gt": 1437.8,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 1460.4,
+   "k": "loot",
+   "gt": 1437.8,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 1470.6,
+   "k": "kill",
+   "gt": 1447.45,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 1470.6,
+   "k": "loot",
+   "gt": 1447.45,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:chest/uncommon"
+   ]
+  },
+  {
+   "at": 1471.9,
+   "k": "kill",
+   "gt": 1449.47,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 1471.9,
+   "k": "loot",
+   "gt": 1449.47,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
   }
  ],
  "marks": [
@@ -11072,5 +12013,5 @@
    "ms": 1674
   }
  ],
- "dodgeOnWarn": 83
+ "dodgeOnWarn": 96
 }
