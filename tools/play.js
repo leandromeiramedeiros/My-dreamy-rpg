@@ -1014,8 +1014,8 @@ const PAD_STUB = () => {
     await wait(500);
     // -- paper doll: the 4 trinket slots at the §19.4 positions (relative to the panel), all 8 slots focusable / hit-testable
     const doll = await m3(() => ({ rel: EQ_REL, pos: EQ_POS, keys: EQUIP_SLOTS, ids: UI.focus.list.map(r => r.id).filter(i => i.startsWith('eq:')) }));
-    check('paper doll: ring1 (24,88) ring2 (176,88) amulet (100,64) belt (100,300) from the panel origin; 8 slots registered',
-      JSON.stringify([doll.rel.ring1, doll.rel.ring2, doll.rel.amulet, doll.rel.belt]) === '[[24,88],[176,88],[100,64],[100,300]]' && doll.keys.every(k => doll.ids.includes('eq:' + k)) && doll.ids.length === 8, doll);
+    check('paper doll: ring1 (24,88) ring2 (176,88) amulet (100,64) from the panel origin, belt tightened to (100,256) (R3 #6); 8 slots registered',
+      JSON.stringify([doll.rel.ring1, doll.rel.ring2, doll.rel.amulet, doll.rel.belt]) === '[[24,88],[176,88],[100,64],[100,256]]' && doll.keys.every(k => doll.ids.includes('eq:' + k)) && doll.ids.length === 8, doll);
     // -- tooltip rows: <= 12 lines for every kind, name in rarity colour, v2 names only (legacy mirrors never read)
     const tip = await m3(() => {
       const p = G.player, out = [];
@@ -1106,6 +1106,127 @@ const PAD_STUB = () => {
     await pg.close();
   }
   // ======================= end M3 UI lane =======================
+  // ======================= UI fixes R3 (docs/meetings/2026-10-20-feel-ui.md "R3 Prioritized UI fixes") — owned by the UI agent =======================
+  {
+    const mk = async (opts, url = '?scene=play') => {
+      const c = await br.newContext(opts), pg = await c.newPage();
+      pg.on('pageerror', e => errs.push('pageerror(r3): ' + e.message));
+      pg.on('console', m => { if (m.type() === 'error') errs.push('console(r3): ' + m.text()); });
+      await pg.goto(`${base}/index.html${url}`, { waitUntil: 'load' });
+      await pg.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+      if (!(await pg.evaluate(() => typeof ICONS !== 'undefined'))) await pg.addScriptTag({ path: path.join(ROOT, 'js', 'icons.js') });
+      await wait(300);
+      return { c, pg, e: (f, a) => pg.evaluate(f, a) };
+    };
+    const frames = (pg, n = 3) => pg.evaluate(n => new Promise(r => { const f = () => (--n <= 0 ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
+    const { c: c1, pg: pg1, e } = await mk({ viewport: { width: 960, height: 540 } });
+    // 1. help overlay: the buttons clear the last row, the whole panel is on the canvas (keyboard rows and touch rows)
+    const help = {};
+    for (const touch of [false, true]) {
+      await e(t => { G.touch = t; IN.device = t ? 'touch' : 'kbm'; G.ui.help = true; }, touch); await frames(pg1);
+      help[touch ? 'touch' : 'kbm'] = await e(() => { const r = HUD.helpRect; G.ui.help = false; return { clear: r.btnY - r.lastRowY, top: r.y, bottom: r.y + r.h }; });
+    }
+    await e(() => { G.touch = false; IN.device = 'kbm'; });
+    check('R3 #1 help overlay: SETTINGS / CLOSE sit below the last row (>= 40 px), panel inside 540 px, keyboard and touch rows',
+      Object.values(help).every(h => h.clear >= 40 && h.top >= 0 && h.bottom <= 540), help);
+    // 3. tracker: wraps at the minimap's left edge in <= 2 lines + ellipsis; "Foes left" only in a live wave; the banner clears the touch buttons
+    const trk = await e(() => {
+      const long = 'Open the chest west of the glade. Then find the Stone\'s lantern and bring it back to the Elder Stone, then talk to Pip about the rift beyond the old bridge.';
+      const L = hudWrapLines(long, TRACKER_RIGHT - 16 - 20, 'body', 2), r = { n: L.length, w: Math.max(...L.map(l => UI.measure(l, 'body'))), ell: /…$/.test(L[L.length - 1]), right: TRACKER_RIGHT };
+      G.pendingSpawns = 0; G.arena = { id: 'a', map: G.map.id, done: true, gates: [] }; G.enemies.push({ type: 'slime', hp: 5, maxHp: 5, dead: false, x: 1, y: 1, z: 0, arena: 'a' });
+      r.doneArena = waveLive(); G.arena = { id: 'a', map: G.map.id, done: false, gates: [] }; r.liveArena = waveLive();
+      G.arena = null; r.idle = waveLive(); G.pendingSpawns = 1; r.pending = waveLive(); G.pendingSpawns = 0; G.enemies.pop();
+      return r;
+    });
+    check('R3 #3 tracker: objective wraps at x < 816 (2 lines + "..."); "Foes left" only while a wave / live arena runs (not after the arena, not idle)',
+      trk.n === 2 && trk.w <= trk.right - 16 - 20 && trk.ell && !trk.doneArena && trk.liveArena && !trk.idle && trk.pending, trk);
+    const bn = await e(() => { G.touch = true; IN.device = 'touch'; G.banner = { s: 'Test', sub: 'x', t: 5, max: 5 }; return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => { const m = touchMenu()[0]; const o = { by: HUD.bannerY, btnBottom: m.y + m.h }; G.banner = null; G.touch = false; IN.device = 'kbm'; r(o); }))); });
+    check('R3 #3 touch: the zone banner starts below the three icon buttons', bn.by >= bn.btnBottom + 8, bn);
+    // 4. tooltip copy: units, "0%", zone display names, a compact compare, skill names
+    await e(() => {
+      const p = G.player; p.level = 30;
+      p.equip.weapon = makeTestItem({ slot: 'weapon', variant: 'sword', tier: 1, rarity: 'rare', ilvl: 12, sockets: ['ruby_2', null], hist: { found: 'pinewood', kills: 3, bossKills: 0 } });
+      window.__r3 = makeTestItem({ slot: 'weapon', variant: 'sword', tier: 2, rarity: 'rare', ilvl: 18, sockets: ['topaz_1'], hist: { found: 'spire', kills: 0, bossKills: 0 } });
+      window.__r3l = makeTestItem({ unique: 'pipslantern', hist: { found: 'spire', kills: 0, bossKills: 0 } });
+      p.bag = Array(BAG_SIZE).fill(null); bagAdd(p, window.__r3); bagAdd(p, window.__r3l); p.cdr = 0.0004; p.skillDmg = -0.003; p.haste = 0; recalcStats(p, true); p.cdr = 0.0004; p.skillDmg = -0.003;
+    });
+    const copy = await e(() => {
+      const p = G.player, cmp = replacedBy(p, window.__r3), T = itemTipRows(p, window.__r3, { w: 308, touch: false, cmp }), TT = itemTipRows(p, window.__r3, { w: 308, touch: true, cmp }), L = itemTipRows(p, window.__r3l, { w: 308 });
+      const D = compareDeltas(window.__r3, cmp), rows = statRows(p, false), short = statRows(p, true).map(r => r[0]), skills = TT.rows.find(r => r.k === 'skills');
+      const hp = p.equip.weapon.affixes[0];
+      return {
+        zones: [zoneName('spire'), zoneName('pinewood'), zoneName('caldera'), zoneName('nowhere_land')], found: L.rows.find(r => r.k === 'footer').parts[0],
+        negZero: rows.concat(statRows(p, true)).some(r => /-0%/.test(String(r[1]))) || /-0%/.test(affixText('cdr', -0.0004)) || /-0%/.test(affixText('skillDmg', -0.001)), cdr: rows.find(r => r[0] === 'CDR')[1],
+        deltas: D.map(d => d.text), nDelta: D.length, labels: rows.map(r => r[0]), short, chip: chipText('hp', 63), unit: affixText('hp', 63), skillNames: skills && skills.skills.length === 3, touchK: TT.rows.map(r => r.k).join(','),
+        n: [T.count, TT.count], hasChips: TT.rows.some(r => r.k === 'chips')
+      };
+    });
+    check('R3 #4 copy: zone display names ("Sleepless Spire", not "spire"), no "-0%" anywhere, units on affixes and touch chips ("+63 HP")',
+      copy.zones[0] === 'Sleepless Spire' && copy.zones[1] === 'Misty Pinewood' && copy.zones[2] === 'Emberfall Caldera' && copy.zones[3] === 'Nowhere land' && copy.found === 'Found: Sleepless Spire' && !copy.negZero && copy.cdr === '0%' && copy.chip === '+63 HP' && copy.unit === '+63 HP', copy);
+    check('R3 #4 compare: up to 3 stat deltas (damage first, with units); Q/E/R names row at touch width; tooltip within 12 lines',
+      copy.nDelta >= 1 && copy.nDelta <= 3 && copy.deltas.every(t => /^[+-]\d/.test(t) && !/^[+-]0/.test(t)) && copy.skillNames && copy.hasChips && copy.n.every(n => n <= 12), copy);
+    // draw it for real (the compare block, no "vs equipped: <name>" line) and the idle loadout pane
+    await e(() => { G.touch = false; IN.device = 'kbm'; openInv('inv'); G.ui.sel = window.__r3; }); await frames(pg1);
+    const drawn = await e(() => ({ ids: UI.focus.list.map(r => r.id), tip: true }));
+    check('R3 #4 compare: EQUIP / SELL stay below the compare block (no overlap)', drawn.ids.includes('btn:equip') && drawn.ids.includes('btn:sell2'), drawn.ids.length);
+    await e(() => { G.ui.sel = null; }); await frames(pg1);
+    const idle = await e(() => { const p = G.player; return { shown: Math.abs(G.t - HUD.loadoutT) < 0.2, gap: EQ_POS.belt[1] - (EQ_POS.chest[1] + 48), labels: statRows(p, false).map(r => r[0]), short: statRows(p, true).map(r => r[0]) }; });
+    check('R3 #6 inventory idle: loadout summary shows when nothing is selected; belt sits <= 16 px under the boots; full stat words (short only on phone)',
+      idle.shown && idle.gap <= 16 && ['Skill dmg', 'Regen', 'Potions', 'Speed'].every(l => idle.labels.includes(l)) && ['SkDmg', 'Rgn', 'Pots', 'Spd'].every(l => idle.short.includes(l)) && !['SkDmg', 'Rgn', 'Pots', 'Spd'].some(l => idle.labels.includes(l)), idle);
+    // 5. quest log: only started quests under ACTIVE (no spoilers at level 1); full titles; no "not started"
+    const quests = {};
+    for (const [k, st] of [['none', {}], ['one', { vale_lantern: { step: 0 } }], ['done', { vale_lantern: 'done', pinewood_foxkit: { step: 1 } }]]) {
+      await e(st => { G.player.level = 1; G.prog.quests = st; G.ui.qSel = null; openInv('quests'); }, st); await frames(pg1);
+      quests[k] = await e(() => ({ ids: UI.focus.list.map(r => r.id).filter(i => i.startsWith('q:')), head: QUESTS.length }));
+    }
+    check('R3 #5 quest log: ACTIVE lists only started quests (0 at level 1 with none started, no caldera / spire spoilers); finished ones move to DONE',
+      quests.none.ids.length === 0 && quests.one.ids.join() === 'q:vale_lantern' && quests.done.ids.length === 2 && quests.none.head >= 7, quests);
+    const titleFmt = await e(() => ({ lines: wrapLines("The Stone's Lost Lantern of the Elder", 'small', 192, 2), ok: !String(drawQuestsTab).includes('not started') }));
+    check('R3 #5 quest log: titles wrap to 2 lines; the "not started" state is gone', titleFmt.lines.length <= 2 && titleFmt.ok, titleFmt.lines);
+    await e(() => { closeInv(); G.prog.quests = {}; });
+    // 8. HUD juice is live: ghost bar after damage, skill-ready flash, HP < 25% pulse, level-up ring (pixel reads on the display canvas)
+    const px = (x, y) => e(([x, y]) => { const d = DISP.getContext('2d').getImageData(Math.round(x * HUD_K), Math.round(y * HUD_K), 1, 1).data; return [d[0], d[1], d[2]]; }, [x, y]);
+    await e(() => { const p = G.player; p.hp = p.maxHp; G.t += 0; }); await frames(pg1, 4);
+    await e(() => { const p = G.player; p.hp = p.maxHp * 0.7; }); await frames(pg1, 3);
+    const ghost = await px(310, 465);
+    check('R3 #8 HUD ghost bar: after damage a light fill trails the HP bar (live)', ghost.every(v => v > 170), ghost);
+    await e(() => { const p = G.player; p.hp = p.maxHp * 0.2; }); await frames(pg1, 4);
+    const red = []; for (let i = 0; i < 12; i++) { red.push((await px(18, 488))[0]); await wait(45); }
+    check('R3 #8 HUD low-HP pulse: the portrait frame breathes red at 2 Hz (red channel varies)', Math.max(...red) - Math.min(...red) > 25, red);
+    await e(() => { const p = G.player; p.hp = p.maxHp; p.cds = p.cds || {}; p.cds.q = 0.25; }); await wait(120);
+    const rdy = await e(() => new Promise(r => { let seen = false, n = 0; const f = () => { const h = HUD.ready.q; if (h && h.t != null && G.t - h.t < 0.13) seen = true; if (++n < 40) requestAnimationFrame(f); else r({ seen, cd: G.player.cds.q }); }; requestAnimationFrame(f); }));
+    check('R3 #8 skill-ready rim flash fires when a cooldown ends (HUD.ready.q.t within 120 ms)', rdy.seen, rdy);
+    const ring = await e(() => { const p = G.player; HUD.lvl.n = p.level; p.level += 1; return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); }).then(() => px(160, 508));
+    check('R3 #8 level-up gold ring is drawn around the XP bar', ring[0] > 200 && ring[1] > 150 && ring[2] < 160, ring);
+    await e(() => { G.player.level -= 1; });
+    await c1.close();
+    // 2. phone portrait: the rotate card flag follows the orientation on a touch device (and never trips on desktop)
+    {
+      const { c, pg } = await mk({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+      const up = await pg.evaluate(() => G.portrait);
+      await pg.setViewportSize({ width: 844, height: 390 }); await wait(250);
+      const side = await pg.evaluate(() => G.portrait);
+      await pg.setViewportSize({ width: 390, height: 844 }); await wait(250);
+      const again = await pg.evaluate(() => G.portrait);
+      const desk = await mk({ viewport: { width: 540, height: 960 } }); const dp = await desk.pg.evaluate(() => G.portrait); await desk.c.close();
+      check('R3 #2 portrait: touch device upright -> rotate card; sideways -> no card; a tall desktop window (mouse) never shows it', up === true && side === false && again === true && dp === false, { up, side, again, desktopTall: dp });
+      await c.close();
+    }
+    // 8. title: one box width for slots and entries, 2 px rules, a "?" entry instead of the controls text wall
+    {
+      const { c, pg } = await mk({ viewport: { width: 960, height: 540 } }, '');
+      await pg.evaluate(() => { newGame(); saveGame(); G.state = 'title'; G.save = readSave(); G.ui.slotInfo = null; G.ui.settings = false; G.ui.help = false; });
+      await wait(500);
+      const t = await pg.evaluate(() => ({ list: UI.focus.list.filter(r => r.id.startsWith('title:')).map(r => ({ id: r.id, w: r.w })), wall: typeof titleControlsHint !== 'undefined' }));
+      const ws = [...new Set(t.list.filter(r => /slot|continue|new|settings/.test(r.id)).map(r => r.w))];
+      check('R3 #8 title: slot boxes and entries share one width; "?" help entry exists; the controls text wall is gone', ws.length === 1 && t.list.some(r => r.id === 'title:help') && !t.wall, t);
+      await pg.evaluate(() => { G.ui.help = true; }); await wait(300);
+      const th = await pg.evaluate(() => ({ ids: UI.focus.list.map(r => r.id), started: G.state }));
+      check('R3 #8 title "?" opens the help overlay (SETTINGS / CLOSE) without starting the game', th.ids.includes('btn:help-close') && th.started === 'title', th);
+      await c.close();
+    }
+  }
+  // ======================= end UI fixes R3 =======================
   check('no page errors', errs.length === 0, errs.slice(0, 5));
   await br.close(); srv.close();
   console.log(fails ? `\n${fails} check(s) failed` : '\nAll play checks passed');
