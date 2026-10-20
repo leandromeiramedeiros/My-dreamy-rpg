@@ -476,10 +476,10 @@ const ENEMY_ART = (function () {
   function drawTroll(b, anim, f) {
     const R = P.stone;
     let dy = 0, dx = 0, lean = 0, fl = 0, ph = null, hxo = 0, hyo = 0;
-    let hand = [14, -13], club = [18, -34], dead = 0, eyes = 1, slam = 0;
+    let hand = [14, -13], club = [26, -24], dead = 0, eyes = 1, slam = 0;
     if (anim === 'sleep') return drawTrollSleep(b, f);
-    if (anim === 'idle') { dy = [0, -0.8][f]; hand = [14, -13 + (f ? 0.6 : 0)]; club = [20, -33 - f]; }
-    else if (anim === 'walk') { ph = f * Math.PI / 2; dy = [0, -1.2, 0, -1.2][f]; hand = [13 + Math.sin(ph + Math.PI) * 3, -13]; club = [19 + Math.sin(ph + Math.PI) * 3, -33]; }
+    if (anim === 'idle') { dy = [0, -0.8][f]; hand = [14, -13 + (f ? 0.6 : 0)]; club = [27, -24 - f]; }
+    else if (anim === 'walk') { ph = f * Math.PI / 2; dy = [0, -1.2, 0, -1.2][f]; hand = [13 + Math.sin(ph + Math.PI) * 3, -13]; club = [26 + Math.sin(ph + Math.PI) * 3, -24]; }
     else if (anim === 'attack') {
       if (f === 0) { lean = -0.14; dx = -2; hand = [5, -37]; club = [-4, -53]; hyo = 1; }
       else { lean = 0.2; dx = 4; dy = 1; hand = [20, -12]; club = [28, 0]; hyo = 2; slam = 1; }
@@ -526,7 +526,6 @@ const ENEMY_ART = (function () {
       for (const [px, py] of [[-2, -2], [2, -1], [0, 2], [-1, 3]]) b.raw(e[0] + px, e[1] + py, P.bone[1]);   // bone spikes
       b.raw(e[0] + 3, e[1] - 4, P.bone[2]); b.raw(e[0] - 3, e[1] - 3, P.bone[2]);
     };
-    if (anim === 'attack' && f === 0) clubDraw();
     // torso
     const tc = T(1, -27);
     b.ell(tc[0], tc[1], 12, 10.5, R, lean * 0.6);
@@ -537,6 +536,7 @@ const ENEMY_ART = (function () {
     b.patch(tc[0] + 6, tc[1] - 7, 4, 2.4, P.leaf, 2); b.patch(tc[0] - 4, tc[1] + 5, 4, 2.4, P.leafDk, 8);
     b.cap(T(-3, -17)[0], T(-3, -17)[1], T(7, -17)[0], T(7, -17)[1], 1.8, 1.8, P.bark);   // rope belt
     leg(6, 8 + (ph == null ? 0 : swing), R);
+    clubDraw();
     // head: pushes forward from the shoulders, lighter stone, two bright eyes, low tusks
     const hd = T(16 + hxo, -33 + hyo), HR = P.stone.map((c, i) => i < 3 ? c.map(v => Math.min(255, v * 1.18 + 8)) : c);
     b.cap(T(7, -31)[0], T(7, -31)[1], hd[0] - 2, hd[1] + 1, 5.6, 5, R);                                  // thick neck
@@ -552,7 +552,6 @@ const ENEMY_ART = (function () {
     const na = T(9, -29);
     b.cap(na[0], na[1], gripH[0], gripH[1], 4.2, 3.6, R);
     b.ell(gripH[0], gripH[1], 3.6, 3.4, dk(R, 0.92));
-    if (!(anim === 'attack' && f === 0)) clubDraw();
     if (anim === 'attack' && f === 0) b.ell(gripH[0], gripH[1], 3.6, 3.4, dk(R, 0.92));
     if (slam) { chunks(b, [[28, -5, 1.4], [33, -8, 1.2], [36, -3, 1.4], [24, -9, 1]], P.dirt); b.line(30, 0, 38, -1, P.dirt[0]); }
     b.fl = 0; b.rim('#b9b6dc'); b.outline();
