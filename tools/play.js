@@ -1208,7 +1208,7 @@ const PAD_STUB = () => {
       const fr = (n, f) => { const g = () => (--n <= 0 ? f() : requestAnimationFrame(g)); requestAnimationFrame(g); };
       fr(3, () => {
         out.before = Object.assign({}, HUD.bossSegs);
-        st = { n: 3, i: 0, frac: 0, transition: false }; HUD.phaseI = 0; st = { n: 3, i: 2, frac: 0, transition: true };
+        st = { n: 3, i: 2, frac: 0, transition: true };
         fr(3, () => {
           out.mid = Object.assign({}, HUD.bossSegs); out.midFading = HUD.bossSegs.dia.includes('fading');
           setTimeout(() => {
