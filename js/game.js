@@ -11,6 +11,8 @@ const G = {
   arena: null, fade: 0, fadeDir: 0, fadeTo: null, boss: null, muted: false, drops: [],
   prog: { chests: {}, firsts: {}, trig: {} }, checkpoint: null,
   seen: {},   // bestiary hooks: seen[type] = { kills, res: { el: tier } } — set on first sight, saved
+  prompt: null,   // nearest interactable { kind: chest|shrine|tablet, obj, text } (items.js updateLoot); Interact acts on it
+  stats: { playtime: 0, deaths: 0 },
 
 };
 
@@ -19,6 +21,7 @@ let AC = null;
 function initAudio() { if (!AC) try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } }
 function tone(f0, f1, dur, type = 'sine', vol = 0.08, noise = false, at = 0) {
   if (!AC || G.muted) return;
+  vol *= typeof sfxVol === 'function' ? sfxVol() : 1; if (vol <= 0) return;
   const t = AC.currentTime + at, g = AC.createGain();
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   let src;
@@ -77,18 +80,67 @@ function sfx(k) {
 let CAST = null;
 function withCast(c, fn) { const o = CAST; CAST = c; try { fn(); } finally { CAST = o; } }
 const delay = (t, fn) => G.delays.push({ t, fn, c: CAST });
-const shake = a => { G.shakeA = Math.max(G.shakeA, a); };
-const hitstop = t => { G.hitstopT = Math.max(G.hitstopT, t); };
+const shake = a => { G.shakeA = Math.max(G.shakeA, a * (typeof shakeMul === 'function' ? shakeMul() : 1)); };
+const hitstop = t => { if (typeof hitstopOn !== 'function' || hitstopOn()) G.hitstopT = Math.max(G.hitstopT, t); };
 const fx = o => { o.t = 0; G.effects.push(o); return o; };
 const zone = o => { o.t = 0; o.tickT = 0; o.cast = CAST; G.zones.push(o); return o; };
-function burst(x, y, z, n, cols, spd = 3, o = {}) {
+// ===== particles: pooled, hard cap PART.cap (DESIGN §0 / §16.6.5) ===========================================
+// Combat bursts go through burst(); ambient motes (petals, mist, sparkles…) through addPart(o) and are the first
+// to go: they are skipped by budget and when the pool is full, while a full pool evicts ambient motes for combat.
+// PART.budget (0.35..1) scales with measured frame time (main.js), so a struggling device sheds particles first.
+const PART = { cap: 600, budget: 1, pool: [], amb: 0 };
+function addPart(o, amb = true) {
+  const L = G.parts;
+  if (amb) { if (L.length >= PART.cap * 0.75 || Math.random() > PART.budget) return null; }
+  else if (L.length >= PART.cap) {   // evict the oldest ambient mote, else drop this one
+    const i = L.findIndex(q => q.amb); if (i < 0) return null;
+    PART.pool.push(L[i]); L[i] = L[L.length - 1]; L.pop();
+  }
+  const q = PART.pool.pop() || {};
+  q.petal = q.mist = false;
+  Object.assign(q, o); q.amb = amb; q.t = q.t || 0;
+  L.push(q); return q;
+}
+// in-place update + compaction (no per-frame array garbage); dead particles return to the pool
+function updateParts(rdt, m) {
+  const L = G.parts; let j = 0;
+  for (let i = 0; i < L.length; i++) {
+    const q = L[i];
+    q.t += rdt; q.x += q.vx * rdt; q.y += q.vy * rdt; q.vz -= q.grav * rdt; q.z += q.vz * rdt;
+    if (q.z < 0 && !q.petal) { q.z = 0; q.vz *= -0.3; q.vx *= 0.6; q.vy *= 0.6; }
+    if (q.petal) { q.x += Math.sin(G.t * 2 + q.y) * rdt * 0.3; if (q.z < tileH(m, q.x, q.y)) { q.vz = 0; q.vx = 0; q.vy = 0; } }
+    if (q.t < q.life) L[j++] = q; else if (PART.pool.length < 800) PART.pool.push(q);
+  }
+  L.length = Math.min(j, PART.cap);
+}
+const BURST_O = {};
+function burst(x, y, z, n, cols, spd = 3, o = BURST_O) {
+  n = Math.ceil(n * PART.budget);
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2, s = Math.random() * spd;
-    G.parts.push(Object.assign({ x, y, z: z + Math.random() * 0.5, vx: Math.cos(a) * s, vy: Math.sin(a) * s, vz: 2 + Math.random() * 4, life: 0.4 + Math.random() * 0.6, t: 0, col: pick2(cols), grav: 9, size: Math.random() < 0.3 ? 2 : 1, glow: true }, o));
+    const q = addPart({ x, y, z: z + Math.random() * 0.5, vx: Math.cos(a) * s, vy: Math.sin(a) * s, vz: 2 + Math.random() * 4, life: 0.4 + Math.random() * 0.6, t: 0, col: pick2(cols), grav: 9, size: Math.random() < 0.3 ? 2 : 1, glow: true }, false);
+    if (!q) break;
+    if (o !== BURST_O) Object.assign(q, o);
   }
 }
 const pick2 = arr => arr[(Math.random() * arr.length) | 0];
-function text(x, y, z, s, col, big = false, life = 0.9) { G.texts.push({ x, y, z, s, col, big, t: 0, life, vx: frand(-0.6, 0.6) }); }
+function text(x, y, z, s, col, big = false, life = 0.9) { const t = { x, y, z, s, col, big, t: 0, life, vx: frand(-0.6, 0.6) }; G.texts.push(t); return t; }
+// damage numbers respect the settings toggle (reveals like WEAK: FIRE always show)
+// o = { e: enemy, kind: 'crit'|'weak'|'resist'|'normal', v: raw damage }: the HUD styles by kind; hits on the same enemy
+// within 80 ms merge into one number (HUD.md)
+function dmgText(x, y, z, s, col, big, o) {
+  if (typeof damageNumbersOn === 'function' && !damageNumbersOn()) return;
+  if (o && o.e) {
+    const prev = o.e.lastDmgText;
+    if (prev && G.texts.includes(prev) && prev.t < 0.08 && prev.kind !== 'weak' === (o.kind !== 'weak')) {
+      prev.sum += o.v; prev.s = String(Math.round(prev.sum)) + (prev.kind === 'crit' || o.kind === 'crit' ? '!' : '');
+      if (o.kind === 'crit') { prev.kind = 'crit'; prev.col = col; }
+      prev.t = Math.min(prev.t, 0.03); return;
+    }
+  }
+  const t = text(x, y, z, s, col, big);
+  if (o) { t.kind = o.kind; t.sum = o.v || 0; if (o.e) o.e.lastDmgText = t; }
+}
 
 // ===== player ==================================================================
 function makePlayer() {
@@ -100,6 +152,11 @@ function makePlayer() {
     csk: ['secondwind', 'chain', 'shootingstar'],
     cds: {}, buffs: {}, atkT: 0, combo: 0, swing: null, dash: null, invulnT: 0, hurtT: 0, rootT: 0, slowT: 0, castT: 0, spin: 0,
     name: 'Aerin', level: 1, dead: false,
+    ult: 0,          // ultimate charge 0..100 (§15.3), not saved
+    ranks: {},       // skill id -> { hits } (casts that hit; rank = 1 + hits / RANK_HITS, max 5), saved
+    mods: {},        // skill id -> { 3: modId, 5: modId } chosen SKILL_MODS, saved
+    cast: null,      // the skill cast in progress { c, id, slot, age, dur, mp } (dodge-cancel window)
+    dodgeBuf: 0, autoAtk: false, stMax: {},
   };
   starterKit(p);
   recalcStats(p, true);
@@ -134,16 +191,123 @@ function slotSkill(p, slot) {
   if (slot === 'shift') return item('boots', p.gear.boots).skill;
   return p.csk[+slot - 1] || null;
 }
+// ===== skill casting: ultimate charge, dodge-cancel, ranks and modifiers (DESIGN §15.2–15.3) ===================
+const SLOT_ACTION = { lmb: 'attack', q: 'skillQ', e: 'skillE', r: 'skillR', f: 'skillF', c: 'skillC', shift: 'dodge', 1: 's1', 2: 's2', 3: 's3', pot: 'potion' };
+const CANCEL_AFTER = 0.1;            // dodge cancels a cast only after its first 0.1 s (buffered until then)
+const RANK_HITS = 25, RANK_MAX = 5, RANK_BONUS = 0.06;
+// Every cast — skills AND basic attacks — carries ONE mutable ctx, created in useSkill / basicAttack and threaded
+// (via CAST -> delays, projectiles, zones, dashes) into every hit it produces: damageEnemy reads cast.ctx.
+//   ctx = { dmg, r, stun, slow, burn, cd, mp, dur (multipliers), extraProj, count, stagger, element, rank, onHit:[] }
+// onHit[] = fn(enemy, dmg, opts) called per hit (the M4 EFFECTS layer hooks here). Single call sites for M4's bus:
+// cast = useSkill / basicAttack, dodge = useSkill(slot 'shift'), hit = damageEnemy, kill = killEnemy.
+// SKILL_MODS: data only. { id: { id, skill, rank: 3|5, name, desc, apply(ctx) } } — apply() may only change the
+// numbers on ctx (dmg r stun slow burn cd mp dur extraProj are multipliers / counts, element a damage type).
+// Content arrives later (M4); the slots open at ranks 3 and 5.
+const SKILL_MODS = {};
+const MOD_NUM_KEYS = ['dmg', 'r', 'stun', 'slow', 'burn', 'cd', 'mp', 'dur', 'extraProj', 'count', 'stagger'];
+const newCtx = (element, stagger = 0, rank = 1) => ({ dmg: 1, r: 1, stun: 1, slow: 1, burn: 1, cd: 1, mp: 1, dur: 1, extraProj: 0, count: 1, stagger, element, rank, onHit: [] });
+const skillRank = (p, id) => Math.min(RANK_MAX, 1 + Math.floor(((p.ranks[id] && p.ranks[id].hits) || 0) / RANK_HITS));
+const skillRankBonus = (p, id) => RANK_BONUS * (skillRank(p, id) - 1);
+function skillRankProgress(p, id) {
+  const hits = (p.ranks[id] && p.ranks[id].hits) || 0, rank = skillRank(p, id);
+  return { rank, hits, max: rank >= RANK_MAX, into: rank >= RANK_MAX ? RANK_HITS : hits - (rank - 1) * RANK_HITS, need: RANK_HITS, frac: rank >= RANK_MAX ? 1 : (hits - (rank - 1) * RANK_HITS) / RANK_HITS, bonus: skillRankBonus(p, id) };
+}
+const skillModOptions = (id, rank) => Object.values(SKILL_MODS).filter(m => m.skill === id && m.rank === rank);
+function skillModSlots(p, id) {
+  const r = skillRank(p, id);
+  return [3, 5].map(rank => ({ rank, open: r >= rank, chosen: (p.mods[id] && p.mods[id][rank]) || null, options: skillModOptions(id, rank) }));
+}
+function chooseSkillMod(p, id, rank, modId) {
+  const m = modId == null ? null : SKILL_MODS[modId];
+  if (modId != null && (!m || m.skill !== id || m.rank !== rank || skillRank(p, id) < rank)) return false;
+  const o = p.mods[id] || (p.mods[id] = {});
+  if (m) o[rank] = modId; else delete o[rank];
+  return true;
+}
+// numbers-only cast context: rank bonus lives in damageEnemy's additive sum; mods multiply these
+function skillCtx(p, id, s) {
+  const ctx = newCtx(s.element, s.stagger || 0, skillRank(p, id));
+  const ch = p.mods[id] || {};
+  for (const rank of [3, 5]) {
+    const m = SKILL_MODS[ch[rank]]; if (!m || m.skill !== id || ctx.rank < rank || typeof m.apply !== 'function') continue;
+    const before = Object.assign({}, ctx);
+    try { m.apply(ctx); } catch (e) { Object.assign(ctx, before); }
+    for (const k of MOD_NUM_KEYS) if (typeof ctx[k] !== 'number' || !isFinite(ctx[k])) ctx[k] = before[k];
+    if (typeof ctx.element !== 'string' || !EL_COL[ctx.element]) ctx.element = before.element;
+    ctx.rank = before.rank;
+    if (!Array.isArray(ctx.onHit)) ctx.onHit = before.onHit;
+  }
+  return ctx;
+}
+const castR = () => (CAST && CAST.ctx ? CAST.ctx.r : 1);
+function addSkillHit(p, id) {
+  const r = p.ranks[id] || (p.ranks[id] = { hits: 0 }), before = skillRank(p, id);
+  if (before >= RANK_MAX) return;
+  r.hits++;
+  const after = skillRank(p, id);
+  if (after > before) {
+    const sk = SKILLS[id], msg = `${sk.name} — Rank ${after}${after === 3 || after === 5 ? ', modifier slot open' : ''}`;
+    say(msg); sfx('levelup');
+    if (typeof UI !== 'undefined') UI.toast({ text: msg, icon: typeof skillIcon === 'function' ? skillIcon(id) : null, col: '#ffd35a' });
+  }
+}
+// ultimate charge: fed by the pre-multiplier damage of every hit (level-independent), reactions x2 (M4)
+// §20.5: a single hit adds at most 5 % charge, a reaction hit at most 10 %
+const ultGain = (p, base, reaction) => Math.min(reaction ? 10 : 5, base * G.tune.player.ultRate * (reaction ? 2 : 1) * (1 + ultChargeBonus(p)));
+// §20.5 MP builder: per weapon family, basic attacks only, ONCE per swing (not per target), hard cap 40 MP/s from
+// hits over a rolling 1 s window. Values ~ swing time so every family builds ~15-23 MP/s on basics
+// (sword 8 / 0.42 s, staff 9 / 0.48 s, bow 7 / 0.36 s, daggers 6 / 0.28 s, two-hander 14 / 0.62 s).
+const MP_ON_HIT = { sword: 8, staff: 9, bow: 7, daggers: 6, dagger: 6, twohander: 14 };
+const MP_HIT_CAP = 40;
+function basicMpGain(p, c) {
+  if (c && c.basic) { if (c.mpDone) return; c.mpDone = true; }
+  const w = item('weapon', p.gear.weapon), gain = MP_ON_HIT[w && w.kind] != null ? MP_ON_HIT[w.kind] : G.tune.player.mpOnHit;
+  const L = p.mpHits || (p.mpHits = []), t = G.t;
+  while (L.length && t - L[0][0] >= 1) L.shift();
+  const used = L.reduce((a, q) => a + q[1], 0), add = Math.max(0, Math.min(gain, MP_HIT_CAP - used));
+  if (add <= 0) return;
+  L.push([t, add]); p.mp = Math.min(p.maxMp, p.mp + add);
+}
+const castActive = p => !!(p.cast && p.cast.age < p.cast.dur);
+// dodge cancels the cast in progress: drops its pending delays and its dash, refunds 50 % of its MP
+function cancelCast(p) {
+  const c = p.cast; if (!c) return false;
+  G.delays = G.delays.filter(d => d.c !== c.c);
+  if (p.dash && p.dash.cast === c.c) p.dash = null;
+  p.castT = 0; p.swing = null; p.spin = 0;
+  p.mp = Math.min(p.maxMp, p.mp + c.mp * 0.5);
+  p.cast = null;
+  G.cancelled = { id: c.id, t: G.t };
+  return true;
+}
 function useSkill(p, slot) {
-  const id = slotSkill(p, slot); if (!id || p.dead) return;
-  const s = SKILLS[id];
-  if ((p.cds[id] || 0) > 0 || p.dash || p.rootT > 0) return;
-  if ((s.mp || 0) > p.mp) { say('Not enough mana'); return; }
-  if ((s.st || 0) > p.st) { say('Not enough stamina'); return; }
-  // cooldown reduction is additive too (affix/sapphire cdr + diamond on the ultimate), capped at 50%
-  p.mp -= s.mp || 0; p.st -= s.st || 0; p.cds[id] = p.cdm[id] = s.cd * (1 - Math.min(0.5, p.cdr + (slot === 'r' ? ultCdr(p) : 0)));
-  withCast({ skill: id, el: s.element }, () => s.cast(p, p.aim, G.mouse.wx, G.mouse.wy));
+  const id = slotSkill(p, slot); if (!id || p.dead) return false;
+  const s = SKILLS[id], ult = slot === 'r', dodge = slot === 'shift';
+  if ((p.cds[id] || 0) > 0 || p.rootT > 0) return false;
+  if ((s.st || 0) > p.st) { say('Not enough stamina'); return false; }
+  if (dodge && castActive(p)) {
+    if (p.cast.age < CANCEL_AFTER) { p.dodgeBuf = CANCEL_AFTER - p.cast.age + 0.02; return false; }   // buffered
+    cancelCast(p);
+  }
+  if (p.dash) return false;
+  if (ult && p.ult < 100) { if (!G.ultWarnT || G.t > G.ultWarnT) { say('Ultimate is still charging'); G.ultWarnT = G.t + 1.2; } return false; }
+  const ctx = skillCtx(p, id, s), mp = Math.round((s.mp || 0) * ctx.mp);
+  if (mp > p.mp) { say('Not enough mana'); return false; }
+  p.mp -= mp; p.st -= s.st || 0;
+  // ultimates use the charge bar instead of a cooldown (a short lockout stops double-casts)
+  if (ult) { p.ult = 0; p.cds[id] = p.cdm[id] = 0.5; }
+  else p.cds[id] = p.cdm[id] = s.cd * ctx.cd * (1 - Math.min(0.4, p.cdr));
+  if (p.swing && p.atkT > 0) p.swing = null;   // attacks cancel into skills
+  const c = { skill: id, el: ctx.element, slot, ctx, hit: false };
+  const n0 = G.delays.length;
+  withCast(c, () => s.cast(p, p.aim, G.mouse.wx, G.mouse.wy));
+  if (id === 'orbit') p.orbitCast = c;
+  let dur = Math.max(0, p.castT, p.swing ? p.swing.dur - p.swing.t : 0);
+  for (let i = n0; i < G.delays.length; i++) if (G.delays[i].c === c) dur = Math.max(dur, G.delays[i].t);
+  if (p.dash && p.dash.cast === c) dur = Math.max(dur, p.dash.t);
+  p.cast = dodge ? null : { c, id, slot, age: 0, dur: Math.min(1.5, dur), mp };
   G.lastCast = { slot, t: 0.25 };
+  return true;
 }
 function say(s) { G.msg = { s, t: 1.6 }; }
 // temporary buffs stay multiplicative but cap at 1.6x (bless x surge x focus was 2.37x)
@@ -154,8 +318,13 @@ function swingWeapon(p, dur, arc, dir) { p.swing = { t: 0, dur, arc, dir: dir ||
 function castAnim(p, t = 0.25) { p.castT = t; }
 
 function basicAttack(p) {
-  if (p.atkT > 0 || p.dash || p.dead || p.rootT > 0) return;
-  const w = item('weapon', p.gear.weapon), a = p.aim;
+  if (p.atkT > 0 || p.dash || p.dead || p.rootT > 0 || castActive(p)) return;   // skills never cancel into attacks
+  const w = item('weapon', p.gear.weapon);
+  // basic attacks are casts too (skill: null, basic: true) so their hits carry a ctx; they build MP on hit
+  withCast({ skill: null, basic: true, el: w.element || 'slash', slot: 'lmb', ctx: newCtx(w.element || 'slash') }, () => basicSwing(p, w));
+}
+function basicSwing(p, w) {
+  const a = p.aim;
   p.atkT = w.basic.rate / (1 + p.haste);
   if (w.kind === 'sword') {
     p.combo = (p.combo + 1) % 3;
@@ -244,17 +413,10 @@ function updatePlayer(p, dt) {
   p.mp = Math.min(p.maxMp, p.mp + p.mpRegen * dt);
   p.st = Math.min(p.maxSt, p.st + 22 * dt);
   if (p.swing) { p.swing.t += dt; if (p.swing.t > p.swing.dur) p.swing = null; }
+  if (p.cast) { p.cast.age += dt; if (p.cast.age >= p.cast.dur) p.cast = null; }
+  for (const k of ['slowT', 'rootT']) { if (p[k] > 0) { if (!(p.stMax[k] > 0) || p[k] > p.stMax[k]) p.stMax[k] = p[k]; } else p.stMax[k] = 0; }
 
-  // aim
-  const ps = worldToView(p.x, p.y, p.z);
-  if (G.touch) touchAim(p);
-  else {
-    const mwz = toWorld(G.mouse.x - RW / 2 + G.cam.x, G.mouse.y - RH / 2 + G.cam.y + p.z * ZS);
-    G.mouse.wx = mwz[0]; G.mouse.wy = mwz[1];
-  }
-  p.aim = Math.atan2(G.mouse.wy - p.y, G.mouse.wx - p.x);
-  p.face = G.mouse.x >= ps[0] ? 1 : -1;
-  p.back = G.mouse.y < ps[1] - 14;
+  resolveAim(p);
 
   const h0 = tileH(m, p.x, p.y);
   if (p.dash) {
@@ -268,14 +430,9 @@ function updatePlayer(p, dt) {
     }
     if (d.t <= 0) { p.dash = null; if (d.opt.onEnd) withCast(d.cast, d.opt.onEnd); }
   } else {
-    let sx = 0, sy = 0;
-    const K = G.keys;
-    if (K.w || K.arrowup) sy -= 1;
-    if (K.s || K.arrowdown) sy += 1;
-    if (K.a || K.arrowleft) sx -= 1;
-    if (K.d || K.arrowright) sx += 1;
-    let mag = 1;
-    if (G.touchMove) { sx = G.touchMove.x; sy = G.touchMove.y; mag = Math.min(1, Math.hypot(sx, sy) * 1.25); }
+    const mv = typeof IN !== 'undefined' ? IN.move : { x: 0, y: 0, mag: 0 };
+    let sx = mv.x, sy = mv.y;
+    const mag = mv.mag;
     p.moving = (sx || sy) && p.rootT <= 0 && !G.ui.open;
     if (p.moving) {
       let wx = sx + sy, wy = sy - sx;
@@ -283,12 +440,12 @@ function updatePlayer(p, dt) {
       const sp = mag * p.speed * (p.buffs.sprint ? 1.8 : 1) * (p.buffs.veil ? 1.4 : 1) * (p.slowT > 0 ? 0.6 : 1) * (p.castT > 0 ? 0.75 : 1) * (1 + 0.3 * Math.abs(sy) / Math.hypot(sx, sy));
       moveEntity(p, wx * sp * dt, wy * sp * dt, h0);
       p.walkT += dt;
-      if (Math.random() < dt * 6) G.parts.push({ x: p.x, y: p.y, z: p.z, vx: frand(-0.3, 0.3), vy: frand(-0.3, 0.3), vz: 0.6, life: 0.4, t: 0, col: '#e8e0f8', grav: 1, size: 1, glow: false });
+      if (Math.random() < dt * 6) addPart({ x: p.x, y: p.y, z: p.z, vx: frand(-0.3, 0.3), vy: frand(-0.3, 0.3), vz: 0.6, life: 0.4, t: 0, col: '#e8e0f8', grav: 1, size: 1, glow: false });
     }
   }
   const th = tileH(m, p.x, p.y);
   p.z = lerp(p.z, th, Math.min(1, dt * 14));
-  if (G.mouse.down && !G.ui.open) basicAttack(p);
+  playerActions(p, dt);
 
   // orbit orbs
   if (p.buffs.orbit) {
@@ -297,25 +454,114 @@ function updatePlayer(p, dt) {
       for (const e of G.enemies) {
         if (e.dead || e.spawnT > 0) continue;
         e.orbitCd = (e.orbitCd || 0) - dt / 3;
-        if (e.orbitCd <= 0 && dist(ox, oy, e.x, e.y) < 0.5 + e.r) { e.orbitCd = 0.4; damageEnemy(e, 30, { knock: 0.1, fx: ox, fy: oy, cast: ORBIT_CAST }); }
+        if (e.orbitCd <= 0 && dist(ox, oy, e.x, e.y) < 0.5 + e.r) { e.orbitCd = 0.4; damageEnemy(e, 30, { knock: 0.1, fx: ox, fy: oy, cast: p.orbitCast || ORBIT_CAST }); }
       }
     }
   }
 }
 
 const ORBIT_CAST = { skill: 'orbit', el: 'arcane' };
+
+// ===== HUD getters (read-only views the HUD draws from; docs/HUD.md) =========================================
+// ultCharge(p) 0..1 · ultReady(p) · skillSlotState(p, slot) · heroStatuses(p) · interactPrompt() · skillInfo(p, id)
+const ultCharge = (p = G.player) => clamp((p.ult || 0) / 100, 0, 1);
+const ultReady = (p = G.player) => (p.ult || 0) >= 100;
+// slot: 'lmb' q e r f c shift 1 2 3 'pot'
+function skillSlotState(p, slot) {
+  const action = SLOT_ACTION[slot], glyph = typeof IN !== 'undefined' ? IN.glyph(action) : '';
+  if (slot === 'pot') return { slot, action, glyph, potions: p.potions, max: MAX_POTIONS, cd: Math.max(0, (p.potT || 0) - G.t), unavailable: p.dead };
+  if (slot === 'lmb') { const w = item('weapon', p.gear.weapon); return { slot, action, glyph, id: null, name: w.basic.name, element: w.element, cd: Math.max(0, p.atkT), cdFrac: 0, unavailable: !!(p.dash || p.rootT > 0 || castActive(p)) }; }
+  const id = slotSkill(p, slot), s = id && SKILLS[id];
+  if (!s) return { slot, action, glyph, id: null };
+  const ult = slot === 'r', cd = Math.max(0, p.cds[id] || 0), max = p.cdm[id] || s.cd;
+  const rp = skillRankProgress(p, id);
+  return {
+    slot, action, glyph, id, name: s.name, element: s.element, color: s.color, ult,
+    cd: ult ? 0 : cd, cdMax: max, cdFrac: ult ? 0 : (cd > 0 ? cd / max : 0),
+    charge: ult ? ultCharge(p) : null, ready: ult ? ultReady(p) && cd <= 0 : cd <= 0,
+    mp: s.mp || 0, st: s.st || 0, mpShort: (s.mp || 0) > p.mp, stShort: (s.st || 0) > p.st,
+    unavailable: !!(p.dead || p.rootT > 0 || (p.dash && slot !== 'shift')),
+    rank: rp.rank, rankFrac: rp.frac, flash: G.lastCast && G.lastCast.slot === slot ? Math.max(0, G.lastCast.t) : 0,
+  };
+}
+function skillInfo(p, id) { return Object.assign({ id, skill: SKILLS[id], slots: skillModSlots(p, id) }, skillRankProgress(p, id)); }
+// hero buff row: debuffs first; frac = remaining time 0..1 (sweep), stacks for digit badges
+function heroStatuses(p = G.player) {
+  const out = [];
+  if (p.slowT > 0) out.push({ id: 'slowed', kind: 'debuff', t: p.slowT, max: p.stMax.slowT || p.slowT, frac: p.slowT / (p.stMax.slowT || p.slowT), stacks: 0 });
+  if (p.rootT > 0) out.push({ id: 'rooted', kind: 'debuff', t: p.rootT, max: p.stMax.rootT || p.rootT, frac: p.rootT / (p.stMax.rootT || p.rootT), stacks: 0 });
+  for (const id in p.buffs) { const b = p.buffs[id]; out.push({ id, kind: 'buff', t: b.t, max: b.max, frac: b.max ? b.t / b.max : 1, stacks: 0, color: BUFFS[id] && BUFFS[id].color }); }
+  if ((p.potT || 0) > G.t) out.push({ id: 'potion', kind: 'cooldown', t: p.potT - G.t, max: 1, frac: (p.potT - G.t) / 1, stacks: 0 });
+  return out.slice(0, 10);
+}
+const interactPrompt = () => G.prompt && G.state === 'play' && !G.ui.open ? Object.assign({ glyph: typeof IN !== 'undefined' ? IN.glyph('interact') : 'SPACE' }, G.prompt) : null;
+
+// ===== aim: mouse cursor, twin-stick (sticky) or auto, with aim assist on stick/touch only (CONTROLS.md) ======
+// Writes the canonical aim cursor G.mouse.{wx,wy} (world) + {x,y} (view) that skills, render and HUD read.
+function viewDirToWorld(sx, sy) { const [wx, wy] = toWorld(sx, sy), l = Math.hypot(wx, wy) || 1; return [wx / l, wy / l]; }
+// auto target: nearest living enemy in range, preferring elites/bosses and the one you hit last
+function autoTarget(p, range, dir, cone) {
+  let best = null, bs = 1e9;
+  for (const e of G.enemies) {
+    if (e.dead || e.spawnT > 0) continue;
+    const d = dist(p.x, p.y, e.x, e.y); if (d > range) continue;
+    let s = d / range;
+    if (dir) { const da = Math.abs(angDiff(Math.atan2(dir[1], dir[0]), Math.atan2(e.y - p.y, e.x - p.x))); if (da > cone + Math.atan2(e.r, Math.max(d, 0.1))) continue; s += da / Math.max(cone, 0.01); }
+    if (e === G.lastHit) s -= 0.35;
+    if (e.boss || enemyClass(e.type) === 'elite') s -= 0.2;
+    if (s < bs) { bs = s; best = e; }
+  }
+  return best;
+}
+function resolveAim(p) {
+  const A = typeof IN !== 'undefined' ? IN.aim : { mode: 'cursor' };
+  G.aimAssisted = false;
+  if (G.touch) touchAim(p);
+  else if (A.mode === 'cursor') {
+    const mwz = toWorld(G.mouse.x - RW / 2 + G.cam.x, G.mouse.y - RH / 2 + G.cam.y + p.z * ZS);
+    G.mouse.wx = mwz[0]; G.mouse.wy = mwz[1];
+  } else {
+    let dir = null, d = 4;
+    if (A.mode === 'stick') { dir = viewDirToWorld(A.x, A.y); d = clamp(A.mag * 7, 1.5, 7); }
+    const cone = typeof aimAssistCone === 'function' ? aimAssistCone() : 10 * Math.PI / 180;
+    const tgt = dir ? (cone > 0 ? autoTarget(p, 9, dir, cone) : null) : autoTarget(p, 8, null, 0);
+    if (tgt) { G.mouse.wx = tgt.x; G.mouse.wy = tgt.y; G.aimAssisted = true; }
+    else {
+      if (!dir && p.moving && IN.move.mag > 0) dir = viewDirToWorld(IN.move.x, IN.move.y);
+      if (!dir) dir = [Math.cos(p.aim), Math.sin(p.aim)];
+      G.mouse.wx = p.x + dir[0] * d; G.mouse.wy = p.y + dir[1] * d;
+    }
+    const [vx, vy] = worldToView(G.mouse.wx, G.mouse.wy, p.z);
+    G.mouse.x = vx; G.mouse.y = vy;
+  }
+  const ps = worldToView(p.x, p.y, p.z);
+  p.aim = Math.atan2(G.mouse.wy - p.y, G.mouse.wx - p.x);
+  p.face = G.mouse.x >= ps[0] ? 1 : -1;
+  p.back = G.mouse.y < ps[1] - 14;
+}
+// gameplay actions, read once per step after the aim is resolved (keyboard/mouse, pad and touch alike)
+const SKILL_ACTIONS = [['skillQ', 'q'], ['skillE', 'e'], ['skillR', 'r'], ['skillF', 'f'], ['skillC', 'c'], ['dodge', 'shift'], ['s1', '1'], ['s2', '2'], ['s3', '3']];
+function playerActions(p, dt) {
+  if (typeof IN === 'undefined' || G.ui.open || G.state !== 'play' || G.fadeDir > 0) return;
+  if (p.dodgeBuf > 0) { p.dodgeBuf -= dt; if (!castActive(p) || p.cast.age >= CANCEL_AFTER) { p.dodgeBuf = 0; useSkill(p, 'shift'); } }
+  for (const [a, slot] of SKILL_ACTIONS) if (IN.pressed(a)) useSkill(p, slot);
+  if (typeof attackToggle === 'function' && attackToggle()) { if (IN.pressed('attack')) p.autoAtk = !p.autoAtk; } else p.autoAtk = false;
+  if (IN.held('attack') || p.autoAtk) basicAttack(p);
+  if (IN.pressed('potion')) drinkPotion(p);
+  if (IN.pressed('interact')) interact(p);
+}
 // el = damage type of the hit (§5b); the hero's resist applies on top of defence (arcane ignores half of it)
 function hurtPlayer(dmg, srcX, srcY, el = 'slash') {
   const p = G.player;
   if (p.dead || p.invulnT > 0 || (p.dash && p.dash.opt.invuln) || G.state !== 'play') return;
   const r = (p.res && p.res[el]) || 0;
-  let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1);
+  let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1) * (typeof damageTakenMul === 'function' ? damageTakenMul() : 1);
   p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2;
   text(p.x, p.y, p.z + 3, Math.round(d), '#ff5a7a');
   shake(4); sfx('hurt');
   burst(p.x, p.y, p.z + 1.2, 8, ['#ff5a7a', '#ffffff'], 2);
   if (p.hp <= 0) {
-    p.hp = 0; p.dead = true; G.state = 'dead'; G.deadT = 0; sfx('die');
+    p.hp = 0; p.dead = true; G.state = 'dead'; G.deadT = 0; sfx('die'); G.stats.deaths++;
     burst(p.x, p.y, p.z + 1, 40, ['#ffb0e0', '#c7a8ff', '#ffffff'], 3);
   }
 }
@@ -326,12 +572,18 @@ function damageEnemy(e, base, o = {}) {
   const p = G.player, c = o.cast !== undefined ? o.cast : CAST;
   // damage type: explicit > the skill's element > the weapon's (sword slash, staff arcane, bow pierce); burn ticks are fire
   const el = o.el || (o.dot ? 'fire' : c ? c.el : item('weapon', p.gear.weapon).element) || 'slash';
+  const sk = c && c.skill ? c.skill : null;   // a skill cast (basic attacks run with c.basic, burn ticks with o.dot)
   // one additive sum: gear damage % (+ skill damage % and the element's gem amplification for skill hits)
-  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (c ? p.skillDmg + elementAmp(p, el) : 0)) * buffMul(p);
+  // skill rank (+6 %/rank above 1) joins the same additive sum; modifier ctx.dmg multiplies (numbers only)
+  const cx = c && c.ctx;
+  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (sk ? p.skillDmg + elementAmp(p, el) + skillRankBonus(p, sk) : 0)) * buffMul(p) * (cx ? cx.dmg : 1);
   const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
   dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
-  const st = o.stagger != null ? o.stagger : c && SKILLS[c.skill] ? SKILLS[c.skill].stagger || 0 : 0;
-  if (st) e.stagger = (e.stagger || 0) + st;   // stored for the M4 stagger bar
+  const st = o.stagger != null ? o.stagger : cx ? cx.stagger || 0 : sk && SKILLS[sk] ? SKILLS[sk].stagger || 0 : 0;
+  if (st) {   // the boss stagger bar (hud.js): fills with heavy hits, BREAK flash when full, then empties
+    e.stagger = (e.stagger || 0) + st;
+    if (e.boss && e.stagger >= STAGGER_CAP) { e.stagger = 0; e.breakT = G.t; }
+  }
   let crit = Math.random() < p.crit;
   if (p.buffs.veil && !o.dot) { crit = true; delete p.buffs.veil; }
   if (crit) dmg *= 1 + p.critDmg;
@@ -339,19 +591,27 @@ function damageEnemy(e, base, o = {}) {
   if (e.dummy) { e.hp = e.maxHp; }
   else e.hp -= dmg;
   e.flash = 0.1;
+  if (!o.dot) G.lastHit = e;
+  // §15.3 resource rhythm: basic attacks (CAST null) build 8 MP per hit; all damage but the ultimate's own feeds the charge
+  if ((!c || c.basic) && !o.dot) basicMpGain(p, c);
+  if (eff < 1 && !(c && c.slot === 'r') && p.ult < 100) p.ult = Math.min(100, p.ult + ultGain(p, base * (1 - eff), o.reaction));
+  // skill ranks: a cast counts once, on its first hit on a real enemy (training dummies don't rank skills)
+  if (sk && c.slot && !c.hit && !o.dot && !e.dummy) { c.hit = true; addSkillHit(p, sk); }
+  if (cx && cx.onHit.length) for (const fn of cx.onHit) fn(e, dmg, o);
   // numbers coloured by damage type; WEAK big + yellow, RESIST grey, IMMUNE spelled out
   if (eff >= 1) text(e.x, e.y, e.z + e.hgt, 'IMMUNE', '#9a92b0');
-  else text(e.x, e.y, e.z + e.hgt, Math.round(dmg) + (crit ? '!' : ''), res < 0 ? '#ffe36a' : res > 0 ? '#9a92b0' : EL_COL[el] || '#ffffff', crit || res < 0);
+  else dmgText(e.x, e.y, e.z + e.hgt, Math.round(dmg) + (crit ? '!' : ''), res < 0 ? '#ffe36a' : res > 0 ? '#a7a3b8' : EL_COL[el] || '#ffffff', crit || res < 0,
+    { e, v: dmg, kind: res < 0 ? 'weak' : crit ? 'crit' : res > 0 ? 'resist' : 'normal' });
   if (res && !e.dummy) discoverRes(e, el, res);
   const fxx = o.fx != null ? o.fx : p.x, fyy = o.fy != null ? o.fy : p.y;
   if (o.knock && !e.boss && !e.dummy) {
     const d = dist(fxx, fyy, e.x, e.y) || 1;
     e.kx += (e.x - fxx) / d * o.knock * 9; e.ky += (e.y - fyy) / d * o.knock * 9;
   }
-  if (o.stun) e.stunT = Math.max(e.stunT, o.stun * (e.boss ? 0.25 : 1));
+  if (o.stun) e.stunT = Math.max(e.stunT, o.stun * (cx ? cx.stun : 1) * (e.boss ? 0.25 : 1));
   if (o.freeze) e.frozen = o.stun;
-  if (o.slow) e.slowT = Math.max(e.slowT, o.slow * 2);
-  if (o.burn) { e.burnT = o.burn; e.burnTick = 0.5; e.burnCast = c; }
+  if (o.slow) e.slowT = Math.max(e.slowT, o.slow * 2 * (cx ? cx.slow : 1));
+  if (o.burn) { e.burnT = o.burn * (cx ? cx.burn : 1); e.burnTick = 0.5; e.burnCast = c; }
   if (!o.dot) { burst(e.x, e.y, e.z + e.hgt * 0.6, 5, ['#ffffff', e.blood || '#c7a8ff'], 2.5); sfx('hit'); }
   if (e.hp <= 0) killEnemy(e);
   return true;
@@ -365,13 +625,14 @@ function discoverRes(e, el, res) {
   text(e.x, e.y, e.z + e.hgt + 1.2, `${res < 0 ? 'WEAK' : res >= 1 ? 'IMMUNE' : 'RESIST'}: ${el.toUpperCase()}`, res < 0 ? '#ffe36a' : '#c8c0e0', true, 1.5);
 }
 function hitArea(x, y, r, dmg, o = {}) {
-  let n = 0;
+  let n = 0; r *= castR();
   for (const e of G.enemies.slice()) if (!e.dead && dist(x, y, e.x, e.y) < r + e.r) { if (damageEnemy(e, dmg, Object.assign({ fx: x, fy: y }, o))) n++; }
   if (n) shake(1.5);
   return n;
 }
 function hitCone(x, y, a, arc, r, dmg, o = {}) {
-  let n = 0;
+  let n = 0; r *= castR();
+  if (typeof IN !== 'undefined' && IN.assist()) arc *= 1.15;   // melee cones widen 15 % on pad / touch
   for (const e of G.enemies.slice()) {
     if (e.dead) continue;
     const d = dist(x, y, e.x, e.y);
@@ -383,6 +644,7 @@ function hitCone(x, y, a, arc, r, dmg, o = {}) {
   return n;
 }
 function hitLine(x, y, a, len, w, dmg, o = {}) {
+  w *= castR();
   const ex = x + Math.cos(a) * len, ey = y + Math.sin(a) * len;
   for (const e of G.enemies.slice()) if (!e.dead && segDist(e.x, e.y, x, y, ex, ey) < w + e.r) damageEnemy(e, dmg, o);
 }
@@ -390,6 +652,11 @@ function hitLine(x, y, a, len, w, dmg, o = {}) {
 // ===== projectiles ===================================================================
 function spawnProj(o) {
   const p = Object.assign({ t: 0, hit: new Set(), pierce: 0, friendly: true, cast: CAST }, o);
+  // 6° projectile magnetism on pad / touch (never mouse)
+  if (p.friendly && typeof IN !== 'undefined' && IN.assist() && typeof aimAssistCone === 'function' && aimAssistCone() > 0) {
+    const tgt = autoTarget(G.player, (o.speed || 10) * (o.life || 1), [Math.cos(o.ang), Math.sin(o.ang)], 6 * Math.PI / 180);
+    if (tgt) p.ang = o.ang = Math.atan2(tgt.y - p.y, tgt.x - p.x);
+  }
   p.vx = Math.cos(o.ang) * o.speed; p.vy = Math.sin(o.ang) * o.speed;
   G.projs.push(p); return p;
 }
@@ -453,6 +720,7 @@ function updateZones(dt) {
 }
 
 // ===== enemies ========================================================================
+const STAGGER_CAP = 12, STAGGER_DECAY = 1.2;   // boss stagger bar: heavy hits add 2-3, it drains 1.2/s
 const ENEMY = {
   // element = what its attacks deal; res = hand-authored tiers (-0.5 weak, 0.5 resist, 1 immune); tags: archetype (§5b)
   slime: { name: 'Gloom slime', ai: 'hopper', hp: 170, r: 0.38, speed: 2.0, dmg: 32, range: 1.0, wind: 0.55, cd: 1.1, aoe: 1.15, hgt: 1.8, blood: '#8b7cf6',
@@ -501,6 +769,7 @@ function updateEnemies(dt) {
   for (const e of G.enemies) {
     if (e.dead) continue;
     e.flash -= dt; e.anim += dt;
+    if (e.stagger > 0) e.stagger = Math.max(0, e.stagger - dt * STAGGER_DECAY);
     if (e.spawnT > 0) { e.spawnT -= dt; continue; }
     if (e.dummy) continue;
     const edt = dt * ts * (e.slowT > 0 ? 0.55 : 1);
@@ -705,7 +974,9 @@ function updateCritters(dt) {
 }
 
 // ===== tuning (numbers editable in the editor's Tuning tab) ==============================
-G.tune = { player: { hp: 650, mp: 260, stamina: 100, speed: 3.7, regen: 2, mpRegen: 7, crit: 0.08, damage: 1 } };
+// mpRegen was 7/s before §15.3 (basic attacks now build mpOnHit per hit); ultRate = charge per point of
+// pre-multiplier damage (0.01 -> ~50 s of basic hits on one target, ~30-40 s with skills; reactions x2 in M4)
+G.tune = { player: { hp: 650, mp: 260, stamina: 100, speed: 3.7, regen: 2, mpRegen: 2, crit: 0.08, damage: 1, mpOnHit: 8, ultRate: 0.01 } };
 const TUNE_ENEMY_KEYS = ['hp', 'speed', 'dmg', 'range', 'cd'];
 function applyTuning(t) {
   if (!t) return;

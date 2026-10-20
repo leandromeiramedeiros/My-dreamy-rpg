@@ -5,6 +5,10 @@
 //   HERO.build(look) -> { front:[idle0,idle1,walk0..3], back:[...], weapon, weaponGrip, weaponTip,
 //                         hand:{front:[{x,y}..],back:[..]}, anchors:{head,chest,boots,weapon}, ... }
 //   look = { head:{family,tier,gems}, chest:{..}, boots:{..}, weapon:{..}, hair?, skin? }  (any slot may be null)
+//   trinkets (DESIGN 19.4): look.belt={family?,tier 1-3,color?,rarity?,tempered?}, look.amulet={tier,element?|color?,rarity?,tempered?},
+//     look.ring={tier,element?,rarity?,tempered?} (object or array; Epic+ rings glint 1px on the attack frame), any gear piece may carry tempered:true
+//     (bright edge). Belt/amulet are slots for HERO.slotSprite(b,'belt'|'amulet'|'ring',view,fi); HERO.drawTrinketGlow(ctx,b,view,fi,x,y,t)
+//     draws their rarityFx rim (call it AFTER drawHero: the rim lies on the torso). HERO.BELT_COLORS / ELEMENT_COLORS list the palettes.
 //   HERO.rarityFx, HERO.rarityColor(r,t), HERO.drawGlow(ctx,sprite,x,y,rarity,t),
 //   HERO.emit/stepParticles/drawParticles, HERO.drawHero(...), HERO.slotSprite(built,slot,view,frame)
 // Painting model: each layer paints 1-px rects through a painter `g` (shape / shaded-box helpers). Tiers are
@@ -440,6 +444,51 @@ const HERO = (function () {
     }
   };
 
+
+  // ---- trinket overlays (DESIGN 19.4) + tempered edge ------------------------------------
+  const ELC = { fire: '#ff8a3a', frost: '#5fd4ff', nature: '#5fd65f', lightning: '#ffe14a', arcane: '#b07cff', physical: '#aab4cc', holy: '#ffd75a' };
+  const BELTC = { rope_sash: '#b8935a', mistwoven_belt: '#7fa8c8', moonlit_girdle: '#b8b4ee', cindersash: '#d8601c', quietgirdle: '#4a4a88', tidewovenclasp: '#2aa0a8', hollowbell: '#d8b040' };
+  const BELT_TIER = ['#8a5a30', '#5c78a8', '#b8b4ee'];
+  const trinket = (p, kind) => {
+    if (!p) return null;
+    const t = clamp(p.tier | 0 || 1, 1, 3), o = { tier: t, rarity: p.rarity || 'common', tempered: !!p.tempered };
+    if (kind === 'belt') o.color = p.color || BELTC[p.family] || BELT_TIER[t - 1];
+    else o.color = p.color || ELC[p.element] || (kind === 'amulet' ? '#e8c860' : '#c8d0e8');
+    return o;
+  };
+  const edgeLight = (cv, f) => {     // lighten top/left silhouette edges of a layer canvas (tempered highlight)
+    const cx = cv.getContext('2d'), w = cv.width, h = cv.height, id = cx.getImageData(0, 0, w, h), d = id.data, src = new Uint8ClampedArray(d);
+    const a = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? 0 : src[(y * w + x) * 4 + 3]);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4; if (!src[i + 3] || (a(x, y - 1) && a(x - 1, y))) continue;
+      d[i] += (255 - d[i]) * f; d[i + 1] += (252 - d[i + 1]) * f; d[i + 2] += (214 - d[i + 2]) * f;
+    }
+    cx.putImageData(id, 0, 0);
+  };
+  const withTemper = (x, g0, on, back, fn) => {      // run fn(g); when on, via a scratch layer whose edge is lit
+    if (!on) return fn(g0);
+    const t = makeCanvas(FW, FH), tg = mkG(t.x, back); t.x.translate(0, TOP); tg.gl = g0.gl; fn(tg);
+    edgeLight(t.c, 0.6); x.drawImage(t.c, 0, -TOP);
+  };
+  function drawBelt(g, P, back, B) {
+    const R = RP(B.color), y = 21 + (B.tier >= 2 ? 0 : 1), h = B.tier >= 2 ? 2 : 1;
+    g.oy = P.bob; g.r(8, y, 8, h, R.m); g.r(8, y, 8, 1, R.h); g.p(8, y + h - 1, R.l); g.p(15, y + h - 1, R.l);
+    if (B.tier >= 3) { g.sp(9, y + h - 1, R.d); g.sp(10, y, WHITE.h); }
+    if (!back) { const bk = B.tier >= 3 ? WHITE : GOLD; g.sp(11, y, bk.h); if (h > 1) g.sp(11, y + 1, bk.m); }
+    else if (B.tier === 1) { g.p(12, y + 1, R.d); g.p(13, y + 2, R.m); }     // sash knot tail
+  }
+  function drawAmulet(g, P, back, A) {
+    if (back) return;
+    const R = RP(A.color); g.oy = P.bob;
+    g.p(11, 15, GOLD.l); g.p(12, 15, GOLD.l);          // chain
+    g.p(11, 16, R.h); g.p(12, 16, R.m);                 // 2 px pendant, element colour
+  }
+  function drawRingGlint(g, P, R) {                    // attack frame only, on the thrusting hand
+    g.oy = P.bob + P.ray; g.p(17, 23, '#ffffff'); g.p(17, 22, mixRgbHex(R.color));
+  }
+  const mixRgbHex = c => lt(c, 0.5);
+  const RANKS = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+
   // ---- render pipeline -----------------------------------------------------
   function outline(cv) {
     const cx = cv.getContext('2d'), w = cv.width, h = cv.height, id = cx.getImageData(0, 0, w, h), d = id.data, o = new Uint8ClampedArray(d);
@@ -454,16 +503,17 @@ const HERO = (function () {
     }
     cx.putImageData(new ImageData(o, w, h), 0, 0);
   }
-  const piece = p => (p && p.family ? { family: p.family, tier: clamp(p.tier | 0, 0, 4), gems: p.gems || null } : null);
+  const piece = p => (p && p.family ? { family: p.family, tier: clamp(p.tier | 0, 0, 4), gems: p.gems || null, tempered: !!p.tempered } : null);
   function renderFrame(L, back, fi, only) {
     const { c, x } = makeCanvas(FW, FH), g = mkG(x, back), P = FR[fi];
     x.translate(0, TOP);
     const run = (slot, tbl, args) => {
       const p = L[slot]; if (!p || (only && only !== slot)) return;
       const fam = tbl[p.family]; if (!fam) return;
-      g.gl = p.gems; g.oy = 0; fam.draw(g, P, back, p.tier);
+      g.gl = p.gems; g.oy = 0; withTemper(x, g, p.tempered, back, tg => fam.draw(tg, P, back, p.tier));
     };
     const doCape = () => { if (!only || only === 'cape') { g.gl = null; cape(g, P, back, L.chest); } };
+    const tri = (slot, f) => { const p = L[slot]; if (!p || (only && only !== slot)) return; g.gl = null; withTemper(x, g, p.tempered, back, tg => f(tg, p)); };
     if (!only || only === 'body') {
       if (!back) doCape();
       g.gl = null; body(g, P, back, L);
@@ -471,21 +521,28 @@ const HERO = (function () {
     } else if (!back) doCape();
     run('boots', BOOTS); run('chest', CHEST);
     if (back && (!only || only === 'cape')) doCape();
+    tri('belt', (tg, p) => drawBelt(tg, P, back, p)); tri('amulet', (tg, p) => drawAmulet(tg, P, back, p));
     run('head', HEAD);
+    if (fi === 6 && L.ring && (!only || only === 'ring')) {
+      const hit = L.ring.filter(r => RANKS.indexOf(r.rarity) >= 3);
+      if (hit.length) { const r = hit[0]; g.gl = null; withTemper(x, g, r.tempered, back, tg => drawRingGlint(tg, P, r)); }
+    }
     if (!only) outline(c);
     return c;
   }
   function renderWeapon(w) {
     const fam = WEAP[w.family], { c, x } = makeCanvas(WW, fam ? fam.H : 20), g = mkG(x, false, WW);
     if (!fam) return { c, grip: [8, 10], tip: [8, 0] };
-    g.gl = w.gems; fam.draw(g, w.tier); outline(c);
+    g.gl = w.gems; fam.draw(g, w.tier); if (w.tempered) edgeLight(c, 0.6); outline(c);
     return { c, grip: fam.grip, tip: [8, fam.tipY(w.tier)] };
   }
 
   const cache = new Map();
   function build(look) {
     look = look || {};
-    const L = { head: piece(look.head), chest: piece(look.chest), boots: piece(look.boots), weapon: piece(look.weapon), hair: look.hair, skin: look.skin };
+    const L = { head: piece(look.head), chest: piece(look.chest), boots: piece(look.boots), weapon: piece(look.weapon), hair: look.hair, skin: look.skin,
+      belt: trinket(look.belt, 'belt'), amulet: trinket(look.amulet, 'amulet'),
+      ring: look.ring ? [].concat(look.ring).map(r => trinket(r, 'ring')) : null };
     const key = JSON.stringify(L);
     if (cache.has(key)) return cache.get(key);
     const b = { key, look: L, w: FW, h: FH, front: [], back: [], hand: { front: [], back: [] }, _slots: {} };
@@ -589,6 +646,15 @@ const HERO = (function () {
     ctx.restore();
   }
 
+  // rarityFx rim for the trinket overlays (belt, amulet, and the ring glint on the attack frame); skips common
+  function drawTrinketGlow(ctx, b, view, fi, x, y, t) {
+    for (const [slot, p] of [['belt', b.look.belt], ['amulet', b.look.amulet], ['ring', b.look.ring && b.look.ring[0]]]) {
+      if (!p || (slot === 'ring' && fi !== 6)) continue;
+      const r = slot === 'ring' ? b.look.ring.reduce((m, q) => (RANKS.indexOf(q.rarity) > RANKS.indexOf(m) ? q.rarity : m), 'common') : p.rarity;
+      drawGlow(ctx, slotSprite(b, slot, view, fi), x, y, r, t);
+    }
+  }
+
   // ---- particles (pure; caller owns the array; box = emitter rectangle in ctx units) ----
   function emit(arr, rarity, bx, by, bw, bh, dt, cap) {
     const f = rarityFx[rarity]; if (!f || !f.rate) return;
@@ -635,7 +701,7 @@ const HERO = (function () {
   }
 
   return {
-    FW, FH, TOP, FRAMES: FR.length, ATTACK: 6, REST_ANGLE: REST, build, drawHero, slotSprite, rarityFx, rarityColor, drawGlow, emit, stepParticles, drawParticles,
+    FW, FH, TOP, FRAMES: FR.length, ATTACK: 6, REST_ANGLE: REST, build, drawHero, slotSprite, rarityFx, rarityColor, drawGlow, emit, stepParticles, drawParticles, drawTrinketGlow, BELT_COLORS: BELTC, ELEMENT_COLORS: ELC,
     FAMILIES: { head: Object.keys(HEAD), chest: Object.keys(CHEST), boots: Object.keys(BOOTS), weapon: Object.keys(WEAP) },
     GEMS: Object.keys(GEMC), RARITIES: ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'],
     gemColor: n => GEMC[n]

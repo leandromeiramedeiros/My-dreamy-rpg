@@ -1,0 +1,247 @@
+kind,id,tier_or_grade,value,pp_est,pp_budget_s20_4,note
+affix,prefix.power,T1,0.03-0.05,4,4,mid 0.04 at ilvl 7
+affix,prefix.power,T2,0.06-0.08,7,8,mid 0.07 at ilvl 20
+affix,prefix.power,T3,0.1-0.13,11.5,13,mid 0.115 at ilvl 35
+affix,prefix.crit,T1,0.02-0.03,2,4,mid 0.025 at ilvl 7
+affix,prefix.crit,T2,0.04-0.05,3.6,8,mid 0.045 at ilvl 20
+affix,prefix.crit,T3,0.07-0.08,6,13,mid 0.075 at ilvl 35
+affix,prefix.critDmg,T1,0.08-0.12,10,4,mid 0.1 at ilvl 7
+affix,prefix.critDmg,T2,0.16-0.2,18,8,mid 0.18 at ilvl 20
+affix,prefix.critDmg,T3,0.24-0.3,27,13,mid 0.27 at ilvl 35
+affix,prefix.haste,T1,0.03-0.04,3.5,4,mid 0.035 at ilvl 7
+affix,prefix.haste,T2,0.06-0.07,6.5,8,mid 0.065 at ilvl 20
+affix,prefix.haste,T3,0.09-0.11,10,13,mid 0.1 at ilvl 35
+affix,prefix.skillDmg,T1,0.04-0.06,5,4,mid 0.05 at ilvl 7
+affix,prefix.skillDmg,T2,0.08-0.1,9,8,mid 0.09 at ilvl 20
+affix,prefix.skillDmg,T3,0.12-0.15,13.5,13,mid 0.135 at ilvl 35
+affix,prefix.cdr,T1,0.02-0.03,2.5,4,mid 0.025 at ilvl 7
+affix,prefix.cdr,T2,0.04-0.05,4.5,8,mid 0.045 at ilvl 20
+affix,prefix.cdr,T3,0.06-0.08,7,13,mid 0.07 at ilvl 35
+affix,prefix.fireDmg,T1,0.04-0.06,5,4,mid 0.05 at ilvl 7
+affix,prefix.fireDmg,T2,0.08-0.1,9,8,mid 0.09 at ilvl 20
+affix,prefix.fireDmg,T3,0.12-0.15,13.5,13,mid 0.135 at ilvl 35
+affix,prefix.frostDmg,T1,0.04-0.06,5,4,mid 0.05 at ilvl 7
+affix,prefix.frostDmg,T2,0.08-0.1,9,8,mid 0.09 at ilvl 20
+affix,prefix.frostDmg,T3,0.12-0.15,13.5,13,mid 0.135 at ilvl 35
+affix,prefix.natureDmg,T1,0.04-0.06,5,4,mid 0.05 at ilvl 7
+affix,prefix.natureDmg,T2,0.08-0.1,9,8,mid 0.09 at ilvl 20
+affix,prefix.natureDmg,T3,0.12-0.15,13.5,13,mid 0.135 at ilvl 35
+affix,prefix.lightningDmg,T1,0.04-0.06,5,4,mid 0.05 at ilvl 7
+affix,prefix.lightningDmg,T2,0.08-0.1,9,8,mid 0.09 at ilvl 20
+affix,prefix.lightningDmg,T3,0.12-0.15,13.5,13,mid 0.135 at ilvl 35
+affix,prefix.arcaneDmg,T1,0.04-0.06,5,4,mid 0.05 at ilvl 7
+affix,prefix.arcaneDmg,T2,0.08-0.1,9,8,mid 0.09 at ilvl 20
+affix,prefix.arcaneDmg,T3,0.12-0.15,13.5,13,mid 0.135 at ilvl 35
+affix,prefix.holyDmg,T1,0.04-0.06,5,4,mid 0.05 at ilvl 7
+affix,prefix.holyDmg,T2,0.08-0.1,9,8,mid 0.09 at ilvl 20
+affix,prefix.holyDmg,T3,0.12-0.15,13.5,13,mid 0.135 at ilvl 35
+affix,prefix.statusChance,T1,0.05-0.07,,4,unpriced stat statusChance
+affix,prefix.statusChance,T2,0.09-0.12,,8,unpriced stat statusChance
+affix,prefix.statusChance,T3,0.16-0.2,,13,unpriced stat statusChance
+affix,prefix.markCap,T1,1-1,,4,unpriced stat markCap
+affix,prefix.markCap,T2,2-2,,8,unpriced stat markCap
+affix,prefix.markCap,T3,3-3,,13,unpriced stat markCap
+affix,prefix.chargeSpeed,T1,0.05-0.07,,4,unpriced stat chargeSpeed
+affix,prefix.chargeSpeed,T2,0.09-0.12,,8,unpriced stat chargeSpeed
+affix,prefix.chargeSpeed,T3,0.14-0.18,,13,unpriced stat chargeSpeed
+affix,suffix.hp,T1,25-35,3.7,4,mid 30 at ilvl 7
+affix,suffix.hp,T2,55-70,5.5,8,mid 62.5 at ilvl 20
+affix,suffix.hp,T3,75-90,5.4,13,mid 82.5 at ilvl 35
+affix,suffix.def,T1,0.02-0.03,2.5,4,mid 0.025 at ilvl 7
+affix,suffix.def,T2,0.04-0.055,4.8,8,mid 0.0475 at ilvl 20
+affix,suffix.def,T3,0.06-0.08,7,13,mid 0.07 at ilvl 35
+affix,suffix.regen,T1,1-1.5,,4,unpriced stat regen
+affix,suffix.regen,T2,2-2.5,,8,unpriced stat regen
+affix,suffix.regen,T3,3-4,,13,unpriced stat regen
+affix,suffix.mpRegen,T1,0.8-1.2,,4,unpriced stat mpRegen
+affix,suffix.mpRegen,T2,1.6-2.2,,8,unpriced stat mpRegen
+affix,suffix.mpRegen,T3,2.4-3.2,,13,unpriced stat mpRegen
+affix,suffix.speed,T1,0.1-0.14,,4,unpriced stat speed
+affix,suffix.speed,T2,0.2-0.26,,8,unpriced stat speed
+affix,suffix.speed,T3,0.3-0.38,,13,unpriced stat speed
+affix,suffix.resFire,T1,0.06-0.08,7,4,mid 0.07 at ilvl 7
+affix,suffix.resFire,T2,0.1-0.14,12,8,mid 0.12 at ilvl 20
+affix,suffix.resFire,T3,0.17-0.2,18.5,13,mid 0.185 at ilvl 35
+affix,suffix.resFrost,T1,0.06-0.08,7,4,mid 0.07 at ilvl 7
+affix,suffix.resFrost,T2,0.1-0.14,12,8,mid 0.12 at ilvl 20
+affix,suffix.resFrost,T3,0.17-0.2,18.5,13,mid 0.185 at ilvl 35
+affix,suffix.resNature,T1,0.06-0.08,7,4,mid 0.07 at ilvl 7
+affix,suffix.resNature,T2,0.1-0.14,12,8,mid 0.12 at ilvl 20
+affix,suffix.resNature,T3,0.17-0.2,18.5,13,mid 0.185 at ilvl 35
+affix,suffix.resLightning,T1,0.06-0.08,7,4,mid 0.07 at ilvl 7
+affix,suffix.resLightning,T2,0.1-0.14,12,8,mid 0.12 at ilvl 20
+affix,suffix.resLightning,T3,0.17-0.2,18.5,13,mid 0.185 at ilvl 35
+affix,suffix.resArcane,T1,0.06-0.08,7,4,mid 0.07 at ilvl 7
+affix,suffix.resArcane,T2,0.1-0.14,12,8,mid 0.12 at ilvl 20
+affix,suffix.resArcane,T3,0.17-0.2,18.5,13,mid 0.185 at ilvl 35
+affix,suffix.resHoly,T1,0.06-0.08,7,4,mid 0.07 at ilvl 7
+affix,suffix.resHoly,T2,0.1-0.14,12,8,mid 0.12 at ilvl 20
+affix,suffix.resHoly,T3,0.17-0.2,18.5,13,mid 0.185 at ilvl 35
+affix,suffix.resSlash,T1,0.06-0.08,7,4,mid 0.07 at ilvl 7
+affix,suffix.resSlash,T2,0.1-0.14,12,8,mid 0.12 at ilvl 20
+affix,suffix.resSlash,T3,0.17-0.2,18.5,13,mid 0.185 at ilvl 35
+affix,suffix.resPierce,T1,0.06-0.08,7,4,mid 0.07 at ilvl 7
+affix,suffix.resPierce,T2,0.1-0.14,12,8,mid 0.12 at ilvl 20
+affix,suffix.resPierce,T3,0.17-0.2,18.5,13,mid 0.185 at ilvl 35
+affix,suffix.resAll,T1,0.03-0.04,3.5,4,mid 0.035 at ilvl 7
+affix,suffix.resAll,T2,0.05-0.06,5.5,8,mid 0.055 at ilvl 20
+affix,suffix.resAll,T3,0.08-0.1,9,13,mid 0.09 at ilvl 35
+affix,suffix.resGloom,T1,0.06-0.08,7,4,mid 0.07 at ilvl 7
+affix,suffix.resGloom,T2,0.1-0.14,12,8,mid 0.12 at ilvl 20
+affix,suffix.resGloom,T3,0.17-0.2,18.5,13,mid 0.185 at ilvl 35
+affix,suffix.onDodge,T1,0.01-0.015,,4,unpriced stat onDodge
+affix,suffix.onDodge,T2,0.02-0.03,,8,unpriced stat onDodge
+affix,suffix.onDodge,T3,0.035-0.04,,13,unpriced stat onDodge
+affix,suffix.onKill,T1,0.02-0.03,,4,unpriced stat onKill
+affix,suffix.onKill,T2,0.04-0.05,,8,unpriced stat onKill
+affix,suffix.onKill,T3,0.06-0.07,,13,unpriced stat onKill
+gem,ruby_1,Chipped,"wpn={""power"":0.04} arm={""hp"":30,""resFire"":0.1}",12.6,4,max of weapon/armour side at L20; skipped: none
+gem,sapphire_1,Chipped,"wpn={""cdr"":0.02} arm={""mp"":20,""mpRegen"":0.5,""resFrost"":0.1}",10,4,"max of weapon/armour side at L20; skipped: mp,mpRegen"
+gem,emerald_1,Chipped,"wpn={""haste"":0.03} arm={""regen"":1,""resNature"":0.1}",10,4,max of weapon/armour side at L20; skipped: regen
+gem,topaz_1,Chipped,"wpn={""critDmg"":0.08} arm={""crit"":0.01,""resLightning"":0.1}",10.8,4,max of weapon/armour side at L20; skipped: none
+gem,amethyst_1,Chipped,"wpn={""skillDmg"":0.04} arm={""power"":0.02,""resArcane"":0.1,""resGloom"":0.1}",22,4,max of weapon/armour side at L20; skipped: none
+gem,diamond_1,Chipped,"wpn={""power"":0.01,""def"":0.01,""crit"":0.005,""haste"":0.01} arm={""def"":0.01,""resAll"":0.05}",6,4,max of weapon/armour side at L20; skipped: none
+gem,ruby_2,Clear,"wpn={""power"":0.1} arm={""hp"":100,""resFire"":0.2}",28.7,8,max of weapon/armour side at L20; skipped: none
+gem,sapphire_2,Clear,"wpn={""cdr"":0.05} arm={""mp"":55,""mpRegen"":1.5,""resFrost"":0.2}",20,8,"max of weapon/armour side at L20; skipped: mp,mpRegen"
+gem,emerald_2,Clear,"wpn={""haste"":0.08} arm={""regen"":3.5,""resNature"":0.2}",20,8,max of weapon/armour side at L20; skipped: regen
+gem,topaz_2,Clear,"wpn={""critDmg"":0.2} arm={""crit"":0.03,""resLightning"":0.2}",22.4,8,max of weapon/armour side at L20; skipped: none
+gem,amethyst_2,Clear,"wpn={""skillDmg"":0.1} arm={""power"":0.06,""resArcane"":0.2,""resGloom"":0.2}",46,8,max of weapon/armour side at L20; skipped: none
+gem,diamond_2,Clear,"wpn={""power"":0.02,""def"":0.02,""crit"":0.01,""haste"":0.02} arm={""def"":0.03,""resAll"":0.1}",13,8,max of weapon/armour side at L20; skipped: none
+gem,ruby_3,Radiant,"wpn={""power"":0.2} arm={""hp"":240,""resFire"":0.3}",51,14,max of weapon/armour side at L20; skipped: none
+gem,sapphire_3,Radiant,"wpn={""cdr"":0.1} arm={""mp"":110,""mpRegen"":3,""resFrost"":0.3}",30,14,"max of weapon/armour side at L20; skipped: mp,mpRegen"
+gem,emerald_3,Radiant,"wpn={""haste"":0.15} arm={""regen"":7,""resNature"":0.3}",30,14,max of weapon/armour side at L20; skipped: regen
+gem,topaz_3,Radiant,"wpn={""critDmg"":0.4} arm={""crit"":0.06,""resLightning"":0.3}",40,14,max of weapon/armour side at L20; skipped: none
+gem,amethyst_3,Radiant,"wpn={""skillDmg"":0.2} arm={""power"":0.12,""resArcane"":0.3,""resGloom"":0.3}",72,14,max of weapon/armour side at L20; skipped: none
+gem,diamond_3,Radiant,"wpn={""power"":0.04,""def"":0.04,""crit"":0.02,""haste"":0.04} arm={""def"":0.06,""resAll"":0.15}",21,14,max of weapon/armour side at L20; skipped: none
+implicit,rustyblade,,slashDmg=0.04,4,5,flat hp at L20
+implicit,dawnblade,,shatterDmg=0.1,10,5,flat hp at L20
+implicit,sunforged,,holyDmg=0.06,6,5,flat hp at L20
+implicit,auroraedge,,stagger=1,,5,unpriced stat stagger
+implicit,dawneternal,,chargeSpeed=0.08,,5,unpriced stat chargeSpeed
+implicit,willowwand,,arcaneDmg=0.04,4,5,flat hp at L20
+implicit,starfall,,statusChance=0.05,,5,unpriced stat statusChance
+implicit,cometrod,,fireDmg=0.08,8,5,flat hp at L20
+implicit,nebulasceptre,,frostDmg=0.08,8,5,flat hp at L20
+implicit,nighteternal,,arcaneDmg=0.14,14,5,flat hp at L20
+implicit,hunterbow,,pierce=1,,5,unpriced stat pierce
+implicit,moonbow,,haste=0.04,4,5,flat hp at L20
+implicit,silverwing,,critDmg=0.1,10,5,flat hp at L20
+implicit,eclipsebow,,statusChance=0.06,,5,unpriced stat statusChance
+implicit,mooneternal,,pierce=2,,5,unpriced stat pierce
+implicit,ironcap,,def=0.02,2,5,flat hp at L20
+implicit,knighthelm,,poise=1,,5,unpriced stat poise
+implicit,sunguard,,holyDmg=0.05,5,5,flat hp at L20
+implicit,auroravisor,,crit=0.02,1.6,5,flat hp at L20
+implicit,crownofdawn,,hp=20,1.7,5,flat hp at L20
+implicit,novicehood,,arcaneDmg=0.03,3,5,flat hp at L20
+implicit,arcanecowl,,frostDmg=0.06,6,5,flat hp at L20
+implicit,starweave,,cdr=0.03,3,5,flat hp at L20
+implicit,astralcirclet,,statusChance=0.05,,5,unpriced stat statusChance
+implicit,crownofstars,,mpRegen=0.6,,5,unpriced stat mpRegen
+implicit,rangercap,,natureDmg=0.03,3,5,flat hp at L20
+implicit,wardenhood,,regen=0.5,,5,unpriced stat regen
+implicit,mossmantle,,natureDmg=0.06,6,5,flat hp at L20
+implicit,thornwarden,,reflect=0.03,,5,unpriced stat reflect
+implicit,crownofroots,,regen=1,,5,unpriced stat regen
+implicit,ironmail,,hp=15,1.3,5,flat hp at L20
+implicit,knightplate,,poise=1,,5,unpriced stat poise
+implicit,sunplate,,holyDmg=0.06,6,5,flat hp at L20
+implicit,auroraplate,,reflect=0.05,,5,unpriced stat reflect
+implicit,dawnaegis,,hp=40,3.5,5,flat hp at L20
+implicit,linenrobe,,mpOnHit=0.1,,5,unpriced stat mpOnHit
+implicit,dreamrobe,,arcaneDmg=0.06,6,5,flat hp at L20
+implicit,starwoven,,cdr=0.04,4,5,flat hp at L20
+implicit,nebularobe,,mpRegen=0.8,,5,unpriced stat mpRegen
+implicit,dreamshroud,,skillDmg=0.1,10,5,flat hp at L20
+implicit,jerkin,,crit=0.02,1.6,5,flat hp at L20
+implicit,stalkerjacket,,haste=0.04,4,5,flat hp at L20
+implicit,nightcoat,,critDmg=0.1,10,5,flat hp at L20
+implicit,shadowweave,,backstab=15,,5,unpriced stat backstab
+implicit,eclipsegarb,,statusChance=0.06,,5,unpriced stat statusChance
+implicit,ironboots,,hp=10,0.9,5,flat hp at L20
+implicit,knightgreaves,,poise=1,,5,unpriced stat poise
+implicit,sungreaves,,holyDmg=0.05,5,5,flat hp at L20
+implicit,auroragreaves,,chargeSpeed=0.06,,5,unpriced stat chargeSpeed
+implicit,dawnstriders,,speed=0.2,,5,unpriced stat speed
+implicit,ropesandals,,mpRegen=0.3,,5,unpriced stat mpRegen
+implicit,clothsandals,,cdr=0.03,3,5,flat hp at L20
+implicit,mistwalkers,,speed=0.15,,5,unpriced stat speed
+implicit,skystep,,cdr=0.05,5,5,flat hp at L20
+implicit,cloudsteps,,mpRegen=1,,5,unpriced stat mpRegen
+implicit,softshoes,,speed=0.1,,5,unpriced stat speed
+implicit,stalkershoes,,statusChance=0.03,,5,unpriced stat statusChance
+implicit,quietstep,,crit=0.02,1.6,5,flat hp at L20
+implicit,shadowstep,,speed=0.25,,5,unpriced stat speed
+implicit,eclipsetreads,,critDmg=0.1,10,5,flat hp at L20
+boon,ring:fireBurn,minor,"{""fireDmg"":0.08,""burnChance"":0.05}",8,,unpriced: burnChance
+boon,ring:fireBurn,major,"{""fireDmg"":0.15,""burnChance"":0.1}",15,,unpriced: burnChance
+boon,ring:shatterRadius,minor,"{""shatterRadius"":1}",,,unpriced: shatterRadius
+boon,ring:shatterRadius,major,"{""shatterRadius"":2}",,,unpriced: shatterRadius
+boon,ring:conductJump,minor,"{""conductJump"":1}",,,unpriced: conductJump
+boon,ring:conductJump,major,"{""conductJump"":2}",,,unpriced: conductJump
+boon,ring:backstabArc,minor,"{""backstab"":15}",,,unpriced: backstab
+boon,ring:backstabArc,major,"{""backstab"":30}",,,unpriced: backstab
+boon,ring:markCap,minor,"{""markCap"":1}",,,unpriced: markCap
+boon,ring:markCap,major,"{""markCap"":2}",,,unpriced: markCap
+boon,ring:chargedSwing,minor,"{""chargeTime"":0.12}",,,unpriced: chargeTime
+boon,ring:chargedSwing,major,"{""chargeTime"":0.25}",,,unpriced: chargeTime
+boon,ring:projPierce,minor,"{""pierce"":1}",,,unpriced: pierce
+boon,ring:projPierce,major,"{""pierce"":2}",,,unpriced: pierce
+boon,ring:frostPower,minor,"{""frostDmg"":0.08,""freezeChance"":0.05}",8,,unpriced: freezeChance
+boon,ring:frostPower,major,"{""frostDmg"":0.15,""freezeChance"":0.1}",15,,unpriced: freezeChance
+boon,ring:naturePower,minor,"{""natureDmg"":0.08,""poisonChance"":0.05}",8,,unpriced: poisonChance
+boon,ring:naturePower,major,"{""natureDmg"":0.15,""poisonChance"":0.1}",15,,unpriced: poisonChance
+boon,ring:lightningPower,minor,"{""lightningDmg"":0.08,""shockDur"":0.5}",8,,unpriced: shockDur
+boon,ring:lightningPower,major,"{""lightningDmg"":0.15,""shockDur"":1}",15,,unpriced: shockDur
+boon,ring:arcanePower,minor,"{""arcaneDmg"":0.08,""markDur"":0.5}",8,,unpriced: markDur
+boon,ring:arcanePower,major,"{""arcaneDmg"":0.15,""markDur"":1}",15,,unpriced: markDur
+boon,ring:holyPower,minor,"{""holyDmg"":0.08,""stagger"":0.5}",8,,unpriced: stagger
+boon,ring:holyPower,major,"{""holyDmg"":0.15,""stagger"":1}",15,,unpriced: stagger
+boon,amulet:chargeFromReact,minor,"{""reactCharge"":0.08}",,,unpriced: reactCharge
+boon,amulet:chargeFromReact,major,"{""reactCharge"":0.15}",,,unpriced: reactCharge
+boon,amulet:rFrostTag,minor,"{""rTag"":""frost""}",,,unpriced: rTag
+boon,amulet:rFrostTag,major,"{""rTag"":""frost"",""rDmg"":0.1}",,,"unpriced: rTag,rDmg"
+boon,amulet:rCost,minor,"{""rCost"":90}",,,unpriced: rCost
+boon,amulet:rCost,major,"{""rCost"":80}",,,unpriced: rCost
+boon,amulet:rFirstFree,minor,"{""rFirstCost"":0.5}",,,unpriced: rFirstCost
+boon,amulet:rFirstFree,major,"{""rFirstFree"":true}",,,unpriced: rFirstFree
+boon,amulet:ultDmg,minor,"{""ultDmg"":0.05}",,,unpriced: ultDmg
+boon,amulet:ultDmg,major,"{""ultDmg"":0.1}",,,unpriced: ultDmg
+boon,amulet:ultRadius,minor,"{""ultRadius"":0.5}",,,unpriced: ultRadius
+boon,amulet:ultRadius,major,"{""ultRadius"":1}",,,unpriced: ultRadius
+boon,amulet:ultBuffDur,minor,"{""ultBuffDur"":1}",,,unpriced: ultBuffDur
+boon,amulet:ultBuffDur,major,"{""ultBuffDur"":2}",,,unpriced: ultBuffDur
+boon,amulet:skillDmgFull,minor,"{""skillDmg"":0.04}",4,,
+boon,amulet:skillDmgFull,major,"{""skillDmg"":0.08}",8,,
+boon,amulet:chargeOnDodge,minor,"{""chargeOnDodge"":3}",,,unpriced: chargeOnDodge
+boon,amulet:chargeOnDodge,major,"{""chargeOnDodge"":5}",,,unpriced: chargeOnDodge
+boon,amulet:chargeOnKill,minor,"{""chargeOnKill"":1}",,,unpriced: chargeOnKill
+boon,amulet:chargeOnKill,major,"{""chargeOnKill"":2}",,,unpriced: chargeOnKill
+boon,amulet:mpOnR,minor,"{""mpOnR"":10}",,,unpriced: mpOnR
+boon,amulet:mpOnR,major,"{""mpOnR"":20}",,,unpriced: mpOnR
+boon,amulet:critAfterR,minor,"{""crit"":0.03}",2.4,,
+boon,amulet:critAfterR,major,"{""crit"":0.05}",4,,
+boon,belt:potionCleanse,minor,"{""potionCleanse"":1}",,,unpriced: potionCleanse
+boon,belt:potionCleanse,major,"{""potionCleanse"":2}",,,unpriced: potionCleanse
+boon,belt:killHeal,minor,"{""killHeal"":0.25}",,,unpriced: killHeal
+boon,belt:killHeal,major,"{""killHeal"":0.5}",,,unpriced: killHeal
+boon,belt:cookingDur,minor,"{""cookingDurMin"":10}",,,unpriced: cookingDurMin
+boon,belt:cookingDur,major,"{""cookingDurMin"":15}",,,unpriced: cookingDurMin
+boon,belt:salvageDust,minor,"{""salvageDust"":1.25}",,,unpriced: salvageDust
+boon,belt:salvageDust,major,"{""salvageDust"":1.5}",,,unpriced: salvageDust
+boon,belt:gemWrap,minor,"{""gemWrapSlots"":[""chest""],""gemWrapGrade"":1}",,,"unpriced: gemWrapSlots,gemWrapGrade"
+boon,belt:gemWrap,major,"{""gemWrapSlots"":[""chest"",""boots""],""gemWrapGrade"":1}",,,"unpriced: gemWrapSlots,gemWrapGrade"
+boon,belt:potionCap,minor,"{""potionCharge"":1}",,,unpriced: potionCharge
+boon,belt:potionCap,major,"{""potionCharge"":2}",,,unpriced: potionCharge
+boon,belt:dustOnKill,minor,"{""dustOnElite"":1}",,,unpriced: dustOnElite
+boon,belt:dustOnKill,major,"{""dustOnElite"":2}",,,unpriced: dustOnElite
+boon,belt:flaskRegen,minor,"{""potionRegen"":0.01}",,,unpriced: potionRegen
+boon,belt:flaskRegen,major,"{""potionRegen"":0.03}",,,unpriced: potionRegen
+boon,belt:foodXp,minor,"{""foodXp"":0.05}",,,unpriced: foodXp
+boon,belt:foodXp,major,"{""foodXp"":0.1}",,,unpriced: foodXp
+boon,belt:fishLuck,minor,"{""fishLuck"":0.03}",,,unpriced: fishLuck
+boon,belt:fishLuck,major,"{""fishLuck"":0.05}",,,unpriced: fishLuck
+boon,belt:potionMp,minor,"{""potionMp"":0.1}",,,unpriced: potionMp
+boon,belt:potionMp,major,"{""potionMp"":0.2}",,,unpriced: potionMp
+boon,belt:dodgeIframe,minor,"{""dodgeIframeDur"":0.05}",,,unpriced: dodgeIframeDur
+boon,belt:dodgeIframe,major,"{""dodgeIframeDur"":0.1}",,,unpriced: dodgeIframeDur

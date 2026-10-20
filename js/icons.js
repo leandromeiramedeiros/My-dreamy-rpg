@@ -6,6 +6,8 @@
 // Only `ICONS` is exposed.  Self-contained: no dependency on other game files.
 //   ICONS.skill(id)                      -> framed skill icon (element-coloured bevel frame)
 //   ICONS.item(base, tier, rarity, gems) -> slot icon: art + static rarity frame + gem dots
+//      trinkets: ICONS.item('dreamsilver_band'|'ring'+tier 1..3|unique id, tier, rarity, gems, {element, implicit, tempered})
+//   ICONS.trinketIds / ICONS.uniqueIds    -> base ids (9) / unique ids (11) with art
 //   ICONS.gem(type, grade)               -> gem (grade 0..4: chipped..radiant)
 //   ICONS.misc(name)                     -> potion dust rune chest xp key choice shrine tablet gold
 //   ICONS.glyph(glyph, color)            -> OLD glyph names -> new art (drop-in for icon())
@@ -470,6 +472,140 @@ const ICONS = (() => {
     return 'sword';
   }
 
+  // ---- trinkets (DESIGN 19.4/19.5): ring / amulet / belt x tiers 1-3, element tint, uniques ----------------
+  const RCUT = (x0, y0, x1, y1) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (x >= 0 && y >= 0 && x < N && y < N) L[y * N + x] = null; };
+  const TMET = { ring: [['#2a2824', '#5a5648', '#8c866e', '#b8b296'], ['#3a4a68', '#7a90b8', '#bcd0f0', '#f0f8ff'], ['#3a2a78', '#7a68d0', '#b8a8ff', '#f4ecff']],
+    amulet: [R.gd, ['#5a6a88', '#9ab0d0', '#d4e4fa', '#ffffff'], ['#6a4a98', '#b890e8', '#e8d0ff', '#ffffff']],
+    belt: [['#4a2e14', '#7a5028', '#b0804a', '#dcb078'], ['#2c3a5a', '#52688e', '#8aa4cc', '#c8dcf4'], ['#4a4488', '#8480d0', '#bcb8f4', '#f0eeff']] };
+  const DEFSTONE = [null, R.bl, R.ar];
+  const tint = (M, ec) => (ec ? M.map((c) => mix(c, ec, 0.16)) : M);
+  const TRK = {
+    ring(t, ec) {
+      const M = tint(TMET.ring[t - 1], ec), S = ec ? rp(ec) : DEFSTONE[t - 1];
+      arc(11.5, 14.5, 6.4, 3.2, 0, 360, M);
+      if (t === 1) { if (S) disc(11.5, 7.4, 1.5, S); else top(() => P(11, 8, M[3])); return; }
+      if (t === 2) { bar(9, 7.5, 10, 9.5, 2, 2, M); bar(14, 7.5, 13, 9.5, 2, 2, M); disc(11.5, 6.3, 2.5, S); top(() => P(10, 5, '#fff')); return; }
+      bar(8.5, 9, 7.5, 7, 2, 2, M); bar(14.5, 9, 15.5, 7, 2, 2, M);
+      poly([[11.5, 1.8], [15.5, 6], [11.5, 10.2], [7.5, 6]], S); top(() => { P(10, 4, '#fff'); P(11, 5, S[3]); }); spk(18, 4, 1, '#fff', S[3]); spk(5, 18, 1, '#fff', M[3]);
+    },
+    amulet(t, ec) {
+      const M = TMET.amulet[t - 1], S = ec ? rp(ec) : [R.lt, R.bl, R.ar][t - 1], CH = R.gd;
+      bar(4, 1.5, 10.5, 9, 1, 1, CH); bar(19, 1.5, 12.5, 9, 1, 1, CH);
+      if (t === 1) {       // lantern charm
+        disc(11.5, 9.6, 1.6, M, true); cut(11.5, 9.6, 0.7); poly([[9, 11.5], [14, 11.5], [13, 13], [10, 13]], M);
+        poly([[8.5, 13], [14.5, 13], [15, 19.5], [8, 19.5]], S); top(() => { P(9, 14, '#fff'); P(9, 15, S[3]); line(11, 18, 12, 15, '#fff'); });
+        bar(7.5, 20, 15.5, 20, 2, 2, M); bar(8, 13, 8, 19, 1, 1, M); bar(15, 13, 15, 19, 1, 1, M);
+      } else if (t === 2) {  // dreamglass drop
+        disc(11.5, 9.6, 1.6, M, true); cut(11.5, 9.6, 0.7);
+        poly([[11.5, 11], [16.5, 16.5], [15.5, 20], [11.5, 22], [7.5, 20], [6.5, 16.5]], M);
+        poly([[11.5, 12.5], [15, 16.5], [14, 19.3], [11.5, 20.5], [9, 19.3], [8, 16.5]], S); top(() => { P(10, 15, '#fff'); P(10, 16, '#fff'); P(11, 14, S[3]); P(13, 18, S[3]); });
+      } else {               // starhollow
+        poly(starPts(11.5, 16, 7, 3.4, 5), M); disc(11.5, 16.2, 2.6, S); top(() => { P(10, 15, '#fff'); P(11, 14, S[3]); });
+        disc(11.5, 9, 1.3, M, true); cut(11.5, 9, 0.6); spk(19, 8, 1, '#fff', S[3]); spk(4, 20, 1, '#fff', S[3]);
+      }
+    },
+    belt(t) {
+      const M = TMET.belt[t - 1];
+      if (t === 1) {   // rope sash: twisted band, knot, tassels
+        bar(1, 12.5, 22.5, 12.5, 5, 5, M); top(() => { for (let x = 2; x < 22; x += 3) { P(x, 11, M[3]); P(x + 1, 12, M[3]); P(x + 2, 13, M[0]); P(x + 1, 14, M[0]); } });
+        bar(10.5, 14, 8.5, 21, 2, 2, M); bar(13, 14, 15, 21, 2, 2, M); bar(8, 20.5, 9.5, 21.5, 2, 2, R.gd); bar(14.5, 20.5, 16, 21.5, 2, 2, R.gd);
+        disc(11.5, 12.5, 3.2, M); top(() => { P(10, 11, M[3]); P(11, 12, M[0]); P(12, 13, M[0]); });
+      } else if (t === 2) {  // mistwoven: woven cloth + silver buckle
+        poly([[1, 10], [22, 10], [22, 15.5], [1, 15.5]], M, false); top(() => { for (let x = 2; x < 22; x++) for (let y = 11; y < 15; y++) if ((x + y) % 3 === 0) P(x, y, M[3]); line(1, 10, 22, 10, M[3]); line(1, 15, 22, 15, M[0]); });
+        poly([[7.5, 7.5], [15.5, 7.5], [15.5, 18], [7.5, 18]], TMET.amulet[1]); RCUT(9, 9, 14, 16); top(() => { RCUT(9, 9, 14, 16); bar(9, 12.5, 14, 12.5, 2, 2, ['#9ab0d0', '#9ab0d0', '#d4e4fa', '#ffffff']); P(8, 8, '#fff'); });
+        dots([[3, 6], [19, 6], [5, 19], [17, 20]], R.ic[3]);
+      } else {                // moonlit girdle: ornate band, moon buckle, stars
+        poly([[1, 9.5], [22, 9.5], [22, 16], [1, 16]], M, false); top(() => { line(1, 10, 22, 10, R.gd[2]); line(1, 15, 22, 15, R.gd[1]); for (const x of [3, 6, 17, 20]) { P(x, 12, '#fff'); P(x - 1, 13, M[3]); P(x + 1, 11, M[3]); } });
+        disc(11.5, 12.8, 6, R.gd); disc(11.5, 12.8, 4.6, R.dk, true);
+        disc(10.8, 12.8, 3.5, R.mn, true); top(() => { disc(12.6, 11.9, 3, R.dk, true); P(10, 11, '#fff'); }); spk(16, 5, 1, '#fff', R.mn[2]); spk(5, 19, 1, '#fff', R.mn[2]);
+      }
+    },
+  };
+  // uniques: one hand-drawn icon each (6 trinket + 5 world)
+  const ASH = ['#2c2826', '#5a524c', '#8c8078', '#c0b4a8'], TEAL = ['#123a3c', '#2a7a78', '#5cc0b4', '#c8fff0'], CHAR = ['#16121a', '#2e2830', '#4a424e', '#6e6474'];
+  const UQ = {
+    pipslantern() {
+      arc(11.5, 6, 3.6, 1.8, 180, 360, R.gd); bar(7, 8, 16, 8, 3, 3, R.gd); poly([[8, 9.5], [15, 9.5], [16.5, 19], [6.5, 19]], R.lt);
+      bar(6, 19.5, 17, 19.5, 3, 3, R.gd); bar(8, 9.5, 7, 19, 1, 1, R.gd); bar(15, 9.5, 16, 19, 1, 1, R.gd);
+      poly([[11.5, 11], [13.4, 14.5], [13, 17.5], [11.5, 18.5], [10, 17.5], [9.6, 14.5]], R.fr); top(() => { P(11, 15, '#fff'); P(11, 16, R.lt[3]); P(12, 16, R.lt[3]); });
+      spk(3, 11, 1, '#fff', R.lt[2]); spk(20, 12, 1, '#fff', R.lt[2]); spk(19, 4, 0, '#fff', '#fff');
+    },
+    drownedcompass() {
+      arc(11.5, 6, 3, 1.6, 180, 360, TEAL); disc(11.5, 13.5, 8.6, TEAL); disc(11.5, 13.5, 6.4, R.bl, true); disc(11.5, 13.5, 5.2, R.dk, true);
+      poly([[11.5, 8.5], [13, 13.5], [11.5, 14.5], [10, 13.5]], R.rd); poly([[11.5, 18.5], [13, 13.5], [11.5, 12.5], [10, 13.5]], R.wh);
+      top(() => { dots([[11, 8], [11, 19], [6, 13], [17, 13]], TEAL[3]); dots([[4, 18], [3, 20], [19, 20], [20, 18]], R.lf[2]); P(11, 13, '#fff'); P(18, 22, R.ic[2]); P(5, 22, R.ic[2]); });
+    },
+    ashensignet() {
+      arc(11.5, 15.5, 6, 3, 0, 360, ASH); poly([[6.5, 1.8], [16.5, 1.8], [17, 10], [6, 10]], ASH); poly([[8, 3.2], [15, 3.2], [15, 8.5], [8, 8.5]], R.fr);
+      top(() => { line(9, 7, 11, 4, R.lt[3]); line(12, 4, 14, 7, R.lt[3]); line(9, 4, 14, 7, R.lt[1]); dots([[8, 3]], '#fff'); dots([[4, 21], [19, 22], [20, 18], [3, 14]], ASH[3]); });
+      spk(19, 4, 1, '#fff', R.fr[2]);
+    },
+    kindredband() {
+      arc(8, 13.5, 5.2, 2.8, 0, 360, R.gd); arc(15.5, 13.5, 5.2, 2.8, 0, 360, R.wh);
+      top(() => arc(8, 13.5, 5.2, 2.8, -50, 100, R.gd)); poly([[8, 2.5], [10.5, 5.5], [8, 8], [5.5, 5.5]], R.rd); poly([[15.5, 2.5], [18, 5.5], [15.5, 8], [13, 5.5]], R.bl);
+      top(() => { P(7, 4, '#fff'); P(14, 4, '#fff'); }); spk(11.5, 21, 1, '#fff', R.lt[2]);
+    },
+    cindersash() {
+      poly([[1, 9.5], [22, 9.5], [22, 15.5], [1, 15.5]], CHAR); top(() => { line(3, 14, 6, 11, R.fr[2]); line(6, 11, 8, 13, R.fr[1]); line(15, 11, 18, 14, R.fr[2]); line(18, 14, 20, 11, R.fr[1]); line(1, 10, 22, 10, CHAR[3]); });
+      bar(10.5, 15, 9, 21, 2, 2, CHAR); bar(13, 15, 14.5, 21, 2, 2, CHAR);
+      disc(11.5, 12.5, 5, R.gd); disc(11.5, 12.5, 3.6, R.fr, true); top(() => { P(10, 11, '#fff'); P(11, 12, R.lt[3]); });
+      spk(6, 5, 1, R.lt[3], R.fr[2]); spk(17, 4, 1, R.lt[3], R.fr[2]); spk(12, 2, 0, '#fff', '#fff'); spk(21, 19, 0, R.fr[2], R.fr[2]);
+    },
+    quietgirdle() {
+      poly([[1, 9.5], [22, 9.5], [22, 15.5], [1, 15.5]], R.ar, false, 0.3); top(() => { line(1, 10, 22, 10, R.ar[3]); line(1, 15, 22, 15, R.dk[0]); for (const x of [3, 6, 17, 20]) P(x, 12, '#fff'); });
+      disc(11.5, 12.8, 6, R.gd); disc(11.5, 12.8, 4.6, R.dk, true);
+      top(() => { arc(11.5, 11.2, 3.3, 1.4, 20, 140, R.mn); P(8, 14, R.mn[2]); P(15, 14, R.mn[2]); P(10, 15, R.mn[1]); P(13, 15, R.mn[1]); });
+      spk(18, 4, 1, '#fff', R.ar[2]); spk(5, 4, 0, '#fff', '#fff'); dots([[12, 19], [15, 21], [8, 20]], R.ar[3]);
+    },
+    cometband() {
+      arc(10, 15, 5.8, 3, 0, 360, R.st); bar(22, 1, 14, 7.5, 1, 4, R.ic);  bar(21, 4, 14.5, 8, 1, 2, R.wh);
+      disc(13.5, 7.3, 2.8, R.ic); top(() => { P(12, 6, '#fff'); P(13, 7, R.ic[3]); P(19, 8, R.ic[3]); P(17, 11, R.ic[2]); });
+      bar(8.5, 9.5, 9, 10.5, 2, 2, R.st); spk(3, 4, 1, '#fff', R.ic[2]);
+    },
+    tidewovenclasp() {
+      poly([[1, 10], [22, 10], [22, 15.5], [1, 15.5]], TEAL); top(() => { for (let x = 1; x < 22; x++) { P(x, 12 + Math.round(Math.sin(x * 0.9) * 1.2), TEAL[3]); P(x, 13 + Math.round(Math.sin(x * 0.9) * 1.2), TEAL[0]); } line(1, 10, 22, 10, TEAL[3]); });
+      poly([[11.5, 5], [16, 7], [18, 12], [16, 18], [11.5, 20], [7, 18], [5, 12], [7, 7]], R.gd);
+      top(() => { for (const [x, y] of [[11.5, 6.5], [8.5, 8], [14.5, 8], [7, 11.5], [16, 11.5]]) line(11.5, 18.5, x, y, R.lt[3]); line(8, 17, 15, 17, R.gd[0]); });
+      disc(11.5, 18.5, 1.2, R.ic, true); dots([[3, 5], [20, 18], [4, 20]], R.ic[2]);
+    },
+    afterimagependant() {
+      bar(4, 1.5, 10.5, 9, 1, 1, R.gd); bar(19, 1.5, 12.5, 9, 1, 1, R.gd);
+      const gh = (dx, a) => { const g = ['#3a2a70', '#5a44a0', '#7a64c8', '#9a88e8'].map((c) => mix(c, '#171024', a)); poly([[11.5 + dx, 11], [16 + dx, 16], [11.5 + dx, 22], [7 + dx, 16]], g); };
+      gh(-4, 0.55); gh(4, 0.55); gh(-2, 0.25); gh(2, 0.25);
+      poly([[11.5, 10.5], [16.5, 16], [11.5, 22.5], [6.5, 16]], R.gd); poly([[11.5, 12.5], [14.8, 16], [11.5, 20.5], [8.2, 16]], R.ar);
+      top(() => { P(10, 15, '#fff'); P(10, 16, R.ar[3]); P(12, 18, R.ar[3]); });
+    },
+    summonersthread() {
+      arc(11.5, 15.5, 5.6, 1.8, 0, 360, R.pk); arc(11.5, 15.5, 5.6, 0.9, 200, 330, R.wh);
+      poly([[11.5, 9], [7, 4], [5, 7], [8, 9.5]], R.pk); poly([[11.5, 9], [16, 4], [18, 7], [15, 9.5]], R.pk); disc(11.5, 9.2, 1.4, R.pk);
+      bar(10.5, 10, 8, 14, 1, 1, R.pk); bar(12.5, 10, 15, 13, 1, 1, R.pk);
+      disc(11.5, 16, 2.6, R.ic, true); top(() => { P(10, 15, R.dk[0]); P(13, 15, R.dk[0]); P(11, 17, R.dk[0]); P(12, 17, R.dk[0]); }); spk(19, 20, 1, '#fff', R.pk[2]); spk(3, 20, 0, '#fff', '#fff');
+    },
+    hollowbell() {
+      poly([[1, 3.5], [22, 3.5], [22, 7.5], [1, 7.5]], R.sn, false, 0.4); top(() => { line(1, 4, 22, 4, R.sn[3]); line(1, 7, 22, 7, R.sn[0]); });
+      const bell = (dx, M) => poly([[9.5 + dx, 8], [13.5 + dx, 8], [14.5 + dx, 12], [17 + dx, 18], [6 + dx, 18], [8.5 + dx, 12]], M);
+      bell(-5, ['#3a3a52', '#4e4e6c', '#62628a', '#7878a0']); bell(5, ['#3a3a52', '#4e4e6c', '#62628a', '#7878a0']);
+      bell(0, R.gd); ell(11.5, 18, 5.6, 1.5, R.dk, true); disc(11.5, 20.2, 1.7, R.gd);
+      top(() => { P(9, 11, R.lt[3]); P(9, 13, R.lt[3]); P(8, 15, R.lt[3]); line(11, 8, 11, 8, '#fff'); });
+    },
+  };
+  const TRK_BASES = { tarnished_band: ['ring', 1], dreamsilver_band: ['ring', 2], starmetal_band: ['ring', 3], lantern_charm: ['amulet', 1], dreamglass_pendant: ['amulet', 2],
+    starhollow_amulet: ['amulet', 3], rope_sash: ['belt', 1], mistwoven_belt: ['belt', 2], moonlit_girdle: ['belt', 3] };
+  const TRK_SLOT = { ring: 1, amulet: 1, belt: 1 };
+  // implicit-element dot on the frame (top-left, 4x4) and the tempered bright edge (top/left of the rarity ring + sparkle)
+  function implicitDot(o, el) {
+    const c = EC[el]; if (!c) return;
+    for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) {
+      const edge = x === 0 || y === 0 || x === 3 || y === 3; if (edge && (x === 0 || x === 3) && (y === 0 || y === 3)) continue;
+      o[(2 + y) * N + 2 + x] = edge ? DK : x === 1 && y === 1 ? mix(c, '#fff', 0.75) : x === 2 && y === 2 ? mix(c, DK, 0.35) : c;
+    }
+  }
+  function temperEdge(o) {
+    const hi = '#fff6d0';
+    for (let i = 1; i < N - 1; i++) { o[1 * N + i] = hi; o[i * N + 1] = hi; o[(N - 2) * N + i] = mix(o[(N - 2) * N + i], hi, 0.45); o[i * N + N - 2] = mix(o[i * N + N - 2], hi, 0.45); }
+    o[1 * N + 2] = '#ffffff'; o[2 * N + 1] = '#ffffff'; o[1 * N + 1] = '#ffffff';
+  }
+
   // ---- gems ------------------------------------------------------------------------
   const GEM = {
     ruby: { c: '#e0284a', p: [[-0.5, -1], [0.5, -1], [1, -0.5], [1, 0.5], [0.5, 1], [-0.5, 1], [-1, 0.5], [-1, -0.5]] },
@@ -603,15 +739,24 @@ const ICONS = (() => {
         const o = paint(SK[id] || (() => { poly(starPts(11.5, 11.5, 8, 3.4, 5), R.ar); }), bg); skFrame(o, ec); return bake(o);
       });
     },
-    item(base, tier, rarity, gems) {
-      tier = clamp(tier | 0, 0, 4); rarity = RC[rarity] ? rarity : 'common';
+    // opts (all items, optional): { element: ring/amulet tint, implicit: element of the item's implicit -> dot on the frame, tempered: bright frame edge }
+    // trinkets: base = TRINKET_BASES id | TRINKET_UNIQUES / WORLD_UNIQUES id | 'ring'|'amulet'|'belt' (+ tier 1..3)
+    item(base, tier, rarity, gems, opts) {
+      tier = clamp(tier | 0, 0, 4); rarity = RC[rarity] ? rarity : 'common'; opts = opts || {};
       const gk = (gems || []).map((g) => (g ? String(g) : '-')).join(',');
-      return memo(`i:${base}:${tier}:${rarity}:${gk}`, () => {
-        const kind = kindOf(base), [tab, name] = KIND[kind], o = paint(() => tab[name](tier), slotBg());
+      const tb = TRK_BASES[base] || (TRK_SLOT[base] ? [base, clamp(tier, 1, 3)] : null), uq = UQ[base] ? base : null, el = EC[opts.element] ? opts.element : null;
+      return memo(`i:${base}:${tier}:${rarity}:${gk}:${el}:${opts.implicit || ''}:${opts.tempered ? 1 : 0}`, () => {
+        let o;
+        if (tb || uq) o = paint(() => (uq ? UQ[uq]() : TRK[tb[0]](tb[1], el && EC[el])), slotBg());
+        else { const kind = kindOf(base), [tab, name] = KIND[kind]; o = paint(() => tab[name](tier), slotBg()); }
         (gems || []).slice(0, 3).forEach((g, k) => { const s = g ? String(g).split('_') : null; dotAt(o, k, s && s[0]); });
-        drawStaticFrame(o, rarity); return bake(o);
+        drawStaticFrame(o, rarity);
+        if (opts.implicit) implicitDot(o, opts.implicit);
+        if (opts.tempered) temperEdge(o);
+        return bake(o);
       });
     },
+    trinketIds: Object.keys(TRK_BASES), uniqueIds: Object.keys(UQ),
     gem(type, grade) {
       if (typeof type === 'string' && type.includes('_')) { const q = type.split('_'); type = q[0]; if (grade == null) grade = +q[1]; }
       grade = clamp(grade | 0, 0, 2); type = GEM[type] ? type : 'ruby';        // 3 grades: chipped, clear, radiant

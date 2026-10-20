@@ -22,6 +22,8 @@ Albion-style "you are what you wear" skills, Diablo-style loot with rarity, sock
 gear visibly changes him — the better the gear, the more it glows.
 
 ## 2. Story (brief but competent)
+> **Superseded by `docs/STORY.md`** (premise, twist, endings, beat sheet with final lines, every boss and mini-boss,
+> the BOSS_MOVES library). The table below is kept for the zone order only.
 
 **Hero:** Aerin, a young Dreamwarden who wakes in the Whispering Vale with no memory and a dim lantern-spirit, **Pip**.
 **Antagonist:** **Morrow, the Unwaking King** — once the first Dreamwarden, he refused to wake when his dream ended,
@@ -118,8 +120,7 @@ Each changes a skill's *rule*, not just numbers:
 ## 5. Skills
 * Weapon gives LMB + Q/E/R; chest F, helmet C, boots Shift (existing system kept).
 * Character skills 1/2/3 unlock by level: 2 at L1, more at L5, L10, L15, L20 (8 total: existing 6 + 2 new).
-* **Choice moments instead of talents:** at L5/10/15/20 pick 1 of 2 skill modifiers (e.g. "Chain Lightning +2 jumps"
-  vs "Chain Lightning stuns"). Respec free at the Elder Stone.
+* Skill modifiers come from per-skill ranks (§15.2).
 * **Universal dodge:** every boots skill has ≥0.25 s i-frames so telegraphs are fair for every build.
 * **Kill-heal** (existing +HP/+MP per kill) scales with a kill streak (`p.combo`).
 * Weapon skill options (two choices per slot) unlock with weapon tier: second option at weapon reqLvl ≥ 10.
@@ -360,13 +361,13 @@ Each reaction pops its name in its element colour with its own sound. Seven, no 
 
 ### 15.5 Roster (existing + 9 new casts; hard cap 12 new, reuse fx types)
 * **Sword** (basic 3-hit slash): Q Sunslash / Heroic Strike · E Dash Strike / Whirling Blade · R Radiant Judgement /
-  Dawn Wave / ***Cinder Cleave*** (fire, sets up Detonate).
+  Dawn Wave (Cinder Cleave moved to the two-hander, §17.3).
 * **Staff** (basic arcane bolt): Q Firebolt / Frost Shards / ***Static Field*** (lightning zone, applies Shock) ·
   E Arcane Barrage / Gravity Well · R Meteor / Starstorm.
 * **Bow** (basic pierce): Q Multishot / Piercing Shot · E Tumble / Snare Trap / ***Venom Volley*** (nature, sets up
   Wildfire) · R Rain of Arrows / Moonbeam.
-* **Chest:** Bulwark, Mana Surge, Shadow Veil, ***Thornmail*** (nature, reflects poison).
-* **Helm:** War Cry, Frost Nova, Mend, ***Stormcall*** (lightning, Shock aura).
+* **Chest:** Bulwark, Mana Surge, Shadow Veil, ***Thornmail*** (nature, reflects poison; restored for the Pacifist build, §18.5).
+* **Helm:** War Cry, Frost Nova, Mend (Stormcall cut, see §17.7).
 * **Boots:** Charge, Blink, Sprint (all with i-frames).
 * **Character pool (10):** Second Wind, Arcane Orbit, Chain Lightning, Dreamveil, Blessing of Dawn, Shooting Star,
   ***Dawn Lance*** (holy line, Purify), ***Briar Field*** (nature zone, Poison), ***Ember Mark*** (next 3 hits burn),
@@ -382,7 +383,7 @@ Each reaction pops its name in its element colour with its own sound. Seven, no 
 ### 15.7 Build archetypes the game must support
 1. **Shatter Knight** — sword, Knight set, Frost Nova, Sapphires in armour; Heroic Strike after Nova.
 2. **Pyromancer** — staff, Dreamweave robe, Rubies, Ember Mark + Firebolt + Meteor; Detonate with Thunderclap.
-3. **Stormcaller** — Static Field + Chain Lightning + Stormcall, Topaz; Conduct off Frost Shards.
+3. **Stormcaller** — Static Field + Chain Lightning + Smoke Bomb (Shade Mask), Topaz; Conduct off Frost Shards.
 4. **Venom Ranger** — Venom Volley + Snare + Briar Field, Stalker set, Emeralds; Wildfire with Shooting Star.
 5. **Breaker** — Piercing Shot + War Cry + Charge, Diamonds; Rupture on every break; best against golems and bosses.
 6. **Dawn Paladin** — holy sword R + Dawn Lance + Blessing, Mend, Diamonds; Purify sustain, gloom killer.
@@ -399,6 +400,236 @@ Each reaction pops its name in its element colour with its own sound. Seven, no 
   reactions it triggers, modifier slots, which gems amplify it.
 * The ultimate charge bar replaces R's cooldown sweep.
 
+## 16. Polish, economy, save schema and technology (expert review; authoritative)
+### 16.1 Commercial-feel polish list
+1. **Hit feedback hierarchy:** enemy white flash 2 frames, 1 px knockback shake, reaction pops with unique sfx, hitstop
+   scaled by damage %.
+2. **Music and sound:** see **`docs/AUDIO.md`** (authoritative). A WebAudio step sequencer (16 steps, 3 voices: square / triangle / noise) on the existing `tone()`, one
+   4-bar loop per zone + a boss stinger; pattern tables in data. (M2b)
+3. **Transitions:** rift fade → map-name banner → control hint; the next map pre-rasters during the fade / on portal
+   proximity. (M2b)
+4. **Onboarding:** no help screen; contextual prompts via `IN.glyph()` the first time each system matters (first drop,
+   first gem, first Chill on an enemy: "slash to Shatter").
+5. **Difficulty:** a per-level-band sheet (enemy HP/DPS vs expected player power) checked by the scripted run, and a
+   **Story / Normal** setting (Story = damage taken ×0.6). (M2a setting, sheet by Haiku)
+6. **Save UX:** autosave glyph (2 s), title "Continue" shows zone / level / playtime, **3 save slots**. (M2b)
+7. **Settings + accessibility** from HUD.md and CONTROLS.md ship in **M2a**, not M8.
+8. **No hitching:** cached light sprites, pre-rastered maps, pooled particles with a verified hard cap.
+9. **Art consistency:** one shared palette (`PAL`) for icons, hero, UI frames and enemy recolours; enemies rescaled to the
+   24×34 hero (M3).
+10. **Death/retry:** respawn at the arena entrance, the boss intro is skipped on retries, "Retry" within 1 s.
+
+### 16.2 The first 10 minutes (every minute adds one new noun)
+0:00 title (soft music, Continue / New Dream) → 0:10 wake in the Vale, Pip's line, move prompt, camera pan to the
+cottage → 0:40 dummies teach attack, dodge, Q (one prompt each, numbers + white flash) → 1:30 first chest: beam, Uncommon
+weapon + Chipped gem, Pip's two lines, Tab opens on the item with Equip highlighted; equipping visibly changes the hero
+→ 2:30 fishing spot beside the chest: one cast, guaranteed gem, log unlocked → 3:30 Elder Stone riddle, lost-lantern
+quest, first Tome → 4:30 scripted ambush (3 slimes) in the garden: first drop, first kill-heal, Level 2 → 5:30 rift to
+Pinewood opens, banner, a fox flees → 6:30 room 1 ogres teach the brute telegraph, an elite aura visible ahead → 8:00
+first Shatter pop if the player has frost; bestiary badge → 9:30 shrine (checkpoint, potions, cooking fire) → 10:00 the
+Root Hollow door and the key hint.
+
+### 16.3 Dust economy
+Salvage is currently the only Dust source. Haiku owns one sheet listing every **source** with a rate (salvage by
+rarity, hunt milestones, fishing treasure, chests, arena tiers, quest rewards) and every **sink** with a price (Socket
+Rune, Chipped gem, Skill Rune at the Elder Stone, rod tiers); respec stays free. Balance target: a player who salvages
+everything can afford one Socket Rune + one Skill Rune per zone.
+
+### 16.4 One elite table
+Elite modifiers and elite element badges are the same thing: one `ELITE_MODS` table (Fast, Shielded, Burning, Frozen,
+Storm, Gloomed), each with its aura colour, badge icon, added element and stat changes.
+
+### 16.5 Save schema (named now so every lane uses the same shape)
+Key `dreamy.save.v1`, field `version`, one `migrate(save)`. Top-level fields:
+`player` (level, xp, equip, bag, dust, potions, tool), `skills` ({ id: { rank, xp, mods:[...] } }, known runes, known tomes,
+equipped character skills, ultimate charge not saved), `world` (map, checkpoint, trigger state per map, opened chests,
+secrets found, gates/levers state), `bosses` ({ id: { kills, firstKill } }), `bestiary` ({ type: { seen, kills, res:{},
+reactions:{} } }), `fishing` ({ fish: { caught, best } }, pearls applied), `quests` ({ id: { step, done } }),
+`zone100` ({ zone: true }), `settings` (audio, accessibility, difficulty), `bindings`, `stats` (playtime, deaths),
+`slot` (1–3).
+
+### 16.6 Technology roadmap (Canvas 2D, classic scripts, file://)
+**Now (M2a–M3):**
+1. **Cached light sprites:** pre-render one 64×64 radial sprite per (colour, alpha) and `drawImage` it scaled instead of
+   building `createRadialGradient` per light per frame.
+2. **Map rastering off the critical path:** split `rasterGround` into row bands over several frames, and pre-raster the
+   next map during the portal fade.
+3. **Fixed-step update** at 1/60 with an accumulator (deterministic reactions, hitstop and scripted tests).
+4. **Sprite atlases:** blit the many small hero/icon canvases into 2–3 atlases at boot.
+5. **Particle pool** with a hard cap and budget scaling (ambient motes are dropped first).
+6. **Mobile:** scene stays 480×270; HUD at min(DPR, 2); pause the loop on `visibilitychange`; one fog layer on
+   `pointer: coarse`.
+7. **WebAudio step sequencer** for music (M2b).
+
+**Later (M5–M6):** water reflections (sprites flipped at 30 % into a clipped water region + a 1 px per-row sine offset,
+the same trick for Caldera heat haze); a one-time palette quantize of static layers; ground rastering in a classic
+worker via a `blob:` URL with a synchronous fallback.
+
+**Not planned:** a WebGL2 renderer (rewrites render.js, hero/icon generation and every fx; the current look is already
+achieved in 2D), normal-mapped lighting (art cost), `ctx.filter` (unsupported on Safari). A CRT/scanline overlay only as an
+off-by-default setting.
+
+**Rules:** feature-detect OffscreenCanvas and workers; vibrate / fullscreen / gamepad only after a user gesture; every
+perf change is measured with Haiku's 60 s sample on the largest map logging **p95 frame time**, not the average.
+
+## 17. Thief and Warrior: two new weapon families + Origins (expert-reviewed)
+The game stays classless ("you are what you wear"). The class fantasy comes from **two new weapon families**, one new
+armour family, and an **Origin** chosen at New Dream.
+
+### 17.1 Origins
+A starting kit + one small additive passive + a title. Re-choosable once at the Elder Stone, so it is flavour, not a lock.
+Pip's first line and the portrait frame change per origin.
+| Origin | Starting kit | Passive |
+|---|---|---|
+| Knight | sword, Knight Plate | +10 % defence |
+| Mystic | staff, Dreamweave Robe | +10 % MP on hit |
+| Ranger | bow, Stalker Jacket | +10 % crit damage |
+| **Thief** | daggers, Shade leathers | +10 % damage from behind |
+| **Warrior** | two-hander, Knight Plate | +1 stagger on weapon skills |
+
+### 17.2 Dual Daggers — "Nightfang" family (Thief)
+Tiers: Shiv → Nightfang → Twin Eclipse → Widow's Kiss → Night Eternal.
+* **Basic:** 4-hit pierce combo (rate 0.28, 55 % of sword damage per hit; hit 4 adds 1 stagger); 6 MP per hit.
+* **Backstab:** any pierce hit from the target's rear 120° arc gets +30 % crit chance (works on every enemy).
+* **Marks (0–3):** each skill hit adds a Mark (pips over the enemy); finishers consume them (`ctx.marks`).
+* Q: **Fan of Knives** (pierce cone, +1 Mark per enemy) / **Venom Slash** (nature, 2 hits, Poison) / *Shadow Hook*
+  (pierce line, pulls one enemy; third option only if ahead of schedule).
+* E: **Flicker** (arcane, blink behind the aimed enemy; next hit is a backstab) / **Caltrops** (nature zone, Slow + Poison) /
+  *Smoke Veil* (third option).
+* R: **Death Mark** (consumes all Marks: 120 % weapon damage per Mark; guaranteed Rupture if staggered) /
+  **Thousand Cuts** (dash through enemies in a line 3×, pierce, Poison).
+* Drives Wildfire, Rupture and Overload. Weak into Amorphous enemies (resist pierce) by design.
+
+### 17.3 Two-handers — "Dawnbreaker" family (Warrior)
+Greatsword, greataxe and warhammer are its **tiers**: Splitting Axe → Dawnbreaker → Sunhammer → Aurora Maul → Dawn Colossus.
+* **Basic:** 2-hit slash combo (rate 0.62, 170 % of sword damage, stagger 2 per hit; hit 2 is a 180° sweep); 14 MP per hit.
+* **Poise (hyper-armour) while swinging:** hits taken deal 50 % and never interrupt; capped at 50 %, and disabled by
+  boss moves flagged `unblockable: true`.
+* **Charged swings:** holding a weapon skill up to 1 s scales damage ×1.0 → ×1.8 and stagger +1 (on touch: hold the button).
+* Q: **Cleave** (slash cone 160°, stagger 2) / **Earthbreaker** (slash line slam with 3 cracks, stagger 3) /
+  **Cinder Cleave** (fire; moved here from the sword).
+* E: **Shoulder Charge** (slash dash, knock-up, stagger 2, 0.2 s i-frames) / **Warbanner** (holy zone: +20 % damage and
+  poise, 6 s) / *Whirlwind* (third option: moving 4-spin).
+* R: **Colossus Strike** (hold ≥ 1 s, circle r3, 400 % weapon damage, stagger 6) / **Avalanche** (frost, 3 expanding
+  rings, Chill ×3).
+* Drives Shatter, Detonate and Rupture. Best into Armoured; weak into Ethereal.
+
+### 17.4 Shade leathers (new armour family, Thief)
+Resists: pierce +25, nature −25. Helm **Shade Mask** → C: *Smoke Bomb* (arcane, vanish 1 s + Shock aura).
+Chest **Shade Harness** → F: *Fade Step* (short blink behind the target). Boots **Shade Treads** → Shift: a dodge that leaves
+a decoy. Set: 2 pieces = backstab arc 180°; 3 pieces = Marks cap 4. The Warrior uses Knight Plate (its stagger set bonus is
+shared with the sword).
+
+### 17.5 Balance
+* On a dummy, all five families deal within ±8 % at equal tier (Haiku's DPS sheet). Two-hander +25 % vs Armoured,
+  daggers +25 % from behind, sword +0 % everywhere with the best reaction coverage (slash + holy).
+* The sword stays relevant: cancel-friendly mid-range, keeps the holy ultimates, poise only on Heroic Strike.
+* The two-hander pays with −35 % attack rate, −12 % move speed while swinging and no dodge-cancel during a charged swing.
+* Daggers pay with −45 % per-hit damage and the pierce weakness of slimes and jellies.
+* **Skill Runes drop for your equipped weapon family 70 % of the time.**
+
+### 17.6 New builds (added to §15.7)
+9. **Night Assassin** — daggers + Shade set + Flicker / Fan of Knives / Death Mark, Topaz + Emeralds; backstab crits, Rupture.
+10. **Plague Dancer** — daggers Venom Slash + Caltrops + Briar Field, Jacket set, Rubies for Wildfire.
+11. **Juggernaut** — two-hander + Plate 3 + War Cry + Avalanche, Diamonds; the boss stagger-break build.
+12. **Cinder Berserker** — two-hander Cinder Cleave + Earthbreaker + Ember Mark, Rubies; Detonate chains.
+
+### 17.7 Legendaries, skill cap, placement
+* Named legendaries: **Morrow's Regret** (daggers, from the Twin Vigils: Death Mark refunds the charge bar if it kills) and
+  **Kharzul's Anvil** (two-hander, an alternative choice from Kharzul's chest: charged swings reach ×1.8 in 0.5 s).
+* Skill cap raised from 12 to **22 new casts**, paid for by cutting **Stormcall** (Smoke Bomb takes its role); Thornmail is kept (§18.5). Each new family ships with 2 options per slot; third options only if ahead of schedule.
+* Art: daggers (main + off-hand layers) and two-hander (large layer, shoulder-carry idle) ×5 tiers, stab and overhead
+  attack poses, 25 icons, Shade overlays ×3 slots ×5 tiers — about a week for Sonnet B.
+* **M4:** daggers, Shade family, Origins at New Dream. **M5:** two-handers. Nothing on the 2-hour main path depends on them;
+  from M4 the starting chest can roll any family.
+
+## 18. Combo layer: tags, triggers, Duos, rune-words, aspects (expert-reviewed; authoritative)
+Goal: the "I found a broken-in-a-good-way interaction" feeling, without per-combo code or tuning.
+
+### 18.1 Tags and the effect table
+* Every skill gets `tags` from {projectile, zone, dash, nova, cone, line, channel, summon, mark, charge, buff, heal,
+  ultimate, melee, ranged, spin} plus its element/type. The cast `ctx` also carries `shape`, `count`, `onHit[]`, `onEnd[]`,
+  `spawnAt`.
+* **One effect table** drives gems, sets, legendaries, Duos, rune-words, origins, pearls, food and trigger affixes:
+  `EFFECTS: [{ id, src, when, ifTags, ifState, do(ctx), icd, name, hint }]` with
+  `when ∈ cast | hit | kill | dodge | statusApplied | reaction | ultimate`. **No effect ever names a skill**, so a new
+  weapon family inherits every combo for free.
+* **Triggers:** the four event hooks (cast, dodge, kill, ultimate) are first-class combo inputs; "on dodge: recast your last
+  zone skill at your old position" is the richest effect type.
+
+### 18.2 Duos, rune-words, aspects
+* **Duos** — named cross-slot synergies (two tag conditions). 12 for 1.0.
+* **Rune-words** — ordered 3-gem socket patterns on one item that replace the gems' stats with a named power. 10 for 1.0,
+  hinted in the Codex and sold as recipes by the Elder Stone. The fishing rod's socket counts as a 4th socket for
+  rune-word patterns.
+* **Aspects** — legendaries transform a **tag**, not a skill ("projectile → spiral of 3", "dash → leaves a mirror image
+  that recasts your last skill once", "zone → follows you", "nova → fires twice, the second at your aim point").
+  7 for 1.0, on the existing named legendaries.
+* **Trigger affixes** on Epic+ items: e.g. "on dodge: Frost Nova (r1)", "on kill: 1 Mark on the nearest enemy".
+
+### 18.3 Combo Codex
+A tab beside the Bestiary: silhouettes of Duos and rune-words, revealed on first trigger with a pop ("FROST TORNADO —
+discovered") and a one-time reward (Dust + a Clear gem for the first 5, then cosmetics). Undiscovered entries show a
+hint ("a cold helm and a spinning blade…"); discovered ones show their ingredients so builds can be reproduced. Pip gives
+one hint per zone for an undiscovered entry the player's **current gear can already trigger** (computed from equipped tags).
+
+### 18.4 Examples (the 1.0 set is chosen from these)
+| Combo | Inputs → result |
+|---|---|
+| Frost Tornado | Frost Nova + a spin skill → each spin re-applies Chill in a ring; Shatter on the 3rd spin |
+| Afterimage Meteor | Blink + Meteor → lands where you blinked *from*, 0.5 s sooner |
+| Knives from the Dark | Smoke Bomb + Fan of Knives → knives fired from the smoke always backstab |
+| Orbit | Gravity Well + any projectile → projectiles circle the well for 2 s, hitting repeatedly |
+| Catapult | Snare Trap + Charge → dashing through your trap launches it ahead as a rolling net |
+| Thunderstorm | Static Field + Rain of Arrows → arrows landing in the field Shock; Conduct chains the zone |
+| Burning Halo | Arcane Orbit + Cinder Cleave → orbs turn to fire and Detonate when a charged swing passes through |
+| Battering Ram | Bulwark + Shoulder Charge → the shield rides the charge, reflecting projectiles |
+| Thorn Garden | Caltrops + Dreamveil → slowed enemies in caltrops are poisoned twice as fast |
+| Phantom Cut | Dash Strike + Shadow Veil → dashing while invisible leaves an image that repeats the cut |
+| Marked Circuit | Chain Lightning + Marks → prefers Marked targets, refunds 1 Mark per jump |
+| Faultline Arrow | Piercing Shot along an Earthbreaker crack → a line explosion |
+| Stormfire (rune-word) | Ruby·Topaz·Ruby → Burn stacks arc to Shocked enemies |
+| Glacier (rune-word) | Sapphire·Diamond·Sapphire → Freeze on bosses becomes 1 s Brittle (next Shatter +100 %) |
+| Dreamroot (rune-word) | Emerald·Emerald·Amethyst → your zones heal you 1 %/s while you stand in them |
+| Nautilus (aspect) | "projectile → spiral" on Multishot → 5 arrows spiral outward |
+| Walking Garden (aspect) | "zone → follows you" on Briar Field → a poison lawn that walks with you |
+| Dragging Well (aspect) | Cinderstride "dash → casts your last zone" + Gravity Well → every dodge drops a well |
+| Rally | Second Wind + kill streak → heal scales with the streak, +10 % per kill during the heal |
+| Zealot | Blessing + holy skills → holy Purifies on *any* status while Blessed |
+| Standard Bearer | Warbanner + Colossus Strike → a charged hit makes the banner explode in holy light |
+| Fireproof | Cinderkoi dish + Pyromancer → your own Detonates no longer knock you back |
+**Wild builds the engine must allow:** *Pacifist* (Thornmail + Walking Garden + Bloom + Mend: never press attack),
+*Dodge Healer* (decoy dodge + Moonmaw pearl: dodging through enemies heals 3 %), *Turret* (traps count as summons +
+"summon → fires your basic attack" + Arcane Orbit), *Glass Cannon* (charged Colossus Strike + Marked Circuit + Blessing +
+Brittle), *Chain Reaction* (Wildfire + Stormfire + Orbit: the room cooks itself).
+
+### 18.5 Remakes so every skill joins combos
+* Blessing of Dawn → **Zealot's Light**: +25 % damage and your next 3 skills gain the holy tag.
+* Mana Surge → **Overflow**: restores MP and your next zone skill is cast twice.
+* Sprint → **Afterimage**: speed + 3 taunting images (summon tag).
+* Second Wind → **Rally**; Mend → **Bloom** (heal ticks poison enemies touching you); Bulwark gains baseline projectile
+  reflect; War Cry adds 1 Mark to everything it hits and staggers.
+* **Thornmail is restored** (chest, nature: reflects poison) for the Pacifist build — the new-skill cap stays 22.
+* Set 3-piece bonuses become **tag rules**: Plate "melee skills gain poise", Robe "zone skills follow you",
+  Jacket "projectiles pierce once", Shade "dashes leave decoys".
+* Origin passives become **triggers** (e.g. Mystic: every 4th cast is free).
+* Affixes stay plain numbers (the noise floor), plus the trigger affixes above on Epic+.
+
+### 18.6 Teaching and guardrails (engine-side, global)
+* Tooltips show tags as icons and an auto-generated "Synergises with: zone, dash" line (reverse lookup of the effect
+  table); hovering a gem or legendary highlights every skill on the bar it would affect; first-trigger pop + Codex.
+* **Internal cooldown** per effect (default 0.5 s); **proc coefficient** per hit source (basic 1.0, projectile 0.6, zone
+  tick 0.3, reflected 0.3, summon 0.4) scales trigger chances and reaction damage; **chain depth 2** (an effect-triggered
+  hit cannot trigger further effects); **reaction damage cap 300 % weapon damage per second**; **live caps** (zones 2,
+  summons 3, images 1); boss **damage per hit capped at 25 % of its HP**; reflected/thorn damage capped at 40 % of power.
+* The event bus hooks `damageEnemy`, casts, dodges and kills — never per particle or fx.
+
+### 18.7 Placement
+* **M4:** engine (tags on ctx, event bus, ICD/proc/chain/caps, aspect hooks in `spawnProj` / `zone` / `dashPlayer`,
+  decoy/summon entity), Combo Codex tab, 6 Duos, 3 rune-words, the §18.5 remakes. Haiku tags all skills and authors data.
+* **M5:** aspects on the existing legendaries, more Duos. **M6:** the rest; the wild builds verified in the arena.
+* Budget for 1.0: 12 Duos / 10 rune-words / 7 aspects; the Codex can grow in NG+. Nothing on the 2-hour path depends on it.
+
 ## 13. Dreamfishing
 Fishing is a **second loot channel** that pays in the currencies the loop already wants (gems, Runes, keys, boss-prep
 food), not fish for their own sake.
@@ -410,10 +641,14 @@ pond once all Shards are lit (post-game/NG+). Spots are `fishspot` objects with 
 
 **Minigame (one mechanic, all inputs):**
 1. Hold Interact to cast; hold time sets distance over 3 rings on the water (farther ring = rarer pool).
-2. The bobber waits 2–6 s; a **bite** = dip + splash + a 0.6 s "!" window; press Interact to hook (miss = the fish flees).
+2. **The water shows the fish:** glowing shadows sized and coloured by rarity swim in the rings before you cast, so
+   choosing a ring is a visible decision; legendary shadows are huge and appear only under their condition.
+   The bobber waits 1–4 s (the first cast at a new spot bites at once); a **bite** = dip + splash + a **0.8 s** "!" window
+   (1.0 s with a Sapphire rod); press Interact to hook (miss = the fish flees).
 3. **Reel** with a tension bar (48×6 px on the 480 grid, above the hero): the fish pulls in telegraphed bursts, its
    glowing shadow visible in the water. Hold Interact to reel, release to rest; 1 s in the red snaps the line.
-4. Rare fish add a "turn" burst: push the stick / mouse / drag toward the arrow shown on the bobber.
+4. Rare fish add one "turn" burst, legendaries two: push the stick / mouse / drag toward the arrow on the bobber.
+   No catch lasts more than 20 s.
 5. The catch lands with a rarity loot beam. Nothing faster than 4 Hz; 10–20 s per catch.
 Touch: hold the attack button to reel, drag anywhere to turn. Keyboard: Space. Gamepad: hold A + left stick.
 
@@ -426,18 +661,20 @@ rod skins, and a 1 % Sunken Chest (Rare+ item).
 **What fish are for:**
 1. **Cooking at any shrine fire** (1 fish = 1 dish, no recipes): a 10-minute food buff. Zone fish = +15 to that zone's
    resistance; rare fish = +10 % damage of an element; legendary fish = a unique effect (Moonmaw: kill-heal doubled).
-   One food buff at a time, shown in the status row: the pre-boss preparation moment.
+   One food buff at a time, shown in the status row, **kept through death** and shown on the boss-intro card
+   ("Cinderkoi: fire resist +15"). Each zone's fish counters that zone's guardian (written into the `FISH` table).
 2. **Fishing Log** tab inside the Bestiary (silhouette → caught, size records). Rewards at 10/20/30 entries: a Socket
    Rune, a Radiant gem of your choice, the Mythic rod. Hunts count fish.
-3. **Elder Stone trades:** 3 rare fish → a Clear gem of your choice; a legendary fish → choose which unique rule an
-   existing legendary has (the only reroll in the game, and it is fishing-gated).
-4. **The rod** is equipped in a fifth, non-combat `tool` slot: tiers T0–T4 (Twig → Dawn Rod → Cinder → Gloam →
-   Moonline), rarity like gear, **one socket** (Ruby = lava spots earlier; Sapphire = longer bite window; Topaz = more
+3. **Elder Stone trades:** 3 rare fish → a Clear gem of your choice; a legendary fish → a **pearl slot** added to one
+   legendary item, holding that fish's unique effect (Moonmaw pearl: kill-heal ×2). No rerolls: each boss keeps *its* rule.
+4. **The rod** is equipped in a fifth, non-combat `tool` slot: **4 tiers** (Twig → Dawn Rod → Cinder → Moonline; void fishing
+   uses a Cinder rod with an Amethyst), rarity like gear, **one socket** (Ruby = lava spots earlier; Sapphire = longer bite window; Topaz = more
    treasure; Diamond = the line can't snap once per catch). Rods drop from fishing or are bought with Dust, and the rod
    shows on the hero's back.
 
-**Budget:** 5–10 min on the main path (the first spot sits next to the first Vale chest and Pip points it out once),
-45–60 min for the full log (30 fish + 5 legendaries), inside the completionist optional time.
+**Budget:** 5–10 min on the main path (the first spot sits next to the first Vale chest, Pip points it out once, and the first catch is a guaranteed
+Chipped gem),
+~35–45 min for the full log (30 fish + 5 legendaries), inside the completionist optional time.
 **Art/audio:** per zone a bobber and 5 fish sprites (16×8, also the water shadow and the 3× log art), rod overlay ×5
 tiers, tension-bar strip, cooking-fire prop; sfx cast whoosh, plop, bite tick, reel ratchet (pitch rises with tension),
 snap, splash-catch, sizzle; music ducks 30 % while fishing.
@@ -474,8 +711,7 @@ legendary + Mythic chance), one **secret vault per zone** (12–16 tiles, reache
 * Drops: ~every 3rd kill; room clear ≥Uncommon; elite Rare+; **mini-boss guaranteed Epic with ≥2 sockets**;
   boss = named Legendary; Morrow = Mythic.
 * Gems: 4–5 per zone (chest, mini-boss, secret, quest) → 22–25 socketed by the end; one Socket Rune per dungeon.
-* Character skills unlock at L1/5/10/15/20/25/30 (two new skills: one holy, one nature). Modifier picks at
-  L5/10/15/20/25/30. Second weapon-skill option at reqLvl ≥ 8.
+* Skills are acquired and grown per §15 (Dream Tomes, Skill Runes, per-skill ranks with modifier slots).
 * Potions: 3 charges, refilled at shrines; every dungeon has a midpoint shrine.
 * **Per zone the player gets:** 1 gear tier-up, 1 Epic, 1 Legendary, 4–5 gems, 1 Rune, 2 choice moments, ~7 levels.
 
@@ -493,14 +729,18 @@ legendary + Mythic chance), one **secret vault per zone** (12–16 tiles, reache
 * Rewards escalate gem → Socket Rune → gold chest with a guaranteed Rare+. Never a Legendary (those stay on bosses).
 * Every secret is a trigger area + `openGate`/`loot` action, so it stays editable in `editor.html`.
 
-### 11.4 Bestiary
-* A tab on the Tab screen: **Inventory | Skills | Bestiary | Quests**. Entries appear on first sight; unseen ones are "?"
-  silhouettes, grouped by zone.
-* Entry: animated sprite, name, archetype tag, one lore line in Pip's voice, kill count, the weak/resist row (each element
-  revealed by the first-hit discovery of §5b, unknown = "?"), drop hint. Bosses get a second lore line on kill.
-* Hunt milestones: 10 / 25 / 50 kills of a type give Dream Dust; 50 also gives a permanent +5% damage to that type
-  (`huntBonus`, additive into power).
-* The resist row uses the same icons as the enemy nameplate, so the lesson transfers.
+### 11.4 Bestiary (revised after expert review)
+* A tab on the Tab screen holding two lists: **Bestiary** and **Fishing Log** (same silhouette → seen model, same
+  milestone pips). List grouped by zone with counters ("7/9 seen"); a new-entry badge on the Tab icon.
+* Entry: sprite at 4× on a dark vignette, name, archetype tag **with its one-sentence rule** ("Armoured — resists slash,
+  breaks under stagger"), weak/resist row (each element revealed by §5b first-hit discovery, unknown = "?"),
+  **"Best reaction"** line auto-derived from its resists + §15.4 (e.g. Golem → "Chill, then slash: Shatter"), revealed the
+  first time you trigger that reaction on it. This line is the tutorial for the reaction system.
+* **Hunt milestones:** 10 kills = full resist row revealed; 25 = drop hint + Dream Dust; 50 = permanent +5 % damage to
+  that type (`huntBonus`, additive). Bosses: kill = lore2; 3 kills (arena / NG+) = their move list with telegraph names.
+* **Voice:** Pip's voice for common enemies; a guardian's lore2 is in the guardian's own words (STORY.md voice rules).
+* Quests reference bestiary ids (an entry shows a "Quest" marker until the quest is done). A zone's bestiary + fish +
+  tablets complete = the **zone 100 %** stamp the true ending checks.
 
 ### 11.5 Status icons (12×12, `ICONS.status(id)`)
 * **On enemies** (over the health bar; stacks as a corner digit, time as a pie sweep): Burn, Chill/Freeze, Poison, Shock,
@@ -518,7 +758,7 @@ legendary + Mythic chance), one **secret vault per zone** (12–16 tiles, reache
 | Hub arena: scaling waves, Dust, guaranteed Epic every 5 rounds (endgame + balance test bed) | should | M6 |
 | Pip companion: follows you, auto-picks up loot nearby, lights darkness, calls out a new enemy's first weakness | should | M7 |
 | Return-rift at each checkpoint shrine to the hub (fast travel) | should | M2 |
-| Achievements (20) | nice | M8 |
+| **Dream Record** page (achievements folded into bestiary / log / zone-100 % milestones) | nice | M8 |
 | NG+ modifiers: elites everywhere / no kill-heal / gloom everywhere, each raising drop rarity | nice | M7 |
 
 **Rejected:** potion/rune crafting and enchanting, gold and merchants (Dream Dust is the one currency; the Elder Stone is the
@@ -541,15 +781,20 @@ shop), reputation, minigames other than fishing (fishing is in, see §13), day/n
   first-hit weakness reveal) and the `huntBonus` slot, smoke test harness.
 * **M2a HUD, controls and combat feel** (ships on the existing maps): the complete "Dream Glass" UI from `docs/HUD.md`
   (`ui.js` primitives + `input.js` action layer and focus model by Opus, bitmap font, all HUD elements and Tab screens
-  rebuilt on it by Sonnet B), gamepad support, plus the §15 rhythm: MP-on-hit, ultimate charge, dodge-cancel, skill ranks.
+  rebuilt on it by Sonnet B), gamepad support, the §15 rhythm (MP-on-hit, ultimate charge, dodge-cancel, skill ranks),
+  the settings + accessibility screen with the Story/Normal toggle, and the §16.6 "now" performance items 1, 3, 5, 6.
 * **M2b Act I slice** (~25 min playable): Pinewood outer + Root Hollow dungeon + Bramblehorn, hub 40, the data-driven boss
   system with a mini-boss, key/door, levers/gates, dialogue/camera/loot/checkpoint/quest actions, intro and Pip, elites,
-  universal dodge, one side quest, 3 secrets, return-rift, the first Skill Rune drop and 2 Dream Tomes, scripted play test.
-* **M3 The Hero & Icons:** layered hero, gear overlays, rarity glow & particles, paper-doll in the new Tab screen, the
-  icon set wired into the HUD, hero status-icon row, enemies rescaled, unified `rarityFx`.
+  universal dodge, one side quest, 3 secrets, return-rift, the first Skill Rune drop and 2 Dream Tomes, audio engine + Vale/Pinewood music and core SFX per `docs/AUDIO.md`, map pre-rastering and fade transitions, 3 save
+  slots, the first 10 minutes per §16.2, scripted play test.
+* **M3 The Hero, Icons & Items v2:** layered hero, gear overlays, rarity glow & particles, paper-doll in the new Tab screen, the
+  icon set wired into the HUD, hero status-icon row, enemies rescaled, unified `rarityFx`; **§19 items v2 core: implicits,
+  named prefix/suffix tiers + naming grammar, 4 trinket slots with boon tables, caps table, tooltip v2, temper, save v4,
+  starter origin ring, trinket icons + belt/amulet overlays** (ring resonance and belt gem-wrap boons land with the M4
+  combo engine; uniques 2–3 per milestone M4–M7; attune in M5).
 * **M4 Act II** (~45 min): Ruins (3 maps), Gloam Warden ported, 5 status effects + enemy status icons, set bonuses,
-  Bestiary tab, the 7 reactions, Skills tab with ranks and modifiers.
-* **M5 Act III** (~65 min): Grotto (3 maps), Mirelle, gem amplification complete, Drifting Isles if ahead of schedule.
+  Bestiary tab, the 7 reactions, Skills tab with ranks and modifiers, **combo layer engine + Combo Codex (§18)**, **Thief: daggers + Shade leathers + Origins (§17)**.
+* **M5 Act III** (~65 min): Grotto (3 maps), Mirelle, **Warrior: two-handers (§17)**, gem amplification complete, Drifting Isles if ahead of schedule.
 * **M6 Act IV** (~85 min): Caldera (3 maps), Kharzul, hub arena, two new character skills.
 * **M7 Finale** (~110–120 min): Spire (3 maps), Morrow, Pip companion and sacrifice, ending, credits, NG+ and modifiers.
 * **M8 Polish:** timed 2-hour playthrough, music loops, minimap fog-of-war, mastery, achievements, secret vaults, README.
@@ -561,3 +806,397 @@ lore, resist/set/quest data, and a **timed scripted main-path run** reporting mi
 Review gates: every map ships a screenshot and a timed main-path walk; every boss ships one screenshot per telegraph.
 
 Ship gate per milestone: smoke + play test green → director review → PR → merge to `claude/dreamy-rpg-concept` (= live on Pages).
+
+## 19. Equipment v2: affixes, item detail, trinkets (expert-reviewed; director-approved; supersedes §4 affix rules)
+
+**Principle:** M1 items are a correct skeleton but two Rare swords differ only in numbers. v2 gives every item an
+*identity*. **Gear = skills, trinkets = rules** (trinkets are passive only; the Albion rule stays clean).
+
+### 19.1 Affixes
+* **Implicit** (1 per base, fixed, not rerollable): each of the 60 family tiers gets a distinct implicit line
+  (Sunforged Blade "+10 % Shatter damage", Hunter's Bow "+1 pierce", Linen Robe "+10 % MP on hit"). `BASES[id].implicit`.
+  The tier's implicit *is* the variant; no extra base types (hero overlay cost).
+* **Prefixes** (offence/utility: power, crit, critDmg, haste, skillDmg, cdr, element dmg %, status chance %, +Mark cap,
+  charge speed) and **suffixes** (defence/sustain: hp, def, regen, mpRegen, speed, resists, resAll on Legendary+,
+  on-dodge / on-kill triggers on Epic+).
+* **3 named tiers per affix**, gated by ilvl (T1 1+, T2 14+, T3 28+): `power:[{name:'Keen',r:[3,6]},{name:'Fierce',
+  r:[7,11]},{name:'Savage',r:[12,18]}]`.
+* **Counts:** Common 0 · Uncommon 1 (P or S) · Rare 1P+1S · Epic 3 (2P+1S or 1P+2S) · Legendary 2P+2S + unique rule ·
+  Mythic 3P+2S + unique rule + 1 aspect (§18).
+* `req = max(base, ilvl−2)`; drop ilvl = enemy level ±2; ilvl 20+ may roll the rarity's max sockets.
+* **No affix reroll** (§4.4 stands); pearls (§13) remain the only post-drop change to a legendary rule.
+
+### 19.2 Crafting at the Elder Stone (Dust only)
+* **Temper:** raise one affix by one tier, once per item; 20 / 60 / 150 Dust (Rare / Epic / Legendary+).
+* **Imbue:** add a socket for Dust; the Socket Rune drop remains the free route.
+* ~~Attune~~ **cut** (§20 anti-bloat).
+
+### 19.3 Detailed items
+* **Tooltip v2, top to bottom (≤ 12 lines; on touch, affixes collapse to icon + number):**
+  1. the generated name, in rarity colour
+  2. icon row with family and tier
+  3. "Lv 14 · ilvl 16 · Rare"
+  4. the implicit, in dim blue
+  5. affixes, P then S, with tier pips ◆◆◇ and green/red compare deltas
+  6. sockets, as gem icons
+  7. the unique rule, in gold
+  8. the family line ("Knight 2/3 — 3: melee gains poise")
+  9. granted skills, as icons
+  10. the auto "Synergises with: zone, dash" line from §18 tags
+  11. one line of flavour
+  12. footer: "Found: Root Hollow · Kills 212 · Tempered"
+* **Naming:** `[prefix-tier name] [base] [of the suffix noun]`, e.g. "Fierce Sunforged Blade of the Fox".
+  * Suffix nouns come from a table per stat: speed = Fox, hp = Oak, resFire = Ember…
+  * Rare+ items get both parts and Uncommon gets one; uniques keep their own names; Mythic draws from a 30-name table.
+  * Haiku writes the word lists and the director reviews them once for tone (no silly names near the twist).
+* **Flavour:** 1 line per family tier (60) plus 1 per unique, in STORY.md voice.
+* **History:** `it.hist = {found, kills, bossKills, tempered}`. Kills count on the equipped weapon only. At 500 kills
+  the weapon gains a cosmetic trail ("my sword").
+* **Visuals:** a tempered item gets a bright edge highlight on its hero overlay. The implicit's element shows as a gem
+  dot on the icon frame.
+
+### 19.4 Trinkets: Ring ×2, Amulet, Belt
+* **Tiers:** 3 (reqLvl 1 / 16 / 32), with the same rarities as other gear. Mythic trinkets are NG+ only.
+* **Boons:** one per trinket from its slot's table (≈ 12 per slot). Uncommon gets a minor boon, Rare+ a major one, and
+  Legendary a unique boon plus a rule.
+* **Amulet → the ultimate.** 1P+1S, 1 socket.
+  * Example boons: +15 % charge from reactions; R gains the frost tag; R costs 80 charge; the first R in each fight is free.
+  * **Unique:** *Pip's Lantern* (R casts twice at 50 %), the reward of Pip's three-lanterns quest (Spire). This is the
+    director's placement: it ties the item to the story.
+* **Belt → consumables, sustain, and the gear it wraps.** S only, 1 socket; implicit +1 potion charge.
+  * Example boons: potions also cleanse; kill-heal +50 %; cooking buffs last 15 min; salvage Dust ×1.5.
+  * **The wrap-around boon:** the best gem in chest *or* boots counts +1 grade, clamped at Radiant (one socket only; §20 balance).
+* **Rings → elements and reactions.** P only, 0 sockets.
+  * Example boons: +15 % fire damage and +10 % Burn chance; Shatter radius +1; Conduct +1 jump; backstab arc +30°;
+    +1 Mark cap; charged swings 0.25 s faster; projectiles +1 pierce.
+  * **Ring resonance:** two rings of the same element give that element's reaction +25 % and an aura colour on the hero.
+    A Duo pair (fire + nature, frost + slash…) primes that Duo's reaction. Each pair is a Codex discovery.
+* **Origin starter ring:** the Origin passive (§17.1) *is* a free starter ring's boon, so ring slot 1 means something
+  at minute 3.
+* **Acquisition:**
+  * the first ring from the first Vale chest
+  * the amulet from Bramblehorn's choice chest
+  * the belt from the first secret vault
+  * after that, trinkets are 15 % of drops
+* **On the hero and in icons:**
+  * Rings don't show on the hero; an optional glint marks Epic+ rings.
+  * The belt is a band overlay with a buckle pixel, and the amulet a 2 px pendant in its element colour. Both get the
+    rarity rim glow.
+  * Icons: ring, amulet and belt × 3 tiers with element tints, plus the unique icons (≈ 15).
+* **Paper doll** (HUD.md, 220 px column): ring1 (24,88), ring2 (176,88), amulet (100,64), belt (100,300).
+
+### 19.5 Uniques: 18 total
+* 7 boss and optional-boss drops (already designed).
+* 6 trinket uniques (2 per slot type).
+* 5 **world uniques**, found only in secret vaults or Sunken Chests from fishing. They are built on §18 tags so they
+  work with every family (e.g. "Comet Band: projectiles curve toward Marked enemies").
+* Each unique has a fixed implicit and rule plus 2 random affixes, so two copies differ.
+* **No set items:** the armour-family 2/3 bonuses already cover it. Instead there is a **full-dream bonus**: 3 family
+  pieces plus that family's weapon apply the family's tag rule to trinket boons too.
+
+### 19.6 Guardrails
+* One `CAPS` table, applied in `recalcStats`: cdr 40 %, crit 60 %, haste 50 %, gear power 150 %, reaction bonus 50 %,
+  Mark cap 5, potions 5.
+* Trinket resists: at most +10 % per resist line and +15 % resAll across all four trinkets. The hero clamp [−0.5, +0.6]
+  still applies.
+* Boon ids never stack: two "+1 Mark cap" rings count as one.
+* Every boon is an `EFFECTS` row (§18, `src:'trinket'`), so the ICD, proc, chain-depth and boss caps apply automatically.
+
+### 19.7 Save v4
+* `player.equip` gains `ring1, ring2, amulet, belt`.
+* Items gain `implicit`, `affixes[].tier`, `boon`, `hist` and `tempered`.
+* `migrate(v3→v4)` fills each implicit from its base and assigns the tier of old affixes from their ilvl.
+
+### 19.8 Who builds it
+* **Haiku:** affix, name, implicit, flavour and boon tables (data, written in M2b's idle time).
+* **Opus:** `makeItem` v2, trinket slots and equip, CAPS, temper/imbue, save v4 (M3), then resonance and wrap boons on
+  the §18 bus (M4).
+* **Sonnet B:** tooltip v2, the 4 new paper-doll slots, names on drop toasts (M3); the Elder Stone craft panel (M5).
+* **Sonnet art:** trinket icons, belt and amulet overlays, the tempered highlight (M3).
+
+**Cut:** base-type variants, set items, affix reroll, a 5th trinket slot, sockets on rings, and skills on trinkets.
+
+## 20. Balance framework and scope budget (expert audit; director-approved; supersedes conflicting numbers anywhere above)
+
+### 20.1 Play-time target (decided with the client)
+**Dense, plus replay.** The main path runs **~95–110 min** and 100 % takes **~3–3.5 h**. The original 2 h / 4–5 h is
+reached through honest replay (NG+ modifiers, a second family or origin run), never through padding.
+
+### 20.2 Scope budget (hard caps)
+* ~~Maps: 17 max~~ **superseded by §22: 27 maps, each with its own hook (client decision).** Former list: These are:
+  * the hub
+  * 5 outer zones
+  * 5 boss arenas
+  * **2 mandatory dungeons:** Root Hollow, the teaching dungeon, and Forge Deep, the Caldera showcase
+  * 3 optional vaults (the former Warden Crypt, Drowned Vault and Spire gauntlet; the Twin Vigils fold into the Spire
+    ascent's last room)
+  * Drifting Isles (Sorrel)
+  * a one-floor Gloaming Below with one boss
+* **Cut:** Starlit Shoals (the Moonmaw moves to the Vale moon pond) and Gloaming floor 2.
+* **Systems: 10.** Anything else must live inside one of these or be cut:
+  1. loot and affixes
+  2. gems
+  3. elements and reactions
+  4. skills and ranks
+  5. trinkets and aspects
+  6. bestiary and Codex (one book)
+  7. quests
+  8. fishing and cooking
+  9. crafting (temper, imbue)
+  10. NG+ modifiers
+* **Merges and cuts:**
+  * Dream Tomes merge into Skill Runes: one item that teaches a weapon option or a character skill.
+  * Rune-words are **cut**. Rules have two homes: aspects on legendaries, boons on trinkets.
+  * Attune is cut.
+  * Origin passives become the starter ring.
+  * NG+ is one modifiers screen and promises no NG+-only content.
+  * Mastery and achievements share one page.
+* **Trimmed:**
+  * arena to 5 tiers, as a balance test bed
+  * hunt milestones to 10 and 25 kills
+  * fishing to 18 fish (3 per zone) plus the legendaries, with 4 rods
+  * secrets to 1 *good* secret per map, preferring visible puzzles to hidden cracks
+* **Freshness:** 14–16 min per zone on the main path; a zone goes stale at 18 min.
+* **Pacing check:** at least one new idea every 10 min of the main path. Fishing moves from the Vale to Pinewood.
+* **Do not cut:** reactions, trinkets, the bestiary as a teacher, fishing core, the twist, the Codex.
+* **Enemy roster:** see §21 (expert enemy review). Rule: more types are welcome, but **every enemy in a zone has a
+  distinct verb**. No palette swaps.
+
+### 20.3 Power curves (the targets the sim enforces)
+The reference hero has the expected gear for each band (Rare → Epic, 2 gems per zone, 2 trinkets by Act II and 4 by
+Act IV, no tempering).
+
+| Band | L | Hero DPS | Hero eHP | TTK common | TTK elite | 3 enemies' DPS |
+|---|---|---|---|---|---|---|
+| Vale | 1–3 | 60 | 900 | 2 s | — | 25 |
+| Pinewood | 3–10 | 110→220 | 1.1k→1.9k | 2.5–3.5 s | 12 s | 45→90 |
+| Ruins | 10–17 | 220→420 | 1.9k→3.0k | 3–4 s | 14 s | 90→160 |
+| Grotto | 17–24 | 420→700 | 3.0k→4.4k | 3–4 s | 15 s | 160→250 |
+| Caldera | 24–31 | 700→1.1k | 4.4k→6.2k | 3.5–4.5 s | 16 s | 250→370 |
+| Spire | 31–38 | 1.1k→1.6k | 6.2k→8.5k | 4–5 s | 18 s | 370→520 |
+
+* **Common TTK** stays between 2.5 and 5 s across the whole game.
+* **Survival:** standing in 3 commons, the hero dies in 10–14 s.
+* **Boss length:**
+  * mini-boss: 60–90 s
+  * guardian: 150–240 s
+  * Morrow: about 300 s
+  * boss HP = length × ref DPS × uptime, where uptime is 0.7 for mini-bosses and 0.6 for guardians
+* **Boss damage:** a telegraphed big hit takes 35–45 % of ref eHP, chip damage 8–12 %. Three mistakes kill; one never does.
+* **Expected tuning:** `enemyHpMul` 1.10 → **~1.08 per level**, and gear tier steps of about 45 %. The sim decides.
+* **XP:** bosses give 1 level and mini-bosses 0.5. Each zone has an XP band ceiling: XP drops to 10 % once you are 3
+  levels above the band. A 2 h player meets Morrow at ~36 and a completionist at 38–40, about a 1.2× advantage.
+
+### 20.4 Item power points (1 pp = +1 % DPS or eHP)
+* tier upgrade: 40 pp on weapons, 25 on armour
+* rarity step: 15
+* affix tiers: T1 4, T2 8, T3 13; a temper adds 4–5
+* gems: Chipped 4, Clear 8, Radiant 14 (a Radiant gem never beats a T3 affix)
+* implicit: 5
+* unique rule: 15–25 within its build, ≤ 5 outside it
+* **Trinkets: ≤ 25 % of total gear power**, resonance included
+* **An optimal build beats a random one by 1.6× DPS and 1.4× eHP**, reactions included; the CI band is 1.3–2.2×.
+
+### 20.5 Skills, MP and the ultimate
+* **Reactions:** 20–30 % of DPS for a reaction build, never more than 40 %.
+* **Ultimate:** one cast per ~40 s baseline and ~25 s with reactions and the amulet; floor 18 s. Charge gain is capped at
+  5 % per hit and 10 % per reaction.
+* **MP:**
+  * The rhythm is a ~6 s builder/spender cycle.
+  * `mpOnHit` is **per family** (§17: daggers 6, sword 8, two-hander 14), basic attacks only, once per swing (not per
+    target).
+  * A hard cap of **40 MP/s** from hits. This fixes the uncapped M2a value.
+* **Skill gap:** damage per MP within a slot ≤ 1.3×; best vs worst skill in a role ≤ 1.5×.
+* **Caps:**
+  * cdr is **40 %**, which matches the code; §19.6 is corrected.
+  * Ring resonance counts **inside** the 50 % reaction-bonus cap.
+  * The real ceiling is the sim's final-damage check (optimal ≤ 2.2× reference); the 1.6× buff cap alone doesn't
+    guarantee it.
+
+### 20.6 Economy and difficulty
+* **Dust:**
+  * A main-path run earns ~900–1,200 Dust.
+  * Planned spend is ~700 Dust (6 tempers, 2 imbues, 3 Chipped gems, 2 runes). Income stays at ~1.3× spend.
+  * A completionist earns ~3,000, enough to temper every slot once.
+* **Potions:** about 1.2 per room on Normal and 0.6 on Story.
+* **Difficulty modes:**
+  * Story: damage taken ×0.6, telegraphs +0.2 s.
+  * Normal: the reference.
+  * NG+: ×1.6, absorbed by ilvl 40–44 and Mythic drops.
+  * No Hard mode on a first run.
+
+### 20.7 Tooling and CI
+* **Sheets:** Haiku generates CSV sheets from the game data with a node script, never by hand. They live in
+  `tools/balance/`:
+  * hero_curve, enemy_curve, boss_length
+  * item_pp, skill_table
+  * dust_flow, xp_path
+* **Sim:** `tools/balsim.js` (Opus).
+  * It runs the real `SKILLS` and damage math headless, with a scripted rotation of basic ×3 → skill → dodge.
+  * It runs against each zone's reference enemy and boss, for the reference, random and optimal builds, on Story,
+    Normal and NG+.
+* **CI red flags** (each fails `node tools/smoke.js`):
+  * common TTK below 1.5 s or above 7 s
+  * a mini-boss under 45 s or over 120 s
+  * a guardian under 100 s or over 300 s
+  * the optimal/random ratio outside 1.3–2.2×
+  * reaction share above 40 %
+  * an ultimate faster than every 15 s
+  * any stat sum over its cap
+  * Dust sinks larger than income
+  * more than 2 potions per room
+  * a hero level at Morrow outside 34–40 on either path
+* **When:** the sim and sheets land in **M2b**, and every later milestone ships only with the sim green.
+
+## 21. Enemy roster and behaviour parts (expert review; director-approved; supersedes §11.4 roster counts)
+
+**Rule:** more enemies are good **if each one adds a verb**, meaning a different player decision. Palette or stat
+swaps ("Elder Ogre") are banned. A zone variant counts as half an enemy: at most 2 per zone, each with one new part.
+
+### 21.1 Roster: 28 commons (every row is a distinct decision)
+| Zone | Enemies (verb → what the player does) |
+|---|---|
+| Vale | Dream Moth (swarm that drifts to light → AoE basics) · dummy |
+| Pinewood | Gloom Slime (splits → finish smalls) · Shade Hound (line lunge → sidestep, punish) · Bramble Shaman (poison zones + **heals** → kill first) · Ogre (cone brute → dodge through, stagger) · Thornback Boar (**burrows** → keep moving; surfaces staggered) · Mountain Troll (**sleeper**; Root Hollow only → skip or prep) |
+| Ruins | Wisp (kiting shooter → close with dash/holy) · Gloom Knight (**shield-front** → flank or break) · Grave Chanter (**summons** wisps, Dread aura → interrupt) · Pillar Mimic (ambush → read the room) · Shadeling Swarm (6 tiny chasers → nova) · Void Archer (**sniper** line from off-screen → line of sight) |
+| Grotto | Frost Jelly (split + Chill puddles) · Tide Crab (shield-front + **teleport** on bubbles) · Glowfin Shoal (orbiting swarm → nova timing) · Deepsinger (**aura-buffer** −50 % dmg → pull/kill her) · Lightning Eel (water-path-bound charges → fight on dry tiles) · Crystal Sentinel (turret, sweeping beam → cover timing) |
+| Caldera | Cinder Imp (**bomber** → range or dodge the fuse; Chill defuses) · Slag Golem (poise brute → charged swings) · Ash Wraith (teleport backstab → turn, counter) · Forge Priest (**trap-layer** lava mines + heals golems) · Magma Hopper (hops, fire pools, splits) |
+| Spire | Vigil Knight (linked shield pair → hit the one not blocking) · Star Archer (3-shot sniper from islets) · Dread Herald (aura + summons swarms → priority target) · **Unmade** (copies the hero's silhouette and last skill shape; ties to the twist) · Void Bomber (bomber swarm of 3) |
+
+Each row also defines element / damage type, weak / resist, and the reaction it teaches. The expert's table is the
+source for those; Haiku transcribes it into `ENEMY_DATA` when the part runtime lands.
+
+**Bosses (10 main + vault bosses):** Bramblehorn, Gloam Warden, Mirelle, Kharzul and Morrow; mini-bosses Mossjaw and
+Slagheart; optional Sorrel's Echo and the Unwaking Child.
+
+**Director ruling:** the **Oathless** (Crypt vault) and **Brinemother** (Drowned Vault) stay as **vault bosses**, built
+cheaply: Gloom Knight and Tide Crab rows at boss scale with 2 elite mods and a boss bar, so they need no new art. The
+**Twin Vigils** are the Vigil Knight linked pair in the Spire ascent's last room.
+
+**Cut order if art slips:** the 5th enemy of each zone first (Boar, Mimic, Eel, Magma Hopper, Void Bomber), never a
+support or ranged enemy.
+
+### 21.2 Behaviour parts (enemies are data)
+`{name, sprite, hp, speed, dmg, el, dmgType, stagger, res, tags, parts:[...], params:{part:{...}}}`
+* **Movement (one):** chase, kite, orbit, charge, burrow, teleport, path-bound, stationary, sleep, mimic.
+* **Attack (1–2):** brute (reuses the BOSS_MOVES cone/circle), shoot, beam, sniper, bomber, zone-caster, trap-layer.
+* **Support (0–1):** healer (4 s telegraphed heal, ≤ 30 % of the target's HP), aura-buffer, summon, shield-front,
+  linked.
+* **Death and group:** split, zone-on-death, swarm (a swarm counts as **one** enemy for XP and loot).
+* The editor's Enemies tab shows parts as checkboxes with param fields. Once the runtime exists, a new enemy costs one
+  data row (Haiku), one 12-frame sprite set (~0.5 Sonnet-day) and 3 sound recipes (Haiku).
+* **Director ruling:** the part runtime moves **from M4 to M2b**, because Pinewood's healer, burrower and sleeper need
+  it. The existing hopper, shooter, charger and brute become the first 4 data rows.
+
+### 21.3 Elite modifiers (8)
+* Shielded (a periodic front shield to break)
+* Storm (Shock aura that arcs when adjacent)
+* Burning (fire trail)
+* Frozen (rare)
+* Gloomed (Dread aura)
+* **Twin** (a linked copy at 50 %; replaces Fast, which was only a stat)
+* **Vampiric** (heals on hit)
+* **Summoner** (a periodic swarm)
+
+### 21.4 Encounter rules (validated by Haiku's sheet from the trigger data)
+* **Roles:** each pack has 1 anchor (brute or armoured), 2–4 pressure (chase, charge or swarm), 0–1 support and 0–1
+  ranged.
+* After room 1, every room has a support or ranged enemy that is the correct first target.
+* Each zone has one pack combining two supports (e.g. healer + shield-front).
+* Each zone has one pack that is the wrong weapon on purpose.
+* No pack has two enemies with the same movement part.
+* Elites never spawn alongside healers.
+* Sleepers and mimics appear at most once per map, and only after a shrine.
+* Swarms always have a visible source.
+
+### 21.5 Pacing and budget
+* **Bestiary:** ~56 entries (28 commons, ~12 bosses, fish).
+* **Main-path pacing:** a new enemy every ~4 min and a new verb every ≤ 6 min. Pinewood holds the troll back for Root
+  Hollow.
+* **CI data checks:**
+  * any 10-minute main-path window without a new enemy type
+  * any zone whose rooms use fewer than 4 movement parts
+* **Art per milestone (Sonnet-days):** M2b 4 · M4 4 · M5 4.5 · M6 5 · M7 5 · lane O 3, about 26 in total.
+
+## 22. The 27 maps and the studio (expert review; client chose 27 maps; supersedes §20.2's map list)
+
+**Rule:** a map exists only if it has a hook the previous map didn't. If a map's hook slips, cut the map; never ship it
+as corridors. Mechanics must be beatable by skill, never timers you wait out.
+
+### 22.1 Main path (16 maps, ~110 min)
+| # | Map | Kind / size | Hook |
+|---|---|---|---|
+| 1 | Whispering Vale | hub 40 | tutorial, Elder Stone; the hub visibly heals each act |
+| 2 | Misty Pinewood | outer 56 | enemy debuts; fleeing animals form a trail; fishing introduced |
+| 3 | Root Hollow | dungeon 32 (2 rooms) | key door, lever bridge, burrowing boars, Mossjaw |
+| 4 | Bramblehorn's Clearing | boss 22 | root-pillar arena |
+| 5 | Gloomspire Ruins | outer 56 | shield knights, snipers; the pillar names (twist seed) |
+| 6 | Warden Crypt | dungeon 36 | **darkness**: your light radius, relight lanterns; mimics and summoners |
+| 7 | Warden's Hall | boss 22 | falling pillars in phase 3 |
+| 8 | Sunken Grotto | outer 64 | **tide** tiles on a timer; water-bound eels |
+| 9 | Drowned Vault | dungeon 36 | **airlock** gates (only one open at a time); crabs, Deepsinger |
+| 10 | Mirelle's Basin | boss 24 | ring arena that floods each phase |
+| 11 | Emberfall Caldera | outer 64 | lava rivers crossed on timed cooling-slag **platforms** |
+| 12 | Forge Deep | dungeon 36 | furnace bellows **wind** zones; trap-layer priests |
+| 13 | The Anvil | boss 24 | the lava floor spreads each phase |
+| 14 | Spire Ascent | ascent 48 | 5 height levels (falling sends you back to the last ledge); snipers; Twin Vigils in the last room |
+| 15 | The Sleepless Court | 36 | void tiles vanish in a learnable rhythm; Dread Herald; the Unmade |
+| 16 | Morrow's Throne | boss 28 | three phases, Pip's light |
+
+### 22.2 Optional (11 maps; brings 100 % to ~4–4.5 h)
+| # | Map | Hook |
+|---|---|---|
+| 17 | Vale Moon Pond (hub extension, 16) | night fishing; the pearl ritual for the true ending |
+| 18 | Fox Warrens (vault 14) | **noise**: sneak past sleeping trolls |
+| 19 | Oath Reliquary (vault 16) | mimic gallery; the Oathless vault boss |
+| 20 | Glowfin Shallows (vault 16) | swarm fight on shrinking sandbars (tide) |
+| 21 | Slag Chambers (vault 16) | wind + mine puzzle; Slagheart optional encounter |
+| 22 | Vigil Walk (vault 16) | sniper gauntlet solved with cover |
+| 23 | Drifting Isles (48, L34–40) | rift-hop bridges; Sorrel's Echo; the sixth legendary |
+| 24 | Starlit Shoals (32) | **no combat**, fishing only; where the real Aerin drowned; **the Moonmaw lives here** (director ruling: story placement) |
+| 25 | The Gloaming Below (36, post-game) | corrupted elites, the Gloomed tint (−10 % res), no shrines (**Story mode gets one**); the Unwaking Child |
+| 26 | Dream Arena (24) | 5 tiers of mixed role packs; the balance test bed |
+| 27 | Pip's Lanterns (rooftop islet 12) | pure story: three lanterns, three memories; powers the true ending |
+
+Brinemother is the Drowned Vault's mini-boss. Each vault elite (Oathless, Slagheart, Twin Vigils) shares one data row
+with its common-enemy version.
+
+### 22.3 Keeping the cost per map low
+* **New stamps** (Opus, built once): `vault`, `ascent`, `arena`, `islet-chain`.
+* **Mechanic modules:** recipe fields that emit triggers. Each is a generator option plus one engine feature,
+  ~1–2 days each, reused across maps:
+  * `darkness`
+  * `tide:{period}`
+  * `airlock:[gates]`
+  * `wind:[zones]`
+  * `platforms:[timed]`
+  * `noise:{sleepers}`
+* **Per map:** a recipe drafted by Haiku, tuned by the level designer (Sonnet), and passed through `engine-check`, at
+  about 0.5–1 day per map.
+* Decoration comes from per-zone palette rules. Only rooms are hand-tuned.
+
+### 22.4 Studio
+* **Tiers:**
+  * **Opus:** engine and cross-system invariants. Its risk is over-building, so I review the diff against the brief's
+    non-goals.
+  * **Sonnet:** art, UI, music, levels. Its risk is drifting from the spec, so I review screenshots against the spec's
+    numbers.
+  * **Haiku:** data, tests, sheets. Its risk is inventing ids that don't exist, so `tools/validate-ids.js` catches them.
+* **File ownership is the lock.** A task that spans two owners' files is split into two prompts with an API contract
+  between them.
+* **Concurrency:** at most **4 agents at once** (1 Opus, 2 Sonnet, 1–2 Haiku).
+* **Merge order per milestone:** engine (Opus) → data (Haiku) → content and UI (Sonnet) → QA.
+* **Every owned file starts with a header:** purpose, exported globals, what it must never do, and which tests to run.
+* **Every prompt** is ≤ 25 lines: goal, owned files, allowed APIs, spec sections, non-goals, acceptance, report format.
+  Data tasks also include one filled example row.
+* **Agent reuse:** reuse an agent for a series of same-shaped tasks. Spawn fresh after a merge or a spec change. Never
+  reuse an Opus session across milestones.
+* **Effort:** Opus high only for engine work; Sonnet medium; Haiku low.
+* **New roles:**
+  * **QA play-tester** (Sonnet): scripted routes each build, reporting death spots, soft-locks and unreadable telegraphs.
+  * **Level designer** (Sonnet): owns the recipes.
+  * **Balance tuner** (Haiku + balsim): proposes number diffs.
+  * **Writer** (Haiku): lore lines only. Finale lines stay director-written.
+  * **Build captain** (Haiku): runs every check and keeps the README.
+* **Director ruling:** agents still never commit. The director commits after the checks pass.
+

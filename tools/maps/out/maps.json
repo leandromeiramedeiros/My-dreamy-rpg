@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-19T22:56:14.299Z",
+ "generated": "2026-10-19T23:03:07.221Z",
  "maps": {
   "pinewood": {
    "name": "Misty Pinewood",
@@ -4255,7 +4255,7 @@
      "y": 21.64,
      "role": "tablet",
      "label": "lore",
-     "text": "The first Warden sealed the Thornmother here to keep the Gloam from the pines."
+     "text": "The first Warden sealed Mossjaw here to keep the Gloam from the pines."
     },
     {
      "t": "crystal",
@@ -5426,13 +5426,13 @@
       },
       {
        "type": "objective",
-       "text": "Descend to the Thornmother's den"
+       "text": "Descend to the Mossjaw's den"
       }
      ]
     },
     {
      "id": "boss",
-     "name": "Thornmother's den",
+     "name": "Mossjaw's den",
      "when": {
       "type": "enter_area",
       "x": 8,
@@ -5445,13 +5445,13 @@
      "actions": [
       {
        "type": "banner",
-       "title": "The Thornmother",
-       "sub": "Rootbound mother of the pines - mini-boss",
+       "title": "Mossjaw",
+       "sub": "Moss-gorged root troll - mini-boss",
        "boss": true
       },
       {
        "type": "objective",
-       "text": "Defeat The Thornmother"
+       "text": "Defeat Mossjaw"
       },
       {
        "type": "shake",
@@ -5497,7 +5497,7 @@
     },
     {
      "id": "boss_done",
-     "name": "The Thornmother falls",
+     "name": "Mossjaw falls",
      "when": {
       "type": "all_enemies_dead"
      },
@@ -5510,12 +5510,12 @@
       },
       {
        "type": "banner",
-       "title": "The Thornmother falls",
+       "title": "Mossjaw falls",
        "sub": "A way out opens"
       },
       {
        "type": "message",
-       "text": "The Thornmother: The roots remember the first Warden... he did not wake, and neither shall I."
+       "text": "Mossjaw: The roots remember the first Warden... he did not wake, and neither shall I."
       },
       {
        "type": "heal",

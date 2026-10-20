@@ -1,0 +1,177 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Dream Glass UI art</title>
+<style>
+body{background:#0e0a1c;color:#c9bff0;font:12px monospace;margin:14px 18px;width:1180px}
+h1{font-size:15px;margin:0 0 4px;color:#ffd35a}
+h2{margin:18px 0 6px;font-size:13px;color:#c8b6ff;border-bottom:1px solid #2c2244;padding-bottom:3px}
+canvas{image-rendering:pixelated;display:block}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+.cell{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:#9f93c4;text-align:center}
+.cell canvas{background:#15102a}
+.lab{max-width:96px;word-break:break-all}
+</style></head><body>
+<h1>Dream Glass UI art (1x sources, shown at 2x unless noted)</h1>
+<div id="out"></div>
+<script src="../js/font.js"></script>
+<script>
+const out = document.getElementById('out');
+const load = (src) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+const tintCache = new Map();
+function tinted(img, col) {
+  const k = img.src.slice(-40) + col; if (tintCache.has(k)) return tintCache.get(k);
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const x = c.getContext('2d');
+  x.drawImage(img, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = col; x.fillRect(0, 0, c.width, c.height);
+  tintCache.set(k, c); return c;
+}
+const F = {};
+function fold(ch, f) { return f.glyphs[ch] ? ch : (FONT_ART.fold[ch] && f.glyphs[FONT_ART.fold[ch]] ? FONT_ART.fold[ch] : '?'); }
+function measure(f, s, sc) { let w = 0; for (const ch of s) w += f.glyphs[fold(ch, f)].adv; return (w - 1) * sc; }
+function drawRaw(ctx, f, img, s, x, y, sc, col) {
+  const t = tinted(img, col);
+  for (const ch of s) { const g = f.glyphs[fold(ch, f)]; if (g.w) ctx.drawImage(t, g.x, g.y, g.w, f.h, x, y, g.w * sc, f.h * sc); x += g.adv * sc; }
+}
+function text(ctx, name, s, x, y, sc, col, o = {}) {
+  const f = FONT_ART[name], img = F[name];
+  if (o.align === 'center') x -= Math.round(measure(f, s, sc) / 2); else if (o.align === 'right') x -= measure(f, s, sc);
+  if (o.outline) for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]]) drawRaw(ctx, f, img, s, x + dx * sc, y + dy * sc, sc, '#0b0716');
+  if (o.shadow !== false) drawRaw(ctx, f, img, s, x + 2, y + 2, sc, '#0b0716');
+  drawRaw(ctx, f, img, s, x, y, sc, col);
+}
+let atlas;
+function slice9(ctx, name, x, y, w, h, sc) { // w,h in source px
+  const fr = UI_ART.frames[name], [l, t, r, b] = fr.slice, S = (sx, sy, sw, sh, dx, dy, dw, dh) => { if (sw > 0 && sh > 0 && dw > 0 && dh > 0) ctx.drawImage(atlas, fr.x + sx, fr.y + sy, sw, sh, x + dx * sc, y + dy * sc, dw * sc, dh * sc); };
+  const cw = fr.w - l - r, ch = fr.h - t - b, mw = w - l - r, mh = h - t - b;
+  S(0, 0, l, t, 0, 0, l, t); S(fr.w - r, 0, r, t, w - r, 0, r, t); S(0, fr.h - b, l, b, 0, h - b, l, b); S(fr.w - r, fr.h - b, r, b, w - r, h - b, r, b);
+  S(l, 0, cw, t, l, 0, mw, t); S(l, fr.h - b, cw, b, l, h - b, mw, b); S(0, t, l, ch, 0, t, l, mh); S(fr.w - r, t, r, ch, w - r, t, r, mh); S(l, t, cw, ch, l, t, mw, mh);
+}
+function spr(ctx, name, x, y, sc) { const s = UI_ART.sprites[name] || UI_ART.frames[name]; ctx.drawImage(atlas, s.x, s.y, s.w, s.h, x, y, s.w * sc, s.h * sc); return s; }
+function mk(w, h, bg, parent) { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.imageSmoothingEnabled = false; if (bg) { x.fillStyle = bg; x.fillRect(0, 0, w, h); } (parent || out).appendChild(c); return x; }
+function h2(t) { const e = document.createElement('h2'); e.textContent = t; out.appendChild(e); }
+function row() { const r = document.createElement('div'); r.className = 'row'; out.appendChild(r); return r; }
+function cell(r, label, w, h, bg, fn) { const d = document.createElement('div'); d.className = 'cell'; const x = mk(w, h, bg, d); fn(x); const l = document.createElement('div'); l.className = 'lab'; l.textContent = label; d.appendChild(l); r.appendChild(d); }
+
+function charts(name, sc, bg, fg) {
+  const f = FONT_ART[name]; const keys = Object.keys(f.glyphs).filter((k) => f.glyphs[k].w);
+  const cols = Math.floor(1140 / ((8 * sc) + 4 * sc)); const cw = 12 * sc, chh = (f.h + 2) * sc;
+  const ctx = mk(cols * cw, Math.ceil(keys.length / cols) * chh + 4, bg);
+  keys.forEach((k, i) => { const x = (i % cols) * cw + 4, y = ((i / cols) | 0) * chh + 2; drawRaw(ctx, f, F[name], k, x, y, sc, fg); });
+}
+
+function mockHud() {
+  const W = 960, H = 540, ctx = mk(W, H, '#3b2a55');
+  // pretend world
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#6b4a8a'); g.addColorStop(1, '#2c1f4a'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 90; i++) { ctx.fillStyle = i % 3 ? '#7d5aa0' : '#4a3570'; ctx.fillRect((i * 97) % W & ~1, (i * 53) % H & ~1, 6 + (i % 4) * 4, 6); }
+  // tracker
+  text(ctx, 'body', 'Prado de Luar', 16, 16, 2, '#ffd35a');
+  spr(ctx, 'bullet', 16, 40, 2); text(ctx, 'body', 'Derrote os pesadelos', 36, 42, 2, '#f3ecff');
+  text(ctx, 'small', 'Colete 3 fragmentos de sonho', 16, 66, 2, '#9f93c4');
+  // minimap
+  spr(ctx, 'minimapMask', 832, 16, 2); const m = UI_ART.sprites.minimapMask; ctx.save(); ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = 'rgba(30,20,60,.75)'; ctx.fillRect(832, 16, 112, 112); ctx.restore();
+  spr(ctx, 'minimap', 832, 16, 2);
+  // portrait block
+  slice9(ctx, 'primary', 16, 452, 36, 36, 2); ctx.fillStyle = '#e8c9a0'; ctx.fillRect(34, 470, 36, 36);
+  spr(ctx, 'levelBadge', 72, 500, 2); text(ctx, 'small', '14', 96, 506, 1, '#f3ecff', { align: 'center' }); text(ctx, 'small', '14', 84, 510, 2, '#f3ecff', { align: 'center' });
+  const bar = (x, y, w, h, c1, c2, fill) => { ctx.fillStyle = '#0b0716'; ctx.fillRect(x - 2, y - 2, w + 4, h + 4); ctx.fillStyle = '#26203f'; ctx.fillRect(x, y, w, h); ctx.fillStyle = c1; ctx.fillRect(x, y, w * fill, h); ctx.fillStyle = c2; ctx.fillRect(x, y, w * fill, 2); };
+  bar(100, 456, 236, 18, P('hp'), P('hpHi'), .72); text(ctx, 'small', '1304/1813', 330, 460, 2, '#f3ecff', { align: 'right' });
+  bar(100, 480, 236, 12, P('mp'), P('mpHi'), .6); bar(100, 498, 236, 8, P('st'), P('stHi'), .85); bar(100, 512, 236, 4, '#b48aff', '#d9c2ff', .4);
+  // status row
+  for (let i = 0; i < 3; i++) { slice9(ctx, 'plain', 100 + i * 24, 428, 10, 10, 2); }
+  // skill bar
+  const xs = [232, 282, 332, 382, 442, 492, 542, 588, 638, 688];
+  const keys = ['LMB', 'Q', 'E', 'R', 'F', 'C', 'SHF', '1', '2', '3'];
+  const cols = ['#e8761c', '#6ad0ff', '#f0a040', '#b48aff', '#8bd06a', '#ffd35a', '#c8c8d8', '#e8476c', '#4f7df0', '#e3a93a'];
+  xs.forEach((x, i) => {
+    slice9(ctx, 'slot', x, 484, 22, 22, 2);
+    ctx.fillStyle = cols[i]; ctx.fillRect(x + 6, 490, 32, 32);
+    const t = tinted(atlas, cols[i]); const r = UI_ART.frames.slotRim; ctx.save(); ctx.globalAlpha = 1;
+    const rimC = document.createElement('canvas'); rimC.width = 22 * 2; rimC.height = 22 * 2; const rx = rimC.getContext('2d'); rx.imageSmoothingEnabled = false; slice9(rx, 'slotRim', 0, 0, 22, 22, 2); rx.globalCompositeOperation = 'source-in'; rx.fillStyle = i === 9 ? '#ffd35a' : cols[i]; rx.fillRect(0, 0, 44, 44); ctx.drawImage(rimC, x, 484); ctx.restore();
+    slice9(ctx, 'keyTag', x - 2, 480, 10, 8, 2); text(ctx, 'small', keys[i].length > 2 ? keys[i][0] : keys[i], x + 6, 484, 1, '#f3ecff', { shadow: false });
+  });
+  slice9(ctx, 'gold', 740, 484, 22, 22, 2); ctx.fillStyle = '#e8476c'; ctx.fillRect(748, 492, 28, 28);
+  for (let i = 0; i < 3; i++) spr(ctx, i < 2 ? 'pipFull' : 'pipEmpty', 746 + i * 14, 534 - 12, 2);
+  spr(ctx, 'help', 928, 480, 2);
+  // boss bar
+  text(ctx, 'body', 'Rainha do Pesadelo', 480, 10, 2, '#ffd35a', { align: 'center', outline: true });
+  bar(240, 34, 480, 14, '#e8476c', '#ff8fa8', .8);
+  // dialogue
+  slice9(ctx, 'primary', 120, 372, 360, 56, 2);
+  text(ctx, 'body', 'Clara', 236, 384, 2, '#ffd35a'); text(ctx, 'body', 'Você chegou até aqui, sonhadora.', 236, 408, 2, '#f3ecff'); text(ctx, 'body', 'Não é pelo medo que a luz', 236, 428, 2, '#f3ecff');
+  text(ctx, 'small', '▼', 690, 460, 2, '#c8b6ff');
+  // toasts
+  slice9(ctx, 'plain', 770, 336, 87, 14, 2); text(ctx, 'body', 'Lâmina da Aurora', 780, 346, 2, '#ffd35a');
+  // damage numbers
+  text(ctx, 'small', '248', 440, 250, 3, '#ffd35a', { outline: true }); text(ctx, 'small', '77', 500, 270, 2, '#f3ecff');
+  text(ctx, 'body', 'WEAK', 380, 300, 2, '#ffe36a', { outline: true }); text(ctx, 'body', 'LEVEL 15', 480, 200, 3, '#ffd35a', { align: 'center', outline: true });
+}
+function P(k) { return UI_ART.palette[k]; }
+
+(async () => {
+  F.small = await load(FONT_ART.small.src); F.body = await load(FONT_ART.body.src); atlas = await load(UI_ART.src);
+
+  h2('Mock HUD at 960x540 (2x grid) - judge it as a player would');
+  mockHud();
+
+  h2('Pangrams (shadow on): small x2, body x2, heading body x3 with outline');
+  {
+    const lines = [
+      ['small', 2, 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG 0123456789'],
+      ['small', 2, 'the quick brown fox jumps over the lazy dog. HP 1304/1813  +12%  Lv 14'],
+      ['small', 2, 'Um pequeno jabuti xereta viu dez cegonhas felizes: ação, avô, pé, ônibus, lição, coração'],
+      ['body', 2, 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG 0123456789'],
+      ['body', 2, 'the quick brown fox jumps over the lazy dog. "Hello", (nice!) [ok] {x} a/b @ # $ % & * + = < > ? ~ _ | \\ ^ `'],
+      ['body', 2, 'Um pequeno jabuti xereta viu dez cegonhas felizes: ação, avô, pé, ônibus, lição, coração, àquela, três'],
+      ['body', 3, 'Zona: Prado de Luar ✦ LEVEL 15'],
+      ['body', 2, '• ◆ ◇ ▼ ▲ ► ◄ ✦ ☆ △ ○ … × °   x2 × 5°  Wait… ◆◆◇'],
+    ];
+    let y = 8; const H = lines.reduce((a, l) => a + FONT_ART[l[0]].lineH * l[1] + 8, 20);
+    for (const bgc of ['#15102a', '#d8d0ec']) {
+      const ctx = mk(1150, H, bgc); y = 8;
+      for (const [fn, sc, s] of lines) { text(ctx, fn, s, 8, y, sc, bgc === '#15102a' ? '#f3ecff' : '#2a1f55', { outline: sc === 3 && bgc === '#15102a', shadow: bgc === '#15102a' }); y += FONT_ART[fn].lineH * sc + 8; }
+    }
+  }
+
+  h2('Glyph charts: DreamSmall x2 / x4 (dark, light)');
+  charts('small', 2, '#15102a', '#f3ecff'); charts('small', 2, '#e8e2f6', '#2a1f55'); charts('small', 4, '#15102a', '#f3ecff');
+  h2('Glyph charts: DreamBody x2 / x4 (dark, light)');
+  charts('body', 2, '#15102a', '#f3ecff'); charts('body', 2, '#e8e2f6', '#2a1f55'); charts('body', 4, '#15102a', '#f3ecff');
+
+  h2('9-slice frames at several sizes (x2). Left to right: 16x16 source, then 24x24, 40x24, 64x40 (src px)');
+  for (const name of Object.keys(UI_ART.frames).filter((k) => !/^(sliderFill|scrollTrack|scrollThumb|sliderTrack|keycap|keyTag|keyTagMp|focus|slotRim|slot|tabActive|tabInactive)$/.test(k))) {
+    const r = row(); const fr = UI_ART.frames[name];
+    for (const [w, h] of [[fr.w, fr.h], [24, 24], [40, 24], [64, 40]]) cell(r, name + ' ' + w + 'x' + h, w * 2 + 8, h * 2 + 8, '#3b2a55', (x) => slice9(x, name, 4, 4, w, h, 2));
+  }
+  h2('Tabs, slots, tags, focus, rims (x2)  [slot 22/24 src, rim tinted by element]');
+  {
+    const r = row();
+    cell(r, 'tab active/inactive', 260, 40, '#15102a', (x) => { slice9(x, 'tabActive', 8, 8, 56, 24, 2); text(x, 'body', 'BAG', 20, 14, 2, '#f3ecff'); slice9(x, 'tabInactive', 130, 12, 56, 20, 2); text(x, 'body', 'MAP', 142, 14, 2, '#9f93c4'); });
+    cell(r, 'slot 22 / 24 + rim tint', 240, 60, '#3b2a55', (x) => { slice9(x, 'slot', 6, 6, 22, 22, 2); slice9(x, 'slot', 70, 6, 24, 24, 2); [['#6ad0ff', 130], ['#ffd35a', 180]].forEach(([c, ox]) => { slice9(x, 'slot', ox, 6, 22, 22, 2); const t = document.createElement('canvas'); t.width = t.height = 44; const tx = t.getContext('2d'); tx.imageSmoothingEnabled = false; slice9(tx, 'slotRim', 0, 0, 22, 22, 2); tx.globalCompositeOperation = 'source-in'; tx.fillStyle = c; tx.fillRect(0, 0, 44, 44); x.drawImage(t, ox, 6); }); });
+    cell(r, 'keyTag / MP tint', 90, 40, '#3b2a55', (x) => { slice9(x, 'keyTag', 6, 6, 12, 10, 2); text(x, 'small', 'Q', 15, 11, 1, '#f3ecff', { shadow: false }); slice9(x, 'keyTagMp', 50, 6, 12, 10, 2); text(x, 'small', 'E', 59, 11, 1, '#9ab8ff', { shadow: false }); });
+    cell(r, 'focus (tint)', 110, 80, '#15102a', (x) => { slice9(x, 'plain', 8, 8, 24, 24, 2); const t = document.createElement('canvas'); t.width = t.height = 56; const tx = t.getContext('2d'); tx.imageSmoothingEnabled = false; slice9(tx, 'focus', 0, 0, 28, 28, 2); tx.globalCompositeOperation = 'source-in'; tx.fillStyle = '#ffd35a'; tx.fillRect(0, 0, 56, 56); x.drawImage(t, 4, 4); });
+    cell(r, 'keycap + text', 230, 40, '#15102a', (x) => { [['Q', 12], ['SPACE', 40], ['ESC', 120]].forEach(([s, ox]) => { const w = Math.max(9, Math.round(measure(FONT_ART.small, s, 1) + 6)); slice9(x, 'keycap', ox, 6, w, 12, 2); text(x, 'small', s, ox * 1 + 6, 12, 2, '#f3ecff', { shadow: false }); }); });
+  }
+
+  h2('Small sprites (x2 left, x4 right) and sheet');
+  {
+    const r = row();
+    for (const name of Object.keys(UI_ART.sprites)) {
+      const s = UI_ART.sprites[name];
+      cell(r, name + ' ' + s.w + 'x' + s.h, Math.max(s.w * 6 + 8, 60), s.h * 4 + 8, '#3b2a55', (x) => { spr(x, name, 4, 4, 2); spr(x, name, 4 + s.w * 2 + 6, 4, 4); });
+    }
+  }
+  h2('Scrollbar / slider / checkbox composed (x2)');
+  {
+    const r = row();
+    cell(r, 'scrollbar', 40, 140, '#15102a', (x) => { slice9(x, 'scrollTrack', 12, 4, 5, 64, 2); slice9(x, 'scrollThumb', 12, 12, 5, 22, 2); });
+    cell(r, 'slider 5-step', 190, 40, '#15102a', (x) => { slice9(x, 'sliderTrack', 8, 14, 80, 5, 2); slice9(x, 'sliderFill', 10, 16, 48, 3, 2); for (let i = 0; i < 5; i++) spr(x, 'sliderTick', 10 + i * 18 * 1 + 0, 24, 2); spr(x, 'sliderKnob', 8 + 54, 8, 2); });
+    cell(r, 'checkbox off/on + label', 220, 40, '#15102a', (x) => { spr(x, 'checkOff', 8, 10, 2); text(x, 'body', 'Shake', 32, 12, 2, '#f3ecff'); spr(x, 'checkOn', 120, 10, 2); text(x, 'body', 'Nums', 144, 12, 2, '#f3ecff'); });
+  }
+  h2('Prompt glyphs inline with text (x2)');
+  {
+    const ctx = mk(1150, 160, '#15102a'); let y = 10;
+    const line = (items) => { let x = 10; for (const it of items) { if (it[0] === 's') { const s = UI_ART.sprites[it[1]]; spr(ctx, it[1], x, y + Math.round((22 - s.h * 2) / 2), 2); x += s.w * 2 + 6; } else { text(ctx, 'body', it, x, y + 2, 2, '#f3ecff'); x += measure(FONT_ART.body, it, 2) + 12; } } y += 34; };
+    line([['s', 'xboxA'], 'Confirm', ['s', 'xboxB'], 'Back', ['s', 'xboxX'], 'Skill', ['s', 'xboxY'], 'Bag', ['s', 'xboxLB'], ['s', 'xboxRB'], 'Tabs', ['s', 'xboxLT'], ['s', 'xboxRT'], 'Aim', ['s', 'padStick'], 'Move']);
+    line([['s', 'psCross'], 'Confirm', ['s', 'psCircle'], 'Back', ['s', 'psSquare'], 'Skill', ['s', 'psTriangle'], 'Bag', ['s', 'psL1'], ['s', 'psR1'], 'Tabs', ['s', 'psL2'], ['s', 'psR2'], 'Aim', ['s', 'touchTap'], 'Tap to continue']);
+  }
+})().catch((e) => { console.error('preview failed', e); document.title = 'FAILED'; });
+</script></body></html>

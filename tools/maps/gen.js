@@ -154,7 +154,7 @@ const STAND_IN = {
   // interactive blockers: omitted in compat mode (the passage is simply open) -- engine must support them in future mode
   gate: { omit: true }, hidden: { omit: true }, keydoor: { omit: true }, fishspot: { omit: true },
 };
-const COMPAT_ENEMY = { shaman: 'ogre', thornmother: 'troll', bramblehorn: 'troll' };
+const COMPAT_ENEMY = { shaman: 'ogre', mossjaw: 'troll', bramblehorn: 'troll' };
 
 // ------------------------------- trigger cards -----------------------------
 // Builders producing exactly the card format used in js/world.js

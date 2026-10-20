@@ -29,12 +29,12 @@ module.exports = dungeon({
   startOff: [1.2, -0.2],
   text: {
     intro: ['Roots everywhere... they are moving. Stay close to me.'], locked: 'A door of knotted roots. It needs the Root Hollow key.',
-    shrineName: 'Root Hollow midpoint', tablet: 'The first Warden sealed the Thornmother here to keep the Gloam from the pines.',
+    shrineName: 'Root Hollow midpoint', tablet: 'The first Warden sealed Mossjaw here to keep the Gloam from the pines.',
     bossLast: 'The roots remember the first Warden... he did not wake, and neither shall I.',
   },
   enemies: {
     r1: { name: 'First cavern', banner: ['Root Cavern', 'Thorn-touched brutes in numbers'], gap: 8, waves: [[['ogre', 3]], [['ogre', 3]]], clear: 'The roots go still.' },
     r2: { name: 'Gate gallery', banner: ['The Gallery', 'Fight to the lever'], gap: 9, waves: [[['troll', 1]], [['ogre', 2], ['shaman', 1]]], clear: 'Silence. A lever waits nearby.' },
-    arena: { name: 'Thornmother\'s den', title: 'The Thornmother', sub: 'Rootbound mother of the pines - mini-boss', enemy: 'thornmother', add: 'ogre' },
+    arena: { name: 'Mossjaw\'s den', title: 'Mossjaw', sub: 'Moss-gorged root troll - mini-boss', enemy: 'mossjaw', add: 'ogre' },
   },
 });
