@@ -220,13 +220,7 @@ function drawScene() {
   // ---- sky & distant world ----
   const pxs = clamp(-80 - camX * 0.02, -160, 0), pys = clamp(-50 - camY * 0.02, -90, 0);
   ctx.drawImage(bg.sky.c, Math.round(pxs), Math.round(pys));
-  if (!th.moon.sun) for (const s of bg.sky.stars) {   // 140 twinkling stars: fill strings from a 256-step table (no per-frame strings)
-    const a = 0.35 + 0.65 * Math.max(0, Math.sin(G.t * s.s * 2 + s.p));
-    ctx.fillStyle = STAR_FILL[0][Math.round(a * 0.9 * 255)];
-    const x = Math.round(s.x + pxs), y = Math.round(s.y + pys);
-    ctx.fillRect(x, y, 1, 1);
-    if (s.big) { ctx.fillStyle = STAR_FILL[1][Math.round(a * 0.45 * 255)]; ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3); }
-  }
+  if (!th.moon.sun) drawStars(ctx, bg.sky.stars, pxs, pys);
   perfMark('sky.base');
   const mo = th.moon, mx = mo.x + pxs * 0.5, my = mo.y + pys * 0.5;
   ctx.drawImage(moonGlow(mo), Math.round(mx - mo.r * 4), Math.round(my - mo.r * 4));
@@ -416,7 +410,26 @@ function drawPropShadows(ctx, m) {
 // perf: the moon disc was ~(2r+1)^2 fillRects + value-noise calls EVERY frame (~10 % of a play frame headless); it is
 // now rastered once per (radius, colour) into a canvas and blitted (same pixels: x, y snap to whole pixels as before)
 const MOON_CACHE = new Map();
-const STAR_FILL = [0, 1].map(k => Array.from({ length: 256 }, (_, i) => k ? `rgba(255,230,250,${i / 255})` : `rgba(255,248,255,${i / 255})`));
+// 140 twinkling stars were ~160 fillRects a frame, each with a new rgba() string. Now the twinkle alpha snaps to STAR_LV levels
+// (1/32 steps on a 1 px dot) and each level is one path of rects + one fill, from a fixed string table: <= 2 x STAR_LV fills.
+const STAR_LV = 32, STAR_FILL = [0, 1].map(k => Array.from({ length: STAR_LV + 1 }, (_, i) => k ? `rgba(255,230,250,${(i / STAR_LV) * 0.45})` : `rgba(255,248,255,${(i / STAR_LV) * 0.9})`));
+let STAR_LVL = null;
+function drawStars(ctx, stars, pxs, pys) {
+  const n = stars.length; if (!STAR_LVL || STAR_LVL.length < n) STAR_LVL = new Uint8Array(n);
+  for (let i = 0; i < n; i++) { const s = stars[i]; STAR_LVL[i] = Math.round((0.35 + 0.65 * Math.max(0, Math.sin(G.t * s.s * 2 + s.p))) * STAR_LV); }
+  for (let lv = 0; lv <= STAR_LV; lv++) {
+    let any = false, big = false;
+    for (let i = 0; i < n; i++) if (STAR_LVL[i] === lv) { if (!any) { ctx.beginPath(); any = true; } const s = stars[i]; ctx.rect(Math.round(s.x + pxs), Math.round(s.y + pys), 1, 1); if (s.big) big = true; }
+    if (!any) continue;
+    ctx.fillStyle = STAR_FILL[0][lv]; ctx.fill();
+    // a big star's cross: the arms in two fills (they overlap on the centre pixel, which the old two fillRects blended twice)
+    if (big) for (let arm = 0; arm < 2; arm++) {
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) if (STAR_LVL[i] === lv && stars[i].big) { const s = stars[i], x = Math.round(s.x + pxs), y = Math.round(s.y + pys); if (arm) ctx.rect(x, y - 1, 1, 3); else ctx.rect(x - 1, y, 3, 1); }
+      ctx.fillStyle = STAR_FILL[1][lv]; ctx.fill();
+    }
+  }
+}
 // the moon / sun halo: a radial gradient rastered once per theme moon (it was a new gradient + an 8r x 8r gradient fill each frame)
 function moonGlow(mo) {
   const k = 'glow|' + mo.r + '|' + mo.glow;
