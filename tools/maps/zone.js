@@ -141,6 +141,7 @@ function populate(S, g, T) {
     const spawns = [T.banner(pk.name, pk.sub || 'Elite pocket'), T.spawn(pk.elite, 1, rm.x, rm.y - 0.5, 0.5, { elite: pk.mod })];
     let k = 0; for (const [en, c] of pk.mobs) for (let i = 0; i < c; i++, k++) { const a = 0.5 + k * 2 * Math.PI / n, q = snap(rm.x + Math.cos(a) * 2.1, rm.y + Math.sin(a) * 2.1, 1); spawns.push(T.spawn(en, 1, q.x, q.y, 0.5)); }
     tr.push(Object.assign(T.enter(pk.id, pk.name, rm.x, rm.y, rm.r + 0.4, spawns), { once: false, cooldown: 100000 }));
+    (g.levelAreas || (g.levelAreas = [])).push({ id: pk.id, x: rm.x, y: rm.y, r: r2(rm.r + 2.5), level: BOSS_LVL(pk.boss) });   // the pack spawns at the boss's level (elite +2)
     tr.push(T.allDead(pk.id + '_done', pk.name + ': first clear', [pk.id], [T.message(pk.done || 'The pocket is quiet. Something good was guarded here.'), T.loot('rare', 1, rm.x, rm.y, { slot: 'upgrade', ilvl: floor })]));
   }
   g.rng = keepRng;

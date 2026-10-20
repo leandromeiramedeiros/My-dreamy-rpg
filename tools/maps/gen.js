@@ -982,6 +982,7 @@ class MapGen {
     // M2c: sections (bounds, kind, ambient light, palette name), void gutters and warp anchors ride along as plain map fields
     if (this.sections.length) m.sections = this.sections.map(sc => { const b = sc.bounds, o = { id: sc.id, name: sc.name, kind: sc.kind, x: b[0], y: b[1], w: b[2] - b[0], h: b[3] - b[1] }; for (const k of ['ambient', 'dark']) if (sc[k] != null) o[k] = sc[k]; return o; });
     if (Object.keys(this.anchors).length) m.anchors = Object.values(this.anchors).map(a => Object.assign({}, a));
+    if (this.levelAreas && this.levelAreas.length) m.levelAreas = this.levelAreas.map(z => Object.assign({}, z));   // §26.2 pockets: items.js enemyLevel
     m.triggers = this.triggers;
     return m;
   }

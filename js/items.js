@@ -441,8 +441,10 @@ function enemyClass(type) { const d = ENEMY[type] || {}; return d.ai === 'boss' 
 // an instance: elite spawns (parts.js makeElite) count as elites
 const enemyClassOf = e => (e.elite && !e.boss ? 'elite' : enemyClass(e.type));
 // enemies track the hero inside the zone band; elites +2, bosses sit at the top of the band
+// §26.2 elite pockets: a map's `levelAreas` [{ x, y, r, level }] pin the level enemies spawn at while the hero stands inside (the boss's
+// level; elites still +2): a pocket's pack is spawned by its own enter card, so the hero is in its area when it spawns
 function enemyLevel(type) {
-  const [a, b] = zoneLevel(), c = enemyClass(type), L = G.player ? G.player.level : a, d = ENEMY[type] || {};
+  const [a, b] = zoneLevel(), c = enemyClass(type), d = ENEMY[type] || {}, p = G.player, LA = p && G.map && ((G.world.maps[G.map.id] || {}).levelAreas || []).find(z => Math.hypot(p.x - z.x, p.y - z.y) < z.r), L = LA ? +LA.level : p ? p.level : a;
   if (c === 'boss' && d.level) return clamp(+d.level, 1, MAX_LEVEL);   // bosses.js rows carry their story level
   return clamp(c === 'boss' ? b : L + (c === 'elite' ? 2 : 0), a, b);
 }

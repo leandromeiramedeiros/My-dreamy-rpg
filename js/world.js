@@ -10616,6 +10616,36 @@ const WORLD_DATA = {
      "y": 36.9
     }
    ],
+   "levelAreas": [
+    {
+     "id": "pk_moss_w",
+     "x": 31,
+     "y": 31,
+     "r": 5.9,
+     "level": 5
+    },
+    {
+     "id": "pk_moss_e",
+     "x": 57,
+     "y": 31,
+     "r": 5.9,
+     "level": 5
+    },
+    {
+     "id": "pk_bram_n",
+     "x": 74,
+     "y": 27,
+     "r": 5.9,
+     "level": 8
+    },
+    {
+     "id": "pk_bram_s",
+     "x": 89,
+     "y": 53,
+     "r": 5.7,
+     "level": 8
+    }
+   ],
    "triggers": [
     {
      "id": "banner",

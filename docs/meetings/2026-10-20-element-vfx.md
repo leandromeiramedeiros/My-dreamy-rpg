@@ -452,7 +452,10 @@ Readability with many enemies on screen (desktop up to ~20, phone fewer):
 
 ## B6. Staging relative to the particle work (agent-days; files)
 The ladder needs the registry (P0) for its colours and the sheets (P1) for its particles, and it *is* the M4 reaction
-system's first half, so it follows P0-P2 and runs beside P3-P5 inside the M4 combat lane (DESIGN §31 M4 list).
+system's first half, so it follows P0-P2 and runs beside P3-P5 inside the M4 combat lane (DESIGN §31 M4 list). **S1 and
+S4 start only after the elements meeting rules on B2 / B3**; S2, S3 and S5's visual parts can start on the draft, since
+B4 / B5 do not change with the numbers. The estimates assume the ruling keeps roughly this shape (2-3 tiers, ≤ 10
+elements); each added element is about +0.5 d (one registry row, one ladder, one glyph, one strip).
 
 | Step | Work | Files | Days |
 |---|---|---|---|
