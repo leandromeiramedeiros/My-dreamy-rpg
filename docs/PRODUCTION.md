@@ -112,7 +112,6 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
   * recipe sync + elite pockets + shrine warp (§26.2)
   * HUD text cache (phone p95)
   * world art group 2: trees/density (density waits for the pockets lane)
-  * element particle language + status visuals (expert VFX director → §32)
 * Queue:
   1. world art group 3 (tall set pieces)
   2. pixel FX prototype: 3 effects + element particles, for client approval
@@ -120,7 +119,7 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
   4. ship M3 (PR #4)
   5. docs/organisation meeting with the expert game director; apply its ruling
   6. RESUME.md resume kit, then pause until Friday
-* Also pending: the long elements meeting (roles, interactions, Wind and classic elements, world puzzles), after the VFX minutes land
+* Done: the elements meeting (§33) and the element VFX language (§32); both are scheduled into M4a/M4b/M5
 
 ## Status snapshot (M2b shipped)
 * Done on branch `claude/m2b-act1`: enemy behaviour parts (js/parts.js), boss move library + Mossjaw/Bramblehorn/Warden
