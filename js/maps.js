@@ -118,7 +118,8 @@ const isGrassy = t => t === 'g' || t === 'f' || t === 'p' || t === 'd';
 // transition from the 8-neighbour mask: a lower-priority neighbour laps over this tile as a scalloped 3-5 px tongue with a 1 px dark
 // line (priority water > path > stone > moss > meadow > grass; a bright wet line on water), (d) the edge grammar: a 2 px lit lip where
 // the top meets a lower height or void, ambient occlusion within 4 px of a higher neighbour's wall foot, a baked wedge shadow to the SW
-// of every column (0.6 x dh x ZS px at 25 %), and (e) height fog (5 % toward th.haze per level below the map's top, at most 20 %).
+// of every column (0.6 x dh x ZS px at 25 %), and (e) height fog (5 % toward th.haze per level below the map's dominant level m.hFog,
+// at most 20 %).
 // Ramps are quantised by rampQ: ordered 2x2 dither only between adjacent steps and only inside steps 2..5, hard steps elsewhere.
 const BAYER2 = [0.125, 0.625, 0.875, 0.375];
 function rampQ(r, v, x, y) {
@@ -299,11 +300,11 @@ function topColor(m, t, h, wx, wy, px, py, SX, SY) {
   if (tf & 512) for (let k = 1; k <= 2; k++) { const hc = hAt(m, tx, ty - k); if (hc > h) { if (fy + k - 1 < 0.2 * (hc - h) * (0.4 + 0.6 * fx)) mul *= 0.75; break; } }
   if (mul < 1) c = mulRgb(c, mul);
   // (e) height fog
-  const fog = Math.min(0.2, 0.05 * (m.hMax - h));
+  const fog = Math.min(0.2, 0.05 * (m.hFog - h));
   return fog > 0 ? mixRgb(c, th.haze, fog) : c;
 }
 // kept for callers outside the raster (editor swatches): a top pixel of type t on the flat plane
-function surfaceColor(m, t, wx, wy, px, py) { if (m.hMax == null) groundPrep(m); return topColor(m, t, 0, wx, wy, px, py, isoX(wx, wy), isoY(wx, wy)); }
+function surfaceColor(m, t, wx, wy, px, py) { if (m.hFog == null) groundPrep(m); return topColor(m, t, 0, wx, wy, px, py, isoX(wx, wy), isoY(wx, wy)); }
 
 // ---- ground + slab + underside ------------------------------------------------
 // groundPrep(m): per raster column, from tile geometry (no pixels): the first / last surface row (top / edge), the
@@ -324,10 +325,11 @@ function* groundPrepGen(m) {
   const th = m.theme, minSX = -m.H * 16, W = (m.W + m.H) * 16, GB = (m.W + m.H) * 8;
   const H = GB + SLAB + th.underDepth + 60;
   const top = new Int32Array(W).fill(-1), edge = new Int32Array(W).fill(-1);
-  let hMax = 0;
+  let hMax = 0; const hCount = new Int32Array(40);
   for (let j = 0; j < m.H; j++, yield) for (let i = 0; i < m.W; i++) {
     if (!m.type[j][i]) continue;
     if (m.h[j][i] > hMax) hMax = m.h[j][i];
+    hCount[Math.min(39, m.h[j][i])]++;
     const cx = (i - j) * 16 - minSX, a = Math.max(0, cx - 17), b = Math.min(W - 1, cx + 17);
     for (let px = a; px <= b; px++) {
       const k = (px + minSX + 0.5) / 16, lo = Math.max(2 * i - k, 2 * j + k), hi = Math.min(2 * i + 2 - k, 2 * j + 2 + k);
@@ -338,7 +340,9 @@ function* groundPrepGen(m) {
       if (y1 > edge[px]) edge[px] = y1;
     }
   }
-  m.hMax = hMax;
+  // height fog reference: the map's dominant (most common) land level, so terraces BELOW the play level recede into haze while the
+  // play level itself (and the raised coast rim above it) stays clear
+  m.hMax = hMax; m.hFog = hCount.indexOf(Math.max(...hCount));
   let firstPx = W, lastPx = 0;
   for (let px = 0; px < W; px++) if (edge[px] >= 0) { firstPx = Math.min(firstPx, px); lastPx = Math.max(lastPx, px); }
   const cx = (firstPx + lastPx) / 2, hw = Math.max(1, (lastPx - firstPx) / 2);
@@ -700,7 +704,7 @@ function rasterColumn(m, i, j) {
     }
     const foot = Math.min(vd, hz) - d;   // AO: the bottom 3 px of the visible face
     if (foot < 3 && di > 1) c = mulRgb(c, 0.65 + 0.1 * Math.floor(foot));
-    const fog = Math.min(0.2, 0.05 * (m.hMax - lvh));
+    const fog = Math.min(0.2, 0.05 * (m.hFog - lvh));
     if (fog > 0) c = mixRgb(c, th.haze, fog);
     pb.set(cx, cy, c);
   }

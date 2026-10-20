@@ -769,23 +769,39 @@ function drawPortal(ctx, o, lights) {
 // no pixel work. Facing: art is drawn facing right; face < 0 mirrors the whole transform and the aim angle (pi - a).
 const WEAPON_POSE = { sword: 'swing', staff: 'cast', bow: 'aim' };   // how each weapon kind is held (default: swing)
 // ===== §30 Echo: the spirit clone (game.js G.echo) ===========================================================================
-// The hero's cached layered frame + held weapon (p.spr.hero, the heroSig cache), tinted to the echo's element with the mythic
-// aura's hue cycle (ECHO_STEPS quantised steps), drawn additively at ~0.5 alpha. Each tint is built ONCE per (source canvas,
-// colour) into a WeakMap (dropped with the sprite set when heroSig changes): per frame it is 2 drawImage calls, no allocation.
-const ECHO_TINT = new WeakMap(), ECHO_STEPS = 6, ECHO_CYCLE = ['#ff5ac8', '#a060ff', '#40e8ff'], ECHO_PAL = {};
+// The hero's cached layered frame + held weapon (p.spr.hero, the heroSig cache) baked ONCE per (source canvas, colour) into a
+// padded tint (WeakMap, dropped with the sprite set when heroSig changes): a saturated element-colour body that keeps the
+// shading, inside a 1 px bright rim. Per frame: a cached foot glow, 2 afterimage copies on the spirit's recent positions, the
+// body at ~0.55 alpha + a light additive pass, the weapon; a materialise shimmer (width grows, a light column) on spawn and a
+// rising dissolve (narrowing, motes) on fade. Cached blits only; colours are a hue-offset element set + the mythic cycle.
+const ECHO_TINT = new WeakMap(), ECHO_STEPS = 6, ECHO_CYCLE = ['#ff5ac8', '#a060ff', '#40e8ff'], ECHO_PAL = {}, ECHO_GLOW = {};
+const ECHO_ELCOL = { fire: '#ff5a1e', frost: '#2aa8ff', nature: '#28d860', lightning: '#ffd010', arcane: '#9a44ff', holy: '#ffbe2a' };
 function echoPalette(el) {
   return ECHO_PAL[el] || (ECHO_PAL[el] = Array.from({ length: ECHO_STEPS }, (_, s) => {
     const a = ECHO_CYCLE[Math.floor(s / 2) % 3], b = ECHO_CYCLE[(Math.floor(s / 2) + 1) % 3];
-    return mixHex(mixHex(EL_COL[el] || '#d6b0ff', mixHex(a, b, (s % 2) * 0.5), 0.3), '#000000', 0.15);
+    return mixHex(ECHO_ELCOL[el] || ECHO_ELCOL.arcane, mixHex(a, b, (s % 2) * 0.5), 0.22);
   }));
 }
-function echoTint(img, col) {
+function echoTint(img, col) {   // (w + 2) x (h + 2): the rim, then the tinted body at (1, 1)
   let m = ECHO_TINT.get(img); if (!m) ECHO_TINT.set(img, m = {});
   let c = m[col];
   if (!c) {
-    const t = makeCanvas(img.width, img.height); t.x.drawImage(img, 0, 0);
-    t.x.globalCompositeOperation = 'source-atop'; t.x.globalAlpha = 0.9; t.x.fillStyle = col; t.x.fillRect(0, 0, img.width, img.height);
+    const W = img.width + 2, Hh = img.height + 2, t = makeCanvas(W, Hh), b = makeCanvas(W, Hh);
+    for (const [ox, oy] of [[0, 1], [2, 1], [1, 0], [1, 2]]) t.x.drawImage(img, ox, oy);
+    t.x.globalCompositeOperation = 'source-in'; t.x.fillStyle = mixHex(col, '#ffffff', 0.65); t.x.fillRect(0, 0, W, Hh);
+    b.x.drawImage(img, 1, 1); b.x.globalCompositeOperation = 'source-atop'; b.x.globalAlpha = 0.82; b.x.fillStyle = col; b.x.fillRect(0, 0, W, Hh);
+    t.x.globalCompositeOperation = 'source-over'; t.x.drawImage(b.c, 0, 0);
     c = m[col] = t.c;
+  }
+  return c;
+}
+function echoGlow(col) {
+  let c = ECHO_GLOW[col];
+  if (!c) {
+    const t = makeCanvas(36, 14), gr = t.x.createRadialGradient(18, 7, 0, 18, 7, 18);
+    gr.addColorStop(0, rgba(col, 0.9)); gr.addColorStop(0.5, rgba(col, 0.35)); gr.addColorStop(1, rgba(col, 0));
+    t.x.setTransform(1, 0, 0, 14 / 36, 0, 7 - 7 * 14 / 36); t.x.fillStyle = gr; t.x.fillRect(0, 0, 36, 36);
+    c = ECHO_GLOW[col] = t.c;
   }
   return c;
 }
@@ -796,24 +812,50 @@ function drawEcho(ctx, E, lights) {
   const atk = !!(g.swing || g.castT > 0 || g.spin > 0);
   const fi = atk ? HERO.ATTACK : g.dashing ? 2 + (Math.floor(t * 18) & 3) : g.moving ? 2 + (Math.floor(g.walkT * 8) & 3) : (Math.sin(t * 2.5 + 1) > 0.3 ? 1 : 0);
   const col = echoPalette(E.el)[Math.floor(t * 4) % ECHO_STEPS], frame = H[view][fi], hand = H.hand[view][fi];
-  const dx = Math.round(vx - H.w / 2), dy = Math.round(vy - H.h + 1 - 2 * Math.sin(t * 3));   // a slow float
-  let ang = pose === 'swing' ? (g.face > 0 ? -1.15 : -Math.PI + 1.15) : pose === 'cast' ? (g.castT > 0 ? g.aim : (g.face > 0 ? -1.35 : -Math.PI + 1.35)) : (g.castT > 0 ? g.aim : (g.face > 0 ? 0.5 : Math.PI - 0.5));
-  if (pose === 'swing' && g.swing) { const k = 1 - Math.pow(1 - g.swing.t / g.swing.dur, 2); ang = g.aim + g.swing.dir * (-g.swing.arc / 2 + g.swing.arc * k); }
-  if (g.spin > 0) ang = t * 40;
-  const la = flip ? Math.PI - ang : ang, sa = ctx.globalAlpha, so = ctx.globalCompositeOperation;
-  ctx.save(); ctx.translate(flip ? dx + H.w : dx, dy); if (flip) ctx.scale(-1, 1);
   const body = echoTint(frame, col), wpn = H.weapon ? echoTint(H.weapon, col) : null;
-  const drawW = () => { if (!wpn) return; ctx.save(); ctx.translate(hand.x, hand.y); ctx.rotate(la + (H.weaponAim === 'right' ? 0 : Math.PI / 2)); ctx.drawImage(wpn, -H.weaponGrip.x, -H.weaponGrip.y); ctx.restore(); };
-  // two passes of the same cached tint: a translucent body (the colour reads on bright ground), then the additive glow
-  for (let k = 0; k < 2; k++) {
-    ctx.globalAlpha = (k ? 0.5 : 0.4) * E.alpha; ctx.globalCompositeOperation = k ? 'lighter' : 'source-over';
-    if (g.back) drawW();
-    ctx.drawImage(body, 0, 0);
-    if (!g.back) drawW();
+  const spawn = clamp(E.age / 0.3, 0, 1), fade = clamp((E.idleT - (ECHO.idle - ECHO.fadeOut)) / ECHO.fadeOut, 0, 1);   // 0..1 materialise / dissolve
+  const sa = ctx.globalAlpha, so = ctx.globalCompositeOperation, bob = 2 * Math.sin(t * 3);
+  // the afterimage trail: the spirit's last 8 drawn positions (world), copies at 3 and 6 frames back
+  const T = E.trail || (E.trail = { b: new Float32Array(24), i: 0, n: 0 });
+  T.b[T.i * 3] = g.x; T.b[T.i * 3 + 1] = g.y; T.b[T.i * 3 + 2] = g.z; T.i = (T.i + 1) & 7; T.n = Math.min(8, T.n + 1);
+  const blit = (img, x, y, a, wk, rise) => {   // the body canvas centred on feet x,y (view px), width scaled by wk, raised by rise
+    const bw = Math.max(1, Math.round(img.width * wk)), bx = Math.round(x - bw / 2), by = Math.round(y - img.height + 2 - rise);
+    ctx.globalAlpha = a;
+    if (flip) { ctx.save(); ctx.translate(bx + bw, by); ctx.scale(-1, 1); ctx.drawImage(img, 0, 0, bw, img.height); ctx.restore(); } else ctx.drawImage(img, bx, by, bw, img.height);
+  };
+  const A = E.alpha;
+  // foot glow (additive, cached)
+  ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.55 * A; const gl = echoGlow(col); ctx.drawImage(gl, Math.round(vx - 18), Math.round(vy - 7));
+  // trail copies (source-over, decreasing alpha) where the spirit has moved
+  ctx.globalCompositeOperation = 'source-over';
+  for (const [back, a] of [[6, 0.16], [3, 0.3]]) {
+    if (T.n <= back) continue;
+    const j = ((T.i - 1 - back) & 7) * 3, [tx, ty] = worldToView(T.b[j], T.b[j + 1], T.b[j + 2]);
+    if (Math.abs(tx - vx) + Math.abs(ty - vy) > 1.5) blit(body, tx, ty - bob, a * A, 1, 0);
   }
-  ctx.restore();
+  // the body: translucent saturated pass + a light additive pass; materialise = width grows, dissolve = rises and narrows
+  const wk = (0.25 + 0.75 * spawn) * (1 - 0.6 * fade), rise = fade * 7 + bob;
+  blit(body, vx, vy, 0.55 * A, wk, rise);
+  ctx.globalCompositeOperation = 'lighter'; blit(body, vx, vy, 0.22 * A, wk, rise);
+  // the weapon (same tint), only once whole
+  if (wpn && spawn >= 1 && fade < 0.5) {
+    let ang = pose === 'swing' ? (g.face > 0 ? -1.15 : -Math.PI + 1.15) : pose === 'cast' ? (g.castT > 0 ? g.aim : (g.face > 0 ? -1.35 : -Math.PI + 1.35)) : (g.castT > 0 ? g.aim : (g.face > 0 ? 0.5 : Math.PI - 0.5));
+    if (pose === 'swing' && g.swing) { const k = 1 - Math.pow(1 - g.swing.t / g.swing.dur, 2); ang = g.aim + g.swing.dir * (-g.swing.arc / 2 + g.swing.arc * k); }
+    if (g.spin > 0) ang = t * 40;
+    const la = flip ? Math.PI - ang : ang, dx = Math.round(vx - H.w / 2), dy = Math.round(vy - H.h + 1 - rise);
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 0.6 * A;
+    ctx.save(); ctx.translate(flip ? dx + H.w : dx, dy); if (flip) ctx.scale(-1, 1);
+    ctx.translate(hand.x, hand.y); ctx.rotate(la + (H.weaponAim === 'right' ? 0 : Math.PI / 2)); ctx.drawImage(wpn, -H.weaponGrip.x - 1, -H.weaponGrip.y - 1);
+    ctx.restore();
+  }
+  // materialise shimmer: a light column that thins out; dissolve / spawn motes through the budgeted particle pool
+  if (spawn < 1) {
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - spawn) * 0.8; ctx.fillStyle = mixHex(col, '#ffffff', 0.6);
+    const cw = Math.max(1, Math.round(6 * (1 - spawn))); ctx.fillRect(Math.round(vx - cw / 2), Math.round(vy - H.h - 4), cw, H.h + 4);
+  }
+  if ((spawn < 1 || fade > 0) && E.moteT !== t) { E.moteT = t; if (Math.random() < 0.5) addPart({ x: g.x + frand(-0.3, 0.3), y: g.y + frand(-0.3, 0.3), z: g.z + frand(0.3, 2.6), vx: 0, vy: 0, vz: frand(0.6, 1.6), life: frand(0.4, 0.8), t: 0, col, grav: 0, size: 1, glow: true }); }
   ctx.globalAlpha = sa; ctx.globalCompositeOperation = so;
-  lights.push({ sx: vx + camX - RW / 2, sy: vy - 14 + camY - RH / 2, r: 22, col, a: 0.25 * E.alpha });
+  lights.push({ sx: vx + camX - RW / 2, sy: vy - 14 + camY - RH / 2, r: 24, col, a: 0.3 * A });
 }
 function drawPlayer(ctx, p, lights) {
   const [vx, vy] = worldToView(p.x, p.y, p.z);
