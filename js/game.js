@@ -34,7 +34,7 @@ function sfx(k, pos, opts) { if (typeof AUDIO !== 'undefined') AUDIO.sfx(k, pos,
 let CAST = null;
 function withCast(c, fn) { const o = CAST; CAST = c; try { fn(); } finally { CAST = o; } }
 const delay = (t, fn) => G.delays.push({ t, fn, c: CAST });
-const shake = a => { G.shakeA = Math.max(G.shakeA, a * (typeof shakeMul === 'function' ? shakeMul() : 1)); };
+const shake = a => { if (CAST && CAST.src === 'echo') return; G.shakeA = Math.max(G.shakeA, a * (typeof shakeMul === 'function' ? shakeMul() : 1)); };
 // ===== hit feel: power-scaled hitlag (DESIGN §27, meeting 2026-10-20 R2) ===================================
 // Two tiers, both counted in fixed STEPs (1/60 s), never seconds, so slow-mo cannot stretch them:
 //  * target-only freeze e.hitFreeze (damageEnemy, every non-DoT hit): the struck enemy skips AI / move / knockback and
@@ -293,6 +293,11 @@ const AFFIX_EFFECTS = [
   { id: 'onDodge', src: 'affix', when: 'dodge', do(c, v, p) { healPlayer(p, p.maxHp * v); } },
   { id: 'onKill', src: 'affix', when: 'kill', do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + p.maxMp * v); } },
 ];
+// unique rules on the bus (src 'unique', live while hasRule(p, id)): §30 Echo records every basic / Q / E cast (when 'cast',
+// emitted by useSkill and basicAttack; ctx = { p, c, slot, id, a, tx, ty }). Its replays never emit 'cast' (no echo of an echo).
+const UNIQUE_EFFECTS = [
+  { id: 'echo', src: 'unique', when: 'cast', icd: 0, name: 'Echo', hint: 'A spirit repeats your attacks', do(c, v, p) { echoRecord(p, c); } },
+];
 const EFFECTS = [], EFFECT_BY_ID = {}, EFFECTS_WHEN = {};
 (function buildEffects() {
   const rows = [];
@@ -304,17 +309,18 @@ const EFFECTS = [], EFFECT_BY_ID = {}, EFFECTS_WHEN = {};
     EFFECTS.push(row); EFFECT_BY_ID[b.id] = row;
   }
   for (const r of AFFIX_EFFECTS) { const row = Object.assign({ icd: EFFECT_ICD, name: r.id, hint: '' }, r); EFFECTS.push(row); EFFECT_BY_ID['affix:' + r.id] = row; }
+  for (const r of UNIQUE_EFFECTS) { EFFECTS.push(r); EFFECT_BY_ID['unique:' + r.id] = r; }
   for (const r of EFFECTS) if (r.do && r.when) (EFFECTS_WHEN[r.when] || (EFFECTS_WHEN[r.when] = [])).push(r);
 })();
 const boonLive = id => !!(EFFECT_BY_ID[id] && !EFFECT_BY_ID[id].dataOnly);
 let FX_DEPTH = 0;
 function emitEffects(when, ctx) {
-  const p = G.player, list = EFFECTS_WHEN[when]; if (!p || !p.boons || !list || FX_DEPTH >= 2 || p.dead) return;
+  const p = G.player, list = EFFECTS_WHEN[when]; if (!p || !list || FX_DEPTH >= 2 || p.dead) return;
   const icd = p.fxIcd || (p.fxIcd = {});
   FX_DEPTH++;
   try {
     for (const r of list) {
-      const vals = r.src === 'trinket' ? p.boons[r.id] && p.boons[r.id].vals : p.sum && p.sum[r.id];
+      const vals = r.src === 'trinket' ? p.boons && p.boons[r.id] && p.boons[r.id].vals : r.src === 'unique' ? hasRule(p, r.id) || null : p.sum && p.sum[r.id];
       if (!vals) continue;
       if (r.icd && (icd[r.id] || -1e9) > G.t) continue;
       r.do(ctx, vals, p);
@@ -448,8 +454,9 @@ function useSkill(p, slot) {
   else p.cds[id] = p.cdm[id] = s.cd * ctx.cd * (1 - Math.min(capsT().cdr, p.cdr));
   if (p.swing && p.atkT > 0) p.swing = null;   // attacks cancel into skills
   const c = { skill: id, el: ctx.element, slot, ctx, hit: false };
-  const n0 = G.delays.length;
-  withCast(c, () => s.cast(p, p.aim, G.mouse.wx, G.mouse.wy));
+  const n0 = G.delays.length, a0 = p.aim, tx0 = G.mouse.wx, ty0 = G.mouse.wy, x0 = p.x, y0 = p.y;
+  withCast(c, () => s.cast(p, a0, tx0, ty0));
+  emitEffects('cast', { p, c, slot, id, a: a0, tx: tx0, ty: ty0, x: x0, y: y0 });   // §30: the cast hook (Echo records lmb / q / e)
   if (id === 'orbit') p.orbitCast = c;
   if (dodge) emitEffects('dodge', { p, c }); else if (ult) emitEffects('ultimate', { p, c });
   let dur = Math.max(0, p.castT, p.swing ? p.swing.dur - p.swing.t : 0);
@@ -468,11 +475,93 @@ function healPlayer(p, n) { p.hp = Math.min(p.maxHp, p.hp + n); text(p.x, p.y, p
 function swingWeapon(p, dur, arc, dir) { p.swing = { t: 0, dur, arc, dir: dir || (Math.random() < 0.5 ? 1 : -1) }; }
 function castAnim(p, t = 0.25) { p.castT = t; }
 
+// ===== §30 Echo: the spirit clone (unique rule 'echo', a weapon legendary) ===================================================
+// An after-image, not a pet: every basic / Q / E cast is recorded ({ skill, slot, aim, target offset, ctx }) by the 'cast' bus
+// row and replayed ECHO.delay s later through the SAME cast function, from where the hero stood ECHO.frames fixed steps ago
+// (a Float32Array ring, written only on steps that advance time), under a cast with src 'echo' (damageEnemy's guard).
+// The caster handed to the cast function is G.echo.g = Object.create(hero): reads fall through to the hero's stats, every
+// write (swing, castT, combo, dash, buffs, mp) lands on the spirit, so a replayed dash or blink never moves the hero.
+// Never R (the cast row only takes lmb / q / e). No MP, cooldown or charge cost, never targeted, no summon counters.
+// State lives on G.echo (never saved); it resets when the hero, the map or the rule changes.
+const ECHO = { k: 0.4, floor: 0.3, a0: 0.15, full: 0.4, delay: 0.4, queue: 4, idle: 2, frames: 24, fadeIn: 0.12, fadeOut: 0.5, els: ['fire', 'frost', 'nature', 'lightning', 'arcane', 'holy'] };
+const ECHO_RS = 6;   // ring stride: x, y, z, face, flags (1 back, 2 moving, 4 dashing), walkT
+function echoState(p) {
+  let E = G.echo;
+  if (!E || E.p !== p || E.map !== G.map) {
+    const g = Object.create(p);
+    Object.assign(g, { echo: true, swing: null, castT: 0, spin: 0, atkT: 0, combo: 0, dash: null, buffs: {}, cds: {}, invulnT: 0, slowT: 0, rootT: 0, hurtT: 0, moving: false, back: false, face: p.face, walkT: 0, mp: p.mp, st: p.st });
+    E = G.echo = { p, map: G.map, ring: new Float32Array(ECHO.frames * ECHO_RS), i: 0, n: 0, q: [], g, alive: false, age: 0, idleT: 0, alpha: 0, el: 'arcane', count: 0, log: [] };
+  }
+  return E;
+}
+// the echo's damage type (§30 "retyped to magic"): argmax of the element % bonuses (gear %Dmg + gem amplification), arcane by default
+function echoElement(p) {
+  let best = 'arcane', bv = 1e-9;
+  for (const el of ECHO.els) { const v = echoAmpOf(p, el); if (v > bv) { bv = v; best = el; } }
+  return best;
+}
+// focus scaling (the §30 balsim gate; see ECHO): the echo runs at `floor` strength until the hero's top element bonus A
+// passes a0, and at full strength from `full` up (linear between). Final damage x k alone cannot separate a focused build
+// (+25-30 %) from an unfocused one (<= +15 %): both land at ~ k x the non-R share of the rotation.
+const echoAmpOf = (p, el) => ((p.sum && p.sum[el + 'Dmg']) || 0) + elementAmp(p, el);
+const echoFocus = (p, el) => ECHO.floor + (1 - ECHO.floor) * clamp((echoAmpOf(p, el) - ECHO.a0) / (ECHO.full - ECHO.a0), 0, 1);
+function echoRecord(p, cx) {
+  const slot = cx.slot; if (slot !== 'lmb' && slot !== 'q' && slot !== 'e') return;   // never R (nor f / c / shift / 1-3)
+  if (!cx.c || cx.c.src === 'echo') return;
+  const E = echoState(p), ctx = cx.c.ctx || null;
+  E.q.push({ t: ECHO.delay, fresh: true, id: cx.id, slot, basic: slot === 'lmb', a: cx.a, dx: (cx.tx != null ? cx.tx : cx.x) - cx.x, dy: (cx.ty != null ? cx.ty : cx.y) - cx.y, combo: cx.combo || 0, ctx });
+  if (E.q.length > ECHO.queue) E.q.shift();   // at most 4 queued; the oldest is dropped
+}
+function echoReplay(p, E, r) {
+  const g = E.g, el = E.el = echoElement(p);
+  const ctx = Object.assign(newCtx(el), r.basic || !r.ctx ? null : r.ctx, { onHit: [], element: el, src: 'echo' });
+  ctx.dmg = (r.ctx && isFinite(r.ctx.dmg) ? r.ctx.dmg : 1) * ECHO.k * (E.focus = echoFocus(p, el));
+  const c = { skill: r.basic ? null : r.id, basic: r.basic, el, slot: r.slot, ctx, hit: true, src: 'echo', mpDone: true, caster: g };
+  g.aim = r.a; g.face = Math.cos(r.a) - Math.sin(r.a) >= 0 ? 1 : -1; g.swing = null; g.castT = 0; g.atkT = 0; g.dash = null; g.combo = r.combo;
+  const tx = g.x + r.dx, ty = g.y + r.dy;
+  try { withCast(c, () => { if (r.basic) basicSwing(g, item('weapon', p.gear.weapon)); else if (SKILLS[r.id]) SKILLS[r.id].cast(g, r.a, tx, ty); }); }
+  catch (err) { console.warn('echo replay', r.id, err); }
+  if (!E.alive) { E.alive = true; E.age = 0; }
+  E.idleT = 0; E.count++; E.log.push(r.basic ? 'lmb' : r.id); if (E.log.length > 12) E.log.shift();
+}
+function updateEcho(p, dt) {
+  if (!hasRule(p, 'echo') || p.dead) { if (G.echo) G.echo = null; return; }
+  const E = echoState(p), R = ECHO_RS, F = ECHO.frames, ring = E.ring, g = E.g;
+  // read the oldest entry (where the hero stood F time-advancing steps ago) BEFORE this step overwrites it
+  if (E.n) { const k = (E.n < F ? 0 : E.i) * R; g.x = ring[k]; g.y = ring[k + 1]; g.z = ring[k + 2]; g.face = ring[k + 3] || 1; g.back = !!(ring[k + 4] & 1); g.moving = !!(ring[k + 4] & 2); g.dashing = !!(ring[k + 4] & 4); g.walkT = ring[k + 5]; }
+  else { g.x = p.x; g.y = p.y; g.z = p.z; g.face = p.face; }
+  if (dt > 0) {   // one ring entry per time-advancing fixed step (a hitlag freeze does not shorten the 0.4 s lag)
+    const j = E.i * R; ring[j] = p.x; ring[j + 1] = p.y; ring[j + 2] = p.z; ring[j + 3] = p.face; ring[j + 4] = (p.back ? 1 : 0) | (p.moving ? 2 : 0) | (p.dash ? 4 : 0); ring[j + 5] = p.walkT || 0;
+    E.i = (E.i + 1) % F; if (E.n < F) E.n++;
+  }
+  // the spirit's own cast timers (a replayed swing / cast pose / spin)
+  if (g.swing) { g.swing.t += dt; if (g.swing.t > g.swing.dur) g.swing = null; }
+  g.castT -= dt; g.spin -= dt; g.atkT -= dt;
+  for (const b in g.buffs) { g.buffs[b].t -= dt; if (g.buffs[b].t <= 0) delete g.buffs[b]; }
+  if (g.dash) {   // a replayed dash rides the recorded path (the ring) and keeps its hit test and onEnd
+    const d = g.dash; d.t -= dt;
+    if (d.opt.hit) for (const e of G.enemies) {
+      if (e.dead || d.hit.has(e) || e.spawnT > 0) continue;
+      if (dist(g.x, g.y, e.x, e.y) < d.opt.hit.r + e.r) { d.hit.add(e); damageEnemy(e, d.opt.hit.dmg, { knock: d.opt.hit.knock, cast: d.cast }); }
+    }
+    if (d.t <= 0) { g.dash = null; if (d.opt.onEnd) withCast(d.cast, d.opt.onEnd); }
+  }
+  for (const r of E.q) if (r.fresh) r.fresh = false; else r.t -= dt;   // a cast recorded this step starts counting next step
+  while (E.q.length && E.q[0].t <= 1e-9) echoReplay(p, E, E.q.shift());
+  if (E.alive) {
+    E.age += dt; if (!E.q.length && !g.dash && !g.swing && !(g.castT > 0)) E.idleT += dt;
+    if (E.idleT >= ECHO.idle) { E.alive = false; E.alpha = 0; }
+    else E.alpha = Math.min(1, E.age / ECHO.fadeIn) * Math.min(1, (ECHO.idle - E.idleT) / ECHO.fadeOut);
+  }
+}
+
 function basicAttack(p) {
   if (p.atkT > 0 || p.dash || p.dead || p.rootT > 0 || castActive(p)) return;   // skills never cancel into attacks
   const w = item('weapon', p.gear.weapon);
   // basic attacks are casts too (skill: null, basic: true) so their hits carry a ctx; they build MP on hit
-  withCast({ skill: null, basic: true, el: w.element || 'slash', slot: 'lmb', ctx: newCtx(w.element || 'slash') }, () => basicSwing(p, w));
+  const c = { skill: null, basic: true, el: w.element || 'slash', slot: 'lmb', ctx: newCtx(w.element || 'slash') }, combo = p.combo, a0 = p.aim;
+  withCast(c, () => basicSwing(p, w));
+  emitEffects('cast', { p, c, slot: 'lmb', id: null, a: a0, tx: G.mouse.wx, ty: G.mouse.wy, x: p.x, y: p.y, combo });
 }
 function basicSwing(p, w) {
   const a = p.aim;
@@ -655,6 +744,7 @@ function updatePlayer(p, dt) {
   const th = tileH(m, p.x, p.y);
   p.z = lerp(p.z, th, Math.min(1, dt * 14));
   playerActions(p, dt);
+  updateEcho(p, dt);   // §30 spirit clone (no-op without the 'echo' rule)
 
   // orbit orbs
   if (p.buffs.orbit) {
@@ -786,8 +876,11 @@ function hurtPlayer(dmg, srcX, srcY, el = 'slash', o) {
 function damageEnemy(e, base, o = {}) {
   if (e.dead || e.spawnT > 0 || e.under) return false;
   const p = G.player, c = o.cast !== undefined ? o.cast : CAST;
+  // §30 spirit clone replays (cast ctx src 'echo'): retyped (c.el, never an explicit o.el), no MP, half ult charge,
+  // no on-hit EFFECTS, no skill ranks, half particles and stagger x k, hitlag target-only <= 2
+  const echo = !!(c && (c.src === 'echo' || (c.ctx && c.ctx.src === 'echo')));
   // damage type: explicit > the skill's element > the weapon's (sword slash, staff arcane, bow pierce); burn ticks are fire
-  const el = o.el || (o.dot ? 'fire' : c ? c.el : item('weapon', p.gear.weapon).element) || 'slash';
+  const el = (echo && !o.dot ? c.el : o.el) || (o.dot ? 'fire' : c ? c.el : item('weapon', p.gear.weapon).element) || 'slash';
   const sk = c && c.skill ? c.skill : null;   // a skill cast (basic attacks run with c.basic, burn ticks with o.dot)
   // one additive sum: gear damage % (+ skill damage % and the element's gem amplification for skill hits)
   // skill rank (+6 %/rank above 1) joins the same additive sum; modifier ctx.dmg multiplies (numbers only)
@@ -801,6 +894,7 @@ function damageEnemy(e, base, o = {}) {
   const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
   dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
   let st = o.stagger != null ? o.stagger : cx ? cx.stagger || 0 : sk && SKILLS[sk] ? SKILLS[sk].stagger || 0 : 0;
+  if (echo) st *= ECHO.k;
   // +stagger from gear: heavy-strike implicits (on hits that already stagger), holy hits (Halo Hoop), weapon skills (Warrior ring)
   if (!o.dot) st += (st > 0 ? S.stagger || 0 : 0) + (el === 'holy' ? S.holyStagger || 0 : 0) + (sk && c.slot && 'qer'.includes(c.slot) ? S.weaponStagger || 0 : 0);
   let broke = false;   // hitlag: a boss BREAK is the 8-step global freeze
@@ -812,7 +906,7 @@ function damageEnemy(e, base, o = {}) {
   }
   if (e.parts && e.parts.length || e.mods) dmg = partsHurt(e, dmg, o);   // shield-front, sleepers waking, elite shields
   let crit = Math.random() < Math.min(capsT().crit, p.crit + (p.critR && p.critR.until > G.t ? p.critR.v : 0));
-  if (p.buffs.veil && !o.dot) { crit = true; delete p.buffs.veil; }
+  if (p.buffs.veil && !o.dot && !echo) { crit = true; delete p.buffs.veil; }
   if (crit) dmg *= 1 + p.critDmg;
   dmg *= frand(0.9, 1.1);
   if (e.boss && typeof bossClampDmg === 'function') { dmg = bossClampDmg(e, dmg); if (!(dmg > 0)) return false; }   // §26.1 boss bars (bosses.js): clamp at the bar's end, invulnerable between bars
@@ -824,19 +918,17 @@ function damageEnemy(e, base, o = {}) {
   e.flash = typeof flashReduceOn === 'function' && flashReduceOn() ? 0.1 : 0.1 + 0.1 * r;   // flash length by r
   if (!o.dot) G.lastHit = e;
   // §15.3 resource rhythm: basic attacks (CAST null) build 8 MP per hit; all damage but the ultimate's own feeds the charge
-  // §30 spirit clone replays (cast ctx src 'echo'): no MP, half ult charge, no on-hit EFFECTS, half particles, hitlag target-only <= 2
-  const echo = !!(c && (c.src === 'echo' || (cx && cx.src === 'echo')));
   if ((!c || c.basic) && !o.dot && !echo) basicMpGain(p, c);
-  if (eff < 1 && !(c && c.slot === 'r') && p.ult < 100) p.ult = Math.min(100, p.ult + ultGain(p, base * (1 - eff), o.reaction) * (echo ? 0.5 : 1));
+  if (eff < 1 && !(c && c.slot === 'r') && p.ult < 100) p.ult = Math.min(100, p.ult + ultGain(p, base * (1 - eff) * (echo && cx ? cx.dmg : 1), o.reaction) * (echo ? 0.5 : 1));   // an echo hit charges at 50 % of its own (k-scaled) base
   // skill ranks: a cast counts once, on its first hit on a real enemy (training dummies don't rank skills)
-  if (sk && c.slot && !c.hit && !o.dot && !e.dummy) { c.hit = true; addSkillHit(p, sk); }
+  if (sk && c.slot && !c.hit && !o.dot && !e.dummy && !echo) { c.hit = true; addSkillHit(p, sk); }
   if (cx && cx.onHit.length) for (const fn of cx.onHit) fn(e, dmg, o);
   // numbers coloured by damage type; WEAK big + yellow, RESIST grey, IMMUNE spelled out
   if (eff >= 1) text(e.x, e.y, e.z + e.hgt, 'IMMUNE', '#9a92b0');
   else dmgText(e.x, e.y, e.z + e.hgt, Math.round(dmg) + (crit ? '!' : ''), res < 0 ? '#ffe36a' : res > 0 ? '#a7a3b8' : EL_COL[el] || '#ffffff', crit || res < 0,
     { e, v: dmg, r, kind: res < 0 ? 'weak' : crit ? 'crit' : res > 0 ? 'resist' : 'normal' });
   if (res && !e.dummy) discoverRes(e, el, res);
-  const fxx = o.fx != null ? o.fx : p.x, fyy = o.fy != null ? o.fy : p.y;
+  const src = echo && c.caster ? c.caster : p, fxx = o.fx != null ? o.fx : src.x, fyy = o.fy != null ? o.fy : src.y;   // knockback away from the spirit on its hits
   // tumble (R1): a big non-lethal hit (r >= 0.3) on a non-boss, non-swarm enemy: knockback x1.5, 0.3 s stun and a hop
   // (e.hopZ: a DRAW offset integrated in updateEnemies; e.z is never written)
   const swarmM = e.swarm && e.knockK != null, tumble = !o.dot && !e.boss && !e.dummy && !swarmM && r >= 0.3 && e.hp > 0;

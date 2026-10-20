@@ -59,7 +59,7 @@ ev(`function simMap(lo, hi) {
 }
 function simStep(rdt) {
   let dt = rdt;
-  if (G.hitstopT > 0) { G.hitstopT -= rdt; dt = 0; }
+  if (typeof hitlagStep === 'function' ? hitlagStep() : G.hitstopT > 0 && (G.hitstopT -= rdt, true)) dt = 0;   // the game's fixed-step hitlag (game.js)
   G.t += rdt;
   updatePlayer(G.player, dt); updateEnemies(dt); updateProjs(dt); updateZones(dt);
   for (const d of G.delays.slice()) { d.t -= dt; if (d.t <= 0) { d.done = true; withCast(d.c || null, d.fn); } }

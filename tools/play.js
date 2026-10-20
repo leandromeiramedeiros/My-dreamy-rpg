@@ -483,7 +483,7 @@ const PAD_STUB = () => {
   });
   await shotM2b('bramblehorn_stomp_telegraph');
   const bh2 = await ev(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); await w(700); const p = G.player, b = G.boss; const r = { hurt: p.hp < p.maxHp, fair: bossFairness('bramblehorn').length === 0 && bossFairness('mossjaw').length === 0 }; return r; });
-  check('boss: Bramblehorn stomp telegraph (circle r3, wind 0.9 >= 0.6, open 1.5 >= 1.2, warnSfx hook) and its hit lands', bh.boss && bh.name === 'Old Bramblehorn' && bh.type === 'circle' && bh.move === 'stomp' && bh.wind >= 0.6 && bh.open >= 1.2 && bh.sfx === 'warn_circle' && bh.r === 3 && bh.phases === 2 && bh2.hurt && bh2.fair, Object.assign(bh, bh2));
+  check('boss: Bramblehorn stomp telegraph (circle r3, wind 0.9 >= 0.6, open 1.5 >= 1.2, warnSfx hook) and its hit lands', bh.boss && bh.name === 'Old Bramblehorn' && bh.type === 'circle' && bh.move === 'stomp' && bh.wind >= 0.6 && bh.open >= 1.2 && bh.sfx === 'warn_circle' && bh.r === 3 && bh.phases === 3 && bh2.hurt && bh2.fair, Object.assign(bh, bh2));
   const bhp2 = await ev(async () => { const w = ms => new Promise(r => setTimeout(r, ms)), b = G.boss; G.player.invulnT = 99; b.bk.mv = null; b.hp = b.maxHp * 0.45; await w(400); const q = b.bk.phase; await w(2600); return { phase: q, shrink: !!G.shrink }; });
   check('boss: Bramblehorn phase 2 at 50 % (onEnter: root wall shrinks the arena)', bhp2.phase === 1 && bhp2.shrink, bhp2);
   await ev(() => { G.enemies.length = 0; G.boss = null; G.shrink = null; G.effects.length = 0; G.player.invulnT = 0; G.player.hp = G.player.maxHp; });
@@ -1407,6 +1407,57 @@ const PAD_STUB = () => {
       check('hit feel: phone corpse cap 8 (12 kills keep 8 records)', ph.cap === 8 && ph.n === 8 && ph.pooled === 8, ph);
       await pp.close();
     }
+  }
+  // ---------- boss phases (§26.1 multi-bar phases, cunning forms, fairness; bosses.js / enemydata.js) ----------
+  {
+    const bp = await br.newPage({ viewport: { width: 960, height: 540 } }); bp.on('pageerror', e => errs.push('pageerror(boss phases): ' + e.message));
+    await bp.goto(`${base}/index.html?scene=play`, { waitUntil: 'load' });
+    await bp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    const w = ms => bp.evaluate(ms => new Promise(r => setTimeout(r, ms)), ms);
+    const bars = await bp.evaluate(() => {
+      G.enemies.length = 0; G.effects.length = 0; const p = G.player; p.invulnT = 999;
+      const m = BOSSES.mossjaw, bh = BOSSES.bramblehorn, b = spawnEnemy('bramblehorn', p.x + 6, p.y, 0); b.spawnT = 0; b.cd = 99; G.boss = b;
+      const bb0 = bossBars(b), hp0 = b.hp;
+      const r1 = damageEnemy(b, 1e7, { el: 'fire' }); const bb1 = bossBars(b), f1 = b.hp / b.maxHp;
+      const r2 = damageEnemy(b, 1e7, { el: 'fire' }); const hp2 = b.hp;   // inside the transition: invulnerable
+      window.__bph = { b };
+      return { p3: bh.phases[2].hpBelow, mBars: m.bars && m.phases.length, bBars: bh.bars && bh.phases.length, total: b.maxHp === hp0, bb0, r1, bb1, f1, floor: bh.phases[1].hpBelow, r2, same: hp2 === b.hp && Math.abs(hp2 - b.maxHp * bh.phases[1].hpBelow) < 1,
+        warden: bossBars(spawnEnemy('boss', p.x - 8, p.y, 0)).n, lastBar: G.lastBar && G.lastBar.bar };
+    });
+    await w(1800);
+    const bars2 = await bp.evaluate(() => {
+      const b = window.__bph.b, bb = bossBars(b), r = damageEnemy(b, 10, { el: 'fire' }), hp = b.hp;
+      damageEnemy(b, 1e7, { el: 'fire' }); const bb3 = bossBars(b);   // bar 2 -> clamps at bar 3's top
+      return { transOver: bb.transition === 0, hits: r && hp < b.maxHp * BOSSES.bramblehorn.phases[1].hpBelow, i2: bb3.i, f2: +(b.hp / b.maxHp).toFixed(3), max2: Math.round(bb3.max), alive: !b.dead };
+    });
+    await w(1800);
+    const bars3 = await bp.evaluate(() => { const b = window.__bph.b; damageEnemy(b, 1e8, { el: 'fire' }); const out = { dead: b.dead }; G.enemies.length = 0; G.boss = null; G.effects.length = 0; return out; });
+    check('boss phases: Mossjaw 2 bars, Bramblehorn 3; e.maxHp = total; one 1e7 hit clamps at bar 1\'s end (no skipped phase) and starts a 1.2-1.8 s invulnerable transition; bar 2 clamps too; the last bar kills; bossBars { n, i, frac, max, transition }; the Warden stays 1 bar',
+      bars.mBars === 2 && bars.bBars === 3 && bars.total && bars.bb0.n === 3 && bars.bb0.i === 0 && bars.bb0.frac > 0.999 && Math.abs(bars.bb0.max - bars.bb1.max * (1 - bars.floor) / (bars.floor - bars.p3)) < 2 && bars.r1 === true && bars.bb1.i === 1 && Math.abs(bars.f1 - bars.floor) < 1e-3
+        && bars.bb1.transition >= 1.2 && bars.bb1.transition <= 1.8 && bars.r2 === false && bars.same && bars.lastBar === 1 && bars.warden === 1
+        && bars2.transOver && bars2.hits && bars2.i2 === 2 && Math.abs(bars2.f2 - bars.p3) < 2e-3 && bars2.alive && bars3.dead, { bars, bars2, bars3 });
+    // cunning forms: Mossjaw bar 2 lunge feint (fake wind-up, then the real one); Bramblehorn bar 2 trunkSwipe -> backhand (delayed second hit); bar 3 rootGrab lead-aim
+    const cun = await bp.evaluate(async () => {
+      const wt = ms => new Promise(r => setTimeout(r, ms)), p = G.player, out = {}; p.invulnT = 999; G.enemies.length = 0; G.effects.length = 0;
+      const m = spawnEnemy('mossjaw', p.x + 5, p.y, 0); m.spawnT = 0; m.cd = 99; m.hp = m.maxHp * 0.4; await wt(100);
+      m.bk.mv = null; m.bk.queue.length = 0; m.cd = 99; startMove(m, 'lunge'); out.feint = G.lastWarn.feint; out.tele0 = G.effects.some(e => e.type === 'tele' && e.src === m);
+      for (let k = 0; k < 30 && !G.lastWarn.afterFeint; k++) await wt(50); out.feintAt = +(G.t - G.lastWarn.t).toFixed(2); out.afterFeint = !!G.lastWarn.afterFeint && G.lastWarn.move === 'lunge'; out.realWind = G.lastWarn.wind; out.phaseM = m.bk.phase; G.enemies.length = 0; G.effects.length = 0;
+      const b = spawnEnemy('bramblehorn', p.x + 2, p.y, 0); b.spawnT = 0; b.hp = b.maxHp * 0.5; await wt(100);
+      b.bk.mv = null; b.bk.queue.length = 0; b.cd = 99; startMove(b, 'trunkSwipe'); out.then = G.lastWarn.then; out.p2 = b.bk.phase;
+      await wt(1700); out.second = G.lastWarn.move;
+      b.hp = b.maxHp * 0.2; await wt(100); b.bk.mv = null; b.bk.queue.length = 0; b.cd = 99; G.effects.length = 0;
+      b.bk.pv = { x: p.x, y: p.y, vx: 0, vy: 3 }; startMove(b, 'rootGrab'); const t = G.effects.find(e => e.type === 'tele' && e.src === b && e.kind === 'line');
+      out.lead = G.lastWarn.lead; out.p3 = b.bk.phase; out.leadOff = t ? Math.abs(angDiff(t.ang, Math.atan2(p.y - b.y, p.x - b.x))) : 0;
+      out.fair = bossFairness('mossjaw').length + bossFairness('bramblehorn').length;
+      BOSSES.__ft = { kind: 'mini', bars: true, transition: 2.5, r: 0.9, moveDefs: { c: { type: 'cone', arc: 100, r: 3, wind: 0.6, feint: 0.2, open: 1.2 }, l: { type: 'line', w: 0.6, wind: 0.8, lead: 0.9 } },
+        phases: [{ hpBelow: 1, moves: { c: 1 }, forms: {} }, { hpBelow: 0.5, moves: { c: 1, l: 1 }, forms: {} }] };
+      out.rules = bossFairness('__ft').map(f => f.rule.split(':')[0].split(' ')[0]).sort().join(); delete BOSSES.__ft;
+      G.enemies.length = 0; G.boss = null; G.effects.length = 0; return out;
+    });
+    check('boss phases: cunning forms — Mossjaw bar 2 lunge feints (0.4 s fake, re-aimed real wind-up >= 0.55 s); Bramblehorn bar 2 trunkSwipe -> backhand; bar 3 rootGrab lead-aims; bossFairness clean for both and flags fast cones (walk-out), short feints, long leads, bad transitions, missing onEnter',
+      cun.feint === 0.4 && cun.tele0 && cun.afterFeint && cun.realWind >= 0.55 && cun.phaseM === 1 && cun.then === 'backhand' && cun.p2 === 1 && cun.second === 'backhand' && cun.lead === 0.45 && cun.p3 === 2 && cun.leadOff > 0.05 && cun.fair === 0
+        && ['a', 'bar', 'feint', 'lead-aim', 'walk-out'].every(k => cun.rules.split(',').includes(k)), cun);
+    await bp.close();
   }
   check('no page errors', errs.length === 0, errs.slice(0, 5));
   await br.close(); srv.close();

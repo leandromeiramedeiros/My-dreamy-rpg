@@ -483,7 +483,7 @@ function drawBossBar(ctx) {
   const bb = typeof bossBars === 'function' ? bossBars(b) : null;
   if (bb) drawBossPhases(ctx, bb, x, y, 480, 14, sh); else UI.bar(ctx, x, y, 480, 14, b.hp / b.maxHp, { id: 'boss-hp', col: UC.danger, hi: UC.hpHi });
   const cap = STAGGER_CAP, f = clamp((b.stagger || 0) / cap, 0, 1), broke = G.t - (b.breakT || -9) < 0.8;
-  const sc = broke ? '#ffffff' : mixHex('#ffffff', '#ff8a2a', f);
+  const sc = broke ? (typeof flashReduceOn === 'function' && flashReduceOn() ? '#ff8a2a' : '#ffffff') : mixHex('#ffffff', '#ff8a2a', f);   // reduce flashing: no white BREAK frame
   UI.bar(ctx, x, 50, 480, 4, broke ? 1 : f, { id: 'boss-stg', col: sc, hi: sc, ghost: false, wipe: false });
   if (broke && Math.floor(G.t * 10) % 2) UI.text(ctx, 'BREAK', 480 + sh, 56, 'small', '#ff8a2a', 'center');
   let wx = x, rx = x + 480 - 20;

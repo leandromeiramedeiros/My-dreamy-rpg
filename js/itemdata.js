@@ -372,6 +372,7 @@ const FLAVOR = {
   tideedge: 'The sea remembers every blade it has ever swallowed.',
   cinderstride: 'The boots still glow where a king once walked.',
   morrowbane: 'It was forged to end a dream, and it does so gently.',
+  echo: 'Whatever you do, it does again: a breath behind you, and a little brighter.',
   // Trinket uniques
   pipslantern: 'A small lantern that still remembers its first light.',
   drownedcompass: 'It points toward the things the water was keeping.',

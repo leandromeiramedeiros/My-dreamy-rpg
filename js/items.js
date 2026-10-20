@@ -157,12 +157,17 @@ function fmtStat(k, v, sign = true) {
 }
 // Named legendaries (§4.5): first-kill boss drops that change a skill's RULE. Rules are hooks for M4
 // (check `hasUnique(p, id)` at the skill); M1 ships the table + drop path. `boss` = map:enemy that guarantees it.
+const ECHO_DROP_LVL = 17;   // §30 "drops late (Act III+)": Grotto, the Act III band, starts at L17 (§11)
 const UNIQUES = {
   rootcrown: { name: 'Root-Crown', base: 'mossmantle', boss: 'pinewood:bramblehorn', desc: 'Snare and Frost Nova root bosses for 1s.' },
   lanternplate: { name: 'Warden\'s Lantern Plate', base: 'sunplate', boss: 'ruins:boss', desc: 'Bulwark reflects projectiles.' },
   tideedge: { name: 'Tide-Edge', base: 'auroraedge', boss: 'grotto:mirelle', desc: 'Dash Strike leaves a frost trail that slows.' },
   cinderstride: { name: 'Cinderstride Boots', base: 'sungreaves', boss: 'caldera:kharzul', desc: 'Boots skill leaves a fire trail; lava immunity 2s.' },
   morrowbane: { name: 'Morrowbane', base: 'dawneternal', boss: 'spire:morrow', mythic: true, desc: 'R ultimate resets on boss phase change.' },
+  // §30 the 19th unique (client decision; the §19.5 cap is 19 from here on): rule 'echo' (game.js ECHO). Not a boss's named drop
+  // (boss ''): it is the Act III+ reward (lateUniqueDrop). anyWeapon: it rolls on the finder's own weapon variant at the drop's tier
+  // (base = the fallback when there is no hero), so it works with every weapon class.
+  echo: { name: 'Twice-Told', base: 'nebulasceptre', boss: '', anyWeapon: true, late: ECHO_DROP_LVL, desc: 'A spirit of you repeats your attacks a breath later (basic, Q, E; never R), retyped to your strongest element.' },
 };
 const hasUnique = (p, id) => EQUIP_SLOTS.some(s => p.equip[s] && p.equip[s].unique === id);
 const hasRule = (p, id) => EQUIP_SLOTS.some(s => p.equip[s] && p.equip[s].rule === id);
@@ -171,7 +176,12 @@ const uniqueFor = key => Object.keys(UNIQUES).find(k => UNIQUES[k].boss === key)
 // line is gone, resAll now rolls as a Legendary+ suffix). It keeps its own name (name parts stay null).
 function makeUnique(id, ilvl) {
   const U = UNIQUES[id];
-  return makeItem(U.base, U.mythic ? 'mythic' : 'legendary', Math.max(ilvl, BASES[U.base].reqLvl), { unique: id });
+  let base = U.base;
+  if (U.anyWeapon) {   // the finder's weapon variant, at the tier the item level allows (T3..T5)
+    const p = G.player, fam = p && p.gear && FAMILY_TIERS[p.gear.weapon] ? p.gear.weapon : null;
+    if (fam) { let t = 2; for (let k = 2; k < 5; k++) if (TIER_REQ[k] <= ilvl) t = k; base = FAMILY_TIERS[fam][t].split(':')[0]; }
+  }
+  return makeItem(base, U.mythic ? 'mythic' : 'legendary', Math.max(ilvl, BASES[base].reqLvl), { unique: id });
 }
 
 // ===== gems (DESIGN §4.3) ==========================================================
@@ -695,13 +705,23 @@ function onEnemyKilled(e) {
   if (c === 'boss') {
     const k = G.map.id + ':' + e.type, d = ENEMY[e.type] || {}, B = typeof BOSSES !== 'undefined' ? BOSSES[d.boss || e.type] : null;
     if (!G.prog.firsts[k]) {
-      uq = uniqueFor(k) || (B && B.unique && UNIQUES[B.unique] ? B.unique : null) || Object.keys(UNIQUES).find(u => UNIQUES[u].boss.split(':')[1] === e.type) || null;
+      uq = uniqueFor(k) || (B && B.unique && UNIQUES[B.unique] ? B.unique : null) || Object.keys(UNIQUES).find(u => (UNIQUES[u].boss || '').split(':')[1] === e.type) || null;
       if (B && B.rune) { (p.runes = p.runes || []).push('skill_rune'); if (typeof UI !== 'undefined') UI.toast({ text: 'Skill Rune', col: '#b48aff' }); }   // Mossjaw: guaranteed rune
     }
     G.prog.firsts[k] = true;
   }
-  dropLoot(e.x, e.y, rollLoot(c, e.lvl, uq, (ENEMY[e.type] || {}).loot));
+  const loot = rollLoot(c, e.lvl, uq, (ENEMY[e.type] || {}).loot), late = lateUniqueDrop(e, c);
+  if (late) loot.unshift({ kind: 'item', it: makeUnique(late, e.lvl) });
+  dropLoot(e.x, e.y, loot);
   if (c === 'boss') delay(1.5, saveGame);
+}
+// §30 the late uniques (UNIQUES[id].late = min enemy level): the first boss-class kill (mini-boss, guardian, act boss) at or
+// above that level drops it, once per save (G.prog.secrets['unique:<id>']). A loot card's `item: 'echo'` also places it.
+function lateUniqueDrop(e, c) {
+  if (c !== 'boss' || e.dummy || !G.prog) return null;
+  const S = G.prog.secrets || (G.prog.secrets = {});
+  for (const id in UNIQUES) { const U = UNIQUES[id]; if (U.late && (e.lvl || 0) >= U.late && !S['unique:' + id]) { S['unique:' + id] = true; return id; } }
+  return null;
 }
 function pickup(p, d) {
   if (d.kind === 'potion') {

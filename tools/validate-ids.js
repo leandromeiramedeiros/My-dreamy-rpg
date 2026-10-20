@@ -273,6 +273,16 @@ function main() {
   for (const { id, u } of uniqueList.filter((x) => x.u.base !== undefined)) {
     if (!baseIds.has(u.base)) fail(F.items, 'unique', id, u.base);
   }
+  // §30 / §19.5: the unique budget is 19 (the 19th is Echo, a weapon legendary); anyWeapon / late uniques need a weapon base
+  // and a level gate; a unique id is unique across UNIQUES and the trinket / world tables
+  const UNIQUE_CAP = 19;
+  if (uniqueList.length > UNIQUE_CAP) fail(F.items, 'unique budget', String(uniqueList.length), `at most ${UNIQUE_CAP} uniques (§30)`);
+  { const seen = new Set(); for (const { id, file } of uniqueList) { if (seen.has(id)) fail(file, 'unique', id, 'unique id across UNIQUES / TRINKET_UNIQUES / WORLD_UNIQUES'); seen.add(id); } }
+  if (UNIQUES && !UNIQUES.echo) fail(F.items, 'unique', 'echo', '§30 Echo (rule id "echo") in UNIQUES');
+  for (const [id, u] of Object.entries(UNIQUES || {})) {
+    if (u.anyWeapon && !(BASES && BASES[u.base] && BASES[u.base].slot === 'weapon')) fail(F.items, 'unique', id, 'anyWeapon needs a weapon base');
+    if (u.late != null && !(u.late >= 1 && u.late <= 40)) fail(F.items, 'unique', id, `late gate level "${u.late}"`);
+  }
 
   // ---- boons and uniques that name a slot
   const checkSlot = (file, kind, id, slot, allowed) => {
