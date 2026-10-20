@@ -901,7 +901,7 @@ class MapGen {
   toMap() {
     const portals = this.portals.map(p => Object.assign({}, p)), objects = this.objs.map(o => this._emitObj(o)).filter(Boolean);
     for (const w of this.warps) {
-      if (T.warpMode === 'door') objects.push(Object.assign({ t: 'warpdoor', id: w.id, x: r2(w.x), y: r2(w.y), to: { x: r2(w.to.x), y: r2(w.to.y) } }, w.key ? { key: w.key } : {}, w.label ? { label: w.label } : {}, w.open === false ? { open: false } : {}));
+      if (T.warpMode === 'door') objects.push(Object.assign({ t: 'warpdoor', id: w.id, x: r2(w.x), y: r2(w.y), to: { x: r2(w.to.x), y: r2(w.to.y) } }, w.key ? { key: w.key } : {}, w.label ? { label: w.label } : {}, w.open === false ? { open: false } : {}));   // open:false = sealed until a trigger openGate { id }
       else portals.push(Object.assign({ x: r2(w.x), y: r2(w.y), to: this.id, open: w.open !== false, marker: !!w.marker, id: w.id, arrive: { x: r2(w.to.x), y: r2(w.to.y) } }, w.label ? { label: w.label } : {}));
     }
     const m = {

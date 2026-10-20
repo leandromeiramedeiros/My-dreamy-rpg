@@ -155,3 +155,110 @@ function drawDeath(ctx) {
   ctx.globalAlpha = 1;
   UI.focus.draw(ctx);
 }
+
+// ===== full-map screen (DESIGN §25.2): M / pad D-pad down (the `map` action), or a tap on the minimap ====================
+// G.ui.map = { mode: 'view' | 'shrine', sel } while open; main.js pauses the game step and routes input here (fullMapInput).
+// The map is m.mini.base under the explored mask (fog of war: unexplored ground shows as a faint silhouette, UNDERGROUND
+// sections stay dark until discovered). The right column lists the sections as insets (name or ??? until discovered).
+// Opened while standing at a discovered shrine it is the SHRINE WARP picker: the other discovered shrines of this map are
+// listed; Confirm / click warps (game.js shrineWarp: refused while any enemy is awake). Back / M / D-pad down closes.
+function openFullMap() {
+  if (G.state !== 'play' || G.ui.open || G.ui.pause || G.ui.help || G.warp) return false;
+  const here = typeof shrineHere === 'function' ? shrineHere() : null;
+  G.ui.map = { mode: here && shrineFound(G.map, here.shrineId) ? 'shrine' : 'view', sel: 0, t0: G.t };
+  if (!G.map.mini && typeof miniBuild === 'function') miniBuild(G.map);
+  G.map.mini.fullKey = null; sfx('pickup');
+  return true;
+}
+function closeFullMap() { G.ui.map = null; }
+function fullMapPick(i) {
+  const L = shrineTargets(); if (!L[i]) return false;
+  const ok = shrineWarp(L[i].shrineId);
+  if (ok) closeFullMap();
+  return ok;
+}
+// main.js handleInput (play state): true = consumed this step
+function fullMapInput() {
+  const u = G.ui;
+  if (!u.map) { if (IN.pressed('map')) return openFullMap(); return false; }
+  if (IN.pressed('map') || IN.pressed('back') || IN.pressed('pause')) { closeFullMap(); return true; }
+  if (u.map.mode === 'shrine') {
+    const n = shrineTargets().length;
+    if (n) {
+      if (IN.pressed('menuUp') || IN.pressed('menuLeft')) u.map.sel = (u.map.sel + n - 1) % n;
+      if (IN.pressed('menuDown') || IN.pressed('menuRight')) u.map.sel = (u.map.sel + 1) % n;
+      if (IN.pressed('accept') || IN.pressed('interact')) fullMapPick(u.map.sel);
+    }
+  }
+  return true;
+}
+// the composite: explored base + faint silhouette, undiscovered underground blacked out (rebuilt when the fog grows)
+function fullMapCanvas(m) {
+  const mi = m.mini, found = (G.prog.sections && G.prog.sections[m.id]) || [];
+  const key = HUD.fogTile + '|' + found.length;
+  if (mi.full && mi.fullKey === key) return mi.full;
+  const c = mi.full || (mi.full = document.createElement('canvas')); c.width = mi.N; c.height = mi.N;
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+  const tmp = document.createElement('canvas'); tmp.width = tmp.height = mi.N; const t = tmp.getContext('2d');
+  t.drawImage(mi.base, 0, 0); t.globalCompositeOperation = 'destination-in'; t.drawImage(mi.rev, 0, 0);
+  x.globalAlpha = 0.14; x.drawImage(mi.base, 0, 0); x.globalAlpha = 1; x.drawImage(tmp, 0, 0);
+  x.fillStyle = '#05030c';
+  for (const sec of m.sections || []) if (sec.under && !found.includes(sec.id))
+    for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) if (m.secAt[j * m.W + i] === sec.i) x.fillRect(mi.ox + i - j - 2, mi.oy + i + j - 1, 4, 3);
+  mi.fullKey = key;
+  return c;
+}
+function drawFullMap(ctx) {
+  const m = G.map, u = G.ui.map, p = G.player; if (!m.mini) return;
+  const mi = m.mini, found = (G.prog.sections && G.prog.sections[m.id]) || [];
+  ctx.fillStyle = '#05030c'; ctx.globalAlpha = 0.78; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
+  UI.frame(ctx, 24, 24, 912, 492, 'primary');
+  UI.text(ctx, m.name.toUpperCase(), 48, 40, 'body', UC.gold);
+  UI.text(ctx, u.mode === 'shrine' ? 'SHRINE WARP' : 'MAP', 912, 40, 'small', UC.dim, 'right');
+  // the map, fitted into 600 x 420
+  const MW = 600, MH = 420, MX = 44, MY = 76, k = Math.min(MW / mi.N, MH / mi.N), dw = mi.N * k, dx = MX + (MW - dw) / 2, dy = MY + (MH - dw) / 2;
+  ctx.imageSmoothingEnabled = false; ctx.drawImage(fullMapCanvas(m), Math.round(dx), Math.round(dy), Math.round(dw), Math.round(dw));
+  const at = (x, y) => [dx + (mi.ox + x - y) * k, dy + (mi.oy + x + y) * k];
+  const targets = typeof shrineTargets === 'function' ? shrineTargets(m) : [];
+  for (const o of shrinesOf(m)) if (shrineFound(m, o.shrineId)) {
+    const [sx, sy] = at(o.x, o.y), sel = u.mode === 'shrine' && targets[u.sel] === o;
+    ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(sx) - 5, UI.snap(sy) - 5, 10, 10);
+    ctx.fillStyle = sel ? UC.gold : '#9ef0ff'; ctx.fillRect(UI.snap(sx) - 3, UI.snap(sy) - 3, 6, 6);
+    if (sel) UI.sprite(ctx, 'bullet', sx - 7, sy - 20, { scale: 2, tint: UC.gold, alpha: 0.6 + 0.4 * Math.sin(G.t * 6) });
+  }
+  for (const pt of m.portals) if (pt.open && mi.vis[Math.floor(pt.y) * m.W + Math.floor(pt.x)]) { const [qx, qy] = at(pt.x, pt.y); ctx.fillStyle = UC.gold; ctx.fillRect(UI.snap(qx) - 2, UI.snap(qy) - 2, 4, 4); }
+  const [hx, hy] = at(p.x, p.y);
+  ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(hx) - 5, UI.snap(hy) - 5, 10, 10); ctx.fillStyle = '#ffffff'; ctx.fillRect(UI.snap(hx) - 3, UI.snap(hy) - 3, 6, 6);
+  // right column: shrine list (picker) or section insets
+  const CX = 664, CW = 248;
+  if (u.mode === 'shrine') {
+    const awake = anyEnemyAwake();
+    UI.text(ctx, 'WARP TO', CX, 80, 'small', UC.gold);
+    if (!targets.length) UI.text(ctx, 'No other shrine attuned yet.', CX, 104, 'small', UC.dim);
+    targets.forEach((o, i) => {
+      const y = 100 + i * 34, sel = i === u.sel;
+      ctx.fillStyle = sel ? 'rgba(255,211,90,0.16)' : 'rgba(255,255,255,0.05)'; ctx.fillRect(CX, y, CW, 30);
+      UI.text(ctx, fitText(o.shrineName || (sectionAt(m, o.x, o.y) || {}).name || 'Shrine', CW - 16), CX + 8, y + 9, 'small', sel ? UC.gold : UC.text);
+      UI.hit(CX, y, CW, 30, () => { u.sel = i; fullMapPick(i); }, { id: 'map:shrine' + i });
+    });
+    if (awake) UI.text(ctx, 'Enemies are awake: warping is blocked.', CX, 100 + Math.max(1, targets.length) * 34 + 8, 'small', UC.hpHi);
+  } else {
+    UI.text(ctx, 'SECTIONS', CX, 80, 'small', UC.gold);
+    const secs = (m.sections || []).filter(sc => sc.id !== 'main' || m.sections.length === 1);
+    const cur = sectionAt(m, p.x, p.y), full = fullMapCanvas(m), IH = Math.min(70, Math.floor(400 / Math.max(1, secs.length)) - 6);
+    secs.forEach((sc, i) => {
+      const y = 98 + i * (IH + 6), known = found.includes(sc.id);
+      ctx.fillStyle = sc === cur ? 'rgba(158,240,255,0.14)' : 'rgba(255,255,255,0.05)'; ctx.fillRect(CX, y, CW, IH);
+      // inset: the section's rects mapped into mini space (bounding box of their corners)
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      for (const [rx, ry, rw, rh] of sc.rects || [[0, 0, m.W, m.H]]) for (const [cx, cy] of [[rx, ry], [rx + rw, ry], [rx, ry + rh], [rx + rw, ry + rh]]) { const a = mi.ox + cx - cy, b = mi.oy + cx + cy; x0 = Math.min(x0, a); x1 = Math.max(x1, a); y0 = Math.min(y0, b); y1 = Math.max(y1, b); }
+      const iw = IH - 8, sk = Math.min(iw / Math.max(1, x1 - x0), iw / Math.max(1, y1 - y0));
+      if (known || !sc.under) { ctx.imageSmoothingEnabled = false; ctx.drawImage(full, x0, y0, x1 - x0, y1 - y0, CX + 4, y + 4, (x1 - x0) * sk, (y1 - y0) * sk); }
+      else { ctx.fillStyle = '#05030c'; ctx.fillRect(CX + 4, y + 4, iw, iw); }
+      UI.text(ctx, known ? fitText(sc.name || sc.id, CW - IH - 12) : '???', CX + IH + 4, y + 8, 'small', known ? UC.text : UC.dim);
+      UI.text(ctx, sc.kind || '', CX + IH + 4, y + 26, 'small', UC.dim);
+    });
+  }
+  const hint = IN.device === 'pad' ? `${IN.glyph('back')} close` : 'M / Esc close';
+  UI.text(ctx, u.mode === 'shrine' && targets.length ? hint + '   arrows pick   Enter warp' : hint, 480, 496, 'small', UC.dim, 'center');
+}

@@ -182,12 +182,12 @@ function populate(S, g, T) {
     g.anchor('hollow_in', hst.x + 1.4, hst.y - 0.3); g.poi('door', hd.x, hd.y);
     tr.push(T.enter('hdoor_hint', 'The root door', kd.x, kd.y, 3.2, [T.message(X.locked)]));
   }
-  {   // the root-stair out: gated until Mossjaw falls; lands beside shrine 3
-    const gp = nearRoomEdge(g, 'h_stairp', 'h_stair', -1, 1.0);
-    g.addObj('gate', gp.x, gp.y, { id: 'hollow_exit_gate', ang: r2(gp.ang), len: S.w.branch, force: true, sp: 0.1 });
+  {   // the root-stair out: sealed until Mossjaw falls; lands beside shrine 3. Door mode: a warpdoor with open:false that a trigger openGate opens;
+      // portal mode: a barrier gate in front of the same-map portal
     const land = snap(shr.shrine3.x + 1.7, shr.shrine3.y + 0.9, 1);
-    g.warp('hollow_exit', { x: sa.x, y: sa.y, to: { x: land.x, y: land.y }, label: 'Root-stair up to the shrine', marker: true });
-    g.anchor('hollow_out', land.x, land.y);
+    if (!doorMode) { const gp = nearRoomEdge(g, 'h_stairp', 'h_stair', -1, 1.0); g.addObj('gate', gp.x, gp.y, { id: 'hollow_exit_gate', ang: r2(gp.ang), len: S.w.branch, force: true, sp: 0.1 }); }
+    g.warp('hollow_exit', { x: sa.x, y: sa.y, to: { x: land.x, y: land.y }, label: 'Root-stair up to the shrine', marker: true, open: !doorMode });
+    g.anchor('hollow_out', land.x, land.y); g.poi('door', sa.x, sa.y);
   }
   // gates / levers inside
   const gp = nearRoomEdge(g, 'h_main', 'h_den', -1, 1.2);
@@ -220,7 +220,7 @@ function populate(S, g, T) {
   ], ['h_r2_done']));
   tr.push(T.allDead('h_boss_done', E.den.title + ' falls', ['h_boss'], [
     { type: 'clear_enemies' }, T.banner('Mossjaw falls', 'The root-stair loosens'), T.dialogue(E.den.title, [X.bossLast]), T.heal(100),
-    T.loot('epic', 1, den.x, den.y - 1, { sockets: 2, chest: 'gold' }), T.openGate('gate_h_short'), T.openGate('hollow_exit_gate'), T.openGate('arena_gate'), T.step(S.quest, 3), T.objective(X.stairObjective), T.sound('portal'),
+    T.loot('epic', 1, den.x, den.y - 1, { sockets: 2, chest: 'gold' }), T.openGate('gate_h_short'), T.openGate(doorMode ? 'hollow_exit' : 'hollow_exit_gate'), T.openGate('arena_gate'), T.step(S.quest, 3), T.objective(X.stairObjective), T.sound('portal'),
   ]));
   tr.push(T.enter('h_crack_hum', 'The wall hums', wp.x - Math.cos(wa) * 2, wp.y - Math.sin(wa) * 2, 3.2, [T.dialogue('Pip', ['The wall hums, Aerin. Something is hidden behind it.'])]));
   tr.push(T.enter('h_crack_open', 'Cracked wall gives way', wp.x - Math.cos(wa) * 0.6, wp.y - Math.sin(wa) * 0.6, 1.5, [T.openGate('wall_h_crack'), T.shake(3), T.sound('portal')], ['h_crack_hum']));
