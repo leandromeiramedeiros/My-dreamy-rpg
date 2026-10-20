@@ -503,7 +503,7 @@ const HERO = (function () {
     }
     cx.putImageData(new ImageData(o, w, h), 0, 0);
   }
-  const piece = p => (p && p.family ? { family: p.family, tier: clamp(p.tier | 0, 0, 4), gems: p.gems || null, tempered: !!p.tempered } : null);
+  const piece = p => (p && p.family ? { family: p.family, tier: clamp(p.tier | 0, 0, 4), gems: p.gems || null, tempered: !!p.tempered, rarity: p.rarity || 'common' } : null);
   function renderFrame(L, back, fi, only) {
     const { c, x } = makeCanvas(FW, FH), g = mkG(x, back), P = FR[fi];
     x.translate(0, TOP);
@@ -655,6 +655,70 @@ const HERO = (function () {
     }
   }
 
+  // ---- cached rim layers (perf): the in-game path. Per (view, frame) the rim rings of every glowing piece are composited ONCE into
+  // one white canvas per rarity; per draw it is only tinted (cached per colour) and blitted with a pulsing alpha. Nothing here
+  // runs getImageData / mask building in the frame loop. Gear (head/chest/boots) glows on the OUTER silhouette only; belt, amulet and
+  // the ring glint (attack frame) glow on the torso, as DESIGN 19.4 asks; the weapon has its own ring (b.weaponRim).
+  const PAD = 4;
+  function ringCanvas(sp, rim, cut) {
+    const { c, x } = makeCanvas(sp.width + PAD * 2, sp.height + PAD * 2);
+    x.globalCompositeOperation = 'lighter';
+    for (let k = rim; k >= 1; k--) { x.globalAlpha = k === 1 ? 0.95 : 0.4; x.drawImage(maskFor(sp, k), 0, 0); }
+    if (cut) { x.globalCompositeOperation = 'destination-out'; x.globalAlpha = 1; x.drawImage(cut, PAD, PAD); }
+    return c;
+  }
+  const glows = r => { const f = rarityFx[r]; return !!(f && f.alpha); };
+  function rimsOf(b, view, fi) {
+    const key = view + fi, M = b._rims || (b._rims = {});
+    if (M[key]) return M[key];
+    const L = b.look, groups = {}, whole = (view === 'back' ? b.back : b.front)[fi];
+    const add = (slot, r, outer) => {
+      if (!glows(r)) return;
+      const ring = ringCanvas(slotSprite(b, slot, view, fi), rarityFx[r].rim, outer ? whole : null), g = groups[r] || (groups[r] = makeCanvas(ring.width, ring.height));
+      g.x.globalCompositeOperation = 'lighter'; g.x.drawImage(ring, 0, 0);
+    };
+    for (const s of ['head', 'chest', 'boots']) if (L[s]) add(s, L[s].rarity, true);
+    if (L.belt) add('belt', L.belt.rarity, false);
+    if (L.amulet) add('amulet', L.amulet.rarity, false);
+    if (fi === 6 && L.ring) { const r = L.ring.reduce((m, q) => (RANKS.indexOf(q.rarity) > RANKS.indexOf(m) ? q.rarity : m), 'common'); add('ring', r, false); }
+    return (M[key] = Object.keys(groups).map(r => ({ rarity: r, c: groups[r].c, tint: {} })));
+  }
+  function weaponRimOf(b) {
+    if (b._wrim !== undefined) return b._wrim;
+    const r = b.look.weapon && b.look.weapon.rarity;
+    return (b._wrim = b.weapon && glows(r) ? { rarity: r, c: ringCanvas(b.weapon, rarityFx[r].rim, null), tint: {} } : null);
+  }
+  // blit one rim layer (from rimsOf / weaponRimOf); x,y = top-left of the sprite it hugs, in ctx units. Colour tints are cached
+  // (mythic cycles through quantised hues).
+  function drawRim(ctx, layer, x, y, t) {
+    const f = layer && rarityFx[layer.rarity]; if (!f) return;
+    let col = f.color, ck = 'c';
+    if (f.cycle) { const q = Math.round((t * 0.45 % f.cycle.length) * 5); ck = q; col = rarityColor(layer.rarity, q / 5 / 0.45); }
+    let tc = layer.tint[ck];
+    if (!tc) { tc = layer.tint[ck] = makeCanvas(layer.c.width, layer.c.height); tc.x.drawImage(layer.c, 0, 0); tc.x.globalCompositeOperation = 'source-in'; tc.x.fillStyle = col; tc.x.fillRect(0, 0, tc.c.width, tc.c.height); }
+    const a = f.alpha * (f.pulse ? 0.74 + 0.26 * Math.sin(t * f.pulse) : 1), sv = ctx.globalAlpha, sc = ctx.globalCompositeOperation;
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = sv * Math.min(1, a); ctx.drawImage(tc.c, x - PAD, y - PAD);
+    ctx.globalAlpha = sv; ctx.globalCompositeOperation = sc;
+  }
+  // mythic aura (radial haze + orbiting stars) around a w x h box at x,y; a handful of fillRects, mythic only
+  function drawAura(ctx, x, y, w, h, rarity, t) {
+    const f = rarityFx[rarity]; if (!f || !f.aura) return;
+    const col = rarityColor(rarity, t), p = 0.74 + 0.26 * Math.sin(t * f.pulse), cx = x + w / 2, cy = y + h / 2, R = Math.max(w, h) * (0.85 + 0.08 * Math.sin(t * 2));
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const gr = ctx.createRadialGradient(cx, cy, 2, cx, cy, R);
+    gr.addColorStop(0, rgba(col, 0.28 * p)); gr.addColorStop(0.6, rgba(col, 0.1 * p)); gr.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = gr; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+    ctx.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < 8; i++) {
+      const an = i * 2.399 + t * (0.25 + (i % 3) * 0.08), rr = R * (0.55 + 0.4 * ((i * 37) % 10) / 10), tw = 0.5 + 0.5 * Math.sin(t * 5 + i * 1.7);
+      const sx = Math.round(cx + Math.cos(an) * rr * 0.9), sy = Math.round(cy + Math.sin(an) * rr * 1.05);
+      ctx.globalAlpha = 0.35 + 0.65 * tw; ctx.fillStyle = rarityColor(rarity, t + i * 0.7);
+      if (tw > 0.6) { ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3); }
+      ctx.fillStyle = '#fff'; ctx.fillRect(sx, sy, 1, 1);
+    }
+    ctx.restore();
+  }
+
   // ---- particles (pure; caller owns the array; box = emitter rectangle in ctx units) ----
   function emit(arr, rarity, bx, by, bw, bh, dt, cap) {
     const f = rarityFx[rarity]; if (!f || !f.rate) return;
@@ -701,7 +765,7 @@ const HERO = (function () {
   }
 
   return {
-    FW, FH, TOP, FRAMES: FR.length, ATTACK: 6, REST_ANGLE: REST, build, drawHero, slotSprite, rarityFx, rarityColor, drawGlow, emit, stepParticles, drawParticles, drawTrinketGlow, BELT_COLORS: BELTC, ELEMENT_COLORS: ELC,
+    FW, FH, TOP, FRAMES: FR.length, ATTACK: 6, REST_ANGLE: REST, build, drawHero, slotSprite, rarityFx, rarityColor, drawGlow, emit, stepParticles, drawParticles, drawTrinketGlow, rimsOf, weaponRimOf, drawRim, drawAura, BELT_COLORS: BELTC, ELEMENT_COLORS: ELC,
     FAMILIES: { head: Object.keys(HEAD), chest: Object.keys(CHEST), boots: Object.keys(BOOTS), weapon: Object.keys(WEAP) },
     GEMS: Object.keys(GEMC), RARITIES: ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'],
     gemColor: n => GEMC[n]

@@ -298,6 +298,10 @@ const UI = (() => {
   function toast(m) {
     const o = typeof m === 'string' ? { text: m } : Object.assign({}, m);
     o.t0 = now(); o.hold = o.hold || 3;
+    // loot toasts: icons.js art (24 px, frame baked in) for an item. Callers may pass { item }; items.js pickup() still passes the
+    // 16 px itemIcon, so a rarity toast finds the just-picked item in the bag by name instead (see uiToastItem)
+    if (!o.item && o.rarity && typeof uiToastItem === 'function') o.item = uiToastItem(o);
+    if (o.item && typeof uiItemIcon === 'function' && typeof ICONS !== 'undefined') { o.icon = uiItemIcon(o.item); o.framed = true; }
     toasts.push(o); while (toasts.length > 6) toasts.shift();
     return o;
   }
@@ -313,7 +317,8 @@ const UI = (() => {
       const a = age > q.hold ? 1 - (age - q.hold) / 0.3 : 1, x = X - w + slide;
       const ga = ctx.globalAlpha; ctx.globalAlpha = ga * clamp(a, 0, 1);
       frame(ctx, x, y - h, w, h, 'plain');
-      if (q.icon) { frame(ctx, x + 4, y - h + 2, 28, 28, q.rarity ? 'rarity' : 'slot', { rarity: q.rarity }); ctx.drawImage(q.icon, snap(x + 6), snap(y - h + 4), 24, 24); }
+      if (q.icon && q.framed) ctx.drawImage(q.icon, snap(x + 4), snap(y - h + 4), 24, 24);   // ICONS.item art carries its own rarity frame
+      else if (q.icon) { frame(ctx, x + 4, y - h + 2, 28, 28, q.rarity ? 'rarity' : 'slot', { rarity: q.rarity }); ctx.drawImage(q.icon, snap(x + 6), snap(y - h + 4), 24, 24); }
       text(ctx, q.text, x + 10 + iw, y - h + 8, 'body', col);
       ctx.globalAlpha = ga;
       y -= h + 4;
@@ -448,3 +453,35 @@ const UI = (() => {
     gold: C.gold, line: C.line, dim: C.dim, bg: C.bg,
   };
 })();
+
+// ===== item art routing (M3 UI lane): the ONE place the UI asks icons.js (ICONS) for item / gem / skill art ==========
+// ICONS.item(base, tier, rarity, gems, opts) takes the item's BASE id (never a variant or suit id) and bakes the rarity frame +
+// gem dots into a 24 px canvas. icons.js may not be loaded yet (editor.html, art lane mid-wire): every helper falls back to the
+// legacy 16 px icon routing in items.js, so callers can always drawImage the result.
+const ELEMENT_OF_DMG = { fireDmg: 'fire', frostDmg: 'frost', natureDmg: 'nature', lightningDmg: 'lightning', arcaneDmg: 'arcane', holyDmg: 'holy' };
+function uiItemIcon(it) {
+  if (!it) return null;
+  if (typeof ICONS !== 'undefined' && ICONS.item) {
+    try {
+      const b = typeof baseOf === 'function' ? baseOf(it.base) : null, el = it.implicit && ELEMENT_OF_DMG[it.implicit.id] || null;
+      return ICONS.item(it.base, it.tier != null ? it.tier : (b && b.tier) || 0, it.rarity, it.sockets || [], { element: el, implicit: el, tempered: !!it.tempered });
+    } catch (e) { /* fall back */ }
+  }
+  return itemIcon(it);
+}
+const uiArt = () => typeof ICONS !== 'undefined' && !!ICONS.item;   // true when the 24 px art (with its own frame) is available
+function uiGemIcon(gemId) {
+  const g = typeof gemParse === 'function' ? gemParse(gemId) : null; if (!g) return null;
+  if (typeof ICONS !== 'undefined' && ICONS.gem) { try { return ICONS.gem(g.type, g.grade - 1); } catch (e) { /* fall back */ } }   // ICONS grades are 0..2
+  return gemIcon(g.type, g.grade);
+}
+function uiSkillIcon(id) {
+  if (typeof ICONS !== 'undefined' && ICONS.skill) { try { return ICONS.skill(id); } catch (e) { /* fall back */ } }
+  return skillIcon(id);
+}
+// a rarity toast whose item is in the hero's bag (pickup adds it before toasting): newest match by display name
+function uiToastItem(o) {
+  const p = typeof G !== 'undefined' && G.player; if (!p || !p.bag || typeof itemName !== 'function') return null;
+  for (let i = p.bag.length - 1; i >= 0; i--) { const e = p.bag[i]; if (e && !e.gem && e.rarity === o.rarity && itemName(e) === o.text) return e; }
+  return null;
+}

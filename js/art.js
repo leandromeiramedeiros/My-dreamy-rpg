@@ -91,9 +91,53 @@ const HEAD_OVERLAYS = {
   },
 };
 
-// The sprite seam: takes the equipped gear INSTANCES ({ slot: { base, ... } }, items.js) or plain family ids.
-// M1 still draws by family; M3 swaps this body for HERO.build(equippedVisual(...)).
+// ===== The hero sprite seam (M3): the layered paper-doll in js/hero.js ===================================================
+// buildPlayerSprites(equip) takes the equipped gear INSTANCES ({ slot: { base, rarity, sockets, tempered, implicit } }, items.js, all
+// EQUIP_SLOTS keys) or plain family ids, and returns the p.spr shape the game and HUD read ({front, back, frontF, backF, white,
+// portrait, w, h, ox}) plus `hero` (the HERO.build result: 7 cached frames per view, a held weapon and rim layers) and `sig`.
+// Cost: ~10 ms once per equip change (renderFrame x 14 + the rim layers); drawPlayer (render.js) only blits cached canvases.
+// Item rules: the family is the item's VARIANT / suit (hero.js keys: sword staff bow, warden dreamweave stalker, ...), the tier is
+// the BASES tier index 0..4 (trinkets 0..2, hero.js wants 1..3), a belt's family is its BASE id (its colour), never the variant.
+function heroSig(equip) {          // cheap (per frame) change detector; the key of what is drawn, not of what is rolled
+  let s = '';
+  for (let i = 0; i < HERO_SLOTS.length; i++) {
+    const v = equip[HERO_SLOTS[i]];
+    s += v ? (typeof v === 'string' ? v : v.base + (v.rarity || '') + (v.tempered ? 'T' : '') + (v.sockets ? v.sockets.join('') : '') + (v.implicit ? v.implicit.id : '')) + '|' : '|';
+  }
+  return s;
+}
+const HERO_SLOTS = ['weapon', 'head', 'chest', 'boots', 'belt', 'amulet', 'ring1', 'ring2'];
+function heroLookOf(equip) {
+  const gemType = g => String(g).split('_')[0];
+  const part = (slot, trinket) => {
+    const v = equip[slot]; if (!v) return null;
+    if (typeof v === 'string') return { family: v, tier: trinket ? 1 : 1 };           // a bare family id (tools, old callers)
+    const b = baseOf(v.base); if (!b) return null;
+    const el = v.implicit && /Dmg$/.test(v.implicit.id) ? v.implicit.id.slice(0, -3) : null;
+    const o = { family: trinket ? v.base : b.variant, tier: trinket ? b.tier + 1 : b.tier, rarity: v.rarity, tempered: !!v.tempered };
+    if (trinket) o.element = el; else o.gems = (v.sockets || []).filter(Boolean).map(gemType);
+    return o;
+  };
+  const rings = ['ring1', 'ring2'].map(k => part(k, true)).filter(Boolean);
+  return { weapon: part('weapon'), head: part('head'), chest: part('chest'), boots: part('boots'), belt: part('belt', true), amulet: part('amulet', true), ring: rings.length ? rings : null };
+}
+const HERO_PORTRAIT_OX = 2;
 function buildPlayerSprites(equip) {
+  if (typeof HERO === 'undefined') return buildLegacyPlayerSprites(equip);
+  const hero = HERO.build(heroLookOf(equip)), W = hero.w, H = hero.h;
+  const pick4 = v => [hero[v][0], hero[v][3], hero[v][0], hero[v][5]];                   // idle, stride, idle, stride (old p.spr layout)
+  const out = { hero, sig: heroSig(equip), front: pick4('front'), back: pick4('back') };
+  out.frontF = out.front.map(flipH); out.backF = out.back.map(flipH);
+  out.white = silhouette(out.front[0], '#ffffff');
+  // portrait: hud.js crops 16x16 at (ox, ox); centre the face in it (head spans x 7..16, y 2..15 of the 24x34 frame)
+  const pc = makeCanvas(20, 20); pc.x.drawImage(hero.front[0], -2, 0);
+  out.portrait = pc.c; out.w = W; out.h = H; out.ox = HERO_PORTRAIT_OX;
+  HERO.prewarm(hero);
+  return out;
+}
+
+// the M1 sprite builder: kept only as the fallback for pages that load art.js without hero.js
+function buildLegacyPlayerSprites(equip) {
   const gear = {};
   for (const s of ['weapon', 'head', 'chest', 'boots']) { const v = equip[s]; gear[s] = typeof v === 'string' ? v : (v && familyOf(v.base)) || ITEMS[s][0].id; }
   const head = ITEMS.head.find(i => i.id === gear.head);

@@ -52,7 +52,8 @@ function grayOf(img) {
   return g;
 }
 function hudIcon(ctx, img, x, y, o = {}) {
-  const s = (o.size || 32);
+  let s = (o.size || 32);
+  if (!o.size && img.width === 24) { s = 24; x += 4; y += 4; }   // icons.js art is 24 px: draw it 1:1, centred in the 32 px box (no uneven 1.5x)
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(o.gray ? grayOf(img) : img, UI.snap(x), UI.snap(y), s, s);
 }
@@ -125,7 +126,7 @@ function drawDropNames(ctx) {
     cand.push({ d, i, dd, range, fade });
   }
   const groups = new Map();   // duplicates merge into one label: "Knight Helm ×2" (anchored on the nearest copy)
-  for (const c of cand.sort((a, b) => a.dd - b.dd)) { const g = groups.get(c.d.name + '|' + c.d.rar); if (g) g.n++; else { c.n = 1; groups.set(c.d.name + '|' + c.d.rar, c); } }
+  for (const c of cand.sort((a, b) => a.dd - b.dd)) { const gk = (c.d.it ? itemName(c.d.it) : c.d.name) + '|' + c.d.rar, g = groups.get(gk); if (g) g.n++; else { c.n = 1; groups.set(gk, c); } }
   cand.length = 0; for (const g of groups.values()) cand.push(g);
   cand.sort((a, b) => b.i - a.i || a.dd - b.dd);
   const lh = UI.lineH('small') + 6, placed = []; HUD.dropLabels = placed;
@@ -133,7 +134,8 @@ function drawDropNames(ctx) {
   for (const c of cand) {
     if (!all && shown >= DROP_LABELS) break;
     const d = c.d, [vx, vy] = worldToView(d.x, d.y, d.z), h = DROP_FX[c.i].h * Math.min(1, (d.t - 0.3) * 2.5);
-    const label = c.n > 1 ? `${d.name} ×${c.n}` : d.name, w = UI.measure(label, 'small') + 8, x = vx * 2;
+    const nm = d.it ? itemName(d.it) : d.name;   // the generated v2 name, always in rarity colour
+    const label = c.n > 1 ? `${nm} ×${c.n}` : nm, w = UI.measure(label, 'small') + 8, x = vx * 2;
     let y = (vy - Math.max(10, h) - 5) * 2;
     for (let guard = 0; guard < 24; guard++) {
       const hit = placed.find(r => Math.abs(r.x - x) < (r.w + w) / 2 + 4 && Math.abs(r.y - y) < lh);
@@ -226,7 +228,7 @@ function drawStatusRow(ctx, p, x0, y0, rightAlign) {
 
 // ===== skill bar ==================================================================================================================
 function slotIcon(p, st) {
-  if (st.slot === 'lmb') return itemIcon(p.equip.weapon);
+  if (st.slot === 'lmb') return uiItemIcon(p.equip.weapon);
   if (st.slot === 'pot') return miscIcon('potion');
   return st.id ? skillIcon(st.id) : null;
 }
@@ -556,7 +558,7 @@ function touchBtn(ctx, x, y, r, col, o = {}) {
   if (o.lift) { ctx.fillStyle = '#05030c'; ctx.globalAlpha *= 0.4; ctx.beginPath(); ctx.arc(x, y + 2, r, 0, 7); ctx.fill(); ctx.globalAlpha /= 0.4; y -= o.lift; }
   ctx.fillStyle = '#15102a'; ctx.globalAlpha *= 0.8; ctx.beginPath(); ctx.arc(x, y, r - 2, 0, 7); ctx.fill(); ctx.globalAlpha /= 0.8;
   ctx.lineWidth = 2; ctx.strokeStyle = '#0b0716'; ctx.beginPath(); ctx.arc(x, y, r - 1, 0, 7); ctx.stroke();
-  if (o.icon) hudIcon(ctx, o.icon, x - 16, y - 16, { gray: o.gray, size: o.iconSize || 32 });
+  { const is = o.iconSize || 32; if (o.icon) hudIcon(ctx, o.icon, x - is / 2, y - is / 2, { gray: o.gray, size: is }); }
   if (o.cdFrac > 0) {   // clockwise radial wipe at 70 % dark
     ctx.save(); ctx.beginPath(); ctx.arc(x, y, r - 4, 0, 7); ctx.clip();
     ctx.fillStyle = '#0b0716'; ctx.globalAlpha *= 0.7; ctx.beginPath(); ctx.moveTo(x, y);
@@ -627,7 +629,7 @@ function drawTouchControls(ctx) {
     }
     if (b.slot === 'interact') { touchBtn(ctx, b.x, b.y, b.r, UC.gold, { held, label: G.prompt ? G.prompt.text.split(' ')[0].toUpperCase() : 'USE' }); continue; }
     if (b.slot === 'atk') {
-      touchBtn(ctx, b.x, b.y, b.r, UC.line, { held, icon: itemIcon(p.equip.weapon), iconSize: 48 });
+      touchBtn(ctx, b.x, b.y, b.r, UC.line, { held, icon: uiItemIcon(p.equip.weapon), iconSize: 48 });
       const ch = ultCharge(p);
       UI.ring(ctx, b.x, b.y, b.r - 2, 1, UC.edge, 3);   // the rim doubles as the ultimate charge ring
       UI.ring(ctx, b.x, b.y, b.r - 2, ch, UC.gold, 3);
