@@ -7,11 +7,11 @@
 const ITEMS = {
   weapon: [
     { id: 'dawnblade', name: 'Dawnblade', kind: 'sword', element: 'slash', icon: 'sword', color: '#ffcf6a', desc: 'Sword forged from the first light of morning. Close-range, cleaving combos.',
-      basic: { name: 'Dawn Cut', dmg: 44, rate: 0.42 }, q: ['sunslash', 'heroic'], e: ['dashstrike', 'whirl'], r: ['judgement', 'dawnwave'] },
+      basic: { name: 'Dawn Cut', dmg: 50, rate: 0.42 }, q: ['sunslash', 'heroic'], e: ['dashstrike', 'whirl'], r: ['judgement', 'dawnwave'] },
     { id: 'starfall', name: 'Starfall Staff', kind: 'staff', element: 'arcane', icon: 'staff', color: '#7fe6ff', desc: 'A staff that remembers the night sky. Ranged spells and huge area damage.',
-      basic: { name: 'Arcane Bolt', dmg: 38, rate: 0.48 }, q: ['firebolt', 'frostshard'], e: ['barrage', 'gravity'], r: ['meteor', 'starstorm'] },
+      basic: { name: 'Arcane Bolt', dmg: 32, rate: 0.48 }, q: ['firebolt', 'frostshard'], e: ['barrage', 'gravity'], r: ['meteor', 'starstorm'] },
     { id: 'moonbow', name: 'Moonbow', kind: 'bow', element: 'pierce', icon: 'bow', color: '#c9d8ff', desc: 'Strung with moonlight. Fast shots, traps and evasive tumbles.',
-      basic: { name: 'Moon Arrow', dmg: 33, rate: 0.36 }, q: ['multishot', 'piercing'], e: ['tumble', 'snare'], r: ['arrowrain', 'moonbeam'] },
+      basic: { name: 'Moon Arrow', dmg: 30, rate: 0.36 }, q: ['multishot', 'piercing'], e: ['tumble', 'snare'], r: ['arrowrain', 'moonbeam'] },
   ],
   head: [
     { id: 'knighthelm', name: 'Knight Helm', icon: 'helm', color: '#cfd6ea', skill: 'warcry', stats: { def: 0.08 }, desc: '+8% defence.',
@@ -50,7 +50,7 @@ function targetIn(p, tx, ty, range) {
 const SKILLS = {
   // ---------------- Dawnblade ----------------
   sunslash: { name: 'Sunslash', element: 'slash', icon: 'arc', color: '#ffcf6a', cd: 3, mp: 18, aim:{shape:'cone',range:2.1,arc:2.5}, desc: 'Sweep a wide arc of dawnlight in front of you.',
-    cast(p, a) { swingWeapon(p, 0.26, 2.8); hitCone(p.x, p.y, a, 2.5, 2.1, 95, { knock: 0.35 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 2.6, r: 2.1, col: '#ffd77a', life: 0.28, w: 5 }); sfx('slash'); } },
+    cast(p, a) { swingWeapon(p, 0.26, 2.8); hitCone(p.x, p.y, a, 2.5, 2.1, 150, { knock: 0.35 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 2.6, r: 2.1, col: '#ffd77a', life: 0.28, w: 5 }); sfx('slash'); } },
   heroic: { name: 'Heroic Strike', element: 'slash', stagger: 3, icon: 'strike', color: '#ffb84a', cd: 5, mp: 25, aim:{shape:'cone',range:1.9,arc:1.7}, desc: 'Lunge forward and smash — stuns for 1s.',
     cast(p, a) {
       dashPlayer(p, Math.cos(a), Math.sin(a), 1.4, 0.12, { onEnd: () => {
@@ -59,7 +59,7 @@ const SKILLS = {
       } });
     } },
   dashstrike: { name: 'Dash Strike', element: 'slash', icon: 'dash', color: '#ffd77a', cd: 6, mp: 25, aim:{shape:'dash',range:3.8,len:3.8,w:1.0}, desc: 'Dash through enemies, cutting everything in your path.',
-    cast(p, a) { dashPlayer(p, Math.cos(a), Math.sin(a), 3.8, 0.22, { trail: '#ffe9a0', hit: { dmg: 85, r: 1.0, knock: 0.3 }, invuln: true }); sfx('dash'); } },
+    cast(p, a) { dashPlayer(p, Math.cos(a), Math.sin(a), 3.8, 0.22, { trail: '#ffe9a0', hit: { dmg: 130, r: 1.0, knock: 0.3 }, invuln: true }); sfx('dash'); } },
   whirl: { name: 'Whirling Blade', element: 'slash', icon: 'spin', color: '#ffe08a', cd: 7, mp: 30, aim:{shape:'self',range:0,r:2.0}, desc: 'Spin three times, hitting all around you.',
     cast(p) {
       for (let k = 0; k < 3; k++) delay(k * 0.22, () => {
@@ -77,11 +77,11 @@ const SKILLS = {
     cast(p, a) { swingWeapon(p, 0.25, 2.4); spawnProj({ x: p.x, y: p.y, z: p.z + 1.4, ang: a, speed: 9, r: 1.0, dmg: 220, pierce: 99, life: 1.2, kind: 'wave', col: '#ffe9a0', knock: 0.4 }); sfx('wave'); } },
   // ---------------- Starfall Staff ----------------
   firebolt: { name: 'Firebolt', element: 'fire', icon: 'fire', color: '#ff8a4a', cd: 2.5, mp: 18, aim:{shape:'proj',range:13.2,w:0.35}, desc: 'Hurl a bolt that explodes and burns.',
-    cast(p, a) { castAnim(p); spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a, speed: 11, r: 0.35, dmg: 120, life: 1.2, kind: 'fire', col: '#ff9a4a', burn: 3, explode: { r: 1.1, dmg: 45 } }); sfx('fire'); } },
+    cast(p, a) { castAnim(p); spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a, speed: 11, r: 0.35, dmg: 80, life: 1.2, kind: 'fire', col: '#ff9a4a', burn: 2, explode: { r: 1.1, dmg: 30 } }); sfx('fire'); } },
   frostshard: { name: 'Frost Shards', element: 'frost', icon: 'frost', color: '#9fe8ff', cd: 3, mp: 20, aim:{shape:'proj',range:9.6,w:0.3}, desc: 'Fire three piercing shards that slow.',
     cast(p, a) { castAnim(p); for (const o of [-0.22, 0, 0.22]) spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a + o, speed: 12, r: 0.3, dmg: 68, life: 0.8, kind: 'frost', col: '#bff4ff', pierce: 1, slow: 2 }); sfx('frost'); } },
   barrage: { name: 'Arcane Barrage', element: 'arcane', icon: 'orbs', color: '#c79bff', cd: 6, mp: 30, aim:{shape:'proj',range:14.4,w:0.3}, desc: 'Five homing missiles seek out foes.',
-    cast(p, a) { castAnim(p); for (let k = 0; k < 5; k++) delay(k * 0.07, () => spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a + (k - 2) * 0.35, speed: 8, r: 0.3, dmg: 48, life: 1.8, kind: 'arcane', col: '#d6b0ff', homing: 7 })); sfx('arcane'); } },
+    cast(p, a) { castAnim(p); for (let k = 0; k < 5; k++) delay(k * 0.07, () => spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a + (k - 2) * 0.35, speed: 8, r: 0.3, dmg: 34, life: 1.8, kind: 'arcane', col: '#d6b0ff', homing: 7 })); sfx('arcane'); } },
   gravity: { name: 'Gravity Well', element: 'arcane', icon: 'well', color: '#a07aff', cd: 9, mp: 35, aim:{shape:'circle',range:7,r:2.8}, desc: 'Open a well that drags enemies in and grinds them.',
     cast(p, a, tx, ty) { castAnim(p); [tx, ty] = targetIn(p, tx, ty, 7); zone({ x: tx, y: ty, r: 2.8, life: 2.6, tick: 0.25, dmg: 26, pull: 3.2, col: '#a07aff', kind: 'well' }); sfx('arcane'); } },
   meteor: { name: 'Meteor', element: 'fire', icon: 'meteor', color: '#ff7a4a', cd: 18, mp: 70, aim:{shape:'circle',range:7,r:2.7}, desc: 'ULTIMATE — call down a meteor. Massive area damage + burn.',
@@ -104,7 +104,7 @@ const SKILLS = {
     } },
   // ---------------- Moonbow ----------------
   multishot: { name: 'Multishot', element: 'pierce', icon: 'arrows', color: '#c9d8ff', cd: 3, mp: 18, aim:{shape:'cone',range:10.5,arc:0.56}, desc: 'Loose a fan of five arrows.',
-    cast(p, a) { castAnim(p); for (let k = -2; k <= 2; k++) spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a + k * 0.14, speed: 15, r: 0.25, dmg: 50, life: 0.7, kind: 'arrow', col: '#e7eeff' }); sfx('bow'); } },
+    cast(p, a) { castAnim(p); for (let k = -2; k <= 2; k++) spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a + k * 0.14, speed: 15, r: 0.25, dmg: 38, life: 0.7, kind: 'arrow', col: '#e7eeff' }); sfx('bow'); } },
   piercing: { name: 'Piercing Shot', element: 'pierce', icon: 'pierce', color: '#a6c8ff', cd: 4, mp: 22, aim:{shape:'proj',range:13.2,w:0.4}, desc: 'A charged arrow that pierces every enemy in a line.',
     cast(p, a) { castAnim(p); spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 22, r: 0.4, dmg: 175, life: 0.6, kind: 'arrow', col: '#cfe0ff', pierce: 99, big: true, knock: 0.4 }); sfx('bow'); shake(2); } },
   tumble: { name: 'Tumble', element: 'pierce', icon: 'roll', color: '#9ad8ff', cd: 5, mp: 12, aim:{shape:'dash',range:2.8,len:2.8}, desc: 'Roll away from your aim; your next shots deal +30% for 3s.',

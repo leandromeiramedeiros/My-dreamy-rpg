@@ -55,7 +55,8 @@
 // death and group:
 //   split      { n: 2, type: <row id> }                               children on death (give no XP: their row xp 0)
 //   zone-on-death { kind: 'poison', r: 1.6, life: 4, tick: 0.5, dmgK: 0.3, delay: 0.6 }
-//   swarm      { n: 4, spread: 0.9 }  one spawn = n members sharing hp / n each; XP, loot and kill count once
+//   swarm      { n: 4, spread: 0.9, knockK: 0.25 }  one spawn = n members sharing hp / n each; XP, loot and kill count
+//              once; knockback x knockK keeps the swarm bunched (no sword TTK cliff when a cleave scatters it)
 //
 // ===== ELITE_MODS (§21.3) ======================================================================================
 // spawn action { elite: true | '<mod id>' | ['a','b'] } -> e.elite, x ELITE_HP hp, x ELITE_DMG dmg, mods below.
@@ -363,14 +364,14 @@ const PARTS = {
       const x = e.x, y = e.y, dmg = e.def.dmg * e.dm * P.dmgK, col = (ZONE_KIND[P.kind] || ZONE_KIND.poison).col;
       tele({ kind: 'circle', x, y, r: P.r, life: P.delay, col, onDone: () => hostileZone(zoneOf(P.kind, { x, y, r: P.r, life: P.life, tick: P.tick, dmg })) });
     } },
-  swarm: { cat: 'death', def: { n: 4, spread: 0.9 },
+  swarm: { cat: 'death', def: { n: 4, spread: 0.9, knockK: 0.25 },
     spawn(e, P) {
       if (e.swarm) return;   // members do not re-swarm
-      const grp = { alive: P.n, n: P.n }; e.swarm = grp;
+      const grp = { alive: P.n, n: P.n }; e.swarm = grp; e.knockK = P.knockK;
       e.hp = e.maxHp = Math.max(1, Math.round(e.maxHp / P.n));
       for (let k = 1; k < P.n; k++) {
         const a = k / P.n * 6.28, m = spawnEnemyRaw(e.type, e.x + Math.cos(a) * P.spread, e.y + Math.sin(a) * P.spread, e.spawnT);
-        m.swarm = grp; m.hp = m.maxHp = e.maxHp; initParts(m, e.def);
+        m.swarm = grp; m.knockK = P.knockK; m.hp = m.maxHp = e.maxHp; initParts(m, e.def);
       }
     } },
 };

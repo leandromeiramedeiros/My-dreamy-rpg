@@ -139,14 +139,6 @@ const WORLD_DATA = {
      "open": false,
      "marker": false,
      "id": "pine"
-    },
-    {
-     "x": 34.5,
-     "y": 35.5,
-     "to": "hub_arena",
-     "open": false,
-     "marker": false,
-     "id": "arena"
     }
    ],
    "objects": [

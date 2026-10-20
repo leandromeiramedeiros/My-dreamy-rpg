@@ -23,7 +23,7 @@ const S = {
     caldera: { room: 'riftTerrace', dx: -1.6, dy: 2.4, to: 'caldera', open: false },
     spire: { room: 'riftTerrace', dx: 2.4, dy: 2.2, to: 'spire', open: false },
     pine: { room: 'pine', dx: 0, dy: 0.3, to: 'pinewood', open: false },   // opens when the garden ambush is cleared
-    arena: { room: 'arenaPad', dx: 0, dy: 0, to: 'hub_arena', open: false },
+    // (the hub-arena rift is added when a hub_arena map exists: validate-ids rejects a portal to an undefined map)
   },
 };
 registerPortals(S);

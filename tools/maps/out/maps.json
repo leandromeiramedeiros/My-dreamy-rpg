@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-20T01:14:01.811Z",
+ "generated": "2026-10-20T01:19:12.171Z",
  "maps": {
   "pinewood": {
    "name": "Misty Pinewood",
@@ -3278,14 +3278,6 @@
      "open": false,
      "marker": false,
      "id": "pine"
-    },
-    {
-     "x": 34.5,
-     "y": 35.5,
-     "to": "hub_arena",
-     "open": false,
-     "marker": false,
-     "id": "arena"
     }
    ],
    "objects": [

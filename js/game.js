@@ -619,7 +619,8 @@ function damageEnemy(e, base, o = {}) {
   const fxx = o.fx != null ? o.fx : p.x, fyy = o.fy != null ? o.fy : p.y;
   if (o.knock && !e.boss && !e.dummy) {
     const d = dist(fxx, fyy, e.x, e.y) || 1;
-    e.kx += (e.x - fxx) / d * o.knock * 9; e.ky += (e.y - fyy) / d * o.knock * 9;
+    const kk = e.knockK != null ? e.knockK : 1;   // swarm members barely budge (parts.js), so a cleave keeps them together
+    e.kx += (e.x - fxx) / d * o.knock * 9 * kk; e.ky += (e.y - fyy) / d * o.knock * 9 * kk;
   }
   if (o.stun) e.stunT = Math.max(e.stunT, o.stun * (cx ? cx.stun : 1) * (e.boss ? 0.25 : 1));
   if (o.freeze) e.frozen = o.stun;
