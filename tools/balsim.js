@@ -126,6 +126,7 @@ function simGear(fams, L, rarity, kind) {
     if (kind === 'optimal') { p.dust = 1e6; if (it.affixes.length) temperItem(it, it.affixes[0].id, p); imbueItem(it, p); it.sockets = it.sockets.map(() => (slot === 'weapon' ? 'ruby_' : 'amethyst_') + g); }
     p.equip[slot] = it;
   });
+  p.equip.ring1 = originRing(p.equip.weapon.base);   // the Origin ring (first Vale chest, ~2:00): every build, 'under' too
   simTrinkets(p, L, rarity, kind, fam === 'staff' ? 'staff' : fam === 'bow' ? 'bow' : 'sword');
   recalcStats(p, true); return p;
 }`);

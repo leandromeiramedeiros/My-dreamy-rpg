@@ -984,7 +984,7 @@ function applySave(p, s) {
 function starterKit(p) {
   p.equip = { weapon: makeItem('rustyblade', 'common', 1, { sockets: 0 }), head: makeItem('ironcap', 'common', 1, { sockets: 0 }),
     chest: makeItem('ironmail', 'common', 1, { sockets: 1 }), boots: makeItem('ironboots', 'common', 1, { sockets: 0 }),
-    ring1: null, ring2: null, amulet: null, belt: null };
+    ring1: null, ring2: null, amulet: null, belt: null };   // the Origin ring comes from the first Vale chest (starterLoot)
   p.bag = Array(BAG_SIZE).fill(null);
 }
 // ?scene=... showcases: a mid-level hero (L16) with rare/epic tier-2 gear of the chosen weapon variant (legacy ids accepted)

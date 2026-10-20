@@ -866,7 +866,9 @@ const PAD_STUB = () => {
       const w = ms => new Promise(r => setTimeout(r, ms)), out = {};
       G.enemies.length = 0; G.drops.length = 0;
       // a new game's hero: the Origin starter ring (Rusty Blade -> blades -> Knight), boon live
-      const np = makePlayer(); out.starter = { base: np.equip.ring1 && np.equip.ring1.base, boon: !!(np.boons && np.boons.originKnight), name: itemName(np.equip.ring1) };
+      const np = makePlayer(), kit = starterLoot(np), sr = kit.find(d => d.kind === 'item' && d.it.slot === 'ring');
+      out.starter = { bare: np.equip.ring1 === null, kit: kit.map(d => d.kind === 'gem' ? 'gem:' + d.gem : d.it.base + '/' + d.it.rarity + '/' + d.it.sockets.length).join(), base: sr && sr.it.base };
+      G.player = np; if (sr) equipItem(np, sr.it); out.starter.boon = !!(np.boons && np.boons.originKnight); out.starter.name = sr && itemName(sr.it);
       const p = G.player = makePlayer(); p.level = 14; p.x = G.map.start.x; p.y = G.map.start.y; recalcStats(p, true);
       // an L14 drop: every affix T2 (ilvl 14..15 -> T2), the name from the T2 prefix / suffix noun, req = max(base, ilvl - 2), flavour + hist
       const bad = [];
@@ -926,7 +928,7 @@ const PAD_STUB = () => {
       G.drops.length = 0;
       return out;
     });
-    check('v2: a new game wears the Origin starter ring (Knight, boon live)', v2.starter.base === 'origin_knight' && v2.starter.boon, v2.starter);
+    check('v2: a new game starts ring-less; the first Vale chest gives Common Iron Mail (1 socket) + the Origin ring (Knight, boon live) + a Chipped gem', v2.starter.bare && v2.starter.kit === 'ironmail/common/1,origin_knight/uncommon/0,gem:ruby_1' && v2.starter.base === 'origin_knight' && v2.starter.boon, v2.starter);
     check(`v2: L14 drops roll T2 affixes with the §19.1 counts and grammar names, req = max(base, ilvl - 2), flavour + hist (${v2.l14.sample})`, v2.l14.bad.length === 0, v2.l14.bad.slice(0, 5));
     check('v2: implicits apply in statsOf (Rusty Blade +4 % slash damage)', v2.implicit === 0.04, v2.implicit);
     check('CAPS: stacked cdr gear stays at 40 % (crit 60 %, haste 50 %, gear power 150 %)', v2.cdr.sum > 0.4 && v2.cdr.cdr === 0.4 && v2.crit.crit === 0.6 && v2.haste === 0.5 && v2.power.bonus === 1.5, { cdr: v2.cdr, crit: v2.crit, haste: v2.haste, power: v2.power });

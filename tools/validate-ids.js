@@ -255,6 +255,9 @@ function main() {
     for (const o of ORIGIN_RINGS || []) { const r = EFFECT_BY_ID[o.boon.id]; if (!r || r.src !== 'trinket') fail(F.game, 'EFFECTS', o.boon.id, "a src:'trinket' row"); }
   } else warn(F.game, 'EFFECTS', 'table', 'game.js did not load in the stub context (boon rows unchecked)');
   for (const k of ['cdr', 'crit', 'haste', 'gearPower', 'reactionBonus', 'markCap', 'potions', 'trinketResLine', 'trinketResAll', 'heroResMin', 'heroResMax']) if (typeof CAPS[k] !== 'number') fail(F.itemdata, 'CAPS', k, 'a number');
+  // enemy loot pools (enemydata.js `loot`): common_* names must be a LOOT_POOLS key (boss rows carry notes, not pools)
+  const LOOT_POOLS = get('LOOT_POOLS') || {};
+  for (const [id, e] of Object.entries(ENEMY || {})) if (typeof e.loot === 'string' && /^common_/.test(e.loot) && !LOOT_POOLS[e.loot]) fail('js/enemydata.js', 'loot pool', id, e.loot);
   // world chest markers (level lane contract): loot names a trinket slot, guaranteed names a rarity
   for (const [mid, m] of Object.entries((WORLD_DATA && WORLD_DATA.maps) || {})) {
     const walk = (o) => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { if (o.t === 'chest') {

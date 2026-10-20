@@ -756,6 +756,7 @@ function drawPlayer(ctx, p, lights) {
     if (!wspr) return;
     ctx.save(); ctx.translate(hand.x, hand.y); ctx.rotate(la + (H.weaponAim === 'right' ? 0 : Math.PI / 2));
     ctx.drawImage(wspr, -H.weaponGrip.x, -H.weaponGrip.y);
+    if (pose === 'aim' && p.castT > 0 && H.weaponAim === 'right') ctx.drawImage(ART.weapons.arrow, -1, -1);   // the nocked arrow while drawing
     const wr = HERO.weaponRimOf(H); if (wr) HERO.drawRim(ctx, wr, -H.weaponGrip.x, -H.weaponGrip.y, t);
     ctx.restore();
   };

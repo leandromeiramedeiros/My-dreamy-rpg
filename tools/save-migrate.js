@@ -221,14 +221,15 @@ const ROUND = () => {
       const before = p.equip.ring1 && p.equip.ring2 && p.equip.amulet && p.equip.belt;
       const s = migrate(JSON.parse(JSON.stringify(saveData()))), q = makePlayer(); applySave(q, s);
       const kept = ['ring1', 'ring2', 'amulet', 'belt'].map(k => q.equip[k] && q.equip[k].id === p.equip[k].id).every(Boolean);
-      // a NEW hero has the Origin starter ring (§17.1, §19.4) and it survives the save round trip with its boon live
-      const np = makePlayer(), sr = np.equip.ring1; G.player = np; const s2 = migrate(JSON.parse(JSON.stringify(saveData()))), q2 = makePlayer(); applySave(q2, s2); G.player = p;
-      const starter = { base: sr && sr.base, boon: sr && sr.boon && sr.boon.id, live: !!(np.boons && np.boons.originKnight), kept: !!(q2.equip.ring1 && q2.equip.ring1.base === 'origin_knight' && q2.boons.originKnight), flavor: !!itemFlavor(sr) };
+      // a NEW hero starts with no ring; the first Vale chest (starterLoot) holds the Origin ring (§17.1, §19.4, director ruling);
+      // worn, its boon is live and it survives the save round trip
+      const np = makePlayer(), bare = np.equip.ring1 === null, sr = starterLoot(np).map(d => d.it).find(it => it && it.slot === 'ring'); G.player = np; equipItem(np, sr); const s2 = migrate(JSON.parse(JSON.stringify(saveData()))), q2 = makePlayer(); applySave(q2, s2); G.player = p;
+      const starter = { bare, base: sr && sr.base, boon: sr && sr.boon && sr.boon.id, live: !!(np.boons && np.boons.originKnight), kept: !!(q2.equip.ring1 && q2.equip.ring1.base === 'origin_knight' && q2.boons.originKnight), flavor: !!itemFlavor(sr) };
       return { n: made.length, bad, equip: [r1, r2, r3, r4].join('|'), before: !!before, kept, names: made.map(itemName), starter };
     });
     check(`makeTestItem: ${t.n} v2 items (gear, uniques, ring / amulet / belt) are valid, no legacy mirrors (${t.names.slice(0, 4).join(' · ')} ...)`, t.n === 12 && t.bad.length === 0, t.bad);
     check('makeTestItem: trinkets equip into ring1 / ring2 / amulet / belt and survive a save round trip', t.equip === '|||' && t.before && t.kept, t);
-    check(`new game: the Origin starter ring (${t.starter.base}, boon ${t.starter.boon}) is worn, live, flavoured and survives a save round trip`, t.starter.base === 'origin_knight' && t.starter.boon === 'originKnight' && t.starter.live && t.starter.kept && t.starter.flavor, t.starter);
+    check(`new game: no ring at start; the first chest's Origin ring (${t.starter.base}, boon ${t.starter.boon}) equips, is live, flavoured and survives a save round trip`, t.starter.bare && t.starter.base === 'origin_knight' && t.starter.boon === 'originKnight' && t.starter.live && t.starter.kept && t.starter.flavor, t.starter);
     check('makeTestItem: no page errors', errs.length === 0, errs.slice(0, 3));
     await ctx.close();
   }
