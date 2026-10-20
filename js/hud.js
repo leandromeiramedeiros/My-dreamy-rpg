@@ -439,6 +439,34 @@ function drawTracker(ctx, x, y) {
 }
 
 // ===== boss bar ===========================================================================================================================
+// Segmented boss bar (DESIGN §26.1): bossBars(e) -> { n, i, frac, max, transition }. Spent segments are dark, the current one fills by
+// frac with the usual ghost lag, future ones are full but dimmer; pips sit under the bar; a bar break flashes white and cracks the
+// segment that just went; while `transition` (invulnerable between bars) the whole bar pulses a blue "shielded" look.
+function drawBossSegments(ctx, bb, x, y, w, h, sh) {
+  const n = bb.n, gap = 4, sw = UI.snap((w - gap * (n - 1)) / n), rects = [];
+  if (HUD.segI != null && bb.i > HUD.segI) HUD.segBreakT = G.t;
+  HUD.segI = bb.i;
+  const since = G.t - (HUD.segBreakT == null ? -9 : HUD.segBreakT), dim = mixHex(UC.danger, UC.edge, 0.45);
+  for (let k = 0; k < n; k++) {
+    const sx = x + k * (sw + gap); rects.push({ x: sx, w: sw });
+    if (k < bb.i) {   // spent
+      ctx.fillStyle = UC.edge; ctx.fillRect(sx - 2, y - 2, sw + 4, h + 4); ctx.fillStyle = UC.back; ctx.fillRect(sx, y, sw, h);
+      if (k === bb.i - 1 && since < 0.6) {   // the bar that just broke: white flash, then a crack
+        ctx.globalAlpha = Math.max(0, 1 - since / 0.25); ctx.fillStyle = '#ffffff'; ctx.fillRect(sx, y, sw, h);
+        ctx.globalAlpha = Math.max(0, 1 - since / 0.6); ctx.fillStyle = '#ffffff';
+        const cx = sx + (sw >> 1); for (let j = 0; j < h; j += 4) ctx.fillRect(cx + (j % 8 ? 2 : -2) - 2, y + j, 2, 4);
+        ctx.globalAlpha = 1;
+      }
+    } else if (k === bb.i) UI.bar(ctx, sx, y, sw, h, clamp(bb.frac, 0, 1), { id: 'boss-hp-seg', col: UC.danger, hi: UC.hpHi });
+    else { ctx.fillStyle = UC.edge; ctx.fillRect(sx - 2, y - 2, sw + 4, h + 4); ctx.fillStyle = dim; ctx.fillRect(sx, y, sw, h); ctx.fillStyle = mixHex(UC.hpHi, UC.edge, 0.55); ctx.fillRect(sx, y, sw, 2); }
+  }
+  if (bb.transition) {   // shielded: a blue pulse over the whole bar + a label
+    ctx.globalAlpha = 0.25 + 0.3 * (0.5 + 0.5 * Math.sin(G.t * 10)); ctx.fillStyle = UC.mpHi; ctx.fillRect(x, y, w, h); ctx.globalAlpha = 1;
+    UI.text(ctx, 'SHIELDED', 480 + sh, y + 1, 'small', '#ffffff', 'center');
+  }
+  for (let k = 0; k < n; k++) UI.text(ctx, k < bb.i ? '◇' : '◆', 480 + sh + (k - (n - 1) / 2) * 20, 58, 'small', k === bb.i ? UC.gold : k < bb.i ? UC.dim : UC.hpHi, 'center');
+  HUD.bossSegs = { n, rects, i: bb.i, t: G.t };
+}
 function drawBossBar(ctx) {
   const b = G.boss; if (!b || b.dead || b.spawnT > 0.8) return;
   if (b.phase2 && !HUD.bossPhase) HUD.bossShakeT = G.t;
@@ -447,7 +475,8 @@ function drawBossBar(ctx) {
   const x = 240 + sh, y = 34;
   const pips = '◆' + (b.phase2 ? '◆' : '◇');
   UI.text(ctx, ENEMY.boss.name.toUpperCase() + '  ' + pips, 480 + sh, 8, 'body', UC.gold, 'center');
-  UI.bar(ctx, x, y, 480, 14, b.hp / b.maxHp, { id: 'boss-hp', col: UC.danger, hi: UC.hpHi });
+  const bb = typeof bossBars === 'function' ? bossBars(b) : null;
+  if (bb && bb.n > 1) drawBossSegments(ctx, bb, x, y, 480, 14, sh); else UI.bar(ctx, x, y, 480, 14, b.hp / b.maxHp, { id: 'boss-hp', col: UC.danger, hi: UC.hpHi });
   const cap = STAGGER_CAP, f = clamp((b.stagger || 0) / cap, 0, 1), broke = G.t - (b.breakT || -9) < 0.8;
   const sc = broke ? '#ffffff' : mixHex('#ffffff', '#ff8a2a', f);
   UI.bar(ctx, x, 50, 480, 4, broke ? 1 : f, { id: 'boss-stg', col: sc, hi: sc, ghost: false, wipe: false });
