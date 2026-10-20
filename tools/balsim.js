@@ -16,7 +16,7 @@
 //   member. Elite TTK: rows of class elite and elite spawns (x ELITE_HP).
 //   Boss length = boss HP / (rotation DPS against that boss x uptime), uptime 0.7 mini-boss / 0.6 guardian (§20.3).
 //   Survival: three reference commons with live AI on a hero who only stands (Story x0.6, Normal, NG+ x1.6).
-//   Dust / potions: rollLoot over a main path (40 kills, 3 chests, 2 elites per band, the 3 Act I bosses), 80 % of
+//   Dust / potions: rollLoot over a main path (40 kills, 3 chests, 2 elites, 7 trigger loot cards per band, the 3 Act I bosses), 80 % of
 //   items salvaged; the mean of 40 paths. XP path: six §20.3 bands of equal time, 2 kills/min of the band's reference commons at the hero's
 //   level (clamped to the band), killXp() incl. the band ceiling, each band's boss (mini 0.5 / guardian 1 level).
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -282,6 +282,8 @@ const econ = ev(`(() => {
     for (let k = 0; k < 40; k++) drops.push(...rollLoot('normal', L));
     for (let k = 0; k < 3; k++) drops.push(...rollLoot('chest', L));
     for (let k = 0; k < 2; k++) drops.push(...rollLoot('elite', L));
+    // trigger loot cards (room clears, secrets): the generated Act I maps carry ~7 per band, Uncommon floor
+    for (let k = 0; k < 7; k++) { let r = rollRarity('elite', L); if (!rarityAtLeast(r, 'uncommon')) r = 'uncommon'; drops.push({ kind: 'item', it: rollItem(L, r) }); }
     for (const d of drops) { if (d.kind === 'item') { items++; if (Math.random() < 0.8) dust += salvageValue(d.it); } if (d.kind === 'potion') potions++; }
     rooms += 8;
   }

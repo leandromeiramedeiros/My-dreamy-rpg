@@ -184,9 +184,11 @@ function initParts(e, d) {
   e.dmgK = 1; e.spdK = 1;
   for (const id of e.parts) if (PARTS[id].spawn) PARTS[id].spawn(e, e.pp[id]);
 }
+// an enemy's outgoing damage multiplier: elite x ELITE_DMG, an aura-buffer ally nearby
+const enemyDmgK = e => (e.dmgK || 1) * (e.auraT > 0 ? e.auraDmg || 1 : 1);
 // one enemy strike on the hero: elite hooks (vampiric), returns whether it landed
 function enemyHit(e, dmg, el) {
-  const ok = hurtPlayer(dmg * (e.dmgK || 1), e.x, e.y, el || e.el);
+  const ok = hurtPlayer(dmg * enemyDmgK(e), e.x, e.y, el || e.el);
   if (ok) for (const m of e.mods || []) if (ELITE_MODS[m] && ELITE_MODS[m].onHit) ELITE_MODS[m].onHit(e, dmg);
   return ok;
 }
@@ -294,13 +296,13 @@ const PARTS = {
     begin: (e, P) => P.wind,
     fire(e, P, c) {
       const a0 = Math.atan2(c.p.y - e.y, c.p.x - e.x);
-      for (let k = 0; k < P.n; k++) spawnProj({ x: e.x, y: e.y, z: 2.2, ang: a0 + (k - (P.n - 1) / 2) * P.spread, speed: P.speed, r: P.r, dmg: e.def.dmg * e.dm * (e.dmgK || 1), el: e.el, life: P.life, kind: 'orb', col: P.col, friendly: false, src: e });
+      for (let k = 0; k < P.n; k++) spawnProj({ x: e.x, y: e.y, z: 2.2, ang: a0 + (k - (P.n - 1) / 2) * P.spread, speed: P.speed, r: P.r, dmg: e.def.dmg * e.dm * enemyDmgK(e), el: e.el, life: P.life, kind: 'orb', col: P.col, friendly: false, src: e });
       sfx('arcane'); return null;
     } },
   sniper: { cat: 'attack', def: { range: 9, wind: 1.1, cd: 3.4, speed: 15, w: 0.25, rec: 0.6 },
     ready: (e, P, c) => c.d < P.range && c.d > 2,
     begin(e, P, c) { e.aimA = c.ang; tele({ kind: 'line', x: e.x, y: e.y, ang: c.ang, len: P.range + 1, w: P.w, life: P.wind, col: '#ff3a5a' }); sfx('beam'); return P.wind; },
-    fire(e, P) { spawnProj({ x: e.x, y: e.y, z: 1.8, ang: e.aimA, speed: P.speed, r: 0.3, dmg: e.def.dmg * e.dm * (e.dmgK || 1), el: e.el, life: (P.range + 1) / P.speed, kind: 'orb', col: '#ff8aa0', friendly: false, src: e }); sfx('bow'); return null; } },
+    fire(e, P) { spawnProj({ x: e.x, y: e.y, z: 1.8, ang: e.aimA, speed: P.speed, r: 0.3, dmg: e.def.dmg * e.dm * enemyDmgK(e), el: e.el, life: (P.range + 1) / P.speed, kind: 'orb', col: '#ff8aa0', friendly: false, src: e }); sfx('bow'); return null; } },
   bomber: { cat: 'attack', def: { range: 6, wind: 0.9, cd: 2.8, r: 1.3, rec: 0.5 },
     ready: (e, P, c) => c.d < P.range,
     begin(e, P, c) {

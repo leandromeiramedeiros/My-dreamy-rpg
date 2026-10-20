@@ -169,8 +169,9 @@ function statsOf(it) {
 }
 const itemName = it => it.unique && UNIQUES[it.unique] ? UNIQUES[it.unique].name : BASES[it.base].name;
 // §20.6: main-path Dust ~900-1,200. sheets.js modelled ~2,820 (50 drops/zone) and suggested / 2.4; balsim's main path
-// (40 kills + 3 chests + 2 elites per band + bosses, 80 % salvaged) gives ~1,620 at / 1, so / 1.5 lands on ~1,080
-const SALVAGE_DIV = 1.5;
+// (40 kills + 3 chests + 2 elites + 7 trigger loot cards per band + bosses, 80 % salvaged) gives ~2,470 at / 1, so
+// / 2.3 lands on ~1,080
+const SALVAGE_DIV = 2.3;
 const salvageValue = it => Math.max(1, Math.round([1, 3, 8, 20, 50, 120][RARITY[it.rarity].i] * (1 + it.ilvl / 10) / SALVAGE_DIV));
 // renderer hook for M2: what the hero visibly wears in a slot
 function equippedVisual(slot, p = G.player) {

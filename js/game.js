@@ -512,7 +512,7 @@ function autoTarget(p, range, dir, cone) {
     let s = d / range;
     if (dir) { const da = Math.abs(angDiff(Math.atan2(dir[1], dir[0]), Math.atan2(e.y - p.y, e.x - p.x))); if (da > cone + Math.atan2(e.r, Math.max(d, 0.1))) continue; s += da / Math.max(cone, 0.01); }
     if (e === G.lastHit) s -= 0.35;
-    if (e.boss || enemyClass(e.type) === 'elite') s -= 0.2;
+    if (e.boss || enemyClassOf(e) === 'elite') s -= 0.2;
     if (s < bs) { bs = s; best = e; }
   }
   return best;
@@ -692,7 +692,11 @@ function updateProjs(dt) {
       }
     } else {
       const pl = G.player;
-      if (!pl.dead && dist(p.x, p.y, pl.x, pl.y) < p.r + pl.r) { hurtPlayer(p.dmg, p.x, p.y, p.el); p.dead = true; burst(p.x, p.y, p.z, 8, [p.col, '#ffffff'], 2); }
+      if (!pl.dead && dist(p.x, p.y, pl.x, pl.y) < p.r + pl.r) {
+        // an enemy's own shot (p.src) runs its elite on-hit mods (vampiric, frozen) like a melee hit
+        if (hurtPlayer(p.dmg, p.x, p.y, p.el) && p.src && p.src.mods) for (const m of p.src.mods) if (ELITE_MODS[m] && ELITE_MODS[m].onHit) ELITE_MODS[m].onHit(p.src, p.dmg);
+        p.dead = true; burst(p.x, p.y, p.z, 8, [p.col, '#ffffff'], 2);
+      }
     }
   }
   G.projs = G.projs.filter(p => !p.dead);

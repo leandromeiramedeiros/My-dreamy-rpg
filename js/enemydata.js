@@ -25,7 +25,7 @@ var ENEMY_DATA = {
   // ---- Vale (L1-3, mid L2) ----------------------------------------------------------------
   // hp is the WHOLE swarm (4 moths share it); XP once for the swarm
   dreammoth: {
-    name: 'Dream Moth', sprite: 'moth', look: 'wisp', hp: 720, speed: 3.0, dmg: 20, el: 'arcane', dmgType: 'arcane', stagger: 1,
+    name: 'Dream Moth', sprite: 'moth', look: 'wisp', hp: 860, speed: 3.0, dmg: 20, el: 'arcane', dmgType: 'arcane', stagger: 1,
     res: { slash: 0, pierce: 0, fire: 0, frost: 0, nature: 0, lightning: 0, arcane: 0.5, holy: -0.5 },
     tags: ['flying', 'swarm'],
     parts: ['orbit', 'shoot', 'swarm'],
@@ -90,7 +90,7 @@ var ENEMY_DATA = {
   },
   // Sleeper: appears in Root Hollow only (§21.1, §21.4: sleepers appear once per map, after a shrine).
   mountaintroll: {
-    name: 'Mountain Troll', sprite: 'troll', hp: 400, speed: 1.4, dmg: 88, el: 'none', dmgType: 'slash', stagger: 4,
+    name: 'Mountain Troll', sprite: 'troll', hp: 370, speed: 1.4, dmg: 88, el: 'none', dmgType: 'slash', stagger: 4,
     res: { slash: 0.5, pierce: 0.5, frost: -0.5 },
     tags: ['brute', 'sleeper'],
     parts: ['sleep', 'brute'],
