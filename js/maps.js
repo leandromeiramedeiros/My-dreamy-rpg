@@ -165,7 +165,7 @@ function tileDeco(m, tx, ty) {
 function groundBase(m, t, wx, wy, px, py, dc, rx, ry, line, lipped) {
   const th = m.theme;
   if (t === 'g' || t === 'f' || t === 'd') {
-    let v = nAt(nField(m, 'gr', NF_GRASS), wx, wy) + (dc.vr - 1.5) * 0.025;
+    let v = nAt(nField(m, 'gr', NF_GRASS), wx, wy);
     if (t === 'd') v -= 0.15; else if (t === 'f') v += 0.03;
     if (lipped) return rampH(th.grass, v + 0.22);
     if (line) v -= 0.17;
@@ -178,7 +178,7 @@ function groundBase(m, t, wx, wy, px, py, dc, rx, ry, line, lipped) {
     return rampQ(th.grass, v, px, py);
   }
   if (t === 'p' && th.dirtPath) {   // packed forest dirt; pebbles and needles are the tile's decorative pixels
-    let v = 0.42 + nAt(nField(m, 'md', NF_MED), wx, wy) * 0.5 + (dc.vr - 1.5) * 0.03 - (line ? 0.17 : 0) + (lipped ? 0.22 : 0);
+    let v = 0.42 + nAt(nField(m, 'md', NF_MED), wx, wy) * 0.5 - (line ? 0.17 : 0) + (lipped ? 0.22 : 0);
     for (let q = 0; q < dc.n; q++) if (ry === dc.y[q] && (rx === dc.x[q] || rx === dc.x[q] + 1)) return dc.c[q] < 0.5 ? rampH(th.stone, 0.62 + (rx - dc.x[q]) * 0.12) : rampH(th.grass, 0.4);
     return lipped ? rampH(th.path, v) : rampQ(th.path, v, px, py);
   }
