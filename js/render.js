@@ -250,6 +250,7 @@ function drawScene() {
   }
   // cloud sea far below
   const groundBot = (m.W + m.H) * 8 + 12;
+  if (typeof drawCloudSea === 'function') drawCloudSea(ctx, m, camX, camY, G.t);   // §29: 2-layer cloud sea + island shadow (maps.js, cached)
   bg.sea.forEach((c, i) => {
     for (let r = 0; r < 2; r++) {
       const x = ((i * 230 + r * 330 - camX * 0.6 + G.t * 6) % 900) - 220, y = groundBot + th.underDepth * 0.55 + i * 18 + r * 30 - camY * 0.85 + RH / 2;

@@ -452,7 +452,15 @@ function makeElite(e, spec) {
 
 // ---------------------------------------------------------------- runtime (called by game.js updateEnemies)
 // the M2a state machine, generalised: chase (movement part) -> wind (telegraph) -> action state -> rec (open) -> chase
+// a boss's summoned add (bosses.js summon: e.summoner) flees and despawns once its boss is dead: no loot, no XP
+function partsFlee(e, edt) {
+  const p = G.player; if (e.fleeT == null) { e.fleeT = 1.2; e.state = 'flee'; text(e.x, e.y, e.z + e.hgt, 'flees', '#a7a3b8'); }
+  e.fleeT -= edt; const d = dist(e.x, e.y, p.x, p.y) || 1, sp = (e.def.speed || 2) * 1.3;
+  moveEntity(e, (e.x - p.x) / d * sp * edt, (e.y - p.y) / d * sp * edt, tileH(G.map, e.x, e.y));
+  if (e.fleeT <= 0) { e.dead = true; e.despawned = true; burst(e.x, e.y, 0.5, 10, ['#6a5a8a', '#2a1c38'], 2, { glow: false }); }
+}
 function updatePartsEnemy(e, edt, c) {
+  if (e.summoner && e.summoner.boss && e.summoner.dead) { partsFlee(e, edt); return; }
   for (const id of e.parts) { const P = PARTS[id]; if (P.tick) P.tick(e, e.pp[id], c, edt); }
   for (const m of e.mods || []) if (ELITE_MODS[m] && ELITE_MODS[m].tick) ELITE_MODS[m].tick(e, edt);
   if (e.auraT > 0) e.auraT -= edt;

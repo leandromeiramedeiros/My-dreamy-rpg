@@ -28,6 +28,7 @@
 //   feint: s   a fake wind-up: the telegraph shows, is cut at s seconds, the boss re-aims and the real wind-up starts
 //   then: name a delayed second hit: the move's own (short) open, then the named follow-up with its own wind-up
 //   lead: s    aim at the hero's predicted position s seconds ahead (tracked velocity), capped at FAIR_LEAD
+//   phases[].frenzy: { after (s in the phase), cdMul, speedMul, text }: a soft DPS check; gaps only, wind-ups never change
 // ===== MOVE PARAMS (common) ==================================================================================
 //   wind (telegraph s) · open (s after the hit before the boss acts again) · dmg (raw, x the boss's level multiplier)
 //   OR hit: 'big' | 'chip' (35-45 % / 8-12 % of the reference hero's eHP at the boss level, REF_EHP; dmgPct overrides)
@@ -86,7 +87,8 @@ const BUILTIN_BOSSES = {
 const BOSS_FILL = {
   mossjaw: { look: 'hound', scale: 1.9, r: 0.8, hgt: 3.6, speed: 2.2, keep: 1.6, blood: '#7ac060', breakOpen: 1.5, tags: ['beast'], unique: null, rune: true,
     moves: { lunge: { hit: 'big', dmgPct: 0.4, el: 'slash', w: 0.7, dash: true, cd: 0.6, scale: 'wind', why: 'QA M1: 0.6 -> 0.4 x REF_EHP; with the 45 % max-HP cap (bossHitCap) two lunges no longer end a weak-gear hero' }, rootSpit: { hit: 'chip', el: 'nature', spread: [0.8, 2.6], cd: 0.6 },
-      burrow: { hit: 'big', el: 'nature', cd: 0.6, scale: 'wind' }, howl: { cd: 0.8, max: 3 } } },
+      burrow: { hit: 'big', el: 'nature', cd: 0.6, scale: 'wind' },
+      howl: { cd: 0.8, max: 2, rest: 12, addHp: 0.8, addDmg: 0.7, why: 'QA run-big M3: 12/12 deaths to a 3-hound pile -> 2 alive max, 12 s rest, hounds -20 % HP / -30 % bite, flee on the boss death' } } },
   bramblehorn: { look: 'troll', scale: 1.35, r: 1.0, hgt: 5.2, speed: 1.5, keep: 2.4, blood: '#9ab06a', breakOpen: 2, tags: ['beast'], unique: 'rootcrown',
     moves: { stomp: { hit: 'big', el: 'nature', hitstop: 0.06, cd: 1.5, scale: 'none', why: 'self-centred r3: 0.9 s in every bar (x0.7 = 0.63 s leaves 1.2 tiles of walk after a 0.3 s reaction; it needs 1.5 from melee range)' }, rootGrab: { hit: 'chip', el: 'nature', w: 0.6, cd: 1.5 }, trunkSwipe: { hit: 'chip', dmgPct: 0.14, el: 'slash', cd: 1.4 },
       backhand: { hit: 'chip', dmgPct: 0.14, el: 'slash', cd: 1.4 }, trample: { hit: 'big', el: 'nature', cd: 1.5, scale: 'wind' },   // §26.2: base gaps +0.8 s (bar 1 calm, cdMul 0.8 / 0.65 tighten bars 2-3)
@@ -119,13 +121,14 @@ const BOSSES = {};
       level: b.level, kind: b.kind, xp: b.xp };
   }
 })();
+const summonAlive = b => G.enemies.filter(o => o.summoner === b && !o.dead).length;
 const bossDefOf = e => BOSSES[(ENEMY[e.type] || {}).boss || e.type];
 
 // ---------------------------------------------------------------- runtime
 // b.bk = { def, phase, mv (running move state), queue (moves to run next, e.g. phase onEnter), last }
 function bossInit(b) {
   const D = bossDefOf(b); if (!D) return;
-  b.bk = { def: D, phase: 0, mv: null, queue: [], last: null, transT: 0, pv: null };
+  b.bk = { def: D, phase: 0, mv: null, queue: [], last: null, transT: 0, pv: null, rest: {} };
   b.staggerCap = (D.staggerMax || STAGGER_CAP / STAGGER_HIT) * STAGGER_HIT;
   b.state = 'chase';
 }
@@ -135,7 +138,7 @@ const barsOn = D => !!(D && D.bars && D.phases.length > 1);
 const barBot = (D, i) => (i + 1 < D.phases.length ? D.phases[i + 1].hpBelow : 0);   // the bar's floor, fraction of the total
 function enterPhase(b, i) {
   const K = b.bk, D = K.def;
-  K.phase = i; b.phase2 = i >= 1; b.phaseN = i;
+  K.phase = i; b.phase2 = i >= 1; b.phaseN = i; K.phaseT = 0; K.frenzy = false; b.frenzy = false;
   K.mv = null; K.queue = (D.phases[i].onEnter || []).slice(); b.state = 'chase'; b.under = false; b.fadeT = 0;
   G.effects = G.effects.filter(e => !(e.type === 'tele' && e.src === b));
 }
@@ -189,16 +192,22 @@ function bossUpdate(b, dt, d, ang, hidden) {
   if (b.breakStun > 0) { b.breakStun -= dt; return; }
   syncPhase(b);
   const ph = phaseOf(b);
+  // frenzy (a soft DPS check): after ph.frenzy.after s in this phase the gaps shrink (x cdMul) and the boss speeds up; wind-ups never change
+  K.phaseT = (K.phaseT || 0) + dt;
+  if (ph.frenzy && !K.frenzy && K.phaseT > ph.frenzy.after) { K.frenzy = true; b.frenzy = true; if (ph.frenzy.text) say(ph.frenzy.text); sfx('roar'); shake(6); text(b.x, b.y, b.z + (b.hgt || 3) + 0.5, 'FRENZY', '#ff6a4a', true); G.lastFrenzy = { boss: b.type, phase: K.phase, t: G.t }; }
   if (!K.mv && K.queue.length) { startMove(b, K.queue.shift()); }
   if (K.mv) { stepMove(b, dt); return; }
   if (K.transT > 0) return;   // the transition holds the boss in place once its onEnter has played
   // chase, then pick a weighted move from the phase table
-  if (!hidden && d > (D.keep || 2.2)) moveEntity(b, Math.cos(ang) * (D.speed || 1.6) * (ph.speedMul || 1) * dt, Math.sin(ang) * (D.speed || 1.6) * (ph.speedMul || 1) * dt, tileH(G.map, b.x, b.y));
+  const spd = (D.speed || 1.6) * (ph.speedMul || 1) * (K.frenzy ? ph.frenzy.speedMul || 1 : 1);
+  if (!hidden && d > (D.keep || 2.2)) moveEntity(b, Math.cos(ang) * spd * dt, Math.sin(ang) * spd * dt, tileH(G.map, b.x, b.y));
   if (b.cd <= 0 && !hidden) {
     const near = d < (D.nearR || 3.6), opts = [];
     for (const n in ph.moves || {}) {
       const M = D.moveDefs[n]; if (!M) continue;
       if (M.range === 'near' && !near || M.range === 'far' && near) continue;
+      if (M.rest > 0 && (K.rest[n] || -1e9) > G.t) continue;   // a per-move cooldown (howl: 12 s)
+      if (M.type === 'summon' && summonAlive(b) >= (M.max || 6)) continue;   // a summon with its cap full does nothing: it is not picked
       opts.push([n, ph.moves[n]]);
     }
     if (!opts.length) return;
@@ -222,6 +231,7 @@ function startMove(b, ref) {
     feint: M.feint > 0 && FEINTABLE.includes(M.type) ? M.feint : 0 };
   if (M.then && M.type !== 'vanish') s.after = M.then;   // a delayed second hit (cunning form) / pull + blink follow-ups
   b.bk.mv = s; b.state = M.name; b.st = 0; b.step = 0;
+  if (M.rest > 0) b.bk.rest[M.name] = G.t + M.rest;
   const warn = M.warnSfx || (typeof WARN_SFX !== 'undefined' && WARN_SFX[M.type]) || null;
   G.lastWarn = { boss: b.type, move: M.name, type: M.type, sfx: warn, wind: s.wind, open: s.open, t: G.t, feint: s.feint || 0, lead, then: M.then || null };
   if (warn) sfx(warn);
@@ -242,7 +252,7 @@ function endMove(b) {
   const s = b.bk.mv; b.bk.mv = null; b.state = 'chase';
   const M = s.M, ph = phaseOf(b);
   if (s.after) { startMove(b, s.after); return; }
-  b.cd = (M.cd != null ? M.cd : 0.8) * rand(0.8, 1.3) * (ph.cdMul || 1);
+  b.cd = (M.cd != null ? M.cd : 0.8) * rand(0.8, 1.3) * (ph.cdMul || 1) * (b.bk.frenzy ? ph.frenzy.cdMul || 1 : 1);
 }
 // stagger break (game.js damageEnemy): the open window
 function bossBreak(b) {
@@ -360,15 +370,16 @@ const BOSS_MOVES = {
       return s.t > s.wind + (M.dur || 1.2);
     } },
   summon: {
-    start(b, M, s) { fx({ type: 'ring', x: b.x, y: b.y, r: 2, col: '#b36bff', life: s.wind || 0.6 }); },
+    start(b, M, s) { fx({ type: 'ring', x: b.x, y: b.y, r: 2, col: '#b36bff', life: s.wind || 0.6 }); },   // the cue: this ring for the wind-up + warnSfx (WARN_SFX.summon = warn_summon); no damage, so no danger telegraph
     update(b, M, s) {
       if (s.step === 0 && s.t > (s.wind || 0.6)) {
         s.step = 1;
-        const alive = G.enemies.filter(o => o.summoner === b && !o.dead).length, n = Math.max(0, Math.min(M.n || 2, (M.max || 6) - alive));
+        const alive = summonAlive(b), n = Math.max(0, Math.min(M.n || 2, (M.max || 6) - alive));
         for (let k = 0; k < n; k++) {
           const a = M.pattern === 'random' ? Math.random() * 6.28 : k / n * 6.28 + 0.4; let x = b.x + Math.cos(a) * (M.r || 3), y = b.y + Math.sin(a) * (M.r || 3);
           const A = G.shrink; if (A && A.dmg) { const d = dist(x, y, A.x, A.y), lim = Math.max(1, A.r - 1.2); if (d > lim) { x = A.x + (x - A.x) / d * lim; y = A.y + (y - A.y) / d * lim; } }   // adds land inside the root ring, where the hero can reach them
-          const e = spawnAt(enemyId(M.kind || 'slime'), x, y, 0.6); if (e) e.summoner = b;
+          const e = spawnAt(enemyId(M.kind || 'slime'), x, y, 0.6);
+          if (e) { e.summoner = b; if (M.addHp) e.hp = e.maxHp = Math.max(1, Math.round(e.maxHp * M.addHp)); if (M.addDmg) e.dm *= M.addDmg; }   // summoned adds can be lighter than the zone's own (howl hounds)
         }
         sfx('roar');
       }
@@ -493,11 +504,12 @@ function walkOutNeed(D, M) {
 function bossFairness(id) {
   const D = BOSSES[id], rows = new Map(); if (!D) return [];
   const add = (move, rule, got, legacy, phase) => { const k = move + '|' + rule, o = rows.get(k); if (!o || got < o.got) rows.set(k, { move, rule, got: +(+got).toFixed(2), legacy: !!legacy, phase }); };
-  const SKIP = ['summon', 'sequence', 'random', 'blink', 'arenaShrink', 'pull'];
+  const SKIP = ['sequence', 'random', 'blink', 'arenaShrink', 'pull'];
   const check = (n, M, W, phase) => {
     const sc = M.scale || 'all';
     if (M.type === 'roar') { const w = (M.wind > 0 ? M.wind : ROAR_WIND) * (sc === 'none' ? 1 : W); if (w < FAIR_WIND - 1e-6) add(n, 'roar wind >= ' + FAIR_WIND + ' s', w, M.legacy, phase); return; }
     if (SKIP.includes(M.type)) return;
+    if (M.type === 'summon') { const w = (M.wind || 0.6) * (sc === 'none' ? 1 : W); if (w < FAIR_WIND - 1e-6) add(n, 'summon wind >= ' + FAIR_WIND + ' s', w, M.legacy, phase); return; }
     let wind = (M.type === 'volley' ? (M.delay != null ? M.delay : M.wind) : M.wind) || 0;
     if (M.type === 'vanish') wind = (M.then && M.then.wind) || M.wind || 0.8;
     wind *= sc === 'none' ? 1 : W;

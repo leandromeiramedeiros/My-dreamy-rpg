@@ -300,6 +300,10 @@ const LIVE = { mossjaw: { L: 7, max: 90, red: 120 }, bramblehorn: { L: 9, max: 2
 const REACT = 0.3, MISTAKES = [3, 12], MISS_EVERY = +arg('miss', 10), LIVE_POTIONS = 2, LIVE_TRIALS = 6, LIVE_UNDER = [3, 4];
 const LIVE_ROWS = [{ k: 'under', label: '-1 tier', diff: 'normal', n: +arg('under-trials', 48) }, { k: 'reference', label: 'reference', diff: 'normal', n: +arg('ref-trials', LIVE_TRIALS) }, { k: 'under2', label: '-2 Story', diff: 'story', n: LIVE_TRIALS }];
 const ONLY = arg('only', '');
+// --qa: also replay the QA bot's arrival hero (tools/qa/gear-mossjaw.json, written by run-big.js at the den) in the Mossjaw fight
+const QA_GEAR = process.argv.includes('--qa') && fs.existsSync(path.join(ROOT, 'tools/qa/gear-mossjaw.json')) ? JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/qa/gear-mossjaw.json'), 'utf8')) : null;
+if (QA_GEAR) LIVE_ROWS.push({ k: 'qa', label: 'QA bot', diff: 'normal', n: +arg('qa-trials', 12), boss: 'mossjaw', L: QA_GEAR.level });
+ev(`function simHeroQA(g) { const p = makePlayer(); p.level = g.level; p.equip = JSON.parse(JSON.stringify(g.equip)); if (g.weapon) p.gear.weapon = g.weapon; recalcStats(p, true); G.player = p; p.x = 24; p.y = 24; p.z = 0; p.invulnT = 0; return p; }`);
 ev(`const ADD_R = 3;
 function simBossFight(id, L, maxT, react, mistakes, potions, card, every) {
   const p = G.player, cx = G.map.cx, cy = G.map.cy; if (card.arena) G.arena = { id: 'sim', map: G.map.id, gates: [], x: cx, y: cy, r: card.arena.r, pillars: [], broken: [], done: false };
@@ -372,6 +376,7 @@ function simBossFight(id, L, maxT, react, mistakes, potions, card, every) {
       else { const k = alt++ % 2 ? 'e' : 'q'; if (!useSkill(p, k)) useSkill(p, k === 'q' ? 'e' : 'q'); }
       if (!teleUp || seq[i] === 'b') i = (i + 1) % seq.length;
     }
+    { let na = 0; for (const e of G.enemies) if (e !== b && !e.dead && e.move !== 'stationary') na++; out.addT = (out.addT || 0) + na * dt; out.addMax = Math.max(out.addMax || 0, na); }   // add pressure: mobile adds alive (turrets excluded)
     simStep(dt); t += dt;
     if (++n % 600 === 0) for (const [e] of seen) if (!G.effects.includes(e)) seen.delete(e);
   }
@@ -404,13 +409,14 @@ function arenaAdds(id) {
 const liveRows = [];
 for (const id in LIVE) {
   if (!ENEMY[id] || (arg('boss', '') && arg('boss', '') !== id)) continue;
-  const { L, max, red: redMax } = LIVE[id], card = JSON.stringify(arenaAdds(id));
+  const { max, red: redMax } = LIVE[id], card = JSON.stringify(arenaAdds(id));
   for (const G_ of LIVE_ROWS) {
     const runs = [];
     ev(`setSetting('difficulty', '${G_.diff}')`);
-    if (ONLY && !ONLY.split(',').includes(G_.k)) continue;
+    if (ONLY && !ONLY.split(',').includes(G_.k) || G_.boss && G_.boss !== id) continue;
+    const L = G_.L || LIVE[id].L;
     for (let k = 0; k < G_.n; k++) {
-      ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', '${G_.k}')`);
+      ev(`simMap(${bandOf(LIVE[id].L).lo}, ${bandOf(LIVE[id].L).hi})`); if (G_.k === 'qa') { ctx.__qg = QA_GEAR; ev('simHeroQA(__qg)'); } else ev(`simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', '${G_.k}')`);
       runs.push(ev(`simBossFight('${id}', ${L}, ${redMax * 1.5}, ${REACT}, ${JSON.stringify(MISTAKES)}, ${LIVE_POTIONS}, ${card}, ${MISS_EVERY})`));
     }
     const cap = ev('bossHitCap()');
@@ -418,12 +424,15 @@ for (const id in LIVE) {
     const won = runs.filter(r => r.won), lens = won.map(r => r.t).sort((a, b) => a - b), med = lens.length ? lens[Math.floor(lens.length / 2)] : Infinity;
     const row = { id, gear: G_.k, diff: G_.diff, L, hp: Math.round(runs[0].maxHp), won: won.length, trials: runs.length, med, maxLen: lens.length ? lens[lens.length - 1] : Infinity, potions: Math.max(...runs.map(r => r.potions)),
       mistakes: Math.max(...runs.map(r => r.mistakes)), tele: Math.round(runs.reduce((a, r) => a + r.tele, 0) / runs.length), maxBossHit: Math.max(...runs.map(r => r.maxBossHit)), hpLeft: won.length ? Math.min(...won.map(r => r.hpLeft)) : 0, bossLeft: Math.max(...runs.map(r => r.bossLeft)),
-      bars: Math.max(...runs.map(r => r.bars || 0)), cap };
+      bars: Math.max(...runs.map(r => r.bars || 0)), cap, addsMean: runs.reduce((a, r) => a + (r.addT || 0) / Math.max(1, r.t), 0) / runs.length, addsMax: Math.max(...runs.map(r => r.addMax || 0)) };
     liveRows.push(row);
-    const target = G_.k === 'under' ? `${LIVE_UNDER.join('-')}/6 wins` : G_.k === 'reference' ? `6/6 wins, <= ${max} s (red ${redMax})` : '> 0/6 wins (Story)';
+    if (G_.k === 'qa') { const p = ev('G.player'); row.dps = dpsVs('__neutral', L, 'sword', 'reference').dps; ctx.__qg = QA_GEAR; ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); simHeroQA(__qg); ENEMY.__qad = Object.assign({}, ENEMY.__neutral)`);
+      const q = ev(`(() => { const e = spawnEnemy('__neutral', 27, 24, 0); e.hp = e.maxHp = 1e9; e.stunT = 9; const r = simRotation(e, 60, 1.1); return (1e9 - e.hp) / 60; })()`);
+      row.qaDps = q; log(`    QA bot hero: L${L} HP ${row.hp} (reference at L${L}: ${Math.round(ev(`simHero(${JSON.stringify(FAMS.sword)}, ${L}, '${rarityAt(L)}', 'reference').maxHp`))}), rotation DPS ${Math.round(q)} vs reference ${Math.round(row.dps)}; items ${QA_GEAR.equip ? Object.values(QA_GEAR.equip).filter(Boolean).map(it => it.base + '/' + it.rarity + '/i' + it.ilvl).join(' ') : '?'}`); }
+    const target = G_.k === 'under' ? `${LIVE_UNDER.join('-')}/6 wins` : G_.k === 'reference' ? `6/6 wins, <= ${max} s (red ${redMax})` : G_.k === 'qa' ? 'info (the QA bot\'s arrival gear)' : '> 0/6 wins (Story)';
     log(`  ${id.padEnd(13)} ${G_.label.padEnd(10)} ${String(L).padEnd(3)} ${String(row.hp).padEnd(8)} ${(row.won + '/' + row.trials + (row.trials !== 6 ? ` (${(row.won * 6 / row.trials).toFixed(1)}/6)` : '')).padEnd(5)} ${((lens.length ? Math.round(med) : '-') + ' / ' + (lens.length ? Math.round(row.maxLen) : '-')).padEnd(25)} ${String(row.potions).padEnd(9)} ${(row.mistakes + ' of ' + row.tele).padEnd(9)} ${(Math.round(row.maxBossHit * 100) + ' %').padEnd(13)} ${(Math.round(row.hpLeft * 100) + ' %').padEnd(9)} ${target}`);
     const by = {}; let rooted = 0; for (const r of runs) for (const k in r.by || {}) { by[k.replace('(rooted)', '')] = (by[k.replace('(rooted)', '')] || 0) + r.by[k] / runs.length; if (/\(rooted\)/.test(k)) rooted += r.by[k] / runs.length; }
-    log(`    damage taken per fight, in hero max HP (mean): ${Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v.toFixed(2)).join(', ')}${rooted > 0.005 ? ` (taken while rooted ${rooted.toFixed(2)})` : ''}${runs.some(r => !r.won) ? `; lost fights ended at boss ${runs.filter(r => !r.won).map(r => Math.round(r.bossLeft * 100) + ' %').join(', ')}` : ''}`);
+    log(`    damage taken per fight, in hero max HP (mean): ${Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v.toFixed(2)).join(', ')}${rooted > 0.005 ? ` (taken while rooted ${rooted.toFixed(2)})` : ''}; mobile adds alive: mean ${row.addsMean.toFixed(1)}, peak ${row.addsMax}${runs.some(r => !r.won) ? `; lost fights ended at boss ${runs.filter(r => !r.won).map(r => Math.round(r.bossLeft * 100) + ' %').join(', ')}` : ''}`);
     const tag = `live ${id} (${G_.label}, L${L}, melee, ${LIVE_POTIONS} potions)`;
     // the -1 tier row runs more trials (a 3-4 / 6 band on 6 seeded trials flips on any RNG shift): red when its rate, on the /6
     // scale, rounds outside 3-4 (wins x 6 / trials outside [2.5, 4.5))
