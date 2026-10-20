@@ -744,12 +744,12 @@ const PAD_STUB = () => {
       const grab = () => (HUD.dropLabels || []).map(q => ({ x: q.x, y: q.y, w: q.w, rar: q.rar }));
       const ov = L => { let n = 0; for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) if (Math.abs(L[i].x - L[j].x) < (L[i].w + L[j].w) / 2 && Math.abs(L[i].y - L[j].y) < 15) n++; return n; };
       const a = grab(), out = { n: G.drops.length, shown: a.length, overlaps: ov(a), rarOrder: a.map(q => q.rar).join() };
-      dropAll.alt = true; await w(150); const all = grab(); out.allShown = all.length; out.allOverlaps = ov(all); dropAll.alt = false;
+      dropAll.alt = true; await w(150); const all = grab(); out.allShown = all.length; out.uniq = new Set(G.drops.map(d => d.name + '|' + d.rar)).size; out.allOverlaps = ov(all); dropAll.alt = false;
       return out;
     });
     await lp.screenshot({ path: path.join(SHOTS, 'loot-pile.png') });
     check('loot: 10 drops -> at most 6 labels, none overlapping, best rarity first', r.n >= 8 && r.shown <= 6 && r.shown >= 1 && r.overlaps === 0, r);
-    check('loot: Alt shows every label, still without overlap', r.allShown === r.n && r.allShown >= 8 && r.allOverlaps === 0, r);
+    check('loot: Alt shows every label (duplicates merged), still without overlap', r.allShown === r.uniq && r.allShown >= 5 && r.allOverlaps === 0, r);
     const cm = await lp.evaluate(async () => {
       const w = ms => new Promise(r => setTimeout(r, ms)), p = G.player; G.drops.length = 0;
       p.x += 3; spawnDrop(p.x - 3, p.y, { kind: 'item', it: rollItem(p.level, 'common') }); await w(300);
