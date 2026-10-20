@@ -77,7 +77,7 @@ const SKILLS = {
     cast(p, a) { swingWeapon(p, 0.25, 2.4); spawnProj({ x: p.x, y: p.y, z: p.z + 1.4, ang: a, speed: 9, r: 1.0, dmg: 220, pierce: 99, life: 1.2, kind: 'wave', col: '#ffe9a0', knock: 0.4 }); sfx('wave'); } },
   // ---------------- Starfall Staff ----------------
   firebolt: { name: 'Firebolt', element: 'fire', icon: 'fire', color: '#ff8a4a', cd: 2.5, mp: 18, aim:{shape:'proj',range:13.2,w:0.35}, desc: 'Hurl a bolt that explodes and burns.',
-    cast(p, a) { castAnim(p); spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a, speed: 11, r: 0.35, dmg: 80, life: 1.2, kind: 'fire', col: '#ff9a4a', burn: 2, explode: { r: 1.1, dmg: 30 } }); sfx('fire'); } },
+    cast(p, a) { castAnim(p); spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a, speed: 11, r: 0.35, dmg: 74, life: 1.2, kind: 'fire', col: '#ff9a4a', burn: 2, explode: { r: 1.1, dmg: 30 } }); sfx('fire'); } },
   frostshard: { name: 'Frost Shards', element: 'frost', icon: 'frost', color: '#9fe8ff', cd: 3, mp: 20, aim:{shape:'proj',range:9.6,w:0.3}, desc: 'Fire three piercing shards that slow.',
     cast(p, a) { castAnim(p); for (const o of [-0.22, 0, 0.22]) spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a + o, speed: 12, r: 0.3, dmg: 68, life: 0.8, kind: 'frost', col: '#bff4ff', pierce: 1, slow: 2 }); sfx('frost'); } },
   barrage: { name: 'Arcane Barrage', element: 'arcane', icon: 'orbs', color: '#c79bff', cd: 6, mp: 30, aim:{shape:'proj',range:14.4,w:0.3}, desc: 'Five homing missiles seek out foes.',

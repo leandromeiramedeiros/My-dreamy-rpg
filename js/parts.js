@@ -77,7 +77,7 @@
 
 // ---------------------------------------------------------------- built-in rows (ported 1:1 from M2a game.js)
 const BUILTIN_ROWS = {
-  slime: { name: 'Gloom slime', ai: 'hopper', hp: 400, r: 0.38, speed: 2.0, dmg: 32, hgt: 1.8, blood: '#8b7cf6', xp: 0.13,
+  slime: { name: 'Gloom slime', ai: 'hopper', hp: 500, r: 0.38, speed: 2.0, dmg: 32, hgt: 1.8, blood: '#8b7cf6', xp: 0.13,
     el: 'gloom', dmgType: 'gloom', stagger: 0, res: { pierce: 0.25, slash: -0.5 }, tags: ['amorphous', 'gloom'],
     parts: ['chase', 'brute'], params: { chase: { hop: 1.8 }, brute: { shape: 'circle', r: 1.15, range: 1.0, wind: 0.55, cd: 1.1, rec: 0.4, splat: true, stopK: 0.8 } } },
   wisp: { name: 'Wisp', ai: 'shooter', hp: 235, r: 0.32, speed: 1.9, dmg: 34, hgt: 3.2, blood: '#9ef0ff', xp: 0.092,

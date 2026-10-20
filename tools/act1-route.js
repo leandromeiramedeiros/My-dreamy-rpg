@@ -79,8 +79,8 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
 
   // =================================================================== THE VALE
   check('vale: 40x40, level band [1,3]', await ev(() => G.map.id === 'vale' && G.map.W === 40 && G.map.H === 40 && JSON.stringify(G.world.maps.vale.level) === '[1,3]'));
-  check('vale: banner + Pip wakes you ("Up. You were sleeping like you meant it.")', await wf(() => G.trig.fired.wake) && await said('vale_wake') && await said('vale_banner')
-    && await ev(() => DIALOGUE.vale_wake.lines[0] === 'Up. You were sleeping like you meant it.'));
+  const wakeInfo = { wake: await wf(() => G.trig.fired.wake), talks: await ev(() => window.__log.talks.map(t => t.id)), line: await ev(() => DIALOGUE.vale_wake.lines[0]) };
+  check('vale: banner + Pip wakes you ("Up. You were sleeping like you meant it.")', wakeInfo.wake && wakeInfo.talks.includes('vale_wake') && wakeInfo.talks.includes('vale_banner') && wakeInfo.line === 'Up. You were sleeping like you meant it.', wakeInfo);
   check('vale: two training dummies stand in the yard', await ev(() => G.enemies.filter(e => e.dummy).length === 2));
   check('vale: the Pinewood rift starts CLOSED', (await portalOpen('pinewood')) === false);
   await shot('vale_wake');
@@ -149,7 +149,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
     const hasGate = await objectsOf("o.barrier === 'gate' && o.gid === 'bridge_gate'"); await goto('bridge_pip'); await shot('pinewood_secret_raised_bridge');
     const before = await colliders();
     const lv = await ev(() => { const o = G.map.objects.find(q => q.lever && q.src.id === 'lever_bridge'); if (!o) return null; window.__tp(o.x, o.y + 0.7); o.use.fn(o); return o.pulled; });
-    const after = await colliders(); return hasGate > 0 && lv === true && after < before && await ev(() => gateOpen(G.map, 'bridge_gate'));
+    const after = await colliders(); const ok = hasGate > 0 && lv === true && after < before && await ev(() => gateOpen(G.map, 'bridge_gate')); if (!ok) console.log('   bridge debug', { hasGate, lv, before, after }); return ok;
   })());
   await shot('pinewood_secret_bridge_lowered');
   check('pinewood: gold chest waits on the islet', await objectsOf("o.chest && o.src.tier === 'gold'") === 1);
