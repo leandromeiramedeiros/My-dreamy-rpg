@@ -167,7 +167,7 @@ var BOSS_DATA = {
     res: { nature: 0.5, fire: -0.5 },        // STORY.md gives no weak/resist for Bramblehorn; assumed to match the beast-nature type
     bars: true, transition: 1.5,             // 3 bars (guardian)
     moveDefs: {
-      stomp:     { type: 'circle', r: 3, at: 'self', wind: 0.9, open: 1.5, stagger: 1 },   // open unscaled (BOSS_FILL scale 'wind'): the punish window stays 1.5 s
+      stomp:     { type: 'circle', r: 3, at: 'self', wind: 0.9, open: 1.5, stagger: 1 },   // BOSS_FILL scale 'none': 0.9 s wind + 1.5 s open in every bar (walk-out from melee range)
       rootGrab:  { type: 'line', len: 7, root: 1.5, wind: 0.85, open: 1.2 },     // the mechanic: dodge i-frames or Root-Crown; wind 0.8 -> 0.85: bar 3 0.6 s (walk-out), lead-aimed
       trunkSwipe:{ type: 'cone', arc: 90, r: 3, wind: 0.95, open: 1.2 },        // arc 100 -> 90, wind 0.7 -> 0.95: bar 3 0.67 s still walks out from melee range (1.34 tiles)
       backhand:  { type: 'cone', arc: 90, r: 3.2, wind: 0.95, open: 1.2 },      // the trunk swipe's delayed second hit (bar 2+), re-aimed at the hero
@@ -180,11 +180,11 @@ var BOSS_DATA = {
       { hpBelow: 1.0, moves: { stomp: 3, rootGrab: 2, trunkSwipe: 2 }, onEnter: [] },
       // bar 2: new move saplings (turrets; the root wall closes the ring); cunning: trunkSwipe -> a short 0.35 s beat, then the
       // BACKHAND (delayed second hit, re-aimed, 0.68 s wind); windMul 0.85, gaps x0.8
-      { hpBelow: 0.67, moves: { stomp: 2, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1 }, windMul: 0.85, cdMul: 0.8,
+      { hpBelow: 0.64, moves: { stomp: 2, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1 }, windMul: 0.85, cdMul: 0.8,
         forms: { trunkSwipe: { open: 0.35, then: 'backhand' } },
         onEnter: [{ type: 'arenaShrink', pattern: 'roots_inward', k: 0.75, rMin: 5.5 }, { type: 'roar', banner: 'The roots wake', dur: 1.2 }] },   // ring >= 5.5 tiles: room to walk out of a 3-tile stomp, and the card's saplings (<= 5.4 from the centre) stay inside
       // bar 3: new move trample (charge); cunning: rootGrab LEAD-AIMS 0.45 s ahead of a moving hero (+ bar 2's backhand); windMul 0.7, gaps x0.65
-      { hpBelow: 0.34, moves: { stomp: 1, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1, trample: 2 }, windMul: 0.7, cdMul: 0.65, speedMul: 1.2,
+      { hpBelow: 0.28, moves: { stomp: 1, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1, trample: 2 }, windMul: 0.7, cdMul: 0.65, speedMul: 1.2,
         forms: { rootGrab: { lead: 0.45 } },
         onEnter: [{ type: 'roar', banner: 'Old Bramblehorn splinters into a fury', dur: 1.0 }] }
     ],

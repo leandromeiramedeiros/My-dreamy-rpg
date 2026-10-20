@@ -3,10 +3,10 @@
 // tools/maps/art-audit.js -- the DESIGN §29.4 acceptance numbers for the world-art pass, on 6 FIXED camera shots per map.
 // For each shot it renders the real game (headless Chromium), reads the 480x270 scene canvas (SCN: the world frame, no HUD) and computes
 //   specks    isolated pixels whose luminance differs by > 60 from ALL 4 neighbours (per 480x270 frame; target < 50)
-//   clusters  luminance clusters (value bands): peaks of the smoothed 64-bin luma histogram holding >= 1 % of the frame, split by a
-//             valley at least 25 % below the smaller peak (target >= 5)
-//   skyTop    "top surface touching the sky without thickness": columns of the frame where a ground-top pixel (ground raster or column
-//             top) sits directly under a sky pixel with no lip run (fewer than 2 px of lip + 1 dark px under it). Reported, not gated here.
+//   clusters  luminance clusters (value bands): peaks of the smoothed 32-bin luma histogram holding >= 1 % of the frame per bin,
+//             split by a valley >= 15 % below the smaller peak (target >= 5); plus the 5/50/95 % luma percentiles
+//   flatBackEdge  "top surface touching the sky without thickness": frame columns where the island's back (north / west) edge meets the
+//             sky on a tile that is not a raised rim (see pageMetrics); also how many of those edge columns show a lit lip. Target 0.
 // and writes  tools/shots/world-art/<tag>/<map>_<n>_<name>.png        (the frame, 2x nearest)
 //             tools/shots/world-art/<tag>/<map>_<n>_<name>_sil.png    (the 120x68 silhouette downscale, 4x nearest, luma posterised to 5)
 //             tools/shots/world-art/<tag>/audit.json                  (every number + the chunk raster cost)
@@ -56,19 +56,21 @@ function pageMetrics() {
     const i = y * W + x, v = Y[i];
     if (Math.abs(v - Y[i - 1]) > 60 && Math.abs(v - Y[i + 1]) > 60 && Math.abs(v - Y[i - W]) > 60 && Math.abs(v - Y[i + W]) > 60) specks++;
   }
-  // luminance clusters: smoothed 64-bin histogram peaks
-  const hist = new Float64Array(64); for (let i = 0; i < W * H; i++) hist[Math.min(63, Y[i] >> 2)]++;
-  const K = [1, 2, 3, 2, 1], sm = new Float64Array(64);
-  for (let b = 0; b < 64; b++) { let s = 0, n = 0; for (let k = -2; k <= 2; k++) if (b + k >= 0 && b + k < 64) { s += hist[b + k] * K[k + 2]; n += K[k + 2]; } sm[b] = s / n; }
-  const minMass = W * H * 0.01 / 5;   // a peak bin must carry >= 1 % of the frame spread over ~5 bins
-  const peaks = [];
-  for (let b = 0; b < 64; b++) if (sm[b] >= minMass && (b === 0 || sm[b] >= sm[b - 1]) && (b === 63 || sm[b] > sm[b + 1])) peaks.push(b);
-  const merged = [];   // merge peaks without a deep enough valley between them
+  // luminance clusters (value bands): peaks of the 32-bin luma histogram (8 levels a bin, smoothed 1-2-1) holding >= 1 % of the frame
+  // in their bin, merged with the previous peak unless the valley between them dips >= 15 % below the smaller of the two
+  const hist = new Float64Array(32); for (let i = 0; i < W * H; i++) hist[Math.min(31, Y[i] >> 3)]++;
+  const sm = new Float64Array(32);
+  for (let b = 0; b < 32; b++) sm[b] = (hist[Math.max(0, b - 1)] + 2 * hist[b] + hist[Math.min(31, b + 1)]) / 4;
+  const minMass = W * H * 0.01, peaks = [];
+  for (let b = 0; b < 32; b++) if (sm[b] >= minMass && (b === 0 || sm[b] >= sm[b - 1]) && (b === 31 || sm[b] > sm[b + 1])) peaks.push(b);
+  const merged = [];
   for (const p of peaks) {
     if (!merged.length) { merged.push(p); continue; }
     const q = merged[merged.length - 1]; let valley = Infinity; for (let b = q; b <= p; b++) valley = Math.min(valley, sm[b]);
-    if (valley > 0.75 * Math.min(sm[p], sm[q])) { if (sm[p] > sm[q]) merged[merged.length - 1] = p; } else merged.push(p);
+    if (valley > 0.85 * Math.min(sm[p], sm[q])) { if (sm[p] > sm[q]) merged[merged.length - 1] = p; } else merged.push(p);
   }
+  // value spread: luma of the 5th / 50th / 95th percentile
+  const sorted = Float32Array.from(Y).sort(), pct = k => Math.round(sorted[Math.floor(k * (sorted.length - 1))]);
   // silhouette 120x68 (box filter), luma
   const SW = 120, SH = 68, sil = [];
   for (let y = 0; y < SH; y++) for (let x = 0; x < SW; x++) {
@@ -76,21 +78,29 @@ function pageMetrics() {
     let s = 0, n = 0; for (let yy = y0; yy < y1; yy++) for (let xx = x0; xx < x1; xx++) { s += Y[yy * W + xx]; n++; }
     sil.push(Math.round(s / n));
   }
-  // sky-touching top surfaces: per frame column, ground-top pixels that have sky above. Sky / ground classified from the world itself:
-  // a pixel is "ground" when its iso back-projection lands on a land tile at the drawn height (raster top surfaces only).
-  const m = G.map, g = m.gp; let skyTop = 0, edgeCols = 0;
-  for (let x = 0; x < W; x++) {
-    const rx = x + camX - RW / 2 - g.minSX; if (rx < 0 || rx >= g.W || g.top[rx] < 0) continue;
-    const ty = g.top[rx] - (camY - RH / 2); if (ty < 1 || ty >= H - 3) continue;
-    const [wx, wy] = toWorld(rx + g.minSX + 0.5, g.top[rx] + 0.5), h = tileH(m, wx, wy);
-    if (h > 0) continue;   // a column stands there: its faces give thickness (checked by eye in the shots)
-    edgeCols++;
-    // thickness = the lip: the first 3 px under the top differ from the sky above by > 20 luma and the 3rd px is darker than the 1st
-    const above = Y[(ty - 1) * W + x], a = Y[ty * W + x], b = Y[(ty + 1) * W + x], c = Y[(ty + 2) * W + x];
-    const lip = Math.abs(a - above) > 20 && a > c + 6 && b >= c;
-    if (!lip) skyTop++;
+  // sky-touching top surfaces: per frame column, the topmost tile top edge in view (geometry: min over land tiles of the diamond's upper
+  // boundary). Where sky shows above it, that column is an island BACK edge. It has thickness when the tile is a raised rim (its own S/E
+  // faces show: h >= 2 + the lower of its S / E neighbours, or one of them is void); `lipped` = the frame shows a lit lip there
+  // (rows 0-1 brighter than row 2 by > 6 luma).
+  const m = G.map; let skyTop = 0, edgeCols = 0, lipped = 0;
+  const [tx0, ty0, tx1, ty1] = viewTiles().map(Math.floor), best = new Float64Array(W).fill(1e9), own = new Int32Array(W).fill(-1);
+  for (let j = Math.max(0, ty0); j <= Math.min(m.H - 1, ty1); j++) for (let i = Math.max(0, tx0); i <= Math.min(m.W - 1, tx1); i++) {
+    if (!m.type[j][i]) continue;
+    const cx = isoX(i, j) - camX + RW / 2, cy = isoY(i, j, m.h[j][i]) - camY + RH / 2;
+    for (let x = Math.max(0, Math.ceil(cx - 16)); x <= Math.min(W - 1, Math.floor(cx + 16)); x++) { const y = cy + Math.abs(x + 0.5 - cx) / 2; if (y < best[x]) { best[x] = y; own[x] = j * m.W + i; } }
   }
-  return { specks, clusters: merged.length, clusterPeaks: merged.map(b => b * 4), sil, skyTop, edgeCols };
+  for (let x = 0; x < W; x++) {
+    if (own[x] < 0) continue;
+    const y = Math.round(best[x]); if (y < 3 || y >= H - 4) continue;
+    edgeCols++;
+    const i = own[x] % m.W, j = (own[x] / m.W) | 0, h = m.h[j][i];
+    const hn = k => (k[0] >= m.W || k[1] >= m.H || !m.type[k[1]][k[0]]) ? -99 : m.h[k[1]][k[0]];
+    const rim = h >= 2 + Math.min(hn([i + 1, j]), hn([i, j + 1])) ;
+    const a = Y[y * W + x], b1 = Y[(y + 1) * W + x], c = Y[(y + 2) * W + x];
+    if (Math.max(a, b1) > c + 6) lipped++;
+    if (!rim) skyTop++;
+  }
+  return { specks, clusters: merged.length, clusterPeaks: merged.map(b => b * 8), luma: [pct(0.05), pct(0.5), pct(0.95)], sil, skyTop, edgeCols, lipped };
 }
 function pageChunkCost() {
   const m = G.map, cg = chunkGrid(m), out = [];
@@ -98,13 +108,13 @@ function pageChunkCost() {
   for (const s of m.sections) if (s.kind === 'outer') {
     for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) if (m.secAt[j * m.W + i] === s.i && m.type[j][i]) outerIdx.add(chunkAt(m, isoX(i + 0.5, j + 0.5), isoY(i + 0.5, j + 0.5, m.h[j][i])));
   }
-  for (const idx of outerIdx) {
+  for (let pass = 0; pass < 2; pass++) for (const idx of outerIdx) {   // pass 0 = JIT warm-up, pass 1 is timed
     if (cg.empty[idx]) continue;
     const key = chunkKey(m, idx), ch = CHUNK.cache.get(key);
     if (ch) { CHUNK.cache.delete(key); ch.c.width = 0; }
     CHUNK.jobs.delete(key);
     for (const k of cg.cols[idx]) k.img = null;
-    const t0 = performance.now(); buildChunkStep(m, idx, Infinity); out.push(performance.now() - t0);
+    const t0 = performance.now(); buildChunkStep(m, idx, Infinity); if (pass) out.push(performance.now() - t0);
   }
   out.sort((a, b) => a - b);
   return { chunks: out.length, size: CHUNK.size, worst: +out[out.length - 1].toFixed(1), p90: +out[Math.floor(out.length * 0.9)].toFixed(1), mean: +(out.reduce((a, b) => a + b, 0) / out.length).toFixed(1) };
@@ -155,7 +165,7 @@ async function savePng(page, file, kind, sil) {
       await savePng(page, path.join(OUT, file + '_sil.png'), 'sil', met.sil);
       delete met.sil;
       R.shots.push(Object.assign({ name, x, y, file: file + '.png' }, met));
-      console.log(`${mapId.padEnd(9)} ${String(n)} ${name.padEnd(16)} specks ${String(met.specks).padStart(5)}  clusters ${met.clusters}  skyTop ${met.skyTop}/${met.edgeCols}`);
+      console.log(`${mapId.padEnd(9)} ${String(n)} ${name.padEnd(16)} specks ${String(met.specks).padStart(5)}  clusters ${met.clusters}  flatBackEdge ${met.skyTop}/${met.edgeCols} lipped ${met.lipped}  luma5/50/95 ${met.luma.join('/')}`);
     }
     R.specksMax = Math.max(...R.shots.map(s => s.specks)); R.specksMean = Math.round(R.shots.reduce((a, s) => a + s.specks, 0) / R.shots.length);
     R.clustersMin = Math.min(...R.shots.map(s => s.clusters));

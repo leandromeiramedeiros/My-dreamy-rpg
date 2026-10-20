@@ -44,7 +44,9 @@ const shake = a => { G.shakeA = Math.max(G.shakeA, a * (typeof shakeMul === 'fun
 //    HITLAG.budget steps granted per rolling HITLAG.win steps (12 per 0.5 s), tracked in a fixed ring; a request over
 //    budget returns -1 and the caller folds it into the target-only freeze.
 //  Setting 'hitstop' off | light | full: off = no global freeze and Ft = 2; light = global capped at 3.
-// main.js loop() calls hitlagStep() once per step, BEFORE slow-mo scaling.
+// main.js loop() calls hitlagStep() once per step, BEFORE slow-mo scaling. G.hitstopT mirrors G.hitstopF in seconds for
+// loops that predate the step counter (tools/balsim.js simStep decrements hitstopT by its step); the budget ring
+// advances once per updateEnemies() call (= once per fixed step in every loop).
 const HITLAG = { budget: 12, win: 30, light: 3, ring: new Uint8Array(30), i: 0 };
 const hitlagMode = () => typeof hitstopMode === 'function' ? hitstopMode() : 'full';
 // n = steps (integer >= 1), or seconds when < 1 (legacy callers: bosses.js move.hitstop 0.06 / 0.08 -> 4 / 5 steps).
@@ -54,19 +56,21 @@ function hitstop(n, force) {
   const mode = hitlagMode();
   if (!(f > 0) || mode === 'off') return 0;
   if (mode === 'light') f = Math.min(f, HITLAG.light);
-  const add = f - G.hitstopF;   // only the extension costs budget (Math.max semantics)
+  const cur = Math.min(G.hitstopF, Math.ceil(G.hitstopT * 60 - 1e-6));   // steps still frozen (either clock)
+  const add = f - cur;   // only the extension costs budget (Math.max semantics)
   if (add <= 0) return f;
   if (!force && G.hitstopSpent + add > HITLAG.budget) return -1;
-  G.hitstopF = f; G.hitstopSpent += add; HITLAG.ring[HITLAG.i] = Math.min(255, HITLAG.ring[HITLAG.i] + add);
+  G.hitstopF = f; G.hitstopT = f / 60; G.hitstopSpent += add; HITLAG.ring[HITLAG.i] = Math.min(255, HITLAG.ring[HITLAG.i] + add);
   return f;
 }
-// one fixed step of the hitlag clock (unscaled); true = this step is globally frozen (dt = 0)
+// one fixed step of the global freeze (unscaled); true = this step is frozen (dt = 0)
 function hitlagStep() {
-  const H = HITLAG; H.i = (H.i + 1) % H.win; G.hitstopSpent = Math.max(0, G.hitstopSpent - H.ring[H.i]); H.ring[H.i] = 0;
-  if (G.hitstopF > 0) { G.hitstopF--; return true; }
-  if (G.hitstopT > 0) { G.hitstopT -= 1 / 60; return true; }   // legacy seconds freeze (tools/shots-m3-art.js poses, unscaled)
+  if (G.hitstopF > 0) { G.hitstopF--; G.hitstopT = G.hitstopF / 60; return true; }
+  if (G.hitstopT > 1e-6) { G.hitstopT = Math.max(0, G.hitstopT - 1 / 60); return true; }   // a seconds freeze set directly (tools/shots-m3-art.js poses)
   return false;
 }
+// one fixed step of the rolling budget window (updateEnemies)
+function hitlagBudgetTick() { const H = HITLAG; H.i = (H.i + 1) % H.win; G.hitstopSpent = Math.max(0, G.hitstopSpent - H.ring[H.i]); H.ring[H.i] = 0; }
 function hitlagReset() { G.hitstopF = 0; G.hitstopT = 0; G.hitstopSpent = 0; HITLAG.ring.fill(0); }
 // AoE / multi-hit casts (hitCone / hitArea / hitLine) collect their targets here so the global freeze, the shake and the
 // hit-particle cap apply ONCE per cast from the largest r (never per target, never summed)
@@ -1168,7 +1172,7 @@ function updateEnemies(dt) {
   if (typeof updateArena === 'function') updateArena(dt);
   enemySleepPass();
   cullFar();
-  updateCorpses(dt);
+  hitlagBudgetTick(); updateCorpses(dt);
   for (const e of G.enemies) {
     if (e.dead) continue;
     if (e.dormant) { enemyHeartbeat(e, dt); continue; }
@@ -1176,8 +1180,9 @@ function updateEnemies(dt) {
     e.flash -= dt; e.anim += dt;
     if (e.stagger > 0) e.stagger = Math.max(0, e.stagger - dt * STAGGER_DECAY);
     if (e.spawnT > 0) { e.spawnT -= dt; continue; }
-    // target-only hitlag (R2): counted in steps (unscaled), skips AI / move / knockback; render shows the hit frame
-    if (e.hitFreeze > 0) { e.hitFreeze--; continue; }
+    // target-only hitlag (R2): counted in steps (unscaled), skips AI / move / knockback; render shows the hit frame.
+    // A boss only shows it: its AI keeps running (boss crowd control is already quartered, e.g. stun x0.25).
+    if (e.hitFreeze > 0) { e.hitFreeze--; if (!e.boss) continue; }
     if (e.dummy) continue;
     if (e.hopZ > 0) {   // tumble hop: a draw offset only (render.js), never e.z
       e.hopV -= 12 * dt; e.hopZ += e.hopV * dt;
