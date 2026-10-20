@@ -193,7 +193,7 @@ const T = {
   packMode: 'spawn',
   pack(id, x, y, o = {}) {
     const pk = GAME.packs[id]; if (!pk) throw new Error('unknown pack ' + id);
-    if (T.packMode === 'spawnPack') return Object.assign({ type: 'spawnPack', id, at: { x: r2(x), y: r2(y) } }, o.press > 1 ? { press: o.press } : {});
+    if (T.packMode === 'spawnPack') return Object.assign({ type: 'spawnPack', id, at: { x: r2(x), y: r2(y) } });   // the engine action has no press doubling; press only applies to the spawn fallback
     const snap = o.snap || ((px, py) => ({ x: px, y: py })), R = pk.roles, press = o.press || 1, out = [], a0 = o.ang != null ? o.ang : 0.6;
     const put = (e, n, r, a, rad) => { const q = snap(x + Math.cos(a) * r, y + Math.sin(a) * r); out.push(Object.assign(T.spawn(e, n, q.x, q.y, rad, o.elite && e === R.anchor ? { elite: true } : {}), { pack: id })); };
     put(R.anchor, 1, 0, a0, 0.6);

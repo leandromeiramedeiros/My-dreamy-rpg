@@ -32,7 +32,8 @@
 //   IN.ACTIONS                  the action list.  IN.LABEL[action] = display name for the rebinding screen.
 //   Hold-to-aim (docs/HUD.md "Touch v2", desktop + pad), setting SETTINGS.groundIndicators:
 //     IN.aimMode() -> 'off' | 'hold' | 'always'   ('off' on touch: touch.js owns aiming there)
-//       off    = skills cast on press (M2a behaviour), no indicator
+//       auto   = (default) per device: keyboard + mouse 'off', pad 'hold'
+//       off    = skills cast on press (M2a behaviour), no indicator (kbm: a faint range ring while hovering a skill slot)
 //       hold   = skills cast on RELEASE; holding a skill key / button 0.15 s shows its ground indicator (a pad shows it at
 //                once while the right stick is deflected)
 //       always = skills cast on release; the indicator shows from the first frame of the hold
@@ -173,10 +174,18 @@ const IN = (() => {
   // ---- hold-to-aim ----
   const AIM_SKILL = { skillQ: 'q', skillE: 'e', skillR: 'r', skillF: 'f', skillC: 'c', s1: '1', s2: '2', s3: '3' };
   let aimHold = null; const aimCasts = [];
+  // 'auto' (the default) = per device: keyboard + mouse cast on press ('off': the cursor already aims, release adds
+  // latency), pad 'hold'. An explicit off / hold / always from the settings screen overrides on every device.
+  let aimMigrated = false;
   function aimMode() {
     if (api.device === 'touch' || (typeof G !== 'undefined' && G.touch)) return 'off';
-    const m = typeof SETTINGS !== 'undefined' ? SETTINGS.groundIndicators : 'hold';
-    return m === 'off' || m === 'always' ? m : 'hold';
+    if (!aimMigrated && typeof SETTINGS !== 'undefined') {   // one-time: saves from before 'auto' stored the old default 'hold'
+      aimMigrated = true;
+      try { if (!localStorage.getItem('dreamy.gi.v2')) { localStorage.setItem('dreamy.gi.v2', '1'); if (SETTINGS.groundIndicators === 'hold' && typeof setSetting === 'function') setSetting('groundIndicators', 'auto'); } } catch (e) { /* ignore */ }
+    }
+    const m = typeof SETTINGS !== 'undefined' ? SETTINGS.groundIndicators : 'auto';
+    if (m === 'off' || m === 'always' || m === 'hold') return m;
+    return api.device === 'pad' ? 'hold' : 'off';
   }
   function updateAimHold(dt) {
     aimCasts.length = 0;

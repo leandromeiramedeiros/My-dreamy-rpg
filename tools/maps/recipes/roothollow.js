@@ -43,6 +43,6 @@ module.exports = dungeon({
     r1: { name: 'First cavern', banner: ['Root Cavern', 'Thorn-touched brutes in numbers'], gap: 8, waves: [[{ pack: 'rh_ogre_pack' }]], clear: 'The roots go still.' },
     // wave 2 is the act's one sleeper: a mountain troll lying on the far side of the gallery, in the way to the gate
     r2: { name: 'Gate gallery', banner: ['The Gallery', 'Something large is sleeping at the far end'], gap: 14, waves: [[{ pack: 'rh_boar_wrong' }], [{ pack: 'rh_troll_sleeper', toward: 'arena', dist: 0.7 }]], clear: 'Silence. A lever waits nearby.' },
-    arena: { name: 'Mossjaw\'s den', title: 'Mossjaw', sub: 'Moss-gorged root troll - mini-boss', enemy: 'mossjaw', add: 'ogre' },
+    arena: { name: 'Mossjaw\'s den', title: 'Mossjaw', sub: 'Moss-gorged root wolf — mini-boss', enemy: 'mossjaw', add: 'ogre' },
   },
 });

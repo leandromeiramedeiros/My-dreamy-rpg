@@ -357,7 +357,13 @@ function currentAim() {
     const s = SKILLS[TOUCH_AIM.skill];
     return Object.assign({}, TOUCH_AIM, { from: { x: p.x, y: p.y }, col: s && s.color });
   }
-  const H = typeof IN !== 'undefined' && IN.aimHold; if (!H || !H.show) return null;
+  const H = typeof IN !== 'undefined' && IN.aimHold;
+  if ((!H || !H.show) && typeof HUD !== 'undefined' && HUD.hoverSlot && HUD.hoverSlot !== 'pot' && HUD.hoverSlot !== 'lmb') {   // kbm: hovering a skill slot
+    const id = slotSkill(p, HUD.hoverSlot), s = id && SKILLS[id], aim = s && (typeof skillAimOf === 'function' ? skillAimOf(id, HUD.hoverSlot) : s.aim);
+    if (aim && aim.shape !== 'self') { const R = aim.range || aim.len || 6, spr = aimRangeSprite(R, aimCol(s.color), 0), [hx, hy] = worldToView(p.x, p.y, p.z); sctx.globalAlpha = 0.3; sctx.drawImage(spr, Math.round(hx - spr.width / 2), Math.round(hy - spr.height / 2)); sctx.globalAlpha = 1; }
+    return null;
+  }
+  if (!H || !H.show) return null;
   const id = slotSkill(p, H.slot), s = id && SKILLS[id]; if (!s) return null;
   const aim = typeof skillAimOf === 'function' ? skillAimOf(id, H.slot) : s.aim; if (!aim) return null;
   const R = aim.range || aim.len || 6, dx = G.mouse.wx - p.x, dy = G.mouse.wy - p.y, d = Math.hypot(dx, dy) || 1, k = aim.shape === 'circle' ? Math.min(d, R) : R;

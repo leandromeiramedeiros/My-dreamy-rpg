@@ -34,7 +34,7 @@ const SETTINGS_SCHEMA = [
   { key: 'doubleTapDodge', label: 'Double-tap dodge (touch)', group: 'controls', type: 'toggle', def: true },
   { key: 'leftHanded', label: 'Left-handed touch', group: 'controls', type: 'toggle', def: false },
   { key: 'vibration', label: 'Vibration (haptics)', group: 'controls', type: 'toggle', def: true },
-  { key: 'groundIndicators', label: 'Ground indicators', group: 'controls', type: 'choice', def: 'hold', options: [{ v: 'off', label: 'Off' }, { v: 'hold', label: 'On hold' }, { v: 'always', label: 'Always' }] },
+  { key: 'groundIndicators', label: 'Ground indicators', group: 'controls', type: 'choice', def: 'auto', options: [{ v: 'auto', label: 'Auto' }, { v: 'off', label: 'Off' }, { v: 'hold', label: 'On hold' }, { v: 'always', label: 'Always' }] },
   { key: 'showAll9', label: 'Show all 9 skills (tablets)', group: 'controls', type: 'toggle', def: false },
 ];
 const SETTINGS = {};

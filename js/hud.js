@@ -202,6 +202,7 @@ function drawSkillBar(ctx, p, inert) {
   if (drawSkillSlot(ctx, p, 'pot', POTION_X, SLOT_Y)) hover = { slot: 'pot', x: POTION_X };
   // potion charge pips
   for (let k = 0; k < MAX_POTIONS; k++) UI.sprite(ctx, k < p.potions ? 'pipFull' : 'pipEmpty', POTION_X + 5 + k * 12, 530, { scale: 2 });
+  HUD.hoverSlot = hover && !inert && IN.device === 'kbm' ? hover.slot : null;   // render.js: faint range ring
   if (hover && !inert && (IN.device === 'kbm')) skillTooltip(ctx, p, hover);
 }
 function drawSkillSlot(ctx, p, slot, x, y) {

@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-20T01:26:57.764Z",
+ "generated": "2026-10-20T01:33:25.974Z",
  "maps": {
   "pinewood": {
    "name": "Misty Pinewood",
@@ -2026,8 +2026,7 @@
        "at": {
         "x": 47.54,
         "y": 10.3
-       },
-       "press": 2
+       }
       },
       {
        "type": "wait",
@@ -6046,7 +6045,7 @@
       {
        "type": "banner",
        "title": "Mossjaw",
-       "sub": "Moss-gorged root troll - mini-boss",
+       "sub": "Moss-gorged root wolf — mini-boss",
        "boss": true
       },
       {

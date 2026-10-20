@@ -410,8 +410,9 @@ const PAD_STUB = () => {
   await ev(() => { G.player.cds = {}; }); await page.keyboard.press('KeyQ'); await wait(120);
   const quick = await ev(() => G.player.cds.sunslash || 0);
   await ev(() => setSetting('groundIndicators', 'off')); await ev(() => { G.player.cds = {}; }); await page.keyboard.down('KeyQ'); await wait(60);
-  const off = await ev(() => ({ cd: G.player.cds.sunslash || 0, hold: IN.aimHold })); await page.keyboard.up('KeyQ'); await ev(() => setSetting('groundIndicators', 'hold'));
-  check('aim: desktop hold-to-aim — indicator after 0.15 s held, cast on release; a quick press casts; "off" casts on press', hm.mode === 'hold' && !early.show && early.cd === 0 && held.show && held.drawn && held.cd === 0 && after.cd > 0 && after.hold === null && quick > 0 && off.cd > 0 && off.hold === null, { hm, early, held, after, quick, off });
+  const off = await ev(() => ({ cd: G.player.cds.sunslash || 0, hold: IN.aimHold })); await page.keyboard.up('KeyQ');
+  const auto = await ev(() => { setSetting('groundIndicators', 'auto'); return IN.aimMode(); });
+  check('aim: desktop hold-to-aim (explicit "hold") — indicator after 0.15 s, cast on release; quick press casts; "off" and the kbm default "auto" cast on press', hm.mode === 'hold' && !early.show && early.cd === 0 && held.show && held.drawn && held.cd === 0 && after.cd > 0 && after.hold === null && quick > 0 && off.cd > 0 && off.hold === null && auto === 'off', { hm, early, held, after, quick, off, auto });
   await ev(() => { G.enemies.length = 0; });
   await ev(() => { __reset(); });
   await page.keyboard.press('KeyS'); await wait(100);   // back to kbm for the later sections

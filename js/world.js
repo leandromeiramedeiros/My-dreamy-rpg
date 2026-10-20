@@ -3935,8 +3935,7 @@ const WORLD_DATA = {
        "at": {
         "x": 47.54,
         "y": 10.3
-       },
-       "press": 2
+       }
       },
       {
        "type": "wait",
@@ -6418,7 +6417,7 @@ const WORLD_DATA = {
       {
        "type": "banner",
        "title": "Mossjaw",
-       "sub": "Moss-gorged root troll - mini-boss",
+       "sub": "Moss-gorged root wolf — mini-boss",
        "boss": true
       },
       {
