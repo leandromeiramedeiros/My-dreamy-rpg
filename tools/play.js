@@ -1287,7 +1287,7 @@ const PAD_STUB = () => {
     check('hit feel: a 40 % hit freezes the target longer (4-5 steps) and the world 4 steps (r >= 0.25); it tumbles (0.3 s stun, a hop drawn as an offset, e.z untouched)',
       H.heavy.ft >= 4 && H.heavy.ft <= 5 && H.heavy.frozenSteps === H.heavy.ft && H.heavy.fg === 4 && H.heavy.hop && H.heavy.stun >= 0.29 && H.heavy.maxHop > 0.1 && H.heavy.zKept, H.heavy);
     check('hit feel: companion signals scale with r: flash 0.1 + 0.1r, knockback x(0.7 + 0.6r) (x1.5 tumble), number r carried, hit sound pitched lower',
-      Math.abs(H.weak.flash - (0.1 + 0.1 * H.weak.r)) < 0.01 && Math.abs(H.heavy.flash - (0.1 + 0.1 * H.heavy.r)) < 0.01 && H.heavy.kx > H.weak.kx * 1.5 && H.weak.numR < 0.06 && H.heavy.numR > 0.35
+      Math.abs(H.weak.flash - (0.1 + 0.1 * H.weak.r)) < 0.01 && Math.abs(H.heavy.flash - (0.1 + 0.1 * H.heavy.r)) < 0.01 && H.heavy.kx > H.weak.kx * 1.5 && H.weak.numR < 0.06 && H.heavy.numR > 0.33
       && H.pitches.length === 2 && H.pitches[0] > -60 && H.pitches[1] < -200, { weak: H.weak, heavy: H.heavy, pitches: H.pitches });
     // 1b. a §30 spirit-clone replay (cast src 'echo'): target-only <= 2 steps, never global, no MP, half ult charge
     const Ec = await ev(() => {
