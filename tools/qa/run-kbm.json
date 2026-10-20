@@ -13,12 +13,12 @@
   },
   "pinewood": {
    "enters": 1,
-   "ms": 0,
+   "ms": 1098172,
    "deaths": 2,
-   "potions": 4,
+   "potions": 6,
    "kills": 0,
    "lvlIn": 2,
-   "dmgTaken": 0,
+   "dmgTaken": 11397,
    "stuck": 0
   }
  },
@@ -229,6 +229,24 @@
    "deaths": 1,
    "killed": false,
    "potions": 0
+  },
+  {
+   "type": "bramblehorn",
+   "lvl": 11,
+   "bossLvl": 8,
+   "at": 1079.4,
+   "t0": 1792481295704,
+   "deaths0": 2,
+   "hp": 31442,
+   "pot0": 3,
+   "map": "pinewood",
+   "maxHp": 1072,
+   "wk": "dawnblade",
+   "minHpPct": 9,
+   "dur": 125.3,
+   "deaths": 0,
+   "killed": false,
+   "potions": 2
   }
  ],
  "events": [
@@ -3576,6 +3594,569 @@
    "deaths": 1,
    "killed": false,
    "potions": 0
+  },
+  {
+   "at": 1070.6,
+   "msg": "goal bramblehorn: ok",
+   "sec": "133.0"
+  },
+  {
+   "at": 1073.3,
+   "msg": "Bramblehorn retry #2",
+   "lvl": 11,
+   "deaths": 2
+  },
+  {
+   "at": 1073.3,
+   "msg": "goal: bramblehorn retry"
+  },
+  {
+   "at": 1079.4,
+   "msg": "BOSS START bramblehorn",
+   "type": "bramblehorn",
+   "lvl": 11,
+   "bossLvl": 8,
+   "t0": 1792481295704,
+   "deaths0": 2,
+   "hp": 31442,
+   "pot0": 3,
+   "map": "pinewood",
+   "maxHp": 1072,
+   "wk": "dawnblade"
+  },
+  {
+   "at": 1079.4,
+   "msg": "goal bramblehorn retry: ok",
+   "sec": "6.1"
+  },
+  {
+   "at": 1079.4,
+   "msg": "goal: bramblehorn"
+  },
+  {
+   "at": 1083.1,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.5
+  },
+  {
+   "at": 1086.6,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.41
+  },
+  {
+   "at": 1089.8,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.5
+  },
+  {
+   "at": 1092.5,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.38
+  },
+  {
+   "at": 1096.2,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.49
+  },
+  {
+   "at": 1096.9,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.33
+  },
+  {
+   "at": 1097.7,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.23
+  },
+  {
+   "at": 1099.3,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.28
+  },
+  {
+   "at": 1101,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 1102.4,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.49
+  },
+  {
+   "at": 1103.1,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.03
+  },
+  {
+   "at": 1105.8,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.3
+  },
+  {
+   "at": 1109.3,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.39
+  },
+  {
+   "at": 1112,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.3
+  },
+  {
+   "at": 1112.7,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.13
+  },
+  {
+   "at": 1114.9,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.4
+  },
+  {
+   "at": 1115.7,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 1116.5,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.28
+  },
+  {
+   "at": 1117.6,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.4
+  },
+  {
+   "at": 1121.4,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.33
+  },
+  {
+   "at": 1124.3,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.48
+  },
+  {
+   "at": 1127.3,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.51
+  },
+  {
+   "at": 1130.4,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.32
+  },
+  {
+   "at": 1133.2,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.4
+  },
+  {
+   "at": 1136.1,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.42
+  },
+  {
+   "at": 1138.8,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.3
+  },
+  {
+   "at": 1141.3,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.37
+  },
+  {
+   "at": 1145,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.33
+  },
+  {
+   "at": 1148.1,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.33
+  },
+  {
+   "at": 1153.9,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.5
+  },
+  {
+   "at": 1157,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.28
+  },
+  {
+   "at": 1157.4,
+   "msg": "drink potion",
+   "hp": 333,
+   "max": 1098,
+   "pot": 3,
+   "map": "pinewood"
+  },
+  {
+   "at": 1157.6,
+   "msg": "potion drunk",
+   "hp": 773,
+   "max": 1098
+  },
+  {
+   "at": 1163.1,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 1163.8,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.17
+  },
+  {
+   "at": 1167.4,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 1169,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.33
+  },
+  {
+   "at": 1169.7,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.68
+  },
+  {
+   "at": 1172.1,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.52
+  },
+  {
+   "at": 1172.4,
+   "msg": "drink potion",
+   "hp": 103,
+   "max": 1098,
+   "pot": 2,
+   "map": "pinewood"
+  },
+  {
+   "at": 1172.6,
+   "msg": "potion drunk",
+   "hp": 543,
+   "max": 1098
+  },
+  {
+   "at": 1175.7,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.34
+  },
+  {
+   "at": 1176.4,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.23
+  },
+  {
+   "at": 1178.4,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.37
+  },
+  {
+   "at": 1181.5,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 1183.4,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.54
+  },
+  {
+   "at": 1187,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.4
+  },
+  {
+   "at": 1189.8,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.3
+  },
+  {
+   "at": 1192.6,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.5
+  },
+  {
+   "at": 1196,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.52
+  },
+  {
+   "at": 1199.4,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.5
+  },
+  {
+   "at": 1202.9,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.49
+  },
+  {
+   "at": 1079.4,
+   "msg": "BOSS END bramblehorn",
+   "type": "bramblehorn",
+   "lvl": 11,
+   "bossLvl": 8,
+   "t0": 1792481295704,
+   "deaths0": 2,
+   "hp": 31442,
+   "pot0": 3,
+   "map": "pinewood",
+   "maxHp": 1072,
+   "wk": "dawnblade",
+   "minHpPct": 9,
+   "dur": 125.3,
+   "deaths": 0,
+   "killed": false,
+   "potions": 2
+  },
+  {
+   "at": 1206.7,
+   "msg": "goal bramblehorn: ok",
+   "sec": "127.3"
+  },
+  {
+   "at": 1211,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1211.5,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.6"
+  },
+  {
+   "at": 1211.6,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1211.6,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1211.6,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1211.6,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1211.6,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1211.6,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1211.7,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1211.7,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1211.7,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1211.7,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1211.7,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1211.8,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1211.8,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1211.8,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1211.8,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1211.8,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1211.9,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1211.9,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1211.9,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1211.9,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1212,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1212,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1212,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1212,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1212,
+   "msg": "goal: pick up Dreamweave Robe"
+  },
+  {
+   "at": 1212.1,
+   "msg": "goal pick up Dreamweave Robe: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 1212.1,
+   "msg": "after Bramblehorn",
+   "obj": "Take a rift: home or the Ruins",
+   "portals": [
+    [
+     "home",
+     true
+    ],
+    [
+     "home_arena",
+     true
+    ],
+    [
+     "next",
+     true
+    ]
+   ]
+  },
+  {
+   "at": 1212.1,
+   "msg": "MARK bramblehorn-done",
+   "lvl": 13,
+   "deaths": 2
+  },
+  {
+   "at": 1212.2,
+   "msg": "goal: boss chest"
   }
  ],
  "findings": [
@@ -3700,7 +4281,7 @@
  ],
  "errors": [],
  "potions": {
-  "pinewood": 4
+  "pinewood": 6
  },
  "shots": [
   {
@@ -4068,6 +4649,18 @@
    "tag": "death",
    "file": "tools/qa/shots/kbm-061-death.png",
    "map": "pinewood"
+  },
+  {
+   "at": 1073.3,
+   "tag": "bramblehorn-end",
+   "file": "tools/qa/shots/kbm-062-bramblehorn-end.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 1209.4,
+   "tag": "bramblehorn-end",
+   "file": "tools/qa/shots/kbm-063-bramblehorn-end.png",
+   "map": "pinewood"
   }
  ],
  "dead": [],
@@ -4080,6 +4673,16 @@
     {
      "p95": 33.30000000000291,
      "max": 166.69999999999982
+    }
+   ]
+  },
+  "pinewood": {
+   "frames": 60622,
+   "sumMs": 1098172.699999367,
+   "p95s": [
+    {
+     "p95": 33.300000000046566,
+     "max": 916.5999999999767
     }
    ]
   }
@@ -4724,9 +5327,2031 @@
    "type": "arenaShrink",
    "wind": 0.6,
    "open": 0
+  },
+  {
+   "gt": 1074.3066666660231,
+   "at": 1082.6,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 1077.85666666602,
+   "at": 1086.1,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1080.9399999993504,
+   "at": 1089.2,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1083.7899999993479,
+   "at": 1092.1,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1087.373333332678,
+   "at": 1095.6,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 1090.6899999993416,
+   "at": 1099,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 1093.5733333326723,
+   "at": 1101.8,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 1097.173333332669,
+   "at": 1105.4,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 1100.6233333326659,
+   "at": 1108.8,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1103.48999999933,
+   "at": 1111.8,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 1106.0899999993276,
+   "at": 1114.4,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1108.8566666659917,
+   "at": 1117.1,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 1112.7399999993215,
+   "at": 1121,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 1115.489999999319,
+   "at": 1123.8,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1118.506666665983,
+   "at": 1126.8,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 1121.7899999993133,
+   "at": 1130,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 1124.5066666659775,
+   "at": 1132.7,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1127.3733333326416,
+   "at": 1135.8,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1130.1899999993057,
+   "at": 1138.4,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 1132.5566666659702,
+   "at": 1140.7,
+   "boss": "bramblehorn",
+   "move": "arenaShrink",
+   "type": "arenaShrink",
+   "wind": 0,
+   "open": 0.6
+  },
+  {
+   "gt": 1136.2733333326335,
+   "at": 1144.6,
+   "boss": "bramblehorn",
+   "move": "roar",
+   "type": "roar",
+   "wind": 0.8,
+   "open": 0.6
+  },
+  {
+   "gt": 1139.406666665964,
+   "at": 1147.7,
+   "boss": "bramblehorn",
+   "move": "rootWall",
+   "type": "arenaShrink",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1145.1066666659588,
+   "at": 1153.3,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 1145.7899999992915,
+   "at": 1154.1,
+   "boss": "bramblehorn",
+   "move": "rootRing",
+   "type": "arenaShrink",
+   "wind": 0.6,
+   "open": 0
+  },
+  {
+   "gt": 1148.4066666659558,
+   "at": 1156.7,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 1151.2899999992865,
+   "at": 1159.6,
+   "boss": "bramblehorn",
+   "move": "saplings",
+   "type": "summon",
+   "wind": 1,
+   "open": 1.5
+  },
+  {
+   "gt": 1155.1566666659496,
+   "at": 1163.3,
+   "boss": "bramblehorn",
+   "move": "rootWall",
+   "type": "arenaShrink",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1160.689999999278,
+   "at": 1169,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 1163.2899999992756,
+   "at": 1171.6,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 1166.9733333326055,
+   "at": 1175.3,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 1169.6899999992697,
+   "at": 1178,
+   "boss": "bramblehorn",
+   "move": "rootWall",
+   "type": "arenaShrink",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1173.4399999992663,
+   "at": 1181.6,
+   "boss": "bramblehorn",
+   "move": "rootRing",
+   "type": "arenaShrink",
+   "wind": 0.6,
+   "open": 0
+  },
+  {
+   "gt": 1174.4733333325987,
+   "at": 1182.8,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 1175.223333332598,
+   "at": 1183.4,
+   "boss": "bramblehorn",
+   "move": "rootRing",
+   "type": "arenaShrink",
+   "wind": 0.6,
+   "open": 0
+  },
+  {
+   "gt": 1178.3233333325952,
+   "at": 1186.5,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1181.1733333325926,
+   "at": 1189.5,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.7,
+   "open": 1.2
+  },
+  {
+   "gt": 1183.8233333325902,
+   "at": 1192.1,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 1187.1399999992539,
+   "at": 1195.3,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 1187.989999999253,
+   "at": 1196.3,
+   "boss": "bramblehorn",
+   "move": "rootRing",
+   "type": "arenaShrink",
+   "wind": 0.6,
+   "open": 0
+  },
+  {
+   "gt": 1190.5233333325841,
+   "at": 1198.8,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.8,
+   "open": 1.2
+  },
+  {
+   "gt": 1194.1733333325808,
+   "at": 1202.4,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
   }
  ],
- "damage": [],
+ "damage": [
+  {
+   "gt": 169.62,
+   "map": "pinewood",
+   "dmg": 186,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 1,
+   "warn": null,
+   "tele": false,
+   "hp": 490,
+   "max": 676,
+   "x": 40.7,
+   "y": 92.1
+  },
+  {
+   "gt": 172.75,
+   "map": "pinewood",
+   "dmg": 166,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 1.6,
+   "warn": null,
+   "tele": false,
+   "hp": 510,
+   "max": 676,
+   "x": 40,
+   "y": 92.5
+  },
+  {
+   "gt": 175.7,
+   "map": "pinewood",
+   "dmg": 197,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 0.5,
+   "warn": null,
+   "tele": false,
+   "hp": 337,
+   "max": 676,
+   "x": 39.8,
+   "y": 90
+  },
+  {
+   "gt": 211.67,
+   "map": "pinewood",
+   "dmg": 191,
+   "el": "slash",
+   "src": "ogre",
+   "dist": 1.7,
+   "warn": null,
+   "tele": false,
+   "hp": 485,
+   "max": 676,
+   "x": 91.3,
+   "y": 85.2
+  },
+  {
+   "gt": 233.42,
+   "map": "pinewood",
+   "dmg": 171,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 1,
+   "warn": null,
+   "tele": false,
+   "hp": 531,
+   "max": 702,
+   "x": 54.1,
+   "y": 71.7
+  },
+  {
+   "gt": 236.73,
+   "map": "pinewood",
+   "dmg": 220,
+   "el": "pierce",
+   "src": "thornbackboar",
+   "dist": 1.1,
+   "warn": null,
+   "tele": false,
+   "hp": 352,
+   "max": 702,
+   "x": 55.8,
+   "y": 72.4
+  },
+  {
+   "gt": 272.38,
+   "map": "pinewood",
+   "dmg": 194,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 0.8,
+   "warn": null,
+   "tele": false,
+   "hp": 534,
+   "max": 728,
+   "x": 27.2,
+   "y": 58.2
+  },
+  {
+   "gt": 558.73,
+   "map": "pinewood",
+   "dmg": 181,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 0.8,
+   "warn": null,
+   "tele": false,
+   "hp": 547,
+   "max": 728,
+   "x": 27,
+   "y": 57.5
+  },
+  {
+   "gt": 561.1,
+   "map": "pinewood",
+   "dmg": 195,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 0.8,
+   "warn": null,
+   "tele": false,
+   "hp": 361,
+   "max": 728,
+   "x": 26.1,
+   "y": 57
+  },
+  {
+   "gt": 564.03,
+   "map": "pinewood",
+   "dmg": 193,
+   "el": "slash",
+   "src": "ogre",
+   "dist": 0.4,
+   "warn": null,
+   "tele": true,
+   "hp": 434,
+   "max": 728,
+   "x": 27.7,
+   "y": 58.5
+  },
+  {
+   "gt": 617.72,
+   "map": "pinewood",
+   "dmg": 6,
+   "el": "nature",
+   "src": "shadehound",
+   "dist": 1.4,
+   "warn": null,
+   "tele": true,
+   "hp": 903,
+   "max": 909,
+   "x": 76,
+   "y": 53.1
+  },
+  {
+   "gt": 618.28,
+   "map": "pinewood",
+   "dmg": 7,
+   "el": "nature",
+   "src": "brambleshaman",
+   "dist": 2.6,
+   "warn": null,
+   "tele": true,
+   "hp": 902,
+   "max": 909,
+   "x": 74.5,
+   "y": 51.6
+  },
+  {
+   "gt": 622.4,
+   "map": "pinewood",
+   "dmg": 18,
+   "el": "nature",
+   "src": "gloomslime_small",
+   "dist": 1.6,
+   "warn": null,
+   "tele": false,
+   "hp": 891,
+   "max": 909,
+   "x": 72.5,
+   "y": 53.6
+  },
+  {
+   "gt": 622.97,
+   "map": "pinewood",
+   "dmg": 17,
+   "el": "nature",
+   "src": "gloomslime_small",
+   "dist": 2.2,
+   "warn": null,
+   "tele": false,
+   "hp": 876,
+   "max": 909,
+   "x": 72.4,
+   "y": 52.5
+  },
+  {
+   "gt": 633.55,
+   "map": "pinewood",
+   "dmg": 35,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 0.7,
+   "warn": null,
+   "tele": true,
+   "hp": 900,
+   "max": 935,
+   "x": 69.3,
+   "y": 54.8
+  },
+  {
+   "gt": 636.08,
+   "map": "pinewood",
+   "dmg": 81,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 0.8,
+   "warn": null,
+   "tele": false,
+   "hp": 854,
+   "max": 935,
+   "x": 66.4,
+   "y": 49.8
+  },
+  {
+   "gt": 638.2,
+   "map": "pinewood",
+   "dmg": 74,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 1,
+   "warn": null,
+   "tele": false,
+   "hp": 802,
+   "max": 935,
+   "x": 67.1,
+   "y": 50.9
+  },
+  {
+   "gt": 768.28,
+   "map": "pinewood",
+   "dmg": 36,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 0.9,
+   "warn": null,
+   "tele": true,
+   "hp": 932,
+   "max": 968,
+   "x": 31.5,
+   "y": 12.2
+  },
+  {
+   "gt": 774.85,
+   "map": "pinewood",
+   "dmg": 123,
+   "el": "pierce",
+   "src": "thornbackboar",
+   "dist": 2.3,
+   "warn": null,
+   "tele": false,
+   "hp": 871,
+   "max": 994,
+   "x": 31.3,
+   "y": 15.7
+  },
+  {
+   "gt": 776.93,
+   "map": "pinewood",
+   "dmg": 18,
+   "el": "nature",
+   "src": "brambleshaman",
+   "dist": 4.1,
+   "warn": null,
+   "tele": true,
+   "hp": 861,
+   "max": 994,
+   "x": 32.3,
+   "y": 13.6
+  },
+  {
+   "gt": 781,
+   "map": "pinewood",
+   "dmg": 39,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 1,
+   "warn": null,
+   "tele": true,
+   "hp": 865,
+   "max": 994,
+   "x": 32.6,
+   "y": 9
+  },
+  {
+   "gt": 821.63,
+   "map": "pinewood",
+   "dmg": 105,
+   "el": "nature",
+   "src": "mossjaw",
+   "dist": 0.7,
+   "warn": "rootSpit",
+   "tele": true,
+   "hp": 889,
+   "max": 994,
+   "x": 46.7,
+   "y": 7.5
+  },
+  {
+   "gt": 824.43,
+   "map": "pinewood",
+   "dmg": 278,
+   "el": "slash",
+   "src": "mossjaw",
+   "dist": 0.7,
+   "warn": "lunge",
+   "tele": false,
+   "hp": 621,
+   "max": 994,
+   "x": 46.7,
+   "y": 7.5
+  },
+  {
+   "gt": 841.22,
+   "map": "pinewood",
+   "dmg": 279,
+   "el": "slash",
+   "src": "ogre",
+   "dist": 3.4,
+   "warn": "lunge",
+   "tele": false,
+   "hp": 406,
+   "max": 994,
+   "x": 46.8,
+   "y": 9.4
+  },
+  {
+   "gt": 854.84,
+   "map": "pinewood",
+   "dmg": 111,
+   "el": "slash",
+   "src": "shadehound",
+   "dist": 0.8,
+   "warn": null,
+   "tele": true,
+   "hp": 935,
+   "max": 1046,
+   "x": 47.2,
+   "y": 8.3
+  },
+  {
+   "gt": 855.24,
+   "map": "pinewood",
+   "dmg": 96,
+   "el": "slash",
+   "src": "ogre",
+   "dist": 1,
+   "warn": null,
+   "tele": false,
+   "hp": 841,
+   "max": 1046,
+   "x": 47.6,
+   "y": 8.2
+  },
+  {
+   "gt": 883.39,
+   "map": "pinewood",
+   "dmg": 241,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.9,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 805,
+   "max": 1046,
+   "x": 101.3,
+   "y": 29
+  },
+  {
+   "gt": 887.37,
+   "map": "pinewood",
+   "dmg": 114,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 3.1,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 932,
+   "max": 1046,
+   "x": 102,
+   "y": 27.9
+  },
+  {
+   "gt": 890.12,
+   "map": "pinewood",
+   "dmg": 145,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.4,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 797,
+   "max": 1046,
+   "x": 99.2,
+   "y": 31.3
+  },
+  {
+   "gt": 895.94,
+   "map": "pinewood",
+   "dmg": 104,
+   "el": "slash",
+   "src": "sapling",
+   "dist": 1.4,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 715,
+   "max": 1046,
+   "x": 98.5,
+   "y": 31.9
+  },
+  {
+   "gt": 898.67,
+   "map": "pinewood",
+   "dmg": 16,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.7,
+   "warn": "stomp",
+   "tele": true,
+   "hp": 709,
+   "max": 1046,
+   "x": 98.6,
+   "y": 31.4
+  },
+  {
+   "gt": 900.17,
+   "map": "pinewood",
+   "dmg": 16,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 1.3,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 698,
+   "max": 1046,
+   "x": 96.8,
+   "y": 33.2
+  },
+  {
+   "gt": 909.19,
+   "map": "pinewood",
+   "dmg": 139,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 2.2,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 634,
+   "max": 1046,
+   "x": 98.4,
+   "y": 32.6
+  },
+  {
+   "gt": 912.12,
+   "map": "pinewood",
+   "dmg": 471,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 0.7,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 175,
+   "max": 1046,
+   "x": 99.7,
+   "y": 30
+  },
+  {
+   "gt": 914.16,
+   "map": "pinewood",
+   "dmg": 39,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.3,
+   "warn": "stomp",
+   "tele": true,
+   "hp": 562,
+   "max": 1046,
+   "x": 99.2,
+   "y": 29.4
+  },
+  {
+   "gt": 915.77,
+   "map": "pinewood",
+   "dmg": 42,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 3,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 526,
+   "max": 1046,
+   "x": 99.8,
+   "y": 27.7
+  },
+  {
+   "gt": 917.81,
+   "map": "pinewood",
+   "dmg": 45,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.1,
+   "warn": null,
+   "tele": false,
+   "hp": 488,
+   "max": 1046,
+   "x": 99.7,
+   "y": 29.6
+  },
+  {
+   "gt": 918.44,
+   "map": "pinewood",
+   "dmg": 39,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 0.9,
+   "warn": "stomp",
+   "tele": true,
+   "hp": 452,
+   "max": 1046,
+   "x": 99.3,
+   "y": 29.8
+  },
+  {
+   "gt": 918.76,
+   "map": "pinewood",
+   "dmg": 453,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 2,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 0,
+   "max": 1046,
+   "x": 99.7,
+   "y": 28.7
+  },
+  {
+   "gt": 934.99,
+   "map": "pinewood",
+   "dmg": 262,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.5,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 784,
+   "max": 1046,
+   "x": 100.1,
+   "y": 31.1
+  },
+  {
+   "gt": 938.59,
+   "map": "pinewood",
+   "dmg": 146,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.5,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 651,
+   "max": 1046,
+   "x": 100.7,
+   "y": 31.1
+  },
+  {
+   "gt": 941.22,
+   "map": "pinewood",
+   "dmg": 113,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 1.9,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 548,
+   "max": 1046,
+   "x": 101.5,
+   "y": 31
+  },
+  {
+   "gt": 944.14,
+   "map": "pinewood",
+   "dmg": 471,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 0.2,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 89,
+   "max": 1046,
+   "x": 100.3,
+   "y": 29.3
+  },
+  {
+   "gt": 948.12,
+   "map": "pinewood",
+   "dmg": 140,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 0.7,
+   "warn": "rootGrab",
+   "tele": true,
+   "hp": 381,
+   "max": 1046,
+   "x": 100.7,
+   "y": 29
+  },
+  {
+   "gt": 948.59,
+   "map": "pinewood",
+   "dmg": 46,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 0.7,
+   "warn": "rootGrab",
+   "tele": true,
+   "hp": 337,
+   "max": 1046,
+   "x": 100.7,
+   "y": 29
+  },
+  {
+   "gt": 949.49,
+   "map": "pinewood",
+   "dmg": 39,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 0.7,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 721,
+   "max": 1046,
+   "x": 100.7,
+   "y": 29
+  },
+  {
+   "gt": 950.74,
+   "map": "pinewood",
+   "dmg": 115,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 1.9,
+   "warn": "trunkSwipe",
+   "tele": true,
+   "hp": 610,
+   "max": 1046,
+   "x": 101.9,
+   "y": 28.4
+  },
+  {
+   "gt": 951.76,
+   "map": "pinewood",
+   "dmg": 44,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 2.2,
+   "warn": "trunkSwipe",
+   "tele": true,
+   "hp": 570,
+   "max": 1046,
+   "x": 99.3,
+   "y": 31.7
+  },
+  {
+   "gt": 956.52,
+   "map": "pinewood",
+   "dmg": 19,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.3,
+   "warn": "rootGrab",
+   "tele": true,
+   "hp": 570,
+   "max": 1046,
+   "x": 101.1,
+   "y": 28.6
+  },
+  {
+   "gt": 959.77,
+   "map": "pinewood",
+   "dmg": 39,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 1,
+   "warn": "stomp",
+   "tele": true,
+   "hp": 543,
+   "max": 1046,
+   "x": 98.3,
+   "y": 33.2
+  },
+  {
+   "gt": 960.24,
+   "map": "pinewood",
+   "dmg": 43,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 0.2,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 501,
+   "max": 1046,
+   "x": 97.3,
+   "y": 33.7
+  },
+  {
+   "gt": 962.54,
+   "map": "pinewood",
+   "dmg": 41,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 1.5,
+   "warn": null,
+   "tele": true,
+   "hp": 835,
+   "max": 1046,
+   "x": 100.8,
+   "y": 35.2
+  },
+  {
+   "gt": 963.14,
+   "map": "pinewood",
+   "dmg": 39,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 1.7,
+   "warn": "rootGrab",
+   "tele": true,
+   "hp": 798,
+   "max": 1046,
+   "x": 100.1,
+   "y": 35.6
+  },
+  {
+   "gt": 963.37,
+   "map": "pinewood",
+   "dmg": 43,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 1.6,
+   "warn": "rootGrab",
+   "tele": true,
+   "hp": 756,
+   "max": 1046,
+   "x": 100,
+   "y": 35.5
+  },
+  {
+   "gt": 963.94,
+   "map": "pinewood",
+   "dmg": 42,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 2,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 716,
+   "max": 1046,
+   "x": 100,
+   "y": 35.9
+  },
+  {
+   "gt": 968.07,
+   "map": "pinewood",
+   "dmg": 45,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.6,
+   "warn": "trunkSwipe",
+   "tele": true,
+   "hp": 1027,
+   "max": 1072,
+   "x": 100.3,
+   "y": 30.8
+  },
+  {
+   "gt": 971.92,
+   "map": "pinewood",
+   "dmg": 18,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 0.5,
+   "warn": null,
+   "tele": true,
+   "hp": 1023,
+   "max": 1072,
+   "x": 100.3,
+   "y": 32
+  },
+  {
+   "gt": 972.59,
+   "map": "pinewood",
+   "dmg": 18,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 0.5,
+   "warn": "rootGrab",
+   "tele": true,
+   "hp": 1008,
+   "max": 1072,
+   "x": 100.2,
+   "y": 32.2
+  },
+  {
+   "gt": 972.87,
+   "map": "pinewood",
+   "dmg": 50,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 0.5,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 959,
+   "max": 1072,
+   "x": 100.3,
+   "y": 32
+  },
+  {
+   "gt": 973.12,
+   "map": "pinewood",
+   "dmg": 19,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 0.5,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 942,
+   "max": 1072,
+   "x": 100.3,
+   "y": 32
+  },
+  {
+   "gt": 981.99,
+   "map": "pinewood",
+   "dmg": 42,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.4,
+   "warn": "rootGrab",
+   "tele": true,
+   "hp": 961,
+   "max": 1072,
+   "x": 100.6,
+   "y": 33.7
+  },
+  {
+   "gt": 982.32,
+   "map": "pinewood",
+   "dmg": 129,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.2,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 833,
+   "max": 1072,
+   "x": 100.5,
+   "y": 33.5
+  },
+  {
+   "gt": 994.87,
+   "map": "pinewood",
+   "dmg": 111,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 3.1,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 961,
+   "max": 1072,
+   "x": 101.4,
+   "y": 35.1
+  },
+  {
+   "gt": 1003.89,
+   "map": "pinewood",
+   "dmg": 49,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.1,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 945,
+   "max": 1072,
+   "x": 101.6,
+   "y": 31.7
+  },
+  {
+   "gt": 1007.96,
+   "map": "pinewood",
+   "dmg": 40,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.2,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 921,
+   "max": 1072,
+   "x": 101.8,
+   "y": 31.8
+  },
+  {
+   "gt": 1016.24,
+   "map": "pinewood",
+   "dmg": 43,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 3.4,
+   "warn": "roar",
+   "tele": false,
+   "hp": 909,
+   "max": 1072,
+   "x": 103.2,
+   "y": 30.2
+  },
+  {
+   "gt": 1022.12,
+   "map": "pinewood",
+   "dmg": 18,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.4,
+   "warn": "stomp",
+   "tele": true,
+   "hp": 913,
+   "max": 1072,
+   "x": 101.4,
+   "y": 31.7
+  },
+  {
+   "gt": 1022.42,
+   "map": "pinewood",
+   "dmg": 260,
+   "el": "nature",
+   "src": "sapling",
+   "dist": 2.3,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 654,
+   "max": 1072,
+   "x": 102.2,
+   "y": 30.9
+  },
+  {
+   "gt": 1024.64,
+   "map": "pinewood",
+   "dmg": 46,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.7,
+   "warn": null,
+   "tele": false,
+   "hp": 616,
+   "max": 1072,
+   "x": 101.5,
+   "y": 31.3
+  },
+  {
+   "gt": 1028.06,
+   "map": "pinewood",
+   "dmg": 43,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 1.5,
+   "warn": "rootRing",
+   "tele": false,
+   "hp": 586,
+   "max": 1072,
+   "x": 94.8,
+   "y": 36.2
+  },
+  {
+   "gt": 1028.64,
+   "map": "pinewood",
+   "dmg": 68,
+   "el": "nature",
+   "src": "sapling",
+   "dist": 1.7,
+   "warn": "rootRing",
+   "tele": true,
+   "hp": 520,
+   "max": 1072,
+   "x": 94.3,
+   "y": 35.5
+  },
+  {
+   "gt": 1029.16,
+   "map": "pinewood",
+   "dmg": 71,
+   "el": "nature",
+   "src": "sapling",
+   "dist": 1.9,
+   "warn": "rootRing",
+   "tele": true,
+   "hp": 451,
+   "max": 1072,
+   "x": 94.2,
+   "y": 35.5
+  },
+  {
+   "gt": 1029.72,
+   "map": "pinewood",
+   "dmg": 70,
+   "el": "nature",
+   "src": "sapling",
+   "dist": 1.4,
+   "warn": "rootRing",
+   "tele": false,
+   "hp": 383,
+   "max": 1072,
+   "x": 95.2,
+   "y": 35.2
+  },
+  {
+   "gt": 1030.29,
+   "map": "pinewood",
+   "dmg": 62,
+   "el": "nature",
+   "src": "sapling",
+   "dist": 2.3,
+   "warn": "stomp",
+   "tele": true,
+   "hp": 337,
+   "max": 1072,
+   "x": 95.7,
+   "y": 35.1
+  },
+  {
+   "gt": 1031.22,
+   "map": "pinewood",
+   "dmg": 68,
+   "el": "nature",
+   "src": "sapling",
+   "dist": 2.2,
+   "warn": "rootRing",
+   "tele": true,
+   "hp": 701,
+   "max": 1072,
+   "x": 95.7,
+   "y": 34.7
+  },
+  {
+   "gt": 1032.16,
+   "map": "pinewood",
+   "dmg": 41,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 3,
+   "warn": "rootRing",
+   "tele": true,
+   "hp": 678,
+   "max": 1072,
+   "x": 97.2,
+   "y": 35.1
+  },
+  {
+   "gt": 1037.51,
+   "map": "pinewood",
+   "dmg": 18,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.3,
+   "warn": "trunkSwipe",
+   "tele": true,
+   "hp": 681,
+   "max": 1072,
+   "x": 98,
+   "y": 33.8
+  },
+  {
+   "gt": 1037.91,
+   "map": "pinewood",
+   "dmg": 45,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 1.8,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 637,
+   "max": 1072,
+   "x": 97.8,
+   "y": 34.3
+  },
+  {
+   "gt": 1038.72,
+   "map": "pinewood",
+   "dmg": 17,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.9,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 623,
+   "max": 1072,
+   "x": 97.9,
+   "y": 34.6
+  },
+  {
+   "gt": 1040.91,
+   "map": "pinewood",
+   "dmg": 131,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.7,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 500,
+   "max": 1072,
+   "x": 98.1,
+   "y": 34.5
+  },
+  {
+   "gt": 1041.34,
+   "map": "pinewood",
+   "dmg": 44,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.7,
+   "warn": "rootGrab",
+   "tele": true,
+   "hp": 458,
+   "max": 1072,
+   "x": 98.1,
+   "y": 34.5
+  },
+  {
+   "gt": 1042.49,
+   "map": "pinewood",
+   "dmg": 38,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.7,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 424,
+   "max": 1072,
+   "x": 98.1,
+   "y": 34.5
+  },
+  {
+   "gt": 1046.34,
+   "map": "pinewood",
+   "dmg": 146,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 2.3,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 293,
+   "max": 1072,
+   "x": 98.9,
+   "y": 35.5
+  },
+  {
+   "gt": 1046.72,
+   "map": "pinewood",
+   "dmg": 42,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 2.3,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 253,
+   "max": 1072,
+   "x": 98.9,
+   "y": 35.5
+  },
+  {
+   "gt": 1050.26,
+   "map": "pinewood",
+   "dmg": 39,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 2.4,
+   "warn": "rootWall",
+   "tele": true,
+   "hp": 228,
+   "max": 1072,
+   "x": 99.5,
+   "y": 35.8
+  },
+  {
+   "gt": 1053.77,
+   "map": "pinewood",
+   "dmg": 44,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 2.3,
+   "warn": "trunkSwipe",
+   "tele": true,
+   "hp": 211,
+   "max": 1072,
+   "x": 98.8,
+   "y": 31.1
+  },
+  {
+   "gt": 1054.61,
+   "map": "pinewood",
+   "dmg": 16,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 0.9,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 199,
+   "max": 1072,
+   "x": 99.1,
+   "y": 32.5
+  },
+  {
+   "gt": 1056.54,
+   "map": "pinewood",
+   "dmg": 61,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 4.1,
+   "warn": "rootRing",
+   "tele": true,
+   "hp": 145,
+   "max": 1072,
+   "x": 99.2,
+   "y": 37.8
+  },
+  {
+   "gt": 1057.12,
+   "map": "pinewood",
+   "dmg": 68,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 3.1,
+   "warn": "rootRing",
+   "tele": true,
+   "hp": 79,
+   "max": 1072,
+   "x": 99.2,
+   "y": 36.8
+  },
+  {
+   "gt": 1057.64,
+   "map": "pinewood",
+   "dmg": 63,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 3.1,
+   "warn": "rootRing",
+   "tele": false,
+   "hp": 18,
+   "max": 1072,
+   "x": 99.2,
+   "y": 36.8
+  },
+  {
+   "gt": 1059.69,
+   "map": "pinewood",
+   "dmg": 26,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 4,
+   "warn": "rootRing",
+   "tele": false,
+   "hp": 0,
+   "max": 1072,
+   "x": 97.3,
+   "y": 37.2
+  },
+  {
+   "gt": 1075.27,
+   "map": "pinewood",
+   "dmg": 243,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.9,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 829,
+   "max": 1072,
+   "x": 100,
+   "y": 31.4
+  },
+  {
+   "gt": 1078.66,
+   "map": "pinewood",
+   "dmg": 135,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 2,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 705,
+   "max": 1072,
+   "x": 100.1,
+   "y": 31.4
+  },
+  {
+   "gt": 1081.74,
+   "map": "pinewood",
+   "dmg": 139,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 2.1,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 578,
+   "max": 1072,
+   "x": 99.1,
+   "y": 27.4
+  },
+  {
+   "gt": 1089.72,
+   "map": "pinewood",
+   "dmg": 46,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 4.8,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 562,
+   "max": 1072,
+   "x": 102.8,
+   "y": 33
+  },
+  {
+   "gt": 1091.39,
+   "map": "pinewood",
+   "dmg": 44,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 1.3,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 524,
+   "max": 1072,
+   "x": 100.8,
+   "y": 29.3
+  },
+  {
+   "gt": 1094.97,
+   "map": "pinewood",
+   "dmg": 41,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 0.8,
+   "warn": "stomp",
+   "tele": false,
+   "hp": 496,
+   "max": 1072,
+   "x": 96.8,
+   "y": 32.6
+  },
+  {
+   "gt": 1104.19,
+   "map": "pinewood",
+   "dmg": 112,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 1.6,
+   "warn": "trunkSwipe",
+   "tele": true,
+   "hp": 986,
+   "max": 1098,
+   "x": 100.2,
+   "y": 32.2
+  },
+  {
+   "gt": 1104.47,
+   "map": "pinewood",
+   "dmg": 39,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 1.8,
+   "warn": "trunkSwipe",
+   "tele": true,
+   "hp": 949,
+   "max": 1098,
+   "x": 100,
+   "y": 32.7
+  },
+  {
+   "gt": 1104.97,
+   "map": "pinewood",
+   "dmg": 42,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.8,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 908,
+   "max": 1098,
+   "x": 100.4,
+   "y": 32.3
+  },
+  {
+   "gt": 1106.89,
+   "map": "pinewood",
+   "dmg": 49,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.8,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 867,
+   "max": 1098,
+   "x": 100.4,
+   "y": 32.3
+  },
+  {
+   "gt": 1108.32,
+   "map": "pinewood",
+   "dmg": 16,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.8,
+   "warn": "rootGrab",
+   "tele": true,
+   "hp": 856,
+   "max": 1098,
+   "x": 100.4,
+   "y": 32.3
+  },
+  {
+   "gt": 1108.91,
+   "map": "pinewood",
+   "dmg": 16,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.9,
+   "warn": "trunkSwipe",
+   "tele": true,
+   "hp": 842,
+   "max": 1098,
+   "x": 100.7,
+   "y": 32.1
+  },
+  {
+   "gt": 1113.44,
+   "map": "pinewood",
+   "dmg": 113,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 2.3,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 788,
+   "max": 1098,
+   "x": 99.9,
+   "y": 33.7
+  },
+  {
+   "gt": 1116.29,
+   "map": "pinewood",
+   "dmg": 129,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.7,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 670,
+   "max": 1098,
+   "x": 99.4,
+   "y": 33
+  },
+  {
+   "gt": 1122.49,
+   "map": "pinewood",
+   "dmg": 48,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 2.1,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 645,
+   "max": 1098,
+   "x": 99.5,
+   "y": 29.2
+  },
+  {
+   "gt": 1125.36,
+   "map": "pinewood",
+   "dmg": 132,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.5,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 524,
+   "max": 1098,
+   "x": 98.8,
+   "y": 30.1
+  },
+  {
+   "gt": 1130.89,
+   "map": "pinewood",
+   "dmg": 102,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 2.9,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 443,
+   "max": 1098,
+   "x": 101.8,
+   "y": 33.3
+  },
+  {
+   "gt": 1146.46,
+   "map": "pinewood",
+   "dmg": 70,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 6.5,
+   "warn": "rootRing",
+   "tele": false,
+   "hp": 430,
+   "max": 1098,
+   "x": 97.4,
+   "y": 25.2
+  },
+  {
+   "gt": 1149.11,
+   "map": "pinewood",
+   "dmg": 108,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 1.8,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 333,
+   "max": 1098,
+   "x": 98.4,
+   "y": 30.1
+  },
+  {
+   "gt": 1160.01,
+   "map": "pinewood",
+   "dmg": 38,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 1.5,
+   "warn": null,
+   "tele": false,
+   "hp": 773,
+   "max": 1098,
+   "x": 97.8,
+   "y": 31.3
+  },
+  {
+   "gt": 1160.67,
+   "map": "pinewood",
+   "dmg": 39,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 1.4,
+   "warn": null,
+   "tele": true,
+   "hp": 737,
+   "max": 1098,
+   "x": 97.5,
+   "y": 31.3
+  },
+  {
+   "gt": 1161.04,
+   "map": "pinewood",
+   "dmg": 46,
+   "el": "pierce",
+   "src": "sapling",
+   "dist": 1.1,
+   "warn": "trunkSwipe",
+   "tele": true,
+   "hp": 693,
+   "max": 1098,
+   "x": 97.7,
+   "y": 31.7
+  },
+  {
+   "gt": 1161.39,
+   "map": "pinewood",
+   "dmg": 122,
+   "el": "slash",
+   "src": "sapling",
+   "dist": 0.7,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 572,
+   "max": 1098,
+   "x": 96.8,
+   "y": 32.6
+  },
+  {
+   "gt": 1164.19,
+   "map": "pinewood",
+   "dmg": 494,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.2,
+   "warn": "stomp",
+   "tele": true,
+   "hp": 103,
+   "max": 1098,
+   "x": 98.9,
+   "y": 32.3
+  },
+  {
+   "gt": 1167.67,
+   "map": "pinewood",
+   "dmg": 44,
+   "el": "slash",
+   "src": "bramblehorn",
+   "dist": 0.9,
+   "warn": "trunkSwipe",
+   "tele": true,
+   "hp": 510,
+   "max": 1098,
+   "x": 100,
+   "y": 30.4
+  },
+  {
+   "gt": 1169.04,
+   "map": "pinewood",
+   "dmg": 16,
+   "el": "pierce",
+   "src": "bramblehorn",
+   "dist": 1.1,
+   "warn": "trunkSwipe",
+   "tele": false,
+   "hp": 499,
+   "max": 1098,
+   "x": 99,
+   "y": 30.4
+  },
+  {
+   "gt": 1179.17,
+   "map": "pinewood",
+   "dmg": 142,
+   "el": "nature",
+   "src": "bramblehorn",
+   "dist": 1.2,
+   "warn": "rootGrab",
+   "tele": false,
+   "hp": 423,
+   "max": 1098,
+   "x": 100.5,
+   "y": 32.9
+  }
+ ],
  "started": "2026-10-20T07:10:16.289Z",
  "lite": false,
  "pev": [
@@ -7934,6 +10559,523 @@
    "map": "pinewood",
    "n": 0,
    "kinds": []
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Follow the animals up the road"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Take the key to the root door"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Enter the Warden's Grove"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Take the key to the root door"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Find the root door of the Hollow"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "wall_crack"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "wall_env"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Defeat Mossjaw in the Root Hollow"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Rest at the shrine, then press on"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Pull the lever to raise the gate"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Defeat Mossjaw"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "gate_h_short"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "hollow_exit"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "arena_gate"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Climb the root-stair to the Clearing"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "wall_h_crack"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Sneak past the sleepers to the vault"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "dialogue",
+   "id": "pinewood_banner"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: The Clearing gate"
+  },
+  {
+   "at": 1069.8,
+   "k": "action",
+   "gt": 1061.14,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 1077.1,
+   "k": "action",
+   "gt": 1068.67,
+   "map": "pinewood",
+   "type": "arena",
+   "id": "bramble_arena"
+  },
+  {
+   "at": 1077.1,
+   "k": "action",
+   "gt": 1068.67,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Old Bramblehorn"
+  },
+  {
+   "at": 1077.1,
+   "k": "action",
+   "gt": 1068.67,
+   "map": "pinewood",
+   "type": "dialogue",
+   "id": "boss_bramblehorn_intro"
+  },
+  {
+   "at": 1077.1,
+   "k": "action",
+   "gt": 1068.67,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Defeat Old Bramblehorn"
+  },
+  {
+   "at": 1077.1,
+   "k": "action",
+   "gt": 1068.67,
+   "map": "pinewood",
+   "type": "shake"
+  },
+  {
+   "at": 1079.6,
+   "k": "action",
+   "gt": 1071.17,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "bramblehorn"
+  },
+  {
+   "at": 1095.2,
+   "k": "action",
+   "gt": 1086.11,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "The saplings wake!"
+  },
+  {
+   "at": 1095.2,
+   "k": "action",
+   "gt": 1086.11,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "sapling"
+  },
+  {
+   "at": 1104,
+   "k": "kill",
+   "gt": 1095.11,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 1104,
+   "k": "loot",
+   "gt": 1095.11,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 1104,
+   "k": "kill",
+   "gt": 1095.64,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 1104,
+   "k": "loot",
+   "gt": 1095.64,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 1106.6,
+   "k": "kill",
+   "gt": 1097.46,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 1106.6,
+   "k": "loot",
+   "gt": 1097.46,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 1110.5,
+   "k": "action",
+   "gt": 1101.19,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "sapling"
+  },
+  {
+   "at": 1120.7,
+   "k": "kill",
+   "gt": 1111.44,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 1120.7,
+   "k": "loot",
+   "gt": 1111.44,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 1120.7,
+   "k": "kill",
+   "gt": 1111.44,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 1120.7,
+   "k": "loot",
+   "gt": 1111.44,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "gem"
+   ]
+  },
+  {
+   "at": 1120.7,
+   "k": "kill",
+   "gt": 1111.44,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 1120.7,
+   "k": "loot",
+   "gt": 1111.44,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 1170,
+   "k": "kill",
+   "gt": 1161.69,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 1170,
+   "k": "loot",
+   "gt": 1161.69,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:boots/common"
+   ]
+  },
+  {
+   "at": 1180.2,
+   "k": "kill",
+   "gt": 1171.86,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 1180.2,
+   "k": "loot",
+   "gt": 1171.86,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "gem"
+   ]
+  },
+  {
+   "at": 1184,
+   "k": "kill",
+   "gt": 1174.97,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 1184,
+   "k": "loot",
+   "gt": 1174.97,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:head/uncommon"
+   ]
+  },
+  {
+   "at": 1205.4,
+   "k": "kill",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "bramblehorn",
+   "boss": true
+  },
+  {
+   "at": 1205.4,
+   "k": "loot",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "n": 7,
+   "kinds": [
+    "item:head/legendary",
+    "item:head/rare",
+    "item:weapon/rare",
+    "item:head/uncommon",
+    "gem",
+    "gem",
+    "potion"
+   ]
+  },
+  {
+   "at": 1205.4,
+   "k": "action",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "clear_enemies"
+  },
+  {
+   "at": 1205.4,
+   "k": "action",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Victory"
+  },
+  {
+   "at": 1205.4,
+   "k": "action",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "dialogue",
+   "id": "boss_bramblehorn_death"
+  },
+  {
+   "at": 1205.4,
+   "k": "talk",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "id": "boss_bramblehorn_death",
+   "first": "Tell him… the roots held. Tell him I stayed."
+  },
+  {
+   "at": 1205.4,
+   "k": "action",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 1205.4,
+   "k": "action",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "arena_gate"
+  },
+  {
+   "at": 1205.4,
+   "k": "action",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "quest",
+   "id": "shard_root",
+   "text": "The Shard of Root is relit."
+  },
+  {
+   "at": 1205.4,
+   "k": "action",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 1205.4,
+   "k": "loot",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:chest/epic"
+   ]
+  },
+  {
+   "at": 1205.4,
+   "k": "action",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "message",
+   "text": "A key of dream-glass: the Dream Arena bridge in the Vale will open."
+  },
+  {
+   "at": 1205.4,
+   "k": "action",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "open_portal",
+   "id": "next"
+  },
+  {
+   "at": 1205.4,
+   "k": "action",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "open_portal",
+   "id": "home_arena"
+  },
+  {
+   "at": 1205.4,
+   "k": "action",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Take a rift: home or the Ruins"
+  },
+  {
+   "at": 1205.4,
+   "k": "action",
+   "gt": 1196.41,
+   "map": "pinewood",
+   "type": "sound"
   }
  ],
  "marks": [
@@ -8071,6 +11213,15 @@
    "lvl": 10,
    "hp": 1046,
    "deaths": 0
+  },
+  {
+   "at": 1212.1,
+   "name": "bramblehorn-done",
+   "map": "pinewood",
+   "sec": "clearing",
+   "lvl": 13,
+   "hp": 1124,
+   "deaths": 2
   }
  ],
  "warps": [
@@ -8089,5 +11240,5 @@
    "ms": 1638
   }
  ],
- "dodgeOnWarn": 46
+ "dodgeOnWarn": 76
 }
