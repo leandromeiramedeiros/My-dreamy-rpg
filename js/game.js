@@ -824,8 +824,10 @@ function damageEnemy(e, base, o = {}) {
   e.flash = typeof flashReduceOn === 'function' && flashReduceOn() ? 0.1 : 0.1 + 0.1 * r;   // flash length by r
   if (!o.dot) G.lastHit = e;
   // §15.3 resource rhythm: basic attacks (CAST null) build 8 MP per hit; all damage but the ultimate's own feeds the charge
-  if ((!c || c.basic) && !o.dot) basicMpGain(p, c);
-  if (eff < 1 && !(c && c.slot === 'r') && p.ult < 100) p.ult = Math.min(100, p.ult + ultGain(p, base * (1 - eff), o.reaction));
+  // §30 spirit clone replays (cast ctx src 'echo'): no MP, half ult charge, no on-hit EFFECTS, half particles, hitlag target-only <= 2
+  const echo = !!(c && (c.src === 'echo' || (cx && cx.src === 'echo')));
+  if ((!c || c.basic) && !o.dot && !echo) basicMpGain(p, c);
+  if (eff < 1 && !(c && c.slot === 'r') && p.ult < 100) p.ult = Math.min(100, p.ult + ultGain(p, base * (1 - eff), o.reaction) * (echo ? 0.5 : 1));
   // skill ranks: a cast counts once, on its first hit on a real enemy (training dummies don't rank skills)
   if (sk && c.slot && !c.hit && !o.dot && !e.dummy) { c.hit = true; addSkillHit(p, sk); }
   if (cx && cx.onHit.length) for (const fn of cx.onHit) fn(e, dmg, o);
@@ -852,23 +854,24 @@ function damageEnemy(e, base, o = {}) {
   const A = HITAGG;
   if (!o.dot) {
     // hit particles 5 + 8r (max 12); inside a cast at most 24 in all, 2 per target beyond the 4th
-    let np = Math.min(12, Math.round(5 + 8 * r));
+    let np = Math.min(12, Math.round(5 + 8 * r)); if (echo) np = Math.round(np / 2);
     if (A) { np = Math.max(0, Math.min(A.n < 4 ? np : 2, 24 - A.parts)); A.parts += np; A.n++; }
     if (np) burst(e.x, e.y, e.z + e.hgt * 0.6, np, ['#ffffff', e.blood || '#c7a8ff'], 2.5);
     sfx('hit', null, { pitch: clamp(-100 * r * 6, -600, 0) });   // heavier = lower
   }
-  if (!o.dot && eff < 1 && !e.dead) emitEffects('hit', { e, el, dmg, o, cast: c, crit });
-  if (!o.dot && !e.dead) hitlag(e, r, c, crit, broke, o, A);
+  if (!o.dot && eff < 1 && !e.dead && !echo) emitEffects('hit', { e, el, dmg, o, cast: c, crit });
+  if (!o.dot && !e.dead) hitlag(e, r, c, crit, broke, o, A, echo);
   if (e.hp <= 0 && !e.dead) killEnemy(e, o.dot ? 0 : dmg, o);
   return true;
 }
 // the hitlag of one hit (R2): target-only freeze always, a global freeze request by the table (per cast via HITAGG)
-function hitlag(e, r, c, crit, broke, o, A) {
+function hitlag(e, r, c, crit, broke, o, A, echo) {
   const sk = c && c.skill, ult = !!(c && c.slot === 'r');
   const w = (sk && SKILLS[sk] && SKILLS[sk].weight) || (ult ? 2 : 1);   // skill weight: basic 1, heavy 1.5, ultimate 2
   const mode = hitlagMode();
-  const ft = mode === 'off' ? 2 : clamp(Math.round((2 + 6 * r) * w), 2, 8);
+  const ft = mode === 'off' || echo ? 2 : clamp(Math.round((2 + 6 * r) * w), 2, 8);
   e.hitFreeze = Math.max(e.hitFreeze || 0, ft);
+  if (echo) return;   // a §30 echo hit: target-only, 2 steps, never a global freeze (nor a budget fold-in)
   let fg = 0;   // dummies and a piercing shot's 2nd+ target: target-only
   if (!e.dummy && !o.nofg) {
     if (crit) fg = 3;

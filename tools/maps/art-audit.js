@@ -6,18 +6,21 @@
 //   clusters  luminance clusters (value bands): peaks of the smoothed 32-bin luma histogram holding >= 1 % of the frame per bin,
 //             split by a valley >= 15 % below the smaller peak (target >= 5); plus the 5/50/95 % luma percentiles
 //   flatBackEdge  "top surface touching the sky without thickness": frame columns where the island's back (north / west) edge meets the
-//             sky on a tile that is not a raised rim (see pageMetrics); also how many of those edge columns show a lit lip. Target 0.
+//             sky on a tile with no wall facing the camera within 4 tiles in front of it (no raised rim, no drop); also how many of those
+//             edge columns show a lit lip. Target 0.
 // and writes  tools/shots/world-art/<tag>/<map>_<n>_<name>.png        (the frame, 2x nearest)
 //             tools/shots/world-art/<tag>/<map>_<n>_<name>_sil.png    (the 120x68 silhouette downscale, 4x nearest, luma posterised to 5)
 //             tools/shots/world-art/<tag>/audit.json                  (every number + the chunk raster cost)
 // Chunk raster cost: every non-empty chunk of the map's OUTER sections is rebuilt synchronously (buildChunkStep(.., Infinity), columns
 // included), timed per chunk: worst + mean, desktop (512 px) and phone (?phone=1, 256 px) pages.
-// Usage: node tools/maps/art-audit.js <tag=before|after|...> [maps=pinewood,vale] [--no-chunks]
+// Usage: node tools/maps/art-audit.js <tag=before|after|...> [maps=pinewood,vale] [--no-chunks] [--sea]
+//   --sea  hooks drawCloudSea (maps.js) into the frame exactly where the render.js sky-block line goes, to preview it before it lands
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const ROOT = path.join(__dirname, '..', '..');
 const args = process.argv.slice(2), flags = args.filter(a => a.startsWith('--')), pos = args.filter(a => !a.startsWith('--'));
 const TAG = pos[0] || 'after', MAPS = (pos[1] || 'pinewood,vale').split(','), CHUNKS = !flags.includes('--no-chunks');
+const SEA_HOOK = flags.includes('--sea');   // simulate the render.js sky-block line: drawCloudSea() right before the old 'cloud sea far below' clouds
 const OUT = path.join(__dirname, '..', 'shots', 'world-art', TAG);
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/png', '.json': 'application/json', '.css': 'text/css' };
 fs.mkdirSync(OUT, { recursive: true });
@@ -51,10 +54,10 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 function pageMetrics() {
   const W = SCN.c.width, H = SCN.c.height, d = SCN.x.getImageData(0, 0, W, H).data, Y = new Float32Array(W * H);
   for (let i = 0; i < W * H; i++) Y[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
-  let specks = 0;
+  let specks = 0; const at = [];
   for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
     const i = y * W + x, v = Y[i];
-    if (Math.abs(v - Y[i - 1]) > 60 && Math.abs(v - Y[i + 1]) > 60 && Math.abs(v - Y[i - W]) > 60 && Math.abs(v - Y[i + W]) > 60) specks++;
+    if (Math.abs(v - Y[i - 1]) > 60 && Math.abs(v - Y[i + 1]) > 60 && Math.abs(v - Y[i - W]) > 60 && Math.abs(v - Y[i + W]) > 60) { specks++; if (at.length < 400) at.push([x, y]); }
   }
   // luminance clusters (value bands): peaks of the 32-bin luma histogram (8 levels a bin, smoothed 1-2-1) holding >= 1 % of the frame
   // in their bin, merged with the previous peak unless the valley between them dips >= 15 % below the smaller of the two
@@ -94,13 +97,14 @@ function pageMetrics() {
     const y = Math.round(best[x]); if (y < 3 || y >= H - 4) continue;
     edgeCols++;
     const i = own[x] % m.W, j = (own[x] / m.W) | 0, h = m.h[j][i];
-    const hn = k => (k[0] >= m.W || k[1] >= m.H || !m.type[k[1]][k[0]]) ? -99 : m.h[k[1]][k[0]];
-    const rim = h >= 2 + Math.min(hn([i + 1, j]), hn([i, j + 1])) ;
+    // a raised rim: within 4 tiles in front (+x / +y) the ground drops by >= 2 levels (or to void), i.e. a wall faces the camera
+    let rim = false;
+    for (let b = 0; b <= 4 && !rim; b++) for (let a = 0; a <= 4 && !rim; a++) { if (!a && !b) continue; const x2 = i + a, y2 = j + b; rim = x2 >= m.W || y2 >= m.H || !m.type[y2][x2] || m.h[y2][x2] <= h - 2; }
     const a = Y[y * W + x], b1 = Y[(y + 1) * W + x], c = Y[(y + 2) * W + x];
     if (Math.max(a, b1) > c + 6) lipped++;
     if (!rim) skyTop++;
   }
-  return { specks, clusters: merged.length, clusterPeaks: merged.map(b => b * 8), luma: [pct(0.05), pct(0.5), pct(0.95)], sil, skyTop, edgeCols, lipped };
+  return { specks, speckAt: at, clusters: merged.length, clusterPeaks: merged.map(b => b * 8), luma: [pct(0.05), pct(0.5), pct(0.95)], sil, skyTop, edgeCols, lipped };
 }
 function pageChunkCost() {
   const m = G.map, cg = chunkGrid(m), out = [];
@@ -146,6 +150,11 @@ async function savePng(page, file, kind, sil) {
     await page.goto(`${base}/index.html?map=${mapId}`, { waitUntil: 'load' });
     await page.waitForFunction(() => window.__ready === true, null, { timeout: 120000 });
     await wait(500);
+    if (SEA_HOOK) await page.evaluate(() => {   // the first bg.sea.forEach of a frame is render.js's "cloud sea far below" block
+      const bg = G.map.theme._bg, arr = bg.sea.slice(); let last = -1;
+      arr.forEach = function (fn, self) { if (last !== CHUNK.frame) { last = CHUNK.frame; drawCloudSea(sctx, G.map, camX, camY, G.t); } return Array.prototype.forEach.call(this, fn, self); };
+      bg.sea = arr;
+    });
     let n = 0;
     for (const [name, x, y] of SHOTS[mapId]) {
       n++;
@@ -163,7 +172,7 @@ async function savePng(page, file, kind, sil) {
       const file = `${mapId}_${n}_${name}`;
       await savePng(page, path.join(OUT, file + '.png'), 'frame');
       await savePng(page, path.join(OUT, file + '_sil.png'), 'sil', met.sil);
-      delete met.sil;
+      delete met.sil; if (!flags.includes('--speck-xy')) delete met.speckAt;
       R.shots.push(Object.assign({ name, x, y, file: file + '.png' }, met));
       console.log(`${mapId.padEnd(9)} ${String(n)} ${name.padEnd(16)} specks ${String(met.specks).padStart(5)}  clusters ${met.clusters}  flatBackEdge ${met.skyTop}/${met.edgeCols} lipped ${met.lipped}  luma5/50/95 ${met.luma.join('/')}`);
     }

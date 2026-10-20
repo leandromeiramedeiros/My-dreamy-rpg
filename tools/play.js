@@ -1254,7 +1254,6 @@ const PAD_STUB = () => {
   // ---------- hit feel (DESIGN §27, meeting 2026-10-20 R1 + R2): hitlag by power, death fling, tumble ----------
   {
     const FEEL_DIR = path.join(__dirname, 'shots', 'm3-feel'); fs.mkdirSync(FEEL_DIR, { recursive: true });
-    page.on('framenavigated', f => console.log('DEBUGNAV', f.url())); page.on('console', m => { if (/DBG/.test(m.text())) console.log(m.text()); });
     await ev(() => {
       // a controlled bench: no crits, no buffs, a 1e6-HP slime so r = dmg / maxHp is chosen exactly (frand +-10 % aside)
       window.__hf = {
@@ -1273,7 +1272,7 @@ const PAD_STUB = () => {
       try {
         for (const [k, frac] of [['weak', 0.05], ['heavy', 0.4]]) {
           __hf.reset(); const hp = 1e6, b = __hf.base(frac, hp), e = __hf.mob('slime', 1.2, 0, hp);
-          damageEnemy(e, b, { knock: 0.3 });
+          pitches.length = k === 'weak' ? 0 : 1; damageEnemy(e, b, { knock: 0.3 });
           const t = G.texts[G.texts.length - 1];
           const o = { r: +((hp - e.hp) / hp).toFixed(3), ft: e.hitFreeze, fg: G.hitstopF, flash: +e.flash.toFixed(3), kx: +Math.hypot(e.kx, e.ky).toFixed(2), stun: e.stunT, hop: e.hopZ > 0, numR: t && t.r };
           let n = 0; while (e.hitFreeze > 0 && n < 20) { updateEnemies(STEP); n++; }
@@ -1289,6 +1288,17 @@ const PAD_STUB = () => {
     check('hit feel: companion signals scale with r: flash 0.1 + 0.1r, knockback x(0.7 + 0.6r) (x1.5 tumble), number r carried, hit sound pitched lower',
       Math.abs(H.weak.flash - (0.1 + 0.1 * H.weak.r)) < 0.01 && Math.abs(H.heavy.flash - (0.1 + 0.1 * H.heavy.r)) < 0.01 && H.heavy.kx > H.weak.kx * 1.5 && H.weak.numR < 0.06 && H.heavy.numR > 0.35
       && H.pitches.length === 2 && H.pitches[0] > -60 && H.pitches[1] < -200, { weak: H.weak, heavy: H.heavy, pitches: H.pitches });
+    // 1b. a §30 spirit-clone replay (cast src 'echo'): target-only <= 2 steps, never global, no MP, half ult charge
+    const Ec = await ev(() => {
+      __hf.reset(); const p = G.player, hp = 1e6, b = __hf.base(0.6, hp), e = __hf.mob('slime', 1.2, 0, hp), mp0 = p.mp = 10;
+      p.mpHits = []; damageEnemy(e, b, { cast: { basic: true, src: 'echo' } }); const echo = { ft: e.hitFreeze, fg: G.hitstopF, mp: p.mp - mp0 };
+      __hf.reset(); const e2 = __hf.mob('slime', 1.2, 0, hp); p.mp = 10; p.ult = 0; p.mpHits = []; damageEnemy(e2, b, { cast: { basic: true } });
+      const real = { ft: e2.hitFreeze, fg: G.hitstopF, mp: p.mp - 10 };
+      p.ult = 0; damageEnemy(e2, 20, { cast: { basic: true, src: 'echo' } }); echo.ult = p.ult; p.ult = 0; damageEnemy(e2, 20, { cast: { basic: true } }); real.ult = p.ult;   // small hits: the charge never caps
+      return { echo, real };
+    });
+    check('hit feel: a src:echo hit is target-only (2 steps), never a global freeze, gains no MP and half the ult charge',
+      Ec.echo.ft === 2 && Ec.echo.fg === 0 && Ec.echo.mp === 0 && Ec.real.fg > 0 && Ec.real.mp > 0 && Ec.echo.ult > 0 && Math.abs(Ec.echo.ult / Ec.real.ult - 0.5) < 0.15, Ec);
     // 2. AoE: one global freeze per cast from the largest r, never per target / summed; every target still gets its own freeze;
     //    hit particles are capped per cast
     const A = await ev(() => {
@@ -1359,7 +1369,8 @@ const PAD_STUB = () => {
     //    the boss holds a death pose (no fling)
     const D = await ev(() => new Promise(res => {
       __hf.reset(); const p = G.player, b = spawnEnemy('boss', p.x + 3, p.y, 0); b.cd = 9;
-      b.hp = 0; killEnemy(b, b.maxHp, {});   // the killing-blow path (damageEnemy -> killEnemy), past any phase gate const c = G.corpses.find(q => q.e === b), t0 = performance.now(), f0 = G.hitstopF;
+      b.hp = 0; killEnemy(b, b.maxHp, {});   // the killing-blow path (damageEnemy -> killEnemy), past any phase gate
+      const c = G.corpses.find(q => q.e === b), t0 = performance.now(), f0 = G.hitstopF;
       const tick = () => { if (G.hitstopF > 0 && performance.now() - t0 < 3000) requestAnimationFrame(tick); else res({ f0, ms: Math.round(performance.now() - t0), slowmo: G.slowmo > 0, mode: c && c.mode, still: c && c.vx === 0 && c.vy === 0 }); };
       requestAnimationFrame(tick);
     }));

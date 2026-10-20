@@ -479,6 +479,57 @@ class MapGen {
     this.land = land;
   }
 
+  // §29 island edge v2 -- the raised NORTH / WEST coast band. In this projection a north- or west-facing face projects behind its own
+  // top, so those coasts showed no thickness. Land within 2-3 tiles of void lying straight / diagonally to its -x / -y side (the _coast
+  // land mask; gutters count as void) is raised by `up` (default this.step; the outermost tile +1 more where n1 is high), so its S/E
+  // walls render through rasterColumn as a rim and every island reads as a bowl. Run AFTER populate (generate() below) so the scatter
+  // context (cliff / height) and every object stay exactly as they were. Never raised (with a 1-tile clearance): paths, rooms, fights,
+  // water, bridges, stairs and non-grass tiles, islets under `minComp` tiles, and the surroundings of the start, anchors, warps,
+  // portals, enter_area triggers (r + 1) and every non-decor object (1.5). Raised fragments under 3 tiles are dropped.
+  coastBand(o = {}) {
+    const W = this.W, H = this.H, band = o.band || 3, up = o.up || this.step, minComp = o.minComp || 150;
+    const isLand = (x, y) => x >= 0 && y >= 0 && x < W && y < H && this.type[y][x] !== '.';
+    const comp = new Int32Array(W * H).fill(-1), size = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (!isLand(x, y) || comp[y * W + x] >= 0) continue;
+      const id = size.length, st = [[x, y]]; comp[y * W + x] = id; let n = 0;
+      while (st.length) { const [cx, cy] = st.pop(); n++; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = cx + dx, ny = cy + dy; if (isLand(nx, ny) && comp[ny * W + nx] < 0) { comp[ny * W + nx] = id; st.push([nx, ny]); } } }
+      size.push(n);
+    }
+    const bad = grid(W, H, false), Z = ZONE.path | ZONE.room | ZONE.fight | ZONE.water | ZONE.bridge | ZONE.stairs;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (!isLand(x, y)) continue;
+      if ((this.zone[y][x] & Z) || (this.cor && this.cor[y][x]) || !'gfd'.includes(this.type[y][x])) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (y + dy >= 0 && x + dx >= 0 && y + dy < H && x + dx < W) bad[y + dy][x + dx] = true;
+    }
+    const keepOut = (cx, cy, r) => { for (let y = Math.floor(cy - r); y <= cy + r; y++) for (let x = Math.floor(cx - r); x <= cx + r; x++) if (x >= 0 && y >= 0 && x < W && y < H && Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r + 0.71) bad[y][x] = true; };
+    const DECOR = /^(tree_|pine|bush$|rock|grass$|mushroom|moss$|log$|stump$|sunbeam$)/;
+    for (const ob of this.objs) if (!DECOR.test(ob.t)) keepOut(ob.x, ob.y, 1.5);
+    if (this.startPos) keepOut(this.startPos.x, this.startPos.y, 3);
+    for (const a of Object.values(this.anchors)) keepOut(a.x, a.y, 1.5);
+    for (const w of this.warps) { keepOut(w.x, w.y, 1.5); if (w.to && w.to.x != null) keepOut(w.to.x, w.to.y, 1.5); }
+    for (const p of this.portals) keepOut(p.x, p.y, 2);
+    for (const t of this.triggers) if (t.when && t.when.type === 'enter_area') keepOut(t.when.x, t.when.y, (t.when.r || 1) + 1);
+    const add = grid(W, H, 0);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (!isLand(x, y) || bad[y][x] || size[comp[y * W + x]] < minComp) continue;
+      const n = this.n1.fbm(x * 0.21 + 13, y * 0.21 + 7, 2), depth = band - (n < 0.45 ? 1 : 0);
+      let k = 0;
+      for (let d = 1; d <= depth && !k; d++) if (!isLand(x - d, y) || !isLand(x, y - d) || (d < depth && !isLand(x - d, y - d))) k = d;
+      if (k) add[y][x] = up + (k === 1 && n > 0.6 ? 1 : 0);
+    }
+    // drop raised fragments under 3 tiles
+    const seen = grid(W, H, false); let raised = 0;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (!add[y][x] || seen[y][x]) continue;
+      const cells = [], st = [[x, y]]; seen[y][x] = true;
+      while (st.length) { const [cx, cy] = st.pop(); cells.push([cx, cy]); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = cx + dx, ny = cy + dy; if (nx >= 0 && ny >= 0 && nx < W && ny < H && add[ny][nx] && !seen[ny][nx]) { seen[ny][nx] = true; st.push([nx, ny]); } } }
+      if (cells.length < 3) continue;
+      for (const [cx, cy] of cells) { this.h[cy][cx] = Math.min(35, this.h[cy][cx] + add[cy][cx]); raised++; }
+    }
+    this.notes.push(`coast band: ${raised} north/west coast tiles raised`);
+    return raised;
+  }
+
   // terrace levels for the whole island -> this.Q
   _levels() {
     const W = this.W, H = this.H, step = this.step, srcs = [];
@@ -1054,6 +1105,7 @@ function generate(recipe, opts = {}) {
   recipe.layout(g, T);
   g.build();
   recipe.populate(g, T);
+  if (recipe.coastBand !== false && !opts.noCoastBand) g.coastBand(recipe.coastBand || {});   // §29: after populate, so objects stay put
   const rep = g.validate();
   return { gen: g, map: g.toMap(), report: rep };
 }

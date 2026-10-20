@@ -95,6 +95,12 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * M2b note: Opus lowered boss HP (Mossjaw 8560→6000, Bramblehorn 21470→17200) so an under-geared melee hero wins;
   reference-gear fights now run short (Mossjaw ~50 s vs 60–90 target). Revisit after items v2 changes the power curve.
 
+## Status snapshot (M3 in progress, 2026-10-20)
+* Done: variant structure + save v4; items v2 + trinkets; tooltip v2 / paper doll / UI fixes / boss bar (one bar per phase + phase diamonds);
+  layered hero + parts kit; Act I trinket chests; Mythic naming (§24.2).
+* Running: hit feel (§27), multi-bar boss phases + gear-loop balance (§26.1/26.2), world art group 1 (§29).
+* Queue: Echo legendary (§30) → opening rework (§28) → world art groups 2–3 (§29) → phone perf (§26.4) → QA bot → ship M3.
+
 ## Status snapshot (M2b shipped)
 * Done on branch `claude/m2b-act1`: enemy behaviour parts (js/parts.js), boss move library + Mossjaw/Bramblehorn/Warden
   port (js/bosses.js), map objects + trigger actions, tools/balsim.js, 3 save slots, Pinewood enemy data + art

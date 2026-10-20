@@ -443,6 +443,57 @@ function rasterGround(m) {
   m.ground = c;
 }
 
+// ===== cloud sea + island shadow (§29 island edge v2) ===========================================================
+// Cached once per theme (two 256 x 96 sea tiles, art.js buildSeaTile) and once per map (the island's shadow: its raster silhouette
+// at 1/4 res, squashed to 0.3 in y). drawCloudSea(ctx, m, camX, camY, t) is the ONE live call (render.js sky block, right before the
+// old "cloud sea far below" clouds): far layer (parallax 0.55, alpha 0.75), near layer (0.85, 0.95), then the island shadow on it
+// (alpha 0.25). ~8 drawImage / fillRect a frame, nothing per pixel. The horizon sits on the near mountains' base (render.js nearY + 200).
+const SEA = { par: [0.55, 0.85], alpha: [0.75, 0.95], drop: [0, 34], speed: [3, 4.5] };
+function* prepCloudSeaGen(m) {
+  const th = m.theme;
+  if (!th._sea) {
+    const tiles = [];
+    for (let k = 0; k < 2; k++) { tiles.push(buildSeaTile(th, th.seed * 40 + k, k)); yield; }
+    // the fill under each tile = its own bottom row's mean colour, so the band continues seamlessly to the screen bottom
+    const base = tiles.map(c => { const d = c.getContext('2d').getImageData(0, c.height - 1, c.width, 1).data; let r = 0, g = 0, b = 0; for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; } const n = d.length / 4; return `rgb(${Math.round(r / n)},${Math.round(g / n)},${Math.round(b / n)})`; });
+    th._sea = { tiles, base };
+  }
+  if (!m.seaShadow) {
+    const g = groundPrep(m), Q = 4, w = Math.ceil(g.W / Q), hh = Math.ceil(g.H * 0.3 / Q) + 2, { c, x } = makeCanvas(w, hh);
+    x.fillStyle = '#140a28';
+    for (let q = 0; q < w; q++) {
+      const px = Math.min(g.W - 1, q * Q + 2); if (g.edge[px] < 0) continue;
+      const y0 = g.top[px] * 0.3 / Q, y1 = (g.edge[px] + SLAB + g.len[px] * 0.5) * 0.3 / Q;
+      x.fillRect(q, Math.floor(y0), 1, Math.max(1, Math.ceil(y1 - y0)));
+    }
+    m.seaShadow = c;
+  }
+}
+function prepCloudSea(m) { const g = prepCloudSeaGen(m); while (!g.next().done); }
+function drawCloudSea(ctx, m, camX, camY, t) {
+  const th = m.theme; if (!th._sea || !m.seaShadow) prepCloudSea(m);
+  const S = th._sea, hz = Math.round(RH * 0.55 + 100 - camY * 0.08) - 14;
+  if (hz >= RH) return;
+  const a0 = ctx.globalAlpha;
+  for (let k = 0; k < 2; k++) {
+    const y = hz + SEA.drop[k], tile = S.tiles[k], off = ((-camX * SEA.par[k] + t * SEA.speed[k]) % 256 + 256) % 256;
+    ctx.globalAlpha = SEA.alpha[k];
+    for (let x = off - 256; x < RW; x += 256) ctx.drawImage(tile, Math.round(x), y);
+    if (y + 95 < RH) { ctx.fillStyle = S.base[k]; ctx.fillRect(0, y + 95, RW, RH - y - 95); }
+  }
+  // the island's shadow on the near layer: x at that layer's parallax, raster row y_r at hz + 40 + (y_r - camY) * 0.15 (so the part
+  // under the camera lies just below the near horizon), clipped to the sea
+  const g = m.gp, sc = m.seaShadow, kx = 4 * SEA.par[1], ky = 0.15 / 0.3 * 4;   // canvas px -> view px
+  const sx = (g.minSX - camX) * SEA.par[1] + RW / 2, sy = hz + 40 - camY * 0.15, clipY = hz + SEA.drop[1] + 8;
+  const s0 = Math.max(0, (clipY - sy) / ky);
+  if (s0 < sc.height && sx < RW && sx + sc.width * kx > 0 && sy + sc.height * ky > 0) {
+    const sm = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = true;
+    ctx.globalAlpha = 0.25; ctx.drawImage(sc, 0, s0, sc.width, sc.height - s0, Math.round(sx), Math.round(sy + s0 * ky), Math.round(sc.width * kx), Math.round((sc.height - s0) * ky));
+    ctx.imageSmoothingEnabled = sm;
+  }
+  ctx.globalAlpha = a0;
+}
+
 // ===== chunk cache (game) =====================================================================================
 // chunk index = cj * nx + ci over the raster; CHUNK.cache: key 'map|idx' -> { m, idx, c, last }; LRU by `last`
 // (the CHUNK.frame it was last drawn). CHUNK.jobs: partial builds { m, idx, img, row, cols } advanced in row bands.
@@ -796,6 +847,7 @@ function* buildMapStages(id, d) {
   if (!(typeof window !== 'undefined' && window.EDITOR_MODE)) yield* groundPrepGen(m);   // finalizeMap then finds m.gp
   finalizeMap(m);
   yield 'ground';
+  yield* prepCloudSeaGen(m);   // the cloud-sea tiles (once per theme) and the island shadow, time-sliced with the rest of the load
   buildAnchors(m, d);
   sectionCentres(m);
   return m;

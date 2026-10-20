@@ -400,7 +400,7 @@ function arenaAdds(id) {
 }
 const liveRows = [];
 for (const id in LIVE) {
-  if (!ENEMY[id]) continue;
+  if (!ENEMY[id] || (arg('boss', '') && arg('boss', '') !== id)) continue;
   const { L, max, red: redMax } = LIVE[id], card = JSON.stringify(arenaAdds(id));
   for (const G_ of LIVE_ROWS) {
     const runs = [];

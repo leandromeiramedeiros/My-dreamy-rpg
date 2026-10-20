@@ -703,6 +703,22 @@ function buildCloud(seed, w, h, pal, alpha = 255) {
   return pb.toCanvas();
 }
 
+// cloud sea tile (DESIGN §29 island edge v2): a 256 x 96 band of soft, dense cloud, tileable in x (period-8 noise over 256 px),
+// billowy and lit on top, opaque at the bottom (drawCloudSea fills below it with `base`). layer 0 = the far layer, 1 = the near one.
+// Pure hash noise (no seedRng), so building it never disturbs seeded generation.
+function buildSeaTile(th, seed, layer) {
+  const W = 256, H = 96, pb = new PixBuf(W, H), pal = th.cloud, n = pal.length - 1;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const nz = fbm(x / 32, y / 20 + layer * 3.7, 4, seed, 8), t = y / H;
+    const a = clamp((nz * 0.95 + t * 1.1 - 0.62) / 0.22, 0, 1);
+    if (a <= 0) continue;
+    const v = clamp(0.92 - t * 0.55 + (nz - 0.5) * 0.35 - (1 - a) * 0.15 - layer * 0.08, 0, 1);
+    const f = v * n, i = Math.floor(f), c = pal[(f - i) > ((((y & 1) << 1) | (x & 1)) * 0.25 + 0.125) && i < n ? i + 1 : i];
+    pb.set(x, y, c, Math.round(smooth(a) * 255));
+  }
+  return pb.toCanvas();
+}
+
 function buildFog(seed, hex) {
   const S = 128, pb = new PixBuf(S, S), c = hexToRgb(hex);
   for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
