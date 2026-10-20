@@ -16,7 +16,7 @@ That is all. The session reads this file, takes the director role and restarts t
 - **Expert consults:** big design questions go to a **Fable** "renowned expert" (game director, VFX director, level designer, story director, and so on). The minutes go to `docs/meetings/`, the decisions to `docs/DESIGN.md`, and then I brief the client with choices.
 
 ## 3. The team (employees), and what each model is for
-| Model | Used for | Examples so far |
+| Model | Used for | Typical work |
 |---|---|---|
 | **Opus** | Heavy implementation lanes: engine, combat, bosses, render/perf, world art, opening, balance | hit feel §27, boss phases §26, Echo §30, world art G1/G2 §29, perf §26.4, opening §28, elite pockets |
 | **Sonnet** | Medium, well-specified lanes: data tables, UI polish, test additions, ports from specs | items/UI fixes, port jobs |

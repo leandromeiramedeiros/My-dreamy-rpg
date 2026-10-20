@@ -199,7 +199,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('vale: Moon Pond beat (night fishing, section moon)', await goto('moon_pond') && (await secOf()) === 'moon'); await shot('vale_moon_pond');
   check('vale: Dream Arena islet beat (section arena)', await goto('arena_islet') && (await secOf()) === 'arena'); await shot('vale_dream_arena');
   // shrine-to-shrine warp: both shrines discovered, refused while an enemy is awake
-  check('vale: rift terrace shrine fires; both shrines are discovered', await goto('shrine_terrace') && await ev(() => { const L = (G.prog.shrines || {}).vale || []; return L.includes('shrine_terrace'); }));
+  check('vale: rift terrace shrine fires; both shrines are discovered', await goto('shrine_terrace') && await wf(() => ((G.prog.shrines || {}).vale || []).includes('shrine_terrace'), null, 3000));
   await goto('shrine'); await ev(() => { G.prog.shrines.vale = ['shrine_start', 'shrine_terrace']; });
   const refused = await ev(() => { const e = spawnEnemy('gloomslime', G.player.x + 3, G.player.y, 0); const r = shrineWarp('shrine_terrace'); G.enemies = G.enemies.filter(q => q !== e); return r; });
   check('vale: shrine warp is refused while an enemy is awake', refused === false);
