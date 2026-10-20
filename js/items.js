@@ -556,7 +556,8 @@ function saveData() {
     version: SAVE_VERSION, t: Date.now(), slot: G.saveSlot || 1,
     player: { level: p.level, xp: Math.floor(p.xp), equip: p.equip, bag: p.bag, dust: p.dust, potions: p.potions, tool: p.tool || null, uid: UID },
     skills: { byId, runes: p.runes || [], tomes: p.tomes || [], wsk: p.wsk, csk: p.csk },
-    world: { map: G.map.id, checkpoint: G.checkpoint, trig: G.prog.trig, chests: G.prog.chests, secrets: G.prog.secrets || {}, gates: G.prog.gates || {} },
+    world: { map: G.map.id, checkpoint: G.checkpoint, trig: G.prog.trig, chests: G.prog.chests, secrets: G.prog.secrets || {}, gates: G.prog.gates || {},
+      fog: fogSaveData(), sections: G.prog.sections || {}, shrines: G.prog.shrines || {} },
     bosses, bestiary: seenOut, fishing: G.prog.fishing || {}, quests: G.prog.quests || {}, zone100: G.prog.zone100 || {},
     settings: typeof settingsData === 'function' ? settingsData() : {},
     bindings: typeof IN !== 'undefined' ? IN.getBindings() : null,
@@ -589,11 +590,35 @@ function migrate(s) {
       version: 3, t: s.t || Date.now(), slot: 1,
       player: { level: s.level, xp: s.xp, equip: s.equip, bag: s.bag, dust: s.dust, potions: s.potions, tool: null, uid: s.uid },
       skills: { byId: {}, runes: [], tomes: [], wsk: s.wsk, csk: s.csk },
-      world: { map: s.map, checkpoint: s.cp || null, trig: prog.trig || {}, chests: prog.chests || {}, secrets: {}, gates: {} },
+      world: { map: s.map, checkpoint: s.cp || null, trig: prog.trig || {}, chests: prog.chests || {}, secrets: {}, gates: {}, fog: {}, sections: {}, shrines: {} },
       bosses, bestiary, fishing: {}, quests: {}, zone100: {}, settings: null, bindings: null, stats: { playtime: 0, deaths: 0 },
     };
   }
+  // v3 plus (§25 big maps, no version bump): world.fog / world.sections / world.shrines default to empty
+  if (s.version === SAVE_VERSION && s.world && typeof s.world === 'object') for (const k of ['fog', 'sections', 'shrines']) if (!s.world[k] || typeof s.world[k] !== 'object') s.world[k] = {};
   return s.version === SAVE_VERSION ? s : null;
+}
+// ===== fog of war in the save: world.fog[mapId] = 'WxH:' + base64 of the explored-tile bitfield (1 bit per tile,
+// row-major, LSB first; ~2 KB for 112x112). Every map built this session writes its live bitmap (m.mini.vis, hud.js);
+// maps not visited this session keep the string they were loaded with (G.prog.fog).
+function fogEncode(vis, W, H) {
+  const n = W * H, bytes = new Uint8Array((n + 7) >> 3);
+  for (let i = 0; i < n; i++) if (vis[i]) bytes[i >> 3] |= 1 << (i & 7);
+  let bin = ''; for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+  return W + 'x' + H + ':' + btoa(bin);
+}
+function fogDecode(str, W, H) {
+  if (typeof str !== 'string') return null;
+  const m = /^(\d+)x(\d+):(.*)$/.exec(str); if (!m || +m[1] !== W || +m[2] !== H) return null;
+  let bin; try { bin = atob(m[3]); } catch (e) { return null; }
+  const vis = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) vis[i] = (bin.charCodeAt(i >> 3) >> (i & 7)) & 1;
+  return vis;
+}
+function fogSaveData() {
+  const out = Object.assign({}, G.prog.fog || {});
+  for (const id in G.maps) { const m = G.maps[id]; if (m && m.mini && m.mini.vis) out[id] = fogEncode(m.mini.vis, m.W, m.H); }
+  return out;
 }
 function clearSave(slot = G.saveSlot || 1) { try { localStorage.removeItem(saveKey(slot)); writeSlotIndex(); } catch (e) { /* ignore */ } }
 const hasKey = id => !!(G.prog && G.prog.secrets && G.prog.secrets['key:' + id]);
@@ -619,7 +644,9 @@ function applySave(p, s) {
   p.runes = Array.isArray(K.runes) ? K.runes : []; p.tomes = Array.isArray(K.tomes) ? K.tomes : [];
   const firsts = {}; for (const k in s.bosses || {}) if (s.bosses[k] && s.bosses[k].firstKill) firsts[k] = true;
   G.prog = { chests: W.chests || {}, firsts, trig: W.trig || {}, secrets: W.secrets || {}, gates: W.gates || {},
-    fishing: s.fishing || {}, quests: s.quests || {}, zone100: s.zone100 || {} };
+    fishing: s.fishing || {}, quests: s.quests || {}, zone100: s.zone100 || {},
+    fog: W.fog || {}, sections: W.sections || {}, shrines: W.shrines || {} };
+  for (const id in G.maps) if (G.maps[id]) G.maps[id].mini = null;   // minimaps re-seed their fog from the loaded save
   G.seen = {};
   for (const k in s.bestiary || {}) { const b = s.bestiary[k] || {}; G.seen[k] = { kills: +b.kills || 0, res: b.res || {}, reactions: b.reactions || {} }; }
   G.checkpoint = W.checkpoint || null;
