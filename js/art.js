@@ -556,10 +556,12 @@ function leafPasses(C, own, S, cl) {
     const up = o(x + 1, y - 1); if (up >= 0 && cl[up].ord > ord && cl[up].mass >= c.mass) shade.push([x, y]);
     if (o(x - 1, y) < 0 || o(x, y + 1) < 0) edge.push([x, y]);
   }
-  for (const [x, y, a] of rim) C.set(x, y, mixRgb(C.get(x, y), S.rim, a));
+  for (const [x, y, a] of runsOnly(rim, W)) C.set(x, y, mixRgb(C.get(x, y), S.rim, a));
   for (const [x, y] of shade) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.38));
   for (const [x, y] of edge) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.55));
 }
+// a highlight pixel with no 4-neighbour in its own set reads as a speck (> 60 luma off all 4 neighbours): keep runs of >= 2 only
+function runsOnly(list, W) { const k = new Set(list.map(([x, y]) => y * W + x)); return list.filter(([x, y]) => k.has(y * W + x - 1) || k.has(y * W + x + 1) || k.has((y - 1) * W + x) || k.has((y + 1) * W + x)); }
 function canopyTree(seed, S) {
   seedRng(seed);
   const W = S.W, H = S.H, yb = H - 2, cx = W / 2 + rand(-0.8, 0.8);
@@ -665,8 +667,8 @@ function pineTree2(seed, S) {
     if (up(a1) || (a1 === k && (up(a2) || (a2 === k && up(a3))))) { shade.push([x, y]); continue; }   // a 3 px cast shade under the tier above
     if (o(x - 1, y) < 0 || o(x, y + 1) < 0) edge.push([x, y]);
   }
-  for (const [x, y] of rim) C.set(x, y, mixRgb(C.get(x, y), S.rim, 0.55));
-  for (const [x, y] of dust) C.set(x, y, mixRgb(C.get(x, y), S.rim, 0.3));
+  for (const [x, y] of runsOnly(rim, W)) C.set(x, y, mixRgb(C.get(x, y), S.rim, 0.55));
+  for (const [x, y] of runsOnly(dust, W)) C.set(x, y, mixRgb(C.get(x, y), S.rim, 0.3));
   for (const [x, y] of shade) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.5));
   for (const [x, y] of edge) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.5));
   return treeFromParts(T.toCanvas(), C.toCanvas());
