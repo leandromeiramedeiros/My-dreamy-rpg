@@ -112,7 +112,7 @@ function drawDropNames(ctx) {
 function drawNameplates(ctx) {
   for (const e of G.enemies) {
     if (e.dead || e.dummy || e.boss || e.spawnT > 0) continue;
-    const elite = enemyClass(e.type) === 'elite';
+    const elite = enemyClassOf(e) === 'elite';
     if (e.hp >= e.maxHp && !elite) { if (e.uid) UI.barReset('np' + e.uid); continue; }
     if (!e.uid) e.uid = ++HUD.uid;
     const [vx, vy] = worldToView(e.x, e.y, e.z);
@@ -460,12 +460,7 @@ function drawHUD(ctx) {
 
 
 // ===== touch v2: circular wheel (docs/HUD.md "Touch v2"; layout + input in touch.js) ===========================================
-// ring(ctx,x,y,r,frac,col[,w]): a clockwise arc from 12 o'clock covering frac of the circle. Opus moves this into UI.ring.
-function ring(ctx, x, y, r, frac, col, w = 2) {
-  frac = clamp(frac, 0, 1); if (frac <= 0) return;
-  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'butt';
-  ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2); ctx.stroke(); ctx.restore();
-}
+// ring arcs: UI.ring(ctx,x,y,r,frac,col[,w]) in ui.js
 const TB = { flash: {}, wasCd: {} };
 // one round button: 2 px dark outline + 2 px rim in `col` + #15102a at 80 %, icon, cooldown wipe, seconds
 function touchBtn(ctx, x, y, r, col, o = {}) {
@@ -546,9 +541,9 @@ function drawTouchControls(ctx) {
     if (b.slot === 'atk') {
       touchBtn(ctx, b.x, b.y, b.r, UC.line, { held, icon: itemIcon(p.equip.weapon), iconSize: 48 });
       const ch = ultCharge(p);
-      ring(ctx, b.x, b.y, b.r - 2, 1, UC.edge, 3);   // the rim doubles as the ultimate charge ring
-      ring(ctx, b.x, b.y, b.r - 2, ch, UC.gold, 3);
-      if (ch >= 1) { ctx.save(); ctx.globalAlpha = 0.35 + 0.35 * Math.sin(now * 8); ring(ctx, b.x, b.y, b.r + 1, 1, UC.gold, 3); ctx.restore(); }
+      UI.ring(ctx, b.x, b.y, b.r - 2, 1, UC.edge, 3);   // the rim doubles as the ultimate charge ring
+      UI.ring(ctx, b.x, b.y, b.r - 2, ch, UC.gold, 3);
+      if (ch >= 1) { ctx.save(); ctx.globalAlpha = 0.35 + 0.35 * Math.sin(now * 8); UI.ring(ctx, b.x, b.y, b.r + 1, 1, UC.gold, 3); ctx.restore(); }
       continue;
     }
     if (anim && TOUCH_INNER[b.slot] != null) continue;   // drawn rotating below
@@ -562,7 +557,7 @@ function drawTouchControls(ctx) {
   if (toggle) drawTouchToggle(ctx, p, toggle, u);
   // two-hander charge ring inside the rim of the held skill button: white -> gold over 1 s (hook: p.holdCharge)
   const cf = touchChargeFrac(p), hb = activeAimPtr();
-  if (cf > 0 && hb) ring(ctx, hb.b.x, hb.b.y - (TOUCH_AIM ? 4 : 0), hb.b.r - 7, cf, mixHex('#ffffff', UC.gold, cf), 3);
+  if (cf > 0 && hb) UI.ring(ctx, hb.b.x, hb.b.y - (TOUCH_AIM ? 4 : 0), hb.b.r - 7, cf, mixHex('#ffffff', UC.gold, cf), 3);
   drawTouchCancel(ctx);
   // bag / help / fullscreen
   for (const m of touchMenu()) {

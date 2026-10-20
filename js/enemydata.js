@@ -70,13 +70,13 @@ var ENEMY_DATA = {
     },
     xp: 0.18, loot: 'common_pinewood'
   },
-  // ogre: the built-in row keeps its M2a parts (chase + brute) and js/world.js `enemies.ogre` overrides these numbers in
-  // game; the draft asked for `stationary` + `brute` (a turret ogre) — left for the director to rule on.
+  // ogre: director ruling (M2b) — chase + brute, as in M2a (the built-in row's parts win); js/world.js `enemies.ogre`
+  // overrides these numbers in game.
   ogre: {
     name: 'Ogre', sprite: 'ogre', hp: 515, speed: 1.8, dmg: 64, el: 'none', dmgType: 'slash', stagger: 3,
     res: { slash: 0.5, pierce: 0, fire: 0, holy: -0.5 },
     tags: ['brute'],
-    parts: ['stationary', 'brute'],
+    parts: ['chase', 'brute'],
     params: { brute: { wind: 0.7, open: 1.0, shape: 'cone', arc: 90, r: 2.5 } },
     xp: 0.2, loot: 'common_pinewood'
   },

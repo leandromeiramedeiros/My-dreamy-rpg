@@ -4,8 +4,11 @@
 //
 //   node tools/maps/build.js [ids...]            generate (all recipes or listed ids), write tools/maps/out/maps.json
 //   --preview                                    also write PNG overviews to tools/shots/maps/
-//   --kinds=future                               write real chest/tablet/... object kinds instead of stand-ins
-//   --actions=future                             emit planned trigger actions (checkpoint/loot/dialogue/openGate)
+//   --compat                                     old-engine output: stand-in object kinds + message cards instead of the M2b
+//                                                actions (checkpoint/loot/dialogue/quest/openGate). Default is the M2b engine.
+//   --kinds=compat / --actions=compat            same, one half at a time
+//   --packs=spawn|spawnPack                      how ENCOUNTERS packs are emitted. Default: spawnPack once js/game.js runs that
+//                                                trigger action, else the equivalent per-enemy spawn cards (tagged pack: id)
 //   --merge[=path/to/world.js]                   inject/replace the generated map ids into a world.js (default js/world.js)
 //                                                everything else (tuning, enemies, sprites, other maps) is preserved
 //   --out=<file>                                 write the merge result somewhere else instead of in place
@@ -27,12 +30,13 @@ function parseWorld(src) {
 function loadAll(ids, opts = {}) {
   const files = fs.readdirSync(RECIPES).filter(f => f.endsWith('.js') && !f.startsWith('_')).sort();
   const out = [];
-  gen.T.mode = opts.actions === 'future' ? 'future' : 'compat';
+  gen.T.mode = opts.actions === 'compat' ? 'compat' : 'future';
+  gen.T.packMode = opts.packs || (require('./gamedata.js').engineHasSpawnPack() ? 'spawnPack' : 'spawn');
   const loaded = files.map(f => [f, require(path.join(RECIPES, f))]);   // load every spec first so portal anchors are registered
   for (const [f, rec] of loaded) {
     for (const r of Array.isArray(rec) ? rec : [rec]) {
       if (ids && ids.length && !ids.includes(r.id)) continue;
-      const res = gen.generate(r, { kinds: opts.kinds || 'compat' });
+      const res = gen.generate(r, { kinds: opts.kinds === 'compat' ? 'compat' : 'future' });
       const g = res.gen;
       const meta = {
         rooms: g.rooms.filter(x => x.kind !== 'flat').map(x => ({ id: x.id, label: x.label, x: x.x, y: x.y, r: x.r, kind: x.kind })),
@@ -58,7 +62,8 @@ function mergeInto(worldFile, maps, outFile) {
 
 if (require.main === module) {
   const ids = args.filter(a => !a.startsWith('-'));
-  const res = loadAll(ids, { kinds: flag('kinds'), actions: flag('actions') });
+  const cp = flag('compat') ? 'compat' : null;
+  const res = loadAll(ids, { kinds: cp || flag('kinds'), actions: cp || flag('actions'), packs: flag('packs') });
   if (!res.length) { console.error('no recipes matched'); process.exit(1); }
   let bad = 0;
   const maps = {};

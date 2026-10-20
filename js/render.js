@@ -181,6 +181,9 @@ function drawScene() {
   for (const e of G.enemies) shadow(e.x, e.y, 0, e.boss ? 18 : (e.type === 'wisp' ? 4 : 7));
   for (const z of G.zones) drawZone(ctx, z);
   for (const e of G.effects) if (e.type === 'tele' || e.type === 'marker' || e.type === 'line' || e.type === 'summon') drawDecal(ctx, e);
+  const aimNow = currentAim();   // the player's ground indicator (kind:'aim'), under the sprites
+  if (aimNow) drawAimIndicator(aimNow.aim, aimNow.from, aimNow.to, aimNow);
+  for (const e of G.effects) if (e.type === 'aimflash') drawAimIndicator(e.aim, e.from, e.to, { col: e.col, flash: true });
 
   // ---- depth-sorted world ----
   const list = [];
@@ -197,10 +200,11 @@ function drawScene() {
   if (p.buffs.orbit) for (let k = 0; k < 3; k++) { const a = G.t * 4 + k * Math.PI * 2 / 3; list.push({ kind: 'orb', x: p.x + Math.cos(a) * 1.4, y: p.y + Math.sin(a) * 1.4, z: p.z + 1.2, key: p.x + Math.cos(a) * 1.4 + p.y + Math.sin(a) * 1.4 + p.z * 0.35 }); }
   list.sort((a, b) => a.key - b.key);
   for (const it of list) drawItem(ctx, it, lights);
+  if (aimNow) drawAimReticleTop(aimNow);   // the reticle again on top at 35 % so it reads over a boss
 
   // ---- top effects + particles ----
   ctx.globalCompositeOperation = 'lighter';
-  for (const e of G.effects) if (e.type !== 'tele' && e.type !== 'marker' && e.type !== 'line' && e.type !== 'ghost' && e.type !== 'summon') drawEffect(ctx, e, lights);
+  for (const e of G.effects) if (e.type !== 'tele' && e.type !== 'marker' && e.type !== 'line' && e.type !== 'ghost' && e.type !== 'summon' && e.type !== 'aimflash') drawEffect(ctx, e, lights);
   ctx.globalCompositeOperation = 'source-over';
   drawParticles(ctx, lights);
 
@@ -305,10 +309,128 @@ function drawZone(ctx, z) {
   ctx.globalCompositeOperation = 'source-over';
 }
 
+// ===== ground aim indicators (docs/HUD.md "Touch v2" > Aiming) ==============================================
+// Anti-confusion rule: the PLAYER's indicators (AIM_STYLE) are thin, dashed, low-alpha and cool-toned and never animate
+// their fill (only the range dashes move, 1 px / 100 ms); ENEMY telegraphs (TELE_STYLE) are thick, solid, hot and
+// high-alpha with a filling countdown. If an enemy telegraph covers the reticle, the player's fill drops to 10 %.
+// drawAimIndicator(aim, from, to, o) draws one indicator in scene space: aim = SKILLS[id].aim { shape, range, r, arc,
+// len, w }, from = the hero, to = the (clamped) world target, o = { col, clamped, cancel, flash }. Sources (currentAim):
+// touch.js TOUCH_AIM while a skill is drag-aimed, else input.js IN.aimHold (desktop / pad hold-to-aim). Caches: the
+// dashed range ellipse per (range, colour, dash phase) and the reticle per (r, colour); cone / line / projectile
+// shapes are 4-20 point paths drawn directly (cheaper than sprites at this size).
+const AIM_STYLE = { range: 0.85, dash: [4, 3], fill: 0.25, fillCovered: 0.1, edge: 0.8, lw: 1, cool: '#9fe8ff', coolMix: 0.35, disc: 0.22, top: 0.35, chevron: 12 };
+const TELE_STYLE = { fill: 0.2, edge: 0.95, lw: 2, count: 0.34 };
+const AIMV = { lastShown: -9, cache: new Map() };
+const isoAxes = R => [16 * Math.SQRT2 * R, 8 * Math.SQRT2 * R];   // a world circle of radius R on screen
+function aimCol(c) { return mixHex(c || '#ffffff', AIM_STYLE.cool, AIM_STYLE.coolMix); }
+function aimRangeSprite(R, col, phase) {
+  const key = 'r|' + R + '|' + col + '|' + phase; let c = AIMV.cache.get(key);
+  if (!c) {
+    const [ax, ay] = isoAxes(R), m = makeCanvas(Math.ceil(ax * 2) + 6, Math.ceil(ay * 2) + 6), x = m.x, cx = m.c.width / 2, cy = m.c.height / 2;
+    x.strokeStyle = rgba(col, 0.38); x.lineWidth = 3; x.beginPath(); x.ellipse(cx, cy, ax, ay, 0, 0, Math.PI * 2); x.stroke();   // soft glow
+    x.setLineDash(AIM_STYLE.dash); x.lineDashOffset = -phase; x.lineWidth = 1;
+    x.strokeStyle = 'rgba(11,7,22,0.55)'; x.beginPath(); x.ellipse(cx, cy + 1, ax, ay, 0, 0, Math.PI * 2); x.stroke();   // 1 px dark under-stroke: reads on bright grass
+    x.strokeStyle = rgba(col, 1); x.beginPath(); x.ellipse(cx, cy, ax, ay, 0, 0, Math.PI * 2); x.stroke();
+    c = m.c; AIMV.cache.set(key, c);
+    if (AIMV.cache.size > 80) AIMV.cache.delete(AIMV.cache.keys().next().value);
+  }
+  return c;
+}
+function aimReticleSprite(r, col, clamped) {
+  const key = 't|' + r + '|' + col + '|' + (clamped ? 1 : 0); let c = AIMV.cache.get(key);
+  if (!c) {
+    const [ax, ay] = isoAxes(r), m = makeCanvas(Math.ceil(ax * 2) + 8, Math.ceil(ay * 2) + 8), x = m.x, cx = m.c.width / 2, cy = m.c.height / 2;
+    x.fillStyle = rgba(col, AIM_STYLE.disc); x.beginPath(); x.ellipse(cx, cy, ax, ay, 0, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = 'rgba(11,7,22,0.5)'; x.lineWidth = 1; x.beginPath(); x.ellipse(cx, cy + 1, ax, ay, 0, 0, Math.PI * 2); x.stroke();
+    x.strokeStyle = rgba(col, AIM_STYLE.edge); x.beginPath(); x.ellipse(cx, cy, ax, ay, 0, 0, Math.PI * 2); x.stroke();
+    x.fillStyle = rgba(col, 0.9); for (const [dx, dy] of [[ax, 0], [-ax, 0], [0, ay], [0, -ay]]) x.fillRect(Math.round(cx + dx * 0.82 - 1), Math.round(cy + dy * 0.82), 3, 1);   // 4 ticks
+    x.fillStyle = clamped ? '#ffffff' : rgba(col, 1); x.fillRect(Math.round(cx) - 1, Math.round(cy) - 1, 2, 2);
+    c = m.c; AIMV.cache.set(key, c);
+  }
+  return c;
+}
+// the live indicator: touch drag first, else the desktop / pad hold (input.js), honouring the groundIndicators setting
+function currentAim() {
+  const p = G.player; if (!p || p.dead || G.state !== 'play' || G.ui.open) return null;
+  if (typeof TOUCH_AIM !== 'undefined' && TOUCH_AIM) {
+    if (typeof SETTINGS !== 'undefined' && SETTINGS.groundIndicators === 'off' && !G.touch) return null;
+    const s = SKILLS[TOUCH_AIM.skill];
+    return Object.assign({}, TOUCH_AIM, { from: { x: p.x, y: p.y }, col: s && s.color });
+  }
+  const H = typeof IN !== 'undefined' && IN.aimHold; if (!H || !H.show) return null;
+  const id = slotSkill(p, H.slot), s = id && SKILLS[id]; if (!s) return null;
+  const aim = typeof skillAimOf === 'function' ? skillAimOf(id, H.slot) : s.aim; if (!aim) return null;
+  const R = aim.range || aim.len || 6, dx = G.mouse.wx - p.x, dy = G.mouse.wy - p.y, d = Math.hypot(dx, dy) || 1, k = aim.shape === 'circle' ? Math.min(d, R) : R;
+  return { skill: id, slot: H.slot, aim, from: { x: p.x, y: p.y }, to: { x: p.x + dx / d * k, y: p.y + dy / d * k }, clamped: aim.shape === 'circle' && d > R, col: s.color };
+}
+// is a world point inside a live enemy telegraph? (the reticle's fill then drops to 10 %)
+function teleCovers(x, y) {
+  for (const f of G.effects) {
+    if (f.type !== 'tele') continue;
+    if (f.kind === 'circle' && dist(x, y, f.x, f.y) < f.r) return true;
+    if (f.kind === 'cone' && dist(x, y, f.x, f.y) < f.r && Math.abs(angDiff(f.ang, Math.atan2(y - f.y, x - f.x))) < f.arc / 2) return true;
+    if (f.kind === 'line' && segDist(x, y, f.x, f.y, f.x + Math.cos(f.ang) * f.len, f.y + Math.sin(f.ang) * f.len) < f.w) return true;
+  }
+  return false;
+}
+function drawAimIndicator(aim, from, to, o = {}) {
+  const ctx = sctx, A = AIM_STYLE, p = G.player, z = p ? p.z : 0, col = aimCol(o.col), sh = aim.shape;
+  const ang = Math.atan2(to.y - from.y, to.x - from.x) || (p ? p.aim : 0), R = aim.range || aim.len || 6;
+  const wv = (x, y) => worldToView(x, y, z);
+  const covered = teleCovers(sh === 'circle' ? to.x : from.x + Math.cos(ang) * R * 0.6, sh === 'circle' ? to.y : from.y + Math.sin(ang) * R * 0.6);
+  const fillA = (covered ? A.fillCovered : A.fill) * (o.cancel ? 0.4 : 1), edgeA = A.edge * (o.cancel ? 0.4 : 1);
+  if (!o.flash) AIMV.lastShown = G.t;
+  ctx.save(); if (o.flash) ctx.globalAlpha = 0.9;
+  // range circle (iso ellipse, dashed, centred on the HERO): not for self skills or a quick-cast flash
+  if (sh !== 'self' && !o.flash) {
+    const phase = Math.floor(performance.now() / 100) % 7, spr = aimRangeSprite(R, col, phase), [hx, hy] = wv(from.x, from.y);
+    ctx.globalAlpha = A.range * (o.cancel ? 0.4 : 1); ctx.drawImage(spr, Math.round(hx - spr.width / 2), Math.round(hy - spr.height / 2)); ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = rgba(col, fillA); ctx.strokeStyle = rgba(col, edgeA); ctx.lineWidth = A.lw;
+  const poly = pts => { ctx.beginPath(); pts.forEach((q, i) => { const [x, y] = wv(q[0], q[1]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath(); ctx.fill(); ctx.stroke(); };
+  const c = Math.cos(ang), sn = Math.sin(ang);
+  if (sh === 'cone') {
+    const arc = aim.arc || 1.6, pts = [[from.x, from.y]];
+    for (let i = 0; i <= 16; i++) { const a = ang - arc / 2 + arc * i / 16; pts.push([from.x + Math.cos(a) * R, from.y + Math.sin(a) * R]); }
+    poly(pts);
+  } else if (sh === 'line' || sh === 'dash') {
+    const w = (aim.w || 0.8) / 2, L = aim.len || R, hl = Math.min(0.8, L * 0.2), nx = -sn * w, ny = c * w;
+    poly([[from.x + nx, from.y + ny], [from.x + nx + c * (L - hl), from.y + ny + sn * (L - hl)], [from.x + c * L, from.y + sn * L], [from.x - nx + c * (L - hl), from.y - ny + sn * (L - hl)], [from.x - nx, from.y - ny]]);
+    if (sh === 'dash' && p && p.spr && !o.flash) { const spr = currentPlayerSprite(p), [gx, gy] = wv(from.x + c * L, from.y + sn * L); ctx.globalAlpha = 0.35; ctx.drawImage(silOf(spr, col), Math.round(gx - spr.width / 2), Math.round(gy - spr.height + 1)); ctx.globalAlpha = 1; }
+  } else if (sh === 'proj') {
+    const w = (aim.w || 0.4) / 2, nx = -sn * w, ny = c * w, [ax, ay] = wv(from.x, from.y), [bx, by] = wv(from.x + c * R, from.y + sn * R);
+    ctx.beginPath(); for (const k of [-1, 1]) { const [x0, y0] = wv(from.x + nx * k, from.y + ny * k), [x1, y1] = wv(from.x + nx * k + c * R, from.y + ny * k + sn * R); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); } ctx.stroke();
+    const L = Math.hypot(bx - ax, by - ay) || 1, ux = (bx - ax) / L, uy = (by - ay) / L;
+    ctx.beginPath(); for (let t = A.chevron; t < L; t += A.chevron) { const x = ax + ux * t, y = ay + uy * t; ctx.moveTo(x - ux * 3 - uy * 3, y - uy * 3 + ux * 3); ctx.lineTo(x, y); ctx.lineTo(x - ux * 3 + uy * 3, y - uy * 3 - ux * 3); } ctx.stroke();
+  } else if (sh === 'circle') {
+    const spr = aimReticleSprite(aim.r || 2, col, o.clamped), [tx, ty] = wv(to.x, to.y);
+    ctx.globalAlpha *= covered ? 0.45 : 1; ctx.drawImage(spr, Math.round(tx - spr.width / 2), Math.round(ty - spr.height / 2)); ctx.globalAlpha = o.flash ? 0.9 : 1;
+    if (!o.flash) { const [hx, hy] = wv(from.x, from.y); ctx.strokeStyle = rgba(col, 0.35); ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(tx, ty); ctx.stroke(); ctx.setLineDash([]); }
+  } else if (sh === 'self') {
+    const r = (aim.r || 1.2) * (1 + 0.04 * Math.sin(G.t * 4));   // a breathing ring
+    projRing(ctx, from.x, from.y, z, r); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawAimReticleTop(a) {
+  if (!a || a.aim.shape !== 'circle') return;
+  const spr = aimReticleSprite(a.aim.r || 2, aimCol(a.col), a.clamped), [tx, ty] = worldToView(a.to.x, a.to.y, G.player.z);
+  sctx.globalAlpha = AIM_STYLE.top * (a.cancel ? 0.4 : 1); sctx.drawImage(spr, Math.round(tx - spr.width / 2), Math.round(ty - spr.height / 2)); sctx.globalAlpha = 1;
+}
+// 1-frame quick-cast flash (game.js useSkill): the skill's shape at its target, no range circle
+function aimFlash(id, slot) {
+  const p = G.player, s = SKILLS[id]; if (!s || !p) return;
+  const aim = typeof skillAimOf === 'function' ? skillAimOf(id, slot) : s.aim; if (!aim || aim.shape === 'self') return;
+  if (G.t - AIMV.lastShown < 0.1) return;   // an aimed cast already showed its indicator
+  const R = aim.range || aim.len || 6, dx = G.mouse.wx - p.x, dy = G.mouse.wy - p.y, d = Math.hypot(dx, dy) || 1, k = aim.shape === 'circle' ? Math.min(d, R) : R;
+  fx({ type: 'aimflash', aim, from: { x: p.x, y: p.y }, to: { x: p.x + dx / d * k, y: p.y + dy / d * k }, col: s.color, life: 1 / 30 });
+}
+
 function drawDecal(ctx, e) {
   const k = clamp(e.t / e.life, 0, 1);
   if (e.type === 'tele') {
-    ctx.fillStyle = rgba(e.col, 0.16); ctx.strokeStyle = rgba(e.col, 0.85); ctx.lineWidth = 1;
+    const T = TELE_STYLE;
+    ctx.fillStyle = rgba(e.col, T.fill); ctx.strokeStyle = rgba(e.col, T.edge); ctx.lineWidth = T.lw;
     const shape = (s) => {
       if (e.kind === 'circle') projRing(ctx, e.x, e.y, 0, e.r * s);
       else if (e.kind === 'cone') { ctx.beginPath(); const [cx, cy] = worldToView(e.x, e.y, 0); ctx.moveTo(cx, cy); const n = 20; for (let i = 0; i <= n; i++) { const a = e.ang - e.arc / 2 + e.arc * i / n, [vx, vy] = worldToView(e.x + Math.cos(a) * e.r * s, e.y + Math.sin(a) * e.r * s, 0); ctx.lineTo(vx, vy); } ctx.closePath(); }
@@ -319,7 +441,7 @@ function drawDecal(ctx, e) {
       }
     };
     shape(1); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = rgba(e.col, 0.28); shape(k); ctx.fill();
+    ctx.fillStyle = rgba(e.col, T.count); shape(k); ctx.fill();   // the filling countdown
   } else if (e.type === 'marker') {
     ctx.globalCompositeOperation = 'lighter';
     ctx.strokeStyle = rgba(e.col, 0.8); ctx.fillStyle = rgba(e.col, 0.1 + k * 0.15); ctx.lineWidth = 1;
@@ -534,6 +656,8 @@ function drawEnemy(ctx, e, lights) {
   let vy = vy0;
   const spawnA = e.spawnT > 0 ? 1 - e.spawnT / (e.boss ? 1.6 : 0.9) : 1;
   if (spawnA <= 0.05) return;
+  const artKey = enemyArtKey(e);
+  if (artKey) { drawEnemyArt(ctx, e, artKey, vx, vy, spawnA); return; }
   if (e.under) { drawBurrowed(ctx, e, vx, vy); return; }
   if (e.mimic) { const ci = ART.chest; ctx.drawImage(e.flash > 0 ? silOf(ci, '#ffffff') : ci, Math.round(vx - ci.width / 2), Math.round(vy - ci.height + 1)); return; }
   ctx.globalAlpha = spawnA * (e.fadeT > 0 ? 0.35 : 1);
@@ -596,6 +720,63 @@ function drawEnemy(ctx, e, lights) {
   ctx.globalAlpha = 1;
   if (e.stunT > 0 && !e.frozen) for (let k = 0; k < 3; k++) { const a = G.t * 6 + k * 2.1; ctx.fillStyle = '#ffe36a'; ctx.fillRect(Math.round(vx + Math.cos(a) * 6), Math.round(vy - e.hgt * ZS - 4 + Math.sin(a) * 2), 1, 1); }
   // nameplates (bar, icons, statuses) are drawn by hud.js drawNameplates on the 2x grid
+}
+
+// ===== ENEMY_ART (js/enemyart.js, procedural 12+ frame sets): the primary enemy sprite source =====================
+// key = row.art || the enemy id when ENEMY_ART.info has it. Anim from the part / boss state: hit (flash) · sleep ·
+// heal (healer wind-up) · burrow (first 0.35 s of a burrow, then the dirt mound) · erupt · stomp / grab (boss
+// telegraph frame 0, hit frame 1) · attack (wind 0, action 1) · walk (moving) · idle. Elites: tint + aura hooks.
+const ART_FLIP = new WeakMap();
+const flipOf = c => { let f = ART_FLIP.get(c); if (!f) ART_FLIP.set(c, f = flipH(c)); return f; };
+function enemyArtKey(e) {
+  if (typeof ENEMY_ART === 'undefined') return null;
+  const def = ENEMY[e.type] || {}, k = def.art || e.type;
+  return ENEMY_ART.info[k] ? k : null;
+}
+function enemyArtAnim(e, key) {
+  const A = ENEMY_ART.info[key].anims, f8 = Math.floor(e.anim * 8), f4 = Math.floor(e.anim * 4), f3 = Math.floor(e.anim * 3);
+  if (e.flash > 0 && A.hit) return ['hit', 0];
+  if (e.asleep) return [A.sleep ? 'sleep' : 'idle', Math.floor(e.anim * 1.5)];
+  const mv = e.boss && e.bk && e.bk.mv;
+  if (mv) {
+    const step = mv.step > 0 || mv.t > mv.wind ? 1 : 0;
+    if (mv.M.name === 'stomp' && A.stomp) return ['stomp', step];
+    if ((mv.M.name === 'rootGrab' || mv.M.root) && A.grab) return ['grab', step];
+    return ['attack', step];
+  }
+  if (e.state === 'wind') {
+    if (e.act === 'healer' && A.heal) return ['heal', f4];
+    if (e.act === 'burrow' && A.burrow) return ['burrow', Math.floor(((e.windMax || 0) - e.st) / 0.18)];
+    return ['attack', 0];
+  }
+  if (e.state === 'erupt' && A.erupt) return ['erupt', e.st > 0.3 ? 0 : 1];
+  if (e.state !== 'chase' && e.state !== 'rec') return ['attack', 1];
+  const moving = e.lmx != null && Math.hypot(e.x - e.lmx, e.y - e.lmy) > 0.002;
+  return moving ? ['walk', f8] : ['idle', f3];
+}
+function drawEnemyArt(ctx, e, key, vx, vy, spawnA) {
+  const info = ENEMY_ART.info[key];
+  if (!e.artHgt) { e.artHgt = true; e.hgt = Math.max(e.hgt || 0, info.ay / ZS * 0.95); }
+  const [anim, frame] = enemyArtAnim(e, key);
+  e.lmx = e.x; e.lmy = e.y;
+  if (e.under && !(e.state === 'wind' && e.act === 'burrow' && (e.windMax || 0) - e.st < 0.36)) { drawBurrowed(ctx, e, vx, vy); return; }
+  const fly = (ENEMY[e.type].tags || []).includes('flying'), oy = fly ? -(8 + Math.sin(e.anim * 3) * 3) : 0;
+  const mods = e.elite && e.mods || [], ecol = mods[0] && ELITE_MODS[mods[0]] ? ELITE_MODS[mods[0]].col : '#ffd35a';
+  let img = ENEMY_ART.get(key, anim, frame, e.elite ? { tint: ecol, amount: 0.3 } : null);
+  if (e.face < 0) img = flipOf(img);
+  const ax = e.face < 0 ? img.width - info.ax : info.ax, x = Math.round(vx - ax), y = Math.round(vy + oy - info.ay);
+  ctx.globalAlpha = spawnA * (e.fadeT > 0 ? 0.35 : 1);
+  if (e.elite) {
+    const R = 2; let au = ENEMY_ART.aura(key, anim, frame, ecol, R); if (e.face < 0) au = flipOf(au);
+    ctx.globalAlpha = spawnA * (0.55 + 0.3 * Math.sin(G.t * 4)); ctx.drawImage(au, x - R, y - R); ctx.globalAlpha = spawnA;
+    drawEliteAura(ctx, e);
+  }
+  ctx.drawImage(e.flash > 0 ? silOf(img, '#ffffff') : img, x, y);
+  if (e.state === 'wind' && !e.boss && e.act === 'brute') { ctx.globalAlpha = spawnA * (0.2 + 0.2 * Math.sin(e.anim * 30)); ctx.drawImage(silOf(img, '#ff5040'), x, y); }
+  if (e.frozen) { ctx.globalAlpha = 0.5 * spawnA; ctx.drawImage(silOf(img, '#bff4ff'), x, y); }
+  ctx.globalAlpha = 1;
+  if (e.eShield > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = rgba('#cfe6ff', 0.4 + 0.4 * e.eShield / e.eShieldMax); projRing(ctx, e.x, e.y, 0.2, e.r + 0.45); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
+  if (e.stunT > 0 && !e.frozen) for (let k = 0; k < 3; k++) { const a = G.t * 6 + k * 2.1; ctx.fillStyle = '#ffe36a'; ctx.fillRect(Math.round(vx + Math.cos(a) * 6), Math.round(y - 4 + Math.sin(a) * 2), 1, 1); }
 }
 
 // what an enemy looks like: its own sprite (ART.custom or a 12-frame ENEMY_SPRITES set), else the row's `look`

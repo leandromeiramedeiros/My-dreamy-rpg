@@ -363,6 +363,56 @@ const PAD_STUB = () => {
   await wait(150);
   const two2 = await ev(() => ({ move: IN.move.mag, atk: IN.held('attack'), aim: TOUCH_AIM, n: Object.keys(TOUCH.ptrs).length }));
   check('touch: two+ pointers at once (stick moves, attack held, skill drag-aims), all released cleanly', two.move > 0 && two.atk && two.aim === 'e' && Math.hypot(two.x - p0m.x, two.y - p0m.y) > 0.1 && two2.move === 0 && !two2.atk && two2.aim === null && two2.n === 0, { two, two2 });
+  // ---------- 4d'. ground aim indicators (render.js drawAimIndicator, AIM_STYLE / TELE_STYLE) + hold-to-aim ----------
+  const M2B_AIM = path.join(__dirname, 'shots', 'm2b'); fs.mkdirSync(M2B_AIM, { recursive: true });
+  const aimShot = async name => { await wait(150); await page.screenshot({ path: path.join(M2B_AIM, name + '.png') }); };
+  const dragAim = async (slot, dx, dy) => { await ev(([s, dx, dy]) => { const b = __bt(s); __tp('pointerdown', 40, b.x, b.y); __tp('pointermove', 40, b.x + dx * 0.3, b.y + dy * 0.3); __tp('pointermove', 40, b.x + dx, b.y + dy); }, [slot, dx, dy]); await wait(250); };
+  const endAim = async () => { await ev(() => { __tp('pointermove', 40, 480, 500); __tp('pointerup', 40, 480, 500); }); await wait(200); };   // released on the X: cancelled
+  await ev(() => { __tp('pointerdown', 9, 5, 5); __tp('pointerup', 9, 5, 5); __reset(); G.banner = null; const p = G.player; spawnEnemy('slime', p.x + 2.4, p.y + 1, 0).hp = 1e6; });
+  await dragAim('q', -60, -25);
+  const cone = await ev(() => { const a = currentAim(); return a && { shape: a.aim.shape, cx: a.from.x === G.player.x && a.from.y === G.player.y, shown: G.t - AIMV.lastShown < 0.2 }; });
+  check('aim: touch drag draws the cone indicator, its range ellipse centred on the hero', cone && cone.shape === 'cone' && cone.cx && cone.shown, cone);
+  await aimShot('touch-aim-cone'); await endAim();
+  await ev(() => { __reset(); G.player.ult = 100; }); await dragAim('r', -170, -90);
+  const circ = await ev(() => { const a = currentAim(); return a && { shape: a.aim.shape, clamped: a.clamped, d: +Math.hypot(a.to.x - a.from.x, a.to.y - a.from.y).toFixed(2), range: a.aim.range }; });
+  check('aim: circle reticle clamped to the range circle (clamped flag, |to-from| = range)', circ && circ.shape === 'circle' && circ.clamped && Math.abs(circ.d - circ.range) < 1e-6, circ);
+  await aimShot('touch-aim-circle-clamped'); await endAim();
+  // line: equip the Moonbow ultimate (moonbeam)
+  await ev(() => { __reset(); const p = G.player; p.equip.weapon = makeItem('moonbow', 'rare', p.level, { sockets: 0 }); recalcStats(p); p.wsk.moonbow.r = 'moonbeam'; p.ult = 100; });
+  await dragAim('r', -120, -40);
+  const line = await ev(() => { const a = currentAim(); return a && a.aim.shape; });
+  check('aim: line indicator (Moonbeam)', line === 'line', line);
+  await aimShot('touch-aim-line'); await endAim();
+  // vs a boss telegraph: player indicator stays thin / cool, its fill drops to 10 % under the enemy circle
+  await ev(() => { const p = G.player; __reset(); p.equip.weapon = makeItem('rustyblade', 'rare', p.level, { sockets: 0 }); recalcStats(p); p.invulnT = 99; p.ult = 100;
+    const b = spawnEnemy('bramblehorn', p.x + 3.2, p.y - 0.6, 0); b.cd = 99; startMove(b, 'stomp'); });
+  await dragAim('r', 14, 6);
+  const ov = await ev(() => { const a = currentAim(), b = G.boss; return { boss: !!b, tele: G.effects.some(f => f.type === 'tele' && f.src === b), covered: a ? teleCovers(a.to.x, a.to.y) : null, AIM: AIM_STYLE.fillCovered, TELE: TELE_STYLE.lw > AIM_STYLE.lw }; });
+  await aimShot('touch-vs-boss-telegraph'); await endAim();
+  check('aim: TELE_STYLE thicker than AIM_STYLE; a reticle under an enemy telegraph drops to 10 % fill', ov.boss && ov.tele && ov.TELE && ov.AIM === 0.1 && ov.covered === true, ov);
+  await ev(() => { G.enemies.length = 0; G.boss = null; G.effects.length = 0; __reset(); G.player.invulnT = 0; });
+  // quick-cast (tap) flashes the shape for one frame
+  await ev(() => { const p = G.player; spawnEnemy('slime', p.x + 1.3, p.y + 0.5, 0).hp = 1e6; AIMV.lastShown = -9; window.__flash = 0; window.__af = aimFlash; aimFlash = (id, slot) => { const n = G.effects.length; window.__af(id, slot); if (G.effects.slice(n).some(f => f.type === 'aimflash')) window.__flash++; }; });
+  await tap2('q');
+  const fl = await ev(() => { aimFlash = window.__af; return window.__flash; });
+  check('aim: a tap quick-cast shows a 1-frame flash of the shape at the target', fl >= 1, fl);
+  await ev(() => { __reset(); });
+  // desktop hold-to-aim: hold Q -> indicator after 0.15 s, cast on release; a quick press casts at once
+  await page.keyboard.press('KeyS'); await wait(120);
+  const hm = await ev(() => { setSetting('groundIndicators', 'hold'); const p = G.player; p.cds = {}; p.mp = p.maxMp; G.enemies.length = 0; spawnEnemy('slime', p.x + 1.4, p.y + 0.4, 0).hp = 1e6; return { mode: IN.aimMode(), dev: IN.device }; });
+  await page.keyboard.down('KeyQ'); await wait(80);
+  const early = await ev(() => ({ show: !!(IN.aimHold && IN.aimHold.show), cd: G.player.cds.sunslash || 0 }));
+  await wait(320);
+  const held = await ev(() => ({ show: !!(IN.aimHold && IN.aimHold.show), cd: G.player.cds.sunslash || 0, drawn: G.t - AIMV.lastShown < 0.3 }));
+  await aimShot('aim-on-hold');
+  await page.keyboard.up('KeyQ'); await wait(150);
+  const after = await ev(() => ({ cd: G.player.cds.sunslash || 0, hold: IN.aimHold }));
+  await ev(() => { G.player.cds = {}; }); await page.keyboard.press('KeyQ'); await wait(120);
+  const quick = await ev(() => G.player.cds.sunslash || 0);
+  await ev(() => setSetting('groundIndicators', 'off')); await ev(() => { G.player.cds = {}; }); await page.keyboard.down('KeyQ'); await wait(60);
+  const off = await ev(() => ({ cd: G.player.cds.sunslash || 0, hold: IN.aimHold })); await page.keyboard.up('KeyQ'); await ev(() => setSetting('groundIndicators', 'hold'));
+  check('aim: desktop hold-to-aim — indicator after 0.15 s held, cast on release; a quick press casts; "off" casts on press', hm.mode === 'hold' && !early.show && early.cd === 0 && held.show && held.drawn && held.cd === 0 && after.cd > 0 && after.hold === null && quick > 0 && off.cd > 0 && off.hold === null, { hm, early, held, after, quick, off });
+  await ev(() => { G.enemies.length = 0; });
   await ev(() => { __reset(); });
   await page.keyboard.press('KeyS'); await wait(100);   // back to kbm for the later sections
 

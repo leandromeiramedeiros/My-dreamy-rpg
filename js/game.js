@@ -311,6 +311,7 @@ function useSkill(p, slot) {
   if (p.dash && p.dash.cast === c) dur = Math.max(dur, p.dash.t);
   p.cast = dodge ? null : { c, id, slot, age: 0, dur: Math.min(1.5, dur), mp };
   G.lastCast = { slot, t: 0.25 };
+  if (!dodge && typeof aimFlash === 'function') aimFlash(id, slot);   // quick-cast: 1-frame flash of the shape at the target
   return true;
 }
 function say(s) { G.msg = { s, t: 1.6 }; }
@@ -545,10 +546,14 @@ function resolveAim(p) {
 }
 // gameplay actions, read once per step after the aim is resolved (keyboard/mouse, pad and touch alike)
 const SKILL_ACTIONS = [['skillQ', 'q'], ['skillE', 'e'], ['skillR', 'r'], ['skillF', 'f'], ['skillC', 'c'], ['dodge', 'shift'], ['s1', '1'], ['s2', '2'], ['s3', '3']];
+// Hold-to-aim (input.js IN.aimMode): 'off' casts on press (M2a); 'hold' / 'always' cast the skill keys on RELEASE so the
+// ground indicator can show while held (IN.aimCasts lists this step's releases). Dodge and potion stay instant.
 function playerActions(p, dt) {
-  if (typeof IN === 'undefined' || G.ui.open || G.state !== 'play' || G.fadeDir > 0) return;
+  if (typeof IN === 'undefined' || G.ui.open || G.state !== 'play' || G.fadeDir > 0) { if (typeof IN !== 'undefined' && IN.clearAimHold) IN.clearAimHold(); return; }
   if (p.dodgeBuf > 0) { p.dodgeBuf -= dt; if (!castActive(p) || p.cast.age >= CANCEL_AFTER) { p.dodgeBuf = 0; useSkill(p, 'shift'); } }
-  for (const [a, slot] of SKILL_ACTIONS) if (IN.pressed(a)) useSkill(p, slot);
+  const hold = IN.aimMode && IN.aimMode() !== 'off';
+  for (const [a, slot] of SKILL_ACTIONS) if (IN.pressed(a) && (!hold || slot === 'shift')) useSkill(p, slot);
+  if (hold) for (const a of IN.aimCasts) { const sa = SKILL_ACTIONS.find(q => q[0] === a); if (sa) useSkill(p, sa[1]); }
   if (typeof attackToggle === 'function' && attackToggle()) { if (IN.pressed('attack')) p.autoAtk = !p.autoAtk; } else p.autoAtk = false;
   if (IN.held('attack') || p.autoAtk) basicAttack(p);
   if (IN.pressed('potion')) drinkPotion(p);
@@ -883,6 +888,9 @@ function applyTuning(t) {
 //   teleport · checkpoint { x, y, text } · loot { rarity, count, x, y, + extras: gem, chest: tier, sockets, item } ·
 //   dialogue { id: DIALOGUE key } or { speaker, lines } · openGate { id } (gate / keydoor / hidden wall; levers flip) ·
 //   quest { id, step | done, title, text } -> G.prog.quests[id] = { step } | 'done' (the Quests tab reads it)
+//   spawnPack { id, at: { x, y } | 'x,y', radius = 1.5, elite } spawns an ENCOUNTERS pack (js/enemydata.js) by id, its
+//     members ringed around `at` (default: beside the hero), tagged e.pack = id. A pack's `after` rule is NOT checked
+//     here: the trigger's own `requires` gates it.
 const LASTING_ACTIONS = { open_portal: 1, close_portal: 1, objective: 1, openGate: 1 };
 function startTriggers() {
   const m = G.map, settled = G.prog.trig[m.id] || [];
@@ -954,6 +962,7 @@ function runAction(a) {
     case 'dialogue': talk(a); break;
     case 'openGate': if (typeof openGate === 'function') openGate(a.id, true); break;
     case 'quest': questAction(a); break;
+    case 'spawnPack': spawnPack(a); break;
     case 'clear_enemies': for (const e of G.enemies.slice()) if (!e.dummy && !e.dead) killEnemy(e); break;
     case 'shake': shake(+a.power || 6); break;
     case 'sound': sfx(a.name || 'portal'); break;
@@ -999,4 +1008,19 @@ function questAction(a) {
   const msg = a.done ? `Quest complete: ${title}` : cur ? `Quest updated: ${title}` : `New quest: ${title}`;
   if (typeof UI !== 'undefined' && UI.toast) UI.toast({ text: msg, col: '#ffd35a' }); else say(msg);
   sfx(a.done ? 'levelup' : 'pickup');
+}
+function encounterPack(id) {
+  if (typeof ENCOUNTERS === 'undefined' || !id) return null;
+  for (const zone in ENCOUNTERS) { const f = (ENCOUNTERS[zone] || []).find(q => q.id === id); if (f) return f; }
+  return null;
+}
+function spawnPack(a) {
+  const pk = encounterPack(a.id); if (!pk) { if (typeof console !== 'undefined') console.warn('spawnPack: no ENCOUNTERS pack ' + a.id); return; }
+  let at = a.at; if (typeof at === 'string') { const [x, y] = at.split(',').map(Number); at = { x, y }; }
+  const p = G.player, cx = at && isFinite(+at.x) ? +at.x : p.x + 3, cy = at && isFinite(+at.y) ? +at.y : p.y, R = a.radius != null && a.radius !== '' ? +a.radius : 1.5;
+  pk.members.forEach((type, i) => {
+    const ang = i / pk.members.length * Math.PI * 2 + 0.3;
+    G.pendingSpawns++;
+    delay(0.15 * i, () => { G.pendingSpawns--; const e = spawnAt(type, cx + Math.cos(ang) * R, cy + Math.sin(ang) * R, 0.4, a.instant, i === 0 ? a.elite : null); if (e) e.pack = pk.id; });
+  });
 }

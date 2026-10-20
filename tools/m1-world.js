@@ -12,17 +12,14 @@ const w = new Function(src + ';return WORLD_DATA;')();
 const worldSource = d => "'use strict';\n// The game world: maps, triggers (logic) and tuning. Edit it visually with editor.html,\n// which can publish straight back to this file on GitHub.\nconst WORLD_DATA = " + JSON.stringify(d, null, 1) + ';\n';
 
 // DESIGN §3/§11 bands (always written, so a re-run follows the design)
-const LEVELS = { vale: [1, 3], pinewood: [3, 10], pinewood_boss: [8, 10], ruins: [10, 17] };
-const OBJECTS = {
-  vale: [{ t: 'chest', x: 4.5, y: 17.2, starter: true }, { t: 'shrine', x: 2.6, y: 21.2 }],
-  pinewood: [{ t: 'chest', x: 13.2, y: 3.0, tier: 'silver' }, { t: 'shrine', x: 6.8, y: 19.2 },
-    { t: 'tablet', x: 4.6, y: 17.2, title: 'Warden stone', text: 'The Wardens planted the first pines to hold the Gloam back. Now the roots are black.' }],
-};
+const LEVELS = { vale: [1, 3], pinewood: [3, 10], roothollow: [3, 10], pinewood_boss: [6, 10], ruins: [10, 17] };   // Act I maps now carry the same band from their recipes (tools/maps/recipes)
+// vale / pinewood used to get a hand-placed chest, shrine and tablet here (coordinates of the old 24x24 / 26x26 maps). The generated
+// 40x40 / 56x56 maps place their own, so only maps without a recipe are listed (none today).
+const OBJECTS = {};
 // trigger id -> actions appended once (matched by type)
 const ACTIONS = {
   ruins: { clear1: [{ type: 'loot', rarity: 'uncommon', count: 1 }], clear2: [{ type: 'loot', rarity: 'uncommon', count: 1 }],
     bossintro: [{ type: 'checkpoint', text: 'Checkpoint: before the Warden' }] },
-  pinewood: { ogres_done: [{ type: 'loot', rarity: 'uncommon', count: 1 }], calm: [{ type: 'loot', rarity: 'rare', count: 1 }] },
 };
 const ENEMIES = {
   ogre: { element: 'slash', res: { fire: -0.5 }, tags: ['beast'] },

@@ -1,11 +1,23 @@
 'use strict';
 // pinewood -- Act I outer map (56x56), built with the `outer` stamp.
+// HOOK: the trees are running -- a fox-and-rabbit trail leads up the road, ogres and thornback boars debut, a creek fishing spot
+//       is introduced. The troll is NOT here (it sleeps in Root Hollow, DESIGN 21.5). Level band [3,10].
+// PACING (walk 3.7 t/s, ~195 tiles main path = ~55 s of walking; fights make it ~6 min):
+//   0:00 banner + Pip, fox trail starts at once        0:25 creek: fishing stub + Pip      0:50 tablet detour (30 s round trip)
+//   1:10 r1 ogre pack (first brute telegraph)          2:30 elite ogre nook -> root key    3:40 ford ambush: boars (pierce is wrong)
+//   4:30 checkpoint 2 on the road                      5:00 r2 boar+shaman, ogre pack      7:00 r3 ogre grove -> rift down opens
+//   Secrets: wall_crack (lantern tell, Pip hum), bridge lever -> gold chest islet, plus a lantern-lit silver-chest detour.
 const { outer } = require('../stamps.js');
 const forestRules = require('./_forest.js');
+const D = require('../gamedata.js');
 
 module.exports = outer({
   id: 'pinewood', name: 'Misty Pinewood', sub: 'The trees are leaning away from something', theme: 'forest', seed: 4107, pad: 3.4, amp: 1.7,
-  objective: 'Follow the dirt road north. The animals are fleeing.', palette: forestRules, density: 1.1, key: 'key_roothollow',
+  objective: 'Follow the animals north along the dirt road.', palette: forestRules, density: 1.1, key: 'key_roothollow', level: [3, 10], quest: 'shard_root',
+  say: { banner: 'pinewood_banner', trail: 'pinewood_fox', tablet: 'pinewood_tablet' },
+  trail: [0.07, 0.17, 0.29, 0.43, 0.58, 0.74, 0.9],
+  shrine2: { x: 34, y: 23.6 },
+  ambush: [{ id: 'ford', name: 'Thornbacks at the ford', x: 49.5, y: 31, r: 4.2, pack: 'pw_boar_pierce', requires: ['r1_done'], banner: ['Thornback Boars', 'Arrows glance off their bristles (resist pierce)'], clear: { text: 'The ford is quiet again.', heal: 20 } }],
   rooms: {
     start: { kind: 'clearing', x: 7, y: 48, r: 4, lvl: 0 },
     r1: { kind: 'clearing', x: 38, y: 40, r: 6.5, lvl: 2 },
@@ -31,27 +43,27 @@ module.exports = outer({
   fishspots: [[30, 28.6], [42, 29.6]],
   rivers: { creek: { w: 2.6, pts: [[0, 21], [12, 25], [23, 27], [36, 30], [49.5, 31], [55, 33]] } },
   bridges: [{ x: 7, y: 4, axis: 'x', len: 5, w: 2, lvl: 4 }],
-  secrets: { crack: { t: 0.62 }, env: { pond: true, runeDx: 1.4, runeDy: 1.8 }, logic: { islet: 'islet', leverRoom: 'tablet' } },
+  secrets: { crack: { t: 0.62 }, env: { pond: true, chestDx: 1.4, chestDy: 1.8 }, logic: { islet: 'islet', leverRoom: 'tablet' } },
   landmark: [30, 41],
   portals: {
     home: { room: 'start', dx: -3, dy: 2.6, to: 'vale', arrive: 'vale.pine' },
     down: { room: 'r3', dx: 1.5, dy: -0.5, to: 'roothollow', open: false, marker: true },
   },
   startOff: [-0.5, 0.8],
-  foxes: [[13, 44], [30, 46], [28, 28], [10, 33]], rabbits: [[9, 45], [16, 36], [33, 38], [25, 30], [6, 30], [40, 22]],
   signs: [{ room: 'start', dx: 3.2, dy: -3.4, text: 'North: Troll Hollow. Mind the creek.' }, { room: 'r1', dx: -4.5, dy: -5.5, text: 'Danger: ogres in the clearing' }],
   text: {
-    startName: 'Glade of Arrival', intro: ['The animals are running. Something big has woken in the pinewood.'],
-    tablet: 'The Wardens planted the first pines to hold the Gloam back. Now the roots are black.',
-    eliteDone: 'The troll drops a gnarled root key.', keyLine: 'That key smells of roots and earth. It must open the Root Hollow below Troll Hollow.', riftSub: 'The Root Hollow lies below',
+    startName: 'Glade of Arrival', intro: ['The animals are running.', 'Something big has woken in the wood.'],
+    tablet: D.DIALOGUE.pinewood_tablet.lines.join(' '), shrine2Name: 'The road to the plaza',
+    eliteDone: 'The ogre drops a gnarled root key.', keyLine: 'That key smells of roots and earth. It opens the Root Hollow.', riftSub: 'The Root Hollow lies below',
   },
   enemies: {
-    r1: { name: 'Ogres in the clearing', banner: ['Ogres!', 'Lesser brutes guard the sunlit clearing'], gap: 9, waves: [[['ogre', 2]], [['ogre', 2]]],
-      clear: { text: 'Heavy footsteps echo to the north...', objective: 'Follow the road north to the stone plaza' } },                                    // teaches the zone's new enemy
-    r2: { name: 'Ogres and trolls at the plaza', banner: ['The Stone Plaza', 'Trolls shrug off arrows (resist pierce)'], gap: 10, waves: [[['ogre', 3]], [['troll', 1], ['ogre', 1]]],
-      clear: { text: 'The way to the hollow is clear.', heal: 30, objective: 'Enter Troll Hollow (north-east)' } },                                 // mixes with a pierce-resisting archetype
-    r3: { name: 'Troll Hollow', banner: ['Troll Hollow', 'A shaman chants in the dark', true], gap: 9, waves: [[['ogre', 2]], [['shaman', 1], ['troll', 1], ['ogre', 1]]],
-      clear: { text: 'The shaman falls silent.', heal: 40, rarity: 'rare', objective: 'Take the rift down into the Root Hollow (key from the elite troll)' } },   // adds a caster spot
-    elite: { title: 'Mountain Troll', sub: 'Guardian of the Root Hollow key', enemy: 'troll' },
+    // packs are ENCOUNTERS ids (js/enemydata.js); wave 2 follows `gap` s after wave 1
+    r1: { name: 'Ogres in the clearing', banner: ['Ogre!', 'A brute guards the sunlit clearing'], gap: 9, waves: [[{ pack: 'pw_ogre_run' }]],
+      clear: { text: 'Heavy footsteps echo to the north...', objective: 'Follow the road north to the stone plaza' } },                      // room 1: no support yet
+    r2: { name: 'The Stone Plaza', banner: ['The Stone Plaza', 'Kill the shaman first: it keeps the boar standing'], gap: 12, waves: [[{ pack: 'pw_boar_shaman' }], [{ pack: 'pw_ogre_slimes' }]],
+      clear: { text: 'The way to the grove is clear.', heal: 30, objective: 'Enter the Warden\'s Grove (north-east)' } },                            // support first target; wave 2 = slash is the wrong weapon
+    r3: { name: 'The Warden\'s Grove', banner: ['The Warden\'s Grove', 'A shaman chants in the dark', true], gap: 12, waves: [[{ pack: 'pw_ogre_grove', press: 2 }], [{ pack: 'pw_boar_last' }]],
+      clear: { text: 'The shaman falls silent.', heal: 40, rarity: 'rare', objective: 'Take the rift down into the Root Hollow (key from the elite ogre)' } },
+    elite: { title: 'Gnarlroot Ogre', sub: 'Guardian of the Root Hollow key', enemy: 'ogre' },
   },
 });

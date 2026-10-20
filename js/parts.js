@@ -65,6 +65,9 @@
 //   onHit, onHurt }.
 //
 // ===== SPRITE CONTRACT (Sonnet) ================================================================================
+// PRIMARY (M2b): js/enemyart.js ENEMY_ART — when ENEMY_ART.info[row.art || id] exists, render.js draws those frames and
+// picks the anim from the part state (hit, sleep, heal, burrow, erupt, stomp, grab, attack, walk, idle; elites get the
+// tint + aura hooks). Fallbacks, in order:
 // row.sprite names ART.custom[sprite] (world.sprites pixel rows, or a global ENEMY_SPRITES = { id: { w, h, pal, rows }
 // } loaded before main.js). Optional 12-frame sets: ENEMY_SPRITES[id].frames = { idle: [rows, rows], move: [x4],
 // wind: [x2], attack: [x2], hurt: [x1], die: [x1] } (each entry a rows[] array sharing w / h / pal); render.js picks

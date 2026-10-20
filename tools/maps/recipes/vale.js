@@ -1,9 +1,16 @@
 'use strict';
+// HOOK: you wake in a dream above the clouds -- one new noun every ~minute (DESIGN 16.2): dummies teach swing, dodge and Q;
+//       the Elder Stone gives a riddle and the lost-lantern quest; a chest with a fishing spot beside it; a garden ambush of three
+//       slimes (first drop, first kill-heal) whose end opens the Pinewood rift. Level band [1,3].
+// PACING (main path ~27 tiles = 7 s; every branch <= 7 s):  0:10 wake + Pip  0:40 yard dummies  1:30 Elder Stone riddle + quest
+//   2:00 NE chest + fishing stub  3:00 cottage tablet  3:30 garden ambush  4:30 rift opens (banner, Pip)  5:00 lantern found
+//   (optional, the NW nook)  5:30 lantern returned, reward.  The rift stays shut until the ambush is cleared.
 // vale -- Whispering Vale hub, 40x40: arrival glade + dummy yard, Elder Plaza (Elder Stone), cottage & garden, creek,
 // terraced Rift Terrace (NE) with the Ruins rift open and closed rifts for the future zones, Pinewood rift (S),
 // hub-arena pad (closed portal), tutorial chest ledge and a hidden gem cache islet.
 const { registerPortals, placePortals } = require('../stamps.js');
 const valeRules = require('./_vale.js');
+const { DIALOGUE } = require('../gamedata.js');
 
 const S = {
   id: 'vale',
@@ -15,7 +22,7 @@ const S = {
     grotto: { room: 'riftTerrace', dx: 2.4, dy: -1.6, to: 'grotto', open: false },
     caldera: { room: 'riftTerrace', dx: -1.6, dy: 2.4, to: 'caldera', open: false },
     spire: { room: 'riftTerrace', dx: 2.4, dy: 2.2, to: 'spire', open: false },
-    pine: { room: 'pine', dx: 0, dy: 0.3, to: 'pinewood' },
+    pine: { room: 'pine', dx: 0, dy: 0.3, to: 'pinewood', open: false },   // opens when the garden ambush is cleared
     arena: { room: 'arenaPad', dx: 0, dy: 0, to: 'hub_arena', open: false },
   },
 };
@@ -23,7 +30,7 @@ registerPortals(S);
 
 module.exports = {
   id: 'vale',
-  opts: { W: 40, H: 40, seed: 2024, name: 'Whispering Vale', sub: 'A dream drifting above the clouds', theme: 'vale', objective: 'Explore. Rifts hum to the north-east and the south.', pad: 2.7, amp: 1.2 },
+  opts: { W: 40, H: 40, seed: 2024, name: 'Whispering Vale', sub: 'A dream drifting above the clouds', theme: 'vale', objective: 'Wake up. Training dummies wait in the yard.', pad: 2.7, amp: 1.2, level: [1, 3] },
   patch: { f: 0.62, d: -1 },
   layout(g, T) {
     g.room('start', { kind: 'hub', x: 6.5, y: 31, r: 4, lvl: 0, label: 'ARRIVAL', clear: true });
@@ -50,22 +57,48 @@ module.exports = {
     g.setStart(R.start.x - 1.2, R.start.y + 1.2);
     g.house(R.cottage.x - 2, R.cottage.y - 3);
     placePortals(g, S);
-    g.marker('elder_stone', R.plaza.x, R.plaza.y, { label: 'elder stone' });
+    g.marker('elder_stone', R.plaza.x, R.plaza.y, { label: 'elder stone', text: DIALOGUE.vale_elder.lines.join(' ') + ' Past the cottage, where the path ends, a light waits.' });
     g.ring('plaza', 'crystal', 5, 0.55, { rot: 0.3 }); g.ring('plaza', 'lantern', 6, 0.95);
     g.marker('shrine', R.start.x + 2, R.start.y - 1.8, { label: 'checkpoint' });
     g.marker('sign', R.start.x + 2.8, R.start.y + 1, { label: 'sign', text: 'Training yard east. Elder Stone north-east.' });
-    g.marker('chest', R.nookChest.x, R.nookChest.y, { label: 'tutorial-chest', tier: 'wood' });
+    g.marker('chest', R.nookChest.x, R.nookChest.y, { label: 'tutorial-chest', tier: 'wood', starter: true });   // starter: true -> items.js starterLoot() (weapon, armour, gem)
     g.marker('gem_cache', R.gemNook.x, R.gemNook.y, { label: 'secret gem cache' });
-    { const a = g.waterEdge(C0.x + 0.5, C0.y + 3, 6), b = g.waterEdge(27.5, 25, 6); g.marker('fishspot', a.x, a.y, { pool: 'vale_a' }); g.marker('fishspot', b.x, b.y, { pool: 'vale_b' }); }
-    g.marker('tablet', R.cottage.x + 3.2, R.cottage.y + 2.4, { label: 'lore', text: 'Aerin\'s lantern burns low. Wake the Shards and the Vale will bloom again.' });
+    const fa = g.waterEdge(C0.x + 0.5, C0.y + 3, 6), fb = g.waterEdge(27.5, 25, 6);
+    g.marker('fishspot', fa.x, fa.y, { pool: 'vale_a' }); g.marker('fishspot', fb.x, fb.y, { pool: 'vale_b' });
+    g.marker('tablet', R.cottage.x + 3.2, R.cottage.y + 2.4, { label: 'lore', title: 'Tablet', text: DIALOGUE.vale_tablet.lines.join(' ') });
+    const LAN = g.nearWalkable(R.gemNook.x + 1.3, R.gemNook.y + 0.9, 0.6);
+    g.marker('lantern_blue', LAN.x, LAN.y, { label: 'lost-lantern' });                                 // the Stone's lost lantern (quest vale_lantern)
     g.ring('yard', 'lantern', 3, 0.9); g.ring('cottage', 'lantern', 3, 0.95); g.ring('riftTerrace', 'lantern_blue', 5, 0.95); g.ring('pine', 'lantern', 3, 0.9); g.ring('arenaPad', 'lantern_blue', 3, 0.85);
     g.scatter(valeRules(0.95));
-    const tr = g.triggers, Y = R.yard, P = R.plaza, C = R.nookChest;
+    const tr = g.triggers, Y = R.yard, P = R.plaza, C = R.nookChest, GD = R.garden, S0 = R.start;
+    const pineIdx = g.portalIdx.pine;
+    // -- 0:00 banner every entry; the dummies stand again each visit; one-shot beats use enter_area (map_enter re-fires)
+    tr.push(T.mapEnter('banner', 'Zone banner', [T.say('vale_banner')]));
     tr.push(T.mapEnter('dummies', 'Training dummies', [T.spawn('dummy', 1, Y.x - 0.8, Y.y - 0.6, null, { instant: true }), T.spawn('dummy', 1, Y.x + 0.8, Y.y + 0.8, null, { instant: true })]));
-    tr.push(T.mapEnter('intro', 'Pip wakes Aerin', [T.dialogue('Pip', ['You are awake! I am Pip, your lantern spirit.', 'Hit a training dummy with your blade to warm up.'])]));
-    tr.push(T.enter('shrine', 'Rift shrine', R.start.x + 2, R.start.y - 1.8, 2.2, [T.checkpoint('Checkpoint: Whispering Vale'), T.heal(100)]));
-    tr.push(T.enter('chest', 'Tutorial chest', C.x, C.y, 2.4, [T.loot('uncommon', 1, C.x, C.y, { gem: true }), T.dialogue('Pip', ['A weapon and a gem! Press I to open your bag and equip them.'])]));
-    tr.push(T.enter('elder', 'The Elder Stone', P.x, P.y, 3, [T.dialogue('Elder Stone', ['Dreamwarden... the Gloam seeps from the Unwaking King.', 'Relight the four Dawn Shards. The rift south leads to the Misty Pinewood.']), T.quest('shard_root', 'The Shard of Root', 'Enter the Misty Pinewood and defeat Old Bramblehorn.')]));
+    tr.push(T.enter('wake', 'Pip wakes Aerin', S0.x, S0.y, 7, [T.say('vale_wake'), T.dialogue('Pip', ['Training dummies are east. Hit one.']), T.objective('Hit the training dummies in the yard.')]));
+    tr.push(T.enter('shrine', 'Rift shrine', S0.x + 2, S0.y - 1.8, 2.2, [T.checkpoint('Checkpoint: Whispering Vale'), T.heal(100)]));
+    tr.push(T.enter('yard_teach', 'Dummy yard lesson', Y.x, Y.y, 3.6, [T.dialogue('Pip', ['Swing. Then dodge. Then try your Q skill.', 'The dummy never hits back. Lucky thing.']), T.objective('Follow the path north to the Elder Plaza.')]));
+    // -- 1:30 Elder Stone: riddle + the lost-lantern quest
+    tr.push(T.enter('elder', 'The Elder Stone', P.x, P.y, 3, [T.say('vale_elder'), T.dialogue('Elder Stone', ['The Stone lost a light. Past the cottage, a path ends.']), T.step('vale_lantern', 0), T.objective('Open the chest north-east. Then find the Stone\'s lantern.')]));
+    // -- 2:00 first chest (the engine rolls the starter kit on Interact) + fishing stub beside it
+    tr.push(T.enter('chest', 'Tutorial chest', C.x, C.y, 2.6, [T.dialogue('Pip', ['A chest! Interact to open it.']), T.wait(4), T.say('vale_chest'), T.dialogue('Pip', ['Open your bag and equip it.'])]));
+    tr.push(T.enter('fish_hint', 'Fishing spot', fa.x, fa.y, 3.4, [T.dialogue('Pip', ['Ripples. Fishing waits in the Pinewood.'])]));
     tr.push(T.enter('gems', 'Hidden gem cache', R.gemNook.x, R.gemNook.y, 2.2, [T.message('A hidden gem cache!'), T.loot('uncommon', 1, R.gemNook.x, R.gemNook.y, { gem: true })]));
+    // -- 3:00 tablet (the cottage), 3:30 garden ambush (3 slimes): first drop, first kill-heal -> 4:30 the Pinewood rift opens
+    tr.push(T.enter('tablet', 'Cottage tablet', R.cottage.x + 3.2, R.cottage.y + 2.4, 2.4, [T.say('vale_tablet')]));
+    tr.push(T.enter('garden_ambush', 'Gloom in the garden', GD.x, GD.y, 3.2, [
+      T.banner('Gloom in the garden', 'Slimes ooze out of the flowers'), T.spawn('gloomslime', 1, GD.x - 1.6, GD.y - 0.6, 1.2), T.spawn('gloomslime', 1, GD.x + 1.8, GD.y + 0.4, 1.2), T.spawn('gloomslime', 1, GD.x, GD.y + 1.8, 1.2),
+    ], ['elder']));
+    tr.push(T.allDead('garden_done', 'Garden cleared', ['garden_ambush'], [
+      T.message('The garden is quiet. Something hums in the south.'), T.heal(40), T.loot('uncommon', 1, GD.x, GD.y),
+      T.openPortal(pineIdx), T.sound('portal'), T.banner('The Pinewood rift opens', 'South of the yard'), T.say('vale_rift'),
+      T.step('shard_root', 0), T.objective('Take the rift south into the Misty Pinewood.'),
+    ]));
+    // -- 5:00 side quest: the Stone's lost lantern (vale_lantern) -> reward at the Stone
+    tr.push(T.enter('lantern_found', 'The lost lantern', LAN.x, LAN.y, 2.2, [T.message('The Stone\'s lantern, still warm.'), T.step('vale_lantern', 1), T.objective('Return the lantern to the Elder Stone.')], ['elder']));
+    tr.push(T.enter('lantern_return', 'Lantern returned', P.x, P.y, 3, [
+      T.dialogue('Elder Stone', ['The Stone is lit. The Stone remembers kindness.']), T.done('vale_lantern'),
+      T.loot('rare', 1, P.x, P.y, { gem: true, item: 'socket_rune' }), T.message('Reward: a gem and a Socket Rune.'),
+    ], ['lantern_found']));
   },
 };

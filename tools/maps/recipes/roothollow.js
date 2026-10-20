@@ -1,11 +1,18 @@
 'use strict';
 // roothollow -- Act I dungeon (32x32) under the Pinewood, built with the `dungeon` stamp.
+// HOOK: a key door, a lever gate, a thornback boar that burrows, and the one sleeping troll of the act -- then Mossjaw.
+//       Level band [3,10] (Mossjaw is L5).
+// PACING (~63 tile main path = 17 s of walking): 0:00 Pip line + root door (key from the Pinewood elite) -> 0:30 cavern ogre pack
+//   -> 1:30 shrine (checkpoint; the sleeper is armed only after this) -> 2:00 gallery: boar + shaman (slash is wrong), a troll
+//   asleep on the far side -> 4:00 lever -> gate -> 4:30 Mossjaw (60-90 s) -> 6:30 rift down to Bramblehorn.
+//   Secrets: wall_crack (lantern tell, Pip hum) -> socket rune.
 const { dungeon } = require('../stamps.js');
 const caveRules = require('./_cave.js');
 
 module.exports = dungeon({
   id: 'roothollow', name: 'Root Hollow', sub: 'Where the old roots drink the dark', theme: 'forest', seed: 3311, pad: 3, amp: 2.0,
-  objective: 'Open the root door and descend.', palette: caveRules, density: 1.1, key: 'key_roothollow', pathType: 'p',
+  objective: 'Open the root door and descend.', palette: caveRules, density: 1.1, key: 'key_roothollow', pathType: 'p', level: [3, 10], quest: 'shard_root',
+  say: { intro: 'pinewood_hollow' },
   patch: { f: 2, d: 0.62 },
   rooms: {
     start: { kind: 'clearing', x: 4.5, y: 27, r: 3, lvl: 0 },
@@ -33,8 +40,9 @@ module.exports = dungeon({
     bossLast: 'The roots remember the first Warden... he did not wake, and neither shall I.',
   },
   enemies: {
-    r1: { name: 'First cavern', banner: ['Root Cavern', 'Thorn-touched brutes in numbers'], gap: 8, waves: [[['ogre', 3]], [['ogre', 3]]], clear: 'The roots go still.' },
-    r2: { name: 'Gate gallery', banner: ['The Gallery', 'Fight to the lever'], gap: 9, waves: [[['troll', 1]], [['ogre', 2], ['shaman', 1]]], clear: 'Silence. A lever waits nearby.' },
+    r1: { name: 'First cavern', banner: ['Root Cavern', 'Thorn-touched brutes in numbers'], gap: 8, waves: [[{ pack: 'rh_ogre_pack' }]], clear: 'The roots go still.' },
+    // wave 2 is the act's one sleeper: a mountain troll lying on the far side of the gallery, in the way to the gate
+    r2: { name: 'Gate gallery', banner: ['The Gallery', 'Something large is sleeping at the far end'], gap: 14, waves: [[{ pack: 'rh_boar_wrong' }], [{ pack: 'rh_troll_sleeper', toward: 'arena', dist: 0.7 }]], clear: 'Silence. A lever waits nearby.' },
     arena: { name: 'Mossjaw\'s den', title: 'Mossjaw', sub: 'Moss-gorged root troll - mini-boss', enemy: 'mossjaw', add: 'ogre' },
   },
 });

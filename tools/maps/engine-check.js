@@ -7,7 +7,7 @@ const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const root = path.resolve(process.argv[2] || path.join(__dirname, '..', '..'));
 const shots = path.resolve(process.argv[3] || path.join(__dirname, '..', 'shots', 'maps'));
-const ids = (process.argv[4] || 'vale,pinewood,pinewood_boss').split(',');
+const ids = (process.argv[4] || 'vale,pinewood,roothollow,pinewood_boss').split(',');
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/png', '.json': 'application/json' };
 fs.mkdirSync(shots, { recursive: true });
 const srv = http.createServer((q, r) => { const f = path.join(root, decodeURIComponent(new URL(q.url, 'http://x').pathname)); if (!fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404).end(); return; } r.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(r); });

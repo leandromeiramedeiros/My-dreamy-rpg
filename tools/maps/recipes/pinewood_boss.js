@@ -1,12 +1,17 @@
 'use strict';
 // pinewood_boss -- compact Act I boss map (24x24), `boss` stamp.
+// HOOK: a root-pillar arena where the rootGrab line is the lesson (dodge i-frames or the Root-Crown). Level band [6,10].
+// BEATS: intro line (boss_bramblehorn_intro) at the arena threshold -> fight -> death line (boss_bramblehorn_death) + Root-Crown
+//        (boss row `unique`) -> victory heals, quest done, rift home to the Vale opens (and the Ruins rift, closed until M3).
+// PACING: 6 s walk from the shrine to the arena, then ~170 s of boss; the ledge chest is a 2 s detour.
 const { boss } = require('../stamps.js');
 const forestRules = require('./_forest.js');
 const BOSS = process.env.PINE_BOSS_ENEMY || 'bramblehorn';   // compat mode maps this to 'troll' (see COMPAT_ENEMY)
 
 module.exports = boss({
   id: 'pinewood_boss', name: 'Bramblehorn\'s Court', sub: 'Where the old troll king holds his root-throne', theme: 'forest', seed: 905,
-  objective: 'Climb to the root-throne.', palette: forestRules,
+  objective: 'Climb to the root-throne.', palette: forestRules, level: [6, 10],
+  say: { intro: 'boss_bramblehorn_intro', death: 'boss_bramblehorn_death' },
   rooms: {
     start: { kind: 'clearing', x: 4.5, y: 19.5, r: 3.2, lvl: 0 },
     arena: { kind: 'arena', x: 14, y: 8.5, r: 7, lvl: 2, walled: true, pillars: 8, rune: 2.6, wall: 3 },

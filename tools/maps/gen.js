@@ -154,6 +154,13 @@ const STAND_IN = {
   // interactive blockers: omitted in compat mode (the passage is simply open) -- engine must support them in future mode
   gate: { omit: true }, hidden: { omit: true }, keydoor: { omit: true }, fishspot: { omit: true },
 };
+// --kinds=future (the default now that the engine has them): names the engine has no object type for are written as the
+// closest real kind, with the planned name kept in `role`.  chest_* become real chests (tier -> rarity floor).
+const ENGINE_KIND = {
+  chest_silver: { t: 'chest', tier: 'silver' }, chest_gold: { t: 'chest', tier: 'gold' },
+  gem_cache: { t: 'crystal_violet' }, rune_cache: { t: 'crystal_violet' },
+  elder_stone: { t: 'tablet', title: 'Elder Stone' }, tower: { t: 'pine_giant' },
+};
 const COMPAT_ENEMY = { shaman: 'ogre', mossjaw: 'troll', bramblehorn: 'troll' };
 
 // ------------------------------- trigger cards -----------------------------
@@ -172,11 +179,30 @@ const T = {
     const e = Object.assign({}, extra || {}); if (e.elite && T.mode !== 'future') delete e.elite;   // planned flag: spawn elite:true
     return Object.assign({ type: 'spawn', enemy, count, x: r2(x), y: r2(y) }, radius != null ? { radius } : {}, e);
   },
-  enter: (id, name, x, y, r, actions, requires) => Object.assign({ id, name, when: { type: 'enter_area', x: r2(x), y: r2(y), r } }, requires && requires.length ? { requires } : {}, { actions }),
-  mapEnter: (id, name, actions) => ({ id, name, when: { type: 'map_enter' }, actions }),
-  allDead: (id, name, requires, actions) => ({ id, name, when: { type: 'all_enemies_dead' }, requires, actions }),
+  enter: (id, name, x, y, r, actions, requires) => Object.assign({ id, name, when: { type: 'enter_area', x: r2(x), y: r2(y), r } }, requires && requires.length ? { requires } : {}, { actions: actions.flat(9) }),
+  mapEnter: (id, name, actions) => ({ id, name, when: { type: 'map_enter' }, actions: actions.flat(9) }),
+  allDead: (id, name, requires, actions) => ({ id, name, when: { type: 'all_enemies_dead' }, requires, actions: actions.flat(9) }),
+  // DIALOGUE-table line by id (js/dialogue.js; build fails on an unknown id).  Banner entries show the zone banner.
+  say(id) { if (!GAME.DIALOGUE[id]) throw new Error('unknown DIALOGUE id ' + id); return { type: 'dialogue', id }; },
+  // quest step (explicit index so a re-run never advances twice); done:true completes it
+  step(id, step) { return { type: 'quest', id, step }; },
+  done(id) { return { type: 'quest', id, done: true }; },
+  // an ENCOUNTERS pack (js/enemydata.js).  packMode 'spawnPack' -> one { type:'spawnPack', id, at } card; 'spawn' -> the
+  // same pack expanded into per-enemy spawn cards (anchor centre, pressure around, support behind), each tagged pack: id.
+  packMode: 'spawn',
+  pack(id, x, y, o = {}) {
+    const pk = GAME.packs[id]; if (!pk) throw new Error('unknown pack ' + id);
+    if (T.packMode === 'spawnPack') return Object.assign({ type: 'spawnPack', id, at: { x: r2(x), y: r2(y) } }, o.press > 1 ? { press: o.press } : {});
+    const snap = o.snap || ((px, py) => ({ x: px, y: py })), R = pk.roles, press = o.press || 1, out = [], a0 = o.ang != null ? o.ang : 0.6;
+    const put = (e, n, r, a, rad) => { const q = snap(x + Math.cos(a) * r, y + Math.sin(a) * r); out.push(Object.assign(T.spawn(e, n, q.x, q.y, rad, o.elite && e === R.anchor ? { elite: true } : {}), { pack: id })); };
+    put(R.anchor, 1, 0, a0, 0.6);
+    (R.pressure || []).forEach((e, i) => put(e, press, 2.1, a0 + 2.1 + i * 2.3, 1.2));
+    (R.support || []).forEach((e, i) => put(e, 1, 3.4, a0 + Math.PI + i * 0.9, 0.8));
+    (R.ranged || []).forEach((e, i) => put(e, 1, 3.8, a0 + Math.PI * 1.3 + i, 0.8));
+    return out;
+  },
   // --- planned engine actions (mode 'future'); 'compat' falls back to existing actions ---
-  mode: 'compat',
+  mode: 'future',      // 'compat' (--compat) falls back to message cards / stand-ins for engines without these actions
   checkpoint(label) { return this.mode === 'future' ? { type: 'checkpoint', text: label || 'Checkpoint' } : { type: 'message', text: label || 'Rift shrine attuned.' }; },
   loot(rarity, count, x, y, extra) { return this.mode === 'future' ? Object.assign({ type: 'loot', rarity: rarity || 'uncommon', count: count || 1 }, x != null ? { x: r2(x), y: r2(y) } : {}, extra || {}) : { type: 'message', text: 'Treasure gleams nearby...' }; },
   quest(id, title, text, done) { return this.mode === 'future' ? Object.assign({ type: 'quest', id, title, text }, done ? { done: true } : {}) : { type: 'message', text: (title ? title + ': ' : '') + text }; },
@@ -185,6 +211,8 @@ const T = {
   openGate(id) { return this.mode === 'future' ? { type: 'openGate', id } : { type: 'sound', name: 'portal' }; },
   timer: (id, name, seconds, after, actions, requires) => Object.assign({ id, name, when: { type: 'timer', seconds, after } }, requires ? { requires } : {}, { actions }),
 };
+
+const GAME = require('./gamedata.js');
 
 // ===================================== MapGen ====================================
 class MapGen {
@@ -196,7 +224,7 @@ class MapGen {
     this.slope = o.slope || 0.6;        // max profile slope along a path (height units per tile)
     this.objective = o.objective || '';
     this.amp = o.amp != null ? o.amp : 1.6;   // terrace noise amplitude away from paths
-    this.kinds = o.kinds || 'compat';
+    this.kinds = o.kinds || 'future'; this.level = o.level || null;
     this.rng = makeRng(this.seed);
     this.n1 = makeNoise(this.seed * 31 + 7); this.n2 = makeNoise(this.seed * 17 + 3); this.n3 = makeNoise(this.seed * 13 + 11);
     this.ponds = []; this.rooms = []; this.roomBy = {}; this.paths = []; this.pathBy = {}; this.rivers = []; this.bridges = []; this.lobes = [];
@@ -777,6 +805,7 @@ class MapGen {
       objective: this.objective,
     };
     if (this.sigil) m.sigil = { x: this.sigil.x, y: this.sigil.y };
+    if (this.level) m.level = this.level;   // zone level band [lo, hi] (DESIGN 3/11); tools/m1-world.js re-asserts the same table
     m.triggers = this.triggers;
     return m;
   }
@@ -788,6 +817,7 @@ class MapGen {
       const si = STAND_IN[o.t];
       if (si && this.kinds !== 'future') { out.t = si.t; out.role = o.t; if (si.tier) out.tier = si.tier; }
       else if (si) { out.role = o.t; }
+      if (this.kinds === 'future' && ENGINE_KIND[o.t]) { const ek = ENGINE_KIND[o.t]; out.role = o.t; out.t = ek.t; for (const k of Object.keys(ek)) if (k !== 't' && o[k] == null) out[k] = ek[k]; }
     }
     for (const k of Object.keys(o)) if (!['t', 'x', 'y', 'v', 'f', 'sp', 'marker'].includes(k) && out[k] == null) out[k] = o[k];
     return out;
@@ -853,7 +883,7 @@ class MapGen {
       for (const q of tr.requires || []) if (!this.triggers.some(t => t.id === q)) errs.push(`trigger ${tr.id} requires missing ${q}`);
       if (tr.when.type === 'all_enemies_dead' && !(tr.requires || []).length) errs.push(`trigger ${tr.id}: all_enemies_dead without requires`);
       if (tr.when.type === 'enter_area') chk('enter_area ' + tr.id, tr.when.x, tr.when.y);
-      for (const a of tr.actions) if (a.type === 'spawn' || a.type === 'spawn_boss') { if (a.x != null) chk(`spawn ${tr.id}`, a.x, a.y); }
+      for (const a of tr.actions) if (a.type === 'spawn' || a.type === 'spawn_boss') { if (a.x != null) chk(`spawn ${tr.id}`, a.x, a.y); } else if (a.type === 'spawnPack') chk(`spawnPack ${tr.id}`, a.at.x, a.at.y);
     }
     for (const p of this.portals) if (Math.hypot(p.x - m.start.x, p.y - m.start.y) < 2) warns.push(`portal ${p.to} within 2 tiles of start (instant bounce risk)`);
     // secrets: reachable but off the main route
@@ -889,4 +919,4 @@ function generate(recipe, opts = {}) {
   return { gen: g, map: g.toMap(), report: rep };
 }
 
-module.exports = { COMPAT_ENEMY, MapGen, generate, T, PROP, STAND_IN, ZONE, makeRng, makeNoise, catmull, distField, clamp, lerp, smoothstep, grid };
+module.exports = { ENGINE_KIND, COMPAT_ENEMY, MapGen, generate, T, PROP, STAND_IN, ZONE, makeRng, makeNoise, catmull, distField, clamp, lerp, smoothstep, grid };

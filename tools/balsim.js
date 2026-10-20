@@ -7,7 +7,7 @@
 //
 // MODEL
 //   Hero: three weapon families with their own armour sets; reference gear per band (Uncommon in the Vale, Rare to the
-//   Ruins, Epic after; tier = highest TIER_REQ <= level; affixes at 80 % of their roll; 2 gems of the band grade).
+//   Ruins, Epic after; tier = highest TIER_REQ <= level; affixes at 80 % of their roll; 2 diamonds of the band grade).
 //   Random build = the same rarity with makeItem's random rolls and random gems (mean of 12). Optimal = every affix an
 //   offence stat at its best roll + matching damage gems.
 //   Rotation (§20.7): basic x3 -> skill (Q / E alternating, R whenever charged) -> dodge, against a target that stands
@@ -39,7 +39,7 @@ ctx.window = ctx;
 vm.createContext(ctx);
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const order = [...html.matchAll(/<script\s+src="js\/([a-z0-9_]+)\.js"/g)].map(m => m[1]);
-const LOAD = order.slice(0, order.indexOf('game') + 1).filter(f => !['sprites', 'art'].includes(f));
+const LOAD = order.slice(0, order.indexOf('game') + 1).filter(f => !['sprites', 'art', 'enemyart'].includes(f));
 if (!LOAD.includes('itemdata')) LOAD.splice(LOAD.indexOf('items') + 1, 0, 'itemdata');   // CAPS (items v2 data)
 for (const f of LOAD) vm.runInContext(fs.readFileSync(path.join(ROOT, 'js', f + '.js'), 'utf8'), ctx, { filename: 'js/' + f + '.js' });
 const ev = s => vm.runInContext(s, ctx);
@@ -97,7 +97,8 @@ function simGear(fams, L, rarity, kind) {
     const it = makeItem(base, rarity, L, { sockets: slot === 'weapon' || slot === 'chest' ? 1 : 0 });
     if (kind === 'reference') it.affixes = (slot === 'weapon' ? REF.weapon : REF.armour).slice(0, RARITY[rarity].affixes).map(stat => ({ stat, v: simAffix(stat, L, rarity, 0.8) }));
     if (kind === 'optimal') it.affixes = (slot === 'weapon' ? ['power', 'critDmg', 'crit'] : slot === 'head' ? ['crit', 'critDmg', 'power'] : slot === 'chest' ? ['power', 'skillDmg', 'crit'] : ['haste', 'power', 'crit']).slice(0, RARITY[rarity].affixes).map(stat => ({ stat, v: simAffix(stat, L, rarity, 1) }));
-    if (it.sockets.length) it.sockets[0] = kind === 'random' ? pick2(GEM_TYPES) + '_' + g : kind === 'optimal' ? (slot === 'weapon' ? 'ruby_' + g : 'amethyst_' + g) : 'ruby_' + g;
+    // reference gems are diamonds (element-neutral: a ruby would amplify only fire skills and skew weapon parity)
+    if (it.sockets.length) it.sockets[0] = kind === 'random' ? pick2(GEM_TYPES) + '_' + g : kind === 'optimal' ? (slot === 'weapon' ? 'ruby_' + g : 'amethyst_' + g) : 'diamond_' + g;
     p.equip[slot] = it;
   });
   recalcStats(p, true); return p;
@@ -166,7 +167,7 @@ function survival(types, L, ng, story) {
 const flags = [], explained = [], notes = [];
 const red = (s) => flags.push(s), ok = (s) => notes.push(s);
 const r2 = v => Math.round(v * 100) / 100, r1 = v => Math.round(v * 10) / 10;
-const log = (...a) => { if (!JSON_OUT) console.log(...a); };
+const log = (...a) => { if (!JSON_OUT && !QUIET) console.log(...a); }, say = (...a) => { if (!JSON_OUT) console.log(...a); };   // --quiet: flags only
 const ENEMY = ev('ENEMY');
 
 // 1. hero curve (reference DPS vs a neutral dummy-like target: no resistances)
@@ -180,8 +181,11 @@ for (const L of [1, 3, 6, 10, 13, 17, 24, 31, 38]) {
 }
 log('\nHERO (reference gear, rotation DPS vs a neutral target; eHP = HP / (1 - armour))');
 log('  L   sword   staff   bow    §20.3 DPS   ratio   HP     eHP');
+const parity = heroRows.map(h => Math.max(h.sword, h.staff, h.bow) / Math.min(h.sword, h.staff, h.bow));
 for (const h of heroRows) log(`  ${String(h.L).padEnd(3)} ${String(Math.round(h.sword)).padStart(5)}  ${String(Math.round(h.staff)).padStart(6)}  ${String(Math.round(h.bow)).padStart(5)}  ${String(Math.round(h.target)).padStart(9)}   ${r2((h.sword + h.staff + h.bow) / 3 / h.target).toFixed(2).padStart(5)}  ${String(Math.round(h.hp)).padStart(5)}  ${String(Math.round(h.ehp)).padStart(6)}`);
 
+log(`  weapon parity (max/min family DPS): ${parity.map(r2).join(' ')}   (director target <= 1.3)`);
+heroRows.forEach((h, i) => { if (parity[i] > 1.3) notes.push(`weapon parity ${r2(parity[i])} at L${h.L} (target <= 1.3)`); });
 // 2. common TTK per band (reference enemies at the band mid level)
 log('\nCOMMON TTK (s, mean of ' + TRIALS + '; target per §20.3, red outside 1.5-7)');
 log('  band       L    enemy             sword  staff  bow    target');
@@ -317,9 +321,9 @@ for (const [k, path_] of [['2 h', p2], ['5 h', p5]]) { const L = path_[path_.len
 log('\nNOT MEASURABLE YET (listed, never red): reaction share (no reactions before M4) · trinket share of gear power (no');
 log('  trinkets in index.html yet) · NG+ drop scaling (NG+ is modelled as x1.6 damage taken only) · Grotto/Caldera/Spire');
 log('  TTK (no reference enemies for those bands yet) · potions per room on Story · Morrow fight length.');
-if (explained.length) { log('\nEXPLAINED (not red):'); for (const s of explained) log('  - ' + s); }
+if (explained.length && !QUIET) { log('\nEXPLAINED (not red):'); for (const s of explained) log('  - ' + s); }
 if (notes.length) { log('\nNOTES (targets, not CI flags):'); for (const s of notes) log('  - ' + s); }
-log(flags.length ? `\nRED FLAGS (${flags.length}):` : '\nNo red flags.');
-for (const s of flags) log('  ! ' + s);
+say(flags.length ? `\nbalsim RED FLAGS (${flags.length}):` : `\nbalsim: no red flags (${explained.length} explained, ${notes.length} notes).`);
+for (const s of flags) say('  ! ' + s);
 if (JSON_OUT) console.log(JSON.stringify({ heroRows, ttkRows, bossRows, surv, econ, xp: { p2, p5 }, flags, explained, notes }, null, 1));
 process.exit(flags.length ? 1 : 0);

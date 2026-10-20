@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-19T23:03:07.221Z",
+ "generated": "2026-10-20T01:14:01.811Z",
  "maps": {
   "pinewood": {
    "name": "Misty Pinewood",
@@ -176,23 +176,24 @@
      "text": "Danger: ogres in the clearing"
     },
     {
-     "t": "sign",
+     "t": "tablet",
      "x": 22,
      "y": 50.2,
      "role": "tablet",
      "label": "lore",
-     "text": "The Wardens planted the first pines to hold the Gloam back. Now the roots are black."
+     "title": "Warden stone",
+     "text": "Bramblehorn kept the roots. He loved the roots too much."
     },
     {
-     "t": "crystal",
+     "t": "chest",
      "x": 23.3,
      "y": 51.6,
      "role": "chest",
-     "tier": "wood",
-     "label": "tablet-chest"
+     "label": "tablet-chest",
+     "tier": "wood"
     },
     {
-     "t": "crystal",
+     "t": "chest",
      "x": 52,
      "y": 46.6,
      "role": "chest_silver",
@@ -1528,53 +1529,108 @@
     },
     {
      "t": "fox",
-     "x": 13,
-     "y": 44
+     "x": 8.55,
+     "y": 35.74
+    },
+    {
+     "t": "rabbit",
+     "x": 4.81,
+     "y": 35.1
+    },
+    {
+     "t": "rabbit",
+     "x": 4.19,
+     "y": 37.63
     },
     {
      "t": "fox",
-     "x": 30,
-     "y": 46
+     "x": 19.03,
+     "y": 28.5
+    },
+    {
+     "t": "rabbit",
+     "x": 22.69,
+     "y": 29.51
+    },
+    {
+     "t": "rabbit",
+     "x": 22.18,
+     "y": 32.06
     },
     {
      "t": "fox",
-     "x": 28,
-     "y": 28
+     "x": 33.35,
+     "y": 41.45
+    },
+    {
+     "t": "rabbit",
+     "x": 35.86,
+     "y": 38.6
+    },
+    {
+     "t": "rabbit",
+     "x": 34.04,
+     "y": 36.75
     },
     {
      "t": "fox",
-     "x": 10,
-     "y": 33
+     "x": 47.86,
+     "y": 32.38
     },
     {
      "t": "rabbit",
-     "x": 9,
-     "y": 45
+     "x": 51.01,
+     "y": 30.26
     },
     {
      "t": "rabbit",
-     "x": 16,
-     "y": 36
+     "x": 52.61,
+     "y": 32.3
+    },
+    {
+     "t": "fox",
+     "x": 32.46,
+     "y": 21.65
     },
     {
      "t": "rabbit",
-     "x": 33,
-     "y": 38
+     "x": 33.49,
+     "y": 25.3
     },
     {
      "t": "rabbit",
-     "x": 25,
-     "y": 30
+     "x": 35.16,
+     "y": 24.26
+    },
+    {
+     "t": "fox",
+     "x": 19.02,
+     "y": 4.12
     },
     {
      "t": "rabbit",
-     "x": 6,
-     "y": 30
+     "x": 21.94,
+     "y": 6.54
     },
     {
      "t": "rabbit",
-     "x": 41.42,
-     "y": 22.6
+     "x": 20.43,
+     "y": 8.66
+    },
+    {
+     "t": "fox",
+     "x": 33.91,
+     "y": 5.76
+    },
+    {
+     "t": "rabbit",
+     "x": 36.33,
+     "y": 8.68
+    },
+    {
+     "t": "rabbit",
+     "x": 38.45,
+     "y": 7.17
     },
     {
      "t": "sunbeam",
@@ -1585,6 +1641,21 @@
      "t": "sunbeam",
      "x": 9.2,
      "y": 49.4
+    },
+    {
+     "t": "shrine",
+     "x": 34,
+     "y": 23.6,
+     "label": "checkpoint-2"
+    },
+    {
+     "t": "hidden",
+     "x": 16.61,
+     "y": 36.75,
+     "role": "hidden",
+     "id": "wall_crack",
+     "ang": 0.52,
+     "len": 2.4
     },
     {
      "t": "lantern",
@@ -1601,22 +1672,61 @@
      "label": "secret gem cache"
     },
     {
-     "t": "crystal_violet",
+     "t": "chest",
      "x": 53.9,
      "y": 24.3,
-     "role": "rune_cache",
-     "label": "secret socket rune"
+     "role": "chest_silver",
+     "tier": "silver",
+     "label": "detour-chest"
     },
     {
-     "t": "sign",
+     "t": "fishspot",
+     "x": 53.5,
+     "y": 23.5,
+     "role": "fishspot",
+     "pool": "pinewood_hidden",
+     "hidden": true
+    },
+    {
+     "t": "lantern_blue",
+     "x": 50.9,
+     "y": 23.9,
+     "label": "detour-lantern"
+    },
+    {
+     "t": "fishspot",
+     "x": 31.5,
+     "y": 28.5,
+     "role": "fishspot",
+     "pool": "pinewood_a"
+    },
+    {
+     "t": "fishspot",
+     "x": 42.5,
+     "y": 30.5,
+     "role": "fishspot",
+     "pool": "pinewood_b"
+    },
+    {
+     "t": "gate",
+     "x": 11.6,
+     "y": 5,
+     "role": "gate",
+     "id": "bridge_gate",
+     "ang": 0,
+     "len": 2
+    },
+    {
+     "t": "lever",
      "x": 22.6,
      "y": 52.2,
      "role": "lever",
      "label": "bridge-lever",
-     "id": "lever_bridge"
+     "id": "lever_bridge",
+     "gate": "bridge_gate"
     },
     {
-     "t": "crystal_violet",
+     "t": "chest",
      "x": 5,
      "y": 4.5,
      "role": "chest_gold",
@@ -1624,18 +1734,42 @@
      "label": "secret-gold-chest"
     }
    ],
-   "objective": "Follow the dirt road north. The animals are fleeing.",
+   "objective": "Follow the animals north along the dirt road.",
+   "level": [
+    3,
+    10
+   ],
    "triggers": [
     {
-     "id": "intro",
-     "name": "Pip speaks",
+     "id": "banner",
+     "name": "Zone banner",
      "when": {
       "type": "map_enter"
      },
      "actions": [
       {
-       "type": "message",
-       "text": "Pip: The animals are running. Something big has woken in the pinewood."
+       "type": "dialogue",
+       "id": "pinewood_banner"
+      }
+     ]
+    },
+    {
+     "id": "intro",
+     "name": "Pip at the glade",
+     "when": {
+      "type": "enter_area",
+      "x": 7,
+      "y": 48,
+      "r": 6
+     },
+     "actions": [
+      {
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "The animals are running.",
+        "Something big has woken in the wood."
+       ]
       }
      ]
     },
@@ -1650,12 +1784,57 @@
      },
      "actions": [
       {
-       "type": "message",
+       "type": "checkpoint",
        "text": "Checkpoint: Glade of Arrival"
       },
       {
        "type": "heal",
        "pct": 100
+      }
+     ]
+    },
+    {
+     "id": "trail",
+     "name": "Fleeing animals",
+     "when": {
+      "type": "enter_area",
+      "x": 8.55,
+      "y": 35.74,
+      "r": 4.5
+     },
+     "actions": [
+      {
+       "type": "dialogue",
+       "id": "pinewood_fox"
+      },
+      {
+       "type": "objective",
+       "text": "Follow the animals north along the dirt road."
+      }
+     ]
+    },
+    {
+     "id": "fish_intro",
+     "name": "Fishing spot",
+     "when": {
+      "type": "enter_area",
+      "x": 31.5,
+      "y": 28.5,
+      "r": 3.4
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Fishing",
+       "sub": "Stand at the water and Interact"
+      },
+      {
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "Ripples, Aerin. Fish are still here.",
+        "Fishing wakes in a later dream."
+       ]
       }
      ]
     },
@@ -1670,8 +1849,28 @@
      },
      "actions": [
       {
-       "type": "message",
-       "text": "Tablet: The Wardens planted the first pines to hold the Gloam back. Now the roots are black."
+       "type": "dialogue",
+       "id": "pinewood_tablet"
+      }
+     ]
+    },
+    {
+     "id": "shrine2",
+     "name": "Second shrine",
+     "when": {
+      "type": "enter_area",
+      "x": 34,
+      "y": 23.6,
+      "r": 2.2
+     },
+     "actions": [
+      {
+       "type": "checkpoint",
+       "text": "Checkpoint: The road to the plaza"
+      },
+      {
+       "type": "heal",
+       "pct": 100
       }
      ]
     },
@@ -1687,28 +1886,16 @@
      "actions": [
       {
        "type": "banner",
-       "title": "Ogres!",
-       "sub": "Lesser brutes guard the sunlit clearing"
+       "title": "Ogre!",
+       "sub": "A brute guards the sunlit clearing"
       },
       {
-       "type": "spawn",
-       "enemy": "ogre",
-       "count": 2,
-       "x": 40.09,
-       "y": 41.76,
-       "radius": 2
-      },
-      {
-       "type": "wait",
-       "seconds": 9
-      },
-      {
-       "type": "spawn",
-       "enemy": "ogre",
-       "count": 2,
-       "x": 35.43,
-       "y": 40.91,
-       "radius": 2
+       "type": "spawnPack",
+       "id": "pw_ogre_run",
+       "at": {
+        "x": 39.67,
+        "y": 41.41
+       }
       }
      ]
     },
@@ -1731,8 +1918,11 @@
        "pct": 25
       },
       {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
+       "type": "loot",
+       "rarity": "uncommon",
+       "count": 1,
+       "x": 38,
+       "y": 40
       },
       {
        "type": "objective",
@@ -1742,7 +1932,7 @@
     },
     {
      "id": "r2",
-     "name": "Ogres and trolls at the plaza",
+     "name": "The Stone Plaza",
      "when": {
       "type": "enter_area",
       "x": 20,
@@ -1756,41 +1946,33 @@
       {
        "type": "banner",
        "title": "The Stone Plaza",
-       "sub": "Trolls shrug off arrows (resist pierce)"
+       "sub": "Kill the shaman first: it keeps the boar standing"
       },
       {
-       "type": "spawn",
-       "enemy": "ogre",
-       "count": 3,
-       "x": 22.09,
-       "y": 14.76,
-       "radius": 2
+       "type": "spawnPack",
+       "id": "pw_boar_shaman",
+       "at": {
+        "x": 21.67,
+        "y": 14.41
+       }
       },
       {
        "type": "wait",
-       "seconds": 10
+       "seconds": 12
       },
       {
-       "type": "spawn",
-       "enemy": "troll",
-       "count": 1,
-       "x": 17.43,
-       "y": 13.91,
-       "radius": 2
-      },
-      {
-       "type": "spawn",
-       "enemy": "ogre",
-       "count": 1,
-       "x": 21.28,
-       "y": 10.59,
-       "radius": 2
+       "type": "spawnPack",
+       "id": "pw_ogre_slimes",
+       "at": {
+        "x": 17.94,
+        "y": 13.73
+       }
       }
      ]
     },
     {
      "id": "r2_done",
-     "name": "Ogres and trolls at the plaza cleared",
+     "name": "The Stone Plaza cleared",
      "when": {
       "type": "all_enemies_dead"
      },
@@ -1800,25 +1982,28 @@
      "actions": [
       {
        "type": "message",
-       "text": "The way to the hollow is clear."
+       "text": "The way to the grove is clear."
       },
       {
        "type": "heal",
        "pct": 30
       },
       {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
+       "type": "loot",
+       "rarity": "uncommon",
+       "count": 1,
+       "x": 20,
+       "y": 13
       },
       {
        "type": "objective",
-       "text": "Enter Troll Hollow (north-east)"
+       "text": "Enter the Warden's Grove (north-east)"
       }
      ]
     },
     {
      "id": "r3",
-     "name": "Troll Hollow",
+     "name": "The Warden's Grove",
      "when": {
       "type": "enter_area",
       "x": 46,
@@ -1831,51 +2016,36 @@
      "actions": [
       {
        "type": "banner",
-       "title": "Troll Hollow",
+       "title": "The Warden's Grove",
        "sub": "A shaman chants in the dark",
        "boss": true
       },
       {
-       "type": "spawn",
-       "enemy": "ogre",
-       "count": 2,
-       "x": 47.93,
-       "y": 10.62,
-       "radius": 2
+       "type": "spawnPack",
+       "id": "pw_ogre_grove",
+       "at": {
+        "x": 47.54,
+        "y": 10.3
+       },
+       "press": 2
       },
       {
        "type": "wait",
-       "seconds": 9
+       "seconds": 12
       },
       {
-       "type": "spawn",
-       "enemy": "ogre",
-       "count": 1,
-       "x": 43.63,
-       "y": 9.84,
-       "radius": 2
-      },
-      {
-       "type": "spawn",
-       "enemy": "troll",
-       "count": 1,
-       "x": 47.18,
-       "y": 6.77,
-       "radius": 2
-      },
-      {
-       "type": "spawn",
-       "enemy": "ogre",
-       "count": 1,
-       "x": 46.63,
-       "y": 11.44,
-       "radius": 2
+       "type": "spawnPack",
+       "id": "pw_boar_last",
+       "at": {
+        "x": 44.1,
+        "y": 9.68
+       }
       }
      ]
     },
     {
      "id": "r3_done",
-     "name": "Troll Hollow cleared",
+     "name": "The Warden's Grove cleared",
      "when": {
       "type": "all_enemies_dead"
      },
@@ -1905,12 +2075,70 @@
        "pct": 40
       },
       {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
+       "type": "loot",
+       "rarity": "rare",
+       "count": 1,
+       "x": 46,
+       "y": 9
       },
       {
        "type": "objective",
-       "text": "Take the rift down into the Root Hollow (key from the elite troll)"
+       "text": "Take the rift down into the Root Hollow (key from the elite ogre)"
+      }
+     ]
+    },
+    {
+     "id": "ford",
+     "name": "Thornbacks at the ford",
+     "when": {
+      "type": "enter_area",
+      "x": 49.5,
+      "y": 31,
+      "r": 4.2
+     },
+     "requires": [
+      "r1_done"
+     ],
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Thornback Boars",
+       "sub": "Arrows glance off their bristles (resist pierce)"
+      },
+      {
+       "type": "spawnPack",
+       "id": "pw_boar_pierce",
+       "at": {
+        "x": 49.5,
+        "y": 31
+       }
+      }
+     ]
+    },
+    {
+     "id": "ford_done",
+     "name": "Thornbacks at the ford cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "ford"
+     ],
+     "actions": [
+      {
+       "type": "message",
+       "text": "The ford is quiet again."
+      },
+      {
+       "type": "heal",
+       "pct": 20
+      },
+      {
+       "type": "loot",
+       "rarity": "uncommon",
+       "count": 1,
+       "x": 49.5,
+       "y": 31
       }
      ]
     },
@@ -1929,17 +2157,18 @@
      "actions": [
       {
        "type": "banner",
-       "title": "Mountain Troll",
+       "title": "Gnarlroot Ogre",
        "sub": "Guardian of the Root Hollow key",
        "boss": true
       },
       {
        "type": "spawn",
-       "enemy": "troll",
+       "enemy": "ogre",
        "count": 1,
        "x": 51,
        "y": 47,
-       "radius": 1.2
+       "radius": 1.2,
+       "elite": true
       }
      ]
     },
@@ -1955,15 +2184,31 @@
      "actions": [
       {
        "type": "message",
-       "text": "The troll drops a gnarled root key."
+       "text": "The ogre drops a gnarled root key."
       },
       {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
+       "type": "loot",
+       "rarity": "rare",
+       "count": 1,
+       "x": 52,
+       "y": 47,
+       "item": "key_roothollow"
       },
       {
-       "type": "message",
-       "text": "Pip: That key smells of roots and earth. It must open the Root Hollow below Troll Hollow."
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "That key smells of roots and earth. It opens the Root Hollow."
+       ]
+      },
+      {
+       "type": "quest",
+       "id": "shard_root",
+       "step": 1
+      },
+      {
+       "type": "objective",
+       "text": "Find the way down: the Root Hollow door"
       }
      ]
     },
@@ -1978,8 +2223,11 @@
      },
      "actions": [
       {
-       "type": "message",
-       "text": "Pip: The wall hums, Aerin. Something is hidden behind it."
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "The wall hums, Aerin. Something is hidden behind it."
+       ]
       }
      ]
     },
@@ -1997,8 +2245,8 @@
      ],
      "actions": [
       {
-       "type": "sound",
-       "name": "portal"
+       "type": "openGate",
+       "id": "wall_crack"
       },
       {
        "type": "shake",
@@ -2025,32 +2273,31 @@
        "text": "A hidden gem cache!"
       },
       {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
+       "type": "loot",
+       "rarity": "uncommon",
+       "count": 1,
+       "x": 20,
+       "y": 40,
+       "gem": true
       }
      ]
     },
     {
-     "id": "env_loot",
-     "name": "Hidden socket rune",
+     "id": "env_hint",
+     "name": "A light off the road",
      "when": {
       "type": "enter_area",
       "x": 52.5,
       "y": 22.5,
-      "r": 2.2
+      "r": 4.2
      },
      "actions": [
       {
-       "type": "message",
-       "text": "A Socket Rune glints in the moss."
-      },
-      {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
-      },
-      {
-       "type": "message",
-       "text": "Pip: The water here ripples with dream-fish, Aerin. A secret pool!"
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "A light off the road, Aerin. Worth the detour."
+       ]
       }
      ]
     },
@@ -2065,8 +2312,11 @@
      },
      "actions": [
       {
-       "type": "message",
-       "text": "Pip: The bridge is raised. There must be a lever somewhere."
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "The bridge is raised. There must be a lever somewhere."
+       ]
       }
      ]
     },
@@ -2085,8 +2335,8 @@
        "text": "A lever clunks. Far away, a bridge lowers."
       },
       {
-       "type": "sound",
-       "name": "portal"
+       "type": "openGate",
+       "id": "bridge_gate"
       },
       {
        "type": "sound",
@@ -2107,10 +2357,6 @@
       {
        "type": "message",
        "text": "A gold chest!"
-      },
-      {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
       }
      ]
     }
@@ -2220,7 +2466,7 @@
      "label": "checkpoint"
     },
     {
-     "t": "crystal_violet",
+     "t": "chest",
      "x": 19.5,
      "y": 20,
      "role": "chest_gold",
@@ -2715,17 +2961,41 @@
     "x": 14,
     "y": 8.5
    },
+   "level": [
+    6,
+    10
+   ],
    "triggers": [
     {
-     "id": "intro",
-     "name": "Pip warns",
+     "id": "banner",
+     "name": "Zone banner",
      "when": {
       "type": "map_enter"
      },
      "actions": [
       {
-       "type": "message",
-       "text": "Pip: Aerin... the ground is shaking. That is the troll king."
+       "type": "banner",
+       "title": "Bramblehorn's Court",
+       "sub": "Where the old troll king holds his root-throne"
+      }
+     ]
+    },
+    {
+     "id": "intro",
+     "name": "Pip warns",
+     "when": {
+      "type": "enter_area",
+      "x": 4.5,
+      "y": 19.5,
+      "r": 6
+     },
+     "actions": [
+      {
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "Aerin... the ground is shaking. That is the troll king."
+       ]
       }
      ]
     },
@@ -2740,7 +3010,7 @@
      },
      "actions": [
       {
-       "type": "message",
+       "type": "checkpoint",
        "text": "Checkpoint: Bramblehorn's Court"
       },
       {
@@ -2766,6 +3036,10 @@
        "boss": true
       },
       {
+       "type": "dialogue",
+       "id": "boss_bramblehorn_intro"
+      },
+      {
        "type": "objective",
        "text": "Defeat Old Bramblehorn"
       },
@@ -2775,15 +3049,16 @@
       },
       {
        "type": "wait",
-       "seconds": 1.5
+       "seconds": 2.5
       },
       {
        "type": "spawn",
-       "enemy": "troll",
+       "enemy": "bramblehorn",
        "count": 1,
        "x": 14,
        "y": 7,
-       "radius": 0.5
+       "radius": 0.5,
+       "elite": true
       },
       {
        "type": "wait",
@@ -2835,20 +3110,19 @@
        "sub": "The Shard of Root is relit"
       },
       {
-       "type": "message",
-       "text": "Old Bramblehorn: I only wished to keep the roots from rotting... Morrow is no king. He is a sleeper who will not wake."
+       "type": "dialogue",
+       "id": "boss_bramblehorn_death"
       },
       {
        "type": "heal",
        "pct": 100
       },
       {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
-      },
-      {
-       "type": "message",
-       "text": "The Shard of Root: The Shard of Root is relit."
+       "type": "quest",
+       "id": "shard_root",
+       "title": "The Pinewood Shard",
+       "text": "The Shard of Root is relit.",
+       "done": true
       },
       {
        "type": "open_portal",
@@ -3001,7 +3275,7 @@
      "x": 25,
      "y": 35.8,
      "to": "pinewood",
-     "open": true,
+     "open": false,
      "marker": false,
      "id": "pine"
     },
@@ -3021,11 +3295,13 @@
      "y": 7
     },
     {
-     "t": "crystal_violet",
+     "t": "tablet",
      "x": 19.5,
      "y": 21,
      "role": "elder_stone",
-     "label": "elder stone"
+     "title": "Elder Stone",
+     "label": "elder stone",
+     "text": "The Stone knows her. The Stone does not say. Past the cottage, where the path ends, a light waits."
     },
     {
      "t": "lantern",
@@ -3051,12 +3327,13 @@
      "text": "Training yard east. Elder Stone north-east."
     },
     {
-     "t": "crystal",
+     "t": "chest",
      "x": 36.5,
      "y": 16.5,
      "role": "chest",
+     "label": "tutorial-chest",
      "tier": "wood",
-     "label": "tutorial-chest"
+     "starter": true
     },
     {
      "t": "crystal_violet",
@@ -3066,923 +3343,964 @@
      "label": "secret gem cache"
     },
     {
-     "t": "sign",
+     "t": "fishspot",
+     "x": 36.5,
+     "y": 19.5,
+     "role": "fishspot",
+     "pool": "vale_a"
+    },
+    {
+     "t": "fishspot",
+     "x": 27.5,
+     "y": 24.5,
+     "role": "fishspot",
+     "pool": "vale_b"
+    },
+    {
+     "t": "tablet",
      "x": 11.7,
      "y": 11.9,
      "role": "tablet",
      "label": "lore",
-     "text": "Aerin's lantern burns low. Wake the Shards and the Vale will bloom again."
+     "title": "Tablet",
+     "text": "Four Wardens. One would not wake."
+    },
+    {
+     "t": "lantern_blue",
+     "x": 4.5,
+     "y": 4.3,
+     "label": "lost-lantern"
     },
     {
      "t": "lantern",
-     "x": 12.71,
-     "y": 30.53
+     "x": 12.94,
+     "y": 30.62
     },
     {
      "t": "lantern",
-     "x": 6.27,
-     "y": 13.65
+     "x": 6.25,
+     "y": 13.59
     },
     {
      "t": "lantern_blue",
-     "x": 37.89,
-     "y": 8.19
+     "x": 37.97,
+     "y": 7.89
     },
     {
      "t": "lantern_blue",
-     "x": 34.27,
-     "y": 12.68
+     "x": 34.72,
+     "y": 12.53
     },
     {
      "t": "lantern_blue",
-     "x": 29.03,
-     "y": 5.02
+     "x": 28.93,
+     "y": 4.98
     },
     {
      "t": "lantern_blue",
-     "x": 34.33,
-     "y": 3.28
+     "x": 34.48,
+     "y": 3.14
     },
     {
      "t": "lantern",
-     "x": 23.68,
-     "y": 38.14
+     "x": 23.43,
+     "y": 37.99
     },
     {
      "t": "lantern_blue",
-     "x": 37.03,
-     "y": 35.62
+     "x": 37.11,
+     "y": 35.47
     },
     {
      "t": "lantern_blue",
-     "x": 33.11,
-     "y": 33.46
+     "x": 33.14,
+     "y": 33.36
     },
     {
      "t": "tree_poplar",
-     "x": 32.69,
-     "y": 2.42,
-     "v": 2
-    },
-    {
-     "t": "tree_poplar",
-     "x": 1.65,
-     "y": 10.83,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "tree_poplar",
-     "x": 9.2,
-     "y": 15.86,
-     "v": 1
-    },
-    {
-     "t": "tree_poplar",
-     "x": 12.2,
-     "y": 20.12,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "tree_poplar",
-     "x": 21.8,
-     "y": 37.97,
-     "v": 2
-    },
-    {
-     "t": "tree_poplar",
-     "x": 38.88,
-     "y": 37.88,
-     "v": 2
-    },
-    {
-     "t": "tree_poplar",
-     "x": 38,
-     "y": 11.94,
+     "x": 29.25,
+     "y": 32.26,
      "v": 2,
      "f": 1
     },
     {
      "t": "tree_poplar",
-     "x": 3.87,
-     "y": 26.27,
+     "x": 27.37,
+     "y": 38.88
+    },
+    {
+     "t": "tree_poplar",
+     "x": 21.04,
+     "y": 11.46,
      "v": 1
     },
     {
      "t": "tree_poplar",
-     "x": 22.49,
-     "y": 7.14,
+     "x": 20.72,
+     "y": 6.21,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 29.34,
+     "y": 2.91
+    },
+    {
+     "t": "tree_poplar",
+     "x": 17.04,
+     "y": 13,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 11.72,
+     "y": 37.66,
      "v": 2
     },
     {
      "t": "tree_poplar",
-     "x": 18.35,
-     "y": 4.43,
+     "x": 37.93,
+     "y": 32.08,
+     "v": 2
+    },
+    {
+     "t": "tree_poplar",
+     "x": 1.71,
+     "y": 8.27,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 11.29,
+     "y": 17.58,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 25.39,
+     "y": 30.35,
+     "v": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 10.49,
+     "y": 26.39
+    },
+    {
+     "t": "tree_poplar",
+     "x": 2.4,
+     "y": 32.9,
+     "v": 1
+    },
+    {
+     "t": "tree_poplar",
+     "x": 37.85,
+     "y": 3.08,
      "v": 1,
      "f": 1
     },
     {
      "t": "tree_poplar",
-     "x": 29.98,
-     "y": 31.52,
+     "x": 9.53,
+     "y": 25.04,
      "v": 1
     },
     {
      "t": "tree_poplar",
-     "x": 38.92,
-     "y": 28.3,
-     "f": 1
-    },
-    {
-     "t": "tree_poplar",
-     "x": 32.12,
-     "y": 31.58,
+     "x": 10.75,
+     "y": 2.35,
      "v": 2
     },
     {
      "t": "tree_poplar",
-     "x": 8.27,
-     "y": 2.38
+     "x": 38.78,
+     "y": 12.8
     },
     {
      "t": "tree_poplar",
-     "x": 24.18,
-     "y": 11.29
+     "x": 31.96,
+     "y": 31.92,
+     "v": 2
     },
     {
      "t": "tree_poplar",
-     "x": 21.71,
-     "y": 10.49,
+     "x": 29.19,
+     "y": 1.03,
+     "v": 2,
      "f": 1
     },
     {
      "t": "tree_poplar",
-     "x": 7.98,
-     "y": 4.07,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "tree_poplar",
-     "x": 14.25,
+     "x": 5.58,
      "y": 26.82,
      "v": 1,
      "f": 1
     },
     {
      "t": "tree_poplar",
-     "x": 27.74,
-     "y": 30.96,
-     "v": 1
-    },
-    {
-     "t": "tree_poplar",
-     "x": 5.71,
-     "y": 35.07
-    },
-    {
-     "t": "tree_poplar",
-     "x": 7.31,
-     "y": 36.16
-    },
-    {
-     "t": "tree_poplar",
-     "x": 31.08,
-     "y": 1.21,
+     "x": 37.4,
+     "y": 37.3,
      "f": 1
     },
     {
      "t": "tree_poplar",
-     "x": 1.95,
-     "y": 30.63,
-     "v": 2,
+     "x": 14.14,
+     "y": 26.81
+    },
+    {
+     "t": "tree_poplar",
+     "x": 23.59,
+     "y": 12.06
+    },
+    {
+     "t": "tree_poplar",
+     "x": 2.08,
+     "y": 30.79,
+     "v": 1,
      "f": 1
     },
     {
      "t": "tree_poplar",
-     "x": 37.42,
-     "y": 21.31,
-     "v": 1
-    },
-    {
-     "t": "tree_poplar",
-     "x": 38.01,
-     "y": 4.99
-    },
-    {
-     "t": "tree_teal",
-     "x": 26.81,
-     "y": 28.61,
-     "v": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 14.84,
-     "y": 4.15,
+     "x": 38.35,
+     "y": 33.72,
      "f": 1
     },
     {
      "t": "tree_teal",
-     "x": 12.19,
-     "y": 3.36,
+     "x": 12.64,
+     "y": 19.48,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 2.14,
+     "y": 10.76,
      "v": 2
     },
     {
      "t": "tree_teal",
-     "x": 10.34,
-     "y": 28.03,
+     "x": 16.37,
+     "y": 38.21,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 8.6,
+     "y": 16.06,
      "v": 1,
      "f": 1
     },
     {
      "t": "tree_teal",
-     "x": 38.34,
-     "y": 31.46,
+     "x": 33.89,
+     "y": 1.97,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 12.53,
+     "y": 5.65,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 5.33,
+     "y": 36.61
+    },
+    {
+     "t": "tree_teal",
+     "x": 15.89,
+     "y": 4.39
+    },
+    {
+     "t": "tree_teal",
+     "x": 35.75,
+     "y": 31.88,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 18.9,
+     "y": 13.4,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 17.56,
+     "y": 3.52,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 38.71,
+     "y": 36.44,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 12.67,
+     "y": 28.38,
      "v": 1
     },
     {
      "t": "tree_teal",
-     "x": 37.52,
-     "y": 38.82,
+     "x": 2.37,
+     "y": 26.62,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 4.1,
+     "y": 14.41,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 6.31,
+     "y": 15.56
+    },
+    {
+     "t": "tree_teal",
+     "x": 12.23,
+     "y": 22.86,
      "v": 2
     },
     {
      "t": "tree_teal",
-     "x": 9.82,
-     "y": 2.32,
-     "f": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 16.13,
-     "y": 37.47,
-     "f": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 9.47,
-     "y": 25.47,
-     "f": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 15.08,
-     "y": 24.43,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 26.17,
-     "y": 25,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 5.65,
-     "y": 1.82,
-     "f": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 1.67,
-     "y": 6.29
-    },
-    {
-     "t": "tree_teal",
-     "x": 2.36,
-     "y": 34.37
-    },
-    {
-     "t": "tree_teal",
-     "x": 27.6,
-     "y": 22.32,
-     "f": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 7.15,
-     "y": 25.04,
-     "v": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 2.3,
-     "y": 12.67,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 19.36,
-     "y": 12.23,
-     "v": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 4.92,
-     "y": 14.23,
-     "f": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 35.94,
-     "y": 2.03,
-     "f": 1
-    },
-    {
-     "t": "tree_teal",
-     "x": 13.04,
-     "y": 38.2,
-     "v": 1
-    },
-    {
-     "t": "tree_round",
-     "x": 38.69,
-     "y": 22.77,
-     "f": 1
-    },
-    {
-     "t": "tree_round",
-     "x": 34.23,
-     "y": 31.84,
-     "v": 2,
-     "f": 1
-    },
-    {
-     "t": "tree_round",
-     "x": 38.58,
-     "y": 9.93,
-     "v": 1
-    },
-    {
-     "t": "tree_round",
-     "x": 38.93,
-     "y": 14.65
-    },
-    {
-     "t": "tree_round",
-     "x": 1.56,
-     "y": 27.84,
-     "v": 1
-    },
-    {
-     "t": "tree_round",
-     "x": 2.33,
-     "y": 8.48
-    },
-    {
-     "t": "tree_round",
-     "x": 38.75,
-     "y": 34.38,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "tree_round",
-     "x": 6.73,
-     "y": 15.36,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "tree_round",
-     "x": 20.48,
-     "y": 14.5,
-     "v": 1
-    },
-    {
-     "t": "tree_round",
-     "x": 29.14,
-     "y": 2.72,
-     "f": 1
-    },
-    {
-     "t": "tree_round",
-     "x": 25.89,
-     "y": 7.25,
-     "v": 2,
-     "f": 1
-    },
-    {
-     "t": "tree_blossom",
-     "x": 32.53,
-     "y": 17.54,
-     "f": 1
-    },
-    {
-     "t": "tree_blossom",
-     "x": 25.21,
-     "y": 23.02,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "tree_blossom",
-     "x": 25.63,
-     "y": 30.45,
-     "v": 2,
-     "f": 1
-    },
-    {
-     "t": "tree_blossom",
-     "x": 4.14,
-     "y": 36.81,
-     "v": 3,
-     "f": 1
-    },
-    {
-     "t": "tree_blossom",
-     "x": 16.47,
-     "y": 13.21,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "bush",
-     "x": 36.22,
-     "y": 3.77,
-     "v": 1,
-     "f": 1
-    },
-    {
-     "t": "bush",
-     "x": 19.26,
-     "y": 5.26,
-     "f": 1
-    },
-    {
-     "t": "bush",
-     "x": 32.88,
-     "y": 38.34,
-     "f": 1
-    },
-    {
-     "t": "bush",
-     "x": 5.68,
-     "y": 25.69,
+     "x": 22.44,
+     "y": 9.36,
      "v": 2
     },
     {
-     "t": "bush",
+     "t": "tree_teal",
+     "x": 7.87,
+     "y": 36.39,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 14,
+     "y": 24.96,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_teal",
+     "x": 26.33,
+     "y": 22.93
+    },
+    {
+     "t": "tree_round",
+     "x": 9.17,
+     "y": 3.83,
+     "v": 2
+    },
+    {
+     "t": "tree_round",
+     "x": 26.35,
+     "y": 6.4,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 35.26,
+     "y": 38.44,
+     "v": 2
+    },
+    {
+     "t": "tree_round",
+     "x": 26.64,
+     "y": 26.22,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 5.22,
+     "y": 34.13
+    },
+    {
+     "t": "tree_round",
+     "x": 38.33,
+     "y": 29.07,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
      "x": 28.97,
-     "y": 29.5,
+     "y": 20.52,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 14.28,
+     "y": 38.85,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 6.53,
+     "y": 1.33,
+     "v": 1
+    },
+    {
+     "t": "tree_round",
+     "x": 29.81,
+     "y": 30.27,
      "v": 2
     },
     {
+     "t": "tree_round",
+     "x": 8.12,
+     "y": 26.61
+    },
+    {
+     "t": "tree_blossom",
+     "x": 4.24,
+     "y": 25.13,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_blossom",
+     "x": 1.56,
+     "y": 5.47,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "tree_blossom",
+     "x": 25.1,
+     "y": 10.58,
+     "v": 1
+    },
+    {
+     "t": "tree_blossom",
+     "x": 20.9,
+     "y": 15.39,
+     "v": 2
+    },
+    {
+     "t": "tree_blossom",
+     "x": 33.25,
+     "y": 13.35
+    },
+    {
      "t": "bush",
-     "x": 28.03,
-     "y": 29.53,
+     "x": 22.85,
+     "y": 7.95,
+     "v": 2,
      "f": 1
     },
     {
      "t": "bush",
-     "x": 12.85,
-     "y": 18.85,
-     "v": 1
-    },
-    {
-     "t": "bush",
-     "x": 37.68,
-     "y": 29.07
-    },
-    {
-     "t": "bush",
-     "x": 36.54,
-     "y": 31.55,
+     "x": 10.44,
+     "y": 16.74,
      "f": 1
     },
     {
      "t": "bush",
-     "x": 21.26,
-     "y": 7.78,
-     "v": 1
-    },
-    {
-     "t": "bush",
-     "x": 13.23,
-     "y": 23.26,
-     "v": 2
-    },
-    {
-     "t": "bush",
-     "x": 34.52,
-     "y": 1.92,
-     "v": 2
-    },
-    {
-     "t": "bush",
-     "x": 26.98,
-     "y": 8.53,
+     "x": 38.9,
+     "y": 6.05,
      "v": 1,
      "f": 1
     },
     {
      "t": "bush",
-     "x": 14.09,
-     "y": 28.55,
+     "x": 12.96,
+     "y": 38.02
+    },
+    {
+     "t": "bush",
+     "x": 38.3,
+     "y": 8.88,
      "v": 2,
      "f": 1
     },
     {
      "t": "bush",
-     "x": 35.41,
-     "y": 18.65,
+     "x": 19.22,
+     "y": 11.06
+    },
+    {
+     "t": "bush",
+     "x": 14.75,
+     "y": 22.57,
      "v": 2,
      "f": 1
     },
     {
      "t": "bush",
-     "x": 38.63,
-     "y": 24.57,
+     "x": 1.5,
+     "y": 28.25,
      "f": 1
     },
     {
      "t": "bush",
-     "x": 1.88,
-     "y": 1.67,
+     "x": 8.37,
+     "y": 2.41,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 38.55,
+     "y": 22.32,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 14.66,
+     "y": 28.8,
+     "v": 1
+    },
+    {
+     "t": "bush",
+     "x": 32.06,
+     "y": 38.61,
+     "v": 2,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 21.66,
+     "y": 38.93,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 33.18,
+     "y": 38.77,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 7.32,
+     "y": 14.17,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 21.56,
+     "y": 8.03,
+     "f": 1
+    },
+    {
+     "t": "bush",
+     "x": 36.76,
+     "y": 31.13,
      "f": 1
     },
     {
      "t": "rock",
-     "x": 32.96,
-     "y": 13.44,
-     "v": 2
-    },
-    {
-     "t": "rock",
-     "x": 10.97,
-     "y": 16.65,
+     "x": 26.33,
+     "y": 20.42,
      "v": 1
     },
     {
      "t": "rock",
-     "x": 38.28,
-     "y": 17.27,
+     "x": 22.19,
+     "y": 37.57,
+     "v": 2
+    },
+    {
+     "t": "rock",
+     "x": 10.64,
+     "y": 15.3,
+     "v": 2,
      "f": 1
     },
     {
      "t": "rock",
+     "x": 28.66,
+     "y": 13.85,
+     "v": 2
+    },
+    {
+     "t": "rock",
+     "x": 11.87,
+     "y": 29.9
+    },
+    {
+     "t": "rock",
+     "x": 19.29,
+     "y": 26.25,
+     "f": 1
+    },
+    {
+     "t": "rock",
+     "x": 23.65,
+     "y": 28.95,
+     "v": 2
+    },
+    {
+     "t": "mushroom",
+     "x": 26.08,
+     "y": 34.79
+    },
+    {
+     "t": "mushroom",
+     "x": 27.68,
+     "y": 33.74
+    },
+    {
+     "t": "mushroom",
+     "x": 27.37,
+     "y": 33.13
+    },
+    {
+     "t": "mushroom",
+     "x": 29.32,
+     "y": 8.24
+    },
+    {
+     "t": "mushroom",
+     "x": 35.79,
+     "y": 11.02
+    },
+    {
+     "t": "mushroom",
+     "x": 35.59,
+     "y": 11.6
+    },
+    {
+     "t": "mushroom",
+     "x": 28.62,
+     "y": 12.68
+    },
+    {
+     "t": "mushroom",
+     "x": 28.12,
+     "y": 12.11
+    },
+    {
+     "t": "mushroom",
+     "x": 12.78,
+     "y": 13.54
+    },
+    {
+     "t": "mushroom",
+     "x": 29.54,
+     "y": 10.52
+    },
+    {
+     "t": "mushroom",
+     "x": 30.24,
+     "y": 10.42
+    },
+    {
+     "t": "mushroom",
+     "x": 35.55,
+     "y": 13.62
+    },
+    {
+     "t": "mushroom",
+     "x": 37.23,
+     "y": 15.81
+    },
+    {
+     "t": "grass",
+     "x": 32.2,
+     "y": 12.18,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 31.23,
+     "y": 11.96,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 32.92,
+     "y": 11.57
+    },
+    {
+     "t": "grass",
+     "x": 31.72,
+     "y": 11.77,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 25.34,
+     "y": 36.68,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 24.82,
+     "y": 36.77
+    },
+    {
+     "t": "grass",
+     "x": 35.42,
+     "y": 3.61,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 13.49,
+     "y": 11.61,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 30.44,
+     "y": 31.75,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 22.78,
+     "y": 18.4,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 6.42,
+     "y": 12.15
+    },
+    {
+     "t": "grass",
+     "x": 6.76,
+     "y": 13.26,
+     "f": 1
+    },
+    {
+     "t": "grass",
      "x": 28,
      "y": 4.53,
-     "v": 2
-    },
-    {
-     "t": "rock",
-     "x": 22.34,
-     "y": 15.34
-    },
-    {
-     "t": "rock",
-     "x": 13.31,
-     "y": 24.7,
-     "v": 2,
-     "f": 1
-    },
-    {
-     "t": "rock",
-     "x": 36.6,
-     "y": 14.37
-    },
-    {
-     "t": "mushroom",
-     "x": 11.1,
-     "y": 11.14
-    },
-    {
-     "t": "mushroom",
-     "x": 10.52,
-     "y": 11.3
-    },
-    {
-     "t": "mushroom",
-     "x": 21.04,
-     "y": 31.9
-    },
-    {
-     "t": "mushroom",
-     "x": 37.14,
-     "y": 4.15
-    },
-    {
-     "t": "mushroom",
-     "x": 17.53,
-     "y": 16.57
-    },
-    {
-     "t": "mushroom",
-     "x": 18.17,
-     "y": 16.7
-    },
-    {
-     "t": "mushroom",
-     "x": 21.52,
-     "y": 9.27
-    },
-    {
-     "t": "mushroom",
-     "x": 22.26,
-     "y": 9.02
-    },
-    {
-     "t": "mushroom",
-     "x": 20.79,
-     "y": 9.02
-    },
-    {
-     "t": "mushroom",
-     "x": 32.76,
-     "y": 8.87
-    },
-    {
-     "t": "mushroom",
-     "x": 33.49,
-     "y": 9.38
-    },
-    {
-     "t": "mushroom",
-     "x": 31.67,
-     "y": 2.1
-    },
-    {
-     "t": "mushroom",
-     "x": 32.26,
-     "y": 12.38
-    },
-    {
-     "t": "grass",
-     "x": 13.85,
-     "y": 21.5,
      "v": 1
     },
     {
      "t": "grass",
-     "x": 13.32,
-     "y": 21.66,
-     "f": 1
+     "x": 27.28,
+     "y": 4.18
     },
     {
      "t": "grass",
-     "x": 13.45,
-     "y": 20.32
-    },
-    {
-     "t": "grass",
-     "x": 13.74,
-     "y": 22.72,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 7.34,
-     "y": 30.81,
-     "v": 1
-    },
-    {
-     "t": "grass",
-     "x": 8.18,
-     "y": 31.25,
-     "v": 1
-    },
-    {
-     "t": "grass",
-     "x": 7.41,
-     "y": 31.92,
-     "v": 1
-    },
-    {
-     "t": "grass",
-     "x": 12.79,
-     "y": 17.87
-    },
-    {
-     "t": "grass",
-     "x": 11.99,
-     "y": 18.62,
+     "x": 27.16,
+     "y": 5.19,
      "v": 1,
      "f": 1
     },
     {
      "t": "grass",
-     "x": 34.5,
-     "y": 10.54
-    },
-    {
-     "t": "grass",
-     "x": 35.21,
-     "y": 10.22,
-     "v": 1
-    },
-    {
-     "t": "grass",
-     "x": 8.56,
-     "y": 30.44,
-     "v": 1
-    },
-    {
-     "t": "grass",
-     "x": 31.84,
-     "y": 35,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 32.85,
-     "y": 34.29,
-     "v": 1
-    },
-    {
-     "t": "grass",
-     "x": 30.8,
-     "y": 35.09,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 17.28,
-     "y": 15.2
-    },
-    {
-     "t": "grass",
-     "x": 18.29,
-     "y": 15.05,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 16.52,
-     "y": 15.97,
+     "x": 35.78,
+     "y": 4.12,
      "v": 1,
      "f": 1
     },
     {
      "t": "grass",
-     "x": 17.78,
-     "y": 15.08,
+     "x": 28.27,
+     "y": 15.07,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 33.86,
+     "y": 38.01
+    },
+    {
+     "t": "grass",
+     "x": 17.39,
+     "y": 35.98
+    },
+    {
+     "t": "grass",
+     "x": 17.37,
+     "y": 35.13
+    },
+    {
+     "t": "grass",
+     "x": 3.6,
+     "y": 11.95,
      "v": 1,
      "f": 1
     },
     {
      "t": "grass",
-     "x": 36.99,
-     "y": 8.06,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 35.93,
-     "y": 7.48,
+     "x": 27.09,
+     "y": 34.94,
      "v": 1
     },
     {
      "t": "grass",
-     "x": 21.55,
-     "y": 31.55,
+     "x": 25.44,
+     "y": 35.61
+    },
+    {
+     "t": "grass",
+     "x": 25.37,
+     "y": 34.01,
      "v": 1
     },
     {
      "t": "grass",
      "x": 22.22,
-     "y": 31.19,
+     "y": 30.25
+    },
+    {
+     "t": "grass",
+     "x": 21.97,
+     "y": 30.71,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 21.29,
+     "y": 30.02,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 36.29,
+     "y": 3.55,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 35.16,
+     "y": 4.16,
      "v": 1,
      "f": 1
     },
     {
      "t": "grass",
-     "x": 21.8,
-     "y": 30.73,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 25.7,
-     "y": 10.82,
-     "v": 1
-    },
-    {
-     "t": "grass",
-     "x": 25.49,
-     "y": 10.15,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 26.95,
-     "y": 10.67,
-     "v": 1
-    },
-    {
-     "t": "grass",
-     "x": 17.91,
-     "y": 26.91,
-     "v": 1
-    },
-    {
-     "t": "grass",
-     "x": 18.13,
-     "y": 26.09
-    },
-    {
-     "t": "grass",
-     "x": 8.77,
-     "y": 31.23,
+     "x": 7.69,
+     "y": 30.89,
      "v": 1,
      "f": 1
     },
     {
      "t": "grass",
-     "x": 17.48,
-     "y": 36.22
-    },
-    {
-     "t": "grass",
-     "x": 17.54,
-     "y": 34.97,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 16.21,
-     "y": 35.99,
+     "x": 6.94,
+     "y": 29.93,
      "v": 1
     },
     {
      "t": "grass",
-     "x": 17.08,
-     "y": 36.96,
-     "f": 1
-    },
-    {
-     "t": "grass",
-     "x": 14.77,
-     "y": 31.05,
-     "v": 1
-    },
-    {
-     "t": "grass",
-     "x": 14.54,
-     "y": 29.8
-    },
-    {
-     "t": "grass",
-     "x": 15.44,
-     "y": 30.76,
+     "x": 22,
+     "y": 21.8,
      "v": 1,
      "f": 1
     },
     {
      "t": "grass",
-     "x": 23.64,
-     "y": 33.71
-    },
-    {
-     "t": "grass",
-     "x": 24.36,
-     "y": 34.16,
+     "x": 13.95,
+     "y": 5.83,
      "f": 1
     },
     {
      "t": "grass",
-     "x": 30.71,
-     "y": 7.26
-    },
-    {
-     "t": "grass",
-     "x": 31.24,
-     "y": 7
-    },
-    {
-     "t": "grass",
-     "x": 31.48,
-     "y": 8.16,
+     "x": 9.62,
+     "y": 11.24,
+     "v": 1,
      "f": 1
     },
     {
      "t": "grass",
-     "x": 14.76,
-     "y": 14.12
+     "x": 9.96,
+     "y": 11.96,
+     "v": 1
     },
     {
      "t": "grass",
-     "x": 13.8,
-     "y": 14.92,
+     "x": 5.04,
+     "y": 28.89,
      "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 4.11,
+     "y": 28,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 25.21,
+     "y": 37.39,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 24.38,
+     "y": 38.39,
+     "v": 1
+    },
+    {
+     "t": "grass",
+     "x": 13.67,
+     "y": 27.95,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 13.58,
+     "y": 9.6,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 14.25,
+     "y": 8.94
+    },
+    {
+     "t": "grass",
+     "x": 14.03,
+     "y": 9.82,
+     "v": 1,
+     "f": 1
+    },
+    {
+     "t": "grass",
+     "x": 25.05,
+     "y": 22.19
     },
     {
      "t": "crystal",
-     "x": 30.36,
-     "y": 13.69
-    },
-    {
-     "t": "crystal",
-     "x": 26.59,
-     "y": 18.33
+     "x": 26.94,
+     "y": 18.24
     }
    ],
-   "objective": "Explore. Rifts hum to the north-east and the south.",
+   "objective": "Wake up. Training dummies wait in the yard.",
+   "level": [
+    1,
+    3
+   ],
    "triggers": [
+    {
+     "id": "banner",
+     "name": "Zone banner",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "dialogue",
+       "id": "vale_banner"
+      }
+     ]
+    },
     {
      "id": "dummies",
      "name": "Training dummies",
@@ -4009,15 +4327,29 @@
      ]
     },
     {
-     "id": "intro",
+     "id": "wake",
      "name": "Pip wakes Aerin",
      "when": {
-      "type": "map_enter"
+      "type": "enter_area",
+      "x": 6.5,
+      "y": 31,
+      "r": 7
      },
      "actions": [
       {
-       "type": "message",
-       "text": "Pip: You are awake! I am Pip, your lantern spirit. Hit a training dummy with your blade to warm up."
+       "type": "dialogue",
+       "id": "vale_wake"
+      },
+      {
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "Training dummies are east. Hit one."
+       ]
+      },
+      {
+       "type": "objective",
+       "text": "Hit the training dummies in the yard."
       }
      ]
     },
@@ -4032,7 +4364,7 @@
      },
      "actions": [
       {
-       "type": "message",
+       "type": "checkpoint",
        "text": "Checkpoint: Whispering Vale"
       },
       {
@@ -4042,22 +4374,26 @@
      ]
     },
     {
-     "id": "chest",
-     "name": "Tutorial chest",
+     "id": "yard_teach",
+     "name": "Dummy yard lesson",
      "when": {
       "type": "enter_area",
-      "x": 36.5,
-      "y": 16.5,
-      "r": 2.4
+      "x": 14.5,
+      "y": 33.5,
+      "r": 3.6
      },
      "actions": [
       {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "Swing. Then dodge. Then try your Q skill.",
+        "The dummy never hits back. Lucky thing."
+       ]
       },
       {
-       "type": "message",
-       "text": "Pip: A weapon and a gem! Press I to open your bag and equip them."
+       "type": "objective",
+       "text": "Follow the path north to the Elder Plaza."
       }
      ]
     },
@@ -4072,12 +4408,77 @@
      },
      "actions": [
       {
-       "type": "message",
-       "text": "Elder Stone: Dreamwarden... the Gloam seeps from the Unwaking King. Relight the four Dawn Shards. The rift south leads to the Misty Pinewood."
+       "type": "dialogue",
+       "id": "vale_elder"
       },
       {
-       "type": "message",
-       "text": "The Shard of Root: Enter the Misty Pinewood and defeat Old Bramblehorn."
+       "type": "dialogue",
+       "speaker": "Elder Stone",
+       "lines": [
+        "The Stone lost a light. Past the cottage, a path ends."
+       ]
+      },
+      {
+       "type": "quest",
+       "id": "vale_lantern",
+       "step": 0
+      },
+      {
+       "type": "objective",
+       "text": "Open the chest north-east. Then find the Stone's lantern."
+      }
+     ]
+    },
+    {
+     "id": "chest",
+     "name": "Tutorial chest",
+     "when": {
+      "type": "enter_area",
+      "x": 36.5,
+      "y": 16.5,
+      "r": 2.6
+     },
+     "actions": [
+      {
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "A chest! Interact to open it."
+       ]
+      },
+      {
+       "type": "wait",
+       "seconds": 4
+      },
+      {
+       "type": "dialogue",
+       "id": "vale_chest"
+      },
+      {
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "Open your bag and equip it."
+       ]
+      }
+     ]
+    },
+    {
+     "id": "fish_hint",
+     "name": "Fishing spot",
+     "when": {
+      "type": "enter_area",
+      "x": 36.5,
+      "y": 19.5,
+      "r": 3.4
+     },
+     "actions": [
+      {
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "Ripples. Fishing waits in the Pinewood."
+       ]
       }
      ]
     },
@@ -4096,8 +4497,193 @@
        "text": "A hidden gem cache!"
       },
       {
+       "type": "loot",
+       "rarity": "uncommon",
+       "count": 1,
+       "x": 3.2,
+       "y": 3.4,
+       "gem": true
+      }
+     ]
+    },
+    {
+     "id": "tablet",
+     "name": "Cottage tablet",
+     "when": {
+      "type": "enter_area",
+      "x": 11.7,
+      "y": 11.9,
+      "r": 2.4
+     },
+     "actions": [
+      {
+       "type": "dialogue",
+       "id": "vale_tablet"
+      }
+     ]
+    },
+    {
+     "id": "garden_ambush",
+     "name": "Gloom in the garden",
+     "when": {
+      "type": "enter_area",
+      "x": 17,
+      "y": 8.5,
+      "r": 3.2
+     },
+     "requires": [
+      "elder"
+     ],
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Gloom in the garden",
+       "sub": "Slimes ooze out of the flowers"
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 1,
+       "x": 15.4,
+       "y": 7.9,
+       "radius": 1.2
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 1,
+       "x": 18.8,
+       "y": 8.9,
+       "radius": 1.2
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 1,
+       "x": 17,
+       "y": 10.3,
+       "radius": 1.2
+      }
+     ]
+    },
+    {
+     "id": "garden_done",
+     "name": "Garden cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "garden_ambush"
+     ],
+     "actions": [
+      {
        "type": "message",
-       "text": "Treasure gleams nearby..."
+       "text": "The garden is quiet. Something hums in the south."
+      },
+      {
+       "type": "heal",
+       "pct": 40
+      },
+      {
+       "type": "loot",
+       "rarity": "uncommon",
+       "count": 1,
+       "x": 17,
+       "y": 8.5
+      },
+      {
+       "type": "open_portal",
+       "index": 4
+      },
+      {
+       "type": "sound",
+       "name": "portal"
+      },
+      {
+       "type": "banner",
+       "title": "The Pinewood rift opens",
+       "sub": "South of the yard"
+      },
+      {
+       "type": "dialogue",
+       "id": "vale_rift"
+      },
+      {
+       "type": "quest",
+       "id": "shard_root",
+       "step": 0
+      },
+      {
+       "type": "objective",
+       "text": "Take the rift south into the Misty Pinewood."
+      }
+     ]
+    },
+    {
+     "id": "lantern_found",
+     "name": "The lost lantern",
+     "when": {
+      "type": "enter_area",
+      "x": 4.5,
+      "y": 4.3,
+      "r": 2.2
+     },
+     "requires": [
+      "elder"
+     ],
+     "actions": [
+      {
+       "type": "message",
+       "text": "The Stone's lantern, still warm."
+      },
+      {
+       "type": "quest",
+       "id": "vale_lantern",
+       "step": 1
+      },
+      {
+       "type": "objective",
+       "text": "Return the lantern to the Elder Stone."
+      }
+     ]
+    },
+    {
+     "id": "lantern_return",
+     "name": "Lantern returned",
+     "when": {
+      "type": "enter_area",
+      "x": 19.5,
+      "y": 21,
+      "r": 3
+     },
+     "requires": [
+      "lantern_found"
+     ],
+     "actions": [
+      {
+       "type": "dialogue",
+       "speaker": "Elder Stone",
+       "lines": [
+        "The Stone is lit. The Stone remembers kindness."
+       ]
+      },
+      {
+       "type": "quest",
+       "id": "vale_lantern",
+       "done": true
+      },
+      {
+       "type": "loot",
+       "rarity": "rare",
+       "count": 1,
+       "x": 19.5,
+       "y": 21,
+       "gem": true,
+       "item": "socket_rune"
+      },
+      {
+       "type": "message",
+       "text": "Reward: a gem and a Socket Rune."
       }
      ]
     }
@@ -4205,13 +4791,41 @@
    ],
    "objects": [
     {
+     "t": "keydoor",
+     "x": 7.99,
+     "y": 24.6,
+     "role": "keydoor",
+     "id": "door_key",
+     "key": "key_roothollow",
+     "ang": -0.44,
+     "len": 2.4
+    },
+    {
+     "t": "gate",
+     "x": 14.25,
+     "y": 7.14,
+     "role": "gate",
+     "id": "gate_r2",
+     "ang": -2.13,
+     "len": 2.4
+    },
+    {
+     "t": "gate",
+     "x": 22.1,
+     "y": 21.27,
+     "role": "gate",
+     "id": "gate_short",
+     "ang": 0.48,
+     "len": 1.8
+    },
+    {
      "t": "shrine",
      "x": 23.5,
      "y": 22,
      "label": "midpoint checkpoint"
     },
     {
-     "t": "sign",
+     "t": "lever",
      "x": 28.5,
      "y": 17,
      "role": "lever",
@@ -4219,7 +4833,7 @@
      "id": "lever_r2"
     },
     {
-     "t": "sign",
+     "t": "lever",
      "x": 11.03,
      "y": 11.03,
      "role": "lever",
@@ -4227,7 +4841,7 @@
      "id": "lever_short"
     },
     {
-     "t": "crystal_violet",
+     "t": "chest",
      "x": 8,
      "y": 7,
      "role": "chest_gold",
@@ -4243,6 +4857,15 @@
      "label": "secret socket rune"
     },
     {
+     "t": "hidden",
+     "x": 6.4,
+     "y": 19.32,
+     "role": "hidden",
+     "id": "wall_crack",
+     "ang": -2.52,
+     "len": 2.2
+    },
+    {
      "t": "lantern",
      "x": 7.31,
      "y": 21.83,
@@ -4250,11 +4873,12 @@
      "pointsAt": "wall_crack"
     },
     {
-     "t": "sign",
+     "t": "tablet",
      "x": 15.5,
      "y": 21.64,
      "role": "tablet",
      "label": "lore",
+     "title": "Warden stone",
      "text": "The first Warden sealed Mossjaw here to keep the Gloam from the pines."
     },
     {
@@ -5208,17 +5832,47 @@
     "x": 8,
     "y": 8
    },
+   "level": [
+    3,
+    10
+   ],
    "triggers": [
     {
-     "id": "intro",
-     "name": "Pip in the dark",
+     "id": "banner",
+     "name": "Zone banner",
      "when": {
       "type": "map_enter"
      },
      "actions": [
       {
-       "type": "message",
-       "text": "Pip: Roots everywhere... they are moving. Stay close to me."
+       "type": "banner",
+       "title": "Root Hollow",
+       "sub": "Where the old roots drink the dark"
+      }
+     ]
+    },
+    {
+     "id": "intro",
+     "name": "Pip in the dark",
+     "when": {
+      "type": "enter_area",
+      "x": 4.5,
+      "y": 27,
+      "r": 5
+     },
+     "actions": [
+      {
+       "type": "dialogue",
+       "id": "pinewood_hollow"
+      },
+      {
+       "type": "quest",
+       "id": "shard_root",
+       "step": 2
+      },
+      {
+       "type": "objective",
+       "text": "Open the root door and descend."
       }
      ]
     },
@@ -5249,7 +5903,7 @@
      },
      "actions": [
       {
-       "type": "message",
+       "type": "checkpoint",
        "text": "Checkpoint: Root Hollow midpoint"
       },
       {
@@ -5274,24 +5928,12 @@
        "sub": "Thorn-touched brutes in numbers"
       },
       {
-       "type": "spawn",
-       "enemy": "ogre",
-       "count": 3,
-       "x": 15.54,
-       "y": 26.3,
-       "radius": 2
-      },
-      {
-       "type": "wait",
-       "seconds": 8
-      },
-      {
-       "type": "spawn",
-       "enemy": "ogre",
-       "count": 3,
-       "x": 12.1,
-       "y": 25.68,
-       "radius": 2
+       "type": "spawnPack",
+       "id": "rh_ogre_pack",
+       "at": {
+        "x": 15.23,
+        "y": 26.04
+       }
       }
      ]
     },
@@ -5314,8 +5956,11 @@
        "pct": 25
       },
       {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
+       "type": "loot",
+       "rarity": "uncommon",
+       "count": 1,
+       "x": 14,
+       "y": 25
       },
       {
        "type": "objective",
@@ -5333,41 +5978,34 @@
       "r": 3.5
      },
      "requires": [
-      "r1_done"
+      "r1_done",
+      "shrine"
      ],
      "actions": [
       {
        "type": "banner",
        "title": "The Gallery",
-       "sub": "Fight to the lever"
+       "sub": "Something large is sleeping at the far end"
       },
       {
-       "type": "spawn",
-       "enemy": "troll",
-       "count": 1,
-       "x": 25.61,
-       "y": 11.35,
-       "radius": 2
+       "type": "spawnPack",
+       "id": "rh_boar_wrong",
+       "at": {
+        "x": 25.28,
+        "y": 11.08
+       }
       },
       {
        "type": "wait",
-       "seconds": 9
+       "seconds": 14
       },
       {
-       "type": "spawn",
-       "enemy": "ogre",
-       "count": 2,
-       "x": 22.02,
-       "y": 10.7,
-       "radius": 2
-      },
-      {
-       "type": "spawn",
-       "enemy": "ogre",
-       "count": 1,
-       "x": 24.98,
-       "y": 8.14,
-       "radius": 2
+       "type": "spawnPack",
+       "id": "rh_troll_sleeper",
+       "at": {
+        "x": 20.53,
+        "y": 9.57
+       }
       }
      ]
     },
@@ -5390,8 +6028,11 @@
        "pct": 25
       },
       {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
+       "type": "loot",
+       "rarity": "uncommon",
+       "count": 1,
+       "x": 24,
+       "y": 10
       },
       {
        "type": "objective",
@@ -5417,8 +6058,8 @@
        "text": "The lever grinds. A gate rumbles open."
       },
       {
-       "type": "sound",
-       "name": "portal"
+       "type": "openGate",
+       "id": "gate_r2"
       },
       {
        "type": "sound",
@@ -5463,11 +6104,12 @@
       },
       {
        "type": "spawn",
-       "enemy": "troll",
+       "enemy": "mossjaw",
        "count": 1,
        "x": 8,
        "y": 6.5,
-       "radius": 0.5
+       "radius": 0.5,
+       "elite": true
       },
       {
        "type": "wait",
@@ -5514,24 +6156,37 @@
        "sub": "A way out opens"
       },
       {
-       "type": "message",
-       "text": "Mossjaw: The roots remember the first Warden... he did not wake, and neither shall I."
+       "type": "dialogue",
+       "speaker": "Mossjaw",
+       "lines": [
+        "The roots remember the first Warden... he did not wake, and neither shall I."
+       ]
       },
       {
        "type": "heal",
        "pct": 100
       },
       {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
+       "type": "loot",
+       "rarity": "epic",
+       "count": 1,
+       "x": 8,
+       "y": 7,
+       "sockets": 2,
+       "chest": "gold"
       },
       {
-       "type": "sound",
-       "name": "portal"
+       "type": "openGate",
+       "id": "gate_short"
       },
       {
        "type": "open_portal",
        "index": 1
+      },
+      {
+       "type": "quest",
+       "id": "shard_root",
+       "step": 3
       },
       {
        "type": "objective",
@@ -5561,8 +6216,8 @@
        "text": "A second lever: the shortcut to the shrine is open."
       },
       {
-       "type": "sound",
-       "name": "portal"
+       "type": "openGate",
+       "id": "gate_short"
       }
      ]
     },
@@ -5577,8 +6232,11 @@
      },
      "actions": [
       {
-       "type": "message",
-       "text": "Pip: The wall hums, Aerin. Something is hidden behind it."
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "The wall hums, Aerin. Something is hidden behind it."
+       ]
       }
      ]
     },
@@ -5596,8 +6254,8 @@
      ],
      "actions": [
       {
-       "type": "sound",
-       "name": "portal"
+       "type": "openGate",
+       "id": "wall_crack"
       },
       {
        "type": "shake",
@@ -5624,8 +6282,12 @@
        "text": "A Socket Rune!"
       },
       {
-       "type": "message",
-       "text": "Treasure gleams nearby..."
+       "type": "loot",
+       "rarity": "rare",
+       "count": 1,
+       "x": 3.5,
+       "y": 16,
+       "item": "socket_rune"
       }
      ]
     }
