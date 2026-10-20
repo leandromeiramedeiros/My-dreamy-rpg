@@ -295,7 +295,7 @@ for (const id of BOSS_IDS) {
 // note; the -1 tier median is a note (losses are expected there). The fight lengths themselves are enforced on the frozen table above.
 const LIVE = { mossjaw: { L: 7, max: 90, red: 120 }, bramblehorn: { L: 9, max: 240, red: 300 } };   // L: lowest arrival level (REPORT: 7-9 / 9-11)
 const REACT = 0.3, MISTAKES = [3, 12], MISS_EVERY = +arg('miss', 7), LIVE_POTIONS = 2, LIVE_TRIALS = 6, LIVE_UNDER = [3, 4];
-const LIVE_ROWS = [{ k: 'under', label: '-1 tier', diff: 'normal', n: +arg('under-trials', 12) }, { k: 'reference', label: 'reference', diff: 'normal', n: LIVE_TRIALS }, { k: 'under2', label: '-2 Story', diff: 'story', n: LIVE_TRIALS }];
+const LIVE_ROWS = [{ k: 'under', label: '-1 tier', diff: 'normal', n: +arg('under-trials', 24) }, { k: 'reference', label: 'reference', diff: 'normal', n: LIVE_TRIALS }, { k: 'under2', label: '-2 Story', diff: 'story', n: LIVE_TRIALS }];
 const ONLY = arg('only', '');
 ev(`const ADD_R = 3;
 function simBossFight(id, L, maxT, react, mistakes, potions, card, every) {
@@ -418,11 +418,14 @@ for (const id in LIVE) {
       bars: Math.max(...runs.map(r => r.bars || 0)), cap };
     liveRows.push(row);
     const target = G_.k === 'under' ? `${LIVE_UNDER.join('-')}/6 wins` : G_.k === 'reference' ? `6/6 wins, <= ${max} s (red ${redMax})` : '> 0/6 wins (Story)';
-    log(`  ${id.padEnd(13)} ${G_.label.padEnd(10)} ${String(L).padEnd(3)} ${String(row.hp).padEnd(8)} ${(row.won + '/' + row.trials).padEnd(5)} ${((lens.length ? Math.round(med) : '-') + ' / ' + (lens.length ? Math.round(row.maxLen) : '-')).padEnd(25)} ${String(row.potions).padEnd(9)} ${(row.mistakes + ' of ' + row.tele).padEnd(9)} ${(Math.round(row.maxBossHit * 100) + ' %').padEnd(13)} ${(Math.round(row.hpLeft * 100) + ' %').padEnd(9)} ${target}`);
+    log(`  ${id.padEnd(13)} ${G_.label.padEnd(10)} ${String(L).padEnd(3)} ${String(row.hp).padEnd(8)} ${(row.won + '/' + row.trials + (row.trials !== 6 ? ` (${(row.won * 6 / row.trials).toFixed(1)}/6)` : '')).padEnd(5)} ${((lens.length ? Math.round(med) : '-') + ' / ' + (lens.length ? Math.round(row.maxLen) : '-')).padEnd(25)} ${String(row.potions).padEnd(9)} ${(row.mistakes + ' of ' + row.tele).padEnd(9)} ${(Math.round(row.maxBossHit * 100) + ' %').padEnd(13)} ${(Math.round(row.hpLeft * 100) + ' %').padEnd(9)} ${target}`);
     const by = {}; for (const r of runs) for (const k in r.by || {}) by[k.replace('(rooted)', '')] = (by[k.replace('(rooted)', '')] || 0) + r.by[k] / runs.length;
     log(`    damage taken per fight, in hero max HP (mean): ${Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v.toFixed(2)).join(', ')}${runs.some(r => !r.won) ? `; lost fights ended at boss ${runs.filter(r => !r.won).map(r => Math.round(r.bossLeft * 100) + ' %').join(', ')}` : ''}`);
     const tag = `live ${id} (${G_.label}, L${L}, melee, ${LIVE_POTIONS} potions)`;
-    if (G_.k === 'under' && (row.won < LIVE_UNDER[0] || row.won > LIVE_UNDER[1])) red(`${tag}: won ${row.won}/${row.trials}, §26.2 target ${LIVE_UNDER.join('-')}/6`);
+    // the -1 tier row runs more trials (a 3-4 / 6 band on 6 seeded trials flips on any RNG shift): red when its rate, on the /6
+    // scale, rounds outside 3-4 (wins x 6 / trials outside [2.5, 4.5))
+    const per6 = row.won * 6 / row.trials; row.per6 = per6;
+    if (G_.k === 'under' && (per6 < LIVE_UNDER[0] - 0.5 || per6 >= LIVE_UNDER[1] + 0.5)) red(`${tag}: won ${row.won}/${row.trials} (= ${per6.toFixed(1)}/6), §26.2 target ${LIVE_UNDER.join('-')}/6`);
     if (G_.k === 'reference' && row.won < row.trials) red(`${tag}: won ${row.won}/${row.trials}, §26.2 target 6/6 at reference gear (boss left at up to ${Math.round(row.bossLeft * 100)} %)`);
     if (G_.k === 'under2' && row.won === 0) red(`${tag}: won 0/${row.trials} on Story at -2 tiers (§26.2)`);
     if (G_.k === 'reference' && lens.length && med > redMax) red(`${tag}: median kill ${Math.round(med)} s over the ${redMax} s red limit (§20.7)`);

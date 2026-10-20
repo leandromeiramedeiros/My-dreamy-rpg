@@ -163,7 +163,7 @@ var BOSS_DATA = {
   },
   bramblehorn: {
     name: 'Old Bramblehorn', sprite: 'bramblehorn', kind: 'guardian', level: 8, zone: 'pinewood',
-    type: 'beast', el: 'nature', hp: 23100, lengthSec: [150, 240], staggerMax: 5,   // 21470 -> 17200 (QA B2) -> 23100 (M3 step 2: v2 gear; every family 150-240 s on reference gear, balsim)
+    type: 'beast', el: 'nature', hp: 22000, lengthSec: [150, 240], staggerMax: 5,   // 21470 -> 17200 (QA B2) -> 23100 (M3 step 2: v2 gear; every family 150-240 s on reference gear, balsim) -> 22000 (§26.2: 3 bars + cunning forms carry the difficulty; reference 150-240 s holds)
     res: { nature: 0.5, fire: -0.5 },        // STORY.md gives no weak/resist for Bramblehorn; assumed to match the beast-nature type
     bars: true, transition: 1.5,             // 3 bars (guardian)
     moveDefs: {
