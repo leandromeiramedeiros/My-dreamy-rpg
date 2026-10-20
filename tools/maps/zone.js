@@ -39,6 +39,9 @@ function zone(S) {
       }
       for (const [k, r] of Object.entries(S.ponds || {})) g.pond(k, r);
       for (const b of S.bridges || []) g.bridge(b);
+      // §29 G3 tall set pieces: stacked plateaus + switchbacks (the climbs, drops and the vantage are placed in populate)
+      for (const [k, st] of Object.entries(S.stacks || {})) g.stack(k, st);
+      for (const [k, sw] of Object.entries(S.switchbacks || {})) g.switchback(k, sw);
     },
     populate(g, T) { populate(S, g, T); },
   };
@@ -63,7 +66,7 @@ function populate(S, g, T) {
   for (const sg of S.signs || []) { const rm = R[sg.room]; g.marker('sign', rm.x + sg.dx, rm.y + sg.dy, { label: 'sign', text: sg.text }); g.poi('sign', rm.x + sg.dx, rm.y + sg.dy); }
   const shr = {};
   for (const [k, sh] of Object.entries(S.shrines)) {
-    const rm = R[sh.room]; shr[k] = { x: rm.x, y: rm.y };
+    const rm = sh.at ? { x: sh.at[0], y: sh.at[1] } : R[sh.room]; shr[k] = { x: rm.x, y: rm.y };   // at: [x, y] -- §29 G3 shrine 3 on Hawk's Rest
     g.marker('shrine', rm.x, rm.y, { id: k, name: sh.name, label: 'checkpoint', warp: true }); g.poi('shrine', rm.x, rm.y);
     g.anchor(k + '_land', rm.x + 1.7, rm.y + 0.9);
   }

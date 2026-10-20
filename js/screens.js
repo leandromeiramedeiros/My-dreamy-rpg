@@ -234,6 +234,18 @@ function fullMapCanvas(m) {
   mi.fullKey = key;
   return c;
 }
+// one section row: its inset (the section's rects mapped into mini space, the bounding box of their corners) + name + kind
+function sectionInset(ctx, m, sc, CX, y, CW, IH, cur, known, full) {
+  const mi = m.mini;
+  ctx.fillStyle = cur ? 'rgba(158,240,255,0.14)' : 'rgba(255,255,255,0.05)'; ctx.fillRect(CX, y, CW, IH);
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const [rx, ry, rw, rh] of sc.rects || [[0, 0, m.W, m.H]]) for (const [cx, cy] of [[rx, ry], [rx + rw, ry], [rx, ry + rh], [rx + rw, ry + rh]]) { const a = mi.ox + cx - cy, b = mi.oy + cx + cy; x0 = Math.min(x0, a); x1 = Math.max(x1, a); y0 = Math.min(y0, b); y1 = Math.max(y1, b); }
+  const iw = IH - 8, sk = Math.min(iw / Math.max(1, x1 - x0), iw / Math.max(1, y1 - y0));
+  if (known || !sc.under) { ctx.imageSmoothingEnabled = false; ctx.drawImage(full, x0, y0, x1 - x0, y1 - y0, CX + 4, y + 4, (x1 - x0) * sk, (y1 - y0) * sk); }
+  else { ctx.fillStyle = '#05030c'; ctx.fillRect(CX + 4, y + 4, iw, iw); }
+  UI.text(ctx, known ? fitText(sc.name || sc.id, CW - IH - 12) : '???', CX + IH + 4, y + 8, 'small', known ? UC.text : UC.dim);
+  UI.text(ctx, sc.kind || '', CX + IH + 4, y + 26, 'small', UC.dim);
+}
 function drawFullMap(ctx) {
   const m = G.map, u = G.ui.map, p = G.player; if (!m.mini) return;
   const mi = m.mini, found = (G.prog.sections && G.prog.sections[m.id]) || [];
@@ -273,19 +285,96 @@ function drawFullMap(ctx) {
     UI.text(ctx, 'SECTIONS', CX, 80, 'small', UC.gold);
     const secs = (m.sections || []).filter(sc => sc.id !== 'main' || m.sections.length === 1);
     const cur = sectionAt(m, p.x, p.y), full = fullMapCanvas(m), IH = Math.min(70, Math.floor(400 / Math.max(1, secs.length)) - 6);
-    secs.forEach((sc, i) => {
-      const y = 98 + i * (IH + 6), known = found.includes(sc.id);
-      ctx.fillStyle = sc === cur ? 'rgba(158,240,255,0.14)' : 'rgba(255,255,255,0.05)'; ctx.fillRect(CX, y, CW, IH);
-      // inset: the section's rects mapped into mini space (bounding box of their corners)
-      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-      for (const [rx, ry, rw, rh] of sc.rects || [[0, 0, m.W, m.H]]) for (const [cx, cy] of [[rx, ry], [rx + rw, ry], [rx, ry + rh], [rx + rw, ry + rh]]) { const a = mi.ox + cx - cy, b = mi.oy + cx + cy; x0 = Math.min(x0, a); x1 = Math.max(x1, a); y0 = Math.min(y0, b); y1 = Math.max(y1, b); }
-      const iw = IH - 8, sk = Math.min(iw / Math.max(1, x1 - x0), iw / Math.max(1, y1 - y0));
-      if (known || !sc.under) { ctx.imageSmoothingEnabled = false; ctx.drawImage(full, x0, y0, x1 - x0, y1 - y0, CX + 4, y + 4, (x1 - x0) * sk, (y1 - y0) * sk); }
-      else { ctx.fillStyle = '#05030c'; ctx.fillRect(CX + 4, y + 4, iw, iw); }
-      UI.text(ctx, known ? fitText(sc.name || sc.id, CW - IH - 12) : '???', CX + IH + 4, y + 8, 'small', known ? UC.text : UC.dim);
-      UI.text(ctx, sc.kind || '', CX + IH + 4, y + 26, 'small', UC.dim);
-    });
+    secs.forEach((sc, i) => sectionInset(ctx, m, sc, CX, 98 + i * (IH + 6), CW, IH, sc === cur, found.includes(sc.id), full));
   }
   const hint = IN.device === 'pad' ? `${IN.glyph('back')} close` : 'M / Esc close';
   UI.text(ctx, u.mode === 'shrine' && targets.length ? hint + '   arrows pick   Enter warp' : hint, 480, 496, 'small', UC.dim, 'center');
+}
+
+// ===== §29 G3 the vantage reveal (world-art minutes §3.1.6) =======================================================================
+// A trigger action { type: 'vantage', id, r, title, sub } (game.js runAction -> startVantage) on a summit:
+//   0 - 0.6 s   the camera eases 40 px down-slope (main.js cameraBias reads G.vantage.lead), letterbox bars slide in;
+//   0.6 s       the fog of war lifts within r tiles (hud.js miniRevealArea);
+//   0.6 - 3.1 s the cinematic: desktop first pulls back (a half-scale snapshot of the real world, drawn ONCE: preview + resident chunks
+//               + the columns and props of a 2x view, through drawItem under a 0.5 transform), then both tiers cross to the 1/4-res
+//               ground preview (maps.js groundPreview) centred on the hero, the fog edge growing outward, shrine / portal dots, the
+//               section insets and the vantage name;
+//   3.1 - 3.5 s back to the live scene. Phones never render a bigger scene: the preview blit only. ~1 ms a frame, no new raster.
+const VANTAGE_T = { ease: 0.6, film: 2.5, out: 0.4 };
+function startVantage(a) {
+  const p = G.player, m = G.map; if (!p || !m || G.vantage) return false;
+  // down-slope: the direction (of 8) whose ground 4-8 tiles out is lowest
+  let best = null;
+  for (let k = 0; k < 8; k++) { const ang = k * Math.PI / 4, fx = Math.cos(ang), fy = Math.sin(ang); let lo = 0, n = 0; for (let d = 4; d <= 8; d++) { const x = p.x + fx * d, y = p.y + fy * d; if (typeAt(m, Math.floor(x), Math.floor(y))) { lo += tileH(m, x, y); n++; } else { lo -= 2; n++; } } const v = lo / Math.max(1, n); if (!best || v < best.v) best = { v, fx, fy }; }
+  const sx = (best.fx - best.fy) * 16, sy = (best.fx + best.fy) * 8, l = Math.hypot(sx, sy) || 1;
+  G.vantage = { id: a.id || 'vantage', t0: G.t, r: +a.r || 24, x: p.x, y: p.y, lead: [0, 0], aim: [sx / l * 40, sy / l * 40], title: a.title || (sectionAt(m, p.x, p.y) || {}).name || m.name, sub: a.sub || '', revealed: false, snap: null };
+  sfx('shrine');
+  return true;
+}
+function vantageSnapshot(m) {   // desktop pull-back: the world at 0.5x around the camera, drawn once into a scene-sized canvas
+  const V = makeCanvas(RW, RH), x = V.x, th = m.theme, bg = th._bg, k = 0.5;
+  x.imageSmoothingEnabled = false;
+  if (bg && bg.sky) x.drawImage(bg.sky.c, 0, 0, bg.sky.c.width, bg.sky.c.height, 0, 0, RW, RH * 1.4);
+  x.setTransform(k, 0, 0, k, RW / 2 * (1 - k), RH / 2 * (1 - k));
+  const g = m.gp, pv = groundPreview(m);
+  x.drawImage(pv, Math.round(g.minSX - camX + RW / 2), Math.round(-camY + RH / 2), pv.width * 4, pv.height * 4);
+  const cg = chunkGrid(m);
+  for (const [, ch] of CHUNK.cache) if (ch.m === m) { const ci = ch.idx % cg.nx, cj = (ch.idx / cg.nx) | 0; x.drawImage(ch.c, Math.round(ci * cg.S + g.minSX - camX + RW / 2), Math.round(cj * cg.S - camY + RH / 2)); }
+  const pts = [[-RW, -RH - 120], [RW * 2, -RH - 120], [-RW, RH * 2 + 240], [RW * 2, RH * 2 + 240]].map(([vx, vy]) => toWorld(vx - RW / 2 + camX, vy - RH / 2 + camY));
+  const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]), items = [];
+  for (const c of gridQuery(m, 'cols', Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys))) if (!c.gone && c.img) items.push(c);
+  for (const o of gridQuery(m, 'objs', Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys))) if (o.kind === 'sprite' && !o.gone && o.img && !o.critter) items.push(o);
+  items.sort((a, b) => a.key - b.key);
+  for (const it of items) { if (it.kind === 'sprite' && it.tree && it._split) continue; drawItem(x, it, []); }
+  x.setTransform(1, 0, 0, 1, 0, 0);
+  x.globalCompositeOperation = 'soft-light'; x.globalAlpha = 0.25; if (GRADE[m.themeId]) x.drawImage(GRADE[m.themeId], 0, 0); x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
+  return V.c;
+}
+function drawVantage(ctx) {
+  const V = G.vantage, m = G.map, p = G.player; if (!V || !m) return;
+  const t = G.t - V.t0, T1 = VANTAGE_T.ease, T2 = T1 + VANTAGE_T.film, T3 = T2 + VANTAGE_T.out;
+  if (t >= T3) { G.vantage = null; return; }
+  p.rootT = Math.max(p.rootT, 0.1); p.invulnT = Math.max(p.invulnT, 0.2);
+  const e = clamp(t / T1, 0, 1); V.lead = [V.aim[0] * e * e * (3 - 2 * e), V.aim[1] * e * e * (3 - 2 * e)];
+  if (t >= T1 && !V.revealed) { V.revealed = true; if (typeof miniRevealArea === 'function') V.newTiles = miniRevealArea(m, V.x, V.y, V.r); }
+  const bars = Math.round(54 * clamp(Math.min(t / 0.35, (T3 - t) / 0.35), 0, 1));
+  if (t >= T1) {
+    const u = (t - T1) / VANTAGE_T.film, fade = clamp(Math.min(u / 0.08, (T3 - t) / VANTAGE_T.out), 0, 1);
+    ctx.save(); ctx.imageSmoothingEnabled = false;
+    // the pull-back (desktop): the snapshot zooms from 1:1 with the live frame (display scale 4) to half scale (2)
+    const pull = !PHONE ? clamp(u / 0.32, 0, 1) : 1, mapA = clamp((u - (PHONE ? 0 : 0.26)) / 0.14, 0, 1);
+    if (!PHONE && mapA < 1) {
+      if (!V.snap) V.snap = vantageSnapshot(m);
+      const s = 2 * (2 - pull * pull * (3 - 2 * pull)), w = RW * s, h = RH * s;
+      ctx.globalAlpha = fade; ctx.drawImage(V.snap, Math.round(DW / 2 - w / 2), Math.round(DH / 2 - h / 2), Math.round(w), Math.round(h));
+    }
+    if (mapA > 0) {
+      ctx.globalAlpha = fade * mapA; ctx.fillStyle = '#07040f'; ctx.fillRect(0, 0, DW, DH);
+      const g = m.gp, pv = groundPreview(m), ws = 0.5 - 0.16 * clamp(u, 0, 1), ps = 8 * ws;   // world scale 0.5 -> 0.34; a preview px = 4 world px
+      const hx = (isoX(V.x, V.y) - g.minSX) / 4, hy = isoY(V.x, V.y, 0) / 4, ox = DW / 2 - hx * ps, oy = DH / 2 + 20 - hy * ps;
+      const R = V.r * 16 * 2 * ws * clamp((u - 0.05) / 0.55, 0.08, 1), cx = DW / 2, cy = DH / 2 + 20;   // the fog edge: an iso circle growing out
+      ctx.globalAlpha = fade * mapA * 0.22; ctx.drawImage(pv, Math.round(ox), Math.round(oy), Math.round(pv.width * ps), Math.round(pv.height * ps));
+      ctx.save(); ctx.beginPath(); ctx.ellipse(cx, cy, R * 1.41, R * 0.71, 0, 0, Math.PI * 2); ctx.clip();
+      ctx.globalAlpha = fade * mapA; ctx.drawImage(pv, Math.round(ox), Math.round(oy), Math.round(pv.width * ps), Math.round(pv.height * ps));
+      ctx.restore();
+      ctx.globalAlpha = fade * mapA * 0.85; ctx.strokeStyle = '#e8dcff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(cx, cy, R * 1.41, R * 0.71, 0, 0, Math.PI * 2); ctx.stroke();
+      const at = (x, y) => [ox + (isoX(x, y) - g.minSX) / 4 * ps, oy + isoY(x, y, 0) / 4 * ps];
+      ctx.globalAlpha = fade * mapA;
+      for (const o of (typeof shrinesOf === 'function' ? shrinesOf(m) : [])) { const [sx, sy] = at(o.x, o.y); ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(sx) - 5, UI.snap(sy) - 5, 10, 10); ctx.fillStyle = '#9ef0ff'; ctx.fillRect(UI.snap(sx) - 3, UI.snap(sy) - 3, 6, 6); }
+      for (const pt of m.portals) { const [qx, qy] = at(pt.x, pt.y); ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(qx) - 4, UI.snap(qy) - 4, 8, 8); ctx.fillStyle = pt.open ? UC.gold : '#8a7aa8'; ctx.fillRect(UI.snap(qx) - 2, UI.snap(qy) - 2, 4, 4); }
+      const [hx2, hy2] = at(V.x, V.y); ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(hx2) - 5, UI.snap(hy2) - 5, 10, 10); ctx.fillStyle = '#ffffff'; ctx.fillRect(UI.snap(hx2) - 3, UI.snap(hy2) - 3, 6, 6);
+      // the section insets (the full map's), right column
+      if (m.mini) {
+        const secs = (m.sections || []).filter(sc => sc.id !== 'main' || m.sections.length === 1), found = (G.prog.sections && G.prog.sections[m.id]) || [], full = fullMapCanvas(m), cur = sectionAt(m, V.x, V.y);
+        const IH = Math.min(52, Math.floor(300 / Math.max(1, secs.length)) - 6), slide = 1 - clamp((u - 0.3) / 0.2, 0, 1);
+        secs.forEach((sc, i) => sectionInset(ctx, m, sc, DW - 236 + Math.round(slide * 260), 92 + i * (IH + 6), 212, IH, sc === cur, found.includes(sc.id) || sc === cur, full));
+      }
+    }
+    ctx.restore();
+  }
+  if (bars > 0) { ctx.fillStyle = '#05030c'; ctx.fillRect(0, 0, DW, bars); ctx.fillRect(0, DH - bars, DW, bars); }
+  if (t >= T1) {
+    const a = clamp(Math.min((t - T1 - 0.35) / 0.4, (T3 - 0.2 - t) / 0.3), 0, 1);
+    if (a > 0) { ctx.globalAlpha = a; UI.text(ctx, String(V.title).toUpperCase(), DW / 2, 14, 'body', UC.gold, 'center'); if (V.sub) UI.text(ctx, V.sub, DW / 2, DH - 40, 'small', UC.text, 'center'); ctx.globalAlpha = 1; }
+  }
 }

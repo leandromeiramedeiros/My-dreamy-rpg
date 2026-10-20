@@ -188,7 +188,8 @@ function groundTick(m, idle, sceneMs = 0) {
   GROUND_STATS.lastTickMs = (idle ? GROUND_STATS.lastTickMs : 0) + performance.now() - t0;
 }
 // the tile-space box that can hold anything visible (tall sprites and columns rise above their base: pad below)
-function viewTiles(mx = 80, mTop = 40, mBot = 190) {
+// §29 G3 pads (world-art minutes §3.3 fix 4): mTop 40 -> 160, mBot 190 -> 240, for 28-level columns and the props on them
+function viewTiles(mx = 80, mTop = 160, mBot = 240) {
   const xs = [], ys = [];
   for (const [sx, sy] of [[camX - RW / 2 - mx, camY - RH / 2 - mTop], [camX + RW / 2 + mx, camY - RH / 2 - mTop], [camX - RW / 2 - mx, camY + RH / 2 + mBot], [camX + RW / 2 + mx, camY + RH / 2 + mBot]]) { const [wx, wy] = toWorld(sx, sy); xs.push(wx); ys.push(wy); }
   return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
@@ -297,11 +298,12 @@ function drawScene() {
     if (!c.img) { if (c.chunk == null || !chunkResident(m, c.chunk)) continue; c.img = rasterColumn(m, c.i, c.j).img; }
     list.push(c);
   }
-  TREE_FRAME.n = 0; TREE_FRAME.hero = p.dead ? null : worldToView(p.x, p.y, p.z); TREE_FRAME.hkey = p.x + p.y + p.z * 0.35 + 0.01;
+  const heroKey = depthKey(m, p.x, p.y, p.z) + 0.01;   // §29 G3: never over a taller wall in front of the hero (maps.js depthKey)
+  TREE_FRAME.n = 0; TREE_FRAME.hero = p.dead ? null : worldToView(p.x, p.y, p.z); TREE_FRAME.hkey = heroKey;
   for (const o of viewObjs) if (inView(isoX(o.x, o.y), isoY(o.x, o.y, o.z))) { list.push(o); if (o.tree && o.img.swayF && !o.gone && treeTick(o)) list.push(o._cv || (o._cv = { kind: 'canopy', o, key: o.key + 0.5 })); }
   for (const f of m.falls) if (!f.edge && inView(f.x0 + 8, f.y0 + f.len / 2, 40 + f.len)) list.push({ kind: 'fall', f, key: f.key });
-  if (!p.dead || G.state === 'dead') list.push({ kind: 'player', key: p.x + p.y + p.z * 0.35 + 0.01 });
-  for (const e of viewEnemies) list.push({ kind: 'enemy', e, key: e.x + e.y + 0.01 });
+  if (!p.dead || G.state === 'dead') list.push({ kind: 'player', key: heroKey });
+  for (const e of viewEnemies) list.push({ kind: 'enemy', e, key: depthKey(m, e.x, e.y, e.z || 0) + 0.01 });
   for (const pr of G.projs) if (inView(isoX(pr.x, pr.y), isoY(pr.x, pr.y, pr.z || 0), 40)) list.push({ kind: 'proj', pr, key: pr.x + pr.y + 0.3 });
   for (const d of G.drops) if (inView(isoX(d.x, d.y), isoY(d.x, d.y, d.z))) list.push({ kind: 'drop', d, key: d.x + d.y + d.z * 0.35 + 0.02 });
   for (const c of G.critters || []) if (inViewE(c)) list.push({ kind: 'critter', c, key: c.x + c.y + c.z * 0.35 });
@@ -310,7 +312,9 @@ function drawScene() {
   for (const c of G.corpses) if (inView(isoX(c.x, c.y), isoY(c.x, c.y, c.gz))) { c.key = c.x + c.y + 0.005; list.push(c); }
   if (p.buffs.orbit) for (let k = 0; k < 3; k++) { const a = G.t * 4 + k * Math.PI * 2 / 3; list.push({ kind: 'orb', x: p.x + Math.cos(a) * 1.4, y: p.y + Math.sin(a) * 1.4, z: p.z + 1.2, key: p.x + Math.cos(a) * 1.4 + p.y + Math.sin(a) * 1.4 + p.z * 0.35 }); }
   list.sort((a, b) => a.key - b.key);
+  const occluded = !p.dead && heroOccluders(m, p, list, heroKey);   // §29 G3 cutaway marks + the silhouette below
   for (const it of list) drawItem(ctx, it, lights);
+  if (occluded) drawHeroGhost(ctx, p);
   if (aimNow) drawAimReticleTop(aimNow);   // the reticle again on top at 35 % so it reads over a boss
 
   perfMark('entities');
@@ -804,7 +808,7 @@ function drawDecal(ctx, e) {
 function drawItem(ctx, it, lights) {
   const p = G.player;
   if (it.kind === 'echo') { drawEcho(ctx, G.echo, lights); return; }
-  if (it.kind === 'column') { ctx.drawImage(it.img, Math.round(it.sx - camX + RW / 2), Math.round(it.sy - camY + RH / 2)); return; }
+  if (it.kind === 'column') { if (it._cut === CHUNK.frame) drawCutaway(ctx, it); else ctx.drawImage(it.img, Math.round(it.sx - camX + RW / 2), Math.round(it.sy - camY + RH / 2)); return; }
   if (it.kind === 'sprite') {
     if (it.gone) return;   // an opened gate / keydoor / hidden wall (maps.js openGate)
     const [vx, vy] = worldToView(it.x, it.y, it.z);
@@ -1084,6 +1088,49 @@ function drawEcho(ctx, E, lights) {
   ctx.globalAlpha = sa; ctx.globalCompositeOperation = so;
   lights.push({ sx: vx + camX - RW / 2, sy: vy - 14 + camY - RH / 2, r: 24, col, a: 0.3 * A });
 }
+// ===== §29 G3 occlusion (world-art minutes §3.3 fixes 1 + 2) ===================================================================
+// heroOccluders: the columns sorted AFTER the hero whose top rises more than a level above his feet and whose image overlaps his
+// sprite rect (at most 24 a frame) are marked it._cut; drawItem draws them as a cutaway (desktop: a dithered window around the hero,
+// a 2x2 checker cut out with destination-out on a scratch canvas; phones: plain alpha 0.45). After the sorted draw the hero is
+// drawn again as a silhouette ('#9ef0ff' at alpha 0.4 + a 1 px darker inner silhouette), so he always reads behind a tall wall.
+const OCC = { n: 0, hx: 0, hy: 0, scratch: null, hole: null, max: 24 };
+function heroOccluders(m, p, list, hkey) {
+  const [vx, vy] = worldToView(p.x, p.y, p.z), H = p.spr && p.spr.hero, hw = H ? H.w / 2 - 2 : 8, hh = H ? H.h - 4 : 30;
+  OCC.n = 0; OCC.hx = vx; OCC.hy = vy - hh / 2;
+  const x0 = vx - hw, x1 = vx + hw, y0 = vy - hh, y1 = vy;
+  for (const it of list) {
+    if (it.kind !== 'column' || it.key <= hkey || !it.img) continue;
+    const cx = it.sx - camX + RW / 2, cy = it.sy - camY + RH / 2;
+    if (cx > x1 || cx + 32 < x0 || cy > y1 - 4 || cy + it.img.height < y0) continue;
+    const h = m.h[Math.floor(it.y)][Math.floor(it.x)]; if (h <= p.z + 1) continue;
+    it._cut = CHUNK.frame; if (++OCC.n >= OCC.max) break;
+  }
+  return OCC.n > 0;
+}
+function drawCutaway(ctx, it) {
+  const dx = Math.round(it.sx - camX + RW / 2), dy = Math.round(it.sy - camY + RH / 2);
+  if (PHONE) { ctx.globalAlpha = 0.45; ctx.drawImage(it.img, dx, dy); ctx.globalAlpha = 1; return; }
+  if (!OCC.scratch) {
+    OCC.scratch = makeCanvas(64, 200);
+    const R = 22, hole = makeCanvas(R * 2, R * 3);   // a dithered ellipse: 2x2 checker inside, solid-free outside
+    for (let y = 0; y < R * 3; y++) for (let x = 0; x < R * 2; x++) { const u = (x + 0.5 - R) / R, v = (y + 0.5 - R * 1.5) / (R * 1.5), d = u * u + v * v; if (d < 1 && (((x >> 0) + (y >> 0)) & 1) === 0) { hole.x.fillStyle = '#000'; hole.x.fillRect(x, y, 1, 1); } else if (d < 0.35) { hole.x.fillStyle = '#000'; hole.x.fillRect(x, y, 1, 1); } }
+    OCC.hole = hole.c;
+  }
+  const S = OCC.scratch, w = it.img.width, h = Math.min(200, it.img.height);
+  S.x.globalCompositeOperation = 'source-over'; S.x.clearRect(0, 0, 64, 200); S.x.drawImage(it.img, 0, 0);
+  S.x.globalCompositeOperation = 'destination-out'; S.x.drawImage(OCC.hole, Math.round(OCC.hx - dx - OCC.hole.width / 2), Math.round(OCC.hy - dy - OCC.hole.height / 2));
+  S.x.globalCompositeOperation = 'source-over';
+  ctx.drawImage(S.c, 0, 0, w, h, dx, dy, w, h);
+}
+function drawHeroGhost(ctx, p) {
+  const D = p._drawn; if (!D || !D.frame) return;
+  const img = D.flip ? flipOf(D.frame) : D.frame, lite = silOf(img, '#9ef0ff'), dark = silOf(img, '#1d4a66');
+  ctx.globalAlpha = 0.4;
+  for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) ctx.drawImage(lite, D.dx + ox, D.dy + oy);
+  ctx.globalAlpha = 0.35; ctx.drawImage(dark, D.dx, D.dy);
+  ctx.globalAlpha = 0.25; ctx.drawImage(lite, D.dx, D.dy);
+  ctx.globalAlpha = 1;
+}
 function drawPlayer(ctx, p, lights) {
   const [vx, vy] = worldToView(p.x, p.y, p.z);
   if (!p.spr || !p.spr.hero || p.spr.sig !== heroSig(p.equip)) p.spr = buildPlayerSprites(p.equip);
@@ -1123,6 +1170,7 @@ function drawPlayer(ctx, p, lights) {
   if (p.back) drawW();
   const frame = H[view][fi];
   ctx.drawImage(frame, 0, 0);
+  p._drawn = { frame, dx, dy, flip };   // §29 G3 the silhouette redraws this frame
   const rims = HERO.rimsOf(H, view, fi); for (let i = 0; i < rims.length; i++) HERO.drawRim(ctx, rims[i], 0, 0, t);
   if (p.hurtT > 0 && Math.floor(p.hurtT * 30) % 2) ctx.drawImage(silOf(frame, '#ffffff'), 0, 0);
   if (!p.back) drawW();

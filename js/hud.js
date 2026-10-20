@@ -354,6 +354,21 @@ function miniBuild(m) {
   }
   HUD.fogTile = '';
 }
+// §29 G3 the vantage reveal: explore every tile within R of (x, y) at once (the same rev-canvas stamp as miniReveal); returns how many
+// tiles were new. Only land tiles in the hero's section kind family count, so an underground section stays dark from a summit.
+function miniRevealArea(m, x, y, R) {
+  if (!m.mini || m.mini.prog !== G.prog) miniBuild(m);
+  const mi = m.mini, rx = mi.rev.getContext('2d'); rx.fillStyle = '#fff'; let n = 0;
+  const under = sec => !!(sec && sec.under);
+  for (let j = Math.max(0, Math.floor(y - R)); j <= Math.min(m.H - 1, Math.ceil(y + R)); j++) for (let i = Math.max(0, Math.floor(x - R)); i <= Math.min(m.W - 1, Math.ceil(x + R)); i++) {
+    if (Math.hypot(i + 0.5 - x, j + 0.5 - y) > R || mi.vis[j * m.W + i]) continue;
+    if (m.sections && under(m.sections[m.secAt[j * m.W + i]])) continue;
+    mi.vis[j * m.W + i] = 1; n++;
+    rx.fillRect(mi.ox + i - j - 2, mi.oy + i + j - 1, 4, 3);
+  }
+  if (n) { mi.dirty = true; HUD.fogTile = null; mi.fullKey = null; }
+  return n;
+}
 // mini-map pixel of a world point
 const miniAt = (mi, x, y) => [mi.ox + (x - y), mi.oy + (x + y)];
 function miniReveal(m, p) {

@@ -314,7 +314,9 @@ class MapGen {
     const dx = x - rg.x, dy = y - rg.y, a = Math.atan2(dy, dx);
     return Math.hypot(dx, dy) - rg.r * (1 + s.rough * (this.n2.v(Math.cos(a) * 1.3 + rg.ph, Math.sin(a) * 1.3 + rg.ph * 0.7) - 0.5) * 2);
   }
-  stackRing(s, x, y) { let k = -1; for (const rg of s.rings) { if (this.ringD(s, rg, x, y) > 0) break; k = rg.k; } return k; }
+  // the ring a point belongs to: the highest ring containing it whose lower rings all contain it too, or that is `over` (o.over: [ring
+  // indices]): an over ring may poke out past the rings below it, so its wall drops sheer to the ground outside the stack
+  stackRing(s, x, y) { let k = -1, chain = true; for (const rg of s.rings) { const inside = this.ringD(s, rg, x, y) <= 0; if (inside && (chain || (s.over || []).includes(rg.k))) k = rg.k; chain = chain && inside; } return k; }
   // switchback(id, o): a climbing path of `legs` with 180-degree turns (minutes §3.1.3). o = { from (as path), pts: [[x, y, lvl, hold], ...]
   //   (the leg ends and turn landings), w }. No meander: the legs follow the control points; _pathsPass's Lipschitz profile + _stairs
   //   emit the ramps and 's' tiles. Its own RNG stream (side), so the rest of the map rolls as before.
@@ -576,7 +578,7 @@ class MapGen {
   _levels() {
     const W = this.W, H = this.H, step = this.step, srcs = [];
     this.paths.forEach((p, pi) => {
-      if (p.kind === 'bridge') return;
+      if (p.kind === 'bridge' || p.stack) return;   // §29 G3: a switchback's levels are the stack's, not the terrain's
       p.samples.forEach((sm, i) => srcs.push({ i: Math.floor(sm.x), j: Math.floor(sm.y), d0: 0, lvl: p.tgt[i] }));
     });
     for (const rm of this.rooms) {
@@ -666,7 +668,7 @@ class MapGen {
       this.land[y][x] = true;
       if (!this.type[y][x] || this.type[y][x] === '.') this.type[y][x] = p.type;
       const inRoom = this.zone[y][x] & ZONE.room;
-      const rmHere = inRoom ? this.rooms.find(rm => rm.kind !== 'flat' && this.roomD(rm, x + 0.5, y + 0.5) <= 0) : null;
+      const rmHere = inRoom && !p.stack ? this.rooms.find(rm => rm.kind !== 'flat' && this.roomD(rm, x + 0.5, y + 0.5) <= 0) : null;   // §29 G3: a switchback cuts through rooms too
       if (!rmHere) { this.type[y][x] = p.type; this.h[y][x] = Math.round(p.prof[c.i]); this.zone[y][x] |= ZONE.path; if (p.kind !== 'main') this.zone[y][x] |= ZONE.side; if (p.kind === 'secret') this.zone[y][x] |= ZONE.secret; }
       else { this.zone[y][x] |= ZONE.path; if (rmHere.kind === 'plaza' || rmHere.kind === 'arena') { /* keep floor */ } }
     }
@@ -766,6 +768,8 @@ class MapGen {
           const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H || !this.land[ny][nx]) continue;
           if (!isFix(nx, ny) && !(this.zone[ny][nx] & ZONE.room)) continue;
           if (this.type[ny][nx] === 'w') continue;
+          const cs = this.cor[y][x], sp = cs && this.paths[cs.p].stack;   // §29 G3: a switchback ramp only levels against its own lane
+          if (sp && !(this.cor[ny][nx] && this.cor[ny][nx].p === cs.p)) continue;
           if (this.farLeg(x, y, nx, ny)) continue;   // §29 G3: two legs of one switchback side by side are separate lanes
           const d = this.h[y][x] - this.h[ny][nx];
           if (Math.abs(d) > 1 && !(this.zone[y][x] & ZONE.bridge)) { this.h[y][x] -= Math.sign(d) * (Math.abs(d) - 1); ch++; }
@@ -871,8 +875,13 @@ class MapGen {
       if (pc < def.r + (def.r <= 0.22 ? 0.15 : 0.55)) return false;   // §29 G2: small props (r <= 0.22) may stand in the corridor verge
       const z = this.zoneAt(x, y);
       if (z & (ZONE.fight | ZONE.bare)) return false;
-      // §29 G3: no collider (tree / rock) on a plateau with a higher ring within 3 tiles in front (+x / +y): it would sort over that wall
-      if (z & ZONE.stack) { const h0 = this.hAt(x, y); for (let b = 0; b <= 3; b++) for (let a = 0; a <= 3; a++) if ((a || b) && this.hAt(x + a, y + b) > h0 + 1) return false; }
+      // §29 G3: no collider (tree / rock) on a plateau with a higher ring within 3 tiles in front (+x / +y): it would sort over that wall;
+      // a stack's upper rings are thinned (o.sparse[k] = the share kept, hashed per spot) so the silhouette reads over the trees
+      if (z & ZONE.stack) {
+        const h0 = this.hAt(x, y); for (let b = 0; b <= 3; b++) for (let a = 0; a <= 3; a++) if ((a || b) && this.hAt(x + a, y + b) > h0 + 1) return false;
+        const k = this.stackK ? this.stackK[Math.floor(y)][Math.floor(x)] : -1;
+        for (const st of this.stacks) if (st.sparse && st.sparse[k] != null && this.stackRing(st, x, y) === k && ihash(Math.floor(x * 3), Math.floor(y * 3), 71) > st.sparse[k]) return false;
+      }
     }
     return true;
   }
@@ -1184,7 +1193,7 @@ class MapGen {
       let worst = 0;
       for (let y = Math.floor(rm.y - rm.r); y <= rm.y + rm.r; y++) for (let x = Math.floor(rm.x - rm.r); x <= rm.x + rm.r; x++) {
         if (this.roomD(rm, x + 0.5, y + 0.5) > 0) continue;
-        for (let k = 1; k <= 3; k++) for (const [a, b] of [[k, 0], [0, k], [k, k]]) { const t = this.tileAt(x + a, y + b); if (t !== '.' && t !== 'v' && t !== 'k') worst = Math.max(worst, this.hAt(x + a, y + b) - rm.lvl); }
+        for (let k = 1; k <= 3; k++) for (const [a, b] of [[k, 0], [0, k], [k, k]]) { const t = this.tileAt(x + a, y + b); if (t !== '.' && t !== 'v' && t !== 'k' && (this.zoneAt(x + a, y + b) & ZONE.stack)) worst = Math.max(worst, this.hAt(x + a, y + b) - rm.lvl); }   // a stack's wall
       }
       if (worst > 4) { this.tallBehind.push(`${rm.id} (+${worst})`); if (this.stacks.length) errs.push(`fight room ${rm.id} sits behind a wall ${worst} levels taller (cutaway fight)`); }
     }

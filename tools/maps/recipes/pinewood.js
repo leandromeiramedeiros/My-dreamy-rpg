@@ -97,6 +97,12 @@ module.exports = zone({
   rivers: { creek: { w: 2.6, banks: 4.2, bankLvl: [[0, 4], [24, 4], [44, 3], [58, 2], [68, 4], [112, 4]], pts: [[0, 61], [14, 67], [32, 69.5], [46, 68], [60, 66.5], [72, 64], [84, 62], [98, 58], [112, 56]] } },
   ponds: { hidden: { x: 97.8, y: 48.4, r: 1.7, lvl: 4 } },
   bridges: [{ x: 9, y: 32, axis: 'y', len: 5, w: 2, lvl: 4 }],
+  // §29 G3 HAWK'S REST (world-art minutes §3.2): a leaning bluff 4 / 10 / 16 (96 px) in the void notch above the Clearing's gate, walls
+  // at step 3 (ledges at 7 and 13). Signature moment: the Clearing seen from the bluff before you enter it (camera: the summit, facing
+  // south-east). Shrine 3 sits on the summit (the root-stair out of the Hollow lands beside it); the drop from the 10 lands on the gate road.
+  stacks: {
+    hawk: { land: true, levels: [4, 7, 10, 13, 16], r: [4.6, 4.0, 3.4, 2.4, 1.8], centres: [[85.5, 25], [85.8, 24.8], [86.3, 25.3], [86.6, 24.4], [86.8, 24]], over: [2], rough: 0.12, bare: [4], sparse: { 1: 0.2, 2: 0.15, 3: 0 } },
+  },
   portals: {
     home: { room: 'start', dx: -3, dy: 2.6, to: 'vale', arrive: 'vale.pine' },
     home_arena: { room: 'arena', dx: 2.5, dy: -4, to: 'vale', open: false, arrive: 'vale.pine' },
