@@ -57,7 +57,7 @@ function pageMetrics() {
   let specks = 0; const at = [];
   for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
     const i = y * W + x, v = Y[i];
-    if (Math.abs(v - Y[i - 1]) > 60 && Math.abs(v - Y[i + 1]) > 60 && Math.abs(v - Y[i - W]) > 60 && Math.abs(v - Y[i + W]) > 60) { specks++; if (at.length < 400) at.push([x, y]); }
+    if (Math.abs(v - Y[i - 1]) > 60 && Math.abs(v - Y[i + 1]) > 60 && Math.abs(v - Y[i - W]) > 60 && Math.abs(v - Y[i + W]) > 60) { specks++; if (at.length < 400) at.push([x, y, [-2, -1, 0, 1, 2].map(dy => [-2, -1, 0, 1, 2].map(dx => Math.round(Y[i + dy * W + dx])).join(' ')).join(' | '), [d[i * 4], d[i * 4 + 1], d[i * 4 + 2]].join(',')]); }
   }
   // luminance clusters (value bands): peaks of the 32-bin luma histogram (8 levels a bin, smoothed 1-2-1) holding >= 1 % of the frame
   // in their bin, merged with the previous peak unless the valley between them dips >= 15 % below the smaller of the two
