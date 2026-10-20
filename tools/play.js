@@ -1199,21 +1199,30 @@ const PAD_STUB = () => {
     const ring = await e(() => { const p = G.player; HUD.lvl.n = p.level; p.level += 1; return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); }).then(() => px(160, 508));
     check('R3 #8 level-up gold ring is drawn around the XP bar', ring[0] > 200 && ring[1] > 150 && ring[2] < 160, ring);
     await e(() => { G.player.level -= 1; });
-    // segmented boss bar (DESIGN §26.1): a stubbed bossBars with n=3 renders 3 segments (+ the shielded transition); without it the single bar stays
+    // boss bar, phase model: one full-width bar at frac; n - i filled diamonds, the rest faded; a break (i 1 -> 2) fades the rightmost
+    // filled diamond and refills the bar from empty during the transition; no bossBars -> the single bar, no diamonds
     const seg = await e(() => new Promise(r => {
-      const keep = window.bossBars, kb = G.boss; G.state = 'play';
+      const keep = window.bossBars, kb = G.boss, out = {}; G.state = 'play';
       G.boss = { hp: 500, maxHp: 1500, dead: false, spawnT: 0, res: {}, stagger: 0, phase2: false, boss: true, x: 0, y: 0, z: 0, type: 'boss', hgt: 3 };
-      window.bossBars = () => ({ n: 3, i: 1, frac: 0.5, max: 500, transition: false });
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        const a = HUD.bossSegs && { n: HUD.bossSegs.n, rects: HUD.bossSegs.rects.length };
-        window.bossBars = () => ({ n: 3, i: 1, frac: 0.5, max: 500, transition: true });
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          window.bossBars = undefined; HUD.bossSegs = null;
-          requestAnimationFrame(() => requestAnimationFrame(() => { const fb = HUD.bossSegs; window.bossBars = keep; G.boss = kb; r({ a, fallbackNoSegs: !fb }); }));
-        }));
-      }));
+      let st = { n: 3, i: 1, frac: 0.5, transition: false }; window.bossBars = () => st;
+      const fr = (n, f) => { const g = () => (--n <= 0 ? f() : requestAnimationFrame(g)); requestAnimationFrame(g); };
+      fr(3, () => {
+        out.before = Object.assign({}, HUD.bossSegs);
+        st = { n: 3, i: 0, frac: 0, transition: false }; HUD.phaseI = 0; st = { n: 3, i: 2, frac: 0, transition: true };
+        fr(3, () => {
+          out.mid = Object.assign({}, HUD.bossSegs); out.midFading = HUD.bossSegs.dia.includes('fading');
+          setTimeout(() => {
+            st = { n: 3, i: 2, frac: 0.8, transition: false };
+            fr(3, () => {
+              out.after = Object.assign({}, HUD.bossSegs); window.bossBars = undefined; HUD.bossSegs = null;
+              fr(3, () => { out.fallbackNoSegs = !HUD.bossSegs; window.bossBars = keep; G.boss = kb; r(out); });
+            });
+          }, 700);
+        });
+      });
     }));
-    check('R3 boss bar: bossBars n=3 renders 3 segments; with no bossBars the single bar is drawn', seg.a && seg.a.n === 3 && seg.a.rects === 3 && seg.fallbackNoSegs, seg);
+    check('R3 boss bar: n=3 i=1 -> one bar at frac, 2 filled + 1 faded diamond; a break i 1 -> 2 fades the rightmost filled diamond and refills the bar from empty (SHIELDED); after: 1 filled; no bossBars -> single bar',
+      seg.before.bar === 0.5 && seg.before.dia.join() === 'full,full,faded' && seg.mid.refill && seg.mid.bar < 0.5 && seg.mid.dia.join() === 'full,fading,faded' && seg.after.dia.join() === 'full,faded,faded' && seg.after.bar === 0.8 && seg.fallbackNoSegs, seg);
     await c1.close();
     // 2. phone portrait: the rotate card flag follows the orientation on a touch device (and never trips on desktop)
     {

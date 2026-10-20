@@ -4,12 +4,14 @@
 // Loads ?map=<id> in headless Chromium, walks the hero in a slow square while attacking, and records every
 // requestAnimationFrame delta for N seconds. Prints avg / p50 / p95 / p99 / max in ms, plus `work`: the CPU time
 // spent inside main.js loop() per frame (update + render), which headless vsync pacing would otherwise hide.
-//   node tools/perf.js [gameDir=repo root] [map=pinewood] [seconds=60]
+//   node tools/perf.js [gameDir=repo root] [map=pinewood] [seconds=60] [extra query, e.g. phone=1]
+// The 5th argument is appended to the page query (phone=1 = the phone caps: PHONE chunk / awake / corpse caps).
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const root = path.resolve(process.argv[2] || path.join(__dirname, '..'));
 const map = process.argv[3] || 'pinewood';
 const secs = +(process.argv[4] || 60);
+const extra = process.argv[5] ? '&' + process.argv[5].replace(/^[?&]/, '') : '';
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/png', '.json': 'application/json', '.css': 'text/css' };
 const srv = http.createServer((q, r) => {
   const f = path.join(root, decodeURIComponent(new URL(q.url, 'http://x').pathname));
@@ -21,7 +23,7 @@ const srv = http.createServer((q, r) => {
   const br = await chromium.launch({ headless: true });
   const page = await br.newPage({ viewport: { width: 960, height: 540 } });
   const errs = []; page.on('pageerror', e => errs.push(e.message));
-  await page.goto(`http://127.0.0.1:${srv.address().port}/index.html?map=${map}`, { waitUntil: 'load' });
+  await page.goto(`http://127.0.0.1:${srv.address().port}/index.html?map=${map}${extra}`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 120000 });
   // CPU work per frame: time spent inside main.js loop() (update steps + render), independent of vsync pacing
   await page.evaluate(() => { const orig = window.loop; window.__work = []; window.loop = function (now) { const t0 = performance.now(); orig(now); window.__work.push(performance.now() - t0); }; });
@@ -33,7 +35,7 @@ const srv = http.createServer((q, r) => {
   const w = (await page.evaluate(() => window.__work)).slice(5).sort((a, b) => a - b);
   const wq = k => +w[Math.min(w.length - 1, Math.floor(w.length * k))].toFixed(2);
   const q = k => +d[Math.min(d.length - 1, Math.floor(d.length * k))].toFixed(2);
-  const out = { map, seconds: secs, frames: d.length, avg: +(d.reduce((a, b) => a + b, 0) / d.length).toFixed(2), p50: q(0.5), p95: q(0.95), p99: q(0.99), max: +d[d.length - 1].toFixed(2),
+  const out = { map, query: extra || undefined, seconds: secs, frames: d.length, avg: +(d.reduce((a, b) => a + b, 0) / d.length).toFixed(2), p50: q(0.5), p95: q(0.95), p99: q(0.99), max: +d[d.length - 1].toFixed(2),
     work: { avg: +(w.reduce((a, b) => a + b, 0) / w.length).toFixed(2), p50: wq(0.5), p95: wq(0.95), p99: wq(0.99), max: +w[w.length - 1].toFixed(2) }, errors: errs.length };
   console.log(JSON.stringify(out));
   await br.close(); srv.close();
