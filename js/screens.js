@@ -301,6 +301,7 @@ function drawFullMap(ctx) {
 //               section insets and the vantage name;
 //   3.1 - 3.5 s back to the live scene. Phones never render a bigger scene: the preview blit only. ~1 ms a frame, no new raster.
 const VANTAGE_T = { ease: 0.6, film: 2.5, out: 0.4 };
+const rgbCss = c => (typeof c === 'string' ? c : `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`);
 function startVantage(a) {
   const p = G.player, m = G.map; if (!p || !m || G.vantage) return false;
   // down-slope: the direction (of 8) whose ground 4-8 tiles out is lowest
@@ -342,15 +343,17 @@ function drawVantage(ctx) {
     const u = (t - T1) / VANTAGE_T.film, fade = clamp(Math.min(u / 0.08, (T3 - t) / VANTAGE_T.out), 0, 1);
     ctx.save(); ctx.imageSmoothingEnabled = false;
     // the pull-back (desktop): the snapshot zooms from 1:1 with the live frame (display scale 4) to half scale (2)
-    const pull = !PHONE ? clamp(u / 0.32, 0, 1) : 1, mapA = clamp((u - (PHONE ? 0 : 0.26)) / 0.14, 0, 1);
+    const pull = !PHONE ? clamp(u / 0.36, 0, 1) : 1, mapA = clamp((u - (PHONE ? 0 : 0.3)) / 0.14, 0, 1);
     if (!PHONE && mapA < 1) {
       if (!V.snap) V.snap = vantageSnapshot(m);
-      const s = 2 * (2 - pull * pull * (3 - 2 * pull)), w = RW * s, h = RH * s;
+      const e2 = pull * pull * (3 - 2 * pull), s = 4 - 2.8 * e2, w = RW * s, h = RH * s;   // display scale 4 (1:1 with the live frame) -> 1.2 (the map's 0.3)
       ctx.globalAlpha = fade; ctx.drawImage(V.snap, Math.round(DW / 2 - w / 2), Math.round(DH / 2 - h / 2), Math.round(w), Math.round(h));
     }
     if (mapA > 0) {
-      ctx.globalAlpha = fade * mapA; ctx.fillStyle = '#07040f'; ctx.fillRect(0, 0, DW, DH);
-      const g = m.gp, pv = groundPreview(m), ws = 0.5 - 0.16 * clamp(u, 0, 1), ps = 8 * ws;   // world scale 0.5 -> 0.34; a preview px = 4 world px
+      // the backdrop: the zone's sky over its cloud sea (the island floats in it)
+      const th = m.theme, bgk = V.bgk || (V.bgk = (() => { const gr = ctx.createLinearGradient(0, 0, 0, DH); gr.addColorStop(0, th.sky[1] || '#140c28'); gr.addColorStop(0.55, th.sky[Math.min(th.sky.length - 1, 4)] || '#3a2e7a'); gr.addColorStop(1, rgbCss(th.cloud[2] || [200, 190, 230])); return gr; })());
+      ctx.globalAlpha = fade * mapA; ctx.fillStyle = bgk; ctx.fillRect(0, 0, DW, DH);
+      const g = m.gp, pv = groundPreview(m), ws = 0.3 - 0.1 * clamp(u, 0, 1), ps = 8 * ws;   // world scale 0.3 -> 0.2 (~60 x 60 tiles in view); a preview px = 4 world px
       const hx = (isoX(V.x, V.y) - g.minSX) / 4, hy = isoY(V.x, V.y, 0) / 4, ox = DW / 2 - hx * ps, oy = DH / 2 + 20 - hy * ps;
       const R = V.r * 16 * 2 * ws * clamp((u - 0.05) / 0.55, 0.08, 1), cx = DW / 2, cy = DH / 2 + 20;   // the fog edge: an iso circle growing out
       ctx.globalAlpha = fade * mapA * 0.22; ctx.drawImage(pv, Math.round(ox), Math.round(oy), Math.round(pv.width * ps), Math.round(pv.height * ps));

@@ -121,7 +121,11 @@ function pageMetrics() {
   let sameAdj = 0; for (let a = 0; a < trees.length; a++) for (let b = a + 1; b < trees.length; b++) { const A = trees[a], B = trees[b]; if (A.src.t === B.src.t && A.img === B.img && Math.hypot(A.x - B.x, A.y - B.y) < 1.5) sameAdj++; }
   const density = { trees: trees.length, clutterProps: vis.filter(o => CLUT.test(o.src.t)).length, decals, species: new Set(trees.map(o => o.src.t)).size, sameAdj };
   density.clutter = density.clutterProps + density.decals;
-  return { density, specks, groundSpecks, speckAt: at, clusters: merged.length, clusterPeaks: merged.map(b => b * 8), luma: [pct(0.05), pct(0.5), pct(0.95)], h64: Array.from(h64, v => +(v / (W * H) * 100).toFixed(2)), sil, skyTop, edgeCols, lipped };
+  // §29.4 height: the distinct terrain levels whose tops show in the frame (a level counts with >= 6 land tiles' top centres in view)
+  const lvN = {};
+  for (let j = Math.max(0, ty0); j <= Math.min(m.H - 1, ty1); j++) for (let i = Math.max(0, tx0); i <= Math.min(m.W - 1, tx1); i++) if (m.type[j][i] && inF(i + 0.5, j + 0.5, m.h[j][i])) lvN[m.h[j][i]] = (lvN[m.h[j][i]] || 0) + 1;
+  const levels = Object.keys(lvN).filter(k => lvN[k] >= 6).map(Number).sort((a, b) => a - b);
+  return { levels, levelSpan: levels.length ? levels[levels.length - 1] - levels[0] : 0, density, specks, groundSpecks, speckAt: at, clusters: merged.length, clusterPeaks: merged.map(b => b * 8), luma: [pct(0.05), pct(0.5), pct(0.95)], h64: Array.from(h64, v => +(v / (W * H) * 100).toFixed(2)), sil, skyTop, edgeCols, lipped };
 }
 function pageChunkCost() {
   const m = G.map, cg = chunkGrid(m), out = [];
@@ -178,7 +182,7 @@ async function savePng(page, file, kind, sil) {
     for (const [name, x, y] of SHOTS[mapId]) {
       n++;
       await page.evaluate(([x, y]) => {
-        const p = G.player; p.x = x; p.y = y; p.z = tileH(G.map, x, y); p.dash = null; p.invulnT = 9999;
+        const p = G.player; p.x = x; p.y = y; p.z = tileH(G.map, x, y); p.dash = null; p.invulnT = 9999; G.noCamBias = true;
         G.cam.x = isoX(x, y); G.cam.y = isoY(x, y, p.z) - 12; G.enemies.length = 0; G.banner = null; G.msg = null; G.state = 'play';
         if (G.ui) { G.ui.open = false; G.ui.pause = false; }
       }, [x, y]);
@@ -204,10 +208,11 @@ async function savePng(page, file, kind, sil) {
       }));
       delete met.sil; if (!flags.includes('--speck-xy')) delete met.speckAt; else met.terrainAt = await page.evaluate(() => window.__tsAt);
       R.shots.push(Object.assign({ name, x, y, file: file + '.png' }, met));
-      console.log(`${mapId.padEnd(9)} ${String(n)} ${name.padEnd(16)} specks ${String(met.specks).padStart(5)} (ground ${String(met.groundSpecks).padStart(4)}, terrain ${String(met.terrainSpecks).padStart(4)})  clusters ${met.clusters}  trees ${met.density.trees} clutter ${met.density.clutter} (decals ${met.density.decals}) species ${met.density.species} sameAdj ${met.density.sameAdj}  flatBackEdge ${met.skyTop}/${met.edgeCols} lipped ${met.lipped}  luma5/50/95 ${met.luma.join('/')}`);
+      console.log(`${mapId.padEnd(9)} ${String(n)} ${name.padEnd(16)} specks ${String(met.specks).padStart(5)} (ground ${String(met.groundSpecks).padStart(4)}, terrain ${String(met.terrainSpecks).padStart(4)})  clusters ${met.clusters}  trees ${met.density.trees} clutter ${met.density.clutter} (decals ${met.density.decals}) species ${met.density.species} sameAdj ${met.density.sameAdj}  flatBackEdge ${met.skyTop}/${met.edgeCols} lipped ${met.lipped}  luma5/50/95 ${met.luma.join('/')}  levels ${met.levels.length} [${met.levels}]`);
     }
     R.specksMax = Math.max(...R.shots.map(s => s.specks)); R.groundSpecksMax = Math.max(...R.shots.map(s => s.groundSpecks)); R.terrainSpecksMax = Math.max(...R.shots.map(s => s.terrainSpecks)); R.specksMean = Math.round(R.shots.reduce((a, s) => a + s.specks, 0) / R.shots.length);
     R.clustersMin = Math.min(...R.shots.map(s => s.clusters));
+    R.shots3Levels = R.shots.filter(s => s.levels.length >= 3).length;   // §29.4: >= 3 height levels in 4 of the 6 shots
     if (CHUNKS) {
       R.chunkDesktop = await page.evaluate(pageChunkCost);
       console.log(`${mapId} chunk raster desktop: ${JSON.stringify(R.chunkDesktop)}`);
@@ -225,8 +230,8 @@ async function savePng(page, file, kind, sil) {
   }
   await br.close(); srv.close();
   fs.writeFileSync(path.join(OUT, 'audit.json'), JSON.stringify(report, null, 1));
-  console.log('\nmap       specks max/mean  clusters min  chunk ms desktop worst/mean  phone worst/mean');
-  for (const [id, R] of Object.entries(report.maps)) console.log(`${id.padEnd(9)} ${String(R.specksMax).padStart(6)}/${String(R.specksMean).padEnd(6)}   ${String(R.clustersMin).padStart(6)}        ${R.chunkDesktop ? R.chunkDesktop.worst + '/' + R.chunkDesktop.mean : '-'}               ${R.chunkPhone ? R.chunkPhone.worst + '/' + R.chunkPhone.mean : '-'}`);
+  console.log('\nmap       specks max/mean  clusters min  >=3 levels  chunk ms desktop worst/mean  phone worst/mean');
+  for (const [id, R] of Object.entries(report.maps)) console.log(`${id.padEnd(9)} ${String(R.specksMax).padStart(6)}/${String(R.specksMean).padEnd(6)}   ${String(R.clustersMin).padStart(6)}       ${R.shots3Levels}/6        ${R.chunkDesktop ? R.chunkDesktop.worst + '/' + R.chunkDesktop.mean : '-'}               ${R.chunkPhone ? R.chunkPhone.worst + '/' + R.chunkPhone.mean : '-'}`);
   console.log('wrote ' + path.relative(process.cwd(), OUT));
   process.exit(bad ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

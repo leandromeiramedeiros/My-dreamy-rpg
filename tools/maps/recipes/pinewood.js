@@ -102,6 +102,9 @@ module.exports = zone({
   // root-stair lands beside it); the vantage looks over the Clearing road and the forest; the drop from the 10 lands on the gate road.
   // Signature moment: the forest and the Clearing's road seen from the summit (camera: the summit, facing east).
   stacks: {
+    // level rhythm (minutes §3.1.1): two granite knolls, walls at step 3-4 -- the arrival glade's and the Hollow door's foothill
+    knollStart: { land: true, levels: [4], r: [2.3], centres: [[10.2, 99.6]], rough: 0.24, sparse: { 0: 0.5 } },
+    knollDoor: { land: true, levels: [7], r: [1.9], centres: [[55.2, 35.2]], rough: 0.24, sparse: { 0: 0 } },
     hawk: { land: true, levels: [4, 16, 13, 10], r: [5.9, 4.4, 1.7, 2.3], centres: [[70, 37], [68.8, 37.2], [73.1, 36.6], [73.6, 39.6]], over: [1, 2, 3], rough: 0.2, bare: [1], sparse: { 2: 0, 3: 0 } },
   },
   switchbacks: {

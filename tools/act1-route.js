@@ -216,7 +216,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('vale (§29 G3): the root ladder climbs back down (14 -> 9)', down && down.text === 'Climb down' && Math.abs(down.z1 - 9) < 0.2, down);
   check('vale (§29 G3): Pip at the garden ledge', await goto('cairn_ledge'));
   const drop = await walkKeys(['a', 's'], 900);
-  check('vale (§29 G3): walking off the 9 ledge drops into the garden lawn (lands at 0), and the wall is one-way', drop.h === 0 && !drop.fall && Math.abs(drop.z) < 0.1 && drop.y > 20.9 && await ev(([x, y]) => !walkable(G.map, x, y - 1.2, 0), [drop.x, drop.y]), drop);
+  check('vale (§29 G3): walking off the 9 ledge drops into the garden lawn (lands at 0), and the wall is one-way', drop.h === 0 && !drop.fall && Math.abs(drop.z) < 0.1 && drop.y > 20.9 && await ev(() => { const t = window.__at('cairn_ledge'); return tileH(G.map, t[0], t[1]) === 9 && !walkable(G.map, t[0], t[1], 0) && walkable(G.map, t[0], t[1] + 1, 9); }), drop);
   // shrine-to-shrine warp: both shrines discovered, refused while an enemy is awake
   check('vale: rift terrace shrine fires; both shrines are discovered', await goto('shrine_terrace') && await wf(() => ((G.prog.shrines || {}).vale || []).includes('shrine_terrace'), null, 3000));
   await goto('shrine'); await ev(() => { G.prog.shrines.vale = ['shrine_start', 'shrine_terrace']; });
