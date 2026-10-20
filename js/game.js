@@ -374,6 +374,45 @@ function moveEntity(o, dx, dy, h0) {
   }
 }
 
+// Unstick safety (B1 follow-up): movement input held for UNSTICK_T s with zero displacement AND no direction that would
+// move the hero (a probe step in 8 directions; pushing into a plain wall still leaves the other directions open) ->
+// nudge to the nearest tile centre where the hero fits (4 probes at that tile's height, no collider).
+const UNSTICK_T = 1.5;
+function canBudge(o, h0) {
+  for (let k = 0; k < 8; k++) {
+    const a = k * Math.PI / 4, q = { x: o.x, y: o.y, z: o.z, r: o.r };
+    moveEntity(q, Math.cos(a) * 0.08, Math.sin(a) * 0.08, h0);
+    if (Math.abs(q.x - o.x) + Math.abs(q.y - o.y) > 1e-4) return true;
+  }
+  return false;
+}
+function nearestFreeTile(m, x, y, r, R = 5) {
+  const fits = (cx, cy) => {
+    const h = tileH(m, cx, cy);
+    if (!walkable(m, cx, cy, h) || probeMask(m, cx, cy, r * 0.8, h) !== 15) return false;
+    for (const c of nearColliders(m, cx, cy, r)) if (Math.abs(c.z - h) <= 1.5 && dist(cx, cy, c.x, c.y) < c.r + r) return false;
+    return true;
+  };
+  let best = null, bd = 1e9;
+  const i0 = Math.floor(x), j0 = Math.floor(y);
+  for (let j = j0 - R; j <= j0 + R; j++) for (let i = i0 - R; i <= i0 + R; i++) {
+    const cx = i + 0.5, cy = j + 0.5, d = (cx - x) ** 2 + (cy - y) ** 2;
+    if (d < bd && fits(cx, cy)) { bd = d; best = { x: cx, y: cy }; }
+  }
+  return best;
+}
+function unstickPlayer(p, moved, dt, h0) {
+  if (moved > 1e-4) { p.stuckT = 0; return false; }
+  p.stuckT = (p.stuckT || 0) + dt;
+  if (p.stuckT < UNSTICK_T) return false;
+  p.stuckT = 0;
+  if (canBudge(p, h0)) return false;   // just walking into a wall
+  const t = nearestFreeTile(G.map, p.x, p.y, p.r); if (!t) return false;
+  p.x = t.x; p.y = t.y; p.z = tileH(G.map, t.x, t.y); p.unstuck = (p.unstuck || 0) + 1;
+  burst(p.x, p.y, p.z + 0.5, 10, ['#e7e0ff', '#ffffff'], 2);
+  return true;
+}
+
 function updatePlayer(p, dt) {
   const m = G.map;
   for (const k in p.cds) if (p.cds[k] > 0) p.cds[k] -= dt;
