@@ -227,7 +227,7 @@ function applySprites() {
   ART.hound = { n: h, f: h.map(flipH), w: silhouette(h[0]), wf: silhouette(flipH(h[0])) };
   const b = sprOne('boss');
   ART.boss = { n: b, f: flipH(b), w: silhouette(b), wf: silhouette(flipH(b)) };
-  for (const k of ['round', 'poplar', 'blossom', 'teal', 'dead']) ART.trees[k] = sprFamily('tree_' + k + '_');
+  { const dead = sprFamily('tree_dead_'); if (dead.length) ART.trees.dead = dead; }   // trees v2 come from frozenTrees (buildTreesV2), not this loop
   ART.bush = sprFamily('bush_');
   ART.grass = sprFamily('grass_');
   ART.rock = sprFamily('rock_') .filter(c => !sprFamily('rock_dark_').includes(c));
@@ -428,14 +428,9 @@ function blobTree(seed, opt) {
 }
 
 function buildFlora() {
-  ART.trees = { round: [], poplar: [], blossom: [], teal: [], dead: [] };
-  for (let i = 0; i < 4; i++) {
-    ART.trees.round.push(blobTree(100 + i, { w: 30, h: 42, trunkTop: 26, trunkW: 4, cy: 16, blobs: 6, spread: 6, squash: 0.8, rmin: 5, rmax: 9, vstretch: 1, pal: PAL_LEAF, flecks: { n: 6, c: ['#ffe9a8', '#fff6dc'] } }));
-    ART.trees.poplar.push(blobTree(200 + i, { w: 18, h: 50, trunkTop: 38, trunkW: 3, cy: 21, blobs: 6, spread: 4, squash: 3.2, rmin: 4, rmax: 7, vstretch: 2.2, pal: PAL_LEAF_TEAL }));
-    ART.trees.blossom.push(blobTree(300 + i, { w: 32, h: 42, trunkTop: 25, trunkW: 4, cy: 15, blobs: 7, spread: 7, squash: 0.7, rmin: 5, rmax: 9, vstretch: 0.95, pal: PAL_BLOSSOM, flecks: { n: 18, c: ['#ffffff', '#fff0f7'] } }));
-    ART.trees.teal.push(blobTree(400 + i, { w: 26, h: 38, trunkTop: 24, trunkW: 3, cy: 14, blobs: 5, spread: 5, squash: 0.9, rmin: 4, rmax: 8, vstretch: 1, pal: PAL_LEAF_TEAL, flecks: { n: 5, c: ['#bff7ff'] } }));
-    ART.trees.dead.push(deadTree(500 + i));
-  }
+  // §29 G2: the broadleaves are trees v2 (canopyTree, frozen sheets or ?trees=live); the old one-ellipse blobTree lollipops are gone
+  ART.trees = { dead: [] };
+  for (let i = 0; i < 4; i++) ART.trees.dead.push(deadTree(500 + i));
   ART.bush = [0, 1, 2].map(i => blobTree(600 + i, { w: 16, h: 12, trunkTop: 99, trunkW: 0, cy: 7, blobs: 4, spread: 3, squash: 0.6, rmin: 3, rmax: 5, vstretch: 0.85, pal: PAL_LEAF, flecks: { n: 3, c: ['#ffb3d1', '#ffffff'] } }));
   ART.grass = [0, 1].map(f => {
     const pb = new PixBuf(9, 8);
@@ -462,6 +457,260 @@ function deadTree(seed) {
   const pb = new PixBuf(28, 44); pb.img = x.getImageData(0, 0, 28, 44); pb.d = pb.img.data;
   for (let yy = 0; yy < 44; yy++) for (let xx = 0; xx < 28; xx++) if (pb.a(xx, yy)) pb.set(xx, yy, rampDither(PAL_DEAD, 0.25 + (14 - xx) / 40 + (44 - yy) / 120, xx, yy));
   return pb.toCanvas();
+}
+
+// ===== Trees v2 (DESIGN §29 G2; world-art minutes §2.1) ==============================================================
+// canopyTree(seed, S) (broadleaf) and pineTree2(seed, S) return the COMPOSITE canvas (trunk + canopy: what the editor, the
+// shadow tiles, hit tests and audits read; ART.trees.* / ART.pines.* stay canvas arrays) carrying the parts render.js splits:
+//   c.trunk    trunk, root toes, branches, baked 4 px AO ellipse        c.canopy  the leaves (drawn OVER the hero, fades)
+//   c.canopyF  the canopy with its top 60 % shifted -1 / 0 / +1 px      c.swayF   the composite in those 3 sway frames
+//   c.cbox     the canopy's opaque box [x0, y0, x1, y1] (the hero-under-canopy test)
+// Light is on the RIGHT (Vale moon x 470, forest sun x 360): every sheet is right-lit and a left-lit theme mirrors it
+// (maps.js placeObjects sets a tree's flip from the theme, never at random). No full outline: a 1 px darker edge on the shadow
+// side only. Approved output is frozen into js/sprites.js (tools/freeze-trees.js: frames [trunk, canopy]); ?trees=live
+// builds them here instead. Lift: the crown = leaf clusters on Fibonacci points of a flattened ellipsoid, darker inside and
+// underneath (Lumina src/engine/world/props/Trees.js buildBroadleaf; docs/CREDITS.md), drawn as three 2D pixel masses.
+const GOLDEN = Math.PI * (3 - Math.sqrt(5));
+const B2X2 = [0.125, 0.625, 0.875, 0.375];
+// ordered 2x2 dither between ADJACENT ramp steps only (never a per-pixel hash)
+function ramp2(r, v, x, y) { const f = clamp(v, 0, 0.9999) * (r.length - 1), i = Math.floor(f); return r[(f - i) > B2X2[((y & 1) << 1) | (x & 1)] ? Math.min(i + 1, r.length - 1) : i]; }
+const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const LEAF2 = ramp(['#1b2142', '#1d3f4c', '#245d55', '#33805c', '#5aa564', '#93cb72', '#d6eca0']);
+const TEAL2 = ramp(['#191f46', '#1a3c5a', '#21606c', '#2f8582', '#4fae98', '#8bd6b4', '#d2f4df']);
+const BLOSSOM2 = ramp(['#3a1f4a', '#68336f', '#9f4f8e', '#d277ae', '#f1a3ca', '#ffd2e6', '#fff2f8']);
+const AMBER2 = ramp(['#1c1a2e', '#33292a', '#544024', '#7d5a26', '#a9782f', '#d29d46', '#f2ca7a']);
+const BIRCH2 = ramp(['#1c2236', '#2b3d33', '#45603a', '#678443', '#93a94e', '#c4cd6a', '#eeeaa2']);
+const BARK2 = ramp(['#1c1226', '#352235', '#553644', '#7a5150', '#a07468']);
+const BARK_BIRCH = ramp(['#2a2638', '#59536a', '#9a94a8', '#cfcad6', '#f2eef4']);
+const PINE2 = ramp(['#0b1424', '#10232a', '#173328', '#204630', '#2f5c3a', '#4a7a44', '#7c9a54']);
+const PINE_BARK2 = ramp(['#1a1018', '#33201a', '#4a2e22', '#64402e', '#86583c']);
+const AO_RGB = hexToRgb('#140a24');
+const RIM_VALE = hexToRgb('#ffd6ec'), RIM_FOREST = hexToRgb('#d0904a');
+// split helpers: the 3 sway frames and the composite (shared by the live builders and the frozen sheets)
+function opaqueBox(c) {
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (d[(y * c.width + x) * 4 + 3] > 0) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return x1 < 0 ? [0, 0, 0, 0] : [x0, y0, x1 + 1, y1 + 1];
+}
+function treeFromParts(trunk, canopy) {
+  const W = trunk.width, H = trunk.height, cut = Math.round(H * 0.6);
+  const shift = dx => { const { c, x } = makeCanvas(W, H); x.drawImage(canopy, 0, cut, W, H - cut, 0, cut, W, H - cut); x.drawImage(canopy, 0, 0, W, cut, dx, 0, W, cut); return c; };
+  const canopyF = [shift(-1), canopy, shift(1)];
+  const swayF = canopyF.map(f => { const { c, x } = makeCanvas(W, H); x.drawImage(trunk, 0, 0); x.drawImage(f, 0, 0); return c; });
+  const c = swayF[1];
+  c.trunk = trunk; c.canopy = canopy; c.canopyF = canopyF; c.swayF = swayF; c.cbox = opaqueBox(canopy);
+  return c;
+}
+function treeAO(pb, cx, yb, w) {   // the 4 px ground-contact ellipse baked into the base (2 alpha levels, no smooth ramp)
+  const rx = w * 0.9 + 2, ry = 2.2;
+  for (let y = yb - 2; y <= yb + 1; y++) for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+    const d = ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - yb) / ry) ** 2; if (d < 1) pb.set(x, y, AO_RGB, d < 0.45 ? 130 : 75);
+  }
+}
+// trunk from yb (base) up to yt: 1 px dark side, 1 px warm lit side, a 5-step bark ramp with vertical streaks, a flare at the
+// foot and a knot. Returns xc(y), the trunk's centre line (a gentle bend of `lean` px at the top).
+function treeTrunk(pb, S, cx, yb, yt, lean, seed) {
+  const bark = S.bark, span = Math.max(1, yb - yt), xc = y => cx + lean * Math.pow(clamp((yb - y) / span, 0, 1), 1.6);
+  for (let y = yt; y <= yb; y++) {
+    const t = (yb - y) / span, w = lerp(S.trunkW[0], S.trunkW[1], Math.pow(t, 0.6)) + Math.max(0, 3 - (yb - y)) * 1.3;
+    const x0 = xc(y) - w / 2, xa = Math.round(x0), xb = Math.max(xa + 1, Math.round(x0 + w));
+    for (let x = xa; x < xb; x++) {
+      const u = (x + 0.5 - xa) / (xb - xa);
+      let c = ramp2(bark, 0.22 + u * 0.58 + (vnoise(x * 0.9, y * 0.16, seed + 5) - 0.5) * 0.34, x, y);
+      if (S.birch && vnoise(x * 0.6, y * 0.55, seed + 6) > 0.72) c = bark[1];   // birch: dark lenticel bands
+      if (x === xa && xb - xa > 1) c = bark[0];
+      else if (x === xb - 1 && xb - xa > 2) c = mixRgb(bark[bark.length - 1], S.rim, 0.35);
+      pb.set(x, y, c);
+    }
+  }
+  const ky = Math.round(lerp(yb - 4, yt + span * 0.4, rand(0.2, 0.7))), kx = Math.round(xc(ky) + rand(-0.5, 0.8));   // a knot
+  pb.set(kx, ky, bark[0]); pb.set(kx, ky + 1, bark[0]); pb.set(kx + 1, ky + 1, bark[3]);
+  return xc;
+}
+function treeRoots(pb, S, xc, yb) {   // 2-3 root toes of 3 px reaching out and down from the flare
+  const n = rand() < 0.55 ? 3 : 2, w = S.trunkW[0];
+  for (let k = 0; k < n; k++) {
+    const s = k === 2 ? (rand() < 0.5 ? -1 : 1) : k ? 1 : -1, bx = xc(yb) + s * (w / 2 + 1.5) - (k === 2 ? s * 2.5 : 0);
+    for (let q = 0; q < 3; q++) {
+      const x = Math.round(bx + s * q), y = yb - 1 + (q >> 1) + (k === 2 ? 1 : 0), c = S.bark[s > 0 ? 3 : 1];
+      pb.set(x, y, c); if (q === 0) pb.set(x, y - 1, S.bark[s > 0 ? 2 : 1]);
+    }
+  }
+}
+function treeLine(pb, x0, y0, x1, y1, w0, w1, c0, c1) {   // a tapering branch, dark side below-left
+  const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0)));
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, x = lerp(x0, x1, t), y = lerp(y0, y1, t), w = lerp(w0, w1, t);
+    pb.set(Math.round(x), Math.round(y), c1); if (w > 1.4) pb.set(Math.round(x), Math.round(y) + 1, c0);
+  }
+}
+// leaf pixels of one layer: rim light on the lit side of EVERY cluster (where its right / upper-right / upper neighbour is a
+// cluster drawn earlier or nothing), a 1 px cast shade under a nearer cluster, and the darker edge on the shadow side only
+function leafPasses(C, own, S, cl) {
+  const W = C.w, H = C.h, o = (x, y) => x < 0 || y < 0 || x >= W || y >= H ? -1 : own[y * W + x], rim = [], shade = [], edge = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const k = own[y * W + x]; if (k < 0) continue;
+    const c = cl[k], ord = c.ord, nb = [o(x + 1, y), o(x + 1, y - 1), o(x, y - 1)];
+    const litHalf = (x + 0.5 - c.sx) * 0.8 + (c.sy - y - 0.5) > -0.25 * c.r;
+    if (litHalf && nb.some(j => j < 0 || cl[j].ord < ord)) { rim.push([x, y, c.mass ? S.rimMix : S.rimMix * 0.5]); continue; }
+    const up = o(x + 1, y - 1); if (up >= 0 && cl[up].ord > ord && cl[up].mass >= c.mass) shade.push([x, y]);
+    if (o(x - 1, y) < 0 || o(x, y + 1) < 0) edge.push([x, y]);
+  }
+  for (const [x, y, a] of rim) C.set(x, y, mixRgb(C.get(x, y), S.rim, a));
+  for (const [x, y] of shade) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.38));
+  for (const [x, y] of edge) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.55));
+}
+function canopyTree(seed, S) {
+  seedRng(seed);
+  const W = S.W, H = S.H, yb = H - 2, cx = W / 2 + rand(-0.8, 0.8);
+  const T = new PixBuf(W, H), C = new PixBuf(W, H), own = new Int16Array(W * H).fill(-1);
+  // ---- crown layout in unit space (x radius 1, y radius S.asp): Fibonacci points + a crown top + inner clusters
+  const n = randi(S.clusters[0], S.clusters[1]), off = rand(), cl = [];
+  for (let i = 0; i < n; i++) {
+    const t = (i + off) / n, py = 1 - t * 1.8, pr = Math.sqrt(Math.max(0, 1 - py * py)), th = i * GOLDEN + rand(-0.3, 0.3), k = rand(0.52, 0.8);
+    cl.push({ X: Math.cos(th) * pr * k, Y: py * k, Z: Math.sin(th) * pr * k, r: rand(S.card[0], S.card[1]), inner: false });
+  }
+  cl.push({ X: rand(-0.12, 0.12), Y: 0.66, Z: 0.1, r: rand(S.card[0], S.card[1]) * 0.85, inner: false });
+  for (let i = 0; i < S.inner; i++) { const a = i / S.inner * 6.283 + rand(-0.4, 0.4); cl.push({ X: Math.cos(a) * 0.3, Y: rand(-0.25, 0.15), Z: Math.sin(a) * 0.3 - 0.25, r: S.card[1] * 1.05, inner: true }); }
+  for (const c of cl) {
+    c.occ = c.inner ? 0.5 : clamp(0.66 + 0.5 * Math.hypot(c.X, c.Y, c.Z), 0.6, 1.05) * (0.8 + 0.2 * sstep(-0.8, 0.6, c.Y));
+    c.L = c.X * 0.7 + c.Y * 0.9 + c.Z * 0.35;   // facing the light: upper right, a little toward the viewer
+  }
+  // three masses: shadow (inner + the least lit 30 %), lit (the most lit 28 %, smaller cards), mid (the rest)
+  const outer = cl.filter(c => !c.inner).sort((a, b) => a.L - b.L);
+  outer.forEach((c, i) => { c.mass = i < outer.length * 0.3 ? 0 : i >= outer.length * 0.72 ? 2 : 1; });
+  for (const c of cl) { if (c.inner) c.mass = 0; if (c.mass === 2) c.r *= 0.82; }
+  // fit the crown into the top of the sprite: x within the width, y from row 1 down to the crown bottom
+  const crownBot = Math.round(H * (1 - S.trunk));
+  for (const c of cl) { c.ux = c.X + (c.mass === 0 ? -0.1 : 0); c.uy = -c.Y * S.asp * 0.9 + c.Z * S.asp * 0.3 + (c.mass === 0 ? 0.1 : 0); }
+  let bx0 = 1e9, bx1 = -1e9, by0 = 1e9, by1 = -1e9;
+  for (const c of cl) { bx0 = Math.min(bx0, c.ux - c.r); bx1 = Math.max(bx1, c.ux + c.r); by0 = Math.min(by0, c.uy - c.r); by1 = Math.max(by1, c.uy + c.r); }
+  const sc = Math.min((W - 2) / (bx1 - bx0), (crownBot - 1) / (by1 - by0));
+  for (const c of cl) { c.sx = cx + (c.ux - (bx0 + bx1) / 2) * sc; c.sy = 1 + (c.uy - by0) * sc; c.r *= sc; if (c.mass === 0 && !c.inner) { c.sx -= 2; c.sy += 2; } }   // the shadow mass sits 2 px down-left
+  const cyc = 1 + ((0 - by0) * sc), botY = 1 + (by1 - by0) * sc;
+  // ---- trunk (into the crown), roots, AO, 2-3 branches toward low clusters
+  treeAO(T, cx, yb, S.trunkW[0]);
+  const xc = treeTrunk(T, S, cx, yb, Math.round(cyc), rand(-1.2, 1.2), seed);
+  treeRoots(T, S, xc, yb);
+  const low = cl.filter(c => !c.inner).sort((a, b) => b.sy - a.sy), nb = randi(2, 3);
+  for (let i = 0; i < nb && i < low.length; i++) {
+    const tg = low[(i * 2) % low.length], sy = Math.round(lerp(cyc, botY, rand(0.55, 0.9)));
+    treeLine(T, xc(sy), sy, lerp(xc(sy), tg.sx, 0.8), lerp(sy, tg.sy, 0.7), 2, 1, S.bark[0], S.bark[tg.sx > xc(sy) ? 3 : 1]);
+  }
+  // ---- leaf clusters, back to front (inner, then by depth; the lit mass last)
+  cl.sort((a, b) => ((a.inner ? -10 : 0) + a.mass * 0.6 + a.Z) - ((b.inner ? -10 : 0) + b.mass * 0.6 + b.Z));
+  cl.forEach((c, i) => { c.ord = i; });
+  const BASE = [0.13, 0.42, 0.7], LO = [0, 0.28, 0.6], HI = [0.36, 0.74, 0.98];
+  cl.forEach((c, ci) => {
+    const r = c.r, ry = r * (S.squash || 0.92);
+    for (let y = Math.floor(c.sy - ry - 1); y <= Math.ceil(c.sy + ry + 1); y++) for (let x = Math.floor(c.sx - r - 1); x <= Math.ceil(c.sx + r + 1); x++) {
+      if (x < 0 || y < 0 || x >= W || y >= H) continue;
+      const dx = (x + 0.5 - c.sx) / r, dy = (y + 0.5 - c.sy) / ry, d2 = dx * dx + dy * dy;
+      if (d2 > 1 - 0.25 * vnoise(x * 0.5 + ci * 5.3, y * 0.5, seed + 21)) continue;   // the edge eroded into 3-5 px leaf clumps
+      const nz = Math.sqrt(Math.max(0, 1 - d2)), lam = dx * 0.6 - dy * 0.68 + nz * 0.42;
+      const q = vnoise(x * 0.42 + ci * 3.1, y * 0.42, seed + 11);
+      let v = BASE[c.mass] + (c.occ - 0.85) * 0.3 + lam * 0.2 + (q - 0.5) * 0.16 - (q < 0.24 ? 0.1 : 0);
+      C.set(x, y, ramp2(S.pal, clamp(v, LO[c.mass], HI[c.mass]), x, y)); own[y * W + x] = ci;
+    }
+  });
+  leafPasses(C, own, S, cl);
+  // flecks (blossom / fruit / glints): 2 px pairs on mid / lit clusters, never a lone pixel (a lone one reads as a speck)
+  if (S.flecks) for (let i = 0; i < S.flecks.n; i++) {
+    const cs = cl.filter(c => c.mass > 0), c = cs[Math.floor(rand() * cs.length)], a = rand(0, 6.283), d = rand(0, c.r * 0.75);
+    const x = Math.round(c.sx + Math.cos(a) * d), y = Math.round(c.sy + Math.sin(a) * d * 0.9), col = hexToRgb(S.flecks.c[Math.floor(rand() * S.flecks.c.length)]);
+    if (C.a(x, y) && C.a(x + 1, y)) { C.set(x, y, col); C.set(x + 1, y, col); }
+  }
+  return treeFromParts(T.toCanvas(), C.toCanvas());
+}
+// pine v2: asymmetric tiers (each side's reach 0.6-1.1 independently), 6-9 tiers drawn bottom-up so every tier's drooping tips
+// hang over the one below (with a cast shade under it), per-tier needle gaps, a bare tip, broken lower branches on giants,
+// rim light on the lit side of every tier and dust on the tier tops; lit-side sheet, no outline
+function pineTree2(seed, S) {
+  seedRng(seed);
+  const W = S.W, H = S.H, yb = H - 2, cx = W / 2;
+  const T = new PixBuf(W, H), C = new PixBuf(W, H), own = new Int16Array(W * H).fill(-1);
+  const tip = randi(S.tip[0], S.tip[1]), crownTop = 1 + tip, crownBot = Math.floor(H * (1 - S.bare));
+  treeAO(T, cx, yb, S.trunkW[0]);
+  const xc = treeTrunk(T, S, cx, yb, 1, rand(-0.7, 0.7), seed);
+  treeRoots(T, S, xc, yb);
+  for (let k = 0; k < (S.broken || 0); k++) {   // broken lower branches on the bare trunk
+    const y = Math.round(lerp(crownBot + 3, yb - 12, rand())), s = k % 2 ? 1 : -1, len = randi(3, 6);
+    for (let q = 1; q <= len; q++) T.set(Math.round(xc(y) + s * (S.trunkW[1] + 1 + q)), y + Math.round(q * 0.45), S.bark[s > 0 ? 2 : 0]);
+  }
+  const n = randi(S.tiers[0], S.tiers[1]), step = (crownBot - crownTop) / n, cl = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const y0 = crownTop + i * step + rand(-0.6, 0.6), k = (i + 1) / n, base = 1.5 + k * (W / 2 - 2.5), gs = seed * 7 + i * 31;
+    const ci = cl.length; cl.push({ ord: n - 1 - i, mass: 1, sx: xc(y0), sy: y0 + step * 0.4, r: base });
+    for (const s of [-1, 1]) {
+      const rx = Math.max(1.5, base * rand(0.6, 1.1)), ry = step * 0.75 + 1, ccx = xc(y0) + s * rx * 0.42, ccy = y0 + step * 0.5;
+      for (let y = Math.floor(ccy - ry - 1); y <= Math.ceil(ccy + ry * 1.8); y++) for (let x = Math.floor(ccx - rx - 1); x <= Math.ceil(ccx + rx + 1); x++) {
+        if (x < 0 || y < 0 || x >= W || y >= H) continue;
+        const dx = (x + 0.5 - ccx) / rx, dy = (y + 0.5 - ccy - Math.abs(dx) * ry * 0.6) / ry;   // droop toward the tips
+        if (dx * dx + dy * dy > 1 - vnoise(x * 0.7, y * 0.7, gs) * 0.45) continue;
+        if (vnoise(x * 0.5, y * 0.9, gs + 7) > 0.8) continue;   // gaps show the sky: their own holes on every tier
+        const v = 0.58 - dy * 0.3 + (s > 0 ? 0.1 : -0.08) - (Math.abs(x + 0.5 - xc(y)) < 2 ? 0.06 : 0) - k * 0.16 + (vnoise(x * 0.6, y * 0.6, gs + 3) - 0.5) * 0.14;
+        C.set(x, y, ramp2(S.pal, v, x, y)); own[y * W + x] = ci;
+      }
+    }
+  }
+  // rim on every tier's lit edge (x right of the trunk), dust on lit tier tops, cast shade under the tier above, shadow-side edge
+  const o = (x, y) => x < 0 || y < 0 || x >= W || y >= H ? -1 : own[y * W + x], rim = [], dust = [], shade = [], edge = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const k = o(x, y); if (k < 0) continue;
+    const right = x + 0.5 > xc(y) - 1, r1 = o(x + 1, y);
+    if (right && (r1 < 0 || cl[r1].ord < cl[k].ord)) { rim.push([x, y]); continue; }
+    if (right && o(x, y - 1) < 0 && vnoise(x * 0.5, y * 0.3, seed + 9) > 0.42) { dust.push([x, y]); continue; }
+    const a1 = o(x, y - 1), a2 = o(x, y - 2);
+    if ((a1 >= 0 && cl[a1].ord > cl[k].ord) || (a2 >= 0 && cl[a2].ord > cl[k].ord && a1 === k)) shade.push([x, y]);
+    if (o(x - 1, y) < 0 || o(x, y + 1) < 0) edge.push([x, y]);
+  }
+  for (const [x, y] of rim) C.set(x, y, mixRgb(C.get(x, y), S.rim, 0.55));
+  for (const [x, y] of dust) C.set(x, y, mixRgb(C.get(x, y), S.rim, 0.3));
+  for (const [x, y] of shade) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.4));
+  for (const [x, y] of edge) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.5));
+  return treeFromParts(T.toCanvas(), C.toCanvas());
+}
+// Species: per zone 3+ species x 6 variants x 2 sizes, ordered big0, small0, big1, small1, ... so the data's variant index
+// (o.v % n) walks both sizes. `trunk` = the bare trunk's share of the sprite height (35-45 % broadleaf), asp = crown height / width.
+const TREE_SPECIES = {
+  round: { sizes: [[36, 62], [26, 44]], trunk: 0.4, asp: 0.9, clusters: [8, 10], card: [0.42, 0.56], inner: 4, pal: LEAF2, bark: BARK2, trunkW: [6, 3], rim: RIM_VALE, rimMix: 0.55, flecks: { n: 4, c: ['#ffe9a8', '#fff6dc'] }, seed: 1100 },
+  poplar: { sizes: [[22, 64], [18, 46]], trunk: 0.28, asp: 2.5, clusters: [10, 13], card: [0.42, 0.58], inner: 3, squash: 1.1, pal: TEAL2, bark: BARK2, trunkW: [5, 2.5], rim: RIM_VALE, rimMix: 0.55, seed: 1200 },
+  blossom: { sizes: [[38, 58], [28, 42]], trunk: 0.42, asp: 0.78, clusters: [9, 11], card: [0.4, 0.54], inner: 4, pal: BLOSSOM2, bark: BARK2, trunkW: [6, 3], rim: hexToRgb('#fff0f6'), rimMix: 0.5, flecks: { n: 10, c: ['#ffffff', '#fff0f7'] }, seed: 1300 },
+  teal: { sizes: [[32, 56], [24, 40]], trunk: 0.38, asp: 1.05, clusters: [8, 10], card: [0.42, 0.56], inner: 4, pal: TEAL2, bark: BARK2, trunkW: [5, 2.5], rim: RIM_VALE, rimMix: 0.55, flecks: { n: 3, c: ['#bff7ff'] }, seed: 1400 },
+  // forest broadleaves (step-4 density: Pinewood's 2nd / 3rd species beside the pines)
+  oak: { sizes: [[40, 64], [28, 44]], trunk: 0.4, asp: 0.8, clusters: [9, 12], card: [0.4, 0.54], inner: 4, pal: AMBER2, bark: PINE_BARK2, trunkW: [7, 3], rim: RIM_FOREST, rimMix: 0.55, seed: 1500 },
+  birch: { sizes: [[24, 62], [18, 44]], trunk: 0.44, asp: 1.9, clusters: [8, 10], card: [0.44, 0.6], inner: 2, squash: 1.05, pal: BIRCH2, bark: BARK_BIRCH, trunkW: [4, 2], birch: true, rim: RIM_FOREST, rimMix: 0.5, seed: 1600 },
+};
+const PINE_SPECIES = {
+  giant: { W: 60, H: 140, bare: 0.44, tiers: [8, 10], tip: [3, 5], broken: 3, trunkW: [10, 2], n: 3, seed: 1900 },
+  tall: { W: 36, H: 82, bare: 0.3, tiers: [6, 9], tip: [3, 5], broken: 0, trunkW: [6, 1.5], n: 6, seed: 1910 },
+  young: { W: 20, H: 42, bare: 0.12, tiers: [6, 7], tip: [3, 4], broken: 0, trunkW: [3, 1], n: 6, seed: 1930 },
+};
+const TREES_LIVE = typeof location !== 'undefined' && /[?&]trees=live\b/.test(location.search || '');
+function buildTreeSpecies(kind) {
+  const S = TREE_SPECIES[kind], out = [];
+  for (let v = 0; v < 6; v++) for (let z = 0; z < 2; z++) {
+    const [w, h] = S.sizes[z], sk = z ? 0.78 : 1;
+    out.push(canopyTree(S.seed + v * 10 + z, Object.assign({}, S, { W: w, H: h, clusters: z ? [S.clusters[0] - 2, S.clusters[1] - 2] : S.clusters, card: S.card.map(c => c / sk), trunkW: z ? S.trunkW.map(t => Math.max(1, t - 1)) : S.trunkW })));
+  }
+  return out;
+}
+function buildPineSpecies(kind) {
+  const S = PINE_SPECIES[kind], out = [];
+  for (let v = 0; v < S.n; v++) out.push(pineTree2(S.seed + v, Object.assign({ pal: PINE2, bark: PINE_BARK2, rim: RIM_FOREST }, S)));
+  return out;
+}
+// the frozen sheets (js/sprites.js 'tree_<kind>_NN' / 'pine_<kind>_NN', 2 frames: trunk, canopy) -> composites; null = build live
+function frozenTrees(prefix) {
+  if (TREES_LIVE) return null;
+  const keys = Object.keys(ART.img).filter(k => k.startsWith(prefix) && /_\d\d$/.test(k)).sort();
+  if (!keys.length || keys.some(k => ART.img[k].length < 2)) return null;
+  return keys.map(k => treeFromParts(ART.img[k][0], ART.img[k][1]));
+}
+function buildTreesV2() {
+  for (const k of Object.keys(TREE_SPECIES)) ART.trees[k] = frozenTrees('tree_' + k + '_') || buildTreeSpecies(k);
+  ART.pines = {};
+  for (const k of Object.keys(PINE_SPECIES)) ART.pines[k] = frozenTrees('pine_' + k + '_') || buildPineSpecies(k);
 }
 
 // ===== Props ===================================================================
@@ -769,7 +1018,7 @@ function pineTree(seed, W, H, bare, tierStep) {
   return pb.toCanvas();
 }
 function buildForest() {
-  ART.pines = { giant: [0, 1, 2].map(i => pineTree(900 + i, 58, 136, 0.42, 9)), tall: [0, 1, 2, 3].map(i => pineTree(910 + i, 36, 80, 0.2, 7)), young: [0, 1, 2].map(i => pineTree(920 + i, 20, 40, 0.08, 5)) };
+  buildTreesV2();   // §29 G2: canopyTree broadleaves + pine v2 (ART.trees.*, ART.pines.*)
   ART.mushroomRed = asciiSprite([
     '..KKKK..', '.KRRWRK.', 'KRWRRRRK', 'KRRRRWRK', '.KKSSKK.', '...SS...', '...SS...', '..KSSK..',
   ], { K: '#3a1410', R: '#d23a2a', W: '#f4ece0', S: '#e8dcc8' });

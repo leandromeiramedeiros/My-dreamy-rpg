@@ -98,8 +98,24 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 ## Status snapshot (M3 in progress, 2026-10-20)
 * Done: variant structure + save v4; items v2 + trinkets; tooltip v2 / paper doll / UI fixes / boss bar (one bar per phase + phase diamonds);
   layered hero + parts kit; Act I trinket chests; Mythic naming (§24.2).
-* Running: hit feel (§27), multi-bar boss phases + gear-loop balance (§26.1/26.2), world art group 1 (§29).
-* Queue: Echo legendary (§30) → opening rework (§28) → world art groups 2–3 (§29) → phone perf (§26.4) → QA bot → ship M3.
+* Also done:
+  * hit feel (§27)
+  * Echo legendary (§30), with an element-coloured spirit
+  * multi-bar boss phases, cunning forms and gear-loop balsim (§26.1/26.2); Mossjaw retuned (HP 10000, howl capped at 2 hounds)
+  * world art group 1 (§29: ground, cliffs, skirt, cloud sea)
+  * bare-start opening (§28)
+  * perf pass (§26.4): quality tiers, resolution governor, emitter-only bloom, light pool, ?perf=1 overlay; desktop 16.7 ms, phone p95 ~20.3
+  * Lumina study, with decisions in §31 and credits in docs/CREDITS.md
+* Running:
+  * recipe sync + elite pockets + shrine warp (§26.2)
+  * HUD text cache (phone p95)
+  * world art group 2: trees/density (density waits for the pockets lane)
+  * element particle language + status visuals (expert VFX director → §32)
+* Queue:
+  1. world art group 3 (tall set pieces)
+  2. pixel FX prototype: 3 effects + element particles, for client approval
+  3. QA full bot run
+  4. ship M3 (PR #4)
 
 ## Status snapshot (M2b shipped)
 * Done on branch `claude/m2b-act1`: enemy behaviour parts (js/parts.js), boss move library + Mossjaw/Bramblehorn/Warden

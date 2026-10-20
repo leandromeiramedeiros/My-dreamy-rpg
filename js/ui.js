@@ -144,7 +144,7 @@ const UI = (() => {
   // strings seen once (fresh damage numbers) never allocate.
   const TEXT_CACHE = new Map(), TEXT_SEEN = new Map(), TEXT_MAX = 400, TEXT_PAD = 2;
   function textCached(ctx, F, s, x, y, sz, col, outline, shadow, w) {
-    if (ctx.globalAlpha !== 1 || ctx.globalCompositeOperation !== 'source-over') return false;
+    if (!API.textCache || ctx.globalAlpha !== 1 || ctx.globalCompositeOperation !== 'source-over') return false;
     const T = ctx.getTransform(), K = T.a;
     if (T.b !== 0 || T.c !== 0 || T.d !== K || K !== Math.round(K) || K < 1 || T.e !== Math.round(T.e) || T.f !== Math.round(T.f)) return false;
     const k = s + '\u0001' + sz.face + '|' + sz.sc + '|' + col + '|' + (outline ? 1 : 0) + (shadow ? 1 : 0) + '|' + K;
@@ -476,13 +476,15 @@ const UI = (() => {
     ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'butt';
     ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2); ctx.stroke(); ctx.restore();
   }
-  return {
+  const API = {
+    textCache: true,   // the text-run cache switch (tools: a same-frame cached vs direct comparison)
     S, snap, C, theme: C, SIZES: { small: 14, body: 18, heading: 27 }, el: elCol, rarityCol: rarCol, RARITY_SHAPE, ring,
     text, measure, lineH, wrap, frame, sprite, pad, bar, barReset, sweep, toast, toasts, drawToasts, tooltip, button,
     hit, click, mouseIn, begin, focus, image,
     // legacy colour keys some older call sites expect (hud.js keeps its own palette as HC until the rebuild)
     gold: C.gold, line: C.line, dim: C.dim, bg: C.bg,
   };
+  return API;
 })();
 
 // ===== item art routing (M3 UI lane): the ONE place the UI asks icons.js (ICONS) for item / gem / skill art ==========
