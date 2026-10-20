@@ -513,10 +513,10 @@ function treeTrunk(pb, S, cx, yb, yt, lean, seed) {
   const bark = S.bark, span = Math.max(1, yb - yt), xc = y => cx + lean * Math.pow(clamp((yb - y) / span, 0, 1), 1.6);
   for (let y = yt; y <= yb; y++) {
     const t = (yb - y) / span, w = lerp(S.trunkW[0], S.trunkW[1], Math.pow(t, 0.6)) + Math.max(0, 3 - (yb - y)) * 1.3;
-    const x0 = xc(y) - w / 2, xa = Math.round(x0), xb = Math.max(xa + 1, Math.round(x0 + w));
+    const xa = Math.round(xc(y) - w / 2 + 0.01), xb = Math.max(xa + 1, Math.round(xc(y) + w / 2 - 0.01));   // width steps alternate sides (no ledges)
     for (let x = xa; x < xb; x++) {
       const u = (x + 0.5 - xa) / (xb - xa);
-      let c = ramp2(bark, 0.22 + u * 0.58 + (vnoise(x * 0.9, y * 0.16, seed + 5) - 0.5) * 0.34, x, y);
+      let c = ramp2(bark, 0.22 + u * 0.58 + (vnoise(x * 0.9, y * 0.08, seed + 5) - 0.5) * 0.3, x, y);
       if (S.birch && vnoise(x * 0.6, y * 0.55, seed + 6) > 0.72) c = bark[1];   // birch: dark lenticel bands
       if (x === xa && xb - xa > 1) c = bark[0];
       else if (x === xb - 1 && xb - xa > 2) c = mixRgb(bark[bark.length - 1], S.rim, 0.35);
@@ -552,7 +552,7 @@ function leafPasses(C, own, S, cl) {
     const k = own[y * W + x]; if (k < 0) continue;
     const c = cl[k], ord = c.ord, nb = [o(x + 1, y), o(x + 1, y - 1), o(x, y - 1)];
     const litHalf = (x + 0.5 - c.sx) * 0.8 + (c.sy - y - 0.5) > -0.25 * c.r;
-    if (litHalf && nb.some(j => j < 0 || cl[j].ord < ord)) { rim.push([x, y, c.mass ? S.rimMix : S.rimMix * 0.5]); continue; }
+    if (litHalf && nb.some(j => j < 0 || cl[j].ord < ord)) { rim.push([x, y, (nb[0] < 0 || nb[2] < 0 ? 1.2 : 0.85) * (c.mass ? S.rimMix : S.rimMix * 0.55)]); continue; }
     const up = o(x + 1, y - 1); if (up >= 0 && cl[up].ord > ord && cl[up].mass >= c.mass) shade.push([x, y]);
     if (o(x - 1, y) < 0 || o(x, y + 1) < 0) edge.push([x, y]);
   }
@@ -585,9 +585,9 @@ function canopyTree(seed, S) {
   for (const c of cl) { c.ux = c.X + (c.mass === 0 ? -0.1 : 0); c.uy = -c.Y * S.asp * 0.9 + c.Z * S.asp * 0.3 + (c.mass === 0 ? 0.1 : 0); }
   let bx0 = 1e9, bx1 = -1e9, by0 = 1e9, by1 = -1e9;
   for (const c of cl) { bx0 = Math.min(bx0, c.ux - c.r); bx1 = Math.max(bx1, c.ux + c.r); by0 = Math.min(by0, c.uy - c.r); by1 = Math.max(by1, c.uy + c.r); }
-  const sc = Math.min((W - 2) / (bx1 - bx0), (crownBot - 1) / (by1 - by0));
-  for (const c of cl) { c.sx = cx + (c.ux - (bx0 + bx1) / 2) * sc; c.sy = 1 + (c.uy - by0) * sc; c.r *= sc; if (c.mass === 0 && !c.inner) { c.sx -= 2; c.sy += 2; } }   // the shadow mass sits 2 px down-left
-  const cyc = 1 + ((0 - by0) * sc), botY = 1 + (by1 - by0) * sc;
+  const scx = (W - 2) / (bx1 - bx0), scy = Math.min(scx * 1.25, (crownBot - 1) / (by1 - by0));   // x fills the width, y the crown band
+  for (const c of cl) { c.sx = cx + (c.ux - (bx0 + bx1) / 2) * scx; c.sy = 1 + (c.uy - by0) * scy; c.ry = c.r * scy; c.r *= scx; if (c.mass === 0 && !c.inner) { c.sx -= 2; c.sy += 2; } }   // the shadow mass sits 2 px down-left
+  const cyc = 1 + ((0 - by0) * scy), botY = 1 + (by1 - by0) * scy;
   // ---- trunk (into the crown), roots, AO, 2-3 branches toward low clusters
   treeAO(T, cx, yb, S.trunkW[0]);
   const xc = treeTrunk(T, S, cx, yb, Math.round(cyc), rand(-1.2, 1.2), seed);
@@ -602,7 +602,7 @@ function canopyTree(seed, S) {
   cl.forEach((c, i) => { c.ord = i; });
   const BASE = [0.13, 0.42, 0.7], LO = [0, 0.28, 0.6], HI = [0.36, 0.74, 0.98];
   cl.forEach((c, ci) => {
-    const r = c.r, ry = r * (S.squash || 0.92);
+    const r = c.r, ry = c.ry * (S.squash || 0.92);
     for (let y = Math.floor(c.sy - ry - 1); y <= Math.ceil(c.sy + ry + 1); y++) for (let x = Math.floor(c.sx - r - 1); x <= Math.ceil(c.sx + r + 1); x++) {
       if (x < 0 || y < 0 || x >= W || y >= H) continue;
       const dx = (x + 0.5 - c.sx) / r, dy = (y + 0.5 - c.sy) / ry, d2 = dx * dx + dy * dy;
@@ -647,8 +647,8 @@ function pineTree2(seed, S) {
         if (x < 0 || y < 0 || x >= W || y >= H) continue;
         const dx = (x + 0.5 - ccx) / rx, dy = (y + 0.5 - ccy - Math.abs(dx) * ry * 0.6) / ry;   // droop toward the tips
         if (dx * dx + dy * dy > 1 - vnoise(x * 0.7, y * 0.7, gs) * 0.45) continue;
-        if (vnoise(x * 0.5, y * 0.9, gs + 7) > 0.8) continue;   // gaps show the sky: their own holes on every tier
-        const v = 0.58 - dy * 0.3 + (s > 0 ? 0.1 : -0.08) - (Math.abs(x + 0.5 - xc(y)) < 2 ? 0.06 : 0) - k * 0.16 + (vnoise(x * 0.6, y * 0.6, gs + 3) - 0.5) * 0.14;
+        if (vnoise(x * 0.32, y * 0.6, gs + 7) > 0.82) continue;   // gaps show the sky: their own holes on every tier
+        const v = 0.6 - dy * 0.4 + (s > 0 ? 0.1 : -0.1) - (Math.abs(x + 0.5 - xc(y)) < 2 ? 0.06 : 0) - k * 0.14 + (vnoise(x * 0.9, y * 0.3, gs + 3) - 0.5) * 0.1;
         C.set(x, y, ramp2(S.pal, v, x, y)); own[y * W + x] = ci;
       }
     }
@@ -657,32 +657,33 @@ function pineTree2(seed, S) {
   const o = (x, y) => x < 0 || y < 0 || x >= W || y >= H ? -1 : own[y * W + x], rim = [], dust = [], shade = [], edge = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const k = o(x, y); if (k < 0) continue;
-    const right = x + 0.5 > xc(y) - 1, r1 = o(x + 1, y);
-    if (right && (r1 < 0 || cl[r1].ord < cl[k].ord)) { rim.push([x, y]); continue; }
-    if (right && o(x, y - 1) < 0 && vnoise(x * 0.5, y * 0.3, seed + 9) > 0.42) { dust.push([x, y]); continue; }
-    const a1 = o(x, y - 1), a2 = o(x, y - 2);
-    if ((a1 >= 0 && cl[a1].ord > cl[k].ord) || (a2 >= 0 && cl[a2].ord > cl[k].ord && a1 === k)) shade.push([x, y]);
+    // open = sky, not a needle hole: the gap runs >= 3 px (or off the sprite), so holes get no rim and no dust (no confetti)
+    const right = x + 0.5 > xc(y) + 1, r1 = o(x + 1, y), openR = r1 < 0 && o(x + 2, y) < 0 && o(x + 3, y) < 0, openU = o(x, y - 1) < 0 && o(x, y - 2) < 0;
+    if (right && (openR || (r1 >= 0 && cl[r1].ord < cl[k].ord))) { rim.push([x, y]); continue; }
+    if (right && openU && vnoise(x * 0.35, y * 0.2, seed + 9) > 0.4) { dust.push([x, y]); continue; }
+    const a1 = o(x, y - 1), a2 = o(x, y - 2), a3 = o(x, y - 3), up = j => j >= 0 && cl[j].ord > cl[k].ord;
+    if (up(a1) || (a1 === k && (up(a2) || (a2 === k && up(a3))))) { shade.push([x, y]); continue; }   // a 3 px cast shade under the tier above
     if (o(x - 1, y) < 0 || o(x, y + 1) < 0) edge.push([x, y]);
   }
   for (const [x, y] of rim) C.set(x, y, mixRgb(C.get(x, y), S.rim, 0.55));
   for (const [x, y] of dust) C.set(x, y, mixRgb(C.get(x, y), S.rim, 0.3));
-  for (const [x, y] of shade) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.4));
+  for (const [x, y] of shade) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.5));
   for (const [x, y] of edge) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.5));
   return treeFromParts(T.toCanvas(), C.toCanvas());
 }
 // Species: per zone 3+ species x 6 variants x 2 sizes, ordered big0, small0, big1, small1, ... so the data's variant index
 // (o.v % n) walks both sizes. `trunk` = the bare trunk's share of the sprite height (35-45 % broadleaf), asp = crown height / width.
 const TREE_SPECIES = {
-  round: { sizes: [[36, 62], [26, 44]], trunk: 0.4, asp: 0.9, clusters: [8, 10], card: [0.42, 0.56], inner: 4, pal: LEAF2, bark: BARK2, trunkW: [6, 3], rim: RIM_VALE, rimMix: 0.55, flecks: { n: 4, c: ['#ffe9a8', '#fff6dc'] }, seed: 1100 },
-  poplar: { sizes: [[22, 64], [18, 46]], trunk: 0.28, asp: 2.5, clusters: [10, 13], card: [0.42, 0.58], inner: 3, squash: 1.1, pal: TEAL2, bark: BARK2, trunkW: [5, 2.5], rim: RIM_VALE, rimMix: 0.55, seed: 1200 },
-  blossom: { sizes: [[38, 58], [28, 42]], trunk: 0.42, asp: 0.78, clusters: [9, 11], card: [0.4, 0.54], inner: 4, pal: BLOSSOM2, bark: BARK2, trunkW: [6, 3], rim: hexToRgb('#fff0f6'), rimMix: 0.5, flecks: { n: 10, c: ['#ffffff', '#fff0f7'] }, seed: 1300 },
-  teal: { sizes: [[32, 56], [24, 40]], trunk: 0.38, asp: 1.05, clusters: [8, 10], card: [0.42, 0.56], inner: 4, pal: TEAL2, bark: BARK2, trunkW: [5, 2.5], rim: RIM_VALE, rimMix: 0.55, flecks: { n: 3, c: ['#bff7ff'] }, seed: 1400 },
+  round: { sizes: [[38, 60], [28, 44]], trunk: 0.36, asp: 0.9, clusters: [9, 11], card: [0.42, 0.56], inner: 4, pal: LEAF2, bark: BARK2, trunkW: [7, 3], rim: RIM_VALE, rimMix: 0.55, flecks: { n: 3, c: ['#f4d98a'] }, seed: 1100 },
+  poplar: { sizes: [[22, 64], [18, 46]], trunk: 0.24, asp: 2.5, clusters: [13, 16], card: [0.5, 0.66], inner: 4, squash: 1.1, pal: TEAL2, bark: BARK2, trunkW: [5, 2.5], rim: RIM_VALE, rimMix: 0.55, seed: 1200 },
+  blossom: { sizes: [[38, 58], [28, 42]], trunk: 0.38, asp: 0.78, clusters: [9, 11], card: [0.4, 0.54], inner: 4, pal: BLOSSOM2, bark: BARK2, trunkW: [6, 3], rim: hexToRgb('#fff0f6'), rimMix: 0.5, flecks: { n: 10, c: ['#ffffff', '#fff0f7'] }, seed: 1300 },
+  teal: { sizes: [[34, 56], [26, 40]], trunk: 0.36, asp: 1.05, clusters: [9, 11], card: [0.42, 0.56], inner: 4, pal: TEAL2, bark: BARK2, trunkW: [6, 3], rim: RIM_VALE, rimMix: 0.55, flecks: { n: 3, c: ['#bff7ff'] }, seed: 1400 },
   // forest broadleaves (step-4 density: Pinewood's 2nd / 3rd species beside the pines)
   oak: { sizes: [[40, 64], [28, 44]], trunk: 0.4, asp: 0.8, clusters: [9, 12], card: [0.4, 0.54], inner: 4, pal: AMBER2, bark: PINE_BARK2, trunkW: [7, 3], rim: RIM_FOREST, rimMix: 0.55, seed: 1500 },
   birch: { sizes: [[24, 62], [18, 44]], trunk: 0.44, asp: 1.9, clusters: [8, 10], card: [0.44, 0.6], inner: 2, squash: 1.05, pal: BIRCH2, bark: BARK_BIRCH, trunkW: [4, 2], birch: true, rim: RIM_FOREST, rimMix: 0.5, seed: 1600 },
 };
 const PINE_SPECIES = {
-  giant: { W: 60, H: 140, bare: 0.44, tiers: [8, 10], tip: [3, 5], broken: 3, trunkW: [10, 2], n: 3, seed: 1900 },
+  giant: { W: 60, H: 140, bare: 0.44, tiers: [8, 10], tip: [3, 5], broken: 3, trunkW: [10, 3], n: 3, seed: 1900 },
   tall: { W: 36, H: 82, bare: 0.3, tiers: [6, 9], tip: [3, 5], broken: 0, trunkW: [6, 1.5], n: 6, seed: 1910 },
   young: { W: 20, H: 42, bare: 0.12, tiers: [6, 7], tip: [3, 4], broken: 0, trunkW: [3, 1], n: 6, seed: 1930 },
 };

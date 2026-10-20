@@ -823,11 +823,14 @@ function polyDist(px, py, pts) { let d = 99; for (let i = 0; i < pts.length - 1;
 // the runtime structure (tiles, rasterised ground, columns, props, lights).
 // =========================================================================
 const OBJ_TYPES = {
-  tree_round: { label: 'Round tree', img: () => ART.trees.round, r: 0.32, shadow: 11 },
-  tree_poplar: { label: 'Poplar', img: () => ART.trees.poplar, r: 0.32, shadow: 7 },
-  tree_blossom: { label: 'Blossom tree', img: () => ART.trees.blossom, r: 0.32, shadow: 11 },
-  tree_teal: { label: 'Teal tree', img: () => ART.trees.teal, r: 0.32, shadow: 11 },
-  tree_dead: { label: 'Dead tree', img: () => ART.trees.dead, r: 0.3, shadow: 8 },
+  // tree: true = §29 G2 trees (lit-side sheets: flipped by the theme's light side, never at random; trunk / canopy split in render.js)
+  tree_round: { label: 'Round tree', img: () => ART.trees.round, r: 0.32, shadow: 11, tree: true },
+  tree_poplar: { label: 'Poplar', img: () => ART.trees.poplar, r: 0.32, shadow: 7, tree: true },
+  tree_blossom: { label: 'Blossom tree', img: () => ART.trees.blossom, r: 0.32, shadow: 11, tree: true },
+  tree_teal: { label: 'Teal tree', img: () => ART.trees.teal, r: 0.32, shadow: 11, tree: true },
+  tree_oak: { label: 'Oak (forest)', img: () => ART.trees.oak, r: 0.34, shadow: 12, tree: true },
+  tree_birch: { label: 'Birch (forest)', img: () => ART.trees.birch, r: 0.26, shadow: 7, tree: true },
+  tree_dead: { label: 'Dead tree', img: () => ART.trees.dead, r: 0.3, shadow: 8, tree: true },
   bush: { label: 'Bush', img: () => ART.bush, r: 0.2, shadow: 6 },
   rock: { label: 'Rock', img: () => ART.rock, r: 0.28, shadow: 6 },
   rock_dark: { label: 'Dark rock', img: () => ART.rockDark, r: 0.28, shadow: 6 },
@@ -843,9 +846,9 @@ const OBJ_TYPES = {
   tablet: { label: 'Lore tablet (text)', img: () => [ART.tablet], r: 0.2, shadow: 5, tablet: true, light: { r: 26, col: '#b8e0ff', a: 0.6, h: 8 } },
   brazier: { label: 'Brazier', img: () => [ART.brazier], r: 0.3, shadow: 5, brazier: true, light: { r: 80, col: '#b36bff', a: 1, h: 12 } },
   house: { label: 'Cottage (2x2)', img: () => [ART.house.c], house: true },
-  pine_giant: { label: 'Giant pine', img: () => ART.pines.giant, r: 0.45, shadow: 16 },
-  pine: { label: 'Pine', img: () => ART.pines.tall, r: 0.32, shadow: 10 },
-  pine_young: { label: 'Young pine', img: () => ART.pines.young, r: 0.22, shadow: 6 },
+  pine_giant: { label: 'Giant pine', img: () => ART.pines.giant, r: 0.45, shadow: 16, tree: true },
+  pine: { label: 'Pine', img: () => ART.pines.tall, r: 0.32, shadow: 10, tree: true },
+  pine_young: { label: 'Young pine', img: () => ART.pines.young, r: 0.22, shadow: 6, tree: true },
   mushroom_red: { label: 'Toadstool', img: () => [ART.mushroomRed] },
   moss: { label: 'Moss mound', img: () => ART.moss, shadow: 7 },
   log: { label: 'Fallen log', img: () => [ART.log], r: 0.45, shadow: 9 },
@@ -971,7 +974,7 @@ function placeObjects(m, d) {
     if (def.barrier) { placeBarrier(m, o, def.barrier); continue; }
     if (def.critter) { m.critterSpawns.push({ type: def.critter, x: o.x, y: o.y }); if (!window.EDITOR_MODE) continue; }
     const imgs = def.img(), img = imgs[(o.v || 0) % imgs.length];
-    const ob = addProp(m, img, +o.x, +o.y, { r: def.r || 0, shadow: def.shadow || 0, flip: !!o.f, grass: !!def.grass, sway: rand(0, 6.28), brazier: !!def.brazier, beam: !!def.beam && !window.EDITOR_MODE, chest: !!def.chest, checkpoint: !!def.checkpoint, tablet: !!def.tablet, light: def.light ? Object.assign({}, def.light) : undefined, src: o });
+    const ob = addProp(m, img, +o.x, +o.y, { r: def.r || 0, shadow: def.shadow || 0, flip: def.tree ? m.theme.moon.x < RW / 2 : !!o.f, tree: !!def.tree, grass: !!def.grass, sway: rand(0, 6.28), brazier: !!def.brazier, beam: !!def.beam && !window.EDITOR_MODE, chest: !!def.chest, checkpoint: !!def.checkpoint, tablet: !!def.tablet, light: def.light ? Object.assign({}, def.light) : undefined, src: o });
     if (def.lever) { ob.lever = true; ob.gid = o.gate || null; ob.use = LEVER_USE; }
     if (def.fish) { ob.fish = true; ob.use = FISH_USE; if (o.hidden) ob.secret = true; }
     if (def.warpdoor) { ob.warpdoor = true; ob.gid = o.id || `warpdoor_${(+o.x).toFixed(1)}_${(+o.y).toFixed(1)}`; ob.doorKey = o.key || null; ob.use = WARPDOOR_USE; }

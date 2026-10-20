@@ -297,7 +297,8 @@ function drawScene() {
     if (!c.img) { if (c.chunk == null || !chunkResident(m, c.chunk)) continue; c.img = rasterColumn(m, c.i, c.j).img; }
     list.push(c);
   }
-  for (const o of viewObjs) if (inView(isoX(o.x, o.y), isoY(o.x, o.y, o.z))) list.push(o);
+  TREE_FRAME.n = 0; TREE_FRAME.hero = p.dead ? null : worldToView(p.x, p.y, p.z); TREE_FRAME.hkey = p.x + p.y + p.z * 0.35 + 0.01;
+  for (const o of viewObjs) if (inView(isoX(o.x, o.y), isoY(o.x, o.y, o.z))) { list.push(o); if (o.tree && o.img.swayF && !o.gone && treeTick(o)) list.push(o._cv || (o._cv = { kind: 'canopy', o, key: o.key + 0.5 })); }
   for (const f of m.falls) if (!f.edge && inView(f.x0 + 8, f.y0 + f.len / 2, 40 + f.len)) list.push({ kind: 'fall', f, key: f.key });
   if (!p.dead || G.state === 'dead') list.push({ kind: 'player', key: p.x + p.y + p.z * 0.35 + 0.01 });
   for (const e of viewEnemies) list.push({ kind: 'enemy', e, key: e.x + e.y + 0.01 });
@@ -395,6 +396,56 @@ function drawRays(ctx, m, th, mx, my) {
   ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(RAYS.L.c, bx, by, bw, bh, bx, by, bw, bh); ctx.globalCompositeOperation = 'source-over';
 }
 
+// ===== trees v2: canopy over the hero, travelling-gust sway (DESIGN §29 G2; world-art minutes §2.1 / §2.2) ==================
+// A tree (o.tree, img = art.js canopyTree / pineTree2 composite) is ONE drawImage of its composite (img.swayF[frame]) unless its
+// canopy is split off: then drawItem draws img.trunk at the tree's key and a { kind: 'canopy' } list entry at key + 0.5 draws
+// img.canopyF[frame] at alpha o._fade, OVER the hero. The canopy is split while the hero's rect meets the canopy box and the hero
+// sorts before key + 0.5 (it fades 1 -> 0.35 over 0.2 s), and while it fades back. Sway: 1 tree in 4 (hashed), only in the near
+// band around the hero (<= TREE_SWAY_MAX a frame); its frame (-1 / 0 / +1 px on the top 60 %) comes from a gust that travels
+// across the map plus a two-frequency sway (Lumina src/engine/world/props/Wind.js; docs/CREDITS.md), retuned to tiles.
+const TREE_FRAME = { n: 0, hero: null, hkey: 0 }, TREE_SWAY_MAX = 60, TREE_FADE = 0.35, TREE_FADE_S = 0.2;
+const WIND = { dx: 0.94, dy: 0.34, k: 0.25 };   // direction in tiles; k: phase per tile (a gust front ~25 tiles apart, ~1.7 tiles/s)
+function gustFrame(o, t) {
+  const ph = (o.sway || 0) + o.x * 0.23 + o.y * 0.17;
+  const gust = 0.55 + 0.45 * Math.sin(t * 0.43 - (o.x * WIND.dx + o.y * WIND.dy) * WIND.k);
+  const sw = Math.sin(t * 1.21 + ph) * 0.62 + Math.sin(t * 2.37 + ph * 1.73) * 0.38;
+  const d = sw * (0.35 + 0.65 * gust) + (gust - 0.55) * 0.9;
+  return d > 0.62 ? 1 : d < -0.62 ? -1 : 0;
+}
+// per visible tree, once a frame (drawScene list build): sets o._fr (sway frame), o._fade, o._split; true = push the canopy entry
+function treeTick(o) {
+  const img = o.img, F = TREE_FRAME, h = F.hero, [vx, vy] = worldToView(o.x, o.y, o.z), t = G.t;
+  let fr = 0;
+  if (o._sw === undefined) o._sw = hash2(Math.floor(o.x * 7), Math.floor(o.y * 7), 77) < 0.25;
+  if (o._sw && h && Math.abs(vx - h[0]) < 190 && Math.abs(vy - h[1]) < 130 && F.n < TREE_SWAY_MAX) { F.n++; fr = gustFrame(o, t); }
+  const flip = o.flip !== !!o.pulled; o._fr = flip ? -fr : fr;
+  let cover = false;
+  if (h && F.hkey < o.key + 0.5) {
+    const b = img.cbox, X = Math.round(vx - o.ax), Y = Math.round(vy - o.ay);
+    const x0 = flip ? X + img.width - b[2] : X + b[0], x1 = flip ? X + img.width - b[0] : X + b[2];
+    cover = h[0] + 7 > x0 && h[0] - 7 < x1 && h[1] > Y + b[1] && h[1] - 32 < Y + b[3];
+  }
+  const want = cover ? TREE_FADE : 1, dt = o._ft == null ? 1 : t - o._ft;
+  o._ft = t;
+  if (o._fade == null || dt > 0.5 || dt < 0) o._fade = want;
+  else { const k = (1 - TREE_FADE) / TREE_FADE_S * dt; o._fade = o._fade < want ? Math.min(want, o._fade + k) : Math.max(want, o._fade - k); }
+  return (o._split = o._fade < 0.999);
+}
+// directional tree shadows (desktop): the tree's silhouette squashed to 0.4 in y, laid toward the viewer and skewed -30 deg
+// (down-left, the side the baked SW cliff wedges fall to), alpha 0.32; cached per sheet and baked into the static shadow tiles
+// below (0 live draws a frame). Phones keep the ellipse.
+const TREE_SHADOW = new Map(), TS_K = Math.tan(Math.PI / 6), TS_SY = 0.4;
+function treeShadowOf(img, ax, ay, flip) {
+  const key = flip ? 'f' : 'n'; let m = TREE_SHADOW.get(img); if (!m) TREE_SHADOW.set(img, m = {});
+  if (m[key]) return m[key];
+  const src = silhouette(flip ? flipH(img) : img, '#140828'), W = img.width, H = img.height, a = flip ? W - ax : ax;
+  const OX = Math.ceil(a + TS_K * TS_SY * ay) + 1, OY = 1, { c, x } = makeCanvas(W + TS_K * TS_SY * H + 3, TS_SY * H + 3);
+  x.imageSmoothingEnabled = false;
+  x.setTransform(1, 0, TS_K * TS_SY, -TS_SY, OX - a - TS_K * TS_SY * ay, OY + TS_SY * ay);
+  x.drawImage(src, 0, 0); x.setTransform(1, 0, 0, 1, 0, 0);
+  crisp(c, 60);
+  return (m[key] = { c, ox: OX, oy: OY });
+}
 // ===== static prop shadows, pre-rendered (§26.4 step 5) =================================================================
 // Every prop with a `shadow` radius used to cost one ellipse fill a frame (~150 in the Vale view, ~6 us each in the software
 // rasteriser). They never move, so they are rastered once into 256 px world-screen tiles (the same ellipse at the same whole-pixel
@@ -406,9 +457,10 @@ function shadowTiles(m) {
   if (S && S.ref === m.objects && S.len === m.objects.length) return S;
   const tiles = new Map();
   for (const o of m.objects) if (o.shadow) {
-    const sx = Math.round(isoX(o.x, o.y)), sy = Math.round(isoY(o.x, o.y, o.z)), rx = o.shadow + 1, ry = o.shadow * 0.45 + 1;
-    for (let ty = Math.floor((sy - ry) / SHADOW_T); ty <= Math.floor((sy + ry) / SHADOW_T); ty++) for (let tx = Math.floor((sx - rx) / SHADOW_T); tx <= Math.floor((sx + rx) / SHADOW_T); tx++) {
-      const k = tx + ',' + ty; let L = tiles.get(k); if (!L) tiles.set(k, L = { tx, ty, list: [] }); L.list.push({ o, sx, sy });
+    const sx = Math.round(isoX(o.x, o.y)), sy = Math.round(isoY(o.x, o.y, o.z)), ts = o.tree && !PHONE ? treeShadowOf(o.img, o.ax, o.ay, o.flip) : null;
+    const x0 = ts ? sx - ts.ox : sx - o.shadow - 1, x1 = ts ? x0 + ts.c.width : sx + o.shadow + 1, y0 = ts ? sy - ts.oy : sy - o.shadow * 0.45 - 1, y1 = ts ? y0 + ts.c.height : sy + o.shadow * 0.45 + 1;
+    for (let ty = Math.floor(y0 / SHADOW_T); ty <= Math.floor(y1 / SHADOW_T); ty++) for (let tx = Math.floor(x0 / SHADOW_T); tx <= Math.floor(x1 / SHADOW_T); tx++) {
+      const k = tx + ',' + ty; let L = tiles.get(k); if (!L) tiles.set(k, L = { tx, ty, list: [] }); L.list.push({ o, sx, sy, ts });
     }
   }
   return (m._shadowT = { ref: m.objects, len: m.objects.length, tiles, cache: new Map(), frame: 0 });
@@ -426,7 +478,10 @@ function drawPropShadows(ctx, m) {
         S.cache.set(k, c);
       } else c.x.clearRect(0, 0, SHADOW_T, SHADOW_T);
       c.gone = gone; c.x.fillStyle = SHADOW_COL;
-      for (const e of L.list) if (!e.o.gone) { c.x.beginPath(); c.x.ellipse(e.sx - tx * SHADOW_T, e.sy - ty * SHADOW_T, e.o.shadow, e.o.shadow * 0.45, 0, 0, Math.PI * 2); c.x.fill(); }
+      for (const e of L.list) if (!e.o.gone) {
+        if (e.ts) { c.x.globalAlpha = 0.32; c.x.drawImage(e.ts.c, e.sx - e.ts.ox - tx * SHADOW_T, e.sy - e.ts.oy - ty * SHADOW_T); c.x.globalAlpha = 1; continue; }
+        c.x.beginPath(); c.x.ellipse(e.sx - tx * SHADOW_T, e.sy - ty * SHADOW_T, e.o.shadow, e.o.shadow * 0.45, 0, 0, Math.PI * 2); c.x.fill();
+      }
     }
     c.last = S.frame;
     ctx.drawImage(c.c, tx * SHADOW_T - x0, ty * SHADOW_T - y0);
@@ -756,6 +811,7 @@ function drawItem(ctx, it, lights) {
     if (it.fish) { drawFishSpot(ctx, it, vx, vy, lights); return; }
     let img = it.img;
     if (it.grass) img = ART.grass[Math.sin(G.t * 1.8 + it.sway) > 0 ? 1 : 0];
+    else if (it.tree && img.swayF) img = it._split ? img.trunk : img.swayF[(it._fr | 0) + 1];   // §29 G2: trunk only while the canopy is split off
     if (it.beam) { drawSunbeam(ctx, vx, vy, it); return; }
     // mirrored: the cached flipped canvas at the mirrored spot (the same pixels as the old save / scale(-1, 1) / restore, ~3x cheaper a call)
     if (it.flip !== !!it.pulled) ctx.drawImage(flipOf(img), Math.round(vx) + Math.round(it.ax) - img.width, Math.round(vy - it.ay));
@@ -766,6 +822,13 @@ function drawItem(ctx, it, lights) {
       if (Math.random() < 0.15) addPart({ x: it.x + frand(-0.3, 0.3), y: it.y + frand(-0.3, 0.3), z: it.z + 1, vx: 0, vy: 0, vz: 1.2, life: 1, t: 0, col: '#9ef0ff', grav: 0, size: 1, glow: true });
     }
     return;
+  }
+  if (it.kind === 'canopy') {   // §29 G2: the canopy over the hero (key = trunk + 0.5), at its fade alpha
+    const o = it.o, img = o.img.canopyF[(o._fr | 0) + 1], [vx, vy] = worldToView(o.x, o.y, o.z);
+    ctx.globalAlpha = o._fade;
+    if (o.flip !== !!o.pulled) ctx.drawImage(flipOf(img), Math.round(vx) + Math.round(o.ax) - img.width, Math.round(vy - o.ay));
+    else ctx.drawImage(img, Math.round(vx - o.ax), Math.round(vy - o.ay));
+    ctx.globalAlpha = 1; return;
   }
   if (it.kind === 'portal') { drawPortal(ctx, it, lights); return; }
   if (it.kind === 'fall') { drawFall(ctx, it.f, false); return; }
