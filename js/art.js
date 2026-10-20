@@ -95,7 +95,8 @@ const HEAD_OVERLAYS = {
 // buildPlayerSprites(equip) takes the equipped gear INSTANCES ({ slot: { base, rarity, sockets, tempered, implicit } }, items.js, all
 // EQUIP_SLOTS keys) or plain family ids, and returns the p.spr shape the game and HUD read ({front, back, frontF, backF, white,
 // portrait, w, h, ox}) plus `hero` (the HERO.build result: 7 cached frames per view, a held weapon and rim layers) and `sig`.
-// Cost: ~10 ms once per equip change (renderFrame x 14 + the rim layers); drawPlayer (render.js) only blits cached canvases.
+// Cost: ~10 ms once per equip change (renderFrame x 14); the rim layers (~25 ms more) are built one per frame afterwards (HERO.warmStep, from
+// drawPlayer); drawPlayer itself only blits cached canvases (~25-70 us a frame).
 // Item rules: the family is the item's VARIANT / suit (hero.js keys: sword staff bow, warden dreamweave stalker, ...), the tier is
 // the BASES tier index 0..4 (trinkets 0..2, hero.js wants 1..3), a belt's family is its BASE id (its colour), never the variant.
 function heroSig(equip) {          // cheap (per frame) change detector; the key of what is drawn, not of what is rolled
@@ -135,8 +136,7 @@ function buildPlayerSprites(equip) {
   let top = 'common';                                                                     // best rarity worn: drives the aura, light and particles
   for (const k of HERO_SLOTS) { const v = equip[k]; if (v && typeof v !== 'string' && RARITY[v.rarity] && RARITY[v.rarity].i > RARITY[top].i) top = v.rarity; }
   out.top = top === 'common' ? null : top;
-  HERO.prewarm(hero);
-  return out;
+  return out;                                                                             // rim layers warm up a few per frame (HERO.warmStep, from drawPlayer)
 }
 
 // the M1 sprite builder: kept only as the fallback for pages that load art.js without hero.js

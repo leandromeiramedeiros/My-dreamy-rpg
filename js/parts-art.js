@@ -4,7 +4,11 @@
 //
 //   look = TEMPLATE (one silhouette per variant / suit, ASCII) + TIER TABLE (5 rows: a palette + a few part swaps)
 //
-// An artist adds a variant by writing ONE template and ONE tier table; stamps (guards, pommels, pauldrons...) are shared in LIB.
+// An artist adds a variant by writing ONE template and ONE tier table; stamps (guards, pommels, pauldrons...) are shared in LIB (or local to the
+// set: SET.parts). Slot markers live in the template; a TIER names which stamp fills each slot, so a tier = a palette + 2-3 part swaps.
+// API: PARTS_ART.weapon(family, tier, demo, pad, growCap) -> { w, h, cells, grip, tip, sockets, aim, light }   (hero.js held sprite, icons.js)
+//      PARTS_ART.armour(slot, family, tier, view) -> { layers, sockets }   (head / chest / boots, per view)   PARTS_ART.compile(...) = the raw result.
+//      PARTS_ART.KITS.<slot>.<family> = the live sets;  PARTS_ART.DEMO.weapon.rapier = the planned-variant demo (preview only).
 // Pure data + grid maths: no canvas, no DOM. hero.js paints the compiled cells (HERO, via a painter), icons.js reads the same cells,
 // tools/hero-preview.html shows every set. Needs nothing else (a fake `document` is not even required to compile in node).
 //
@@ -27,7 +31,8 @@
 //           sway:y0 }                           cells at y>=y0 shift by the frame's skirt sway
 // TIER  = { pal:{...}, shape:'broad', grow:n, parts:{ guard:'cross', pommel:'orb' }, light:'#8ad8ff' }
 //           pal   overrides SET.pal for this tier;   shape   picks LAYER.shapes[shape];   grow  repeats LAYER.shapes[..].grow block n extra times
-//           parts slot -> stamp name (omitted slot = nothing);   light = a glow colour (T4+ weapons: hero.js adds a light)
+//           parts slot -> stamp name (an omitted slot uses the stamp named 'default' if the set / LIB has one, else nothing);
+//           light = a glow colour (T4+ weapons: hero.js adds a light)
 // STAMP = { at:[ax,ay], rows:[...] }        painted so that cell (ax,ay) lands on the slot's digit marker; '.' leaves the cell alone, '!' erases
 //
 // CELLS (one char each):  .  empty     1-9  slot marker (a stamp goes here)     @  hand grip anchor (a 'g' cell)

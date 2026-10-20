@@ -35,7 +35,7 @@ const EQUIP = (kit, sockets) => `(() => { const K = ${JSON.stringify(kit)}, p = 
 const POSE = pose => `(() => { const p = G.player; p.swing = null; p.castT = 0; p.moving = false; p.back = false;
   const ps = [isoX(p.x, p.y) - camX + RW / 2, isoY(p.x, p.y, p.z) - camY + RH / 2];
   if ('${pose}' === 'walk') { p.moving = true; p.walkT = 0.25; }
-  if ('${pose}' === 'attack') { G.mouse.x = ps[0] + 60; G.mouse.y = ps[1] - 20; p.swing = { t: 0.08, dur: 0.4, arc: 2.4, dir: 1 }; }
+  if ('${pose}' === 'attack') { G.mouse.x = ps[0] + 60; G.mouse.y = ps[1] - 4; p.swing = { t: 0.08, dur: 0.4, arc: 2.4, dir: 1 }; }
   if ('${pose}' === 'back') { G.mouse.x = ps[0] + 20; G.mouse.y = ps[1] - 70; p.back = true; }
   if ('${pose}' === 'left') { G.mouse.x = ps[0] - 60; G.mouse.y = ps[1] + 10; }
   if ('${pose}' === 'idle') { G.mouse.x = ps[0] + 60; G.mouse.y = ps[1] + 10; }
@@ -43,7 +43,7 @@ const POSE = pose => `(() => { const p = G.player; p.swing = null; p.castT = 0; 
 // enemies at scene-pixel offsets from the hero: [type, sx, sy, face]
 const LINEUP = list => `(() => { const p = G.player; G.enemies.length = 0; const out = [];
   for (const [t, sx, sy, face] of ${JSON.stringify(list)}) { const x = p.x + sx / 32 + sy / 16, y = p.y + sy / 16 - sx / 32, e = spawnEnemy(t, x, y, 0); if (!e) { out.push('?' + t); continue; }
-    e.z = tileH(G.map, x, y); e.stunT = 9999; e.spawnT = 0; e.face = face || 1; e.under = false; out.push(t); }
+    e.z = tileH(G.map, x, y); e.stunT = 9999; e.spawnT = 0; e.face = face || 1; e.under = false; e.asleep = false; out.push(t); }
   G.banner = null; G.boss = null; G.hitstopT = 3; return out; })()`;
 
 (async () => {
@@ -61,7 +61,7 @@ const LINEUP = list => `(() => { const p = G.player; G.enemies.length = 0; const
     try { await fn(page); } finally { await page.close(); }
   }
   const want = n => !only || n.includes(only);
-  const HERO = { x: 380, y: 170, width: 200, height: 130 };       // the hero is at the centre of the 960x540 view
+  const HERO = { x: 380, y: 190, width: 200, height: 130 };       // the hero is at the centre of the 960x540 view
   for (const name of ['t1', 't5']) {
     if (!want('hero-' + name)) continue;
     await game(1, async page => {
@@ -80,14 +80,14 @@ const LINEUP = list => `(() => { const p = G.player; G.enemies.length = 0; const
   }
   if (want('enemies-hero-bosses')) await game(2, async page => {
     await page.evaluate(EQUIP(KITS.t5, GEMS.t5));
-    console.log(await page.evaluate(LINEUP([['gloomslime', -52, 14, 1], ['mountaintroll', 66, 10, -1], ['mossjaw', -120, -30, 1], ['bramblehorn', 138, -34, -1]])));
+    console.log(await page.evaluate(LINEUP([['mossjaw', -168, 14, 1], ['gloomslime', 14, 34, 1], ['mountaintroll', 62, 14, -1], ['bramblehorn', 166, 22, -1]])));
     await page.evaluate(POSE('idle')); await wait(500);
     await page.screenshot({ path: path.join(OUT, 'enemies-hero-bosses.png'), clip: { x: 0, y: 60, width: 960, height: 420 } });
   });
   if (want('enemies-all')) await game(2, async page => {
     await page.evaluate(EQUIP(KITS.t5, GEMS.t5));
-    console.log(await page.evaluate(LINEUP([['gloomslime_small', -36, 20, 1], ['gloomslime', -76, 14, 1], ['shadehound', -120, 18, 1], ['brambleshaman', -166, 10, 1],
-      ['dreammoth', -200, -26, 1], ['thornbackboar', 52, 20, -1], ['ogre', 100, 16, -1], ['mountaintroll', 156, 20, -1], ['mossjaw', -100, -52, 1], ['bramblehorn', 120, -58, -1]])));
+    console.log(await page.evaluate(LINEUP([['gloomslime_small', -34, 30, 1], ['gloomslime', -70, 34, 1], ['shadehound', -112, 36, 1], ['brambleshaman', -158, 34, 1],
+      ['dreammoth', -200, 30, 1], ['thornbackboar', 52, 38, -1], ['ogre', 100, 34, -1], ['mountaintroll', 156, 38, -1], ['mossjaw', -150, -26, 1], ['bramblehorn', 156, -14, -1]])));
     await page.evaluate(POSE('idle')); await wait(500);
     await page.screenshot({ path: path.join(OUT, 'enemies-all.png'), clip: { x: 0, y: 40, width: 960, height: 440 } });
   });

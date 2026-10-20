@@ -19,7 +19,7 @@ const ROOT = path.join(__dirname, '..');
 // after items.js and js/sfxdata.js after maps.js. js/music.js is appended when index.html does not load it.
 function loadOrder() {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-  const names = [...html.matchAll(/<script\s+src="js\/([a-z0-9_]+)\.js"/g)].map((m) => m[1]);
+  const names = [...html.matchAll(/<script\s+src="js\/([a-z0-9_-]+)\.js"/g)].map((m) => m[1]);
   const insertAfter = (list, after, name) => {
     if (!list.includes(name)) list.splice(list.indexOf(after) + 1, 0, name);
   };

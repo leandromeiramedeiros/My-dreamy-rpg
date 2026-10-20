@@ -732,6 +732,7 @@ function drawPlayer(ctx, p, lights) {
     ctx.save(); ctx.translate(Math.round(vx), Math.round(vy)); ctx.rotate(Math.PI / 2 * Math.min(1, G.deadT * 2)); ctx.drawImage(spr, -spr.width / 2, 1 - spr.height); ctx.restore(); ctx.globalAlpha = 1; return;
   }
   const H = p.spr.hero, t = G.t, flip = p.face < 0, view = p.back ? 'back' : 'front';
+  if (!H._warm) HERO.warmStep(H);                                                   // build the cached rim layers a few frames at a time
   const w = item('weapon', p.gear.weapon), pose = WEAPON_POSE[w.kind] || 'swing';
   const atk = !!(p.swing || p.castT > 0 || p.spin > 0 || (G.mouse.down && pose === 'aim'));
   const fi = atk ? HERO.ATTACK : p.dash ? 2 + (Math.floor(t * 18) & 3) : p.moving ? 2 + (Math.floor(p.walkT * 8) & 3) : (Math.sin(t * 2.5) > 0.3 ? 1 : 0);

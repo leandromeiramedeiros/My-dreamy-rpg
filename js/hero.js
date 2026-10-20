@@ -1,7 +1,8 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// HERO — layered paper-doll hero (24x32 px frames), data-driven gear families x 5 tiers.
-// Self-contained: needs only util.js (makeCanvas, hexToRgb, clamp, frand). Exposes one global: HERO.
+// HERO — layered paper-doll hero (24x34 px frames: 24x32 design space + 2 px headroom), data-driven gear families x 5 tiers.
+// Needs util.js (makeCanvas, hexToRgb, clamp, frand, rgba, mixRgb) and js/parts-art.js (the parts kit: weapon / helm / chest / boots looks are
+// TEMPLATE + TIER TABLE data there, painted here). Exposes one global: HERO. Wired into the game by art.js buildPlayerSprites + render.js drawPlayer.
 //   HERO.build(look) -> { front:[idle0,idle1,walk0..3], back:[...], weapon, weaponGrip, weaponTip,
 //                         hand:{front:[{x,y}..],back:[..]}, anchors:{head,chest,boots,weapon}, ... }
 //   look = { head:{family,tier,gems}, chest:{..}, boots:{..}, weapon:{..}, hair?, skin? }  (any slot may be null)
@@ -11,8 +12,11 @@
 //     draws their rarityFx rim (call it AFTER drawHero: the rim lies on the torso). HERO.BELT_COLORS / ELEMENT_COLORS list the palettes.
 //   HERO.rarityFx, HERO.rarityColor(r,t), HERO.drawGlow(ctx,sprite,x,y,rarity,t),
 //   HERO.emit/stepParticles/drawParticles, HERO.drawHero(...), HERO.slotSprite(built,slot,view,frame)
-// Painting model: each layer paints 1-px rects through a painter `g` (shape / shaded-box helpers). Tiers are
-// additive detail passes (t>=1 trim, t>=2 gold, t>=3 big silhouette pieces, t>=4 ornate) over a palette ramp.
+//   HERO.rimsOf(b,view,fi) / weaponRimOf(b) / drawRim(ctx,layer,x,y,t) / drawAura / prewarm(b): the CACHED rarity rim path used in game
+//   (per-frame cost = a tinted blit per glowing rarity; drawGlow above is the slow path kept for previews). look.<slot>.rarity drives it;
+//   look.weapon.demo:true selects a PARTS_ART.DEMO set (the rapier) for previews.
+// Painting model: body, cape and trinkets paint 1-px rects through a painter `g` (shape / shaded-box helpers); weapons and armour paint the
+// compiled cells of their parts-kit set (paintKit): a layer = cells + an animation offset (bob / arm pair / leg pair / skirt sway).
 // ---------------------------------------------------------------------------
 const HERO = (function () {
   const FW = 24, FH = 34, TOP = 2;   // 2px headroom: layers paint in 24x32 design space, shifted down TOP
@@ -24,7 +28,6 @@ const HERO = (function () {
   const RP = c => ({ h: lt(c, 0.4), m: c, l: dk(c, 0.7), d: dk(c, 0.45) });   // 3-tone ramp + deep shade
   const GOLD = RP('#e8b830'), WHITE = RP('#e8eef8');
   const GEMC = { ruby: '#e02848', sapphire: '#3a78f0', emerald: '#30c860', topaz: '#f0b020', amethyst: '#a050e0', diamond: '#d8f4ff' };
-  const mapT = arr => arr.map(RP);
 
   // ---- painter -------------------------------------------------------------
   function mkG(ctx, back, W) {
@@ -105,8 +108,6 @@ const HERO = (function () {
   // ---- armour: painted from the parts kit (js/parts-art.js). PARTS_ART.armour(slot, family, tier, view) -> { layers, sockets }; each layer is a cell
   // list moved by an animation offset: attach 'bob' | 'arm' (a left / right pair: bob + lay / ray) | 'leg' (pair: -la / -ra) | 'none'; `sway` y0 shifts
   // the cells below it by the skirt sway. Rarity / tempered / gems are applied by the callers (withTemper, g.gems).
-  const M_STEEL = mapT(['#7d8494', '#98a6bd', '#b4c4dc', '#c9d6ec', '#dfe8f8']);   // kept for the cape trim colours below
-  const FUR = [{ h: '#f4f0e6', m: '#e4e0d4', l: '#bdb8a8' }][0];
   function paintKit(g, P, kit) {
     for (const L of kit.layers) {
       const n = L.pair ? 2 : 1;
@@ -240,6 +241,8 @@ const HERO = (function () {
     return { c, grip: kit.grip, tip: kit.tip, aim: kit.aim, light: kit.light };
   }
 
+  // (tools/balsim.js loads every index.html script it can in a vm, without parts-art.js: load-time code must not need PARTS_ART)
+  const kitFamilies = k => (typeof PARTS_ART !== 'undefined' ? PARTS_ART.families(k) : []);
   const cache = new Map();
   function build(look) {
     look = look || {};
@@ -404,12 +407,16 @@ const HERO = (function () {
     ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = sv * Math.min(1, a); ctx.drawImage(tc.c, x - PAD, y - PAD);
     ctx.globalAlpha = sv; ctx.globalCompositeOperation = sc;
   }
-  // build every rim layer a build can ask for (both views, 7 frames, the weapon): call once after build(), off the frame loop
-  function prewarm(b) {
-    if (b._warm) return; b._warm = true;
-    for (const v of ['front', 'back']) for (let i = 0; i < FR.length; i++) rimsOf(b, v, i);
-    weaponRimOf(b);
+  // Time-sliced warm-up: build ONE missing rim layer per call (both views x 7 frames, then the weapon's), so an equip change costs the
+  // ~10 ms build plus ~2 ms on each of the next ~15 frames instead of one 35 ms hitch. drawPlayer calls it each frame until it returns true;
+  // a rim asked for before its turn is simply built on demand (rimsOf is lazy). HERO.prewarm(b) does it all at once (previews, tools).
+  function warmStep(b) {
+    if (b._warm) return true;
+    const i = b._wi | 0, n = FR.length * 2;
+    if (i < n) { rimsOf(b, i < FR.length ? 'front' : 'back', i % FR.length); b._wi = i + 1; return false; }
+    weaponRimOf(b); b._warm = true; return true;
   }
+  function prewarm(b) { while (!warmStep(b)); }
   // mythic aura (radial haze + orbiting stars) around a w x h box at x,y; a handful of fillRects, mythic only
   function drawAura(ctx, x, y, w, h, rarity, t) {
     const f = rarityFx[rarity]; if (!f || !f.aura) return;
@@ -475,8 +482,8 @@ const HERO = (function () {
   }
 
   return {
-    FW, FH, TOP, FRAMES: FR.length, ATTACK: 6, REST_ANGLE: REST, build, drawHero, slotSprite, rarityFx, rarityColor, drawGlow, emit, stepParticles, drawParticles, drawTrinketGlow, rimsOf, weaponRimOf, drawRim, drawAura, prewarm, BELT_COLORS: BELTC, ELEMENT_COLORS: ELC,
-    FAMILIES: { head: PARTS_ART.families('head'), chest: PARTS_ART.families('chest'), boots: PARTS_ART.families('boots'), weapon: PARTS_ART.families('weapon') },
+    FW, FH, TOP, FRAMES: FR.length, ATTACK: 6, REST_ANGLE: REST, build, drawHero, slotSprite, rarityFx, rarityColor, drawGlow, emit, stepParticles, drawParticles, drawTrinketGlow, rimsOf, weaponRimOf, drawRim, drawAura, warmStep, prewarm, BELT_COLORS: BELTC, ELEMENT_COLORS: ELC,
+    FAMILIES: { head: kitFamilies('head'), chest: kitFamilies('chest'), boots: kitFamilies('boots'), weapon: kitFamilies('weapon') },
     GEMS: Object.keys(GEMC), RARITIES: ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'],
     gemColor: n => GEMC[n]
   };

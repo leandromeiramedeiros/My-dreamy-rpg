@@ -38,7 +38,7 @@ const ctx = {
 ctx.window = ctx;
 vm.createContext(ctx);
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-const order = [...html.matchAll(/<script\s+src="js\/([a-z0-9_]+)\.js"/g)].map(m => m[1]);
+const order = [...html.matchAll(/<script\s+src="js\/([a-z0-9_-]+)\.js"/g)].map(m => m[1]);
 const LOAD = order.slice(0, order.indexOf('game') + 1).filter(f => !['sprites', 'art', 'enemyart'].includes(f));
 if (!LOAD.includes('itemdata')) LOAD.splice(LOAD.indexOf('items') + 1, 0, 'itemdata');   // CAPS (items v2 data)
 for (const f of LOAD) vm.runInContext(fs.readFileSync(path.join(ROOT, 'js', f + '.js'), 'utf8'), ctx, { filename: 'js/' + f + '.js' });
