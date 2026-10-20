@@ -90,6 +90,7 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
   Sonnet art: wire hero.js + icons.js, enemy rescale, parts-kit system proven on existing 5 weapons / 4 suits (no new variants) ·
   Sonnet level: Act I trinket sources (Vale chest ring, Bramblehorn chest amulet, first vault belt).
 * Step 3 — Opus perf pass on phone after art lands. Non-goals: Elder Stone panel (M5), new variants (M4+), Pip's Lantern (M7).
+* After step 2: Opus boss lane — §26.1 multi-bar phases (Mossjaw 2, Bramblehorn 3) + §26.2 gear loop (balsim −1 tier 3–4/6, boss-door ilvl hint, elite pockets). Opus perf lane — §26.4 after art lands; ask client for a real-phone `?perf=1` reading.
 * M2b note: Opus lowered boss HP (Mossjaw 8560→6000, Bramblehorn 21470→17200) so an under-geared melee hero wins;
   reference-gear fights now run short (Mossjaw ~50 s vs 60–90 target). Revisit after items v2 changes the power curve.
 

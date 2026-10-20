@@ -1571,3 +1571,62 @@ Morrow keeps his own map.
 **Flags:**
 * If the client later wants *more* maps at this size, the art lane breaks first.
 * Eight full rasters must never be resident at once. The chunk cache is mandatory on phones.
+
+## 26. Multi-bar boss phases, the gear loop, skill-variant legendaries (client request; expert-designed; director-approved)
+
+### 26.1 Boss phases: one HP bar per phase
+* **Bar count:** mini-boss 2, guardian 3, act boss 4, Morrow 5. Each bar is its own pool.
+  * Damage clamps at the end of the bar, so one burst can't skip a phase.
+  * Between bars there is a 1.2–1.8 s transition with the onEnter telegraph.
+  * The HUD shows a segmented bar.
+* **Each new phase turns three knobs:**
+  1. One new move.
+  2. One existing move gains a *cunning* form: a feint, a delayed second hit, or aim at the hero's predicted position.
+  3. More aggression: `windMul` goes 1.0 → 0.85 → 0.7 → … and the gaps between moves get shorter.
+* **Fairness floors still apply:**
+  * Melee-range telegraphs keep a wind-up of at least ~0.55 s, so a 0.3 s reaction plus a sidestep fits.
+  * The 45 % hit cap (Story 30 %) and `bossFairness` stay.
+* **Harder through pattern, not numbers:**
+  * The §20 fight-length bands stay.
+  * Difficulty comes from the extra phases and the cunning forms.
+  * A Hard mode arrives later as an NG+ modifier.
+* **Engine:** `bosses.js` already supports `phases[].hpBelow / moves / onEnter / windMul`. The new work is the bar clamp,
+  the segmented bar, cunning move forms and data for every boss. Mossjaw (2 bars) and Bramblehorn (3 bars) are rebuilt first.
+
+### 26.2 The gear loop: farm until you can beat the boss
+* **The balsim live table target changes** (this reverses the M2b ruling that an under-geared hero must always win):
+  * at −1 gear tier: **3–4 / 6 wins**
+  * at reference gear: **6 / 6 wins**
+  * Red flags: a −1-tier win rate outside 3–4/6, or anything under 6/6 at reference. On Story, also 0/6 at −2 tiers.
+* **The boss door shows "Recommended ilvl N · yours M".** This is information, never a lock.
+* **Elite pockets:** each map has 2–3 near its boss. The first clear of each guarantees a Rare at or above (boss ilvl − 2).
+  This farming is optional and fits inside the 24-min map cap (about 6 min of it).
+* **Retries are cheap:** a shrine-to-boss warp makes a retry cost about 20 s, not a walk.
+* Caves, vaults and side sections are where the loop happens. They exist already, so the loop adds content density,
+  not map count.
+
+### 26.3 Skill-variant legendaries: borrowed verbs
+* A skill-variant legendary is an **aspect that swaps one skill slot for a sibling variant's skill in the same class**.
+  * Example: a Sword legendary carries the Rapier's Q while keeping the Sword's E and R.
+  * It reuses §23's cast functions, so it adds zero new casts against the 36 cap.
+  * It enables cross-variant builds.
+* **Count:** one per class, 5 in total, *inside* the 18-unique budget. They are the 5 world uniques of §19.5, found in
+  vaults or by fishing: discoveries, not boss drops.
+* **Balance:** the borrowed skill uses the host weapon's power (pp units), and its rune slot is locked while the legendary
+  is equipped.
+* They ship as each sibling variant lands (M4–M7).
+
+### 26.4 Mobile performance: stay on Canvas 2D (expert ruling)
+* **Why no engine switch:** every hitch found so far was algorithmic (the synchronous map build, a per-pixel moon
+  redraw), not a Canvas 2D ceiling. The file:// and no-build constraints plus the working codebase make a rewrite a
+  milestone-sized risk.
+* **Perf lane order:**
+  1. Measure on a real device, using an on-screen p95 readout behind `?perf=1`.
+  2. Split the play.js perf budget by phase: ground, entities, lights, bloom, HUD.
+  3. On phone, render at 0.5–0.75 DPR with smoothing off, then upscale.
+  4. Lights and bloom at quarter resolution with a light cap. On phone, a particle cap and frame-skip. No per-frame
+     allocations.
+  5. Static layers go to offscreen canvases (the same pattern as the cached hero).
+* **Switch criterion:** only if, after steps 1–5, a mid-range Android still shows p95 > 25 ms *and* the profile is
+  draw-call bound. Even then, swap only render.js's sprite path to a thin WebGL batcher behind the same draw API.
+  That is a renderer swap, never a game-engine switch.
