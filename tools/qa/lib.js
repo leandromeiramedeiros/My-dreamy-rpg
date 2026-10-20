@@ -130,6 +130,16 @@ function installHooks() {
     return o;
   };
   // mouse/display coordinate of a world point (display space = 960x540)
+  // TESTER ASSIST (logged as a finding every time): nudges a wedged hero to the nearest spot where the engine's own edge probes pass
+  Q.unwedge = () => {
+    const p = G.player, m = G.map, r = p.r * 0.8; let best = null, bd = 9;
+    for (let ang = 0; ang < 6.28; ang += 0.2) for (let d = 0.1; d <= 1.2; d += 0.1) {
+      const x = p.x + Math.cos(ang) * d, y = p.y + Math.sin(ang) * d, h = tileH(m, x, y);
+      if (walkable(m, x, y, h) && walkable(m, x + r, y, h) && walkable(m, x - r, y, h) && walkable(m, x, y + r, h) && walkable(m, x, y - r, h) && walkable(m, x + r * 1.5, y, h) && walkable(m, x - r * 1.5, y, h) && walkable(m, x, y + r * 1.5, h) && walkable(m, x, y - r * 1.5, h)) { if (d < bd) { bd = d; best = [x, y]; } }
+    }
+    if (best) { const from = [p.x, p.y]; p.x = best[0]; p.y = best[1]; return { from, to: best }; }
+    return null;
+  };
   Q.view = (x, y, z) => { const p = G.player; const v = worldToView(x, y, z == null ? p.z : z); return [v[0] * 2, v[1] * 2]; };
   Q.canvas = () => { const r = DISP.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, DW, DH }; };
   Q.objects = () => G.map.objects.filter(o => o.chest || o.lever || o.checkpoint || o.tablet || o.use || o.fish || o.barrier).map(o => ({ x: +o.x.toFixed(2), y: +o.y.toFixed(2), chest: !!o.chest && !o.opened, lever: !!o.lever, pulled: !!o.pulled, shrine: !!o.checkpoint, tablet: !!o.tablet, use: o.use ? o.use.kind : null, barrier: o.barrier || null, gid: o.gid || null, fish: !!o.fish, id: o.src && o.src.id, label: o.src && o.src.label, title: o.src && o.src.title, tier: o.src && o.src.tier }));
@@ -328,6 +338,11 @@ class Bot {
       this.stuckN++; this.posHist = []; g.stuckN = (g.stuckN || 0) + 1; this.out.maps[s.map].stuck++;
       if (g.stuckN === 3 || g.stuckN === 8) { const f = await this.shot('stuck'); this.out.stuck.push({ at: +this.el(), map: s.map, pos: [p.x, p.y], goal: g.name, shot: f, n: g.stuckN }); this.log('bot stuck', { pos: [p.x, p.y], goal: g.name, n: g.stuckN }); }
       this.pathCache = null;
+      if (g.stuckN >= 8 && g.stuckN % 4 === 0) {
+        const f = await this.shot('wedged');
+        const r = await this.page.evaluate(() => window.__qa.unwedge());
+        this.find('blocker', 'Hero is wedged: zero movement in all 8 directions and Dodge does not free it (needed a tester nudge)', { map: s.map, pos: [p.x, p.y], nudgedTo: r && r.to, goal: g.name, escape: 'only the pause menu TO HUB, or dying, would free a real player' }, f);
+      }
       // wiggle sideways
       const ang = Math.random() * 6.28; const [sx, sy] = Bot.scr(Math.cos(ang), Math.sin(ang)); await this.setMove(sx, sy); await sleep(300);
       if (g.stuckN >= 2) { await this.drv.dodge(sx, sy); this.log('unstick: dodge', { n: g.stuckN, pos: [p.x, p.y] }); }   // what a stuck human tries next

@@ -183,70 +183,203 @@ function surfaceColor(m, t, wx, wy, px, py) {
 }
 
 // ---- ground + slab + underside ------------------------------------------------
-function rasterGround(m) {
+// groundPrep(m): per raster column, from tile geometry (no pixels): the first / last surface row (top / edge), the
+// underside length, root strands and crystal spots. Every pixel is then a pure function of (px, py), so any rect of
+// the raster (a chunk band, or the whole thing for the editor) renders identically: rasterRect().
+const SLAB = 12;
+function groundPrep(m) {
+  if (m.gp) return m.gp;
   const th = m.theme, minSX = -m.H * 16, W = (m.W + m.H) * 16, GB = (m.W + m.H) * 8;
-  const SLAB = 12, H = GB + SLAB + th.underDepth + 60;
-  const pb = new PixBuf(W, H);
-  m.gox = minSX; m.goy = 0;
-  for (let py = 0; py < GB; py++) for (let px = 0; px < W; px++) {
-    const [wx, wy] = toWorld(px + minSX + 0.5, py + 0.5);
-    const tx = Math.floor(wx), ty = Math.floor(wy), t = typeAt(m, tx, ty);
-    if (!t) continue;
-    let c = surfaceColor(m, t, wx, wy, px, py);
-    if (t === 'w') c = mulRgb(c, 0.92);
-    pb.set(px, py, c);
+  const H = GB + SLAB + th.underDepth + 60;
+  const top = new Int32Array(W).fill(-1), edge = new Int32Array(W).fill(-1);
+  for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) {
+    if (!m.type[j][i]) continue;
+    const cx = (i - j) * 16 - minSX, a = Math.max(0, cx - 17), b = Math.min(W - 1, cx + 17);
+    for (let px = a; px <= b; px++) {
+      const k = (px + minSX + 0.5) / 16, lo = Math.max(2 * i - k, 2 * j + k), hi = Math.min(2 * i + 2 - k, 2 * j + 2 + k);
+      if (lo >= hi) continue;
+      const y0 = Math.ceil(8 * lo - 0.5), y1 = Math.ceil(8 * hi - 0.5) - 1;
+      if (y1 < y0) continue;
+      if (top[px] < 0 || y0 < top[px]) top[px] = y0;
+      if (y1 > edge[px]) edge[px] = y1;
+    }
   }
-  // front edge per column
-  const edge = new Int32Array(W).fill(-1);
-  for (let px = 0; px < W; px++) for (let py = GB - 1; py >= 0; py--) if (pb.a(px, py)) { edge[px] = py; break; }
   let firstPx = W, lastPx = 0;
   for (let px = 0; px < W; px++) if (edge[px] >= 0) { firstPx = Math.min(firstPx, px); lastPx = Math.max(lastPx, px); }
-  const cx = (firstPx + lastPx) / 2, hw = (lastPx - firstPx) / 2;
+  const cx = (firstPx + lastPx) / 2, hw = Math.max(1, (lastPx - firstPx) / 2);
+  const len = new Float32Array(W), bot = new Int32Array(W).fill(-1), root = new Float32Array(W);
   m.crystalSpots = [];
   for (let px = 0; px < W; px++) {
     const e = edge[px]; if (e < 0) continue;
-    const slope = (edge[Math.min(W - 1, px + 2)] - edge[Math.max(0, px - 2)]);
-    const lit = slope >= 0 ? 1 : 0.68;
-    const [wx, wy] = toWorld(px + minSX + 0.5, e - 0.5);
-    const edgeT = typeAt(m, Math.floor(wx), Math.floor(wy));
-    for (let d = 1; d <= SLAB; d++) {
-      let c;
-      if (edgeT === 'w') c = rampDither(th.water, 0.55 - d / SLAB * 0.2, px, e + d);
-      else if (d < 3 && isGrassy(edgeT)) c = th.grass[d === 1 ? 3 : 1];
-      else {
-        let v = (0.75 - d / SLAB * 0.35 + (vnoise(px * 0.2, d * 0.6, 40) - 0.5) * 0.3) * lit;
-        if ((d + Math.floor(vnoise(px * 0.08, 0, 41) * 3)) % 5 === 0) v -= 0.15;
-        c = rampDither(edgeT === 'x' || edgeT === 'r' || edgeT === 's' ? th.stone : th.earth, v, px, e + d);
-      }
-      pb.set(px, e + d, c);
-    }
-    // underside
     const s = Math.pow(Math.max(0, 1 - Math.abs(px - cx) / hw), 0.55);
     const k = Math.floor(px / 7), hk = hash2(k, 0, 78);
     const spike = hk > 0.55 ? (hk - 0.55) * 2.2 * 46 * Math.max(0, 1 - Math.abs((px % 7) - 3) / 3.6) : 0;
     const L = Math.max(2, th.underDepth * s * (0.62 + 0.55 * fbm(px * 0.025, 0, 3, 77)) + spike * s);
-    for (let d = 0; d < L; d++) {
-      const y = e + SLAB + 1 + d, t = d / L;
-      let v = (0.72 - t * 0.55) * lit + (fbm(px * 0.12, y * 0.035, 3, 79) - 0.5) * 0.4 + (vnoise(px * 0.6, 0, 80) - 0.5) * 0.2;
-      let c = rampDither(th.under, v, px, y);
-      c = mixRgb(c, th.haze, clamp(t * t * 0.75, 0, 0.75));
-      pb.set(px, y, c);
-    }
-    if (hash2(px, 0, 81) > 0.955 && edgeT !== 'w') {
-      const len = 8 + hash2(px, 1, 82) * 26;
-      for (let d = 0; d < len; d++) pb.set(px + Math.round(Math.sin(d * 0.3 + px) * 0.7), e + SLAB + d, mixRgb(th.root, th.haze, d / len * 0.5));
-    }
+    len[px] = L;
+    const [wx, wy] = toWorld(px + minSX + 0.5, e - 0.5), edgeT = typeAt(m, Math.floor(wx), Math.floor(wy));
+    if (hash2(px, 0, 81) > 0.955 && edgeT !== 'w') root[px] = 8 + hash2(px, 1, 82) * 26;
+    bot[px] = Math.ceil(e + SLAB + 1 + Math.max(L, root[px]));
     if (hash2(px, 2, 83) > 0.985 && L > 30) m.crystalSpots.push({ px, py: e + SLAB + L * (0.25 + hash2(px, 3, 84) * 0.35) });
   }
-  const can = pb.toCanvas();
-  const cx2 = can.getContext('2d');
-  for (const s of m.crystalSpots) {
-    const img = m.themeId === 'ruins' ? ART.crystalViolet : ART.crystal;
-    cx2.save(); cx2.translate(s.px, s.py); cx2.scale(1, -1); cx2.drawImage(img, -8, -22); cx2.restore();
-    m.lights.push({ sx: s.px + minSX, sy: s.py + 8, r: 46, col: m.themeId === 'ruins' ? '#b36bff' : '#7fd2ff', a: 0.75 });
-  }
-  m.ground = can;
+  for (const s of m.crystalSpots) m.lights.push({ sx: s.px + minSX, sy: s.py + 8, r: 46, col: m.themeId === 'ruins' ? '#b36bff' : '#7fd2ff', a: 0.75 });
+  m.gox = minSX; m.goy = 0;
+  return (m.gp = { W, H, GB, minSX, top, edge, len, bot, root });
 }
+const isGutter = (m, x, y) => !!(m.gutter && x >= 0 && y >= 0 && x < m.W && y < m.H && m.gutter[y * m.W + x]);
+// a gutter pixel: 'v' = a chasm whose north lip shows a cliff face, 'k' = darkness
+function gutterColor(m, wx, wy, px, py) {
+  const th = m.theme, g = m.gutter[Math.floor(wy) * m.W + Math.floor(wx)];
+  if (g === 1) for (let d = 0.2; d <= 1.6; d += 0.2) {
+    const t = typeAt(m, Math.floor(wx - d), Math.floor(wy - d));
+    if (t) { const v = 0.62 - d * 0.36 + (vnoise(px * 0.3, py * 0.15, 47) - 0.5) * 0.3; return mulRgb(rampDither(t === 'x' || t === 'r' || t === 's' ? th.stone : th.earth, v, px, py), Math.max(0.25, 1 - d * 0.45)); }
+  }
+  return mulRgb(th.under[0], 0.35 + hash2(px, py, 48) * 0.08);
+}
+// render raster rect [x0, x0 + w) x [y0, y0 + h) into `out`, an ImageData whose pixel (0, 0) is raster (ox, oy)
+function rasterRect(m, out, ox, oy, x0, y0, w, h) {
+  const th = m.theme, G0 = groundPrep(m), { W, GB, minSX, top, edge, len, root } = G0, d = out.data, ow = out.width, oh = out.height;
+  const put = (px, py, c) => {
+    const x = px - ox, y = py - oy; if (x < 0 || y < 0 || x >= ow || y >= oh) return;
+    const i = (y * ow + x) * 4; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255;
+  };
+  const xa = Math.max(0, x0), xb = Math.min(W, x0 + w), y1 = y0 + h;
+  for (let py = y0; py < Math.min(y1, GB); py++) for (let px = xa; px < xb; px++) {
+    if (top[px] < 0 || py < top[px] || py > edge[px]) continue;
+    const [wx, wy] = toWorld(px + minSX + 0.5, py + 0.5);
+    const tx = Math.floor(wx), ty = Math.floor(wy), t = typeAt(m, tx, ty);
+    if (!t) { if (isGutter(m, tx, ty)) put(px, py, gutterColor(m, wx, wy, px, py)); continue; }
+    let c = surfaceColor(m, t, wx, wy, px, py);
+    if (t === 'w') c = mulRgb(c, 0.92);
+    put(px, py, c);
+  }
+  // front edge per column: slab, underside, root strands (roots spill one column either side)
+  for (let px = Math.max(0, xa - 1); px < Math.min(W, xb + 1); px++) {
+    const e = edge[px]; if (e < 0 || e + 1 >= y1 || G0.bot[px] < y0) continue;
+    const slope = (edge[Math.min(W - 1, px + 2)] - edge[Math.max(0, px - 2)]);
+    const lit = slope >= 0 ? 1 : 0.68;
+    const [wx, wy] = toWorld(px + minSX + 0.5, e - 0.5);
+    const edgeT = typeAt(m, Math.floor(wx), Math.floor(wy)), inX = px >= xa && px < xb;
+    if (inX) {
+      for (let dd = 1; dd <= SLAB; dd++) {
+        const y = e + dd; if (y < y0 || y >= y1) continue;
+        let c;
+        if (edgeT === 'w') c = rampDither(th.water, 0.55 - dd / SLAB * 0.2, px, y);
+        else if (dd < 3 && isGrassy(edgeT)) c = th.grass[dd === 1 ? 3 : 1];
+        else {
+          let v = (0.75 - dd / SLAB * 0.35 + (vnoise(px * 0.2, dd * 0.6, 40) - 0.5) * 0.3) * lit;
+          if ((dd + Math.floor(vnoise(px * 0.08, 0, 41) * 3)) % 5 === 0) v -= 0.15;
+          c = rampDither(edgeT === 'x' || edgeT === 'r' || edgeT === 's' ? th.stone : th.earth, v, px, y);
+        }
+        put(px, y, c);
+      }
+      const L = len[px], ua = Math.max(0, y0 - (e + SLAB + 1)), ub = Math.min(L, y1 - (e + SLAB + 1));
+      for (let dd = ua; dd < ub; dd++) {
+        const y = e + SLAB + 1 + dd, t = dd / L;
+        let v = (0.72 - t * 0.55) * lit + (fbm(px * 0.12, y * 0.035, 3, 79) - 0.5) * 0.4 + (vnoise(px * 0.6, 0, 80) - 0.5) * 0.2;
+        let c = rampDither(th.under, v, px, y);
+        c = mixRgb(c, th.haze, clamp(t * t * 0.75, 0, 0.75));
+        put(px, y, c);
+      }
+    }
+    const rl = root[px];
+    for (let dd = 0; dd < rl; dd++) { const y = e + SLAB + dd; if (y >= y0 && y < y1) put(px + Math.round(Math.sin(dd * 0.3 + px) * 0.7), y, mixRgb(th.root, th.haze, dd / rl * 0.5)); }
+  }
+}
+function drawCrystals(m, ctx, x0, y0, w, h) {
+  const img = m.themeId === 'ruins' ? ART.crystalViolet : ART.crystal;
+  for (const s of m.crystalSpots) {
+    if (s.px + 12 < x0 || s.px - 12 > x0 + w || s.py + 26 < y0 || s.py - 4 > y0 + h) continue;
+    ctx.save(); ctx.translate(s.px - x0, s.py - y0); ctx.scale(1, -1); ctx.drawImage(img, -8, -22); ctx.restore();
+  }
+}
+// the editor's (and tests') full raster: m.ground at (m.gox, m.goy)
+function rasterGround(m) {
+  const g = groundPrep(m), img = new ImageData(g.W, g.H);
+  rasterRect(m, img, 0, 0, 0, 0, g.W, g.H);
+  const { c, x } = makeCanvas(g.W, g.H); x.putImageData(img, 0, 0);
+  drawCrystals(m, x, 0, 0, g.W, g.H);
+  m.ground = c;
+}
+
+// ===== chunk cache (game) =====================================================================================
+// chunk index = cj * nx + ci over the raster; CHUNK.cache: key 'map|idx' -> { m, idx, c, last }; LRU by `last`
+// (the CHUNK.frame it was last drawn). CHUNK.jobs: partial builds { m, idx, img, row, cols } advanced in row bands.
+function chunkGrid(m) {
+  if (m.cg) return m.cg;
+  const g = groundPrep(m), S = CHUNK.size, nx = Math.ceil(g.W / S), ny = Math.ceil(g.H / S);
+  const empty = new Uint8Array(nx * ny), cols = Array.from({ length: nx * ny }, () => []);
+  for (let cj = 0; cj < ny; cj++) for (let ci = 0; ci < nx; ci++) {
+    let any = false; const x0 = ci * S, y0 = cj * S;
+    for (let px = Math.max(0, x0 - 1); px < Math.min(g.W, x0 + S + 1) && !any; px++) if (g.top[px] >= 0 && g.top[px] < y0 + S && g.bot[px] >= y0) any = true;
+    empty[cj * nx + ci] = any ? 0 : 1;
+  }
+  for (const c of m.columns) {
+    const ci = clamp(Math.floor((c.sx + 16 - g.minSX) / S), 0, nx - 1), cj = clamp(Math.floor((c.sy + 8) / S), 0, ny - 1);
+    c.chunk = cj * nx + ci; cols[c.chunk].push(c); empty[c.chunk] = 0;
+  }
+  return (m.cg = { S, nx, ny, empty, cols });
+}
+const chunkKey = (m, idx) => m.id + '|' + idx;
+const chunkResident = (m, idx) => CHUNK.cache.get(chunkKey(m, idx));
+// advance one chunk build by up to `ms` (Infinity = finish now); returns true once the chunk is resident
+function buildChunkStep(m, idx, ms) {
+  const key = chunkKey(m, idx); if (CHUNK.cache.has(key)) return true;
+  const cg = chunkGrid(m), S = cg.S, ci = idx % cg.nx, cj = (idx / cg.nx) | 0, t0 = performance.now();
+  let job = CHUNK.jobs.get(key);
+  if (!job) { job = { m, idx, img: new ImageData(S, S), row: 0, col: 0 }; CHUNK.jobs.set(key, job); }
+  job.touch = CHUNK.frame;
+  const BAND = PHONE ? 16 : 8;
+  while (job.row < S) {
+    rasterRect(m, job.img, ci * S, cj * S, ci * S, cj * S + job.row, S, Math.min(BAND, S - job.row));
+    job.row += BAND;
+    if (performance.now() - t0 > ms) return false;
+  }
+  if (!job.c) {
+    const { c, x } = makeCanvas(S, S); x.putImageData(job.img, 0, 0); drawCrystals(m, x, ci * S, cj * S, S, S);
+    job.c = c; job.img = null;
+  }
+  const cols = cg.cols[idx];
+  while (job.col < cols.length) { const k = cols[job.col++]; if (!k.img) k.img = rasterColumn(m, k.i, k.j).img; if (performance.now() - t0 > ms) return false; }
+  CHUNK.jobs.delete(key);
+  CHUNK.cache.set(key, { m, idx, c: job.c, last: CHUNK.frame }); CHUNK.built++;
+  chunkEvict(m);
+  return true;
+}
+// LRU across every map; chunks of the current map drawn this frame are never evicted
+function chunkEvict(cur) {
+  while (CHUNK.cache.size > CHUNK.max) {
+    let worst = null;
+    for (const [k, ch] of CHUNK.cache) {
+      if (ch.m === cur && ch.last >= CHUNK.frame - 1) continue;   // drawn this frame or the last one: visible
+      if (!worst || (ch.m !== cur) > (worst.m !== cur) || ((ch.m !== cur) === (worst.m !== cur) && ch.last < worst.last)) worst = Object.assign({ k }, ch);
+    }
+    if (!worst) break;
+    const ch = CHUNK.cache.get(worst.k); CHUNK.cache.delete(worst.k); CHUNK.evicted++;
+    ch.c.width = 0;
+    for (const k of chunkGrid(ch.m).cols[ch.idx]) k.img = null;   // the chunk's columns go with it
+  }
+}
+// cheap 1/4-res stand-in drawn under chunks that are still in the queue (flat tile colours, slab, underside)
+function groundPreview(m) {
+  if (m.preview) return m.preview;
+  const g = groundPrep(m), th = m.theme, Q = 4, w = Math.ceil(g.W / Q), h = Math.ceil(g.H / Q), img = new ImageData(w, h), d = img.data;
+  const pal = { g: th.grass[3], f: th.grass[4], d: th.grass[1], p: th.path[2], w: th.water[3], b: th.wood[2], s: th.stone[2], x: th.stone[2], r: th.stone[1], pillar: th.stone[3] };
+  for (let qy = 0; qy < h; qy++) for (let qx = 0; qx < w; qx++) {
+    const px = qx * Q + 2, py = qy * Q + 2; if (px >= g.W) continue;
+    const e = g.edge[px]; if (e < 0 || py < g.top[px]) continue;
+    let c = null;
+    if (py <= e) { const [wx, wy] = toWorld(px + g.minSX + 0.5, py + 0.5), tx = Math.floor(wx), ty = Math.floor(wy), t = typeAt(m, tx, ty); c = t ? pal[t] || th.grass[3] : isGutter(m, tx, ty) ? mulRgb(th.under[0], 0.4) : null; }
+    else if (py <= e + SLAB) c = th.earth[2];
+    else if (py <= e + SLAB + g.len[px]) c = mixRgb(th.under[2], th.haze, clamp((py - e - SLAB) / g.len[px], 0, 0.75));
+    if (!c) continue;
+    const i = (qy * w + qx) * 4; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255;
+  }
+  const { c, x } = makeCanvas(w, h); x.putImageData(img, 0, 0);
+  return (m.preview = c);
+}
+// chunk index under a world-screen point (sx, sy)
+function chunkAt(m, sx, sy) { const cg = chunkGrid(m), g = m.gp; return clamp(Math.floor((sx - g.minSX) / cg.S), 0, cg.nx - 1) + clamp(Math.floor(sy / cg.S), 0, cg.ny - 1) * cg.nx; }
+function ensureChunkAt(m, x, y) { const idx = chunkAt(m, isoX(x, y), isoY(x, y, tileH(m, x, y))); if (!chunkGrid(m).empty[idx]) buildChunkStep(m, idx, Infinity); return idx; }
 
 // ---- elevated tiles become depth-sorted columns ----------------------------
 function rasterColumn(m, i, j) {
@@ -288,22 +421,81 @@ function rasterColumn(m, i, j) {
 }
 
 function finalizeMap(m) {
-  rasterGround(m);
+  const eager = typeof window !== 'undefined' && window.EDITOR_MODE;
+  groundPrep(m);
+  if (eager) rasterGround(m);
   for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) {
     if (!m.type[j][i]) continue;
-    if (m.h[j][i] > 0) m.columns.push(rasterColumn(m, i, j));
+    // game: the column image is rastered with its ground chunk (chunkGrid / buildChunkStep) and freed with it
+    if (m.h[j][i] > 0) m.columns.push(eager ? rasterColumn(m, i, j) : lazyColumn(m, i, j));
     if (m.type[j][i] === 'w' || m.type[j][i] === 'pillar') m.block[j][i] = true;
   }
-  // waterfalls: water tiles whose +y neighbour is lower (or void)
+  // waterfalls: water tiles whose +y neighbour is lower (or void; a gutter swallows the water instead)
   for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) {
     if (m.type[j][i] !== 'w') continue;
     const nT = typeAt(m, i, j + 1), h = m.h[j][i];
-    if (!nT) m.falls.push({ x0: isoX(i, j + 1), y0: isoY(i, j + 1, 0) + 12, len: m.theme.underDepth + 80, edge: true, key: -1 });
+    if (!nT) { if (!isGutter(m, i, j + 1)) m.falls.push({ x0: isoX(i, j + 1), y0: isoY(i, j + 1, 0) + 12, len: m.theme.underDepth + 80, edge: true, key: -1 }); }
     else if (m.h[j + 1][i] < h) m.falls.push({ x0: isoX(i, j + 1), y0: isoY(i, j + 1, h), len: (h - m.h[j + 1][i]) * ZS, edge: false, key: i + j + 1.05, wx: i + 0.5, wy: j + 1.1 });
   }
   for (const o of m.objects) {
     if (o.lights) for (const L of o.lights) m.lights.push(L);
   }
+  if (!eager) chunkGrid(m);
+}
+function lazyColumn(m, i, j) {
+  const h = m.h[j][i];
+  return { kind: 'column', img: null, sx: isoX(i, j) - 16, sy: isoY(i, j, h), key: i + j + 1, x: i + 0.5, y: j + 0.5, i, j };
+}
+
+// ===== spatial grid: 8x8-tile buckets ==========================================================================
+// gridOf(m).objs / .cols / .water: arrays of buckets (bx + by * nx) holding refs; rebuilt when m.objects / m.columns
+// change identity or length (placeObjects, the editor). Colliders: own grid, rebuilt when m.colliders changes
+// (openGate / closeGate / syncGates assign a new array); gone pieces are skipped. Lights: screen-space 256 px cells.
+function gridOf(m) {
+  const g = m._grid;
+  if (g && g.oRef === m.objects && g.oLen === m.objects.length && g.cRef === m.columns && g.cLen === m.columns.length) return g;
+  const nx = Math.ceil(m.W / GRID_B) || 1, ny = Math.ceil(m.H / GRID_B) || 1, mk = () => Array.from({ length: nx * ny }, () => []);
+  const b = (x, y) => clamp(Math.floor(x / GRID_B), 0, nx - 1) + clamp(Math.floor(y / GRID_B), 0, ny - 1) * nx;
+  const G1 = { nx, ny, b, objs: mk(), cols: mk(), water: mk(), oRef: m.objects, oLen: m.objects.length, cRef: m.columns, cLen: m.columns.length };
+  for (const o of m.objects) G1.objs[b(o.x, o.y)].push(o);
+  for (const c of m.columns) G1.cols[b(c.x, c.y)].push(c);
+  for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) if (m.type[j][i] === 'w' && m.h[j][i] === 0) for (let k = 0; k < 3; k++) G1.water[b(i, j)].push({ i, j, a: hash2(i, j, k), b: hash2(j, i, k + 9) });
+  return (m._grid = G1);
+}
+// every ref in buckets overlapping tile rect [x0, x1] x [y0, y1] (appended to out)
+function gridQuery(m, kind, x0, y0, x1, y1, out = []) {
+  const g = gridOf(m), L = g[kind];
+  const bx0 = clamp(Math.floor(x0 / GRID_B), 0, g.nx - 1), bx1 = clamp(Math.floor(x1 / GRID_B), 0, g.nx - 1);
+  const by0 = clamp(Math.floor(y0 / GRID_B), 0, g.ny - 1), by1 = clamp(Math.floor(y1 / GRID_B), 0, g.ny - 1);
+  for (let by = by0; by <= by1; by++) for (let bx = bx0; bx <= bx1; bx++) { const q = L[bx + by * g.nx]; for (let i = 0; i < q.length; i++) out.push(q[i]); }
+  return out;
+}
+function colliderGrid(m) {
+  const g = m._cgrid;
+  if (g && g.ref === m.colliders && g.len === m.colliders.length) return g;
+  const nx = Math.ceil(m.W / GRID_B) || 1, ny = Math.ceil(m.H / GRID_B) || 1, cells = Array.from({ length: nx * ny }, () => []);
+  let maxR = 0;
+  for (const c of m.colliders) { cells[clamp(Math.floor(c.x / GRID_B), 0, nx - 1) + clamp(Math.floor(c.y / GRID_B), 0, ny - 1) * nx].push(c); maxR = Math.max(maxR, c.r || 0); }
+  return (m._cgrid = { nx, ny, cells, maxR, ref: m.colliders, len: m.colliders.length });
+}
+// colliders that may touch a circle (x, y, r): the caller still does the exact test
+function nearColliders(m, x, y, r, out = []) {
+  const g = colliderGrid(m), R = r + g.maxR + 0.01;
+  const bx0 = clamp(Math.floor((x - R) / GRID_B), 0, g.nx - 1), bx1 = clamp(Math.floor((x + R) / GRID_B), 0, g.nx - 1);
+  const by0 = clamp(Math.floor((y - R) / GRID_B), 0, g.ny - 1), by1 = clamp(Math.floor((y + R) / GRID_B), 0, g.ny - 1);
+  for (let by = by0; by <= by1; by++) for (let bx = bx0; bx <= bx1; bx++) { const q = g.cells[bx + by * g.nx]; for (let i = 0; i < q.length; i++) if (!q[i].gone) out.push(q[i]); }
+  return out;
+}
+const LCELL = 256;
+function lightsIn(m, sx0, sy0, sx1, sy1, out = []) {
+  let g = m._lgrid;
+  if (!g || g.ref !== m.lights || g.len !== m.lights.length) {
+    g = m._lgrid = { cells: new Map(), ref: m.lights, len: m.lights.length, maxR: 0 };
+    for (const L of m.lights) { const k = Math.floor(L.sx / LCELL) + ',' + Math.floor(L.sy / LCELL); let q = g.cells.get(k); if (!q) g.cells.set(k, q = []); q.push(L); g.maxR = Math.max(g.maxR, L.r || 0); }
+  }
+  const R = g.maxR;
+  for (let cy = Math.floor((sy0 - R) / LCELL); cy <= Math.floor((sy1 + R) / LCELL); cy++) for (let cx = Math.floor((sx0 - R) / LCELL); cx <= Math.floor((sx1 + R) / LCELL); cx++) { const q = g.cells.get(cx + ',' + cy); if (q) for (const L of q) out.push(L); }
+  return out;
 }
 
 function tileH(m, x, y) {
@@ -373,6 +565,7 @@ const OBJ_TYPES = {
   hidden: { label: 'Hidden wall (id, ang, len): openGate reveals', img: () => ART.rockDark, barrier: 'hidden' },
   lever: { label: 'Lever (id, gate?)', img: () => [ART.sign], r: 0.15, shadow: 4, lever: true, light: { r: 24, col: '#ffd35a', a: 0.6, h: 8 } },
   fishspot: { label: 'Fishing spot (pool) - stub', img: () => [ART.sunIcon], fish: true },
+  warpdoor: { label: 'Warp door (id, to: {x,y} | anchor id, key?)', img: () => [warpdoorArt()], r: 0.3, shadow: 6, warpdoor: true, light: { r: 34, col: '#9ef0ff', a: 0.7, h: 14 } },
   fox: { label: 'Fox (animal)', img: () => [ART.custom.fox || ART.sunIcon], critter: 'fox' },
   rabbit: { label: 'Rabbit (animal)', img: () => [ART.custom.rabbit || ART.sunIcon], critter: 'rabbit' },
 };
@@ -380,6 +573,7 @@ const OBJ_TYPES = {
 const TILE_TYPES = {
   g: 'Grass', f: 'Flower meadow', p: 'Cobble path', w: 'Water', b: 'Bridge', s: 'Stone stairs',
   x: 'Flagstones', r: 'Rune floor', d: 'Dark moss', c: 'Pillar', '.': 'Void (no ground)',
+  v: 'Void gutter (cliff)', k: 'Void gutter (darkness)',
 };
 const THEME_OF = {};   // map id -> theme id (for portal colours)
 
@@ -388,9 +582,11 @@ function buildMapFromData(id, d) {
   m.id = id; m.themeId = THEMES[d.theme] ? d.theme : 'vale';
   m.name = d.name || id; m.sub = d.sub || ''; m.objective = d.objective || '';
   m.triggers = d.triggers || [];
+  m.gutter = new Uint8Array(d.W * d.H);
   for (let y = 0; y < d.H; y++) for (let x = 0; x < d.W; x++) {
     const ch = (d.tiles[y] || '')[x] || '.';
-    m.type[y][x] = ch === '.' ? null : ch === 'c' ? 'pillar' : ch;
+    if (ch === 'v' || ch === 'k') m.gutter[y * d.W + x] = ch === 'v' ? 1 : 2;   // void gutters: void to the engine
+    m.type[y][x] = ch === '.' || ch === 'v' || ch === 'k' ? null : ch === 'c' ? 'pillar' : ch;
     m.h[y][x] = m.type[y][x] ? (parseInt((d.heights[y] || '')[x] || '0', 36) || 0) : 0;
     if (m.type[y][x] === 'r') m.hasRunes = true;
   }
@@ -402,9 +598,54 @@ function buildMapFromData(id, d) {
     if (p.to && typeof p.to === 'object') { q.to = p.to.map; if (p.to.x != null) q.arrive = { x: +p.to.x, y: +p.to.y }; }
     return q;
   });
+  buildSections(m, d);
   placeObjects(m, d);
   finalizeMap(m);
+  buildAnchors(m, d);
+  sectionCentres(m);
+  // the start chunk is rastered now (behind the loading screen / the portal fade); the rest streams in (render.js)
+  if (!(typeof window !== 'undefined' && window.EDITOR_MODE)) ensureChunkAt(m, m.start.x, m.start.y);
   return m;
+}
+// ===== sections, anchors ========================================================================================
+function buildSections(m, d) {
+  m.secMain = { id: 'main', name: m.name, kind: 'outer', i: 0 };
+  m.sections = [m.secMain]; m.secAt = new Uint8Array(m.W * m.H);
+  for (const s0 of d.sections || []) {
+    if (!s0 || !s0.id) continue;
+    const sec = Object.assign({}, s0, { i: m.sections.length });
+    sec.kind = sec.kind || 'outer'; sec.under = !!(sec.under || sec.kind === 'under'); sec.dark = clamp(+sec.dark || 0, 0, 1);
+    sec.rects = s0.rects || [[+s0.x || 0, +s0.y || 0, +s0.w || 0, +s0.h || 0]];
+    if (sec.i > 255) break;
+    m.sections.push(sec);
+    for (const [x, y, w, h] of sec.rects) for (let j = Math.max(0, y | 0); j < Math.min(m.H, (y | 0) + (h | 0)); j++) for (let i = Math.max(0, x | 0); i < Math.min(m.W, (x | 0) + (w | 0)); i++) m.secAt[j * m.W + i] = sec.i;
+  }
+}
+function sectionCentres(m) {
+  for (const sec of m.sections) {   // centre = the mean of its walkable tiles (engine-check tours these)
+    let n = 0, sx = 0, sy = 0;
+    for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) if (m.secAt[j * m.W + i] === sec.i && m.type[j][i] && !m.block[j][i]) { n++; sx += i + 0.5; sy += j + 0.5; }
+    sec.tiles = n; sec.cx = n ? sx / n : m.W / 2; sec.cy = n ? sy / n : m.H / 2;
+    let bd = 1e9, bx = sec.cx, by = sec.cy;   // snap to the nearest walkable tile of the section
+    for (let j = 0; j < m.H && n; j++) for (let i = 0; i < m.W; i++) if (m.secAt[j * m.W + i] === sec.i && m.type[j][i] && !m.block[j][i]) { const d = (i + 0.5 - sec.cx) ** 2 + (j + 0.5 - sec.cy) ** 2; if (d < bd) { bd = d; bx = i + 0.5; by = j + 0.5; } }
+    sec.cx = bx; sec.cy = by;
+  }
+}
+const sectionAt = (m, x, y) => { const i = Math.floor(x), j = Math.floor(y); return (m.sections && i >= 0 && j >= 0 && i < m.W && j < m.H && m.sections[m.secAt[j * m.W + i]]) || m.secMain || null; };
+function buildAnchors(m, d) {
+  const A = m.anchors = {}, put = (id, x, y, rank) => { if (id && (!A[id] || A[id].rank > rank)) A[id] = { id, x: +x, y: +y, rank }; };
+  for (const o of m.objects) if (o.src && o.src.id) put(o.src.id, o.x, o.y, o.warpdoor ? 0 : o.shrineId ? 2 : 3);
+  for (const a of d.anchors || []) put(a.id, a.x, a.y, 1);
+  for (const o of m.objects) if (o.shrineId) put(o.shrineId, o.x, o.y, 2);
+}
+// a warp target -> a walkable spot: { x, y } as given, or an anchor id (warp doors / shrines: a free tile beside it)
+function resolveWarp(m, to) {
+  if (to && typeof to === 'object' && isFinite(+to.x) && isFinite(+to.y)) return { x: +to.x, y: +to.y };
+  const a = m.anchors && m.anchors[to]; if (!a) return null;
+  const free = (x, y) => walkable(m, x, y, tileH(m, x, y)) && !nearColliders(m, x, y, 0.4).some(c => dist(x, y, c.x, c.y) < c.r + 0.4);
+  if (a.rank === 1 && free(a.x, a.y)) return { x: a.x, y: a.y };
+  for (const r of [1.1, 1.6, 2.2]) for (let k = 0; k < 8; k++) { const ang = Math.PI / 4 + k * Math.PI / 4, x = a.x + Math.cos(ang) * r, y = a.y + Math.sin(ang) * r; if (free(x, y)) return { x, y }; }
+  return { x: a.x, y: a.y };
 }
 // Props + portals from the data record (the editor re-runs this alone when only objects change).
 function placeObjects(m, d) {
@@ -429,6 +670,8 @@ function placeObjects(m, d) {
     const ob = addProp(m, img, +o.x, +o.y, { r: def.r || 0, shadow: def.shadow || 0, flip: !!o.f, grass: !!def.grass, sway: rand(0, 6.28), brazier: !!def.brazier, beam: !!def.beam && !window.EDITOR_MODE, chest: !!def.chest, checkpoint: !!def.checkpoint, tablet: !!def.tablet, light: def.light ? Object.assign({}, def.light) : undefined, src: o });
     if (def.lever) { ob.lever = true; ob.gid = o.gate || null; ob.use = LEVER_USE; }
     if (def.fish) { ob.fish = true; ob.use = FISH_USE; if (o.hidden) ob.secret = true; }
+    if (def.warpdoor) { ob.warpdoor = true; ob.gid = o.id || `warpdoor_${(+o.x).toFixed(1)}_${(+o.y).toFixed(1)}`; ob.doorKey = o.key || null; ob.use = WARPDOOR_USE; }
+    if (def.checkpoint) { ob.shrineId = o.id || `shrine_${Math.round(+o.x)}_${Math.round(+o.y)}`; ob.shrineName = o.name || null; }
   }
   for (const p of m.portals) m.objects.push({ kind: 'portal', x: p.x, y: p.y, z: p.z, key: p.x + p.y + p.z * 0.35, portal: p });
 }
@@ -455,7 +698,7 @@ const gateOpen = (m, id) => !!(G.prog && G.prog.gates && G.prog.gates[gateKey(m.
 function syncGates(m) {
   if (m._gateCol) m.colliders = m._gateCol.slice();   // restore after an earlier openGate in this session
   for (const o of m.objects) {
-    if (o.barrier) o.gone = gateOpen(m, o.gid);
+    if (o.barrier) o.gone = gateOpen(m, o.gid) || !!(o.src && o.src.open);   // `open: true` = an arena gate, open until closeGate
     if (o.lever) o.pulled = gateOpen(m, leverGate(m, o) || '');
   }
   m._gateCol = m._gateCol || m.colliders.slice();
@@ -482,6 +725,34 @@ function openGate(id, fromTrigger) {
   for (const o of m.objects) if (o.lever && leverGate(m, o) === id) o.pulled = true;
   if (parts.length && !was) { shake(4); sfx(parts[0].barrier === 'hidden' ? 'boom' : 'portal'); if (parts[0].barrier === 'hidden') say('A hidden passage!'); }
   return parts.length > 0;
+}
+// close a barrier for a fight (trigger closeGate / arena): never persisted, so a respawn (syncGates) reopens it
+function closeGate(id) {
+  const m = G.map; if (!m || !id) return false;
+  const parts = m.objects.filter(o => o.barrier && o.gid === id);
+  for (const o of parts) { if (o.gone) burst(o.x, o.y, o.z + 0.4, 5, ['#8a6a4a', '#c8b090'], 2); o.gone = false; }
+  m.colliders = (m._gateCol || m.colliders).filter(c => !c.gone);
+  if (parts.length) { shake(5); sfx('boom'); }
+  return parts.length > 0;
+}
+// warp doors: Interact = a 0.4 s fade warp (game.js startWarp); a keyed door unlocks once with its key
+const doorUnlocked = (m, o) => !o.doorKey || !!(G.prog && G.prog.gates && G.prog.gates[gateKey(m.id, o.gid)]);
+const WARPDOOR_USE = { kind: 'warpdoor', reach: 1.5, on: () => true,
+  text: o => (doorUnlocked(G.map, o) ? (o.src.label || 'Enter') : hasKey(o.doorKey) ? 'Unlock' : 'Locked'),
+  fn(o) {
+    const m = G.map;
+    if (!doorUnlocked(m, o)) {
+      if (!hasKey(o.doorKey)) { say('Locked. It needs a key.'); sfx('hurt'); return; }
+      (G.prog.gates || (G.prog.gates = {}))[gateKey(m.id, o.gid)] = true; say('The key turns.'); sfx('portal');
+    }
+    if (typeof startWarp === 'function') startWarp(o.src.to != null ? o.src.to : o.src.anchor, { door: o });
+  } };
+let WARPDOOR_IMG = null;
+function warpdoorArt() {
+  return WARPDOOR_IMG || (WARPDOOR_IMG = asciiSprite([
+    '...KKKKKK...', '..KSSSSSSK..', '.KSsBBBBsSK.', '.KSBbbbbBSK.', 'KSsBbccbBsSK', 'KSsBbccbBsSK', 'KSsBbbbbBsSK', 'KSsBbccbBsSK',
+    'KSsBbbbbBsSK', 'KSsBbbbbBsSK', 'KSsBbbbbBsSK', 'KSsBbbbbBsSK', 'KSsBbbbbBsSK', 'KSSSSSSSSSSK', 'KKKKKKKKKKKK',
+  ], { K: '#1a1428', S: '#6a6290', s: '#8f86b0', B: '#2a5aa8', b: '#163064', c: '#9ef0ff' }));
 }
 const LEVER_USE = { kind: 'lever', reach: 1.4, on: o => !o.pulled, text: () => 'Pull lever',
   fn(o) { const id = leverGate(G.map, o); o.pulled = true; sfx('trap'); if (id) openGate(id); else say('The lever clicks. Somewhere, something moved.'); } };

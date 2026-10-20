@@ -3,6 +3,12 @@
 // Scene rendering + post-processing: fake lights (lightmap multiply + additive
 // halos), bloom (cubed bright-pass at 1/4 & 1/8 res), drifting fog & mist,
 // god rays, vignette.
+// Big maps (DESIGN §25.2): drawScene reads the ground from the chunk cache (maps.js CHUNK; drawGround + groundTick
+// here schedule the builds: the chunk under the camera synchronously, visible-missing chunks next with a large
+// budget, then a prefetch ring on idle frames), and queries the spatial grid for objects, columns, water glints and
+// static lights inside the view instead of walking whole-map lists. Lights: at most LIGHT_MAX visible (the hero's
+// own light always kept). Sections: the lightmap ambient follows sectionAt(hero) (ambient / dark, lerped ~0.4 s);
+// dark sections give the hero a lantern and thin the fog.
 // ---------------------------------------------------------------------------
 const SCN = makeCanvas(RW, RH), sctx = SCN.x;
 const LM = makeCanvas(RW / 2, RH / 2);
@@ -95,11 +101,82 @@ function updateAmbient(dt) {
 }
 
 // ===== frame ======================================================================
+// ===== ground chunks: draw what is resident, queue the rest ==================================================
+const GROUND_STATS = { visMissing: 0, syncBuilds: 0, lastTickMs: 0 };
+function drawGround(ctx, m) {
+  const cg = chunkGrid(m), g = m.gp, S = cg.S, vx0 = camX - RW / 2 - g.minSX, vy0 = camY - RH / 2, missing = [];
+  const ci0 = clamp(Math.floor(vx0 / S), 0, cg.nx - 1), ci1 = clamp(Math.floor((vx0 + RW - 1) / S), 0, cg.nx - 1);
+  const cj0 = clamp(Math.floor(vy0 / S), 0, cg.ny - 1), cj1 = clamp(Math.floor((vy0 + RH - 1) / S), 0, cg.ny - 1);
+  for (let cj = cj0; cj <= cj1; cj++) for (let ci = ci0; ci <= ci1; ci++) {
+    const idx = cj * cg.nx + ci; if (cg.empty[idx]) continue;
+    const ch = chunkResident(m, idx), dx = Math.round(ci * S + g.minSX - camX + RW / 2), dy = Math.round(cj * S - camY + RH / 2);
+    if (ch) { ch.last = CHUNK.frame; ctx.drawImage(ch.c, dx, dy); continue; }
+    missing.push(idx);
+    const pv = groundPreview(m), Q = S / 4;
+    ctx.drawImage(pv, ci * Q, cj * Q, Q, Q, dx, dy, S, S);
+  }
+  GROUND_STATS.visMissing = missing.length;
+  return missing;
+}
+// one scheduling step per rendered frame (call before drawGround so finished chunks show this frame)
+function groundTick(m) {
+  const cg = chunkGrid(m), g = m.gp, S = cg.S, t0 = performance.now();
+  const c0 = chunkAt(m, camX, camY);   // the chunk under the camera: always built now (start, respawn, warp arrival)
+  if (!cg.empty[c0] && !chunkResident(m, c0)) { buildChunkStep(m, c0, Infinity); GROUND_STATS.syncBuilds++; }
+  const vx0 = camX - RW / 2 - g.minSX, vy0 = camY - RH / 2, want = [];
+  const pre = S * 0.6, ci0 = Math.floor((vx0 - pre) / S), ci1 = Math.floor((vx0 + RW + pre) / S), cj0 = Math.floor((vy0 - pre) / S), cj1 = Math.floor((vy0 + RH + pre) / S);
+  let vis = 0, visTotal = 0, ringRes = 0;
+  for (let cj = Math.max(0, cj0); cj <= Math.min(cg.ny - 1, cj1); cj++) for (let ci = Math.max(0, ci0); ci <= Math.min(cg.nx - 1, ci1); ci++) {
+    const idx = cj * cg.nx + ci; if (cg.empty[idx]) continue;
+    const x0 = ci * S, y0 = cj * S, visible = x0 < vx0 + RW && x0 + S > vx0 && y0 < vy0 + RH && y0 + S > vy0;
+    if (visible) visTotal++;
+    if (chunkResident(m, idx)) { if (!visible) ringRes++; continue; }   // only drawGround (truly visible) bumps LRU
+    const d = Math.hypot(x0 + S / 2 - (vx0 + RW / 2), y0 + S / 2 - (vy0 + RH / 2));
+    if (visible) vis++;
+    want.push({ idx, visible, pri: (visible ? 0 : 1e6) + d });
+  }
+  // prefetch never builds past the resident cap (so the ring cannot thrash the LRU)
+  let allowPre = Math.max(0, CHUNK.max - 1 - visTotal - ringRes);
+  let ema = 16.7; try { ema = frameEma; } catch (e) { /* main.js not loaded (editor) */ }
+  const budget = vis ? (G.fade > 0.3 ? 14 : PHONE ? 6 : 8) : (ema > 18.5 ? 0 : PHONE ? 1.5 : 2.5);
+  want.sort((a, b) => a.pri - b.pri);
+  const keep = new Set(want.map(w => chunkKey(m, w.idx)));
+  for (const [k, job] of CHUNK.jobs) if (!keep.has(k) && (job.m !== m || CHUNK.frame - (job.touch || 0) > 60)) CHUNK.jobs.delete(k);   // stale partial builds
+  for (const w of want) {
+    if (!w.visible && allowPre-- <= 0) break;
+    const left = budget - (performance.now() - t0); if (left <= 0) break;
+    if (!buildChunkStep(m, w.idx, left)) break;
+  }
+  GROUND_STATS.lastTickMs = performance.now() - t0;
+}
+// the tile-space box that can hold anything visible (tall sprites and columns rise above their base: pad below)
+function viewTiles(mx = 80, mTop = 40, mBot = 190) {
+  const xs = [], ys = [];
+  for (const [sx, sy] of [[camX - RW / 2 - mx, camY - RH / 2 - mTop], [camX + RW / 2 + mx, camY - RH / 2 - mTop], [camX - RW / 2 - mx, camY + RH / 2 + mBot], [camX + RW / 2 + mx, camY + RH / 2 + mBot]]) { const [wx, wy] = toWorld(sx, sy); xs.push(wx); ys.push(wy); }
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+}
+// section ambient (darkness module): the lightmap fill lerps toward the hero's section look
+function sectionLook(m, p, th) {
+  const sec = (typeof sectionAt === 'function' && sectionAt(m, p.x, p.y)) || {}, dark = sec.dark || 0;
+  const target = hexToRgb(sec.ambient || th.ambient), want = dark ? mixRgb(target, [5, 3, 12], dark) : target;
+  const L = m._look || (m._look = { c: want.slice(), dark, t: G.t });
+  const k = 1 - Math.exp(-Math.max(0, G.t - L.t) / 0.13); L.t = G.t;
+  for (let i = 0; i < 3; i++) L.c[i] += (want[i] - L.c[i]) * k;
+  L.dark += (dark - L.dark) * k;
+  L.css = `rgb(${L.c[0] | 0},${L.c[1] | 0},${L.c[2] | 0})`; L.sec = sec;
+  return L;
+}
+
 function drawScene() {
   const m = G.map, th = m.theme, bg = th._bg, ctx = sctx, p = G.player;
   const shx = (Math.random() - 0.5) * G.shakeA * 2, shy = (Math.random() - 0.5) * G.shakeA * 2;
   camX = Math.round(G.cam.x + shx); camY = Math.round(G.cam.y + shy);
   const lights = [];
+  CHUNK.frame++;
+  groundTick(m);
+  const look = sectionLook(m, p, th);
+  const [vtx0, vty0, vtx1, vty1] = viewTiles();
+  const viewObjs = gridQuery(m, 'objs', vtx0, vty0, vtx1, vty1);
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false;
 
   // ---- sky & distant world ----
@@ -162,9 +239,9 @@ function drawScene() {
   });
 
   // ---- island ----
-  ctx.drawImage(m.ground, Math.round(m.gox - camX + RW / 2), Math.round(m.goy - camY + RH / 2));
+  drawGround(ctx, m);
   for (const f of m.falls) if (f.edge) drawFall(ctx, f, true);
-  drawWater(ctx, m);
+  drawWater(ctx, m, vtx0, vty0, vtx1, vty1);
   if (m.hasRunes) drawSigil(ctx, m, lights);
 
   // clouds drifting in front of the underside
@@ -176,10 +253,12 @@ function drawScene() {
   // ---- ground decals: shadows, telegraphs, zones ----
   ctx.fillStyle = 'rgba(20,8,40,0.32)';
   const shadow = (x, y, z, r) => { const [vx, vy] = worldToView(x, y, z); ctx.beginPath(); ctx.ellipse(Math.round(vx), Math.round(vy), r, r * 0.45, 0, 0, Math.PI * 2); ctx.fill(); };
-  for (const o of m.objects) if (o.shadow) shadow(o.x, o.y, o.z, o.shadow);
+  for (const o of viewObjs) if (o.shadow && !o.gone) shadow(o.x, o.y, o.z, o.shadow);
   if (!p.dead) shadow(p.x, p.y, tileH(m, p.x, p.y), 6);
-  for (const e of G.enemies) shadow(e.x, e.y, 0, e.boss ? 18 : (e.type === 'wisp' ? 4 : 7));
-  for (const z of G.zones) drawZone(ctx, z);
+  const inViewE = e => { const vx = isoX(e.x, e.y) - camX + RW / 2, vy = isoY(e.x, e.y, e.z || 0) - camY + RH / 2; return vx > -90 && vx < RW + 90 && vy > -40 && vy < RH + 150; };
+  const viewEnemies = G.enemies.filter(inViewE);
+  for (const e of viewEnemies) shadow(e.x, e.y, 0, e.boss ? 18 : (e.type === 'wisp' ? 4 : 7));
+  for (const z of G.zones) if (inViewE(z) || z.r > 4) drawZone(ctx, z);
   for (const e of G.effects) if (e.type === 'tele' || e.type === 'marker' || e.type === 'line' || e.type === 'summon') drawDecal(ctx, e);
   const aimNow = currentAim();   // the player's ground indicator (kind:'aim'), under the sprites
   if (aimNow) drawAimIndicator(aimNow.aim, aimNow.from, aimNow.to, aimNow);
@@ -188,14 +267,17 @@ function drawScene() {
   // ---- depth-sorted world ----
   const list = [];
   const inView = (sx, sy, w = 80) => { const vx = sx - camX + RW / 2, vy = sy - camY + RH / 2; return vx > -w && vx < RW + w && vy > -w * 1.5 && vy < RH + w * 1.5; };
-  for (const c of m.columns) if (inView(c.sx + 16, c.sy + 20)) list.push(c);
-  for (const o of m.objects) if (inView(isoX(o.x, o.y), isoY(o.x, o.y, o.z))) list.push(o);
-  for (const f of m.falls) if (!f.edge) list.push({ kind: 'fall', f, key: f.key });
+  for (const c of gridQuery(m, 'cols', vtx0, vty0, vtx1, vty1)) if (!c.gone && inView(c.sx + 16, c.sy + 20)) {
+    if (!c.img) { if (c.chunk == null || !chunkResident(m, c.chunk)) continue; c.img = rasterColumn(m, c.i, c.j).img; }
+    list.push(c);
+  }
+  for (const o of viewObjs) if (inView(isoX(o.x, o.y), isoY(o.x, o.y, o.z))) list.push(o);
+  for (const f of m.falls) if (!f.edge && inView(f.x0 + 8, f.y0 + f.len / 2, 40 + f.len)) list.push({ kind: 'fall', f, key: f.key });
   if (!p.dead || G.state === 'dead') list.push({ kind: 'player', key: p.x + p.y + p.z * 0.35 + 0.01 });
-  for (const e of G.enemies) list.push({ kind: 'enemy', e, key: e.x + e.y + 0.01 });
-  for (const pr of G.projs) list.push({ kind: 'proj', pr, key: pr.x + pr.y + 0.3 });
+  for (const e of viewEnemies) list.push({ kind: 'enemy', e, key: e.x + e.y + 0.01 });
+  for (const pr of G.projs) if (inView(isoX(pr.x, pr.y), isoY(pr.x, pr.y, pr.z || 0), 40)) list.push({ kind: 'proj', pr, key: pr.x + pr.y + 0.3 });
   for (const d of G.drops) if (inView(isoX(d.x, d.y), isoY(d.x, d.y, d.z))) list.push({ kind: 'drop', d, key: d.x + d.y + d.z * 0.35 + 0.02 });
-  for (const c of G.critters || []) list.push({ kind: 'critter', c, key: c.x + c.y + c.z * 0.35 });
+  for (const c of G.critters || []) if (inViewE(c)) list.push({ kind: 'critter', c, key: c.x + c.y + c.z * 0.35 });
   for (const e of G.effects) if (e.type === 'ghost') list.push({ kind: 'ghost', e, key: e.x + e.y });
   if (p.buffs.orbit) for (let k = 0; k < 3; k++) { const a = G.t * 4 + k * Math.PI * 2 / 3; list.push({ kind: 'orb', x: p.x + Math.cos(a) * 1.4, y: p.y + Math.sin(a) * 1.4, z: p.z + 1.2, key: p.x + Math.cos(a) * 1.4 + p.y + Math.sin(a) * 1.4 + p.z * 0.35 }); }
   list.sort((a, b) => a.key - b.key);
@@ -209,18 +291,20 @@ function drawScene() {
   drawParticles(ctx, lights);
 
   // ---- fog & mist ----
-  const forest = m.themeId === 'forest';
-  drawFog(ctx, bg.fog, 256, 0.5, 7, 2.5, forest ? 0.24 : m.themeId === 'vale' ? 0.15 : 0.18);
+  const forest = m.themeId === 'forest', fk = 1 - look.dark * 0.7;
+  drawFog(ctx, bg.fog, 256, 0.5, 7, 2.5, (forest ? 0.24 : m.themeId === 'vale' ? 0.15 : 0.18) * fk);
   if (!COARSE_POINTER) {   // §16.6.6: one fog layer on touch devices
-    drawFog(ctx, bg.fog2, 384, 0.8, -4, 1.2, forest ? 0.09 : m.themeId === 'vale' ? 0.07 : 0.1);
-    if (forest) drawFog(ctx, bg.fog, 512, 1.1, 3, 0.6, 0.14);   // heavy low mist banks
+    drawFog(ctx, bg.fog2, 384, 0.8, -4, 1.2, (forest ? 0.09 : m.themeId === 'vale' ? 0.07 : 0.1) * fk);
+    if (forest) drawFog(ctx, bg.fog, 512, 1.1, 3, 0.6, 0.14 * fk);   // heavy low mist banks
   }
 
   // ---- lighting ----
-  for (const L of m.lights) lights.push(L);
-  for (const o of m.objects) if (o.brazier) { lights.push({ sx: isoX(o.x, o.y), sy: isoY(o.x, o.y, o.z) - 14, r: 70 + Math.sin(G.t * 13 + o.x) * 6, col: '#c77bff', a: 0.9 }); }
-  if (!p.dead) lights.push({ sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 10, r: 54, col: '#ffe6d0', a: 0.28 });
-  applyLighting(ctx, lights, th);
+  lightsIn(m, camX - RW / 2, camY - RH / 2, camX + RW / 2, camY + RH / 2, lights);
+  for (const o of viewObjs) if (o.brazier) { lights.push({ sx: isoX(o.x, o.y), sy: isoY(o.x, o.y, o.z) - 14, r: 70 + Math.sin(G.t * 13 + o.x) * 6, col: '#c77bff', a: 0.9 }); }
+  // the hero's light (a lantern in dark sections) is always kept by the light budget
+  const heroL = p.dead ? null : { sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 10, r: 54 + 46 * look.dark, col: '#ffe6d0', a: 0.28 + 0.55 * look.dark, keep: true };
+  if (heroL) lights.push(heroL);
+  applyLighting(ctx, lights, th, look.css);
 
   // ---- bloom + grade ----
   applyBloom(ctx, th.bloom * (typeof flashCap === 'function' ? flashCap() : 1));
@@ -264,9 +348,8 @@ function drawFall(ctx, f, edge) {
   }
 }
 
-function drawWater(ctx, m) {
-  if (!m._water) { m._water = []; for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) if (m.type[j][i] === 'w' && m.h[j][i] === 0) for (let k = 0; k < 3; k++) m._water.push({ i, j, a: hash2(i, j, k), b: hash2(j, i, k + 9) }); }
-  for (const s of m._water) {
+function drawWater(ctx, m, x0, y0, x1, y1) {
+  for (const s of gridQuery(m, 'water', x0, y0, x1, y1)) {
     const fy = (s.b + G.t * 0.35) % 1, x = s.i + s.a, y = s.j + fy;
     const [vx, vy] = worldToView(x, y, 0);
     if (vx < -4 || vx > RW + 4 || vy < -4 || vy > RH + 4) continue;
@@ -961,7 +1044,8 @@ function drawFog(ctx, tex, size, par, spx, spy, alpha) {
 
 // §16.6.1: one cached 64x64 radial sprite per light colour (alpha 1 -> 0), drawn scaled with globalAlpha = L.a.
 // A linear alpha ramp scaled by globalAlpha equals the old per-light rgba(col, a) -> rgba(col, 0) gradient.
-const COARSE_POINTER = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+const COARSE_POINTER = PHONE || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+const LIGHT_MAX = 40, LIGHT_STATS = { inView: 0, drawn: 0 };
 const LIGHT_SPR = new Map();
 function lightSprite(col) {
   let c = LIGHT_SPR.get(col);
@@ -973,17 +1057,23 @@ function lightSprite(col) {
   }
   return c;
 }
-function applyLighting(ctx, lights, th) {
+function applyLighting(ctx, lights, th, ambient) {
   const x = LM.x, fc = typeof flashCap === 'function' ? flashCap() : 1;
-  x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; x.fillStyle = th.ambient; x.fillRect(0, 0, RW / 2, RH / 2);
+  x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; x.fillStyle = ambient || th.ambient; x.fillRect(0, 0, RW / 2, RH / 2);
   x.globalCompositeOperation = 'lighter'; x.imageSmoothingEnabled = true;
-  const vis = [];
+  let vis = [];
   for (const L of lights) {
     const vx = L.sx - camX + RW / 2, vy = L.sy - camY + RH / 2;
     if (vx < -L.r || vx > RW + L.r || vy < -L.r || vy > RH + L.r) continue;
     vis.push([vx, vy, L]);
-    x.globalAlpha = clamp(L.a, 0, 1); x.drawImage(lightSprite(L.col), vx / 2 - L.r / 2, vy / 2 - L.r / 2, L.r, L.r);
   }
+  LIGHT_STATS.inView = vis.length;
+  if (vis.length > LIGHT_MAX) {   // budget: keep the hero's light, then the strongest nearest the centre
+    const sc = ([vx, vy, L]) => (L.keep ? 1e9 : 0) + L.a * L.r / (1 + Math.hypot(vx - RW / 2, vy - RH / 2) / 120);
+    vis = vis.sort((a, b) => sc(b) - sc(a)).slice(0, LIGHT_MAX);
+  }
+  LIGHT_STATS.drawn = vis.length;
+  for (const [vx, vy, L] of vis) { x.globalAlpha = clamp(L.a, 0, 1); x.drawImage(lightSprite(L.col), vx / 2 - L.r / 2, vy / 2 - L.r / 2, L.r, L.r); }
   x.globalAlpha = 1;
   ctx.globalCompositeOperation = 'multiply'; ctx.imageSmoothingEnabled = true;
   ctx.drawImage(LM.c, 0, 0, RW, RH);

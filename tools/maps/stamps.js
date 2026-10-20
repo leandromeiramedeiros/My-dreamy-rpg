@@ -289,4 +289,4 @@ function boss(S) {
   };
 }
 
-module.exports = { outer, dungeon, boss, ANCHORS, landing, registerPortals, placePortals, waveActions, dlgText };
+module.exports = { outer, dungeon, boss, ANCHORS, landing, registerPortals, placePortals, waveActions, nearRoomEdge, dlgText };

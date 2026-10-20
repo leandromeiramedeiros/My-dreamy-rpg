@@ -1,6 +1,6 @@
 const { launch, KbmDriver, sleep } = require('./lib');
 (async () => {
-  const { br, page } = await launch({ query: '?map=vale' });
+  const { br, page } = await launch({ query: '?map=' + (process.argv[4] || 'vale') });
   const X = +process.argv[2] || 22.99, Y = +process.argv[3] || 16.13;
   const info = await page.evaluate(([X, Y]) => {
     const p = G.player, m = G.map; p.x = X; p.y = Y; p.z = tileH(m, X, Y);

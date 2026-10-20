@@ -3,13 +3,13 @@
  "maps": {
   "vale": {
    "enters": 1,
-   "ms": 108413,
+   "ms": 189276,
    "deaths": 0,
    "potions": 0,
    "kills": 0,
    "lvlIn": 1,
    "dmgTaken": 0,
-   "stuck": 6
+   "stuck": 25
   }
  },
  "deaths": [],
@@ -22,357 +22,1222 @@
    "hp": 760
   },
   {
-   "at": 0.1,
+   "at": 0.3,
    "msg": "title: clicking NEW DREAM with the mouse"
   },
   {
-   "at": 1.2,
+   "at": 1.4,
    "msg": "after New Dream",
    "st": "play",
    "obj": "Hit the training dummies in the yard."
   },
   {
-   "at": 1.3,
+   "at": 1.6,
    "msg": "MARK vale-start",
    "lvl": 1
   },
   {
-   "at": 4,
+   "at": 4.4,
    "msg": "goal: dummies"
   },
   {
-   "at": 15,
+   "at": 15.4,
    "msg": "goal dummies: ok",
-   "sec": "11.0"
+   "sec": "11.1"
   },
   {
-   "at": 15.6,
+   "at": 16.1,
    "msg": "goal: shrine"
   },
   {
-   "at": 17.9,
+   "at": 18.4,
    "msg": "goal shrine: ok",
    "sec": "2.3"
   },
   {
-   "at": 17.9,
+   "at": 18.4,
    "msg": "goal: yard_teach"
   },
   {
-   "at": 17.9,
+   "at": 18.4,
    "msg": "goal yard_teach: ok",
    "sec": "0.0"
   },
   {
-   "at": 18,
+   "at": 18.6,
    "msg": "goal: elder plaza"
   },
   {
-   "at": 22.2,
+   "at": 22.4,
    "msg": "goal elder plaza: ok",
-   "sec": "4.1"
+   "sec": "3.8"
   },
   {
-   "at": 22.2,
+   "at": 22.4,
    "msg": "goal: read elder stone"
   },
   {
-   "at": 23.1,
+   "at": 23.5,
    "msg": "goal read elder stone: ok",
    "sec": "1.0"
   },
   {
-   "at": 24.8,
+   "at": 25.2,
    "msg": "goal: tutorial chest"
   },
   {
-   "at": 32.3,
-   "msg": "unstick: dodge",
-   "n": 2,
-   "pos": [
-    23.96,
-    18.04
-   ]
-  },
-  {
-   "at": 37.7,
-   "msg": "bot stuck",
-   "pos": [
-    25.77,
-    17.14
-   ],
-   "goal": "tutorial chest",
-   "n": 3
-  },
-  {
-   "at": 38.1,
-   "msg": "unstick: dodge",
-   "n": 3,
-   "pos": [
-    25.77,
-    17.14
-   ]
-  },
-  {
-   "at": 42.4,
-   "msg": "unstick: dodge",
-   "n": 4,
-   "pos": [
-    25.71,
-    17.14
-   ]
-  },
-  {
-   "at": 46.8,
-   "msg": "unstick: dodge",
-   "n": 5,
-   "pos": [
-    23.97,
-    18.01
-   ]
-  },
-  {
-   "at": 50.3,
-   "msg": "unstick: dodge",
-   "n": 6,
-   "pos": [
-    21.78,
-    15.57
-   ]
-  },
-  {
-   "at": 55.6,
+   "at": 34.2,
    "msg": "goal tutorial chest: ok",
-   "sec": "30.9"
+   "sec": "9.1"
   },
   {
-   "at": 61.9,
+   "at": 35.9,
+   "msg": "goal: pick up Hunter's Bow"
+  },
+  {
+   "at": 36,
+   "msg": "goal pick up Hunter's Bow: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 36,
+   "msg": "goal: pick up Linen Robe"
+  },
+  {
+   "at": 36.4,
+   "msg": "goal pick up Linen Robe: ok",
+   "sec": "0.3"
+  },
+  {
+   "at": 36.4,
+   "msg": "goal: pick up Chipped Ruby"
+  },
+  {
+   "at": 36.8,
+   "msg": "goal pick up Chipped Ruby: ok",
+   "sec": "0.4"
+  },
+  {
+   "at": 38.3,
+   "msg": "equipped via mouse",
+   "name": "Linen Robe",
+   "slot": "chest",
+   "rarity": "uncommon"
+  },
+  {
+   "at": 43.3,
    "msg": "goal: lantern (far NW)"
   },
   {
-   "at": 69.3,
-   "msg": "goal lantern (far NW): ok",
-   "sec": "7.4"
+   "at": 52.5,
+   "msg": "unstick: dodge",
+   "n": 2,
+   "pos": [
+    23.01,
+    15.99
+   ]
   },
   {
-   "at": 71,
-   "msg": "goal: return lantern"
+   "at": 56.3,
+   "msg": "bot stuck",
+   "pos": [
+    22.5,
+    15.74
+   ],
+   "goal": "lantern (far NW)",
+   "n": 3
+  },
+  {
+   "at": 56.7,
+   "msg": "unstick: dodge",
+   "n": 3,
+   "pos": [
+    22.5,
+    15.74
+   ]
+  },
+  {
+   "at": 61.1,
+   "msg": "unstick: dodge",
+   "n": 4,
+   "pos": [
+    22.47,
+    15.76
+   ]
+  },
+  {
+   "at": 65.1,
+   "msg": "unstick: dodge",
+   "n": 5,
+   "pos": [
+    22.73,
+    15.75
+   ]
+  },
+  {
+   "at": 68.3,
+   "msg": "unstick: dodge",
+   "n": 6,
+   "pos": [
+    22.69,
+    15.75
+   ]
+  },
+  {
+   "at": 72.2,
+   "msg": "unstick: dodge",
+   "n": 7,
+   "pos": [
+    22.47,
+    15.78
+   ]
   },
   {
    "at": 75.1,
+   "msg": "bot stuck",
+   "pos": [
+    22.37,
+    15.78
+   ],
+   "goal": "lantern (far NW)",
+   "n": 8
+  },
+  {
+   "at": 75.3,
+   "msg": "FINDING[blocker] Hero is wedged: zero movement in all 8 directions and Dodge does not free it (needed a tester nudge)",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     22.37,
+     15.78
+    ],
+    "nudgedTo": [
+     22.350330847455144,
+     15.583567812659435
+    ],
+    "goal": "lantern (far NW)",
+    "escape": "only the pause menu TO HUB, or dying, would free a real player"
+   }
+  },
+  {
+   "at": 75.6,
+   "msg": "unstick: dodge",
+   "n": 8,
+   "pos": [
+    22.37,
+    15.78
+   ]
+  },
+  {
+   "at": 79.5,
+   "msg": "unstick: dodge",
+   "n": 9,
+   "pos": [
+    22.51,
+    15.77
+   ]
+  },
+  {
+   "at": 83.6,
+   "msg": "unstick: dodge",
+   "n": 10,
+   "pos": [
+    23.07,
+    15.81
+   ]
+  },
+  {
+   "at": 87.5,
+   "msg": "unstick: dodge",
+   "n": 11,
+   "pos": [
+    22.24,
+    15.77
+   ]
+  },
+  {
+   "at": 90.4,
+   "msg": "FINDING[blocker] Hero is wedged: zero movement in all 8 directions and Dodge does not free it (needed a tester nudge)",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     22.35,
+     15.77
+    ],
+    "nudgedTo": [
+     22.364623753885333,
+     15.598211348619138
+    ],
+    "goal": "lantern (far NW)",
+    "escape": "only the pause menu TO HUB, or dying, would free a real player"
+   }
+  },
+  {
+   "at": 90.8,
+   "msg": "unstick: dodge",
+   "n": 12,
+   "pos": [
+    22.35,
+    15.77
+   ]
+  },
+  {
+   "at": 94.9,
+   "msg": "unstick: dodge",
+   "n": 13,
+   "pos": [
+    22.49,
+    15.77
+   ]
+  },
+  {
+   "at": 96.8,
+   "msg": "FINDING[minor] Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     22.48,
+     15.73
+    ],
+    "obj": "Open the chest north-east. Then find the Stone's lantern.",
+    "sinceMs": 60024
+   }
+  },
+  {
+   "at": 99.8,
+   "msg": "unstick: dodge",
+   "n": 14,
+   "pos": [
+    22.97,
+    16.02
+   ]
+  },
+  {
+   "at": 103,
+   "msg": "unstick: dodge",
+   "n": 15,
+   "pos": [
+    22.97,
+    16.02
+   ]
+  },
+  {
+   "at": 105.8,
+   "msg": "FINDING[blocker] Hero is wedged: zero movement in all 8 directions and Dodge does not free it (needed a tester nudge)",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     22.97,
+     16.02
+    ],
+    "nudgedTo": [
+     23.07285703604914,
+     16.01599267362641
+    ],
+    "goal": "lantern (far NW)",
+    "escape": "only the pause menu TO HUB, or dying, would free a real player"
+   }
+  },
+  {
+   "at": 106.2,
+   "msg": "unstick: dodge",
+   "n": 16,
+   "pos": [
+    22.97,
+    16.02
+   ]
+  },
+  {
+   "at": 110.5,
+   "msg": "unstick: dodge",
+   "n": 17,
+   "pos": [
+    22.95,
+    16.13
+   ]
+  },
+  {
+   "at": 113.6,
+   "msg": "unstick: dodge",
+   "n": 18,
+   "pos": [
+    22.95,
+    16.13
+   ]
+  },
+  {
+   "at": 116.8,
+   "msg": "unstick: dodge",
+   "n": 19,
+   "pos": [
+    22.95,
+    16.13
+   ]
+  },
+  {
+   "at": 119.7,
+   "msg": "FINDING[blocker] Hero is wedged: zero movement in all 8 directions and Dodge does not free it (needed a tester nudge)",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     22.95,
+     16.13
+    ],
+    "nudgedTo": [
+     23.054503975757353,
+     16.1343457339182
+    ],
+    "goal": "lantern (far NW)",
+    "escape": "only the pause menu TO HUB, or dying, would free a real player"
+   }
+  },
+  {
+   "at": 120.1,
+   "msg": "unstick: dodge",
+   "n": 20,
+   "pos": [
+    22.95,
+    16.13
+   ]
+  },
+  {
+   "at": 123.2,
+   "msg": "unstick: dodge",
+   "n": 21,
+   "pos": [
+    22.98,
+    16.13
+   ]
+  },
+  {
+   "at": 126.4,
+   "msg": "unstick: dodge",
+   "n": 22,
+   "pos": [
+    22.98,
+    16.13
+   ]
+  },
+  {
+   "at": 129.5,
+   "msg": "unstick: dodge",
+   "n": 23,
+   "pos": [
+    22.98,
+    16.13
+   ]
+  },
+  {
+   "at": 132.4,
+   "msg": "FINDING[blocker] Hero is wedged: zero movement in all 8 directions and Dodge does not free it (needed a tester nudge)",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     22.98,
+     16.13
+    ],
+    "nudgedTo": [
+     23.079755833638735,
+     16.1343457339182
+    ],
+    "goal": "lantern (far NW)",
+    "escape": "only the pause menu TO HUB, or dying, would free a real player"
+   }
+  },
+  {
+   "at": 132.8,
+   "msg": "unstick: dodge",
+   "n": 24,
+   "pos": [
+    22.98,
+    16.13
+   ]
+  },
+  {
+   "at": 138.8,
+   "msg": "goal lantern (far NW): ok",
+   "sec": "95.5"
+  },
+  {
+   "at": 140.6,
+   "msg": "goal: return lantern"
+  },
+  {
+   "at": 144.6,
    "msg": "goal return lantern: ok",
    "sec": "4.1"
   },
   {
-   "at": 76.7,
-   "msg": "goal: pick up Chipped Sapphire"
+   "at": 146.2,
+   "msg": "goal: pick up Chipped Diamond"
   },
   {
-   "at": 77.5,
-   "msg": "goal pick up Chipped Sapphire: ok",
-   "sec": "0.8"
+   "at": 146.6,
+   "msg": "goal pick up Chipped Diamond: ok",
+   "sec": "0.4"
   },
   {
-   "at": 77.5,
-   "msg": "goal: pick up Novice Hood"
+   "at": 146.6,
+   "msg": "goal: pick up Leather Jerkin"
   },
   {
-   "at": 77.8,
-   "msg": "goal pick up Novice Hood: ok",
-   "sec": "0.3"
+   "at": 147.1,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.4"
   },
   {
-   "at": 78,
+   "at": 147.2,
    "msg": "objective after lantern return",
    "obj": "Return the lantern to the Elder Stone.",
    "ambushFired": false,
    "done": false
   },
   {
-   "at": 78,
+   "at": 147.2,
    "msg": "goal: garden ambush"
   },
   {
-   "at": 80.9,
+   "at": 149.6,
    "msg": "goal garden ambush: ok",
-   "sec": "2.9"
+   "sec": "2.4"
   },
   {
-   "at": 81,
+   "at": 149.7,
    "msg": "goal: garden ambush clear"
   },
   {
-   "at": 93.2,
+   "at": 161.6,
    "msg": "goal garden ambush clear: ok",
-   "sec": "12.2"
+   "sec": "11.8"
   },
   {
-   "at": 95.9,
+   "at": 164.2,
    "msg": "after ambush",
    "obj": "Take the rift south into the Misty Pinewood.",
    "portalOpen": true
   },
   {
-   "at": 97.5,
-   "msg": "goal: pick up Novice Hood"
+   "at": 165.9,
+   "msg": "goal: pick up Rusty Blade"
   },
   {
-   "at": 98.2,
-   "msg": "goal pick up Novice Hood: ok",
-   "sec": "0.7"
+   "at": 166.3,
+   "msg": "goal pick up Rusty Blade: ok",
+   "sec": "0.4"
   },
   {
-   "at": 99.6,
-   "msg": "equipped via mouse",
-   "name": "Novice Hood",
-   "slot": "head",
-   "rarity": "rare"
+   "at": 167.8,
+   "msg": "FINDING[minor] Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   }
   },
   {
-   "at": 100.2,
+   "at": 169.7,
+   "msg": "FINDING[minor] Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   }
+  },
+  {
+   "at": 171.6,
+   "msg": "FINDING[minor] Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   }
+  },
+  {
+   "at": 173.5,
+   "msg": "FINDING[minor] Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   }
+  },
+  {
+   "at": 175.4,
+   "msg": "FINDING[minor] Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   }
+  },
+  {
+   "at": 177.3,
+   "msg": "FINDING[minor] Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   }
+  },
+  {
+   "at": 179.2,
+   "msg": "FINDING[minor] Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   }
+  },
+  {
+   "at": 181,
+   "msg": "FINDING[minor] Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   }
+  },
+  {
+   "at": 181.6,
    "msg": "MARK vale-done",
-   "lvl": 1
+   "lvl": 2
   },
   {
-   "at": 100.2,
+   "at": 181.6,
    "msg": "goal: portal->pinewood"
   }
  ],
- "findings": [],
+ "findings": [
+  {
+   "at": 75.3,
+   "sev": "blocker",
+   "title": "Hero is wedged: zero movement in all 8 directions and Dodge does not free it (needed a tester nudge)",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     22.37,
+     15.78
+    ],
+    "nudgedTo": [
+     22.350330847455144,
+     15.583567812659435
+    ],
+    "goal": "lantern (far NW)",
+    "escape": "only the pause menu TO HUB, or dying, would free a real player"
+   },
+   "shot": "tools/qa/shots/kbm-016-wedged.png",
+   "map": "vale"
+  },
+  {
+   "at": 90.4,
+   "sev": "blocker",
+   "title": "Hero is wedged: zero movement in all 8 directions and Dodge does not free it (needed a tester nudge)",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     22.35,
+     15.77
+    ],
+    "nudgedTo": [
+     22.364623753885333,
+     15.598211348619138
+    ],
+    "goal": "lantern (far NW)",
+    "escape": "only the pause menu TO HUB, or dying, would free a real player"
+   },
+   "shot": "tools/qa/shots/kbm-017-wedged.png",
+   "map": "vale"
+  },
+  {
+   "at": 96.8,
+   "sev": "minor",
+   "title": "Dead time: >60 s with no new trigger/objective/XP/kill/loot event",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     22.48,
+     15.73
+    ],
+    "obj": "Open the chest north-east. Then find the Stone's lantern.",
+    "sinceMs": 60024
+   },
+   "shot": "tools/qa/shots/kbm-018-deadtime.png",
+   "map": "vale"
+  },
+  {
+   "at": 105.8,
+   "sev": "blocker",
+   "title": "Hero is wedged: zero movement in all 8 directions and Dodge does not free it (needed a tester nudge)",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     22.97,
+     16.02
+    ],
+    "nudgedTo": [
+     23.07285703604914,
+     16.01599267362641
+    ],
+    "goal": "lantern (far NW)",
+    "escape": "only the pause menu TO HUB, or dying, would free a real player"
+   },
+   "shot": "tools/qa/shots/kbm-019-wedged.png",
+   "map": "vale"
+  },
+  {
+   "at": 119.7,
+   "sev": "blocker",
+   "title": "Hero is wedged: zero movement in all 8 directions and Dodge does not free it (needed a tester nudge)",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     22.95,
+     16.13
+    ],
+    "nudgedTo": [
+     23.054503975757353,
+     16.1343457339182
+    ],
+    "goal": "lantern (far NW)",
+    "escape": "only the pause menu TO HUB, or dying, would free a real player"
+   },
+   "shot": "tools/qa/shots/kbm-020-wedged.png",
+   "map": "vale"
+  },
+  {
+   "at": 132.4,
+   "sev": "blocker",
+   "title": "Hero is wedged: zero movement in all 8 directions and Dodge does not free it (needed a tester nudge)",
+   "detail": {
+    "map": "vale",
+    "pos": [
+     22.98,
+     16.13
+    ],
+    "nudgedTo": [
+     23.079755833638735,
+     16.1343457339182
+    ],
+    "goal": "lantern (far NW)",
+    "escape": "only the pause menu TO HUB, or dying, would free a real player"
+   },
+   "shot": "tools/qa/shots/kbm-021-wedged.png",
+   "map": "vale"
+  },
+  {
+   "at": 167.8,
+   "sev": "minor",
+   "title": "Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   },
+   "shot": "tools/qa/shots/kbm-027-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 169.7,
+   "sev": "minor",
+   "title": "Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   },
+   "shot": "tools/qa/shots/kbm-028-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 171.6,
+   "sev": "minor",
+   "title": "Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   },
+   "shot": "tools/qa/shots/kbm-029-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 173.5,
+   "sev": "minor",
+   "title": "Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   },
+   "shot": "tools/qa/shots/kbm-030-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 175.4,
+   "sev": "minor",
+   "title": "Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   },
+   "shot": "tools/qa/shots/kbm-031-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 177.3,
+   "sev": "minor",
+   "title": "Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   },
+   "shot": "tools/qa/shots/kbm-032-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 179.2,
+   "sev": "minor",
+   "title": "Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   },
+   "shot": "tools/qa/shots/kbm-033-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 181,
+   "sev": "minor",
+   "title": "Equip by mouse (double-click bag slot) did not equip the upgrade",
+   "detail": {
+    "item": {
+     "i": 5,
+     "slot": "weapon",
+     "rarity": "uncommon",
+     "base": "rustyblade",
+     "ilvl": 2,
+     "reqLvl": 1,
+     "name": "Rusty Blade",
+     "fam": "dawnblade",
+     "curFam": "dawnblade",
+     "score": 1020,
+     "eq": 10
+    },
+    "hadRegion": true
+   },
+   "shot": "tools/qa/shots/kbm-034-equip-fail.png",
+   "map": "vale"
+  }
+ ],
  "errors": [],
  "potions": {},
  "shots": [
   {
-   "at": 0.1,
+   "at": 0.3,
    "tag": "title",
    "file": "tools/qa/shots/kbm-001-title.png",
    "map": "vale"
   },
   {
-   "at": 1.3,
+   "at": 1.6,
    "tag": "vale-start",
    "file": "tools/qa/shots/kbm-002-vale-start.png",
    "map": "vale"
   },
   {
-   "at": 4,
+   "at": 4.4,
    "tag": "vale-wake",
    "file": "tools/qa/shots/kbm-003-vale-wake.png",
    "map": "vale"
   },
   {
-   "at": 15.6,
+   "at": 16.1,
    "tag": "vale-dummies",
    "file": "tools/qa/shots/kbm-004-vale-dummies.png",
    "map": "vale"
   },
   {
-   "at": 18,
+   "at": 18.6,
    "tag": "vale-yard-lesson",
    "file": "tools/qa/shots/kbm-005-vale-yard-lesson.png",
    "map": "vale"
   },
   {
-   "at": 24.8,
+   "at": 25.2,
    "tag": "vale-elder",
    "file": "tools/qa/shots/kbm-006-vale-elder.png",
    "map": "vale"
   },
   {
-   "at": 37.7,
-   "tag": "stuck",
-   "file": "tools/qa/shots/kbm-007-stuck.png",
-   "map": "vale"
-  },
-  {
-   "at": 57.4,
+   "at": 36.9,
    "tag": "vale-chest-loot",
-   "file": "tools/qa/shots/kbm-008-vale-chest-loot.png",
+   "file": "tools/qa/shots/kbm-007-vale-chest-loot.png",
    "map": "vale"
   },
   {
-   "at": 58.2,
+   "at": 37.7,
+   "tag": "bag-open-vale",
+   "file": "tools/qa/shots/kbm-008-bag-open-vale.png",
+   "map": "vale"
+  },
+  {
+   "at": 39.7,
    "tag": "menu-character",
    "file": "tools/qa/shots/kbm-009-menu-character.png",
    "map": "vale"
   },
   {
-   "at": 58.9,
+   "at": 40.4,
    "tag": "menu-quests",
    "file": "tools/qa/shots/kbm-010-menu-quests.png",
    "map": "vale"
   },
   {
-   "at": 59.7,
+   "at": 41.1,
    "tag": "menu-bestiary",
    "file": "tools/qa/shots/kbm-011-menu-bestiary.png",
    "map": "vale"
   },
   {
-   "at": 60.4,
+   "at": 41.8,
    "tag": "menu-bag",
    "file": "tools/qa/shots/kbm-012-menu-bag.png",
    "map": "vale"
   },
   {
-   "at": 61.5,
+   "at": 42.9,
    "tag": "menu-help",
    "file": "tools/qa/shots/kbm-013-menu-help.png",
    "map": "vale"
   },
   {
-   "at": 69.4,
+   "at": 56.3,
+   "tag": "stuck",
+   "file": "tools/qa/shots/kbm-014-stuck.png",
+   "map": "vale"
+  },
+  {
+   "at": 75.1,
+   "tag": "stuck",
+   "file": "tools/qa/shots/kbm-015-stuck.png",
+   "map": "vale"
+  },
+  {
+   "at": 75.3,
+   "tag": "wedged",
+   "file": "tools/qa/shots/kbm-016-wedged.png",
+   "map": "vale"
+  },
+  {
+   "at": 90.4,
+   "tag": "wedged",
+   "file": "tools/qa/shots/kbm-017-wedged.png",
+   "map": "vale"
+  },
+  {
+   "at": 96.8,
+   "tag": "deadtime",
+   "file": "tools/qa/shots/kbm-018-deadtime.png",
+   "map": "vale"
+  },
+  {
+   "at": 105.8,
+   "tag": "wedged",
+   "file": "tools/qa/shots/kbm-019-wedged.png",
+   "map": "vale"
+  },
+  {
+   "at": 119.7,
+   "tag": "wedged",
+   "file": "tools/qa/shots/kbm-020-wedged.png",
+   "map": "vale"
+  },
+  {
+   "at": 132.4,
+   "tag": "wedged",
+   "file": "tools/qa/shots/kbm-021-wedged.png",
+   "map": "vale"
+  },
+  {
+   "at": 139,
    "tag": "vale-lantern",
-   "file": "tools/qa/shots/kbm-014-vale-lantern.png",
+   "file": "tools/qa/shots/kbm-022-vale-lantern.png",
    "map": "vale"
   },
   {
-   "at": 78,
+   "at": 147.2,
    "tag": "vale-lantern-return",
-   "file": "tools/qa/shots/kbm-015-vale-lantern-return.png",
+   "file": "tools/qa/shots/kbm-023-vale-lantern-return.png",
    "map": "vale"
   },
   {
-   "at": 81,
+   "at": 149.7,
    "tag": "vale-garden-ambush",
-   "file": "tools/qa/shots/kbm-016-vale-garden-ambush.png",
+   "file": "tools/qa/shots/kbm-024-vale-garden-ambush.png",
    "map": "vale"
   },
   {
-   "at": 95.8,
+   "at": 164.2,
    "tag": "vale-rift-open",
-   "file": "tools/qa/shots/kbm-017-vale-rift-open.png",
+   "file": "tools/qa/shots/kbm-025-vale-rift-open.png",
    "map": "vale"
   },
   {
-   "at": 99,
+   "at": 167.1,
    "tag": "bag-open-vale2",
-   "file": "tools/qa/shots/kbm-018-bag-open-vale2.png",
+   "file": "tools/qa/shots/kbm-026-bag-open-vale2.png",
+   "map": "vale"
+  },
+  {
+   "at": 167.8,
+   "tag": "equip-fail",
+   "file": "tools/qa/shots/kbm-027-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 169.7,
+   "tag": "equip-fail",
+   "file": "tools/qa/shots/kbm-028-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 171.6,
+   "tag": "equip-fail",
+   "file": "tools/qa/shots/kbm-029-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 173.5,
+   "tag": "equip-fail",
+   "file": "tools/qa/shots/kbm-030-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 175.4,
+   "tag": "equip-fail",
+   "file": "tools/qa/shots/kbm-031-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 177.3,
+   "tag": "equip-fail",
+   "file": "tools/qa/shots/kbm-032-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 179.2,
+   "tag": "equip-fail",
+   "file": "tools/qa/shots/kbm-033-equip-fail.png",
+   "map": "vale"
+  },
+  {
+   "at": 181,
+   "tag": "equip-fail",
+   "file": "tools/qa/shots/kbm-034-equip-fail.png",
    "map": "vale"
   }
  ],
  "dead": [],
  "stuck": [
   {
-   "at": 37.7,
+   "at": 56.3,
    "map": "vale",
    "pos": [
-    25.77,
-    17.14
+    22.5,
+    15.74
    ],
-   "goal": "tutorial chest",
-   "shot": "tools/qa/shots/kbm-007-stuck.png",
+   "goal": "lantern (far NW)",
+   "shot": "tools/qa/shots/kbm-014-stuck.png",
    "n": 3
+  },
+  {
+   "at": 75.1,
+   "map": "vale",
+   "pos": [
+    22.37,
+    15.78
+   ],
+   "goal": "lantern (far NW)",
+   "shot": "tools/qa/shots/kbm-015-stuck.png",
+   "n": 8
   }
  ],
  "fps": {
   "vale": {
-   "frames": 6411,
-   "sumMs": 107251.49999999953,
+   "frames": 11287,
+   "sumMs": 189291.30000000566,
    "p95s": [
     {
      "p95": 16.79999999998836,
-     "max": 83.29999999999995
+     "max": 200
     }
    ]
   }
@@ -380,28 +1245,12 @@
  "talks": [],
  "warns": [],
  "damage": [],
- "started": "2026-10-20T02:09:28.960Z",
- "marks": [
-  {
-   "at": 1.3,
-   "name": "vale-start",
-   "map": "vale",
-   "lvl": 1,
-   "hp": 760
-  },
-  {
-   "at": 100.2,
-   "name": "vale-done",
-   "map": "vale",
-   "lvl": 1,
-   "hp": 796
-  }
- ],
+ "started": "2026-10-20T02:22:31.502Z",
  "pev": [
   {
    "at": 1.4,
    "k": "action",
-   "gt": 0.95,
+   "gt": 1.13,
    "map": "vale",
    "type": "dialogue",
    "id": "vale_banner"
@@ -409,7 +1258,7 @@
   {
    "at": 1.4,
    "k": "talk",
-   "gt": 0.95,
+   "gt": 1.13,
    "map": "vale",
    "id": "vale_banner",
    "first": "Whispering Vale"
@@ -417,7 +1266,7 @@
   {
    "at": 1.4,
    "k": "action",
-   "gt": 0.95,
+   "gt": 1.13,
    "map": "vale",
    "type": "spawn",
    "id": "dummy"
@@ -425,7 +1274,7 @@
   {
    "at": 1.4,
    "k": "action",
-   "gt": 0.95,
+   "gt": 1.13,
    "map": "vale",
    "type": "spawn",
    "id": "dummy"
@@ -433,7 +1282,7 @@
   {
    "at": 1.4,
    "k": "action",
-   "gt": 0.95,
+   "gt": 1.13,
    "map": "vale",
    "type": "dialogue",
    "id": "vale_wake"
@@ -441,7 +1290,7 @@
   {
    "at": 1.4,
    "k": "talk",
-   "gt": 0.95,
+   "gt": 1.13,
    "map": "vale",
    "id": "vale_wake",
    "first": "Up. You were sleeping like you meant it."
@@ -449,14 +1298,14 @@
   {
    "at": 1.4,
    "k": "action",
-   "gt": 0.95,
+   "gt": 1.13,
    "map": "vale",
    "type": "dialogue"
   },
   {
    "at": 1.4,
    "k": "talk",
-   "gt": 0.95,
+   "gt": 1.13,
    "map": "vale",
    "id": null,
    "first": "Training dummies are east. Hit one."
@@ -464,490 +1313,518 @@
   {
    "at": 1.4,
    "k": "action",
-   "gt": 0.95,
+   "gt": 1.13,
    "map": "vale",
    "type": "objective",
    "text": "Hit the training dummies in the yard."
   },
   {
-   "at": 5.2,
+   "at": 6.4,
    "k": "action",
-   "gt": 5.52,
+   "gt": 5.83,
    "map": "vale",
    "type": "dialogue"
   },
   {
-   "at": 5.2,
+   "at": 6.4,
    "k": "talk",
-   "gt": 5.52,
+   "gt": 5.83,
    "map": "vale",
    "id": null,
    "first": "Swing. Then dodge. Then try your Q skill."
   },
   {
-   "at": 5.2,
+   "at": 6.4,
    "k": "action",
-   "gt": 5.52,
+   "gt": 5.83,
    "map": "vale",
    "type": "objective",
    "text": "Follow the path north to the Elder Plaza."
   },
   {
-   "at": 18.1,
+   "at": 17.8,
    "k": "action",
-   "gt": 17.73,
+   "gt": 18.22,
    "map": "vale",
    "type": "checkpoint",
    "text": "Checkpoint: Whispering Vale"
   },
   {
-   "at": 18.1,
+   "at": 17.8,
    "k": "action",
-   "gt": 17.73,
+   "gt": 18.22,
    "map": "vale",
    "type": "heal"
   },
   {
-   "at": 24.8,
+   "at": 22.7,
    "k": "action",
-   "gt": 22.7,
+   "gt": 22.98,
    "map": "vale",
    "type": "dialogue",
    "id": "vale_elder"
   },
   {
-   "at": 24.8,
+   "at": 22.7,
    "k": "talk",
-   "gt": 22.7,
+   "gt": 22.98,
    "map": "vale",
    "id": "vale_elder",
    "first": "The Stone knows her. The Stone does not say."
   },
   {
-   "at": 24.8,
+   "at": 22.7,
    "k": "action",
-   "gt": 22.7,
+   "gt": 22.98,
    "map": "vale",
    "type": "dialogue"
   },
   {
-   "at": 24.8,
+   "at": 22.7,
    "k": "talk",
-   "gt": 22.7,
+   "gt": 22.98,
    "map": "vale",
    "id": null,
    "first": "The Stone lost a light. Past the cottage, a path ends."
   },
   {
-   "at": 24.8,
+   "at": 22.7,
    "k": "action",
-   "gt": 22.7,
+   "gt": 22.98,
    "map": "vale",
    "type": "quest",
    "id": "vale_lantern"
   },
   {
-   "at": 24.8,
+   "at": 22.7,
    "k": "action",
-   "gt": 22.7,
+   "gt": 22.98,
    "map": "vale",
    "type": "objective",
    "text": "Open the chest north-east. Then find the Stone's lantern."
   },
   {
-   "at": 56,
+   "at": 34.2,
    "k": "action",
-   "gt": 55.73,
+   "gt": 33.32,
    "map": "vale",
    "type": "dialogue"
   },
   {
-   "at": 56,
+   "at": 34.2,
    "k": "talk",
-   "gt": 55.73,
-   "map": "vale",
-   "id": null,
-   "first": "A chest! Interact to open it."
-  },
-  {
-   "at": 56,
-   "k": "action",
-   "gt": 55.92,
-   "map": "vale",
-   "type": "dialogue"
-  },
-  {
-   "at": 56,
-   "k": "talk",
-   "gt": 55.92,
+   "gt": 33.32,
    "map": "vale",
    "id": null,
    "first": "Ripples. Fishing waits in the Pinewood."
   },
   {
-   "at": 63.2,
+   "at": 34.2,
    "k": "action",
-   "gt": 63.37,
+   "gt": 33.77,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 34.2,
+   "k": "talk",
+   "gt": 33.77,
+   "map": "vale",
+   "id": null,
+   "first": "A chest! Interact to open it."
+  },
+  {
+   "at": 34.2,
+   "k": "loot",
+   "gt": 34.27,
+   "map": "vale",
+   "n": 3,
+   "kinds": [
+    "item:weapon/uncommon",
+    "item:chest/uncommon",
+    "gem"
+   ]
+  },
+  {
+   "at": 43.3,
+   "k": "action",
+   "gt": 39.18,
    "map": "vale",
    "type": "dialogue",
    "id": "vale_chest"
   },
   {
-   "at": 63.2,
+   "at": 43.3,
    "k": "talk",
-   "gt": 63.37,
+   "gt": 39.18,
    "map": "vale",
    "id": "vale_chest",
    "first": "That glow? Keep it. Gear remembers you."
   },
   {
-   "at": 63.2,
+   "at": 43.3,
    "k": "action",
-   "gt": 63.37,
+   "gt": 39.18,
    "map": "vale",
    "type": "dialogue"
   },
   {
-   "at": 63.2,
+   "at": 43.3,
    "k": "talk",
-   "gt": 63.37,
+   "gt": 39.18,
    "map": "vale",
    "id": null,
    "first": "Open your bag and equip it."
   },
   {
-   "at": 68.1,
+   "at": 137,
    "k": "action",
-   "gt": 67.75,
+   "gt": 137.33,
    "map": "vale",
    "type": "dialogue",
    "id": "vale_tablet"
   },
   {
-   "at": 68.1,
+   "at": 137,
    "k": "talk",
-   "gt": 67.75,
+   "gt": 137.33,
    "map": "vale",
    "id": "vale_tablet",
    "first": "Four Wardens. One would not wake."
   },
   {
-   "at": 69.3,
+   "at": 139.5,
    "k": "action",
-   "gt": 69.85,
+   "gt": 139.37,
    "map": "vale",
    "type": "message",
    "text": "The Stone's lantern, still warm."
   },
   {
-   "at": 69.3,
+   "at": 139.5,
    "k": "action",
-   "gt": 69.85,
+   "gt": 139.37,
    "map": "vale",
    "type": "quest",
    "id": "vale_lantern"
   },
   {
-   "at": 69.3,
+   "at": 139.5,
    "k": "action",
-   "gt": 69.85,
+   "gt": 139.37,
    "map": "vale",
    "type": "objective",
    "text": "Return the lantern to the Elder Stone."
   },
   {
-   "at": 75.6,
+   "at": 145.7,
    "k": "action",
-   "gt": 75.63,
+   "gt": 145.15,
    "map": "vale",
    "type": "dialogue"
   },
   {
-   "at": 75.6,
+   "at": 145.7,
    "k": "talk",
-   "gt": 75.63,
+   "gt": 145.15,
    "map": "vale",
    "id": null,
    "first": "The Stone is lit. The Stone remembers kindness."
   },
   {
-   "at": 75.6,
+   "at": 145.7,
    "k": "action",
-   "gt": 75.63,
+   "gt": 145.15,
    "map": "vale",
    "type": "quest",
    "id": "vale_lantern"
   },
   {
-   "at": 75.6,
+   "at": 145.7,
    "k": "action",
-   "gt": 75.63,
+   "gt": 145.15,
    "map": "vale",
    "type": "loot"
   },
   {
-   "at": 75.6,
+   "at": 145.7,
    "k": "loot",
-   "gt": 75.63,
+   "gt": 145.15,
    "map": "vale",
    "n": 2,
    "kinds": [
-    "item:head/rare",
+    "item:chest/rare",
     "gem"
    ]
   },
   {
-   "at": 75.6,
+   "at": 145.7,
    "k": "action",
-   "gt": 75.63,
+   "gt": 145.15,
    "map": "vale",
    "type": "message",
    "text": "Reward: a gem and a Socket Rune."
   },
   {
-   "at": 81.8,
+   "at": 150.7,
    "k": "action",
-   "gt": 81.4,
+   "gt": 150.1,
    "map": "vale",
    "type": "banner",
    "text": "Gloom in the garden"
   },
   {
-   "at": 81.8,
+   "at": 150.7,
    "k": "action",
-   "gt": 81.4,
+   "gt": 150.1,
    "map": "vale",
    "type": "spawn",
    "id": "gloomslime"
   },
   {
-   "at": 81.8,
+   "at": 150.7,
    "k": "action",
-   "gt": 81.4,
+   "gt": 150.1,
    "map": "vale",
    "type": "spawn",
    "id": "gloomslime"
   },
   {
-   "at": 81.8,
+   "at": 150.7,
    "k": "action",
-   "gt": 81.4,
+   "gt": 150.1,
    "map": "vale",
    "type": "spawn",
    "id": "gloomslime"
   },
   {
-   "at": 84.4,
+   "at": 151.9,
    "k": "kill",
-   "gt": 84.22,
+   "gt": 151.95,
    "map": "vale",
    "type": "gloomslime",
    "boss": false
   },
   {
-   "at": 84.4,
+   "at": 151.9,
    "k": "loot",
-   "gt": 84.22,
+   "gt": 151.95,
    "map": "vale",
    "n": 0,
    "kinds": []
   },
   {
-   "at": 85.6,
+   "at": 153.2,
    "k": "kill",
-   "gt": 85.17,
+   "gt": 152.9,
    "map": "vale",
    "type": "gloomslime_small",
    "boss": false
   },
   {
-   "at": 85.6,
+   "at": 153.2,
    "k": "kill",
-   "gt": 85.65,
+   "gt": 152.9,
    "map": "vale",
    "type": "gloomslime_small",
    "boss": false
   },
   {
-   "at": 89.4,
+   "at": 154.4,
    "k": "kill",
-   "gt": 89.4,
+   "gt": 154.28,
    "map": "vale",
    "type": "gloomslime",
    "boss": false
   },
   {
-   "at": 89.4,
+   "at": 154.4,
    "k": "loot",
-   "gt": 89.4,
+   "gt": 154.28,
    "map": "vale",
    "n": 0,
    "kinds": []
   },
   {
-   "at": 89.4,
+   "at": 155.6,
    "k": "kill",
-   "gt": 89.88,
+   "gt": 155.25,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 155.6,
+   "k": "kill",
+   "gt": 155.73,
+   "map": "vale",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 158.1,
+   "k": "kill",
+   "gt": 157.95,
    "map": "vale",
    "type": "gloomslime",
    "boss": false
   },
   {
-   "at": 89.4,
+   "at": 158.1,
    "k": "loot",
-   "gt": 89.88,
+   "gt": 157.95,
    "map": "vale",
    "n": 0,
    "kinds": []
   },
   {
-   "at": 90.6,
+   "at": 159.3,
    "k": "kill",
-   "gt": 90.85,
+   "gt": 158.88,
    "map": "vale",
    "type": "gloomslime_small",
    "boss": false
   },
   {
-   "at": 90.6,
+   "at": 160.6,
    "k": "kill",
-   "gt": 90.85,
+   "gt": 160.18,
    "map": "vale",
    "type": "gloomslime_small",
    "boss": false
   },
   {
-   "at": 91.9,
-   "k": "kill",
-   "gt": 91.33,
-   "map": "vale",
-   "type": "gloomslime_small",
-   "boss": false
-  },
-  {
-   "at": 91.9,
-   "k": "kill",
-   "gt": 91.88,
-   "map": "vale",
-   "type": "gloomslime_small",
-   "boss": false
-  },
-  {
-   "at": 91.9,
+   "at": 160.6,
    "k": "action",
-   "gt": 91.88,
+   "gt": 160.18,
    "map": "vale",
    "type": "message",
    "text": "The garden is quiet. Something hums in the south."
   },
   {
-   "at": 91.9,
+   "at": 160.6,
    "k": "action",
-   "gt": 91.88,
+   "gt": 160.18,
    "map": "vale",
    "type": "heal"
   },
   {
-   "at": 91.9,
+   "at": 160.6,
    "k": "action",
-   "gt": 91.88,
+   "gt": 160.18,
    "map": "vale",
    "type": "loot"
   },
   {
-   "at": 91.9,
+   "at": 160.6,
    "k": "loot",
-   "gt": 91.88,
+   "gt": 160.18,
    "map": "vale",
    "n": 1,
    "kinds": [
-    "item:head/rare"
+    "item:weapon/uncommon"
    ]
   },
   {
-   "at": 91.9,
+   "at": 160.6,
    "k": "action",
-   "gt": 91.88,
+   "gt": 160.18,
    "map": "vale",
    "type": "open_portal"
   },
   {
-   "at": 91.9,
+   "at": 160.6,
    "k": "action",
-   "gt": 91.88,
+   "gt": 160.18,
    "map": "vale",
    "type": "sound"
   },
   {
-   "at": 91.9,
+   "at": 160.6,
    "k": "action",
-   "gt": 91.88,
+   "gt": 160.18,
    "map": "vale",
    "type": "banner",
    "text": "The Pinewood rift opens"
   },
   {
-   "at": 91.9,
+   "at": 160.6,
    "k": "action",
-   "gt": 91.88,
+   "gt": 160.18,
    "map": "vale",
    "type": "dialogue",
    "id": "vale_rift"
   },
   {
-   "at": 91.9,
+   "at": 160.6,
    "k": "talk",
-   "gt": 91.88,
+   "gt": 160.18,
    "map": "vale",
    "id": "vale_rift",
    "first": "The Pinewood screams. Let's be rude back."
   },
   {
-   "at": 91.9,
+   "at": 160.6,
    "k": "action",
-   "gt": 91.88,
+   "gt": 160.18,
    "map": "vale",
    "type": "quest",
    "id": "shard_root"
   },
   {
-   "at": 91.9,
+   "at": 160.6,
    "k": "action",
-   "gt": 91.88,
+   "gt": 160.18,
    "map": "vale",
    "type": "objective",
    "text": "Take the rift south into the Misty Pinewood."
   },
   {
-   "at": 108.5,
+   "at": 189.2,
    "k": "action",
-   "gt": 107.85,
+   "gt": 189.58,
    "map": "pinewood",
    "type": "dialogue",
    "id": "pinewood_banner"
   },
   {
-   "at": 108.5,
+   "at": 189.2,
    "k": "talk",
-   "gt": 107.85,
+   "gt": 189.58,
    "map": "pinewood",
    "id": "pinewood_banner",
    "first": "Misty Pinewood"
   },
   {
-   "at": 108.5,
+   "at": 189.2,
    "k": "action",
-   "gt": 107.85,
+   "gt": 189.58,
    "map": "pinewood",
    "type": "dialogue"
   },
   {
-   "at": 108.5,
+   "at": 189.2,
    "k": "talk",
-   "gt": 107.85,
+   "gt": 189.58,
    "map": "pinewood",
    "id": null,
    "first": "The animals are running."
+  }
+ ],
+ "marks": [
+  {
+   "at": 1.6,
+   "name": "vale-start",
+   "map": "vale",
+   "lvl": 1,
+   "hp": 760
+  },
+  {
+   "at": 181.6,
+   "name": "vale-done",
+   "map": "vale",
+   "lvl": 2,
+   "hp": 676
   }
  ]
 }
