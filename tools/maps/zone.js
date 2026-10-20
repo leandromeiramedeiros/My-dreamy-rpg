@@ -132,6 +132,7 @@ function populate(S, g, T) {
   //   <id>_done  all_enemies_dead on that card's spawns, once: true -> settles, so only the FIRST clear pays the guarantee: one Rare+ at
   //              item level >= (boss level - 2) in slot 'upgrade' (items.js upgradeSlot: weapon > chest > head > boots, the first worn piece it beats that no earlier pocket
   //              filled, in the family worn there). Later clears drop only the elite's own rollLoot('elite') (normal elite rates).
+  const keepRng = g.rng; g.rng = g.sideRng();   // pockets + their shrine on the side stream: the rest of the map places exactly as before
   const BOSS_LVL = id => { const b = (require('./gamedata.js').BOSS_DATA || {})[id]; if (!b || !b.level) throw new Error('pocket boss without a level: ' + id); return b.level; };
   for (const pk of S.pockets || []) {
     const rm = R[pk.room], floor = BOSS_LVL(pk.boss) - 2, n = pk.mobs.reduce((a, m) => a + m[1], 0);
@@ -142,6 +143,7 @@ function populate(S, g, T) {
     tr.push(Object.assign(T.enter(pk.id, pk.name, rm.x, rm.y, rm.r + 0.4, spawns), { once: false, cooldown: 100000 }));
     tr.push(T.allDead(pk.id + '_done', pk.name + ': first clear', [pk.id], [T.message(pk.done || 'The pocket is quiet. Something good was guarded here.'), T.loot('rare', 1, rm.x, rm.y, { slot: 'upgrade', ilvl: floor })]));
   }
+  g.rng = keepRng;
 
   // ============================================================== FOREST: secrets (crack, bridge lever, env pond, cross-section cache)
   const secretTriggers = [];
@@ -200,7 +202,7 @@ function populate(S, g, T) {
     g.warp('hollow_door', { x: hd.x, y: hd.y - 0.2, to: { x: hst.x + 1.4, y: hst.y - 0.3 }, key: S.key, label: 'Root Hollow', marker: true, boss: E.den.doorBoss });
     g.anchor('hollow_in', hst.x + 1.4, hst.y - 0.3); g.poi('door', hd.x, hd.y);
     if (S.doorShrine) {   // DESIGN 26.2 cheap retries: a warp shrine at the boss door, beside the Mossjaw pockets
-      const q = snap(hd.x + S.doorShrine.dx, hd.y + S.doorShrine.dy, 1.2);
+      const keep = g.rng; g.rng = g.sideRng(); const q = snap(hd.x + S.doorShrine.dx, hd.y + S.doorShrine.dy, 1.2); g.rng = keep;
       g.marker('shrine', q.x, q.y, { id: 'door_shrine', name: S.doorShrine.name, label: 'checkpoint', warp: true }); g.poi('shrine', q.x, q.y); g.anchor('door_shrine_land', q.x + 1.2, q.y + 0.6);
       tr.push(repeat(T.enter('door_shrine', S.doorShrine.name, q.x, q.y, 2.2, [T.checkpoint('Checkpoint: ' + S.doorShrine.name), T.heal(100)])));
     }
@@ -236,7 +238,7 @@ function populate(S, g, T) {
     // the root-stair out stays sealed until Mossjaw falls, and warping out to a forest shrine only skips a walk.
     const hp = g.pathBy.h_main, want = den.r + S.denShrine.back;
     let best = null; for (const sm of hp.samples) { if (sm.x > den.x) continue; const d = Math.abs(Math.hypot(sm.x - den.x, sm.y - den.y) - want); if (!best || d < best.d) best = { d, x: sm.x, y: sm.y }; }
-    const q = snap(best.x, best.y - 1.3, 1.2);
+    const keep = g.rng; g.rng = g.sideRng(); const q = snap(best.x, best.y - 1.3, 1.2); g.rng = keep;
     g.marker('shrine', q.x, q.y, { id: 'den_shrine', name: S.denShrine.name, label: 'checkpoint', warp: true }); g.poi('shrine', q.x, q.y);
     tr.push(repeat(T.enter('den_shrine', S.denShrine.name, q.x, q.y, 2.2, [T.checkpoint('Checkpoint: ' + S.denShrine.name), T.heal(100)])));
   }

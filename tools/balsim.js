@@ -425,10 +425,12 @@ function arenaAdds(id) {
   return { adds: [], arena: null, bx: 3, by: 0 };
 }
 const liveRows = [];
-for (const id in LIVE) {
+// two passes: every §26.2 table row first, then the pocket rows (so adding pocket rows never shifts the table rows' seeded numbers)
+for (const pass of [0, 1]) for (const id in LIVE) {
   if (!ENEMY[id] || (arg('boss', '') && arg('boss', '') !== id)) continue;
   const { max, red: redMax } = LIVE[id], card = JSON.stringify(arenaAdds(id));
   for (const G_ of LIVE_ROWS) {
+    if (!!G_.pockets !== !!pass) continue;
     const runs = [];
     ev(`setSetting('difficulty', '${G_.diff}')`);
     if (ONLY && !ONLY.split(',').includes(G_.k) || G_.boss && G_.boss !== id) continue;

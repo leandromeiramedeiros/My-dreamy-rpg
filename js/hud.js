@@ -18,7 +18,10 @@ const SLOT_PITCH = 48, SLOT_Y = 484, SLOT = 44, POTION_X = 858;
 const SLOT_LABEL = { lmb: 'LMB', q: 'Q', e: 'E', r: 'R', f: 'F', c: 'C', shift: 'SHF', 1: '1', 2: '2', 3: '3', pot: '4' };
 const EL_ICON_COL = { slash: 'physical', pierce: 'physical' };
 const uiReady = () => !!(typeof UI_ART !== 'undefined' && UI.image(UI_ART.src));
-const elColor = el => UI.el(EL_ICON_COL[el] || el);
+// element -> rim colour, cached (UI.el asks ICONS each call; ~20 calls a frame from the skill bar). Cached only once ICONS is
+// loaded, so an early fallback colour is never pinned.
+const EL_COLOR_CACHE = new Map();
+const elColor = el => { let c = EL_COLOR_CACHE.get(el); if (c === undefined) { c = UI.el(EL_ICON_COL[el] || el); if (typeof ICONS !== 'undefined') EL_COLOR_CACHE.set(el, c); } return c; };
 const easeOut = k => 1 - (1 - k) * (1 - k);
 // the ultimate's charge as a fraction of what R needs now (some amulets / boons let R fire below 100): ultNeed(p), game.js
 const ultFrac = p => { const n = typeof ultNeed === 'function' ? ultNeed(p) : 100; return n <= 0 ? 1 : clamp((p.ult || 0) / n, 0, 1); };

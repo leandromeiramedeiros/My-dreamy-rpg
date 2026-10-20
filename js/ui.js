@@ -137,6 +137,36 @@ const UI = (() => {
       x += g.adv * sc;
     }
   }
+  // ---- text-run cache (DESIGN §26.4 step 5): a HUD frame drew ~300 glyph blits, each label 1-10 times (outline, shadow, fill).
+  // A run seen twice is rastered once - outline, shadow and fill, in the same order, into a canvas at the target's device scale
+  // - and blitted. Only under a plain whole-pixel transform at alpha 1 / source-over, so the pixels are the ones the direct
+  // draw makes; otherwise (fading text, a scaled menu, the fallback font) the direct path runs as before. TEXT_MAX entries;
+  // strings seen once (fresh damage numbers) never allocate.
+  const TEXT_CACHE = new Map(), TEXT_SEEN = new Map(), TEXT_MAX = 400, TEXT_PAD = 2;
+  function textCached(ctx, F, s, x, y, sz, col, outline, shadow, w) {
+    if (ctx.globalAlpha !== 1 || ctx.globalCompositeOperation !== 'source-over') return false;
+    const T = ctx.getTransform(), K = T.a;
+    if (T.b !== 0 || T.c !== 0 || T.d !== K || K !== Math.round(K) || K < 1 || T.e !== Math.round(T.e) || T.f !== Math.round(T.f)) return false;
+    const k = s + '\u0001' + sz.face + '|' + sz.sc + '|' + col + '|' + (outline ? 1 : 0) + (shadow ? 1 : 0) + '|' + K;
+    let c = TEXT_CACHE.get(k);
+    if (!c) {
+      const n = (TEXT_SEEN.get(k) || 0) + 1;
+      if (n < 2) { if (TEXT_SEEN.size > TEXT_MAX * 4) TEXT_SEEN.clear(); TEXT_SEEN.set(k, n); return false; }
+      TEXT_SEEN.delete(k);
+      if (TEXT_CACHE.size >= TEXT_MAX) TEXT_CACHE.clear();
+      const P = TEXT_PAD, cw = Math.max(1, w + 2 * P + 4 * sz.sc), ch = F.f.h * sz.sc + 2 * P + 2 * sz.sc;
+      c = document.createElement('canvas'); c.width = cw * K; c.height = ch * K;
+      const x2 = c.getContext('2d'); x2.setTransform(K, 0, 0, K, 0, 0); x2.imageSmoothingEnabled = false;
+      if (outline) for (const [dx, dy] of OUTLINE) drawRun(x2, F, s, P + dx, P + dy, sz.sc, C.edge);
+      if (shadow) drawRun(x2, F, s, P + 2, P + 2, sz.sc, C.edge);
+      drawRun(x2, F, s, P, P, sz.sc, col);
+      c.cw = cw; c.ch = ch; TEXT_CACHE.set(k, c);
+    }
+    const sm = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(c, x - TEXT_PAD, y - TEXT_PAD, c.cw, c.ch);
+    ctx.imageSmoothingEnabled = sm;
+    return true;
+  }
   const OUTLINE = [[-2, 0], [2, 0], [0, -2], [0, 2], [-2, -2], [2, -2], [-2, 2], [2, 2]];
   function text(ctx, s, x, y, size = 'body', col = C.text, align = 'left', o = {}) {
     s = s == null ? '' : String(s); if (!s) return 0;
@@ -146,7 +176,8 @@ const UI = (() => {
     const outline = o.outline != null ? o.outline : size === 'heading', shadow = o.shadow !== false;
     const a0 = ctx.globalAlpha; if (o.alpha != null) ctx.globalAlpha = a0 * o.alpha;
     const F = face(sz.face);
-    if (F) {
+    if (F && textCached(ctx, F, s, x, y, sz, col, outline, shadow, w)) { /* one blit of the cached run */ }
+    else if (F) {
       if (outline) for (const [dx, dy] of OUTLINE) drawRun(ctx, F, s, x + dx, y + dy, sz.sc, C.edge);
       if (shadow) drawRun(ctx, F, s, x + 2, y + 2, sz.sc, C.edge);
       drawRun(ctx, F, s, x, y, sz.sc, col);

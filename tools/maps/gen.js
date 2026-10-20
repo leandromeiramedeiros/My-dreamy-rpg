@@ -256,7 +256,7 @@ class MapGen {
   room(id, o) {
     const r = Object.assign({ id, kind: 'clearing', r: 5, lvl: 0, clear: false, walled: false, isolated: false, label: id, shape: 'blob', enemies: false }, o);
     if (r.kind === 'plaza' || r.kind === 'arena') r.shape = r.shape === 'blob' ? 'round' : r.shape;
-    r.ph = this.rng.range(0, 100);
+    r.ph = (r.side ? this.sideRng() : this.rng).range(0, 100);   // side: an add-on room (its own RNG stream: the rest of the map rolls as before)
     this.rooms.push(r); this.roomBy[id] = r; return r;
   }
   // pond: open water disc (fishing). Makes its own land + flat terrace so banks are walkable.
@@ -343,13 +343,13 @@ class MapGen {
       let prev = base;
       for (const c of cps) { if (c.dl != null) c.lvl = prev + c.dl; if (c.lvl == null) c.lvl = prev; prev = c.lvl; }
       // meander: insert displaced intermediate points
-      const wound = [cps[0]];
-      let sg = this.rng.sign();
+      const wound = [cps[0]], RG = p.side ? this.sideRng() : this.rng;   // side: an add-on path on its own RNG stream (DESIGN 26.2 pockets)
+      let sg = RG.sign();
       for (let i = 1; i < cps.length; i++) {
         const a = cps[i - 1], b = cps[i], len = Math.hypot(b.x - a.x, b.y - a.y), k = Math.floor(len / p.every);
         const nx = -(b.y - a.y) / (len || 1), ny = (b.x - a.x) / (len || 1);
         for (let m = 1; m <= k; m++) {
-          const t = m / (k + 1), off = p.meander * sg * (0.5 + this.rng.range(0, 0.9)) * Math.sin(Math.PI * t * 0.5 + 0.9) ; sg = -sg;
+          const t = m / (k + 1), off = p.meander * sg * (0.5 + RG.range(0, 0.9)) * Math.sin(Math.PI * t * 0.5 + 0.9) ; sg = -sg;
           wound.push({ x: clamp(lerp(a.x, b.x, t) + nx * off, 3, this.W - 4), y: clamp(lerp(a.y, b.y, t) + ny * off, 3, this.H - 4), orig: false });
         }
         wound.push(b);
@@ -956,6 +956,8 @@ class MapGen {
 
   // ---------------------------------- portals/start ----------------------------
   house(x, y) { x = Math.round(x); y = Math.round(y); this.blockers = this.blockers || []; this.blockers.push({ x0: x, y0: y, x1: x + 2, y1: y + 2 }); return this.addObj('house', x, y, { force: true, sp: 3.5 }); }
+  // a second seeded stream for add-on content (side: true rooms / paths, zone.js pockets): adding it leaves the main stream untouched
+  sideRng() { return this._side || (this._side = makeRng((this.seed * 7919 + 17) | 0)); }
   setStart(x, y) { this.startPos = { x: r2(x), y: r2(y) }; }
   portal(x, y, to, o = {}) { const p = Object.assign({ x: r2(x), y: r2(y), to, open: true, marker: false }, o); this.portals.push(p); return p; }
 

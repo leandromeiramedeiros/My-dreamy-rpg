@@ -253,7 +253,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   // ---- §26.2 elite pockets: 1 elite + 3-5 commons, the first clear guarantees a Rare+ at ilvl >= boss level - 2 in a rotating, usable
   // slot (the hero's weakest worn gear slot, in the family worn there); the pocket respawns on map re-entry and later clears pay no guarantee
   const PK = path.join(__dirname, 'shots', 'm3-pockets'); fs.mkdirSync(PK, { recursive: true });
-  const pkShot = async name => { await wait(700); await page.screenshot({ path: path.join(PK, name + '.png') }); };
+  const pkShot = async name => { await wait(1400); await page.screenshot({ path: path.join(PK, name + '.png') }); };
   await ev(() => { window.__items = []; const dl = window.dropLoot; window.dropLoot = (x, y, list) => { for (const d of list) if (d.kind === 'item') window.__items.push({ slot: d.it.slot, rarity: d.it.rarity, ilvl: d.it.ilvl, base: d.it.base, req: d.it.req, src: TRIG_SRC, lvl: G.player.level }); return dl(x, y, list); }; });
   const pockets = await ev(() => G.map.triggers.filter(t => /^pk_[a-z_]+$/.test(t.id) && !/_done$/.test(t.id)).map(t => ({ id: t.id, once: t.once, elite: t.actions.find(a => a.elite), commons: t.actions.filter(a => a.type === 'spawn' && !a.elite).length, floor: (G.map.triggers.find(q => q.id === t.id + '_done').actions.find(a => a.type === 'loot') || {}).ilvl })));
   check('pinewood (§26.2): 4 elite pockets (2 by the Hollow door, 2 by the Clearing), each 1 elite + 3-5 commons, re-arming (once: false)', pockets.length === 4 && pockets.every(q => q.once === false && q.elite && q.commons >= 3 && q.commons <= 5), pockets);
