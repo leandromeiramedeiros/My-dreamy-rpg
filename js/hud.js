@@ -97,15 +97,53 @@ function drawDamageNumbers(ctx) {
     UI.text(ctx, t.s, x, y, size, col, 'center', { alpha: clamp(a, 0, 1) });
   }
 }
-// rarity-coloured names over ground loot
+// rarity-coloured names over ground loot. De-overlapped: labels are placed best rarity first (then nearest to the hero),
+// each pushed up a line until it clears the ones already placed; at most DROP_LABELS show near the hero, and Common
+// labels fade 2 s after the drop. Hold Alt (or press L3 on a pad) to show every label.
+const DROP_LABELS = 6;
+const dropAll = { alt: false };
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('keydown', e => { if (e.code === 'AltLeft' || e.code === 'AltRight') { dropAll.alt = true; e.preventDefault(); } });
+  window.addEventListener('keyup', e => { if (e.code === 'AltLeft' || e.code === 'AltRight') dropAll.alt = false; });
+  window.addEventListener('blur', () => { dropAll.alt = false; });
+}
+function dropShowAll() {
+  if (dropAll.alt) return true;
+  try { const gp = navigator.getGamepads && navigator.getGamepads(); for (const g of gp || []) if (g && g.buttons[10] && g.buttons[10].pressed) return true; } catch (e) { /* no pad */ }
+  return false;
+}
 function drawDropNames(ctx) {
   const p = G.player; if (!G.drops || !p) return;
+  const all = dropShowAll(), cand = [];
   for (const d of G.drops) {
     if (d.t < 0.5) continue;
-    const i = RARITY[d.rar].i, dd = dist(p.x, p.y, d.x, d.y), range = i >= 2 ? 9 : 5;
+    const i = RARITY[d.rar].i, dd = dist(p.x, p.y, d.x, d.y), range = all ? 12 : i >= 2 ? 9 : 5;
     if (dd > range) continue;
-    const [vx, vy] = worldToView(d.x, d.y, d.z), h = DROP_FX[i].h * Math.min(1, (d.t - 0.3) * 2.5);
-    UI.text(ctx, d.name, vx * 2, (vy - Math.max(10, h) - 5) * 2, 'small', rarityCol(d.rar), 'center', { alpha: clamp(Math.min((d.t - 0.5) * 3, range - dd), 0, 1) });
+    let fade = 1;
+    if (!all && i === 0 && dd > 1.6) fade = clamp(2.5 - d.t, 0, 1);   // Common: gone 2.5 s after the drop (fully fading from 1.5 s)
+    if (fade <= 0) continue;
+    cand.push({ d, i, dd, range, fade });
+  }
+  const groups = new Map();   // duplicates merge into one label: "Knight Helm ×2" (anchored on the nearest copy)
+  for (const c of cand.sort((a, b) => a.dd - b.dd)) { const g = groups.get(c.d.name + '|' + c.d.rar); if (g) g.n++; else { c.n = 1; groups.set(c.d.name + '|' + c.d.rar, c); } }
+  cand.length = 0; for (const g of groups.values()) cand.push(g);
+  cand.sort((a, b) => b.i - a.i || a.dd - b.dd);
+  const lh = UI.lineH('small') + 6, placed = []; HUD.dropLabels = placed;
+  let shown = 0;
+  for (const c of cand) {
+    if (!all && shown >= DROP_LABELS) break;
+    const d = c.d, [vx, vy] = worldToView(d.x, d.y, d.z), h = DROP_FX[c.i].h * Math.min(1, (d.t - 0.3) * 2.5);
+    const label = c.n > 1 ? `${d.name} ×${c.n}` : d.name, w = UI.measure(label, 'small') + 8, x = vx * 2;
+    let y = (vy - Math.max(10, h) - 5) * 2;
+    for (let guard = 0; guard < 24; guard++) {
+      const hit = placed.find(r => Math.abs(r.x - x) < (r.w + w) / 2 + 4 && Math.abs(r.y - y) < lh);
+      if (!hit) break;
+      y = hit.y - lh;   // stack upward
+    }
+    placed.push({ x, y, w, name: label, rar: d.rar }); shown++;
+    const al = clamp(Math.min((d.t - 0.5) * 3, c.range - c.dd) * c.fade, 0, 1);
+    ctx.save(); ctx.globalAlpha = 0.75 * al; ctx.fillStyle = '#15102a'; ctx.fillRect(Math.round(x - w / 2), Math.round(y - 2), w, lh - 2); ctx.restore();
+    UI.text(ctx, label, x, y, 'small', rarityCol(d.rar), 'center', { alpha: al });
   }
 }
 // nameplates on the 480 grid: a 20x3 scene-pixel bar (40x6 here) 2 scene px above the sprite
@@ -339,17 +377,45 @@ function questLines() {
   for (const d of QUESTS) { const st = q[d.id]; if (st && !(st === 'done' || st.done) && (d.zone === G.map.id || st.active)) out.push(d.title); }
   return out.slice(0, 2);
 }
+// word-wrap `s` into at most `maxLines` lines of width `w`; the last line is ellipsized when text remains
+function hudWrapLines(s, w, size, maxLines) {
+  const words = String(s).split(' '), out = []; let line = '', start = 0;
+  for (let i = 0; i < words.length; i++) {
+    const t = line ? line + ' ' + words[i] : words[i];
+    if (UI.measure(t, size) > w && line) {
+      if (out.length === maxLines - 1) return out.concat([fitText(words.slice(start).join(' '), w, size)]);
+      out.push(line); line = words[i]; start = i;
+    } else line = t;
+  }
+  if (line) out.push(fitText(line, w, size));
+  return out;
+}
+// a boss fight is up: the bar is drawn (bossBarUp), or the boss entry banner / spawn-in is still playing (bossIntro)
+const bossBarUp = () => { const b = G.boss; return !!(b && !b.dead && !(b.spawnT > 0.8)); };
+const bossIntro = () => { const b = G.boss, bn = G.banner; return !!((bn && bn.boss && bn.t > 0) || (b && !b.dead && b.spawnT > 0)); };
+function currentObjectiveText() { return (typeof currentObjective === 'function' ? currentObjective() : G.objective) || ''; }
 function drawTracker(ctx, x, y) {
-  const m = G.map, obj = G.objective || '', ql = questLines(), key = m.id + '|' + obj + '|' + ql.join();
+  const m = G.map, obj = currentObjectiveText(), ql = questLines(), key = m.id + '|' + obj + '|' + ql.join();
   if (HUD.trk.key !== key) { HUD.trk.key = key; HUD.trk.t0 = G.t; }
+  const bar = bossBarUp(), touch = G.touch;
   const age = G.t - HUD.trk.t0, a = age < 6 ? 1 : Math.max(0.45, 1 - (age - 6) * 2);
-  ctx.globalAlpha = a;
-  UI.text(ctx, m.name, x, y, 'body', UC.gold);
+  // boss bar up: desktop moves the tracker below it (bar ends at y 84); touch keeps the corner but shrinks to the column left of the bar
+  if (bar && !touch) y = Math.max(y, 96);
+  const colW = bar && touch ? 240 - x - 12 : 784 - x - 20;
+  ctx.globalAlpha = bar && touch ? Math.min(a, 0.7) : a;
+  UI.text(ctx, fitText(m.name, colW + 20, 'body'), x, y, 'body', UC.gold);
   let yy = y + 24;
-  if (obj) { UI.text(ctx, '◆', x, yy, 'body', UC.gold); UI.text(ctx, obj, x + 20, yy, 'body', UC.text); yy += 24; }
-  const wave = G.pendingSpawns > 0 || (G.arena && G.enemies.some(e => !e.dummy));
-  if (wave) { const n = G.enemies.filter(e => !e.dummy && !e.dead).length; UI.text(ctx, `Foes left ${n}`, x + 20, yy, 'small', UC.hpHi); yy += 18; }
-  for (const t of ql) { UI.text(ctx, t, x + 20, yy, 'small', UC.dim); yy += 18; }
+  if (obj) {
+    const L = hudWrapLines(obj, colW, 'body', bar && touch ? 2 : 2), lh = UI.lineH('body') + 4;
+    UI.text(ctx, '◆', x, yy, 'body', UC.gold);
+    for (const l of L) { UI.text(ctx, l, x + 20, yy, 'body', UC.text); yy += lh; }
+    yy += 24 - lh;
+  }
+  if (!(bar && touch)) {
+    const wave = G.pendingSpawns > 0 || (G.arena && G.enemies.some(e => !e.dummy));
+    if (wave && !bossIntro()) { const n = G.enemies.filter(e => !e.dummy && !e.dead).length; UI.text(ctx, `Foes left ${n}`, x + 20, yy, 'small', UC.hpHi); yy += 18; }
+    for (const t of ql) { UI.text(ctx, fitText(t, colW, 'small'), x + 20, yy, 'small', UC.dim); yy += 18; }
+  }
   ctx.globalAlpha = 1;
   return yy;
 }
@@ -386,10 +452,11 @@ function drawBanner(ctx, p) {
     return;
   }
   ctx.globalAlpha = a;   // zone / boss entry: a 960x64 letterbox strip at y=112
-  ctx.fillStyle = UC.edge; ctx.globalAlpha = a * 0.78; ctx.fillRect(0, 112, DW, 64); ctx.globalAlpha = a;
-  ctx.fillStyle = bn.boss ? UC.danger : UC.line; ctx.fillRect(0, 112, DW, 2); ctx.fillRect(0, 174, DW, 2);
-  UI.text(ctx, bn.s, 480, 118, 'heading', bn.boss ? UC.danger : UC.gold, 'center');
-  if (bn.sub) UI.text(ctx, bn.sub, 480, 152, 'body', UC.text, 'center');
+  const by = G.touch ? 164 : 112;   // touch: below the tracker and the three top-left buttons (they end at y 152)
+  ctx.fillStyle = UC.edge; ctx.globalAlpha = a * 0.78; ctx.fillRect(0, by, DW, 64); ctx.globalAlpha = a;
+  ctx.fillStyle = bn.boss ? UC.danger : UC.line; ctx.fillRect(0, by, DW, 2); ctx.fillRect(0, by + 62, DW, 2);
+  UI.text(ctx, bn.s, 480, by + 6, 'heading', bn.boss ? UC.danger : UC.gold, 'center');
+  if (bn.sub) UI.text(ctx, bn.sub, 480, by + 40, 'body', UC.text, 'center');
   ctx.globalAlpha = 1;
 }
 function drawSay(ctx) {

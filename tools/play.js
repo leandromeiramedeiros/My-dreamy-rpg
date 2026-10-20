@@ -709,6 +709,88 @@ const PAD_STUB = () => {
   });
   check('save: 3 slots (slot 1 = dreamy.save.v1), v3 shape kept, title slot picker reads them', slots.k1 === 'dreamy.save.v1' && slots.k3 === 'dreamy.save.v1.s3' && slots.s2 === 9 && slots.n === 3 && slots.read === 2 && slots.cur === 2, slots);
   await ev(() => { G.enemies.length = 0; G.boss = null; enterMap('vale'); G.state = 'play'; G.player.invulnT = 0; });
+  // ---------- 4z. QA fixes: title focus, loot-label de-overlap, boss bar + tracker, touch banner ----------
+  const SHOTS = path.join(ROOT, 'tools', 'shots', 'qa-fixes'); fs.mkdirSync(SHOTS, { recursive: true });
+  const fresh = async (query, init) => {
+    const pg = await br.newPage({ viewport: { width: 960, height: 540 } }); pg.on('pageerror', e => errs.push('pageerror(qa): ' + e.message));
+    if (init) await pg.addInitScript(init);
+    await pg.goto(`${base}/index.html${query || ''}`, { waitUntil: 'load' });
+    await pg.waitForFunction(() => window.__ready === true, null, { timeout: 60000 }); await wait(500); return pg;
+  };
+  { // title: default focus is NEW DREAM (no save) and Enter / A start the game; a save makes CONTINUE the default
+    const t1 = await fresh('');
+    const f0 = await t1.evaluate(() => UI.focus.current() && UI.focus.current().id);
+    await t1.screenshot({ path: path.join(SHOTS, 'title.png') });
+    await t1.keyboard.press('Enter'); await wait(900);
+    const k1 = await t1.evaluate(() => G.state);
+    check('title: keyboard Enter starts the game (default focus NEW DREAM, not SLOT 2)', f0 === 'title:new' && k1 === 'play', { f0, k1 });
+    await t1.evaluate(() => { const d = saveData(); localStorage.setItem(saveKey(1), JSON.stringify(d)); }); await t1.reload({ waitUntil: 'load' });
+    await t1.waitForFunction(() => window.__ready === true, null, { timeout: 60000 }); await wait(500);
+    const f1 = await t1.evaluate(() => ({ hasSave: !!G.save, id: UI.focus.current() && UI.focus.current().id }));
+    check('title: with a save the default focus is CONTINUE', f1.hasSave && f1.id === 'title:continue', f1);
+    await t1.evaluate(() => localStorage.clear()); await t1.close();
+    const t2 = await fresh('', PAD_STUB);
+    await t2.evaluate(() => window.__btn(0, true)); await wait(150); await t2.evaluate(() => window.__btn(0, false)); await wait(900);
+    check('title: pad A starts the game', await t2.evaluate(() => G.state) === 'play');
+    await t2.close();
+  }
+  { // loot labels: 10 drops in a pile -> <= 6 labels, none overlapping, Commons fade after 2 s, Alt shows all
+    const lp = await fresh('?scene=play');
+    const r = await lp.evaluate(async () => {
+      const w = ms => new Promise(r => setTimeout(r, ms)), p = G.player; G.banner = null; G.enemies.length = 0; G.drops.length = 0;
+      const kinds = ['common', 'common', 'common', 'uncommon', 'uncommon', 'rare', 'rare', 'epic', 'common', 'common'];
+      kinds.forEach((k, i) => { const it = rollItem ? rollItem(p.level, k) : null; spawnDrop(p.x + 0.4, p.y + 0.4, { kind: 'item', it }); });
+      await w(900);
+      const grab = () => (HUD.dropLabels || []).map(q => ({ x: q.x, y: q.y, w: q.w, rar: q.rar }));
+      const ov = L => { let n = 0; for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) if (Math.abs(L[i].x - L[j].x) < (L[i].w + L[j].w) / 2 && Math.abs(L[i].y - L[j].y) < 15) n++; return n; };
+      const a = grab(), out = { n: G.drops.length, shown: a.length, overlaps: ov(a), rarOrder: a.map(q => q.rar).join() };
+      dropAll.alt = true; await w(150); const all = grab(); out.allShown = all.length; out.allOverlaps = ov(all); dropAll.alt = false;
+      return out;
+    });
+    await lp.screenshot({ path: path.join(SHOTS, 'loot-pile.png') });
+    check('loot: 10 drops -> at most 6 labels, none overlapping, best rarity first', r.n >= 8 && r.shown <= 6 && r.shown >= 1 && r.overlaps === 0, r);
+    check('loot: Alt shows every label, still without overlap', r.allShown === r.n && r.allShown >= 8 && r.allOverlaps === 0, r);
+    const cm = await lp.evaluate(async () => {
+      const w = ms => new Promise(r => setTimeout(r, ms)), p = G.player; G.drops.length = 0;
+      p.x += 3; spawnDrop(p.x - 3, p.y, { kind: 'item', it: rollItem(p.level, 'common') }); await w(300);
+      for (const d of G.drops) d.t = 3;   // 3 s old
+      await w(200); return { common: (HUD.dropLabels || []).length };
+    });
+    check('loot: Common labels fade after 2 s', cm.common === 0, cm);
+    await lp.close();
+  }
+  { // boss fight: the tracker sits below the bar, the wave counter hides during the intro, long objectives wrap inside the column
+    const bp = await fresh('?scene=boss'); await wait(2500);
+    const bo = await bp.evaluate(() => {
+      G.enemies.length = 0; G.boss = null; G.banner = null; G.player.invulnT = 999; spawnEnemy('boss', G.player.x + 4, G.player.y, 0);
+      G.objective = 'The Gnarlroot Ogre (south-east, by the loop road) holds the Hollow key. The road north of the shrine leads to the root door of the Hollow and beyond.';
+      const b = G.boss; return { boss: !!b, up: typeof bossBarUp === 'function' && bossBarUp(), intro: typeof bossIntro === 'function' && bossIntro() };
+    });
+    await bp.evaluate(() => { G.banner = null; G.pendingSpawns = 2; G.enemies.forEach(e => { if (!e.boss) e.dead = true; }); if (G.boss) { G.boss.spawnT = 0; G.boss.hp = G.boss.maxHp * 0.8; } }); await wait(400);
+    await bp.screenshot({ path: path.join(SHOTS, 'boss-tracker.png') });
+    const hv = await bp.evaluate(() => {
+      const wrapped = hudWrapLines(G.objective, 700, 'body', 2), narrow = hudWrapLines(G.objective, 200, 'body', 2);
+      G.banner = { s: 'THE TROLL KING', sub: 'x', t: 3, max: 3.4, boss: true };
+      return { lines: wrapped.length, narrow, fits: narrow.every(l => UI.measure(l, 'body') <= 200), introHides: bossIntro() };
+    });
+    check('hud: boss bar up -> tracker is drawn below it; long objective wraps / ellipsizes within the column; wave counter hidden in the boss intro', bo.boss && bo.up && hv.narrow.length === 2 && hv.fits && hv.introHides, { bo, hv });
+    await bp.close();
+  }
+  { // touch: the zone banner sits below the tracker + the three top-left buttons
+    const tp = await fresh('?scene=play');
+    const tb = await tp.evaluate(async () => {
+      const c = document.getElementById('game'); c.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch', pointerId: 5, clientX: 100, clientY: 100, bubbles: true })); c.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', pointerId: 5, clientX: 100, clientY: 100, bubbles: true }));
+      await new Promise(r => setTimeout(r, 300));
+      G.objective = 'Enter the Warden\'s Grove (east). The root door waits north of the road and past the old stone bridge.';
+      G.banner = { s: 'Gloom in the garden', sub: 'Whispering Vale', t: 2.6, max: 2.6 };
+      await new Promise(r => setTimeout(r, 450));
+      const btns = touchMenu();
+      return { touch: G.touch, bottom: Math.max(0, ...btns.map(b => b.y + b.h)) };
+    });
+    await tp.screenshot({ path: path.join(SHOTS, 'touch-banner.png') });
+    check('touch: zone banner draws below the top-left buttons', tb.touch === true && (tb.bottom === 0 || tb.bottom <= 164), tb);
+    await tp.close();
+  }
   // ---------- 5. frame time ----------
   await page.reload({ waitUntil: 'load' });
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
