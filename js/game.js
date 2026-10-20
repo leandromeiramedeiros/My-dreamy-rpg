@@ -343,11 +343,26 @@ function currentPlayerSprite(p) {
 
 // movement with tile + collider collision (colliders come from the 8x8-tile buckets, maps.js nearColliders)
 const MOVE_NEAR = [];
+// Probes: 4 points at 0.8 r (E, W, S, N), tested against h0 = the height of the tile under the centre.
+// B1 (QA wedge): h0 changes when the centre crosses a tile edge, so on a stair (0 -> 1 -> 2) an entity can legally stand
+// on the 1-high step with a probe over a 2-high bank, step down to 0, and find that probe now "illegal" (|2 - 0| > 1).
+// The old rule (every probe must pass at the NEW position) then refused every direction, the dodge included: a wedge.
+// Rule now: a move may not make a passing probe fail, and may not push a probe that already fails further into its tile;
+// sliding along or backing away from such an edge is allowed, so an entity can always walk out of the overlap.
+const probeMask = (m, x, y, r, h0) => (walkable(m, x + r, y, h0) ? 1 : 0) | (walkable(m, x - r, y, h0) ? 2 : 0) | (walkable(m, x, y + r, h0) ? 4 : 0) | (walkable(m, x, y - r, h0) ? 8 : 0);
+function moveOk(m, ox, oy, x, y, r, h0) {
+  if (!walkable(m, x, y, h0) && walkable(m, ox, oy, h0)) return false;
+  const base = probeMask(m, ox, oy, r, h0), k = probeMask(m, x, y, r, h0);
+  if ((k & base) !== base) return false;
+  if (base === 15) return true;
+  const dx = x - ox, dy = y - oy;
+  return !((!(base & 1) && dx > 0) || (!(base & 2) && dx < 0) || (!(base & 4) && dy > 0) || (!(base & 8) && dy < 0));
+}
 function moveEntity(o, dx, dy, h0) {
   const m = G.map, r = o.r * 0.8;
-  const ok = (x, y) => walkable(m, x + r, y, h0) && walkable(m, x - r, y, h0) && walkable(m, x, y + r, h0) && walkable(m, x, y - r, h0);
-  if (ok(o.x + dx, o.y)) o.x += dx;
-  if (ok(o.x, o.y + dy)) o.y += dy;
+  const ok = (x, y) => moveOk(m, o.x, o.y, x, y, r, h0);
+  if (dx && ok(o.x + dx, o.y)) o.x += dx;
+  if (dy && ok(o.x, o.y + dy)) o.y += dy;
   MOVE_NEAR.length = 0;
   for (const c of (typeof nearColliders === 'function' ? nearColliders(m, o.x, o.y, o.r + Math.abs(dx) + Math.abs(dy), MOVE_NEAR) : m.colliders)) {   // spatial grid (maps.js)
     if (Math.abs(c.z - (o.z || 0)) > 1.5) continue;
@@ -394,7 +409,9 @@ function updatePlayer(p, dt) {
       let wx = sx + sy, wy = sy - sx;
       const l = Math.hypot(wx, wy); wx /= l; wy /= l;
       const sp = mag * p.speed * (p.buffs.sprint ? 1.8 : 1) * (p.buffs.veil ? 1.4 : 1) * (p.slowT > 0 ? 0.6 : 1) * (p.castT > 0 ? 0.75 : 1) * (1 + 0.3 * Math.abs(sy) / Math.hypot(sx, sy));
+      const bx = p.x, by = p.y;
       moveEntity(p, wx * sp * dt, wy * sp * dt, h0);
+      unstickPlayer(p, Math.abs(p.x - bx) + Math.abs(p.y - by), dt, h0);
       p.walkT += dt;
       if (Math.random() < dt * 6) addPart({ x: p.x, y: p.y, z: p.z, vx: frand(-0.3, 0.3), vy: frand(-0.3, 0.3), vz: 0.6, life: 0.4, t: 0, col: '#e8e0f8', grav: 1, size: 1, glow: false });
     }
