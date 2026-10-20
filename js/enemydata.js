@@ -29,7 +29,7 @@ var ENEMY_DATA = {
     res: { slash: 0, pierce: 0, fire: 0, frost: 0, nature: 0, lightning: 0, arcane: 0.5, holy: -0.5 },
     tags: ['flying', 'swarm'],
     parts: ['orbit', 'shoot', 'swarm'],
-    params: { orbit: { r: 2.6 }, shoot: { range: 4.5, wind: 0.6, cd: 2.8, speed: 4.5, r: 0.25, col: '#e8d0ff' }, swarm: { n: 4, source: 'moth_nest' } },
+    params: { orbit: { r: 2.6 }, shoot: { range: 4.5, wind: 0.6, cd: 2.8, speed: 4.5, r: 0.25, col: '#e8d0ff' }, swarm: { n: 4, spread: 1.6, source: 'moth_nest' } },
     xp: 0.08, loot: 'common_vale'
   },
 

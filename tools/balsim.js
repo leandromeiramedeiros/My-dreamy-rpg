@@ -108,15 +108,15 @@ ev(`function simHero(fams, L, rarity, kind) { const p = simGear(fams, L, rarity,
 // ---------------------------------------------------------------- rotation vs a frozen target
 ev(`function simRotation(target, maxT, standoff) {
   const p = G.player, seq = ['b', 'b', 'b', 's', 'd']; let i = 0, t = 0, alt = 0, ultAt = [], dash = false;
-  const place = () => { if (target.dead) return; const a = Math.atan2(p.y - target.y, p.x - target.x) || 0; p.x = target.x + Math.cos(a) * standoff; p.y = target.y + Math.sin(a) * standoff; };
+  const place = (t = target) => { if (t.dead) return; const a = Math.atan2(p.y - t.y, p.x - t.x) || 0; p.x = t.x + Math.cos(a) * standoff; p.y = t.y + Math.sin(a) * standoff; };
   place();
   const alive = () => (target.swarm ? G.enemies.some(e => e.swarm === target.swarm && !e.dead) : !target.dead);
   while (alive() && t < maxT) {
     for (const e of G.enemies) { e.stunT = 9; if (e.state !== 'chase') e.state = 'chase'; }
-    if (!p.dash && dash) { dash = false; place(); }
+    if (!p.dash && dash) { dash = false; place(target.dead && target.swarm ? G.enemies.find(e => e.swarm === target.swarm && !e.dead) || target : target); }
     if (!p.dash && !castActive(p) && p.atkT <= 0 && p.castT <= 0) {
       const tg = target.dead && target.swarm ? G.enemies.find(e => e.swarm === target.swarm && !e.dead) || target : target;
-      if (dist(p.x, p.y, tg.x, tg.y) > standoff + 0.3) place();   // walks back into reach (knockback pushes targets away)
+      if (dist(p.x, p.y, tg.x, tg.y) > standoff + 0.3) place(tg);   // walks back into reach (knockback pushes targets away)
       p.aim = Math.atan2(tg.y - p.y, tg.x - p.x); G.mouse.wx = tg.x; G.mouse.wy = tg.y;   // a player aims at the target
       const a = seq[i];
       if (a === 'b') { basicAttack(p); i++; }
