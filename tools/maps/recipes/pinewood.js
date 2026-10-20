@@ -109,6 +109,10 @@ module.exports = zone({
     hawkUp: { w: 2, pts: [[64.6, 38.4, 7], [65.6, 40.3, 7, 0.4], [72.6, 40.4, 10, 0.3], [74, 39.6, 10, 0.3], [73.2, 38.6, 10, 0.3], [68.6, 38.6, 13, 0.3], [68.2, 37.8, 13]] },
   },
   bridges: [{ x: 9, y: 32, axis: 'y', len: 5, w: 2, lvl: 4 }, { x: 60, y: 37, axis: 'x', len: 4, w: 3, lvl: 6, span: true }],
+  climbs: { hawk_roots: { x: 68.4, y: 37.3, to: { x: 68.4, y: 36.2 } } },
+  drops: { hawk_drop: { rect: [76, 35, 78, 40] } },
+  vantage: { id: 'hawks_rest', at: [68.3, 34.6], r: 1.9, reveal: 34, title: 'Hawk\'s Rest', sub: 'The Clearing road, and something big asleep at its end', pip: ['From up here it\'s small. It isn\'t.'] },
+  ledgeHints: [{ id: 'hawk_ledge', name: 'The gate road below', at: [75, 38.2], pip: ['The road to the Clearing is right below. Jump, Aerin.'] }],
   portals: {
     home: { room: 'start', dx: -3, dy: 2.6, to: 'vale', arrive: 'vale.pine' },
     home_arena: { room: 'arena', dx: 2.5, dy: -4, to: 'vale', open: false, arrive: 'vale.pine' },
@@ -122,10 +126,10 @@ module.exports = zone({
     { id: 'pk_bram_s', room: 'pk_bram_s', boss: 'bramblehorn', name: 'The Bramble Pit', sub: 'Elite pocket: a Thornsow Matriarch and her sounder', elite: 'thornsow', mod: 'storm', mobs: [['ogre', 1], ['shadehound', 2], ['gloomslime', 1], ['brambleshaman', 1]] },
   ],
   // §26.2 cheap retries: a warp shrine at Mossjaw's boss door (the Hollow door, beside its pockets) and one just outside Mossjaw's den gate;
-  // Bramblehorn's is shrine3 ('The Clearing gate', already at the arena gate). Shrine warp = the full-map screen (game.js shrineWarp).
+  // Bramblehorn's is shrine3 (§29 G3: on Hawk's Rest; the drop from its 10 lands on the gate road). Shrine warp = the full-map screen (game.js shrineWarp).
   doorShrine: { name: 'The root door', dx: 2.2, dy: 1.4 },
   denShrine: { name: 'Mossjaw\'s gate', back: 2.6 },
-  shrines: { shrine1: { room: 'shr1', name: 'The road to the plaza' }, shrine2: { room: 'shr2', name: 'The creek ford' }, shrine3: { room: 'shr3', name: 'The Clearing gate' } },
+  shrines: { shrine1: { room: 'shr1', name: 'The road to the plaza' }, shrine2: { room: 'shr2', name: 'The creek ford' }, shrine3: { room: 'shr3', at: [67.6, 34.0], name: 'Hawk\'s Rest' } },
   landmark: [65, 69.5],
   fish: [[52, 70], [84, 60.5]],
   trail: [0.05, 0.14, 0.24, 0.35, 0.47, 0.6, 0.74, 0.88],
@@ -179,7 +183,8 @@ module.exports = zone({
     { sec: 'hollow', at: 'h_lever', pause: 5, wind: 1.3, label: 'lever' },
     { sec: 'hollow', at: 'h_den', fight: 80, pause: 8, wind: 1.3, label: 'Mossjaw' },
     { sec: 'hollow', at: 'h_stair', pause: 3, wind: 1.2 },
-    { sec: 'forest', at: 'shr3', warp: true, pause: 4 },
+    { sec: 'forest', at: [67.6, 34.0], warp: true, pause: 4, label: 'shrine 3 on Hawk\'s Rest (the root-stair; the vantage)' },
+    { sec: 'forest', at: [77, 37.5], pause: 0, wind: 1.4, label: 'down the leg, the drop to the gate road' },
     { sec: 'clearing', at: 'arena', on: 'main', fight: 175, pause: 14, label: 'Bramblehorn' },
   ],
   optional: [

@@ -302,6 +302,16 @@ function populate(S, g, T) {
     ]));
   }
 
+  // ============================================================== §29 G3 tall set pieces: root ladders, drop-down ledges, the vantage
+  for (const [k, c] of Object.entries(S.climbs || {})) g.climb(k, c);
+  for (const [k, d] of Object.entries(S.drops || {})) g.drop(k, d);
+  if (S.vantage) {
+    const V = S.vantage, [vx, vy] = V.at;
+    tr.push(T.enter(V.id, V.title, vx, vy, V.r || 2, [T.vantage(V.id, V.reveal || 30, { title: V.title, sub: V.sub || '' }), ...(V.pip ? [T.dialogue('Pip', V.pip)] : [])]));
+    g.poi('landmark', vx, vy);
+  }
+  for (const L of S.ledgeHints || []) tr.push(T.enter(L.id, L.name, L.at[0], L.at[1], L.r || 1.6, [T.dialogue('Pip', L.pip)]));
+
   // ============================================================== scatter (per section) + density fill
   for (const sc of S.sections) {
     if (!sc.rules) continue;
