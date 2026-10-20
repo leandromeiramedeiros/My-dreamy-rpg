@@ -277,6 +277,7 @@ function drawScene() {
   const inViewE = e => { const vx = isoX(e.x, e.y) - camX + RW / 2, vy = isoY(e.x, e.y, e.z || 0) - camY + RH / 2; return vx > -90 && vx < RW + 90 && vy > -40 && vy < RH + 150; };
   const viewEnemies = G.enemies.filter(inViewE);
   for (const e of viewEnemies) shadow(e.x, e.y, 0, e.boss ? 18 : (e.type === 'wisp' ? 4 : 7));
+  for (const c of G.corpses) if (c.mode === 'fling' && c.t < c.life) shadow(c.x, c.y, c.gz, 5);   // the fling arc reads off its shadow
   for (const z of G.zones) if (inViewE(z) || z.r > 4) drawZone(ctx, z);
   for (const e of G.effects) if (e.type === 'tele' || e.type === 'marker' || e.type === 'line' || e.type === 'summon') drawDecal(ctx, e);
   const aimNow = currentAim();   // the player's ground indicator (kind:'aim'), under the sprites
@@ -298,6 +299,7 @@ function drawScene() {
   for (const d of G.drops) if (inView(isoX(d.x, d.y), isoY(d.x, d.y, d.z))) list.push({ kind: 'drop', d, key: d.x + d.y + d.z * 0.35 + 0.02 });
   for (const c of G.critters || []) if (inViewE(c)) list.push({ kind: 'critter', c, key: c.x + c.y + c.z * 0.35 });
   for (const e of G.effects) if (e.type === 'ghost') list.push({ kind: 'ghost', e, key: e.x + e.y });
+  for (const c of G.corpses) if (inView(isoX(c.x, c.y), isoY(c.x, c.y, c.gz))) { c.key = c.x + c.y + 0.005; list.push(c); }
   if (p.buffs.orbit) for (let k = 0; k < 3; k++) { const a = G.t * 4 + k * Math.PI * 2 / 3; list.push({ kind: 'orb', x: p.x + Math.cos(a) * 1.4, y: p.y + Math.sin(a) * 1.4, z: p.z + 1.2, key: p.x + Math.cos(a) * 1.4 + p.y + Math.sin(a) * 1.4 + p.z * 0.35 }); }
   list.sort((a, b) => a.key - b.key);
   for (const it of list) drawItem(ctx, it, lights);
@@ -612,12 +614,52 @@ function drawItem(ctx, it, lights) {
     lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: 26, col: '#c79bff', a: 0.8 });
     return;
   }
+  if (it.kind === 'corpse') { drawCorpse(ctx, it); return; }
   if (it.kind === 'ghost') {
     const e = it.e, k = e.t / e.life, [vx, vy] = worldToView(e.x, e.y, e.z);
     ctx.globalAlpha = (1 - k) * 0.55; ctx.globalCompositeOperation = 'lighter';
-    ctx.drawImage(silOf(e.spr, e.col || '#ffffff'), Math.round(vx - e.spr.width / 2), Math.round(vy - e.spr.height + 1));
+    if (e.sq) {   // a swarm member's squash-pop (game.js spawnCorpse): flattens and widens as it fades
+      const sc = e.sc || 1, w = Math.round(e.spr.width * sc * (1 + 0.5 * k)), h = Math.max(1, Math.round(e.spr.height * sc * (1 - 0.6 * k)));
+      ctx.globalAlpha = (1 - k) * 0.8; ctx.drawImage(silOf(e.spr, e.col || '#ffffff'), Math.round(vx - w / 2), Math.round(vy - h + 1), w, h);
+    } else ctx.drawImage(silOf(e.spr, e.col || '#ffffff'), Math.round(vx - e.spr.width / 2), Math.round(vy - e.spr.height + 1));
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
+}
+
+// ===== corpses (DESIGN §27, R1; records: game.js spawnCorpse / updateCorpses) =====================================
+// corpseLook(e) -> { img, sc, art, hover } once at the kill: ENEMY_ART enemies play their 3 death frames (art = key);
+// legacy / custom sprites keep their hit frame, drawn as a blood-coloured silhouette (sc = their legacy scale).
+const CORPSE_PROBE = { face: 1, flash: 1, hitFreeze: 0, state: 'chase', anim: 0, asleep: false };
+function corpseLook(e) {
+  const def = ENEMY[e.type] || {}, fly = (def.tags || e.tags || []).includes('flying');
+  const key = enemyArtKey(e);
+  if (key) return { img: null, sc: 1, art: key, hover: fly ? 8 / ZS : 0 };
+  const look = enemyLook(def, e.type), sc = (def.scale || 1) * LEGACY_ENEMY_K;
+  let img = null, hover = 0;
+  if (look.img) { img = enemyFrame(look, CORPSE_PROBE); if (def.ai === 'shooter' || fly) hover = 10 / ZS; }
+  else if (look.kind === 'slime') img = ART.slime.n;
+  else if (look.kind === 'hound') img = ART.hound.n[0];
+  else if (look.kind === 'boss') img = ART.boss.n;
+  else if (look.kind === 'wisp') hover = 14 / ZS;   // a glow dot, no sprite: its motes are the body
+  return { img, sc, art: null, hover };
+}
+function drawCorpse(ctx, c) {
+  const end = c.t >= c.life, k = end ? Math.min(1, (c.t - c.life) / c.fade) : 0;
+  const sqk = c.sqT > 0 ? c.sq : 0, sx = 1 + sqk, sy = 1 - sqk * 4 / 3;   // squash 0.3 -> w x1.3, h x0.6
+  const [vx, vy] = worldToView(c.x, c.y, c.gz + c.z);
+  if (c.art) {
+    const info = ENEMY_ART.info[c.art], fr = c.mode === 'boss' ? 0 : Math.min(2, Math.floor(3 * c.t / c.life));
+    let img = ENEMY_ART.get(c.art, 'death', fr); if (c.face < 0) img = flipOf(img);
+    const ax = c.face < 0 ? img.width - info.ax : info.ax, w = Math.round(img.width * sx), h = Math.round(img.height * sy);
+    ctx.globalAlpha = (c.mode === 'boss' && !end ? 1 : 0.7) * (1 - k);
+    ctx.drawImage(img, Math.round(vx - ax * sx), Math.round(vy - info.ay * sy), w, h);
+  } else if (c.img) {
+    let img = c.img; if (c.face < 0) img = flipOf(img);
+    const w = Math.round(img.width * c.sc * sx), h = Math.round(img.height * c.sc * sy);
+    ctx.globalAlpha = 0.6 * (1 - k);
+    ctx.drawImage(silOf(img, c.e.blood || '#c7a8ff'), Math.round(vx - w / 2), Math.round(vy - h + 1), w, h);
+  }
+  ctx.globalAlpha = 1;
 }
 
 // loot on the ground: a light beam whose height, width, alpha and light grow with rarity; the item hops out and bounces
@@ -796,15 +838,17 @@ function drawPlayer(ctx, p, lights) {
 }
 
 const LEGACY_ENEMY_K = 1.5;
+// the hit frame shows while the hit flash runs or the target-only hitlag holds the enemy (game.js hitlag, R2)
+const hitF = e => e.flash > 0 || e.hitFreeze > 0;
 function drawEnemy(ctx, e, lights) {
-  const [vx, vy0] = worldToView(e.x, e.y, e.z);
+  const [vx, vy0] = worldToView(e.x, e.y, e.z + (e.hopZ || 0));   // + the tumble hop: a draw offset only (R1)
   let vy = vy0;
   const spawnA = e.spawnT > 0 ? 1 - e.spawnT / (e.boss ? 1.6 : 0.9) : 1;
   if (spawnA <= 0.05) return;
   const artKey = enemyArtKey(e);
   if (artKey) { drawEnemyArt(ctx, e, artKey, vx, vy, spawnA); return; }
   if (e.under) { drawBurrowed(ctx, e, vx, vy); return; }
-  if (e.mimic) { const ci = ART.chest; ctx.drawImage(e.flash > 0 ? silOf(ci, '#ffffff') : ci, Math.round(vx - ci.width / 2), Math.round(vy - ci.height + 1)); return; }
+  if (e.mimic) { const ci = ART.chest; ctx.drawImage(hitF(e) ? silOf(ci, '#ffffff') : ci, Math.round(vx - ci.width / 2), Math.round(vy - ci.height + 1)); return; }
   ctx.globalAlpha = spawnA * (e.fadeT > 0 ? 0.35 : 1);
   if (e.elite) drawEliteAura(ctx, e);
   let img, white, dr = null;   // dr = where a custom sprite was drawn (the frozen tint reuses it)
@@ -826,7 +870,7 @@ function drawEnemy(ctx, e, lights) {
     const w = Math.round(base.width * (1 + sq) * sc), hh = Math.round(base.height * (1 - sq) * sc);
     const dx = Math.round(vx - w / 2 + ox), dy = Math.round(vy - hh + 1 + oy);
     dr = [dx, dy, w, hh];
-    ctx.drawImage(e.flash > 0 ? silOf(base, '#ffffff') : base, dx, dy, w, hh);
+    ctx.drawImage(hitF(e) ? silOf(base, '#ffffff') : base, dx, dy, w, hh);
     if (look.tint) { ctx.globalAlpha = spawnA * 0.3; ctx.drawImage(silOf(base, look.tint), dx, dy, w, hh); ctx.globalAlpha = spawnA; }
     if (e.state === 'wind' && (def.ai === 'brute' || e.boss)) { ctx.globalAlpha = spawnA * (0.25 + 0.25 * Math.sin(e.anim * 30)); ctx.drawImage(silOf(base, '#ff5040'), dx, dy, w, hh); ctx.globalAlpha = spawnA; }
     vy += oy;
@@ -834,23 +878,23 @@ function drawEnemy(ctx, e, lights) {
     const moving = e.state === 'chase', hop = moving ? Math.max(0, Math.sin(e.anim * 6)) : 0;
     const wind = e.state === 'wind' ? Math.sin(e.anim * 40) * 0.08 + 0.15 : 0;
     const sq = (e.squash > 0 ? e.squash : 0) + wind - hop * 0.12;
-    img = e.flash > 0 ? ART.slime.w : ART.slime.n;
+    img = hitF(e) ? ART.slime.w : ART.slime.n;
     ctx.drawImage(img, Math.round(vx - img.width * (1 + sq) / 2), Math.round(vy - img.height * (1 - sq) - hop * 5), Math.round(img.width * (1 + sq)), Math.round(img.height * (1 - sq)));
   } else if (lk === 'hound') {
     const f = Math.floor(e.anim * (e.state === 'lunge' ? 16 : 8)) % 2;
-    img = e.flash > 0 ? (e.face < 0 ? ART.hound.wf : ART.hound.w) : (e.face < 0 ? ART.hound.f[f] : ART.hound.n[f]);
+    img = hitF(e) ? (e.face < 0 ? ART.hound.wf : ART.hound.w) : (e.face < 0 ? ART.hound.f[f] : ART.hound.n[f]);
     ctx.drawImage(img, Math.round(vx - img.width / 2), Math.round(vy - img.height));
     lights.push({ sx: vx + camX - RW / 2 + e.face * 5, sy: vy + camY - RH / 2 - 8, r: 14, col: '#ff6b9a', a: 0.7 });
   } else if (lk === 'wisp') {
     vy -= 14 + Math.sin(e.anim * 3) * 3;
     const charge = e.state === 'wind' ? 1 + Math.sin(e.anim * 30) * 0.3 : 0;
     for (let k = 0; k < 4; k++) { ctx.fillStyle = rgba('#7fd6ff', 0.5 - k * 0.1); ctx.fillRect(Math.round(vx - 1 + Math.sin(e.anim * 5 + k) * 1.5), Math.round(vy + 3 + k * 2), 2, 2); }
-    glowDot(ctx, vx, vy, e.flash > 0 ? '#ffffff' : '#7fd6ff', '#f0feff', 2 + Math.round(charge));
+    glowDot(ctx, vx, vy, hitF(e) ? '#ffffff' : '#7fd6ff', '#f0feff', 2 + Math.round(charge));
     ctx.fillStyle = '#1a1326'; ctx.fillRect(Math.round(vx - 2), Math.round(vy - 1), 1, 2); ctx.fillRect(Math.round(vx + 1), Math.round(vy - 1), 1, 2);
     lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: 36 + charge * 20, col: '#7fd6ff', a: 0.9 });
   } else if (lk === 'boss') {
     const B = ART.boss;
-    img = e.flash > 0 ? (e.face < 0 ? B.wf : B.w) : (e.face < 0 ? B.f : B.n);
+    img = hitF(e) ? (e.face < 0 ? B.wf : B.w) : (e.face < 0 ? B.f : B.n);
     ctx.drawImage(img, Math.round(vx - img.width / 2), Math.round(vy - img.height + 2));
     const glow = e.state !== 'chase' ? 1 : 0.6;
     lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2 - 40, r: 60, col: '#ff7ae0', a: glow });
@@ -858,8 +902,8 @@ function drawEnemy(ctx, e, lights) {
     if (Math.random() < 0.5) addPart({ x: e.x + frand(-0.7, 0.7), y: e.y + frand(-0.7, 0.7), z: 0.3, vx: 0, vy: 0, vz: frand(0.5, 1.5), life: 1, t: 0, col: pick2(['#2a1c38', '#5f4690', '#ff7ae0']), grav: 0, size: 2, glow: false });
   } else if (lk === 'dummy') {
     img = ART.dummy;
-    const wob = e.flash > 0 ? Math.round(Math.sin(G.t * 60) * 1) : 0;
-    ctx.drawImage(e.flash > 0 ? silOf(img, '#ffffff') : img, Math.round(vx - img.width / 2 + wob), Math.round(vy - img.height + 1));
+    const wob = hitF(e) ? Math.round(Math.sin(G.t * 60) * 1) : 0;
+    ctx.drawImage(hitF(e) ? silOf(img, '#ffffff') : img, Math.round(vx - img.width / 2 + wob), Math.round(vy - img.height + 1));
   }
   if (e.frozen && img) {
     ctx.globalAlpha = 0.5 * spawnA;
@@ -886,7 +930,7 @@ function enemyArtKey(e) {
 }
 function enemyArtAnim(e, key) {
   const A = ENEMY_ART.info[key].anims, f8 = Math.floor(e.anim * 8), f4 = Math.floor(e.anim * 4), f3 = Math.floor(e.anim * 3);
-  if (e.flash > 0 && A.hit) return ['hit', 0];
+  if (hitF(e) && A.hit) return ['hit', 0];
   if (e.asleep) return [A.sleep ? 'sleep' : 'idle', Math.floor(e.anim * 1.5)];
   const mv = e.boss && e.bk && e.bk.mv;
   if (mv) {
@@ -922,7 +966,7 @@ function drawEnemyArt(ctx, e, key, vx, vy, spawnA) {
     ctx.globalAlpha = spawnA * (0.55 + 0.3 * Math.sin(G.t * 4)); ctx.drawImage(au, x - R, y - R); ctx.globalAlpha = spawnA;
     drawEliteAura(ctx, e);
   }
-  ctx.drawImage(e.flash > 0 ? silOf(img, '#ffffff') : img, x, y);
+  ctx.drawImage(hitF(e) ? silOf(img, '#ffffff') : img, x, y);
   if (e.state === 'wind' && !e.boss && e.act === 'brute') { ctx.globalAlpha = spawnA * (0.2 + 0.2 * Math.sin(e.anim * 30)); ctx.drawImage(silOf(img, '#ff5040'), x, y); }
   if (e.frozen) { ctx.globalAlpha = 0.5 * spawnA; ctx.drawImage(silOf(img, '#bff4ff'), x, y); }
   ctx.globalAlpha = 1;
@@ -960,7 +1004,7 @@ function enemyFrame(look, e) {
   if (S && S.frames) {
     let F = FRAME_CACHE[look.id];
     if (!F) { F = FRAME_CACHE[look.id] = {}; for (const k in S.frames) F[k] = S.frames[k].map(rows => { const c = spriteFromData({ w: S.w, h: S.h, pal: S.pal, rows }); return { n: c, f: flipH(c) }; }); }
-    const st = e.flash > 0 && F.hurt ? 'hurt' : e.state === 'wind' && F.wind ? 'wind' : e.state !== 'chase' && e.state !== 'rec' && F.attack ? 'attack' : e.state === 'chase' && !e.asleep && F.move ? 'move' : 'idle';
+    const st = hitF(e) && F.hurt ? 'hurt' : e.state === 'wind' && F.wind ? 'wind' : e.state !== 'chase' && e.state !== 'rec' && F.attack ? 'attack' : e.state === 'chase' && !e.asleep && F.move ? 'move' : 'idle';
     const L = F[st] || F.idle || F.move, fr = L[Math.floor(e.anim * (st === 'move' ? 8 : 4)) % L.length];
     return e.face < 0 ? fr.f : fr.n;
   }
