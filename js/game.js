@@ -549,7 +549,7 @@ function updateEcho(p, dt) {
   for (const r of E.q) if (r.fresh) r.fresh = false; else r.t -= dt;   // a cast recorded this step starts counting next step
   while (E.q.length && E.q[0].t <= 1e-9) echoReplay(p, E, E.q.shift());
   if (E.alive) {
-    E.age += dt; if (!E.q.length && !g.dash && !g.swing && !(g.castT > 0)) E.idleT += dt;
+    E.age += dt; if (!E.q.length && !g.dash) E.idleT += dt;   // idle = time since the last replay
     if (E.idleT >= ECHO.idle) { E.alive = false; E.alpha = 0; }
     else E.alpha = Math.min(1, E.age / ECHO.fadeIn) * Math.min(1, (ECHO.idle - E.idleT) / ECHO.fadeOut);
   }

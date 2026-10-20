@@ -1459,6 +1459,104 @@ const PAD_STUB = () => {
         && ['a', 'bar', 'feint', 'lead-aim', 'walk-out'].every(k => cun.rules.split(',').includes(k)), cun);
     await bp.close();
   }
+  // ---------- §30 Echo: the spirit clone (game.js ECHO, rule 'echo'; render.js drawEcho; strip: tools/shots/m3-echo) ----------
+  {
+    const ECHO_DIR = path.join(__dirname, 'shots', 'm3-echo'); fs.mkdirSync(ECHO_DIR, { recursive: true });
+    const xp = await br.newPage({ viewport: { width: 960, height: 540 } }); xp.on('pageerror', e => errs.push('pageerror(echo): ' + e.message));
+    await xp.goto(`${base}/index.html?scene=play`, { waitUntil: 'load' });
+    await xp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    await xp.evaluate(() => { running = false; });
+    await wait(100);
+    const X = await xp.evaluate(() => {
+      const p = G.player, out = {};
+      const steps = (n, vx = 0) => { for (let i = 0; i < n; i++) { const fr = hitlagStep(); if (vx) p.x += vx; update(fr ? 0 : STEP, STEP); } };
+      const attackStep = () => { const h = IN.held; IN.held = a => a === 'attack'; try { steps(1); } finally { IN.held = h; } };   // a basic attack inside a game step (handleInput -> playerActions)
+      const reset = () => { G.state = 'play'; G.ui.open = false; G.banner = null; G.msg = null; G.enemies.length = 0; G.projs.length = 0; G.zones.length = 0; G.delays.length = 0; G.effects.length = 0; G.echo = null;
+        hitlagReset(); p.cast = null; p.dash = null; p.atkT = 0; p.cds = {}; p.buffs = {}; p.invulnT = 999; p.mp = p.maxMp; p.ult = 0; p.crit = 0; p.critR = null; p.autoAtk = false; };
+      // the unique: a Legendary on the finder's own weapon variant, rule + unique 'echo', the 19th unique
+      p.equip.weapon = makeItem('dawnblade', 'rare', 12); recalcStats(p, true);
+      const U = makeUnique('echo', 24); out.item = { unique: U.unique, rule: U.rule, rarity: U.rarity, variant: BASES[U.base].variant, hero: p.gear.weapon, name: itemName(U), slot: U.slot,
+        count: Object.keys(UNIQUES).length + TRINKET_UNIQUES.length + WORLD_UNIQUES.length };
+      // the Act III+ gate: a boss-class first kill below L17 drops nothing extra, at L17+ once per save
+      G.prog.secrets = G.prog.secrets || {}; delete G.prog.secrets['unique:echo'];
+      out.gate = [lateUniqueDrop({ lvl: 12 }, 'boss'), lateUniqueDrop({ lvl: 20 }, 'elite'), lateUniqueDrop({ lvl: 20 }, 'boss'), lateUniqueDrop({ lvl: 30 }, 'boss')];
+      delete G.prog.secrets['unique:echo'];
+      p.equip.weapon.rule = 'echo';
+      const Q = slotSkill(p, 'q'), E = slotSkill(p, 'e'); out.q = Q; out.e = E;
+      // 1. spawn delay: the spirit forms on the 24th fixed step (0.4 s) after the attack, where the hero stood then
+      reset(); p.aim = 0; G.mouse.wx = p.x + 3; G.mouse.wy = p.y; attackStep(); const x0 = p.x, s1 = { alive: !!(G.echo && G.echo.alive), n: G.echo ? G.echo.count : -1, q: G.echo ? G.echo.q.length : 0 };
+      let k = 0; while (k < 60 && !(G.echo && G.echo.count)) { steps(1, 0.05); k++; }
+      out.spawn = { s1, steps: k, at: { x: +G.echo.g.x.toFixed(2), x0: +x0.toFixed(2) }, heroX: +(p.x - x0).toFixed(2) };
+      // 2. replay order: basic, Q, E in succession, replayed in the same order; the queue holds at most 4 (the oldest dropped)
+      reset(); const ord = []; const D0 = damageEnemy;
+      p.aim = 0; basicAttack(p); steps(2); p.cast = null; p.dash = null; useSkill(p, 'q'); steps(2); p.cast = null; p.dash = null; p.swing = null; useSkill(p, 'e'); out.qLen = G.echo.q.map(r => r.slot).join();
+      steps(60); out.order = G.echo.log.slice();
+      reset(); for (let i = 0; i < 6; i++) { p.atkT = 0; p.cast = null; basicAttack(p); } out.queued = G.echo.q.length; steps(40); out.replayed6 = G.echo.count;
+      // 3. never R: an ultimate is not recorded or replayed
+      reset(); p.ult = 100; const okR = useSkill(p, 'r'); out.r = { cast: okR, queued: G.echo ? G.echo.q.length : 0 }; steps(40); out.r.replays = G.echo ? G.echo.count : 0;
+      // 4. retyping: the hero's most-amplified element, arcane when none; never slash
+      reset(); const sum = p.sum, keep = Object.assign({}, sum); for (const el of DMG_ELS) sum[el + 'Dmg'] = 0; p.amp = {};
+      out.el0 = echoElement(p); sum.fireDmg = 0.1; sum.frostDmg = 0.3; sum.slashDmg = 0.9; out.el1 = echoElement(p); sum.slashDmg = 0;
+      const hits = []; damageEnemy = function (e, b, o = {}) { const c = o.cast !== undefined ? o.cast : CAST; const h0 = e.hp, r = D0(e, b, o); hits.push({ echo: !!(c && c.src === 'echo'), el: c && c.el, dmg: h0 - e.hp }); return r; };
+      const m = spawnEnemy('slime', p.x + 1.1, p.y, 0); m.hp = m.maxHp = 1e9; m.res = {}; m.cd = 99; m.stunT = 99;
+      p.aim = 0; basicAttack(p); steps(40); damageEnemy = D0;
+      const hh = hits.filter(h => h.echo), hr = hits.filter(h => !h.echo);
+      out.retype = { echoHits: hh.length, els: [...new Set(hh.map(h => h.el))].join(), heroEl: hr.length && hr[0].el, ratio: hh.length && hr.length ? +(hh[0].dmg / hr[0].dmg).toFixed(2) : 0, kf: +(ECHO.k * echoFocus(p, 'frost')).toFixed(2) };
+      Object.assign(sum, keep);
+      // 5. the §27 echo guard on a replayed hit: no MP, half (k-scaled) ult charge, target-only freeze <= 2, no global freeze, no
+      //    'hit' EFFECTS, no skill-rank progress, no Veil consumed; a replayed dash moves the spirit, never the hero; not a summon
+      reset(); const m2 = spawnEnemy('slime', p.x + 1.1, p.y, 0); m2.hp = m2.maxHp = 1e9; m2.res = {}; m2.cd = 99; m2.stunT = 99;
+      const ranks0 = (p.ranks[Q] && p.ranks[Q].hits) || 0, E0 = emitEffects, fxHit = []; emitEffects = (w, c) => { if (w === 'hit' && c.cast && c.cast.src === 'echo') fxHit.push(c); return E0(w, c); };
+      p.aim = 0; useSkill(p, 'q');   // the hero's own Sunslash lands now (its MP / charge / rank before the snapshot)
+      const ranks1 = (p.ranks[Q] && p.ranks[Q].hits) || 0, mpR = p.mpRegen; p.mpRegen = 0;
+      p.mp = 10; p.mpHits = []; p.ult = 0; hitlagReset(); m2.hitFreeze = 0; p.buffs.veil = { t: 9, max: 9 }; const hx = p.x, hy = p.y; let maxF = 0, maxG = 0, n0 = G.echo.count;
+      for (let i = 0; i < 30; i++) { steps(1); maxF = Math.max(maxF, m2.hitFreeze || 0); maxG = Math.max(maxG, G.hitstopF); }
+      emitEffects = E0; p.mpRegen = mpR;
+      out.guard = { replays: G.echo.count - n0, mp: +(p.mp - 10).toFixed(3), ult: +p.ult.toFixed(3), maxF, maxG, fxHit: fxHit.length, rank: ((p.ranks[Q] && p.ranks[Q].hits) || 0) - ranks1, heroRank: ranks1 - ranks0, veil: !!p.buffs.veil, heroMoved: +Math.hypot(p.x - hx, p.y - hy).toFixed(3),
+        hpLost: m2.maxHp - m2.hp > 0, summon: G.enemies.includes(G.echo.g) || !!(G.summons && G.summons.includes(G.echo.g)) };
+      // a dash skill replayed by the spirit: the hero stays put
+      const dashId = ['dashstrike', 'heroic', 'tumble'].find(id => SKILLS[id]); reset(); const g0 = echoState(p).g; const hx2 = p.x; echoReplay(p, G.echo, { id: dashId, slot: 'e', basic: false, a: 0, dx: 0, dy: 0, combo: 0, ctx: newCtx(SKILLS[dashId].element) });
+      steps(30); out.dash = { id: dashId, heroMoved: +Math.abs(p.x - hx2).toFixed(3), spiritDash: g0 === G.echo.g };
+      // 6. fade: full alpha while idle < 1.5 s, fading over the last 0.5 s, gone after 2 s idle; it re-forms on the next attack
+      reset(); p.aim = 0; attackStep(); steps(24); const a0 = G.echo.alive; steps(60); const a1 = G.echo.alpha; steps(45); const a2 = G.echo.alpha; steps(20); const a3 = G.echo.alive;
+      p.atkT = 0; attackStep(); steps(24); out.fade = { a0, a1: +a1.toFixed(2), a2: +a2.toFixed(2), gone: !a3, reform: G.echo.alive, count: G.echo.count };
+      // 7. the rule off: no state, no ring
+      reset(); p.equip.weapon.rule = null; basicAttack(p); steps(30); out.off = G.echo === null;
+      p.equip.weapon.rule = 'echo'; reset();
+      return out;
+    });
+    check('echo: the 19th unique (Twice-Told): a Legendary weapon with rule + unique "echo" on the finder\'s own weapon variant; drops once on a boss-class kill at L17+ (Act III)',
+      X.item.unique === 'echo' && X.item.rule === 'echo' && X.item.rarity === 'legendary' && X.item.slot === 'weapon' && X.item.variant === X.item.hero && X.item.name === 'Twice-Told' && X.item.count <= 19
+      && X.gate[0] === null && X.gate[1] === null && X.gate[2] === 'echo' && X.gate[3] === null, { item: X.item, gate: X.gate });
+    check('echo: the spirit forms 0.4 s (24 fixed steps) after the attack, standing where the hero stood then (an after-image: it trails a moving hero)',
+      !X.spawn.s1.alive && X.spawn.s1.n === 0 && X.spawn.s1.q === 1 && X.spawn.steps === 24 && Math.abs(X.spawn.at.x - X.spawn.at.x0) < 0.06 && X.spawn.heroX > 1, X.spawn);
+    check('echo: replays basic, Q, E in the order cast; the queue holds 4 (6 rapid basics replay 4)',
+      X.qLen === 'lmb,q,e' && X.order.join() === ['lmb', X.q, X.e].join() && X.queued === 4 && X.replayed6 === 4, { qLen: X.qLen, order: X.order, queued: X.queued, replayed6: X.replayed6 });
+    check('echo: never R (an ultimate is neither recorded nor replayed)', X.r.cast && X.r.queued === 0 && X.r.replays === 0, X.r);
+    check('echo: retyped to the most-amplified element (arcane with none, never slash); a replayed hit is that element at k x focus of the hero\'s hit',
+      X.el0 === 'arcane' && X.el1 === 'frost' && X.retype.echoHits >= 1 && X.retype.els === 'frost' && X.retype.heroEl === 'slash' && X.retype.ratio > X.retype.kf * 0.7 && X.retype.ratio < X.retype.kf * 1.6, { el0: X.el0, el1: X.el1, retype: X.retype });
+    check('echo: the §27 guard on replayed hits: no MP, half k-scaled ult charge, target-only freeze <= 2, no global freeze, no "hit" EFFECTS, no skill ranks, Veil kept, hero unmoved, not a summon; a replayed dash moves only the spirit',
+      X.guard.replays >= 1 && X.guard.hpLost && X.guard.mp === 0 && X.guard.ult > 0 && X.guard.maxF <= 2 && X.guard.maxF >= 1 && X.guard.maxG === 0 && X.guard.fxHit === 0 && X.guard.rank === 0 && X.guard.veil
+      && X.guard.heroMoved === 0 && !X.guard.summon && X.dash.heroMoved === 0 && X.dash.spiritDash, { guard: X.guard, dash: X.dash });
+    check('echo: fades after 2 s idle (full until 1.5 s, then fading) and re-forms on the next attack; no state without the rule',
+      X.fade.a0 && X.fade.a1 === 1 && X.fade.a2 > 0 && X.fade.a2 < 1 && X.fade.gone && X.fade.reform && X.off, { fade: X.fade, off: X.off });
+    // the strip: the hero walks right swinging; the spirit trails 0.4 s behind, replaying each swing in the echo's element
+    const files = [];
+    await xp.evaluate(() => {
+      const p = G.player; G.enemies.length = 0; G.projs.length = 0; G.effects.length = 0; G.parts.length = 0; G.texts.length = 0; G.drops.length = 0; G.echo = null; G.banner = null; G.msg = null;
+      p.sum.fireDmg = 0.35; p.cast = null; p.atkT = 0; p.aim = 0; p.face = 1; p.invulnT = 999;
+      for (let k = 0; k < 3; k++) { const e = spawnEnemy('thornbackboar', p.x + 2.2 + k * 1.6, p.y + 0.2 + k * 0.7, 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.stunT = 99; e.state = 'idle'; }
+      window.__es = (n) => { for (let i = 0; i < n; i++) { const fr = hitlagStep(); if (!fr) { p.x += 0.06; p.y += 0.02; p.moving = true; p.walkT += STEP; } if (p.atkT <= 0 && !p.cast) { p.aim = 0; basicAttack(p); } update(fr ? 0 : STEP, STEP); p.moving = true; } G.cam.x = isoX(p.x, p.y) - 20; G.cam.y = isoY(p.x, p.y, p.z) - 12; render(); };
+    });
+    for (const [i, n] of [20, 6, 6, 6, 6, 6, 6, 6].entries()) {
+      await xp.evaluate(n => __es(n), n);
+      const f = path.join(ECHO_DIR, `echo-${String(i).padStart(2, '0')}.png`); await xp.screenshot({ path: f, clip: { x: 300, y: 130, width: 360, height: 220 } }); files.push(f);
+    }
+    const alive = await xp.evaluate(() => !!(G.echo && G.echo.alive && G.echo.count > 0));
+    const strip = require('child_process').spawnSync('python3', ['-c', `import sys\nfrom PIL import Image\nfs=sys.argv[2:]\nim=[Image.open(f) for f in fs]\nw,h=im[0].size\ns=Image.new('RGB',(w*len(im),h))\nfor i,m in enumerate(im): s.paste(m,(i*w,0))\ns.save(sys.argv[1])`, path.join(ECHO_DIR, 'strip-echo.png'), ...files]);
+    check('echo: frame strip written to tools/shots/m3-echo (8 frames, the spirit replaying the hero\'s swings)', alive && files.length === 8 && strip.status === 0 && fs.existsSync(path.join(ECHO_DIR, 'strip-echo.png')), { frames: files.length, alive, status: strip.status });
+    await xp.close();
+  }
   check('no page errors', errs.length === 0, errs.slice(0, 5));
   await br.close(); srv.close();
   console.log(fails ? `\n${fails} check(s) failed` : '\nAll play checks passed');
