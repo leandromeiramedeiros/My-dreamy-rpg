@@ -202,9 +202,11 @@ function drawPortrait(ctx, p) {
   const xf = p.level >= MAX_LEVEL ? 1 : p.xp / xpToNext(p.level);
   UI.bar(ctx, 100, 512, 236, 4, xf, { id: 'hud-xp', col: UC.xp, hi: UC.xp, ghost: false });
   const ra = G.t - HUD.lvl.t;
-  if (ra < 1.2) {   // level-up: gold ring on the bar
-    ctx.globalAlpha = 1 - ra / 1.2; ctx.fillStyle = UC.gold;
-    ctx.fillRect(96, 508, 244, 2); ctx.fillRect(96, 518, 244, 2); ctx.fillRect(96, 508, 2, 12); ctx.fillRect(338, 508, 2, 12); ctx.globalAlpha = 1;
+  if (ra < 1.2) {   // level-up (R3 #8): a gold ring on the XP bar that opens outward over 1.2 s, plus a gold wipe along the bar
+    const k = ra / 1.2, g = 2 * Math.round(easeOut(k) * 4), x0 = 96 - g, y0 = 508 - g, w = 244 + g * 2, h = 12 + g * 2;
+    ctx.globalAlpha = 1 - k; ctx.fillStyle = UC.gold;
+    ctx.fillRect(x0, y0, w, 2); ctx.fillRect(x0, y0 + h - 2, w, 2); ctx.fillRect(x0, y0, 2, h); ctx.fillRect(x0 + w - 2, y0, 2, h);
+    ctx.globalAlpha = (1 - k) * 0.7; ctx.fillStyle = '#ffffff'; ctx.fillRect(100, 512, Math.round(236 * Math.min(1, k * 2.5)), 4); ctx.globalAlpha = 1;
   }
   if (UI.mouseIn(100, 478, 236, 32)) {   // MP / ST numbers on hover
     UI.text(ctx, `MP ${Math.floor(p.mp)}/${p.maxMp}   ST ${Math.floor(p.st)}/${p.maxSt}`, 100, 434, 'small', UC.text);
@@ -264,7 +266,10 @@ function drawSkillSlot(ctx, p, slot, x, y) {
     if (st.unavailable) { ctx.fillStyle = UC.edge; ctx.globalAlpha = 0.5; ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; }
     if (st.flash > 0) { ctx.fillStyle = '#ffffff'; ctx.globalAlpha = Math.min(0.6, st.flash * 2); ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; }
   }
-  if (flashK > 0) { ctx.globalAlpha = flashK; hudFrame(ctx, x, y, SLOT, SLOT, 'slotRim', { tint: '#ffffff' }); ctx.globalAlpha = 1; }
+  if (flashK > 0) {   // skill ready (R3 #8): a 120 ms white rim + a soft white fill + a 2 px halo, so it reads at a glance
+    ctx.globalAlpha = flashK * 0.35; ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 4, y + 4, 36, 36);
+    ctx.globalAlpha = flashK; hudFrame(ctx, x, y, SLOT, SLOT, 'slotRim', { tint: '#ffffff' }); UI.frame(ctx, x - 4, y - 4, SLOT + 8, SLOT + 8, 'focus', { tint: '#ffffff' }); ctx.globalAlpha = 1;
+  }
   if (pot) UI.text(ctx, st.potions, x + 40, y + 28, 'small', UC.text, 'right');
   // key tag sits above the slot's top-left corner, outside the icon art
   const label = st.glyph || SLOT_LABEL[slot];
@@ -396,6 +401,14 @@ function hudWrapLines(s, w, size, maxLines) {
 const bossBarUp = () => { const b = G.boss; return !!(b && !b.dead && !(b.spawnT > 0.8)); };
 const bossIntro = () => { const b = G.boss, bn = G.banner; return !!((bn && bn.boss && bn.t > 0) || (b && !b.dead && b.spawnT > 0)); };
 function currentObjectiveText() { return (typeof currentObjective === 'function' ? currentObjective() : G.objective) || ''; }
+// R3 #3: the tracker never runs under the minimap (its left edge is x 816 on both layouts), the objective wraps to 2 lines + "...",
+// "Foes left" shows only while a wave / arena fight is live, and on touch nothing runs into the three icon buttons under it.
+const TRACKER_RIGHT = 816;
+const waveLive = () => {
+  if (G.pendingSpawns > 0) return true;
+  const ar = G.arena;
+  return !!(ar && !ar.done && ar.map === G.map.id && G.enemies.some(e => !e.dummy && !e.dead && e.arena === ar.id));
+};
 function drawTracker(ctx, x, y) {
   const m = G.map, obj = currentObjectiveText(), ql = questLines(), key = m.id + '|' + obj + '|' + ql.join();
   if (HUD.trk.key !== key) { HUD.trk.key = key; HUD.trk.t0 = G.t; }
@@ -403,20 +416,20 @@ function drawTracker(ctx, x, y) {
   const age = G.t - HUD.trk.t0, a = age < 6 ? 1 : Math.max(0.45, 1 - (age - 6) * 2);
   // boss bar up: desktop moves the tracker below it (bar ends at y 84); touch keeps the corner but shrinks to the column left of the bar
   if (bar && !touch) y = Math.max(y, 96);
-  const colW = bar && touch ? 240 - x - 12 : 784 - x - 20;
+  const colW = bar && touch ? 240 - x - 12 : TRACKER_RIGHT - x - 20;
+  const floorY = touch ? touchMenu()[0].y + 2 : 1e9;   // touch: the bag / help / fullscreen buttons start here
   ctx.globalAlpha = bar && touch ? Math.min(a, 0.7) : a;
   UI.text(ctx, fitText(m.name, colW + 20, 'body'), x, y, 'body', UC.gold);
   let yy = y + 24;
   if (obj) {
-    const L = hudWrapLines(obj, colW, 'body', bar && touch ? 2 : 2), lh = UI.lineH('body') + 4;
+    const L = hudWrapLines(obj, colW, 'body', 2), lh = UI.lineH('body') + 4;
     UI.text(ctx, '◆', x, yy, 'body', UC.gold);
     for (const l of L) { UI.text(ctx, l, x + 20, yy, 'body', UC.text); yy += lh; }
     yy += 24 - lh;
   }
   if (!(bar && touch)) {
-    const wave = G.pendingSpawns > 0 || (G.arena && G.enemies.some(e => !e.dummy));
-    if (wave && !bossIntro()) { const n = G.enemies.filter(e => !e.dummy && !e.dead).length; UI.text(ctx, `Foes left ${n}`, x + 20, yy, 'small', UC.hpHi); yy += 18; }
-    for (const t of ql) { UI.text(ctx, fitText(t, colW, 'small'), x + 20, yy, 'small', UC.dim); yy += 18; }
+    if (waveLive() && !bossIntro() && yy + 14 <= floorY) { const n = G.enemies.filter(e => !e.dummy && !e.dead).length; UI.text(ctx, `Foes left ${n}`, x + 20, yy, 'small', UC.hpHi); yy += 18; }
+    for (const t of ql) { if (yy + 14 > floorY) break; UI.text(ctx, fitText(t, colW, 'small'), x + 20, yy, 'small', UC.dim); yy += 18; }
   }
   ctx.globalAlpha = 1;
   return yy;
@@ -454,7 +467,7 @@ function drawBanner(ctx, p) {
     return;
   }
   ctx.globalAlpha = a;   // zone / boss entry: a 960x64 letterbox strip at y=112
-  const by = G.touch ? 164 : 112;   // touch: below the tracker and the three top-left buttons (they end at y 152)
+  const by = G.touch ? touchMenu()[0].y + 40 + 12 : 112;   // touch: below the three top-left buttons (R3 #3), wherever the safe area puts them
   ctx.fillStyle = UC.edge; ctx.globalAlpha = a * 0.78; ctx.fillRect(0, by, DW, 64); ctx.globalAlpha = a;
   ctx.fillStyle = bn.boss ? UC.danger : UC.line; ctx.fillRect(0, by, DW, 2); ctx.fillRect(0, by + 62, DW, 2);
   UI.text(ctx, bn.s, 480, by + 6, 'heading', bn.boss ? UC.danger : UC.gold, 'center');
@@ -480,9 +493,6 @@ function drawTablet(ctx) {
 // ===== help overlay ("?" button / H / pad menu) ==========================================================================================
 function drawHelp(ctx) {
   ctx.fillStyle = UC.edge; ctx.globalAlpha = 0.6; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
-  const x = 200, y = 80, w = 560, h = 380;
-  UI.frame(ctx, x, y, w, h, 'primary');
-  UI.text(ctx, 'HOW TO PLAY', 480, y + 18, 'heading', UC.gold, 'center');
   const rows = G.touch ? [
     ['Left thumb', 'Joystick: move'], ['Big button (hold)', 'Weapon basic attack'], ['Tap a skill', 'Cast at the nearest enemy'], ['Drag a skill', 'Aim, release to cast'],
     ['Hold a skill', 'Open the bag'], ['Potion', 'Drink a potion (40% HP)'], ['Bag / ? / full', 'Top-left buttons'],
@@ -490,14 +500,21 @@ function drawHelp(ctx) {
     ['move', 'Move'], ['aim', 'Aim'], ['attack', 'Attack (builds MP)'], ['skillQ', 'Weapon skills Q E R (R = ultimate)'], ['skillF', 'Chest skill (C = helmet)'],
     ['dodge', 'Dodge (boots skill)'], ['s1', 'Character skills 1 2 3'], ['potion', 'Potion'], ['interact', 'Interact / talk'], ['inventory', 'Bag, character, bestiary, quests'], ['pause', 'Pause and settings'],
   ];
-  let yy = y + 66;
+  // the panel grows with the row count (R3 #1): heading, rows, one dim line, then the buttons, all inside the 540 px canvas
+  const ROW = 26, top = 62, x = 180, w = 600;
+  const footY = top + rows.length * ROW + 8, btnY = footY + 26, h = btnY + 36 + 18, y = Math.max(8, UI.snap((DH - h) / 2));
+  UI.frame(ctx, x, y, w, h, 'primary');
+  UI.text(ctx, 'HOW TO PLAY', 480, y + 16, 'heading', UC.gold, 'center');
+  let yy = y + top;
   for (const [k, v] of rows) {
     if (G.touch) UI.text(ctx, k, x + 32, yy + 2, 'body', UC.stHi); else { const gw = hudGlyph(ctx, k, x + 32, yy - 2); if (!gw) UI.text(ctx, IN.glyph(k), x + 32, yy + 2, 'body', UC.stHi); }
-    UI.text(ctx, v, x + 200, yy + 2, 'body', UC.text); yy += 28;
+    UI.text(ctx, v, x + 200, yy + 2, 'body', UC.text); yy += ROW;
   }
-  UI.text(ctx, 'You are what you wear: gear decides Q E R F C SHIFT.', 480, y + h - 84, 'small', UC.dim, 'center');
-  UI.button(ctx, 480 - 170, y + h - 52, 160, 36, 'SETTINGS', { id: 'btn:help-settings', size: 'small', fn: () => { G.ui.help = false; G.ui.pause = true; } });
-  UI.button(ctx, 480 + 10, y + h - 52, 160, 36, 'CLOSE', { id: 'btn:help-close', size: 'small', def: true, fn: () => { G.ui.help = false; } });
+  UI.text(ctx, 'You are what you wear: gear decides Q E R F C SHIFT.', 480, y + footY, 'small', UC.dim, 'center');
+  const title = G.state === 'title';
+  UI.button(ctx, 480 - 170, y + btnY, 160, 36, 'SETTINGS', { id: 'btn:help-settings', size: 'small', fn: () => { G.ui.help = false; if (title) G.ui.settings = true; else G.ui.pause = true; } });
+  UI.button(ctx, 480 + 10, y + btnY, 160, 36, 'CLOSE', { id: 'btn:help-close', size: 'small', def: true, fn: () => { G.ui.help = false; } });
+  HUD.helpRect = { x, y, w, h, btnY: y + btnY, lastRowY: y + top + (rows.length - 1) * ROW };
   UI.focus.draw(ctx);
 }
 
@@ -530,6 +547,7 @@ function drawPlayHud(ctx, p, inert) {
 function drawHUD(ctx) {
   ctx.imageSmoothingEnabled = false;
   G.ui.btns = [];   // legacy list read by main.js uiClick; hit regions live in UI now
+  if (G.portrait && typeof drawRotateCard === 'function') { drawRotateCard(ctx); return; }   // R3 #2: phone held upright (screens.js)
   if (G.state === 'title') { drawTitle(ctx); return; }
   const p = G.player, u = G.ui;
   drawDamageNumbers(ctx); drawDropNames(ctx); drawNameplates(ctx);

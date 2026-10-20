@@ -36,6 +36,21 @@ function mnRegion(x, y, w, h, id, fn, o = {}) {
   if (hover && !UI.focus.nav && moved) UI.focus.set(id);
   return { hover, focus, on: hover || focus };
 }
+// R3 #4: zone id -> display name, built from world / zone data (never from items.js): a built map's own name, else the zone's entry
+// banner in the dialogue table ("spire_banner" = Sleepless Spire; zones not built yet still have one), else a capitalised id
+function zoneName(id) {
+  if (!id) return '';
+  const m = G.world && G.world.maps && G.world.maps[id];
+  if (m && m.name) return m.name;
+  const b = typeof DIALOGUE !== 'undefined' && DIALOGUE[id + '_banner'];
+  if (b && b.banner) return b.banner;
+  return String(id).replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+}
+// "-0%" / "+0%" never print: a percent that rounds to zero is just "0%"
+const cleanZero = t => String(t).replace(/^[+-]0(?:\.0+)?%/, '0%');
+const signedPct = (v, flip) => { const r = Math.round((flip ? -v : v) * 100); return r === 0 ? '0%' : (r > 0 ? '+' : '-') + Math.abs(r) + '%'; };
+// phone landscape = a touch device on a small screen; only there do the inventory stat labels abbreviate (R3 #6)
+const phoneUI = () => (IN.device === 'touch' || !!G.touch) && Math.min(window.innerWidth, window.innerHeight) < 600;
 function fitText(s, w, size = 'small') {
   s = String(s); if (UI.measure(s, size) <= w) return s;
   while (s.length > 1 && UI.measure(s + '…', size) > w) s = s.slice(0, -1);
@@ -102,20 +117,28 @@ function drawTabScreen(ctx) {
 // Paper doll (DESIGN §19.4 / HUD.md): 8 slots, 48 px. Spec coordinates are relative to the panel (20,20); ring1 (24,88), ring2 (176,88),
 // amulet (100,64), belt (100,300). The four gear slots sit between the rings and the belt.
 const EQ_ORIGIN = [PX, PY];
-const EQ_REL = { amulet: [100, 64], ring1: [24, 88], ring2: [176, 88], weapon: [24, 152], head: [176, 152], chest: [24, 216], boots: [176, 216], belt: [100, 300] };
+// R3 #6: amulet / rings keep their DESIGN §19.4 spots; the weapon / head and chest / boots rows close up to a 8 px gap and the belt
+// sits right under the hero (it was at y 300, a 36 px hole below the boots)
+const EQ_REL = { amulet: [100, 64], ring1: [24, 88], ring2: [176, 88], weapon: [24, 144], head: [176, 144], chest: [24, 200], boots: [176, 200], belt: [100, 256] };
 const EQ_POS = {}; for (const k in EQ_REL) EQ_POS[k] = [EQ_ORIGIN[0] + EQ_REL[k][0], EQ_ORIGIN[1] + EQ_REL[k][1]];
 const EQ_LABEL = { weapon: 'Weapon', head: 'Helm', chest: 'Chest', boots: 'Boots', ring1: 'Ring', ring2: 'Ring', amulet: 'Amulet', belt: 'Belt' };
-const EQ_DOLL = [144, 142];   // doll sprite: centre x, top y
+const EQ_DOLL = [144, 158];   // doll sprite: centre x, top y
 const RING_KEYS = ['ring1', 'ring2'];
+// R3 #6: full words by default; `short` (phone landscape only) abbreviates. The order pairs long labels with short ones so both
+// columns fit in the 220 px column: left column = Atk MP CritDmg SkillDmg Potions Regen, right column = HP Def Crit Haste CDR Speed.
 function statRows(p, short) {
   const S = short ? { 'Crit dmg': 'CDmg', 'Skill dmg': 'SkDmg', Potions: 'Pots', Speed: 'Spd', Regen: 'Rgn' } : {};
-  return [['Atk', Math.round(item('weapon', p.gear.weapon).basic.dmg * p.power)], ['HP', p.maxHp], ['MP', p.maxMp], ['Def', pctText(p.def)], ['Crit', pctText(p.crit)], ['Crit dmg', '+' + pctText(p.critDmg)],
-    ['Haste', '+' + pctText(p.haste)], ['CDR', '-' + pctText(p.cdr)], ['Skill dmg', '+' + pctText(p.skillDmg)], ['Regen', `${+p.regen.toFixed(1)}/s`], ['Potions', `${p.potions}/${MAX_POTIONS}`], ['Speed', `+${Math.round((p.speed / 3.7 - 1) * 100)}%`]].map(([k, v]) => [S[k] || k, v]);
+  const sp = Math.round((p.speed / 3.7 - 1) * 100);
+  return [['Atk', Math.round(item('weapon', p.gear.weapon).basic.dmg * p.power)], ['HP', p.maxHp], ['MP', p.maxMp], ['Def', pctText(p.def)],
+    ['Crit dmg', signedPct(p.critDmg)], ['Crit', pctText(p.crit)], ['Skill dmg', signedPct(p.skillDmg)], ['Haste', signedPct(p.haste)],
+    ['Potions', `${p.potions}/${MAX_POTIONS}`], ['CDR', signedPct(p.cdr, true)], ['Regen', `${+p.regen.toFixed(1)}/s`], ['Speed', signedPct(sp / 100)]].map(([k, v]) => [S[k] || k, v]);
 }
+// colW = one number (equal columns) or [left, right] widths (the inventory's 216 px column needs a wide left column)
 function drawStats(ctx, p, x, y, colW, rowH, short) {
+  const cw = Array.isArray(colW) ? colW : [colW, colW];
   statRows(p, short).forEach(([k, v], i) => {
-    const sx = x + (i % 2) * colW, sy = y + Math.floor(i / 2) * rowH;
-    UI.text(ctx, k, sx, sy, 'small', UC.dim); UI.text(ctx, String(v), sx + colW - 12, sy, 'small', UC.text, 'right');
+    const c = i % 2, sx = x + (c ? cw[0] : 0), sy = y + Math.floor(i / 2) * rowH;
+    UI.text(ctx, k, sx, sy, 'small', UC.dim); UI.text(ctx, String(v), sx + cw[c] - (Array.isArray(colW) ? 4 : 12), sy, 'small', UC.text, 'right');
   });
 }
 function drawResistRow(ctx, p, x, y, cell) {
@@ -211,7 +234,7 @@ function clickEquipSlot(key) {
 }
 
 function drawInventoryTab(ctx, p) {
-  const u = G.ui; let hov = null, ringOn = null;
+  const u = G.ui; let hov = null, ringOn = null, emptyKey = null;
   const gemPick = u.gem != null && p.bag[u.gem] && p.bag[u.gem].gem ? u.gem : null; if (gemPick == null) u.gem = null;
   if (u.ringPick && (!p.bag.includes(u.ringPick) || G.t - (u.ringPickT || 0) > 0.5)) cancelRingPick();   // placed, salvaged, or the screen was closed
   if (u.ringPick) u.ringPickT = G.t;
@@ -226,14 +249,14 @@ function drawInventoryTab(ctx, p) {
       ctx.globalAlpha = 0.55 + 0.45 * Math.sin(G.t * 6); UI.frame(ctx, x - 4, y - 4, 56, 56, 'focus', { tint: UC.gold }); ctx.globalAlpha = 1;
       if (key === (u.ringCand || (r.on && key) || null)) UI.text(ctx, 'REPLACE', x + 24, y - 20, 'small', UC.gold, 'center');
     } else if (!pick && gemPick == null && sel && sel.sockets && p.bag.includes(sel) && equipKeysFor(sel.slot).includes(key) && !it) UI.text(ctx, 'EQUIP', x + 24, y + 50, 'small', UC.gold, 'center');
-    if (r.on) { if (it && !pick) hov = { it, eq: true, key }; if (isRing) ringOn = key; }
+    if (r.on) { if (it && !pick) hov = { it, eq: true, key }; else if (!it && !pick) emptyKey = key; if (isRing) ringOn = key; }
   }
-  mnDivider(ctx, COL1 + 8, 372, 200, 2);
-  UI.text(ctx, `Lv ${p.level}`, COL1 + 8, 378, 'body', UC.gold);
+  mnDivider(ctx, COL1 + 8, 340, 200, 2);
+  UI.text(ctx, `Lv ${p.level}`, COL1 + 8, 348, 'body', UC.gold);
   const need = xpToNext(p.level);
-  UI.text(ctx, p.level >= MAX_LEVEL ? 'MAX' : `${Math.floor(p.xp)}/${need} XP`, COL1 + 208, 382, 'small', UC.dim, 'right');
-  UI.bar(ctx, COL1 + 12, 400, 192, 8, p.level >= MAX_LEVEL ? 1 : p.xp / need, { id: 'tab-xp', col: UC.xp, hi: UC.xp, ghost: false, wipe: false });
-  drawStats(ctx, p, COL1 + 4, 414, 108, 16, true);
+  UI.text(ctx, p.level >= MAX_LEVEL ? 'MAX' : `${Math.floor(p.xp)}/${need} XP`, COL1 + 208, 352, 'small', UC.dim, 'right');
+  UI.bar(ctx, COL1 + 12, 372, 192, 8, p.level >= MAX_LEVEL ? 1 : p.xp / need, { id: 'tab-xp', col: UC.xp, hi: UC.xp, ghost: false, wipe: false });
+  drawStats(ctx, p, COL1, 392, [124, 96], 18, phoneUI());
   // ---- column 2: bag ----
   const bx = COL2 + 10, by = 108, filled = p.bag.filter(Boolean).length;
   UI.text(ctx, `BAG ${filled}/${BAG_SIZE}`, bx, 80, 'body', UC.stHi);
@@ -271,7 +294,7 @@ function drawInventoryTab(ctx, p) {
   if (pick) what = { it: pick, bi: p.bag.indexOf(pick), pick: true };
   else if (!what && UI.focus.showing() && UI.focus.current()) what = whatOf(p, UI.focus.current().id);
   if (!what && sel) what = sel.gem ? { gemIdx: sel.gemIdx } : sel.sockets ? { it: sel, bi: p.bag.indexOf(sel), eq: isEquipped(p, sel) } : null;
-  drawItemPanel(ctx, p, COL3 + 4, 76, 324, what, hov, gemPick, pick ? (u.ringCand || ringOn) : null);
+  drawItemPanel(ctx, p, COL3 + 4, 76, 324, what, hov, gemPick, pick ? (u.ringCand || ringOn) : null, emptyKey);
 }
 function doCombine(p) {
   const u = G.ui; let bi = u.sel && u.sel.gem != null ? u.sel.gemIdx : -1;

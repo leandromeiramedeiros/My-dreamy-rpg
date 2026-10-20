@@ -97,10 +97,31 @@ function titleLogo() {
   if (!uiReady() || !UI.image(FONT_ART.body.src)) return null;
   return hudCached('logo', 340, 40, x => { UI.text(x, 'MY DREAMY RPG', 170, 6, 'heading', UC.gold, 'center'); });
 }
-function titleControlsHint() {
-  if (IN.device === 'touch' || TOUCH_CAPABLE && IN.device !== 'kbm' && IN.device !== 'pad') return 'Left thumb moves   hold the big button to attack   tap or drag skills to cast   hold a skill for the bag';
-  if (IN.device === 'pad') return `${IN.glyph('skillQ')} ${IN.glyph('skillE')} skills   ${IN.glyph('attack')} attack   ${IN.glyph('dodge')} dodge   ${IN.glyph('interact')} interact   ${IN.glyph('inventory')} bag   ${IN.glyph('pause')} pause`;
-  return `WASD move   mouse aim   ${IN.glyph('attack')} attack   Q E R F C ${IN.glyph('dodge')} 1 2 3 skills   ${IN.glyph('potion')} potion   ${IN.glyph('inventory')} bag   ${IN.glyph('pause')} pause`;
+// R3 #2: "rotate to play". A touch device held upright shows the 960x540 canvas at ~40 % height; until the player turns the phone
+// (tryFullscreen locks landscape on the first tap), the whole canvas is this card: title art, a phone turning on its side, one line.
+// G.portrait is kept by main.js fit(); hud.js drawHUD calls this instead of the HUD. The type is drawn large because the canvas
+// is only ~390 css px wide in portrait.
+function drawRotateCard(ctx) {
+  const t = G.t || performance.now() / 1000;
+  ctx.fillStyle = '#0b0716'; ctx.globalAlpha = 0.9; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
+  const logo = titleLogo(), bob = Math.round(Math.sin(t * 1.2) * 2) * 2;
+  if (logo) { ctx.imageSmoothingEnabled = false; ctx.drawImage(logo, 480 - 255, 26 + bob, 510, 60); } else UI.text(ctx, 'MY DREAMY RPG', 480, 40 + bob, 'heading', UC.gold, 'center');
+  // the phone: an upright frame that swings onto its side and back (ease in-out, 2.4 s loop)
+  const k = (t % 2.4) / 2.4, e = k < 0.45 ? 0 : k < 0.7 ? easeOut((k - 0.45) / 0.25) : k < 0.92 ? 1 : 1 - (k - 0.92) / 0.08, ang = e * Math.PI / 2;
+  ctx.save(); ctx.translate(480, 218); ctx.rotate(-ang);
+  ctx.fillStyle = UC.edge; ctx.fillRect(-42, -72, 84, 144);
+  ctx.fillStyle = UC.line; ctx.fillRect(-38, -68, 76, 136);
+  ctx.fillStyle = UC.bg; ctx.fillRect(-32, -60, 64, 120);
+  ctx.fillStyle = UC.gold; ctx.fillRect(-8, -48, 16, 16); ctx.fillStyle = UC.hpHi; ctx.fillRect(-20, -8, 40, 6); ctx.fillStyle = UC.mpHi; ctx.fillRect(-20, 6, 28, 6);
+  ctx.fillStyle = UC.line; ctx.fillRect(-10, 64, 20, 4);
+  ctx.restore();
+  ctx.globalAlpha = 1 - e * 0.6; ctx.fillStyle = UC.gold;   // two chevrons showing the turn direction
+  for (const [cx, cy] of [[576, 150], [584, 218], [576, 286]]) { ctx.fillRect(cx, cy, 8, 8); ctx.fillRect(cx - 8, cy + 8, 8, 8); ctx.fillRect(cx, cy + 16, 8, 8); }
+  ctx.globalAlpha = 1;
+  const big = (s, y, size, col, kk) => { ctx.save(); ctx.translate(480, y); ctx.scale(kk, kk); UI.text(ctx, s, 0, 0, size, col, 'center'); ctx.restore(); };
+  big('ROTATE TO PLAY', 366, 'heading', UC.gold, 1.5);
+  big('Turn your phone sideways', 434, 'body', UC.text, 1.6);
+  big('The game fills the screen in landscape', 480, 'small', UC.dim, 1.6);
 }
 function drawTitle(ctx) {
   const u = G.ui;
@@ -108,16 +129,18 @@ function drawTitle(ctx) {
   const bob = Math.round(Math.sin(G.t * 1.2) * 2) * 2, logo = titleLogo();
   if (logo) { ctx.imageSmoothingEnabled = false; ctx.drawImage(logo, 480 - 340, 160 - 40 + bob, 680, 80); } else UI.text(ctx, 'MY DREAMY RPG', 480, 140 + bob, 'heading', UC.gold, 'center');
   UI.text(ctx, 'a high-fantasy dream above the clouds', 480, 216, 'small', UC.dim, 'center');
+  if (u.help) { drawHelp(ctx); return; }   // the "?" entry (below): the same overlay as in play, no title controls underneath
   const s = G.save && G.save.player ? { level: G.save.player.level, map: G.save.world && G.save.world.map } : null;
   const sure = u.confirmNew > G.t;
+  const BOX = 196, RULE = 2;   // one box width for the slots and the three entries; 2 px rules (2x grid)
   // save slots (M2b): pick one, then Continue / New Dream act on it
   if (!u.settings && typeof saveSlots === 'function' && SAVE_ON) {
     if (!u.slotInfo || G.t > u.slotInfoT) { u.slotInfo = saveSlots(); u.slotInfoT = G.t + 1; }
     u.slotInfo.forEach((info, i) => {
-      const n = i + 1, w = 196, x = 480 - (w * 3 + 16) / 2 + i * (w + 8), y = 258, cur = (G.saveSlot || 1) === n;
+      const n = i + 1, w = BOX, x = 480 - (w * 3 + 16) / 2 + i * (w + 8), y = 258, cur = (G.saveSlot || 1) === n;
       const r = mnRegion(x, y, w, 40, 'title:slot' + n, () => { initAudio(); selectSlot(n); u.confirmNew = 0; u.slotInfo = null; });
       ctx.fillStyle = cur ? 'rgba(255,211,90,0.16)' : 'rgba(255,255,255,0.05)'; ctx.fillRect(x, y, w, 40);
-      ctx.fillStyle = cur ? UC.gold : r.on ? UC.text : UC.bevel; ctx.fillRect(x, y + 39, w, 1);
+      ctx.fillStyle = cur ? UC.gold : r.on ? UC.text : UC.bevel; ctx.fillRect(x, y + 40 - RULE, w, RULE);
       UI.text(ctx, `SLOT ${n}`, x + 8, y + 5, 'small', cur ? UC.gold : UC.text);
       UI.text(ctx, info ? fitText(`Lv ${info.level}  ${(G.world.maps[info.map] || {}).name || ''}`, w - 16) : 'empty', x + 8, y + 22, 'small', UC.dim);
     });
@@ -128,16 +151,19 @@ function drawTitle(ctx) {
     { id: 'settings', label: 'SETTINGS', fn: () => { u.settings = true; } },
   ];
   if (!u.settings) items.forEach((it, i) => {
-    const y = 320 + i * 36, w = Math.max(200, UI.measure(it.label, 'body') + 40), x = 480 - w / 2;
+    const y = 320 + i * 36, w = BOX, x = 480 - w / 2;
     if (it.off) { UI.text(ctx, it.label, 480, y + 6, 'body', UC.bevel, 'center'); return; }
     const r = mnRegion(x, y, w, 32, 'title:' + it.id, () => { initAudio(); it.fn(); }, { def: s ? it.id === 'continue' : it.id === 'new' });
-    if (r.on || UI.focus.is('title:' + it.id)) { UI.sprite(ctx, 'bullet', x - 8, y + 9, { scale: 2, tint: UC.gold, alpha: 0.7 + 0.3 * Math.sin(G.t * 6) }); }
-    UI.text(ctx, it.label, 480, y + 6, 'body', r.on ? UC.gold : UC.text, 'center');
+    const on = r.on || UI.focus.is('title:' + it.id);
+    if (on) { ctx.fillStyle = 'rgba(255,211,90,0.12)'; ctx.fillRect(x, y, w, 32); ctx.fillStyle = UC.gold; ctx.fillRect(x, y + 32 - RULE, w, RULE); UI.sprite(ctx, 'bullet', x - 20, y + 9, { scale: 2, tint: UC.gold, alpha: 0.7 + 0.3 * Math.sin(G.t * 6) }); }
+    UI.text(ctx, fitText(it.label, w - 8, 'body'), 480, y + 6, 'body', r.on ? UC.gold : UC.text, 'center');
     if (it.sub) UI.text(ctx, it.sub, x + w + 12, y + 9, 'small', UC.dim);
   });
   UI.focus.current();   // validate the default focus so the cursor shows on the first frame
-  UI.text(ctx, titleControlsHint(), 480, 500, 'small', UC.dim, 'center');
-  if (TOUCH_CAPABLE && window.innerHeight > window.innerWidth) UI.text(ctx, 'Turn your device sideways for the best view', 480, 460, 'small', UC.hpHi, 'center');
+  if (!u.settings) {   // a single "?" entry replaces the controls text wall (as in play): pad / keys reach it by focus
+    const hr = mnRegion(928, 480, 24, 24, 'title:help', () => { u.help = true; UI.focus.set('btn:help-close', true); });
+    UI.sprite(ctx, hr.on ? 'helpHover' : 'help', 928, 480, { scale: 2 });
+  }
   if (u.settings) { ctx.fillStyle = '#05030c'; ctx.globalAlpha = 0.5; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1; drawSettingsPanel(ctx, 'title'); }
   UI.focus.draw(ctx);
 }

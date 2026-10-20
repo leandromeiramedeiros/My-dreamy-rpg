@@ -14,6 +14,8 @@ function fit() {
   const k = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
   if (k !== HUD_K || DISP.width !== DW * k) { HUD_K = k; DISP.width = DW * k; DISP.height = DH * k; }
   dctx.setTransform(HUD_K, 0, 0, HUD_K, 0, 0); dctx.imageSmoothingEnabled = false;
+  // R3 #2: a touch device held upright gets the "rotate to play" card (screens.js drawRotateCard) instead of a 40 % letterbox
+  G.portrait = !!(TOUCH_CAPABLE && window.innerHeight > window.innerWidth && !(window.matchMedia && matchMedia('(hover: hover)').matches && !matchMedia('(pointer: coarse)').matches));
 }
 window.addEventListener('resize', fit); fit();
 IN.init(DISP);
@@ -207,6 +209,7 @@ function handleInput() {
   if (G.state === 'title') {
     menuNav();
     if (G.ui.settings) { if (IN.pressed('back') || IN.pressed('pause')) { G.ui.settings = false; used(); return; } }
+    if (G.ui.help) { if (IN.pressed('back') || IN.pressed('help') || IN.pressed('pause')) { G.ui.help = false; used(); return; } }   // the title's "?" help (R3 #8)
     if (IN.pressed('accept') || IN.pressed('interact') || (IN.pressed('pause') && IN.device === 'pad' && !G.ui.settings)) { initAudio(); if (!UI.focus.accept()) { if (!G.ui.settings) titleDefault(); } used(); }
     return;
   }
