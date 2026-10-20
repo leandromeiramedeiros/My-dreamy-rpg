@@ -154,7 +154,7 @@ var BOSS_DATA = {
     phases: [
       // bar 1: the hound learns you
       { hpBelow: 1.0, moves: { lunge: 3, rootSpit: 2, burrow: 2 }, onEnter: [] },
-      // bar 2: new move howl (2 shadehounds); cunning: the lunge FEINTS (0.4 s fake crouch, then the real 0.64 s lunge, re-aimed); windMul 0.85, gaps x0.75
+      // bar 2: new move howl (2 shadehounds); cunning: the lunge FEINTS (0.4 s fake crouch, then the real 0.64 s lunge, re-aimed); windMul 0.85, gaps x0.5, speed x1.2
       { hpBelow: 0.5, moves: { lunge: 3, rootSpit: 2, burrow: 2, howl: 3 }, windMul: 0.85, cdMul: 0.5, speedMul: 1.2,
         forms: { lunge: { feint: 0.4 } },
         onEnter: [{ type: 'roar', banner: 'Mossjaw rears up', dur: 1.2 }] }
@@ -176,10 +176,10 @@ var BOSS_DATA = {
       saplings:  { type: 'summon', kind: 'sapling', n: 2, wind: 1.0, open: 1.5 }   // n 3 -> 2 (§26.2 tuning: bars 2-3 carry the pressure)
     },
     phases: [
-      // bar 1: the old troll's three verbs
+      // bar 1: the old troll's three verbs (base gaps +0.8 s in BOSS_FILL: a calm teaching bar)
       { hpBelow: 1.0, moves: { stomp: 2, rootGrab: 2, trunkSwipe: 2 }, onEnter: [] },
       // bar 2: new move saplings (turrets; the root wall closes the ring); cunning: trunkSwipe -> a short 0.35 s beat, then the
-      // BACKHAND (delayed second hit, re-aimed, 0.68 s wind); windMul 0.85, gaps x0.8
+      // BACKHAND (delayed second hit, re-aimed, 0.81 s wind); windMul 0.85, gaps x0.8; bars 38 / 37 / 25 % of the HP
       { hpBelow: 0.62, moves: { stomp: 1.5, rootGrab: 2, trunkSwipe: 2, rootWall: 1, saplings: 1 }, windMul: 0.85, cdMul: 0.8,
         forms: { trunkSwipe: { open: 0.35, then: 'backhand' } },
         onEnter: [{ type: 'arenaShrink', pattern: 'roots_inward', k: 0.75, rMin: 5.5 }, { type: 'roar', banner: 'The roots wake', dur: 1.2 }] },   // ring >= 5.5 tiles: room to walk out of a 3-tile stomp, and the card's saplings (<= 5.4 from the centre) stay inside

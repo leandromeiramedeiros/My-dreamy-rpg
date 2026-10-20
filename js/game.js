@@ -483,7 +483,7 @@ function castAnim(p, t = 0.25) { p.castT = t; }
 // write (swing, castT, combo, dash, buffs, mp) lands on the spirit, so a replayed dash or blink never moves the hero.
 // Never R (the cast row only takes lmb / q / e). No MP, cooldown or charge cost, never targeted, no summon counters.
 // State lives on G.echo (never saved); it resets when the hero, the map or the rule changes.
-const ECHO = { k: 0.4, floor: 0.3, a0: 0.15, full: 0.4, delay: 0.4, queue: 4, idle: 2, frames: 24, fadeIn: 0.12, fadeOut: 0.5, els: ['fire', 'frost', 'nature', 'lightning', 'arcane', 'holy'] };
+const ECHO = { k: 0.3, floor: 0.3, a0: 0.2, full: 0.4, delay: 0.4, queue: 4, idle: 2, frames: 24, fadeIn: 0.12, fadeOut: 0.5, els: ['fire', 'frost', 'nature', 'lightning', 'arcane', 'holy'] };
 const ECHO_RS = 6;   // ring stride: x, y, z, face, flags (1 back, 2 moving, 4 dashing), walkT
 function echoState(p) {
   let E = G.echo;
@@ -942,7 +942,7 @@ function damageEnemy(e, base, o = {}) {
   if (o.stun) e.stunT = Math.max(e.stunT, o.stun * (cx ? cx.stun : 1) * (e.boss ? 0.25 : 1));
   if (o.freeze) e.frozen = o.stun;
   if (o.slow) e.slowT = Math.max(e.slowT, o.slow * 2 * (cx ? cx.slow : 1));
-  if (o.burn) { e.burnT = o.burn * (cx ? cx.burn : 1); e.burnTick = 0.5; e.burnCast = c; }
+  if (o.burn && !(echo && e.burnT > 0 && e.burnCast && e.burnCast.src !== 'echo')) { e.burnT = o.burn * (cx ? cx.burn : 1); e.burnTick = 0.5; e.burnCast = c; }   // an echo Burn never overwrites the hero's own
   const A = HITAGG;
   if (!o.dot) {
     // hit particles 5 + 8r (max 12); inside a cast at most 24 in all, 2 per target beyond the 4th

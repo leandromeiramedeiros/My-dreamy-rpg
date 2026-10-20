@@ -344,8 +344,16 @@ function* groundPrepGen(m) {
     if (hash2(px, 2, 83) > 0.985 && L > 30) m.crystalSpots.push({ px, py: e + SLAB + L * (0.25 + hash2(px, 3, 84) * 0.3) });
   }
   for (const s of m.crystalSpots) m.lights.push({ sx: s.px + minSX, sy: s.py + 8, r: 46, col: m.themeId === 'ruins' ? '#b36bff' : '#7fd2ff', a: 0.75 });
+  // a mist puff baked at 70 % of every edge waterfall (the same water-over-void rule as finalizeMap's edge falls; the fall stays live)
+  const mist = [];
+  for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) {
+    if (m.type[j][i] !== 'w' || typeAt(m, i, j + 1) || isGutter(m, i, j + 1)) continue;
+    const mx = isoX(i, j + 1) - minSX + 8, my = Math.round(isoY(i, j + 1, 0) + SLAB + 4 + (th.underDepth + 80) * 0.7);
+    mist.push({ px: mx, py: my });
+    for (let px = Math.max(0, mx - MIST_RX); px <= Math.min(W - 1, mx + MIST_RX); px++) bot[px] = Math.max(bot[px], my + MIST_RY + 1);
+  }
   m.gox = minSX; m.goy = 0;
-  m.gp = { W, H, GB, minSX, top, edge, len, bot, root, lobe };
+  m.gp = { W, H, GB, minSX, top, edge, len, bot, root, lobe, mist };
 }
 const isGutter = (m, x, y) => !!(m.gutter && x >= 0 && y >= 0 && x < m.W && y < m.H && m.gutter[y * m.W + x]);
 // a gutter pixel: 'v' = a chasm whose north lip shows a cliff face, 'k' = darkness
@@ -368,6 +376,7 @@ function rootPixels(x0, rl, cb) {
   }
 }
 // render raster rect [x0, x0 + w) x [y0, y0 + h) into `out`, an ImageData whose pixel (0, 0) is raster (ox, oy)
+const MIST_RX = 20, MIST_RY = 11;
 function rasterRect(m, out, ox, oy, x0, y0, w, h) {
   const th = m.theme, G0 = groundPrep(m), { W, GB, minSX, top, edge, len, root, lobe } = G0, d = out.data, ow = out.width, oh = out.height;
   const put = (px, py, c, a = 255) => {
@@ -431,6 +440,19 @@ function rasterRect(m, out, ox, oy, x0, y0, w, h) {
       const y = base + dd; if (y < y0 || y >= y1 || x < xa || x >= xb) return;
       put(x, y, mixRgb(side ? mulRgb(th.root, 0.7) : th.root, th.haze, t * 0.45), t < 0.7 ? 255 : Math.round(255 * (1 - (t - 0.7) / 0.3)));
     });
+  }
+  // edge-fall mist: a soft billowy puff composited OVER what is already there (skirt pixels or transparent)
+  const fogC = hexToRgb(th.fog);
+  for (const ms of G0.mist) {
+    if (ms.px + MIST_RX < xa || ms.px - MIST_RX >= xb || ms.py + MIST_RY < y0 || ms.py - MIST_RY >= y1) continue;
+    for (let y = Math.max(y0, ms.py - MIST_RY); y < Math.min(y1, ms.py + MIST_RY + 1); y++) for (let x = Math.max(xa, ms.px - MIST_RX); x < Math.min(xb, ms.px + MIST_RX + 1); x++) {
+      const dx = (x - ms.px) / MIST_RX, dy = (y - ms.py) / MIST_RY, r = Math.sqrt(dx * dx + dy * dy) * (0.8 + 0.4 * vnoise(x * 0.18, y * 0.25, 89));
+      if (r >= 1) continue;
+      const am = 0.62 * Math.pow(1 - r * r, 1.5), X = x - ox, Y = y - oy; if (X < 0 || Y < 0 || X >= ow || Y >= oh) continue;
+      const i = (Y * ow + X) * 4, ae = d[i + 3] / 255, ao = am + ae * (1 - am);
+      for (let k = 0; k < 3; k++) d[i + k] = (fogC[k] * am + d[i + k] * ae * (1 - am)) / ao;
+      d[i + 3] = Math.round(ao * 255);
+    }
   }
 }
 function drawCrystals(m, ctx, x0, y0, w, h) {

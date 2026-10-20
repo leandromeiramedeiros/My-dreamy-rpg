@@ -299,6 +299,7 @@ function drawScene() {
   for (const d of G.drops) if (inView(isoX(d.x, d.y), isoY(d.x, d.y, d.z))) list.push({ kind: 'drop', d, key: d.x + d.y + d.z * 0.35 + 0.02 });
   for (const c of G.critters || []) if (inViewE(c)) list.push({ kind: 'critter', c, key: c.x + c.y + c.z * 0.35 });
   for (const e of G.effects) if (e.type === 'ghost') list.push({ kind: 'ghost', e, key: e.x + e.y });
+  if (G.echo && G.echo.alive && G.echo.alpha > 0.01) { const g = G.echo.g; list.push({ kind: 'echo', key: g.x + g.y + g.z * 0.35 + 0.008 }); }   // §30 spirit clone
   for (const c of G.corpses) if (inView(isoX(c.x, c.y), isoY(c.x, c.y, c.gz))) { c.key = c.x + c.y + 0.005; list.push(c); }
   if (p.buffs.orbit) for (let k = 0; k < 3; k++) { const a = G.t * 4 + k * Math.PI * 2 / 3; list.push({ kind: 'orb', x: p.x + Math.cos(a) * 1.4, y: p.y + Math.sin(a) * 1.4, z: p.z + 1.2, key: p.x + Math.cos(a) * 1.4 + p.y + Math.sin(a) * 1.4 + p.z * 0.35 }); }
   list.sort((a, b) => a.key - b.key);
@@ -584,6 +585,7 @@ function drawDecal(ctx, e) {
 
 function drawItem(ctx, it, lights) {
   const p = G.player;
+  if (it.kind === 'echo') { drawEcho(ctx, G.echo, lights); return; }
   if (it.kind === 'column') { ctx.drawImage(it.img, Math.round(it.sx - camX + RW / 2), Math.round(it.sy - camY + RH / 2)); return; }
   if (it.kind === 'sprite') {
     if (it.gone) return;   // an opened gate / keydoor / hidden wall (maps.js openGate)
@@ -766,6 +768,49 @@ function drawPortal(ctx, o, lights) {
 // Per frame this is: 1 drawImage for the body, 1 rotated drawImage for the weapon, <= 3 rim blits (one per glowing rarity) -
 // no pixel work. Facing: art is drawn facing right; face < 0 mirrors the whole transform and the aim angle (pi - a).
 const WEAPON_POSE = { sword: 'swing', staff: 'cast', bow: 'aim' };   // how each weapon kind is held (default: swing)
+// ===== §30 Echo: the spirit clone (game.js G.echo) ===========================================================================
+// The hero's cached layered frame + held weapon (p.spr.hero, the heroSig cache), tinted to the echo's element with the mythic
+// aura's hue cycle (ECHO_STEPS quantised steps), drawn additively at ~0.5 alpha. Each tint is built ONCE per (source canvas,
+// colour) into a WeakMap (dropped with the sprite set when heroSig changes): per frame it is 2 drawImage calls, no allocation.
+const ECHO_TINT = new WeakMap(), ECHO_STEPS = 6, ECHO_CYCLE = ['#ff5ac8', '#a060ff', '#40e8ff'], ECHO_PAL = {};
+function echoPalette(el) {
+  return ECHO_PAL[el] || (ECHO_PAL[el] = Array.from({ length: ECHO_STEPS }, (_, s) => {
+    const a = ECHO_CYCLE[Math.floor(s / 2) % 3], b = ECHO_CYCLE[(Math.floor(s / 2) + 1) % 3];
+    return mixHex(EL_COL[el] || '#d6b0ff', mixHex(a, b, (s % 2) * 0.5), 0.35);
+  }));
+}
+function echoTint(img, col) {
+  let m = ECHO_TINT.get(img); if (!m) ECHO_TINT.set(img, m = {});
+  let c = m[col];
+  if (!c) {
+    const t = makeCanvas(img.width, img.height); t.x.drawImage(img, 0, 0);
+    t.x.globalCompositeOperation = 'source-atop'; t.x.globalAlpha = 0.72; t.x.fillStyle = col; t.x.fillRect(0, 0, img.width, img.height);
+    c = m[col] = t.c;
+  }
+  return c;
+}
+function drawEcho(ctx, E, lights) {
+  const p = G.player, g = E.g; if (!p.spr || !p.spr.hero) return;
+  const H = p.spr.hero, t = G.t, flip = g.face < 0, view = g.back ? 'back' : 'front', [vx, vy] = worldToView(g.x, g.y, g.z);
+  const w = item('weapon', p.gear.weapon), pose = WEAPON_POSE[w.kind] || 'swing';
+  const atk = !!(g.swing || g.castT > 0 || g.spin > 0);
+  const fi = atk ? HERO.ATTACK : g.dashing ? 2 + (Math.floor(t * 18) & 3) : g.moving ? 2 + (Math.floor(g.walkT * 8) & 3) : (Math.sin(t * 2.5 + 1) > 0.3 ? 1 : 0);
+  const col = echoPalette(E.el)[Math.floor(t * 4) % ECHO_STEPS], frame = H[view][fi], hand = H.hand[view][fi];
+  const dx = Math.round(vx - H.w / 2), dy = Math.round(vy - H.h + 1 - 2 * Math.sin(t * 3));   // a slow float
+  let ang = pose === 'swing' ? (g.face > 0 ? -1.15 : -Math.PI + 1.15) : pose === 'cast' ? (g.castT > 0 ? g.aim : (g.face > 0 ? -1.35 : -Math.PI + 1.35)) : (g.castT > 0 ? g.aim : (g.face > 0 ? 0.5 : Math.PI - 0.5));
+  if (pose === 'swing' && g.swing) { const k = 1 - Math.pow(1 - g.swing.t / g.swing.dur, 2); ang = g.aim + g.swing.dir * (-g.swing.arc / 2 + g.swing.arc * k); }
+  if (g.spin > 0) ang = t * 40;
+  const la = flip ? Math.PI - ang : ang, sa = ctx.globalAlpha, so = ctx.globalCompositeOperation;
+  ctx.globalAlpha = 0.5 * E.alpha; ctx.globalCompositeOperation = 'lighter';
+  ctx.save(); ctx.translate(flip ? dx + H.w : dx, dy); if (flip) ctx.scale(-1, 1);
+  const drawW = () => { if (!H.weapon) return; ctx.save(); ctx.translate(hand.x, hand.y); ctx.rotate(la + (H.weaponAim === 'right' ? 0 : Math.PI / 2)); ctx.drawImage(echoTint(H.weapon, col), -H.weaponGrip.x, -H.weaponGrip.y); ctx.restore(); };
+  if (g.back) drawW();
+  ctx.drawImage(echoTint(frame, col), 0, 0);
+  if (!g.back) drawW();
+  ctx.restore();
+  ctx.globalAlpha = sa; ctx.globalCompositeOperation = so;
+  lights.push({ sx: vx + camX - RW / 2, sy: vy - 14 + camY - RH / 2, r: 30, col, a: 0.45 * E.alpha });
+}
 function drawPlayer(ctx, p, lights) {
   const [vx, vy] = worldToView(p.x, p.y, p.z);
   if (!p.spr || !p.spr.hero || p.spr.sig !== heroSig(p.equip)) p.spr = buildPlayerSprites(p.equip);
