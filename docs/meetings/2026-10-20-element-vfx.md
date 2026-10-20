@@ -285,6 +285,40 @@ client accepted the risk. These lines are proposed; CREDITS.md is edited by the 
   phase and the fire flicker toggle.
 Not taken: `FxQuads.js` (instanced mesh), the GLSL motion, the 2 600-drop rain, `hdr` multipliers (we have no HDR).
 
+## A9. Extensibility: adding an element (the template the elements meeting can use)
+The elements meeting may add Wind and other classics. Everything above is data-driven so a new element is **one registry
+row, one status row set, and zero new draw code**. The checklist, in order:
+1. **Registry row** in `js/elfx.js` (the only place colours live):
+   ```js
+   wind: { ramp: ['#4a7a80', '#7fc8c0', '#c8f0e8', '#ffffff'], textCol: '#c8f0e8', icon: 'wind', gem: null,
+           motif: { w: 5, h: 3, frames: 2, pixels: ['..12.', '.12..', '12...',   '12...', '.12..', '..12.'] },   // a curl
+           model: 'dash', k: 4, vz: 0.2, wobble: 0.4, flicker: false, life: [0.4, 0.8],
+           idle: { rate: 2, alive: 2 }, burst: { n: 8, spd: 4 }, light: null }
+   ```
+   Rules the row must pass (the `tools/validate` check from P0 enforces the mechanical ones): a 4-step ramp with the
+   core the only step above 0.9 luminance; a motif ≤ 5×5 px with ≤ 3 frames; a model from A3 (a new model is a 5-line
+   closed form in `ELFX.MODELS`, never per-particle state); a life band; and the **greyscale pair test** against every
+   existing row: differs in two of {shape, motion, lifetime} from each, three from its nearest neighbour (for Wind the
+   neighbour is frost: both drift; Wind is a horizontal curl that dashes, frost a cross that falls).
+2. **Derived tables fill themselves:** `EL_COL`, `ECHO_ELCOL`, `ICONS.EC`, `HERO.ELC`, `STAT_COL` read the registry
+   (A5.1), so item text, Echo tint, skill frames, hero trinkets and stat rows colour correctly at once. Add the id to
+   `DMG_ELS` (items.js:123) and the `PCT_STATS` / `STAT_NAME` loops generate `windDmg` and its resist. If the element has a
+   gem, add it to `GEMS` / `EL_GEM` and the `GEM` shape in icons.js:674; if not, set `gem: null` and the socket rows skip it.
+3. **Skill and projectile hookup:** a skill's `element: 'wind'` in data.js and a projectile `kind` (or `el`) are all the
+   world surfaces need; A4's emitters key on the element, not the skill.
+4. **Status rows** (Part B) in `js/status.js`: a `LADDER.wind = [...]` with rows whose `visual` block names only registry
+   motifs and the generic overlay bakers (`tint`, `char`, `ice`, `vine`, `rent`, or a new baker, which is one cached
+   silhouette operation). The over-head glyph is one 8×8 entry in the icons.js glyph set.
+5. **Chip and strip:** re-run `chips-16px.png` / `chips-16px-grey.png` and add `strip-wind.png`; the pair test is recorded
+   in the minutes of the meeting that adds the element.
+Worked Wind proposal (for the elements meeting; VFX view only): motif = a 5×3 curl that dashes sideways along the hit
+normal with wobble, life 0.4-0.8 s; palette = a cool teal-white so it sits between frost (blue) and nature (green) by
+hue but reads by motion (horizontal, fast, curling) against both (frost falls, nature tumbles); no light; its status
+read would be a **Buffeted** tint plus a 1 px sideways draw offset (the mirror of Shocked's jitter, but steady), and
+Wind never needs a tier-2 overlay (no freeze-like pose), so it costs no new baker. World and puzzle uses the meeting may
+want (gusts moving leaves, wind lanes) are already the §29 G2 "travelling gusts" and the A3 `dash` model with a world
+wind vector; a wind lane is a zone emitter (A4 "element zones") with the curl motif at 4/s.
+
 ---
 
 # Part B. Elemental statuses: the ladder, the body read, the data
@@ -365,7 +399,7 @@ size) → attached particles → stun stars / status icon above. All cached blit
 | Marked | no tint; **1 to 5 rune pixels** orbiting at head height (the arcane orbit motif, 1 alive per mark) | the marks are the particles | – | – | none: the orbiting marks are the count |
 | Unravelled | tint arcane light 40 % for 0.2 s then nothing | 10-rune burst | 0.2 s squash (the existing `e.squash`) | – | none |
 | Smitten | tint holy light 20 % | mote 1/s | – | – | sun glyph |
-| Blinded | tint holy core 40 % on the head only (a clip at 40 % height) | 3 motes orbiting the head (the stun-star slot, holy colour) | the enemy wanders (`state:'wander'` exists? if not, `chase` with a random target) | – | eye-slash glyph |
+| Blinded | tint holy core 40 % on the head only (a clip at 40 % height) | 3 motes orbiting the head (the stun-star slot, holy colour) | the enemy wanders: `chase` toward a random point 3 tiles off (there is no `wander` state today; no new state needed) | – | eye-slash glyph |
 | Bleeding | tint slash dark 20 % + 2 px of blood colour (`e.blood`) at the hit side | 1 blood square per tick, falling | – | 1 px blood dots on the last 2 positions, 2 s (reuses the corpse-mote colour) | drop glyph |
 | Rent | a 1 px gap in the outline at the hit side (overlay: 2 px of the outline erased, cached) | none | – | – | cracked-shield glyph |
 | Pierced / Pinned | an arrow sprite stuck in the body (ART.weapons.arrow, drawn at the hit angle, 3 s) | none | Pinned: no animation 0.6 s | – | none |
@@ -449,3 +483,7 @@ status-bearing bodies in view.
 | D5 | Thaw / Quench | A: silent status interactions (B3); B: named reactions "Steam" and "Quench" (breaks §15.4 "seven, no more", +2 sfx) | **A** |
 | D6 | Status ladder depth | A: three tiers for fire only, two elsewhere (B3); B: three tiers everywhere (+1 d, more icons) | **A** |
 | D7 | Where the status work lands | A: inside the M4 combat lane beside the reactions (B6); B: after M5 with the atlas swap | **A**: the reactions have nothing to consume without it |
+| D8 | Status mechanics ownership | The elements meeting rules on B2 / B3 (ladders, thresholds, combos, new elements such as Wind); this meeting's proposal is its starting draft | Keep B4 / B5 / A9 as the fixed visual and data contract so the meeting's ruling drops into `status.js` rows without redesign |
+
+Hand-off to the elements meeting: B2 and B3 as the draft ladder; A9 as the template for any element it adds; the A2
+greyscale pair test as the bar any new motif must pass; D1, D5 and D6 as the questions it should answer in passing.
