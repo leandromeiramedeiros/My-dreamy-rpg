@@ -144,6 +144,7 @@ const PROP = {
   mushroom_red: { r: 0, sp: 0.5 }, moss: { r: 0, sp: 1.0 }, log: { r: 0.45, sp: 1.5 }, stump: { r: 0.3, sp: 0.9 }, sunbeam: { r: 0, sp: 3 },
   fox: { r: 0, sp: 3 }, rabbit: { r: 0, sp: 2 },
   fishspot: { r: 0, sp: 3 }, gate: { r: 0, sp: 1.5 }, hidden: { r: 0, sp: 1.5 }, keydoor: { r: 0, sp: 1.5 }, lever: { r: 0, sp: 1 },
+  warpdoor: { r: 0, sp: 2 },
 };
 // Object kinds the game does not know yet are written with a stand-in 't' and the intended kind in 'role'
 // (the engine drops unknown 't', so stand-ins keep the map playable).  Only used with --compat; the default (kinds 'future') writes the
@@ -175,6 +176,9 @@ const T = {
   sound: name => ({ type: 'sound', name }),
   shake: power => ({ type: 'shake', power }),
   openPortal: index => ({ type: 'open_portal', index }),
+  openPortalId: id => ({ type: 'open_portal', id }),   // by portal id (stable when portals are added/removed per warp mode)
+  // M2c: warp within the same map (0.4 s fade, no load, no lost trigger state). `to` = { x, y } or an anchor id. The pre-warp engine ignores it.
+  warp: to => ({ type: 'warp', to }),
   spawn(enemy, count, x, y, radius, extra) {
     enemy = T.enemy(enemy);
     const e = Object.assign({}, extra || {}); if (e.elite && T.mode !== 'future') delete e.elite;   // planned flag: spawn elite:true
@@ -191,6 +195,8 @@ const T = {
   // an ENCOUNTERS pack (js/enemydata.js).  packMode 'spawnPack' -> one { type:'spawnPack', id, at } card; 'spawn' -> the
   // same pack expanded into per-enemy spawn cards (anchor centre, pressure around, support behind), each tagged pack: id.
   packMode: 'spawn',
+  // 'door': the engine runs warpdoor objects (js/maps.js); 'portal': same-map portal + the barrier placed in front of it (build.js --warp=)
+  warpMode: 'portal',
   pack(id, x, y, o = {}) {
     const pk = GAME.packs[id]; if (!pk) throw new Error('unknown pack ' + id);
     if (T.packMode === 'spawnPack') return Object.assign({ type: 'spawnPack', id, at: { x: r2(x), y: r2(y) } });   // the engine action has no press doubling; press only applies to the spawn fallback
@@ -230,6 +236,7 @@ class MapGen {
     this.n1 = makeNoise(this.seed * 31 + 7); this.n2 = makeNoise(this.seed * 17 + 3); this.n3 = makeNoise(this.seed * 13 + 11);
     this.ponds = []; this.rooms = []; this.roomBy = {}; this.paths = []; this.pathBy = {}; this.rivers = []; this.bridges = []; this.lobes = [];
     this.objs = []; this.portals = []; this.triggers = []; this.markers = []; this.notes = [];
+    this.sections = []; this.voids = []; this.warps = []; this.anchors = {}; this.pois = []; this.dead = [];
     this.startPos = null; this.sigil = null;
     this.type = grid(this.W, this.H, '.'); this.h = grid(this.W, this.H, 0);
     this.land = grid(this.W, this.H, false); this.zone = grid(this.W, this.H, 0);   // zone: ZONE bits below
@@ -258,6 +265,19 @@ class MapGen {
     this.paths.push(p); this.pathBy[name] = p; return p;
   }
   river(name, o) { const rv = Object.assign({ name, w: 2.6, meander: 2, every: 8 }, o); this.rivers.push(rv); return rv; }
+  // --- M2c sections (DESIGN 25): one grid, several regions. bounds = [x0, y0, x1, y1]; later sections win where bounds overlap.
+  //     o: { name, kind: 'outer'|'underground'|'vault'|'arena'|'islet'|'pond', ambient, palette, patch: {f, d}, pad, amp, gutter }
+  section(id, o) { const sc = Object.assign({ id, name: id, kind: 'outer', gutter: false }, o); this.sections.push(sc); return sc; }
+  secAt(x, y) { let r = null; for (const sc of this.sections) { const b = sc.bounds; if (b && x >= b[0] && x < b[2] && y >= b[1] && y < b[3]) r = sc; } return r; }
+  // void gutter: land inside the rect is removed after the coast pass (3 tiles wide between zone sections)
+  voidRect(x0, y0, x1, y1) { this.voids.push([x0, y0, x1, y1]); }
+  inVoid(x, y) { for (const v of this.voids) if (x >= v[0] && x < v[2] && y >= v[1] && y < v[3]) return true; return false; }
+  // warp door: a keyed door in one section that lands the hero (same map, 0.4 s fade) at `to`. Emitted as a `warpdoor` object once the
+  // engine has them (T.warpMode 'door'), else as a same-map portal (+ the barrier the caller placed in front of it).
+  warp(id, o) { const w = Object.assign({ id, open: true, marker: true }, o); this.warps.push(w); return w; }
+  anchor(id, x, y) { this.anchors[id] = { x: r2(x), y: r2(y) }; return this.anchors[id]; }
+  // point of interest (density audit): kind, position, whether it counts for the main-path spacing
+  poi(kind, x, y, o = {}) { this.pois.push(Object.assign({ kind, x, y }, o)); }
   bridge(o) { this.bridges.push(Object.assign({ axis: 'x', len: 4, w: 2 }, o)); }
 
   // ------------------------------- build ---------------------------------------
@@ -414,8 +434,9 @@ class MapGen {
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const margin = Math.min(x, y, W - 1 - x, H - 1 - y);
       const n = this.n1.fbm(x * 0.075, y * 0.075, 4), n2 = this.n2.fbm(x * 0.22, y * 0.22, 2);
-      const reach = this.pad * (0.35 + 1.15 * n) + (n2 - 0.5) * 2.2;
-      land[y][x] = D[y * W + x] <= Math.max(0, reach) && margin >= 1;
+      const sc = this.sections.length ? this.secAt(x + 0.5, y + 0.5) : null, pad = sc && sc.pad != null ? sc.pad : this.pad;
+      const reach = pad * (0.35 + 1.15 * n) + (n2 - 0.5) * 2.2;
+      land[y][x] = D[y * W + x] <= Math.max(0, reach) && margin >= 1 && !this.inVoid(x + 0.5, y + 0.5);
       if (D[y * W + x] === 0) land[y][x] = true;
     }
     // cellular smoothing (round off pixel noise, keep the shape lumpy)
@@ -424,6 +445,7 @@ class MapGen {
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         let c = 0; for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { if (!di && !dj) continue; const yy = y + dj, xx = x + di; if (yy >= 0 && xx >= 0 && yy < H && xx < W && land[yy][xx]) c++; }
         nl[y][x] = land[y][x] ? c >= 3 : c >= 6;
+        if (this.voids.length && this.inVoid(x + 0.5, y + 0.5)) nl[y][x] = false;
         if (D[y * W + x] === 0) nl[y][x] = true;
       }
       land = nl;
@@ -472,7 +494,7 @@ class MapGen {
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       if (!this.land[y][x]) continue;
       const d = D[y * W + x], l = L[y * W + x];
-      const a = this.amp * smoothstep(1.5, 7, d), nz = (this.n3.fbm(x * 0.13 + 40, y * 0.13, 3) - 0.5) * 2;
+      const sc = this.sections.length ? this.secAt(x + 0.5, y + 0.5) : null, a = (sc && sc.amp != null ? sc.amp : this.amp) * smoothstep(1.5, 7, d), nz = (this.n3.fbm(x * 0.13 + 40, y * 0.13, 3) - 0.5) * 2;
       Q[y][x] = Math.max(0, Math.round((l + nz * a) / step) * step);
     }
     // walled rooms (chambers / arena): ring of higher ground around the floor, giving cliff walls
@@ -495,8 +517,9 @@ class MapGen {
       if (!this.land[y][x]) continue;
       this.type[y][x] = 'g'; this.h[y][x] = this.Q[y][x];
       const f = this.n2.fbm(x * 0.14 + 11, y * 0.14, 3), dm = this.n1.fbm(x * 0.09 + 70, y * 0.09 + 33, 3);
-      if (f > (this.patchF != null ? this.patchF : 0.64)) this.type[y][x] = 'f';
-      else if (dm < (this.patchD != null ? this.patchD : 0.36)) this.type[y][x] = 'd';
+      const sc = this.sections.length ? this.secAt(x + 0.5, y + 0.5) : null, pt = sc && sc.patch ? sc.patch : null;
+      if (f > (pt ? pt.f : this.patchF != null ? this.patchF : 0.64)) this.type[y][x] = 'f';
+      else if (dm < (pt ? pt.d : this.patchD != null ? this.patchD : 0.36)) this.type[y][x] = 'd';
     }
     // rooms
     for (const rm of this.rooms) {
@@ -752,7 +775,8 @@ class MapGen {
       const def = PROP[rule.t] || { r: 0, sp: 1 }, sp = rule.sp != null ? rule.sp : def.sp;
       let placed = 0, tries = 0; const maxTries = rule.tries || rule.n * 60;
       while (placed < rule.n && tries++ < maxTries) {
-        const x = this.rng.range(1, this.W - 1), y = this.rng.range(1, this.H - 1);
+        const bd = rule.bounds || [1, 1, this.W - 1, this.H - 1];
+        const x = this.rng.range(Math.max(1, bd[0]), Math.min(this.W - 1, bd[2])), y = this.rng.range(Math.max(1, bd[1]), Math.min(this.H - 1, bd[3]));
         const i = Math.floor(x), j = Math.floor(y); if (!this.land[j][i]) continue;
         if (rule.types && !rule.types.includes(this.type[j][i])) continue;
         const c = this.ctx(x, y);
@@ -762,6 +786,7 @@ class MapGen {
           let gx = x, gy = y;
           if (g) { const a = this.rng.range(0, 6.283), d = this.rng.range(0.35, rule.spread || 1.4); gx += Math.cos(a) * d; gy += Math.sin(a) * d; }
           if (gx < 0.5 || gy < 0.5 || gx >= this.W - 0.5 || gy >= this.H - 0.5 || !this.land[Math.floor(gy)][Math.floor(gx)]) continue;
+          if (rule.bounds && (gx < rule.bounds[0] || gx >= rule.bounds[2] || gy < rule.bounds[1] || gy >= rule.bounds[3])) continue;
           const gc = g ? this.ctx(gx, gy) : c;
           if (rule.types && !rule.types.includes(gc.type)) continue;
           if (!this.placeOk(rule.t, gx, gy, gc)) continue;
@@ -796,17 +821,26 @@ class MapGen {
 
   // ---------------------------------- output ------------------------------------
   toMap() {
+    const portals = this.portals.map(p => Object.assign({}, p)), objects = this.objs.map(o => this._emitObj(o)).filter(Boolean);
+    for (const w of this.warps) {
+      if (T.warpMode === 'door') objects.push(Object.assign({ t: 'warpdoor', id: w.id, x: r2(w.x), y: r2(w.y), to: { x: r2(w.to.x), y: r2(w.to.y) } }, w.key ? { key: w.key } : {}, w.label ? { label: w.label } : {}, w.open === false ? { open: false } : {}));
+      else portals.push(Object.assign({ x: r2(w.x), y: r2(w.y), to: this.id, open: w.open !== false, marker: !!w.marker, id: w.id, arrive: { x: r2(w.to.x), y: r2(w.to.y) } }, w.label ? { label: w.label } : {}));
+    }
     const m = {
       name: this.name, sub: this.sub, theme: this.theme, W: this.W, H: this.H,
       tiles: this.type.map(r => r.join('')),
       heights: this.h.map((r, y) => r.map((v, x) => (this.land[y][x] ? Math.min(35, v).toString(36) : '0')).join('')),
       start: this.startPos || { x: this.W / 2, y: this.H / 2 },
-      portals: this.portals.map(p => Object.assign({}, p)),
-      objects: this.objs.map(o => this._emitObj(o)).filter(Boolean),
+      portals,
+      objects,
       objective: this.objective,
     };
     if (this.sigil) m.sigil = { x: this.sigil.x, y: this.sigil.y };
     if (this.level) m.level = this.level;   // zone level band [lo, hi] (DESIGN 3/11); tools/m1-world.js re-asserts the same table
+    // M2c: sections (bounds, kind, ambient light, palette name), void gutters and warp anchors ride along as plain map fields
+    if (this.sections.length) m.sections = this.sections.map(sc => { const o = { id: sc.id, name: sc.name, kind: sc.kind, bounds: sc.bounds.slice() }; for (const k of ['ambient', 'palette', 'gutter', 'music']) if (sc[k] != null) o[k] = sc[k]; return o; });
+    if (this.voids.length) m.gutters = this.voids.map(v => v.slice());
+    if (Object.keys(this.anchors).length) m.anchors = JSON.parse(JSON.stringify(this.anchors));
     m.triggers = this.triggers;
     return m;
   }
@@ -844,11 +878,12 @@ class MapGen {
     for (const b of this.blockers || []) {   // extra rectangular blockers (house)
       for (let cy = Math.floor(b.y0 * S); cy < Math.ceil(b.y1 * S); cy++) for (let cx = Math.floor(b.x0 * S); cx < Math.ceil(b.x1 * S); cx++) if (cx >= 0 && cy >= 0 && cx < W && cy < H) blocked[cy * W + cx] = 1;
     }
-    const sx = Math.floor(fromX * S), sy = Math.floor(fromY * S), q = [sy * W + sx];
-    if (blocked[q[0]]) { // nudge start out of a blocked sub-cell
-      blocked[q[0]] = 0;
+    const seeds = Array.isArray(fromX) ? fromX : [[fromX, fromY]], q = [];   // several roots: the start plus every warp arrival (M2c)
+    for (const [fx, fy] of seeds) {
+      const k0 = Math.floor(fy * S) * W + Math.floor(fx * S);
+      if (blocked[k0]) blocked[k0] = 0;   // nudge a root out of a blocked sub-cell
+      if (!seen[k0]) { seen[k0] = 1; q.push(k0); }
     }
-    seen[q[0]] = 1;
     const hOf = k => this.h[((k / W) | 0) / S | 0][((k % W) / S) | 0];
     for (let qi = 0; qi < q.length; qi++) {
       const k = q[qi], cx = k % W, cy = (k / W) | 0, h0 = hOf(k);
@@ -868,7 +903,25 @@ class MapGen {
     if (m.tiles.length !== this.H || m.heights.length !== this.H) errs.push('row count mismatch');
     m.tiles.forEach((r, y) => { if (r.length !== this.W) errs.push(`tiles[${y}] length ${r.length}`); if (m.heights[y].length !== this.W) errs.push(`heights[${y}] length`); });
     if (!this.walkTile(m.start.x, m.start.y)) errs.push('start is not on walkable ground');
-    const R = this.reach(m.start.x, m.start.y);
+    // reachability: the start, plus the arrival of every warp whose door is itself reachable (iterated to a fixpoint)
+    const seeds = [[m.start.x, m.start.y]], used = new Set(); let R = this.reach(seeds);
+    for (let it = 0; it < 8; it++) {
+      let grew = false;
+      for (const w of this.warps) {
+        if (used.has(w.id)) continue;
+        const near = (x, y) => { if (R.has(x, y)) return true; for (let a = 0; a < 16; a++) for (const rr of [0.6, 0.9, 1.1]) if (R.has(x + Math.cos(a / 16 * 6.283) * rr, y + Math.sin(a / 16 * 6.283) * rr)) return true; return false; };
+        if (near(w.x, w.y)) { used.add(w.id); seeds.push([w.to.x, w.to.y]); grew = true; }
+      }
+      if (!grew) break;
+      R = this.reach(seeds);
+    }
+    for (const w of this.warps) {
+      if (!this.walkTile(w.x, w.y)) errs.push(`warp ${w.id} door (${w.x},${w.y}) not on walkable ground`);
+      else if (!used.has(w.id)) errs.push(`warp ${w.id} door (${w.x},${w.y}) unreachable`);
+      if (!this.walkTile(w.to.x, w.to.y)) errs.push(`warp ${w.id} arrival (${w.to.x},${w.to.y}) not on walkable ground`);
+      for (const q of this.warps) if (q !== w && Math.hypot(q.x - w.to.x, q.y - w.to.y) < 1.4) errs.push(`warp ${w.id} arrives on top of door ${q.id} (instant bounce)`);
+    }
+    for (const rm of this.rooms) if (rm.kind !== 'flat') { const j = Math.floor(rm.y), i = Math.floor(rm.x); if (this.voids.length && this.inVoid(rm.x, rm.y)) errs.push(`room ${rm.id} sits in a void gutter`); void i; void j; }
     const chk = (what, x, y) => {
       if (!this.walkTile(x, y)) { errs.push(`${what} (${x},${y}) not on walkable ground`); return; }
       let ok = R.has(x, y);   // props with colliders block their own cell: accept any reachable cell within 1.1 tiles

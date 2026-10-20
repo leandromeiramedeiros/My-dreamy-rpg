@@ -133,7 +133,7 @@ function installHooks() {
   Q.view = (x, y, z) => { const p = G.player; const v = worldToView(x, y, z == null ? p.z : z); return [v[0] * 2, v[1] * 2]; };
   Q.canvas = () => { const r = DISP.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, DW, DH }; };
   Q.objects = () => G.map.objects.filter(o => o.chest || o.lever || o.checkpoint || o.tablet || o.use || o.fish || o.barrier).map(o => ({ x: +o.x.toFixed(2), y: +o.y.toFixed(2), chest: !!o.chest && !o.opened, lever: !!o.lever, pulled: !!o.pulled, shrine: !!o.checkpoint, tablet: !!o.tablet, use: o.use ? o.use.kind : null, barrier: o.barrier || null, gid: o.gid || null, fish: !!o.fish, id: o.src && o.src.id, label: o.src && o.src.label, title: o.src && o.src.title, tier: o.src && o.src.tier }));
-  Q.bag = () => G.player.bag.map((it, i) => it && !it.gem ? { i, slot: it.slot, rarity: it.rarity, base: it.base, ilvl: it.ilvl, reqLvl: it.reqLvl, name: itemName(it), score: itemScore(it), eq: itemScore(G.player.equip[it.slot]) } : null).filter(Boolean);
+  Q.bag = () => G.player.bag.map((it, i) => it && !it.gem ? { i, slot: it.slot, rarity: it.rarity, base: it.base, ilvl: it.ilvl, reqLvl: it.reqLvl, name: itemName(it), fam: (typeof FAMILY_TIERS !== 'undefined' && Object.keys(FAMILY_TIERS).find(f => FAMILY_TIERS[f].some(t => t.split(':')[0] === it.base))) || null, curFam: G.player.gear.weapon, score: itemScore(it), eq: itemScore(G.player.equip[it.slot]) } : null).filter(Boolean);
   function itemScore(it) { if (!it) return 0; const r = RARITY[it.rarity] ? RARITY[it.rarity].i : 0; return r * 1000 + (it.ilvl || it.reqLvl || 0) * 10 + (it.dmg || it.power || 0); }
   Q.focusList = () => UI.focus.list.map(r => ({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h }));
   Q.touchBtns = () => touchButtons().map(b => ({ slot: b.slot, x: b.x, y: b.y, r: b.r }));
@@ -375,7 +375,7 @@ class Bot {
     }
     await this.setMove(0, 0); await this.drv.attack(false);
     this.log(`goal ${g.name}: ${ok}`, { sec: ((Date.now() - t0) / 1000).toFixed(1) });
-    if (ok === 'timeout') { const f = await this.shot('goal-timeout-' + g.name); const s = this.state; this.find(g.softlock ? 'blocker' : 'major', `Goal timed out: ${g.name}`, { after_s: (g.timeout / 1000), pos: s.p && [s.p.x, s.p.y], obj: s.obj, noPath: g.noPath || 0, stuckN: g.stuckN || 0 }, f); }
+    if (ok === 'timeout' && !g.noFinding) { const f = await this.shot('goal-timeout-' + g.name); const s = this.state; this.find(g.softlock ? 'blocker' : 'major', `Goal timed out: ${g.name}`, { after_s: (g.timeout / 1000), pos: s.p && [s.p.x, s.p.y], obj: s.obj, noPath: g.noPath || 0, stuckN: g.stuckN || 0 }, f); }
     return ok;
   }
   // clear the area: fight until no hostile and no pending spawns for a couple of seconds
@@ -411,6 +411,69 @@ class KbmDriver {
   async reset() { for (const k of [...this.keys]) await this.key(k, false); await this.attack(false); }
 }
 
+
+class PadDriver {
+  constructor(page) { this.page = page; this.L = [0, 0]; this.R = [0, 0]; this.btnHeld = new Set(); }
+  async axes() { await this.page.evaluate(([l, r]) => window.__axes([l[0], l[1], r[0], r[1]]), [this.L, this.R]); }
+  async b(i, on) { await this.page.evaluate(([i, on]) => window.__btn(i, on), [i, on]); }
+  async tap(i, ms = 80) { await this.b(i, true); await sleep(ms); await this.b(i, false); await sleep(30); }
+  async move(sx, sy) { this.L = [sx, sy]; await this.axes(); }
+  async attack(on) { if (on !== this.atk) { this.atk = on; await this.b(7, on); } }
+  async aimAt(vx, vy, x, y, st) { if (!st || !st.p) return; const [ax, ay] = Bot.scr(x - st.p.x, y - st.p.y); this.R = [ax, ay]; await this.axes(); }
+  async skill(sl) { const i = { q: 5, e: 4, r: 11, f: 2, c: 3, 1: 14, 2: 12, 3: 15 }[sl]; await this.tap(i, 70); }
+  async dodge() { await this.tap(6, 70); }
+  async potion() { await this.tap(1, 70); }
+  async interact() { await this.tap(0, 70); }
+  async closeMenu() { await this.tap(1, 80); }
+  async respawn() { await this.tap(0, 80); }
+  async title() { await this.tap(0, 90); await sleep(800); }
+  async reset() { this.L = [0, 0]; this.R = [0, 0]; await this.axes(); await this.attack(false); }
+}
+
+class TouchDriver {
+  constructor(page) { this.page = page; this.pts = new Map(); this.cdp = null; this.stick = null; this.cv = null; this.atkOn = false; }
+  async init() { this.cdp = await this.page.context().newCDPSession(this.page); }
+  async c() { return (this.cv = await this.page.evaluate(() => window.__qa.canvas())); }
+  async send(type) {
+    const c = this.cv || await this.c();
+    const tp = [...this.pts.entries()].map(([id, q]) => ({ x: c.l + q.x / c.DW * c.w, y: c.t + q.y / c.DH * c.h, id }));
+    await this.cdp.send('Input.dispatchTouchEvent', { type, touchPoints: tp });
+  }
+  async down(id, x, y) { this.pts.set(id, { x, y }); await this.send('touchStart'); }
+  async mv(id, x, y) { this.pts.set(id, { x, y }); await this.send('touchMove'); }
+  async up(id) { if (!this.pts.has(id)) return; const q = this.pts.get(id); await this.send('touchMove'); const c = this.cv; const tp = [...this.pts.entries()].filter(([k]) => k !== id).map(([k, v]) => ({ x: c.l + v.x / c.DW * c.w, y: c.t + v.y / c.DH * c.h, id: k })); await this.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: tp }); this.pts.delete(id); }
+  async btn(slot) { const b = (await this.page.evaluate(() => window.__qa.touchBtns())).find(q => q.slot === slot); return b; }
+  async tapAt(x, y, ms = 70) { const id = 50 + ((Math.random() * 40) | 0); await this.down(id, x, y); await sleep(ms); await this.up(id); await sleep(40); }
+  async tapBtn(slot) { const b = await this.btn(slot); if (!b) return false; await this.tapAt(b.x, b.y); return true; }
+  async move(sx, sy) {
+    const m = Math.hypot(sx, sy);
+    if (m === 0) { if (this.stick) { await this.up(1); this.stick = null; } return; }
+    if (!this.stick) { this.stick = { x: 180, y: 380 }; await this.down(1, 180, 380); }
+    await this.mv(1, this.stick.x + sx * 50, this.stick.y + sy * 50);
+  }
+  async attack(on) { if (on && !this.atkOn) { this.atkOn = true; const b = await this.btn('atk'); await this.down(2, b.x, b.y); } else if (!on && this.atkOn) { this.atkOn = false; await this.up(2); } }
+  async aimAt() { }
+  async page_(n) { const st = await this.page.evaluate(() => window.__qa.snap().tpage); if (st !== n) { await this.tapBtn('toggle'); await sleep(250); } }
+  async skill(sl) {
+    if (['1', '2', '3'].includes(sl)) { await this.page_(1); await this.tapBtn(sl); await sleep(120); await this.page_(0); }
+    else { await this.page_(0); await this.tapBtn(sl); }
+  }
+  async dodge() { await this.tapBtn('shift'); }
+  async potion() { await this.tapBtn('pot'); }
+  async interact() { await this.tapBtn('interact'); }
+  async closeMenu() {
+    const fl = await this.page.evaluate(() => window.__qa.focusList());
+    const cand = fl.find(r => /close|back|resume|wake/i.test(r.id)) || null;
+    if (cand) { await this.tapAt(cand.x + cand.w / 2, cand.y + cand.h / 2); return; }
+    await this.tapAt(930, 20);
+  }
+  async respawn() { const fl = await this.page.evaluate(() => window.__qa.focusList()); const r = fl.find(q => q.id === 'btn:wake'); if (r) await this.tapAt(r.x + r.w / 2, r.y + r.h / 2); else await this.tapAt(480, 320); }
+  async title() { await this.tapAt(480, 372); await sleep(900); }
+  async openBag() { const m = (await this.page.evaluate(() => window.__qa.touchMenu())).find(q => q.id === 'gear'); await this.tapAt(m.x + m.w / 2, m.y + m.h / 2); }
+  async clickDisp(x, y) { await this.tapAt(x, y, 90); }
+  async reset() { await this.move(0, 0); await this.attack(false); }
+}
+
 async function launch(opts = {}) {
   const br = await chromium.launch({ headless: true, args: ['--autoplay-policy=no-user-gesture-required'] });
   const ctx = await br.newContext(Object.assign({ viewport: { width: 960, height: 540 } }, opts.context || {}));
@@ -429,4 +492,4 @@ async function launch(opts = {}) {
   return { br, ctx, page, errors, url };
 }
 
-module.exports = { launch, Bot, KbmDriver, sleep, SHOTS, QA, ROOT, PAD_STUB };
+module.exports = { launch, Bot, KbmDriver, PadDriver, TouchDriver, sleep, SHOTS, QA, ROOT, PAD_STUB };

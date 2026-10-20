@@ -251,7 +251,7 @@ const AUDIO = (() => {
     opts = opts || {};
     const E = this; shim(ctx);
     E.ctx = ctx; E.offline = !!opts.offline; E.cfg = Object.assign({}, CFG, opts.cfg || {});
-    E.stats = { tickMs: 0, tickMax: 0, frameMs: 0, ticks: 0, notes: 0, sfx: 0, musicVoices: 0, sfxVoices: 0, timbres: 0 };
+    E.stats = { tickMs: 0, tickMax: 0, frameMs: 0, ticks: 0, notes: 0, steals: 0, sfx: 0, musicVoices: 0, sfxVoices: 0, timbres: 0 };
     E.noise = makeNoise(ctx);
     const gain = (v) => { const g = ctx.createGain(); g.gain.value = v; return g; };
     E.gain = gain;
@@ -316,6 +316,7 @@ const AUDIO = (() => {
     if (perc) dur = Math.max(dur, a + d);
     const { v, steal } = this.allocMusic(t);
     if (steal) {   // fast fade of the oldest voice, the new note lands 12 ms later
+      this.stats.steals++;
       v.env.gain.cancelScheduledValues(t); v.env.gain.setTargetAtTime(0, t, 0.003);
       for (const sN of v.srcs) stopSrc(sN, t + 0.012);
       t += 0.012;
@@ -871,7 +872,7 @@ const AUDIO = (() => {
   // ==================================================================== public
   return {
     cfg: CFG, Engine, MAP_MUSIC, STINGERS,
-    get stats() { return E ? E.stats : { tickMs: 0, tickMax: 0, frameMs: 0, ticks: 0, notes: 0, sfx: 0, musicVoices: 0, sfxVoices: 0, timbres: Object.keys(TIMBRES).length }; },
+    get stats() { return E ? E.stats : { tickMs: 0, tickMax: 0, frameMs: 0, ticks: 0, notes: 0, steals: 0, sfx: 0, musicVoices: 0, sfxVoices: 0, timbres: Object.keys(TIMBRES).length }; },
     get engine() { return E; },
     get ctx() { return AC; },
     unlock, sfx, frame, caption, drawCaptions, applySettings, timbres, renderMusic, renderSfx, bufferStats,

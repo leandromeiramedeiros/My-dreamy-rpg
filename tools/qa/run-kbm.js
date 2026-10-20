@@ -17,7 +17,7 @@ const STOP_AFTER = process.argv[2] || 'all';
     for (let round = 0; round < 8; round++) {
       const s = await bot.snap();
       const bag = await page.evaluate(() => window.__qa.bag());
-      const ups = bag.filter(b => b.score > b.eq && b.reqLvl <= s.p.lvl).sort((a, b) => (b.score - b.eq) - (a.score - a.eq));
+      const ups = bag.filter(b => b.score > b.eq && b.reqLvl <= s.p.lvl && (b.slot !== 'weapon' || b.fam === b.curFam)).sort((a, b) => (b.score - b.eq) - (a.score - a.eq));
       if (!ups.length) break;
       const u = ups[0];
       await drv.tap('Tab'); await sleep(600);
@@ -26,7 +26,7 @@ const STOP_AFTER = process.argv[2] || 'all';
       const r = fl.find(q => q.id === 'bag:' + u.i);
       let ok = false;
       if (r) {
-        await drv.clickDisp(r.x + r.w / 2, r.y + r.h / 2); await sleep(350); await drv.clickDisp(r.x + r.w / 2, r.y + r.h / 2); await sleep(450);
+        await drv.clickDisp(r.x + r.w / 2, r.y + r.h / 2); await sleep(450);
         const after = await bot.snap(); ok = true;
         const bag2 = await page.evaluate(() => window.__qa.bag());
         if (bag2.some(b => b.i === u.i && b.name === u.name)) { ok = false; }
@@ -44,7 +44,15 @@ const STOP_AFTER = process.argv[2] || 'all';
     await drv.tap('KeyH'); await sleep(400); await bot.shot('menu-help'); await drv.tap('KeyH'); await sleep(300);
     const s2 = await bot.snap(); if (s2.ui.help) await drv.tap('Escape');
   }
-  async function loot(ms = 3500) { await bot.idle(ms); }
+  async function loot(ms = 3500) {
+    await bot.idle(Math.min(ms, 1500));
+    for (let k = 0; k < 14; k++) {
+      const s = await bot.snap(); if (!s.p || s.st !== 'play') break;
+      const d = s.drops.filter(q => q.t > 0.4 && Math.hypot(q.x - s.p.x, q.y - s.p.y) < 14).sort((a, b) => Math.hypot(a.x - s.p.x, a.y - s.p.y) - Math.hypot(b.x - s.p.x, b.y - s.p.y))[0];
+      if (!d) break;
+      await bot.goal({ name: 'pick up ' + d.name, x: d.x, y: d.y, r: 0.4, timeout: 9000, noFinding: true });
+    }
+  }
   async function takePortal(id, toMap, timeout = 90000) {
     let s = await bot.snap(); const pt = s.portals.find(q => q.id === id || q.to === id);
     if (!pt) { bot.find('blocker', `Portal ${id} missing`, {}); return false; }

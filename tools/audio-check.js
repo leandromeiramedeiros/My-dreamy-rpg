@@ -97,10 +97,10 @@ const pad = (s, n) => String(s).padEnd(n);
     const cfg = { musicVoices: 12, convolvers: 1, extraLayer: false, impulse: 1.5, lookahead: 0.2 };
     const b = await AUDIO.renderMusic('boss_bramblehorn', { sampleRate: sr, phase: 3, cfg }), s = AUDIO.bufferStats(b, 0.05, b.bodySeconds);
     const full = await AUDIO.renderMusic('boss_bramblehorn', { sampleRate: sr, phase: 3, cfg: { extraLayer: false } });
-    return { rmsDb: +s.rmsDb.toFixed(1), rms: s.rms, peak: +s.peak.toFixed(3), bad: s.bad, notes: b.engineStats.notes, notes24: full.engineStats.notes };
+    return { rmsDb: +s.rmsDb.toFixed(1), rms: s.rms, peak: +s.peak.toFixed(3), bad: s.bad, notes: b.engineStats.notes, notes24: full.engineStats.notes, steals: b.engineStats.steals, steals24: full.engineStats.steals };
   }, SR);
   check('mobile profile: boss phase 4 on 12 voices (stealing), 1 convolver, no extra: no NaN, not silent, no clipping, no notes dropped',
-    mob.bad === 0 && mob.rms > MIN_RMS.song && mob.peak < MAX_PEAK && mob.notes === mob.notes24 && mob.notes > 0, mob);
+    mob.bad === 0 && mob.rms > MIN_RMS.song && mob.peak < MAX_PEAK && mob.notes === mob.notes24 && mob.notes > 0 && mob.steals > 0, mob);
   const phaseRms = rows.filter((r) => /^boss_bramblehorn_phase/.test(r.label)).map((r) => +r.rmsDb.toFixed(1));
   check('music: boss stems add up phase by phase (RMS rises A -> AB -> ABC -> ABCD)', phaseRms.length === 4 && phaseRms.every((v, i) => i === 0 || v >= phaseRms[i - 1] - 0.3), phaseRms);
   fs.writeFileSync(path.join(OUT, 'engine-stats.json'), JSON.stringify({ sfx: sfxRows, music: rows }, null, 1));
