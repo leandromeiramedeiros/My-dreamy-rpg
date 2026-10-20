@@ -796,7 +796,7 @@ class MapGen {
     ob.sp = o.sp != null ? o.sp : def.sp;
     this.objs.push(ob);
     const i = Math.floor(x), j = Math.floor(y);
-    if (i >= 0 && j >= 0 && i < this.W && j < this.H) (this.occ[j][i] = this.occ[j][i] || []).push({ x, y, sp: ob.sp, t, v: ob.v || 0 });
+    if (i >= 0 && j >= 0 && i < this.W && j < this.H) (this.occ[j][i] = this.occ[j][i] || []).push({ x, y, sp: ob.sp, t, v: ob.v || 0, ob });
     return ob;
   }
   // rich marker (chest, tablet, shrine...). kind may be a future kind; resolved at emit time.
@@ -853,13 +853,23 @@ class MapGen {
           if (!this.placeOk(rule.t, gx, gy, gc)) continue;
           if (!rule.force && !this.free(gx, gy, sp)) continue;
           const opts = {}; if (rule.v) opts.v = this.variantFor(rule.t, gx, gy, rule.v); if (rule.flip && this.rng.chance(0.5)) opts.f = 1; if (rule.sp != null) opts.sp = sp;
-          const ob = this.addObj(rule.t, gx, gy, opts); if (rule.then) rule.then(ob, gc, this);
+          const ob = this.addObj(rule.t, gx, gy, opts); ob._sc = true; if (rule.then) rule.then(ob, gc, this);
           placed++;
         }
       }
       stats[rule.t] = (stats[rule.t] || 0) + placed;
     }
     return stats;
+  }
+  // remove the scatter-rule props (ob._sc) that keep (x, y) from being free for spacing sp; true if it is free afterwards
+  clearScatter(x, y, sp) {
+    const bi = Math.floor(x), bj = Math.floor(y), R = 3, gone = new Set();
+    for (let dj = -R; dj <= R; dj++) for (let di = -R; di <= R; di++) {
+      const c = this.occ[bj + dj] && this.occ[bj + dj][bi + di]; if (!c) continue;
+      for (let k = c.length - 1; k >= 0; k--) { const o = c[k]; if (o.ob && o.ob._sc && Math.hypot(o.x - x, o.y - y) < (o.sp + sp) / 2) { gone.add(o.ob); c.splice(k, 1); } }
+    }
+    if (gone.size) this.objs = this.objs.filter(o => !gone.has(o));
+    return this.free(x, y, sp);
   }
   // §29 G2 variation budget: no identical (type, variant) within 3 tiles. A random variant, then the next free one in order
   // (one rng draw whatever happens, so the stream stays aligned); all taken -> the random one.
@@ -903,7 +913,8 @@ class MapGen {
   }
   // a small themed set-piece (counts as a point of interest). set: 'forest' | 'cave'
   dress(set, k, x, y, side = 1, poiOpts = {}) {
-    const put = (t, dx, dy, o = {}) => { const q = this.nearWalkable(x + dx, y + dy, 0.9); if (!this.free(q.x, q.y, 0.5) && !o.force) return; this.addObj(t, q.x, q.y, Object.assign({ sp: 0.6, force: true }, o)); };
+    // §29 G2: a set-piece outranks scattered props (density x2.5 would otherwise crowd out its sign / lantern / camp): it clears them
+    const put = (t, dx, dy, o = {}) => { const q = this.nearWalkable(x + dx, y + dy, 0.9); if (!this.free(q.x, q.y, 0.5) && !o.force && !this.clearScatter(q.x, q.y, 0.5)) return; this.addObj(t, q.x, q.y, Object.assign({ sp: 0.6, force: true }, o)); };
     if (set === 'cave') {
       const kk = ['crystals', 'shrooms', 'rubble'][k % 3];
       if (kk === 'crystals') { put('crystal', 0, 0, { v: 0 }); put('crystal_violet', 0.9 * side, 0.6); put('crystal', -0.7, 0.9); put('lantern_blue', -1.4 * side, -0.4); }
