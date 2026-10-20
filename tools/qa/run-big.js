@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 // Act I on the BIG maps, played from the title screen with real inputs. Usage: node tools/qa/run-big.js <kbm|pad|touch> [stopAfter] [--lite]
+//   stopAfter: vale | pinewood | mossjaw (after the Mossjaw retry loop) | court. Before Mossjaw the hero's gear + stats are written
+//   to tools/qa/gear-mossjaw.json (balsim --qa replays that hero in its live fight).
 //   --lite = main path only (skip secrets / side vaults). Writes tools/qa/run-<pass>.json incrementally.
 const { launch, Bot, KbmDriver, PadDriver, TouchDriver, sleep } = require('./lib');
 const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3].startsWith('--') ? process.argv[3] : 'all', LITE = process.argv.includes('--lite');
@@ -192,6 +194,12 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
     await bot.goal({ name: 'gate hint', x: 40.54, y: 9.04, r: 3, until: q => has(q, 'h_gate_hint'), timeout: 120000, noFinding: true }); await bot.shot('hollow-gate');
     await lever('lever_h_r2', 'gate lever'); await mark('hollow-lever');
     await bot.goal({ name: 'ceiling tell', x: 31.5, y: 8.64, r: 2.4, until: q => has(q, 'h_ceiling'), timeout: 100000, noFinding: true }); await loot(2500);
+    try {   // the arrival gear (§26.2 gear loop): what the hero wears at the den, for balsim --qa
+      const gear = await page.evaluate(() => { const p = G.player; return { at: new Date().toISOString(), level: p.level, maxHp: p.maxHp, def: p.def, power: p.power, dmgBase: p.dmgBase, bonus: p.bonus, crit: p.crit, critDmg: p.critDmg, potions: p.potions,
+        weapon: p.gear && p.gear.weapon, equip: JSON.parse(JSON.stringify(p.equip)) }; });
+      bot.out.gearMossjaw = { level: gear.level, maxHp: gear.maxHp, def: gear.def, items: Object.entries(gear.equip).filter(([, it]) => it).map(([k, it]) => `${k}:${it.base}/${it.rarity}/i${it.ilvl}`) };
+      require('fs').writeFileSync(require('path').join(__dirname, 'gear-mossjaw.json'), JSON.stringify(gear, null, 1)); bot.log('arrival gear', bot.out.gearMossjaw);
+    } catch (e) { bot.log('gear dump failed ' + e.message); }
     await bot.goal({ name: 'mossjaw den', x: 45, y: 10.5, r: 3.3, until: q => has(q, 'h_boss'), timeout: 250000, softlock: true }); await bot.shot('hollow-mossjaw-start');
     await bossFight('mossjaw', 480000);
     for (let t = 0; t < 10; t++) {   // QA retry loop (run 3: 7 straight deaths on a weak-gear hero); done when the objective leaves 'Defeat Mossjaw'
@@ -200,6 +208,7 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
       await bot.goal({ name: 'mossjaw retry', x: 45, y: 10.5, r: 3.3, until: q => !!q.boss, timeout: 200000, noFinding: true });
       await bossFight('mossjaw', 480000);
     }
+    if (STOP === 'mossjaw') { s = await bot.snap(); bot.log('STOP after Mossjaw', { killed: !(s.obj && /Mossjaw/.test(s.obj)) && !s.boss, deaths: s.deaths, lvl: s.p && s.p.lvl }); throw new Error('STOP'); }
     await loot(3500); await equipBest('mossjaw'); await mark('mossjaw-done');
     s = await bot.snap(); bot.log('after Mossjaw', { obj: s.obj, sec: s.sec });
     await chest('mini-boss-chest', 'mini-boss chest');
@@ -208,7 +217,7 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
 
     // ============================ 4. BRAMBLEHORN'S CLEARING
     await mark('clearing-arrive'); await bot.shot('clearing-arrival');
-    await shrine(84, 36, 'clearing shrine3');
+    { const o = (await objs()).find(q => q.shrineId === 'shrine3'); await shrine(o ? o.x : 84, o ? o.y : 36, 'clearing shrine3'); }   // §29 G3: shrine 3 is on Hawk's Rest
     if (!LITE) { await bot.goal({ name: 'arena hint', x: 95.06, y: 37.51, r: 3.4, until: q => has(q, 'arena_hint'), timeout: 60000, noFinding: true }); }
     await bot.goal({ name: 'bramblehorn', x: 100, y: 31, r: 6.5, until: q => has(q, 'boss'), timeout: 300000, softlock: true }); await bot.shot('clearing-boss-start');
     await bossFight('bramblehorn', 600000);

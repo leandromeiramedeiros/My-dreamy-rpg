@@ -8,7 +8,7 @@
 const G = {
   t: 0, map: null, maps: {}, player: null,
   enemies: [], projs: [], effects: [], zones: [], parts: [], texts: [], delays: [],
-  shakeA: 0, hitstopT: 0, state: 'title', cam: { x: 0, y: 0 },
+  shakeA: 0, hitstopT: 0, hitstopF: 0, hitstopSpent: 0, corpses: [], state: 'title', cam: { x: 0, y: 0 },
   mouse: { x: RW / 2, y: RH / 2, dx: DW / 2, dy: DH / 2, wx: 0, wy: 0, down: false },
   keys: {}, ui: { open: false, help: false }, banner: null, msg: null, kills: {}, pendingSpawns: 0, objective: '',
   arena: null, fade: 0, fadeDir: 0, fadeTo: null, boss: null, muted: false, drops: [],
@@ -23,9 +23,10 @@ const G = {
 // ===== audio ===================================================================
 // js/audio.js is the engine (buses, voice pool, music director, captions). These two wrappers keep every call site.
 //   initAudio()          create / resume the AudioContext from a user gesture (also automatic on the first gesture)
-//   sfx(id, pos?)        play an SFX_RECIPES id; pos = { x, y } world tiles for pan + distance (optional)
+//   sfx(id, pos?, opts?) play an SFX_RECIPES id; pos = { x, y } world tiles for pan + distance (optional);
+//                        opts = { pitch: cents, gain, at } (audio.js AUDIO.sfx)
 function initAudio() { if (typeof AUDIO !== 'undefined') AUDIO.unlock(); }
-function sfx(k, pos) { if (typeof AUDIO !== 'undefined') AUDIO.sfx(k, pos); }
+function sfx(k, pos, opts) { if (typeof AUDIO !== 'undefined') AUDIO.sfx(k, pos, opts); }
 
 // ===== generic helpers ==========================================================
 // CAST = the skill being resolved ({ skill, el }); delays/projectiles/zones/dashes capture it so gem
@@ -33,8 +34,54 @@ function sfx(k, pos) { if (typeof AUDIO !== 'undefined') AUDIO.sfx(k, pos); }
 let CAST = null;
 function withCast(c, fn) { const o = CAST; CAST = c; try { fn(); } finally { CAST = o; } }
 const delay = (t, fn) => G.delays.push({ t, fn, c: CAST });
-const shake = a => { G.shakeA = Math.max(G.shakeA, a * (typeof shakeMul === 'function' ? shakeMul() : 1)); };
-const hitstop = t => { if (typeof hitstopOn !== 'function' || hitstopOn()) G.hitstopT = Math.max(G.hitstopT, t); };
+const shake = a => { if (CAST && CAST.src === 'echo') return; G.shakeA = Math.max(G.shakeA, a * (typeof shakeMul === 'function' ? shakeMul() : 1)); };
+// ===== hit feel: power-scaled hitlag (DESIGN §27, meeting 2026-10-20 R2) ===================================
+// Two tiers, both counted in fixed STEPs (1/60 s), never seconds, so slow-mo cannot stretch them:
+//  * target-only freeze e.hitFreeze (damageEnemy, every non-DoT hit): the struck enemy skips AI / move / knockback and
+//    shows its hit frame; costs no input latency.
+//  * global freeze G.hitstopF (hero + world, dt = 0) through hitstop(): crit 3, kill 3, r >= 0.25 4, r >= 0.5 or the
+//    ultimate's first hit 6, boss BREAK 8 (boss death 15 = 0.25 s). Math.max, never additive. Budget: at most
+//    HITLAG.budget steps granted per rolling HITLAG.win steps (12 per 0.5 s), tracked in a fixed ring; a request over
+//    budget returns -1 and the caller folds it into the target-only freeze.
+//  Setting 'hitstop' off | light | full: off = no global freeze and Ft = 2; light = global capped at 3.
+// main.js loop() calls hitlagStep() once per step, BEFORE slow-mo scaling. G.hitstopT mirrors G.hitstopF in seconds for
+// loops that predate the step counter (tools/balsim.js simStep decrements hitstopT by its step); the budget ring
+// advances once per updateEnemies() call (= once per fixed step in every loop).
+const HITLAG = { budget: 12, win: 30, light: 3, ring: new Uint8Array(30), i: 0 };
+const hitlagMode = () => typeof hitstopMode === 'function' ? hitstopMode() : 'full';
+// n = steps (integer >= 1), or seconds when < 1 (legacy callers: bosses.js move.hitstop 0.06 / 0.08 -> 4 / 5 steps).
+// force: ignore the budget (boss death). Returns the steps now frozen, 0 when the setting is Off, -1 when over budget.
+function hitstop(n, force) {
+  let f = n < 1 ? Math.round(n * 60) : Math.round(n);
+  const mode = hitlagMode();
+  if (!(f > 0) || mode === 'off') return 0;
+  if (mode === 'light') f = Math.min(f, HITLAG.light);
+  const cur = Math.min(G.hitstopF, Math.ceil(G.hitstopT * 60 - 1e-6));   // steps still frozen (either clock)
+  const add = f - cur;   // only the extension costs budget (Math.max semantics)
+  if (add <= 0) return f;
+  if (!force && G.hitstopSpent + add > HITLAG.budget) return -1;
+  G.hitstopF = f; G.hitstopT = f / 60; G.hitstopSpent += add; HITLAG.ring[HITLAG.i] = Math.min(255, HITLAG.ring[HITLAG.i] + add);
+  return f;
+}
+// one fixed step of the global freeze (unscaled); true = this step is frozen (dt = 0)
+function hitlagStep() {
+  if (G.hitstopF > 0) { G.hitstopF--; G.hitstopT = G.hitstopF / 60; return true; }
+  if (G.hitstopT > 1e-6) { G.hitstopT = Math.max(0, G.hitstopT - 1 / 60); return true; }   // a seconds freeze set directly (tools/shots-m3-art.js poses)
+  return false;
+}
+// one fixed step of the rolling budget window (updateEnemies)
+function hitlagBudgetTick() { const H = HITLAG; H.i = (H.i + 1) % H.win; G.hitstopSpent = Math.max(0, G.hitstopSpent - H.ring[H.i]); H.ring[H.i] = 0; }
+function hitlagReset() { G.hitstopF = 0; G.hitstopT = 0; G.hitstopSpent = 0; HITLAG.ring.fill(0); }
+// AoE / multi-hit casts (hitCone / hitArea / hitLine) collect their targets here so the global freeze, the shake and the
+// hit-particle cap apply ONCE per cast from the largest r (never per target, never summed)
+let HITAGG = null;
+const aggBegin = () => { const prev = HITAGG; HITAGG = { fg: 0, r: 0, n: 0, parts: 0, hit: [], prev }; return HITAGG; };
+function aggEnd(A) {
+  HITAGG = A.prev;
+  if (!A.hit.length) return;
+  if (A.fg > 0 && hitstop(A.fg) < 0) for (const e of A.hit) e.hitFreeze = Math.max(e.hitFreeze || 0, A.fg);   // over budget: target-only
+  shake(Math.min(6, 1.5 + 4 * A.r));
+}
 const fx = o => { o.t = 0; G.effects.push(o); return o; };
 const zone = o => { o.t = 0; o.tickT = 0; o.cast = CAST; G.zones.push(o); return o; };
 // ===== particles: pooled, hard cap PART.cap (DESIGN §0 / §16.6.5) ===========================================
@@ -86,22 +133,22 @@ function dmgText(x, y, z, s, col, big, o) {
   if (o && o.e) {
     const prev = o.e.lastDmgText;
     if (prev && G.texts.includes(prev) && prev.t < 0.08 && prev.kind !== 'weak' === (o.kind !== 'weak')) {
-      prev.sum += o.v; prev.s = String(Math.round(prev.sum)) + (prev.kind === 'crit' || o.kind === 'crit' ? '!' : '');
+      prev.sum += o.v; if (o.r > (prev.r || 0)) prev.r = o.r; prev.s = String(Math.round(prev.sum)) + (prev.kind === 'crit' || o.kind === 'crit' ? '!' : '');
       if (o.kind === 'crit') { prev.kind = 'crit'; prev.col = col; }
       prev.t = Math.min(prev.t, 0.03); return;
     }
   }
   const t = text(x, y, z, s, col, big);
-  if (o) { t.kind = o.kind; t.sum = o.v || 0; if (o.e) o.e.lastDmgText = t; }
+  if (o) { t.kind = o.kind; t.sum = o.v || 0; t.r = o.r || 0; if (o.e) o.e.lastDmgText = t; }
 }
 
 // ===== player ==================================================================
 function makePlayer() {
   const p = {
     x: 0, y: 0, z: 0, r: 0.28, aim: 0, face: 1, back: false, walkT: 0, moving: false,
-    gear: { weapon: 'dawnblade', head: 'knighthelm', chest: 'knightplate', boots: 'knightgreaves' },   // family ids, derived from p.equip
+    gear: { weapon: 'sword', head: 'knighthelm', chest: 'warden', boots: 'knightgreaves' },   // variant / family ids (data.js), derived from p.equip
     equip: {}, bag: [], dust: 0, potions: 3, xp: 0, cdm: {},
-    wsk: { dawnblade: { q: 'sunslash', e: 'dashstrike', r: 'judgement' }, starfall: { q: 'firebolt', e: 'barrage', r: 'meteor' }, moonbow: { q: 'multishot', e: 'tumble', r: 'arrowrain' } },
+    wsk: { sword: { q: 'sunslash', e: 'dashstrike', r: 'judgement' }, staff: { q: 'firebolt', e: 'barrage', r: 'meteor' }, bow: { q: 'multishot', e: 'tumble', r: 'arrowrain' } },   // per weapon variant (§23)
     csk: ['secondwind', 'chain', 'shootingstar'],
     cds: {}, buffs: {}, atkT: 0, combo: 0, swing: null, dash: null, invulnT: 0, hurtT: 0, rootT: 0, slowT: 0, castT: 0, spin: 0,
     name: 'Aerin', level: 1, dead: false,
@@ -115,35 +162,195 @@ function makePlayer() {
   recalcStats(p, true);
   return p;
 }
-// The stats seam (§3 balance rule): every gear/affix/gem bonus is summed per stat, then applied once.
+// The stats seam (§3 balance rule): every gear/affix/implicit/gem/boon bonus is summed per stat, then applied once.
 // Base damage = tuning x level x (equipped weapon damage / its family's reference damage), so the basic
 // attack AND every skill scale with the weapon; p.bonus is the single additive damage % sum.
+// p.sum = the full summed gear bag (every stat key, incl. ones with no system yet: statusChance, poise, reflect, fishLuck...),
+// read by the engine hooks below (element damage %, pierce, charge rate, MP on hit, kill heal...). CAPS (itemdata.js, §19.6)
+// is applied here and only here: cdr 40 %, crit 60 %, haste 50 %, gear power 150 %, reaction bonus 50 % (incl. resonance),
+// Mark cap 5, potions 5; trinket resists max +10 % per line and +15 % resAll across the trinkets; hero res [-0.5, +0.6].
+const CAPS_DEFAULT = { cdr: 0.4, crit: 0.6, haste: 0.5, gearPower: 1.5, reactionBonus: 0.5, markCap: 5, potions: 5, trinketResLine: 0.1, trinketResAll: 0.15, heroResMin: -0.5, heroResMax: 0.6 };
+const capsT = () => (typeof CAPS !== 'undefined' ? CAPS : CAPS_DEFAULT);
+const MARK_BASE = 3;   // the Mark cap before gear (Marks themselves land with the Shadows class, M4)
+// ring element (§19.4 resonance): its boon's element, else the element of its implicit / first element-damage affix
+const RING_EL = { fireBurn: 'fire', frostPower: 'frost', naturePower: 'nature', lightningPower: 'lightning', arcanePower: 'arcane', holyPower: 'holy', conductJump: 'lightning', shatterRadius: 'frost' };
+function ringElement(it) {
+  if (!it) return null;
+  if (it.boon && RING_EL[it.boon.id]) return RING_EL[it.boon.id];
+  const k = [it.implicit && it.implicit.id].concat(it.affixes.map(a => a.id)).find(id => id && /^(fire|frost|nature|lightning|arcane|holy)Dmg$/.test(id));
+  return k ? k.slice(0, -3) : null;
+}
+// equipped boons by id (§19.6: ids never stack; two of one id count once, the major grade wins)
+function equippedBoons(p) {
+  const out = {};
+  for (const k of TRINKET_SLOTS) {
+    const it = p.equip[k], b = it && it.boon, row = b && boonRow(b.id); if (!row) continue;
+    const prev = out[b.id]; if (prev && !(prev.grade === 'minor' && b.grade !== 'minor')) continue;
+    out[b.id] = { id: b.id, grade: b.grade, slot: k, vals: row[b.grade === 'minor' ? 'minor' : 'major'] || row.major || {} };
+  }
+  return out;
+}
 function recalcStats(p, full) {
+  const C = capsT();
   const s = { hp: 0, mp: 0, def: 0, power: 0, crit: 0, haste: 0, regen: 0, mpRegen: 0, speed: 0, critDmg: 0, cdr: 0, skillDmg: 0, dmg: 0, resAll: 0 };
-  for (const slot of SLOTS) { const it = p.equip[slot]; if (!it) continue; p.gear[slot] = familyOf(it.base); const st = statsOf(it); for (const k in st) s[k] = (s[k] || 0) + st[k]; }
-  p.res = {}; for (const el of RES_ELS) p.res[el] = clamp((s[resKey(el)] || 0) + s.resAll, -0.5, 0.6);   // §5b: additive, clamped
+  let trkAll = 0;
+  // §28 null gear slots: an empty slot's p.gear entry is that slot's DEFAULT family id (render.js / menus read item(slot, p.gear[slot])
+  // for a pose or a name), never the last item worn; everything that acts (skills, damage, the paper doll) reads p.equip
+  for (const slot of SLOTS) p.gear[slot] = p.equip[slot] ? familyOf(p.equip[slot].base) : ITEMS[slot][0].id;
+  for (const slot of EQUIP_SLOTS) {
+    const it = p.equip[slot]; if (!it) continue;
+    const st = statsOf(it), trk = isTrinket(it);
+    for (const k in st) {
+      let v = st[k];
+      if (trk && k === 'resAll') { v = Math.min(v, Math.max(0, C.trinketResAll - trkAll)); trkAll += v; }   // +15 % across all trinkets
+      else if (trk && /^res[A-Z]/.test(k)) v = Math.min(v, C.trinketResLine);                             // +10 % per trinket line
+      s[k] = (s[k] || 0) + v;
+    }
+  }
+  // boons (§19.4): passive boon numbers join the same sum through their EFFECTS row's `stats` map; triggers run via emitEffects
+  p.boons = equippedBoons(p);
+  for (const id in p.boons) { const row = EFFECT_BY_ID[id]; if (row && row.stats) for (const k in row.stats) if (typeof p.boons[id].vals[k] === 'number') s[row.stats[k]] = (s[row.stats[k]] || 0) + p.boons[id].vals[k]; }
+  // belt gem wrap (gemWrap boon): the best gem below Radiant in chest (minor) or chest / boots (major) counts +1 grade, one socket only
+  p.wrap = null;
+  if (p.boons.gemWrap) {
+    let best = null;
+    for (const slot of p.boons.gemWrap.vals.gemWrapSlots || ['chest']) { const it = p.equip[slot]; if (!it) continue; it.sockets.forEach((g, si) => { const q = g && gemParse(g); if (q && q.grade < GEM_MAX && (!best || q.grade > best.grade)) best = { slot, si, gem: g, type: q.type, grade: q.grade }; }); }
+    if (best) {
+      p.wrap = best;
+      const a = gemStats(best.gem, best.slot), b = gemStats(best.type + '_' + (best.grade + 1), best.slot);
+      for (const k in b) s[k] = (s[k] || 0) + b[k] - (a[k] || 0);
+    }
+  }
+  p.sum = s;
+  p.res = {}; for (const el of RES_ELS.concat('holy')) p.res[el] = clamp((s[resKey(el)] || 0) + s.resAll, C.heroResMin, C.heroResMax);   // §5b: additive, clamped
   p.amp = gemAmp(p);
+  // ring resonance (§19.4): two rings of one element -> that element's reaction +25 % (x2 with the Kindred Band), inside the 50 %
+  // reaction-bonus cap. Reactions arrive in M4: p.reactBonus is read there; p.resonance drives the aura colour (art lane).
+  const e1 = ringElement(p.equip.ring1), e2 = ringElement(p.equip.ring2);
+  p.resonance = e1 && e1 === e2 ? { el: e1, bonus: Math.min(C.reactionBonus, 0.25 * (hasRule(p, 'kindredband') ? 2 : 1)) } : null;
+  p.reactBonus = {}; if (p.resonance) p.reactBonus[p.resonance.el] = p.resonance.bonus;
   p.huntBonus = {};   // bestiary hunt milestones (+5% vs a type, additive into the damage sum) — filled by M-later
   const hpR = full || !p.maxHp ? 1 : p.hp / p.maxHp, mpR = full || !p.maxMp ? 1 : p.mp / p.maxMp;
   const B = G.tune.player, L = p.level - 1, w = item('weapon', p.gear.weapon);
   p.maxHp = Math.round(B.hp * (1 + 0.04 * L) + s.hp); p.maxMp = Math.round(B.mp + s.mp); p.maxSt = B.stamina;
-  p.wdmg = s.dmg || w.basic.dmg; p.dmgBase = B.damage * (1 + 0.03 * L) * p.wdmg / w.basic.dmg; p.bonus = s.power;
+  // bare hands (§28): the shove's 1 damage, never the default sword's 50
+  const armed = !!p.equip.weapon;
+  p.wdmg = armed ? s.dmg || w.basic.dmg : UNARMED.basic.dmg; p.dmgBase = B.damage * (1 + 0.03 * L) * (armed ? p.wdmg / w.basic.dmg : 1); p.bonus = Math.min(C.gearPower, s.power);
   p.power = p.dmgBase * (1 + p.bonus);
   p.def = s.def / (1 + s.def);   // additive armour sum -> one diminishing transform (0.2 -> 17%, 0.7 -> 41%, 1.5 -> 60%)
-  p.crit = Math.min(0.75, B.crit + s.crit); p.critDmg = 0.8 + s.critDmg; p.haste = Math.min(1, s.haste);
-  p.cdr = Math.min(0.4, s.cdr); p.skillDmg = s.skillDmg; p.regen = B.regen + s.regen; p.mpRegen = B.mpRegen + s.mpRegen; p.speed = B.speed + s.speed;
+  p.crit = Math.min(C.crit, B.crit + s.crit); p.critDmg = 0.8 + s.critDmg; p.haste = Math.min(C.haste, s.haste);
+  p.cdr = Math.min(C.cdr, s.cdr); p.skillDmg = s.skillDmg; p.regen = B.regen + s.regen; p.mpRegen = B.mpRegen + s.mpRegen; p.speed = B.speed + s.speed;
+  p.markCap = Math.min(C.markCap, MARK_BASE + (s.markCap || 0));
+  p.maxPotions = Math.min(C.potions, MAX_POTIONS + (s.potionCharge || 0));
+  if (p.potions > p.maxPotions) p.potions = p.maxPotions;
   p.hp = p.maxHp * hpR; p.mp = p.maxMp * mpR; if (full) p.st = p.maxSt;
   const key = SLOTS.map(k => p.gear[k]).join();
   if (key !== p.sprKey) { p.sprKey = key; p.spr = buildPlayerSprites(p.equip); }
 }
+// ===== EFFECTS (§18.1 / §19.6): the smallest hook that becomes the M4 combo bus ==========================================
+// One row per trinket boon (src 'trinket', every BOONS + origin id) and per trigger affix (src 'affix': onDodge / onKill):
+//   { id, src, when: 'passive'|'hit'|'kill'|'dodge'|'ultimate'|'potion'|null, stats?: { boonKey: p.sum key }, do?(ctx, vals, p), icd, name, hint, dataOnly? }
+// `stats` rows fold into recalcStats' sum; event rows run from emitEffects(when, ctx) at the existing single call sites
+// (hit = damageEnemy, kill = killEnemy, dodge / ultimate = useSkill, potion = drinkPotion). ICD default 0.5 s, chain depth 2
+// (an effect-triggered hit cannot trigger further effects). A `dataOnly` row names a boon whose system is not built yet (M4+).
+// No row names a skill.
+const EFFECT_ICD = 0.5;
+const EFFECT_IMPL = {
+  // ring
+  fireBurn: { when: 'hit', stats: { fireDmg: 'fireDmg' }, do(c, v) { if (c.el === 'fire' && Math.random() < (v.burnChance || 0)) { const e = c.e; e.burnT = Math.max(e.burnT || 0, 2); e.burnTick = e.burnTick || 0.5; e.burnCast = c.cast; } } },
+  frostPower: { when: 'hit', stats: { frostDmg: 'frostDmg' }, do(c, v) { if (c.el === 'frost' && Math.random() < (v.freezeChance || 0)) { const e = c.e; e.stunT = Math.max(e.stunT, e.boss ? 0.25 : 1); e.frozen = 1; } } },
+  naturePower: { when: 'passive', stats: { natureDmg: 'natureDmg' }, partial: 'poisonChance (no hero poison yet)' },
+  lightningPower: { when: 'passive', stats: { lightningDmg: 'lightningDmg' }, partial: 'shockDur (no Shock status yet)' },
+  arcanePower: { when: 'passive', stats: { arcaneDmg: 'arcaneDmg' }, partial: 'markDur (no Marks yet)' },
+  holyPower: { when: 'passive', stats: { holyDmg: 'holyDmg', stagger: 'holyStagger' } },
+  projPierce: { when: 'passive', stats: { pierce: 'pierce' } },
+  markCap: { when: 'passive', stats: { markCap: 'markCap' }, partial: 'capped (Mark cap 5); Marks land in M4' },
+  // amulet
+  rFrostTag: { when: 'passive', stats: { rDmg: 'ultDmg' }, partial: 'the frost tag (tags land in M4)' },
+  rCost: { when: 'passive', stats: { rCost: 'rCost' } },
+  rFirstFree: { when: 'passive', stats: { rFirstCost: 'rFirstCost' }, flag: 'rFirstFree' },
+  ultDmg: { when: 'passive', stats: { ultDmg: 'ultDmg' } },
+  ultRadius: { when: 'passive', stats: { ultRadius: 'ultRadius' } },
+  skillDmgFull: { when: 'passive', stats: { skillDmg: 'skillDmgFull' } },
+  chargeOnDodge: { when: 'dodge', do(c, v, p) { p.ult = Math.min(100, p.ult + (v.chargeOnDodge || 0)); } },
+  chargeOnKill: { when: 'kill', icd: 0, do(c, v, p) { p.ult = Math.min(100, p.ult + (v.chargeOnKill || 0)); } },
+  mpOnR: { when: 'ultimate', do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + (v.mpOnR || 0)); } },
+  critAfterR: { when: 'ultimate', do(c, v, p) { p.critR = { v: v.crit || 0, until: G.t + 6 }; } },
+  // belt
+  potionCleanse: { when: 'potion', icd: 0, do(c, v, p) { let n = v.potionCleanse || 1; for (const k of ['rootT', 'slowT', 'dreadT']) if (n > 0 && p[k] > 0) { p[k] = 0; n--; } } },
+  killHeal: { when: 'passive', stats: { killHeal: 'killHeal' } },
+  salvageDust: { when: 'passive', stats: { salvageDust: 'salvageDust' } },
+  gemWrap: { when: 'passive' },   // recalcStats: p.wrap
+  potionCap: { when: 'passive', stats: { potionCharge: 'potionCharge' } },
+  dustOnKill: { when: 'kill', icd: 0, do(c, v, p) { if (enemyClassOf(c.e) !== 'normal') p.dust += v.dustOnElite || 0; } },
+  flaskRegen: { when: 'potion', icd: 0, do(c, v, p) { for (let k = 1; k <= 4; k++) delay(k, () => { if (!p.dead) healPlayer(p, p.maxHp * (v.potionRegen || 0)); }); } },
+  potionMp: { when: 'potion', icd: 0, do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + p.maxMp * (v.potionMp || 0)); } },
+  dodgeIframe: { when: 'dodge', icd: 0, do(c, v, p) { const x = v.dodgeIframeDur || 0; if (p.dash && p.dash.opt.invuln) p.invulnT = Math.max(p.invulnT, p.dash.t + x); else if (p.invulnT > 0) p.invulnT += x; } },
+  // origin rings (§17.1: the Origin passive is the starter ring's boon)
+  originKnight: { when: 'passive', stats: { def: 'def' } },
+  originMystic: { when: 'passive', stats: { mpOnHit: 'mpOnHit' } },
+  originRanger: { when: 'passive', stats: { critDmg: 'critDmg' } },
+  originWarrior: { when: 'passive', stats: { stagger: 'weaponStagger' } },
+};
+// trigger affixes (§19.1 suffixes, Epic+): onDodge heals v of max HP, onKill restores v of max MP
+const AFFIX_EFFECTS = [
+  { id: 'onDodge', src: 'affix', when: 'dodge', do(c, v, p) { healPlayer(p, p.maxHp * v); } },
+  { id: 'onKill', src: 'affix', when: 'kill', do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + p.maxMp * v); } },
+];
+// unique rules on the bus (src 'unique', live while hasRule(p, id)): §30 Echo records every basic / Q / E cast (when 'cast',
+// emitted by useSkill and basicAttack; ctx = { p, c, slot, id, a, tx, ty }). Its replays never emit 'cast' (no echo of an echo).
+const UNIQUE_EFFECTS = [
+  { id: 'echo', src: 'unique', when: 'cast', icd: 0, name: 'Echo', hint: 'A spirit repeats your attacks', do(c, v, p) { echoRecord(p, c); } },
+];
+const EFFECTS = [], EFFECT_BY_ID = {}, EFFECTS_WHEN = {};
+(function buildEffects() {
+  const rows = [];
+  if (typeof BOONS !== 'undefined') for (const slot in BOONS) for (const b of BOONS[slot]) rows.push(b);
+  if (typeof ORIGIN_RINGS !== 'undefined') for (const o of ORIGIN_RINGS) rows.push(o.boon);
+  for (const b of rows) {
+    const impl = EFFECT_IMPL[b.id];
+    const row = Object.assign({ id: b.id, src: 'trinket', when: null, icd: EFFECT_ICD, name: b.name, hint: b.text, tags: b.tags || [] }, impl || { dataOnly: true });
+    EFFECTS.push(row); EFFECT_BY_ID[b.id] = row;
+  }
+  for (const r of AFFIX_EFFECTS) { const row = Object.assign({ icd: EFFECT_ICD, name: r.id, hint: '' }, r); EFFECTS.push(row); EFFECT_BY_ID['affix:' + r.id] = row; }
+  for (const r of UNIQUE_EFFECTS) { EFFECTS.push(r); EFFECT_BY_ID['unique:' + r.id] = r; }
+  for (const r of EFFECTS) if (r.do && r.when) (EFFECTS_WHEN[r.when] || (EFFECTS_WHEN[r.when] = [])).push(r);
+})();
+const boonLive = id => !!(EFFECT_BY_ID[id] && !EFFECT_BY_ID[id].dataOnly);
+let FX_DEPTH = 0;
+function emitEffects(when, ctx) {
+  const p = G.player, list = EFFECTS_WHEN[when]; if (!p || !list || FX_DEPTH >= 2 || p.dead) return;
+  const icd = p.fxIcd || (p.fxIcd = {});
+  FX_DEPTH++;
+  try {
+    for (const r of list) {
+      const vals = r.src === 'trinket' ? p.boons && p.boons[r.id] && p.boons[r.id].vals : r.src === 'unique' ? hasRule(p, r.id) || null : p.sum && p.sum[r.id];
+      if (!vals) continue;
+      if (r.icd && (icd[r.id] || -1e9) > G.t) continue;
+      r.do(ctx, vals, p);
+      if (r.icd) icd[r.id] = G.t + r.icd;
+    }
+  } finally { FX_DEPTH--; }
+}
+// ultimate cost (rCost boon: 80 or 90 charge instead of 100) and the first-R-in-a-fight discount (rFirstFree: free / half)
+const ultCost = p => (p.sum && p.sum.rCost ? Math.min(100, p.sum.rCost) : 100);
+function ultNeed(p) { const c = ultCost(p); return p.boons && p.boons.rFirstFree && p.freeR ? (p.boons.rFirstFree.vals.rFirstFree ? 0 : c * (p.sum.rFirstCost || 1)) : c; }
+// a fight starts after FIGHT_GAP s with no damage dealt or taken (arms rFirstFree)
+const FIGHT_GAP = 8;
+function combatPing(p) { if (!p) return; if (G.t - (p.combatT != null ? p.combatT : -1e9) > FIGHT_GAP) p.freeR = true; p.combatT = G.t; }
 const SLOT_KEYS = ['q', 'e', 'r', 'f', 'c', 'shift', '1', '2', '3'];
+// an empty slot grants nothing (§28 bare start): no weapon -> no Q E R, no chest / helm -> no F / C; bare feet keep a short
+// Roll on SHIFT (UNARMED.roll) so the dodge verb exists before the first boots (4:50)
 function slotSkill(p, slot) {
-  if (slot === 'q' || slot === 'e' || slot === 'r') return p.wsk[p.gear.weapon][slot];
-  if (slot === 'f') return item('chest', p.gear.chest).skill;
-  if (slot === 'c') return item('head', p.gear.head).skill;
-  if (slot === 'shift') return item('boots', p.gear.boots).skill;
+  if (slot === 'q' || slot === 'e' || slot === 'r') return p.equip.weapon && p.wsk[p.gear.weapon] ? p.wsk[p.gear.weapon][slot] : null;
+  if (slot === 'f') return p.equip.chest ? item('chest', p.gear.chest).skill : null;
+  if (slot === 'c') return p.equip.head ? item('head', p.gear.head).skill : null;
+  if (slot === 'shift') return p.equip.boots ? item('boots', p.gear.boots).skill : UNARMED.roll;
   return p.csk[+slot - 1] || null;
 }
+// the bare-handed hero (§28): LMB is a shove (1 damage, a little knockback, no skills), SHIFT a barefoot roll
+const UNARMED = { name: 'Bare hands', kind: 'unarmed', element: 'slash', basic: { name: 'Shove', dmg: 1, rate: 0.5 }, roll: 'roll' };
+const weaponOf = p => (p.equip.weapon ? item('weapon', p.gear.weapon) : UNARMED);
 // ===== skill casting: ultimate charge, dodge-cancel, ranks and modifiers (DESIGN §15.2–15.3) ===================
 const SLOT_ACTION = { lmb: 'attack', q: 'skillQ', e: 'skillE', r: 'skillR', f: 'skillF', c: 'skillC', shift: 'dodge', 1: 's1', 2: 's2', 3: 's3', pot: 'potion' };
 const CANCEL_AFTER = 0.1;            // dodge cancels a cast only after its first 0.1 s (buffered until then)
@@ -206,7 +413,8 @@ function addSkillHit(p, id) {
 }
 // ultimate charge: fed by the pre-multiplier damage of every hit (level-independent), reactions x2 (M4)
 // §20.5: a single hit adds at most 5 % charge, a reaction hit at most 10 %
-const ultGain = (p, base, reaction) => Math.min(reaction ? 10 : 5, base * G.tune.player.ultRate * (reaction ? 2 : 1) * (1 + ultChargeBonus(p)));
+// chargeSpeed (amulet implicits, affixes) joins the diamond bonus as one additive charge-rate sum
+const ultGain = (p, base, reaction) => Math.min(reaction ? 10 : 5, base * G.tune.player.ultRate * (reaction ? 2 : 1) * (1 + ultChargeBonus(p) + ((p.sum && p.sum.chargeSpeed) || 0)));
 // §20.5 MP builder: per weapon family, basic attacks only, ONCE per swing (not per target), hard cap 40 MP/s from
 // hits over a rolling 1 s window. Values ~ swing time so every family builds ~15-23 MP/s on basics
 // (sword 8 / 0.42 s, staff 9 / 0.48 s, bow 7 / 0.36 s, daggers 6 / 0.28 s, two-hander 14 / 0.62 s).
@@ -214,7 +422,8 @@ const MP_ON_HIT = { sword: 8, staff: 9, bow: 7, daggers: 6, dagger: 6, twohander
 const MP_HIT_CAP = 40;
 function basicMpGain(p, c) {
   if (c && c.basic) { if (c.mpDone) return; c.mpDone = true; }
-  const w = item('weapon', p.gear.weapon), gain = MP_ON_HIT[w && w.kind] != null ? MP_ON_HIT[w.kind] : G.tune.player.mpOnHit;
+  const w = weaponOf(p), g0 = MP_ON_HIT[w && w.kind] != null ? MP_ON_HIT[w.kind] : G.tune.player.mpOnHit;
+  const gain = Math.round(g0 * (1 + ((p.sum && p.sum.mpOnHit) || 0)));   // +x % MP on hit (Linen Robe implicit, Mystic origin ring)
   const L = p.mpHits || (p.mpHits = []), t = G.t;
   while (L.length && t - L[0][0] >= 1) L.shift();
   const used = L.reduce((a, q) => a + q[1], 0), add = Math.max(0, Math.min(gain, MP_HIT_CAP - used));
@@ -243,23 +452,28 @@ function useSkill(p, slot) {
     cancelCast(p);
   }
   if (p.dash) return false;
-  if (ult && p.ult < 100) { if (!G.ultWarnT || G.t > G.ultWarnT) { say('Ultimate is still charging'); G.ultWarnT = G.t + 1.2; } return false; }
+  const need = ult ? ultNeed(p) : 0;   // 100, or the amulet's rCost / first-R-of-a-fight discount
+  if (ult && p.ult < need) { if (!G.ultWarnT || G.t > G.ultWarnT) { say('Ultimate is still charging'); G.ultWarnT = G.t + 1.2; } return false; }
   const ctx = skillCtx(p, id, s), mp = Math.round((s.mp || 0) * ctx.mp);
+  if (ult && p.sum && p.sum.ultRadius) ctx.r *= 1 + p.sum.ultRadius * 0.4;   // amulet ultRadius: +1 tile on a ~2.5-tile ultimate
   if (mp > p.mp) { say('Not enough mana'); return false; }
   p.mp -= mp; p.st -= s.st || 0;
   // ultimates use the charge bar instead of a cooldown (a short lockout stops double-casts)
-  if (ult) { p.ult = 0; p.cds[id] = p.cdm[id] = 0.5; }
-  else p.cds[id] = p.cdm[id] = s.cd * ctx.cd * (1 - Math.min(0.4, p.cdr));
+  if (ult) { p.ult = Math.max(0, p.ult - need); if (p.freeR && p.boons && p.boons.rFirstFree) p.freeR = false; p.cds[id] = p.cdm[id] = 0.5; }
+  else p.cds[id] = p.cdm[id] = s.cd * ctx.cd * (1 - Math.min(capsT().cdr, p.cdr));
   if (p.swing && p.atkT > 0) p.swing = null;   // attacks cancel into skills
   const c = { skill: id, el: ctx.element, slot, ctx, hit: false };
-  const n0 = G.delays.length;
-  withCast(c, () => s.cast(p, p.aim, G.mouse.wx, G.mouse.wy));
+  const n0 = G.delays.length, a0 = p.aim, tx0 = G.mouse.wx, ty0 = G.mouse.wy, x0 = p.x, y0 = p.y;
+  withCast(c, () => s.cast(p, a0, tx0, ty0));
+  emitEffects('cast', { p, c, slot, id, a: a0, tx: tx0, ty: ty0, x: x0, y: y0 });   // §30: the cast hook (Echo records lmb / q / e)
   if (id === 'orbit') p.orbitCast = c;
+  if (dodge) emitEffects('dodge', { p, c }); else if (ult) emitEffects('ultimate', { p, c });
   let dur = Math.max(0, p.castT, p.swing ? p.swing.dur - p.swing.t : 0);
   for (let i = n0; i < G.delays.length; i++) if (G.delays[i].c === c) dur = Math.max(dur, G.delays[i].t);
   if (p.dash && p.dash.cast === c) dur = Math.max(dur, p.dash.t);
   p.cast = dodge ? null : { c, id, slot, age: 0, dur: Math.min(1.5, dur), mp };
   G.lastCast = { slot, t: 0.25 };
+  if (slot === 'q') hudNoun('skill');   // §28: the first Q brings the E chip in
   if (!dodge && typeof aimFlash === 'function' && (G.touch || (IN.aimMode && IN.aimMode() !== 'off'))) aimFlash(id, slot);   // quick-cast: 1-frame flash of the shape at the target
   return true;
 }
@@ -271,16 +485,103 @@ function healPlayer(p, n) { p.hp = Math.min(p.maxHp, p.hp + n); text(p.x, p.y, p
 function swingWeapon(p, dur, arc, dir) { p.swing = { t: 0, dur, arc, dir: dir || (Math.random() < 0.5 ? 1 : -1) }; }
 function castAnim(p, t = 0.25) { p.castT = t; }
 
+// ===== §30 Echo: the spirit clone (unique rule 'echo', a weapon legendary) ===================================================
+// An after-image, not a pet: every basic / Q / E cast is recorded ({ skill, slot, aim, target offset, ctx }) by the 'cast' bus
+// row and replayed ECHO.delay s later through the SAME cast function, from where the hero stood ECHO.frames fixed steps ago
+// (a Float32Array ring, written only on steps that advance time), under a cast with src 'echo' (damageEnemy's guard).
+// The caster handed to the cast function is G.echo.g = Object.create(hero): reads fall through to the hero's stats, every
+// write (swing, castT, combo, dash, buffs, mp) lands on the spirit, so a replayed dash or blink never moves the hero.
+// Never R (the cast row only takes lmb / q / e). No MP, cooldown or charge cost, never targeted, no summon counters.
+// State lives on G.echo (never saved); it resets when the hero, the map or the rule changes.
+const ECHO = { k: 0.3, floor: 0.3, a0: 0.2, full: 0.4, delay: 0.4, queue: 4, idle: 2, frames: 24, fadeIn: 0.12, fadeOut: 0.5, els: ['fire', 'frost', 'nature', 'lightning', 'arcane', 'holy'] };
+const ECHO_RS = 6;   // ring stride: x, y, z, face, flags (1 back, 2 moving, 4 dashing), walkT
+function echoState(p) {
+  let E = G.echo;
+  if (!E || E.p !== p || E.map !== G.map) {
+    const g = Object.create(p);
+    Object.assign(g, { echo: true, swing: null, castT: 0, spin: 0, atkT: 0, combo: 0, dash: null, buffs: {}, cds: {}, invulnT: 0, slowT: 0, rootT: 0, hurtT: 0, moving: false, back: false, face: p.face, walkT: 0, mp: p.mp, st: p.st });
+    E = G.echo = { p, map: G.map, ring: new Float32Array(ECHO.frames * ECHO_RS), i: 0, n: 0, q: [], g, alive: false, age: 0, idleT: 0, alpha: 0, el: 'arcane', count: 0, log: [] };
+  }
+  return E;
+}
+// the echo's damage type (§30 "retyped to magic"): argmax of the element % bonuses (gear %Dmg + gem amplification), arcane by default
+function echoElement(p) {
+  let best = 'arcane', bv = 1e-9;
+  for (const el of ECHO.els) { const v = echoAmpOf(p, el); if (v > bv) { bv = v; best = el; } }
+  return best;
+}
+// focus scaling (the §30 balsim gate; see ECHO): the echo runs at `floor` strength until the hero's top element bonus A
+// passes a0, and at full strength from `full` up (linear between). Final damage x k alone cannot separate a focused build
+// (+25-30 %) from an unfocused one (<= +15 %): both land at ~ k x the non-R share of the rotation.
+const echoAmpOf = (p, el) => ((p.sum && p.sum[el + 'Dmg']) || 0) + elementAmp(p, el);
+const echoFocus = (p, el) => ECHO.floor + (1 - ECHO.floor) * clamp((echoAmpOf(p, el) - ECHO.a0) / (ECHO.full - ECHO.a0), 0, 1);
+function echoRecord(p, cx) {
+  const slot = cx.slot; if (slot !== 'lmb' && slot !== 'q' && slot !== 'e') return;   // never R (nor f / c / shift / 1-3)
+  if (!cx.c || cx.c.src === 'echo') return;
+  const E = echoState(p), ctx = cx.c.ctx || null;
+  E.q.push({ t: ECHO.delay, fresh: true, id: cx.id, slot, basic: slot === 'lmb', a: cx.a, dx: (cx.tx != null ? cx.tx : cx.x) - cx.x, dy: (cx.ty != null ? cx.ty : cx.y) - cx.y, combo: cx.combo || 0, ctx });
+  if (E.q.length > ECHO.queue) E.q.shift();   // at most 4 queued; the oldest is dropped
+}
+function echoReplay(p, E, r) {
+  const g = E.g, el = E.el = echoElement(p);
+  const ctx = Object.assign(newCtx(el), r.basic || !r.ctx ? null : r.ctx, { onHit: [], element: el, src: 'echo' });
+  ctx.dmg = (r.ctx && isFinite(r.ctx.dmg) ? r.ctx.dmg : 1) * ECHO.k * (E.focus = echoFocus(p, el));
+  const c = { skill: r.basic ? null : r.id, basic: r.basic, el, slot: r.slot, ctx, hit: true, src: 'echo', mpDone: true, caster: g };
+  g.aim = r.a; g.face = Math.cos(r.a) - Math.sin(r.a) >= 0 ? 1 : -1; g.swing = null; g.castT = 0; g.atkT = 0; g.dash = null; g.combo = r.combo;
+  const tx = g.x + r.dx, ty = g.y + r.dy;
+  try { withCast(c, () => { if (r.basic) basicSwing(g, weaponOf(p)); else if (SKILLS[r.id]) SKILLS[r.id].cast(g, r.a, tx, ty); }); }
+  catch (err) { console.warn('echo replay', r.id, err); }
+  if (!E.alive) { E.alive = true; E.age = 0; }
+  E.idleT = 0; E.count++; E.log.push(r.basic ? 'lmb' : r.id); if (E.log.length > 12) E.log.shift();
+}
+function updateEcho(p, dt) {
+  if (!hasRule(p, 'echo') || p.dead) { if (G.echo) G.echo = null; return; }
+  const E = echoState(p), R = ECHO_RS, F = ECHO.frames, ring = E.ring, g = E.g;
+  // read the oldest entry (where the hero stood F time-advancing steps ago) BEFORE this step overwrites it
+  if (E.n) { const k = (E.n < F ? 0 : E.i) * R; g.x = ring[k]; g.y = ring[k + 1]; g.z = ring[k + 2]; g.face = ring[k + 3] || 1; g.back = !!(ring[k + 4] & 1); g.moving = !!(ring[k + 4] & 2); g.dashing = !!(ring[k + 4] & 4); g.walkT = ring[k + 5]; }
+  else { g.x = p.x; g.y = p.y; g.z = p.z; g.face = p.face; }
+  if (dt > 0) {   // one ring entry per time-advancing fixed step (a hitlag freeze does not shorten the 0.4 s lag)
+    const j = E.i * R; ring[j] = p.x; ring[j + 1] = p.y; ring[j + 2] = p.z; ring[j + 3] = p.face; ring[j + 4] = (p.back ? 1 : 0) | (p.moving ? 2 : 0) | (p.dash ? 4 : 0); ring[j + 5] = p.walkT || 0;
+    E.i = (E.i + 1) % F; if (E.n < F) E.n++;
+  }
+  // the spirit's own cast timers (a replayed swing / cast pose / spin)
+  if (g.swing) { g.swing.t += dt; if (g.swing.t > g.swing.dur) g.swing = null; }
+  g.castT -= dt; g.spin -= dt; g.atkT -= dt;
+  for (const b in g.buffs) { g.buffs[b].t -= dt; if (g.buffs[b].t <= 0) delete g.buffs[b]; }
+  if (g.dash) {   // a replayed dash rides the recorded path (the ring) and keeps its hit test and onEnd
+    const d = g.dash; d.t -= dt;
+    if (d.opt.hit) for (const e of G.enemies) {
+      if (e.dead || d.hit.has(e) || e.spawnT > 0) continue;
+      if (dist(g.x, g.y, e.x, e.y) < d.opt.hit.r + e.r) { d.hit.add(e); damageEnemy(e, d.opt.hit.dmg, { knock: d.opt.hit.knock, cast: d.cast }); }
+    }
+    if (d.t <= 0) { g.dash = null; if (d.opt.onEnd) withCast(d.cast, d.opt.onEnd); }
+  }
+  for (const r of E.q) if (r.fresh) r.fresh = false; else r.t -= dt;   // a cast recorded this step starts counting next step
+  while (E.q.length && E.q[0].t <= 1e-9) echoReplay(p, E, E.q.shift());
+  if (E.alive) {
+    E.age += dt; if (!E.q.length && !g.dash) E.idleT += dt;   // idle = time since the last replay
+    if (E.idleT >= ECHO.idle) { E.alive = false; E.alpha = 0; }
+    else E.alpha = Math.min(1, E.age / ECHO.fadeIn) * Math.min(1, (ECHO.idle - E.idleT) / ECHO.fadeOut);
+  }
+}
+
 function basicAttack(p) {
   if (p.atkT > 0 || p.dash || p.dead || p.rootT > 0 || castActive(p)) return;   // skills never cancel into attacks
-  const w = item('weapon', p.gear.weapon);
+  const w = weaponOf(p);
   // basic attacks are casts too (skill: null, basic: true) so their hits carry a ctx; they build MP on hit
-  withCast({ skill: null, basic: true, el: w.element || 'slash', slot: 'lmb', ctx: newCtx(w.element || 'slash') }, () => basicSwing(p, w));
+  const c = { skill: null, basic: true, el: w.element || 'slash', slot: 'lmb', ctx: newCtx(w.element || 'slash') }, combo = p.combo, a0 = p.aim;
+  withCast(c, () => basicSwing(p, w));
+  emitEffects('cast', { p, c, slot: 'lmb', id: null, a: a0, tx: G.mouse.wx, ty: G.mouse.wy, x: p.x, y: p.y, combo });
 }
 function basicSwing(p, w) {
   const a = p.aim;
   p.atkT = w.basic.rate / (1 + p.haste);
-  if (w.kind === 'sword') {
+  if (w.kind === 'unarmed') {   // §28: a short two-handed shove, the empty hands' only verb
+    swingWeapon(p, 0.14, 1.2, 1);
+    hitCone(p.x, p.y, a, 1.4, 1.1, w.basic.dmg, { knock: 0.35 });
+    fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 1.1, r: 0.9, col: '#f2e6ff', life: 0.14, w: 2, dir: 1 });
+    sfx('swing');
+  } else if (w.kind === 'sword') {
     p.combo = (p.combo + 1) % 3;
     const big = p.combo === 2;
     swingWeapon(p, 0.17, big ? 2.6 : 1.9, p.combo % 2 ? -1 : 1);
@@ -427,6 +728,7 @@ function updatePlayer(p, dt) {
   for (const k of ['slowT', 'rootT']) { if (p[k] > 0) { if (!(p.stMax[k] > 0) || p[k] > p.stMax[k]) p.stMax[k] = p[k]; } else p.stMax[k] = 0; }
 
   resolveAim(p);
+  if (p.climb) { updateClimb(p, dt); return; }   // §29 G3 root ladder: a scripted 0.6 s climb
 
   const h0 = tileH(m, p.x, p.y);
   if (p.dash) {
@@ -456,8 +758,9 @@ function updatePlayer(p, dt) {
     } else p.stuckT = 0;
   }
   const th = tileH(m, p.x, p.y);
-  p.z = lerp(p.z, th, Math.min(1, dt * 14));
+  updateFall(p, th, dt);   // §29 G3: a drop-down ledge falls with gravity (and lands with dust); small steps keep the old ease
   playerActions(p, dt);
+  updateEcho(p, dt);   // §30 spirit clone (no-op without the 'echo' rule)
 
   // orbit orbs
   if (p.buffs.orbit) {
@@ -482,7 +785,7 @@ const ultReady = (p = G.player) => (p.ult || 0) >= 100;
 function skillSlotState(p, slot) {
   const action = SLOT_ACTION[slot], glyph = typeof IN !== 'undefined' ? IN.glyph(action) : '';
   if (slot === 'pot') return { slot, action, glyph, potions: p.potions, max: MAX_POTIONS, cd: Math.max(0, (p.potT || 0) - G.t), unavailable: p.dead };
-  if (slot === 'lmb') { const w = item('weapon', p.gear.weapon); return { slot, action, glyph, id: null, name: w.basic.name, element: w.element, cd: Math.max(0, p.atkT), cdFrac: 0, unavailable: !!(p.dash || p.rootT > 0 || castActive(p)) }; }
+  if (slot === 'lmb') { const w = weaponOf(p); return { slot, action, glyph, id: null, name: w.basic.name, element: w.element, cd: Math.max(0, p.atkT), cdFrac: 0, unavailable: !!(p.dash || p.rootT > 0 || castActive(p)) }; }
   const id = slotSkill(p, slot), s = id && SKILLS[id];
   if (!s) return { slot, action, glyph, id: null };
   const ult = slot === 'r', cd = Math.max(0, p.cds[id] || 0), max = p.cdm[id] || s.cd;
@@ -574,7 +877,7 @@ function hurtPlayer(dmg, srcX, srcY, el = 'slash', o) {
   const r = (p.res && p.res[el]) || 0;
   let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1) * (typeof damageTakenMul === 'function' ? damageTakenMul() : 1);
   if (o && o.boss) d = Math.min(d, p.maxHp * (typeof bossHitCap === 'function' ? bossHitCap() : 0.45));
-  p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2;
+  p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2; combatPing(p);
   text(p.x, p.y, p.z + 3, Math.round(d), '#ff5a7a');
   shake(4); sfx('hurt');
   burst(p.x, p.y, p.z + 1.2, 8, ['#ff5a7a', '#ffffff'], 2);
@@ -589,55 +892,106 @@ function hurtPlayer(dmg, srcX, srcY, el = 'slash', o) {
 function damageEnemy(e, base, o = {}) {
   if (e.dead || e.spawnT > 0 || e.under) return false;
   const p = G.player, c = o.cast !== undefined ? o.cast : CAST;
+  // §30 spirit clone replays (cast ctx src 'echo'): retyped (c.el, never an explicit o.el), no MP, half ult charge,
+  // no on-hit EFFECTS, no skill ranks, half particles and stagger x k, hitlag target-only <= 2
+  const echo = !!(c && (c.src === 'echo' || (c.ctx && c.ctx.src === 'echo')));
   // damage type: explicit > the skill's element > the weapon's (sword slash, staff arcane, bow pierce); burn ticks are fire
-  const el = o.el || (o.dot ? 'fire' : c ? c.el : item('weapon', p.gear.weapon).element) || 'slash';
+  const el = (echo && !o.dot ? c.el : o.el) || (o.dot ? 'fire' : c ? c.el : item('weapon', p.gear.weapon).element) || 'slash';
   const sk = c && c.skill ? c.skill : null;   // a skill cast (basic attacks run with c.basic, burn ticks with o.dot)
   // one additive sum: gear damage % (+ skill damage % and the element's gem amplification for skill hits)
   // skill rank (+6 %/rank above 1) joins the same additive sum; modifier ctx.dmg multiplies (numbers only)
   const cx = c && c.ctx;
-  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (sk ? p.skillDmg + elementAmp(p, el) + skillRankBonus(p, sk) : 0)) * buffMul(p) * (cx ? cx.dmg : 1) * (p.dreadT > 0 ? 0.85 : 1);
+  // v2 gear: + the element's damage % (implicits, prefixes, ring boons), the amulet's ultimate damage on R hits and its
+  // skill damage while the charge bar is full — all inside the same additive sum
+  const S = p.sum || {}, ultHit = c && c.slot === 'r';
+  let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (S[el + 'Dmg'] || 0) + (ultHit ? S.ultDmg || 0 : 0)
+    + (sk ? p.skillDmg + elementAmp(p, el) + skillRankBonus(p, sk) + (p.ult >= 100 ? S.skillDmgFull || 0 : 0) : 0)) * buffMul(p) * (cx ? cx.dmg : 1) * (p.dreadT > 0 ? 0.85 : 1);
+  if (!e.dummy) combatPing(p);
   const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
   dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
-  const st = o.stagger != null ? o.stagger : cx ? cx.stagger || 0 : sk && SKILLS[sk] ? SKILLS[sk].stagger || 0 : 0;
+  let st = o.stagger != null ? o.stagger : cx ? cx.stagger || 0 : sk && SKILLS[sk] ? SKILLS[sk].stagger || 0 : 0;
+  if (echo) st *= ECHO.k;
+  // +stagger from gear: heavy-strike implicits (on hits that already stagger), holy hits (Halo Hoop), weapon skills (Warrior ring)
+  if (!o.dot) st += (st > 0 ? S.stagger || 0 : 0) + (el === 'holy' ? S.holyStagger || 0 : 0) + (sk && c.slot && 'qer'.includes(c.slot) ? S.weaponStagger || 0 : 0);
+  let broke = false;   // hitlag: a boss BREAK is the 8-step global freeze
   if (st) {   // the boss stagger bar (hud.js): fills with heavy hits, BREAK flash when full, then empties
     // per-boss staggerMax (bosses.js) rescales the points so the bar's 0..STAGGER_CAP fraction stays right
     e.stagger = (e.stagger || 0) + st * (e.staggerCap ? STAGGER_CAP / e.staggerCap : 1);
-    if (e.boss && e.stagger >= STAGGER_CAP) { e.stagger = 0; e.breakT = G.t; if (typeof bossBreak === 'function') bossBreak(e); }
+    if (e.boss && e.stagger >= STAGGER_CAP) { e.stagger = 0; e.breakT = G.t; broke = true; if (typeof bossBreak === 'function') bossBreak(e); }
     else if (!e.boss) partsStagger(e, st);
   }
   if (e.parts && e.parts.length || e.mods) dmg = partsHurt(e, dmg, o);   // shield-front, sleepers waking, elite shields
-  let crit = Math.random() < p.crit;
-  if (p.buffs.veil && !o.dot) { crit = true; delete p.buffs.veil; }
+  let crit = Math.random() < Math.min(capsT().crit, p.crit + (p.critR && p.critR.until > G.t ? p.critR.v : 0));
+  if (p.buffs.veil && !o.dot && !echo) { crit = true; delete p.buffs.veil; }
   if (crit) dmg *= 1 + p.critDmg;
   dmg *= frand(0.9, 1.1);
+  if (e.boss && typeof bossClampDmg === 'function') { dmg = bossClampDmg(e, dmg); if (!(dmg > 0)) return false; }   // §26.1 boss bars (bosses.js): clamp at the bar's end, invulnerable between bars
   if (e.dummy) { e.hp = e.maxHp; }
   else e.hp -= dmg;
-  e.flash = 0.1;
+  // hit power r = this hit's share of the bar it lands on (a boss: the current phase bar, bosses.js bossBars §26.1)
+  const hb = e.boss && typeof bossBars === 'function' ? bossBars(e) : null;
+  const r = clamp(dmg / ((hb && hb.max > 0 ? hb.max : e.maxHp) || 1), 0, 1);
+  e.flash = typeof flashReduceOn === 'function' && flashReduceOn() ? 0.1 : 0.1 + 0.1 * r;   // flash length by r
   if (!o.dot) G.lastHit = e;
   // §15.3 resource rhythm: basic attacks (CAST null) build 8 MP per hit; all damage but the ultimate's own feeds the charge
-  if ((!c || c.basic) && !o.dot) basicMpGain(p, c);
-  if (eff < 1 && !(c && c.slot === 'r') && p.ult < 100) p.ult = Math.min(100, p.ult + ultGain(p, base * (1 - eff), o.reaction));
+  if ((!c || c.basic) && !o.dot && !echo) basicMpGain(p, c);
+  if (eff < 1 && !(c && c.slot === 'r') && p.ult < 100) p.ult = Math.min(100, p.ult + ultGain(p, base * (1 - eff) * (echo && cx ? cx.dmg : 1), o.reaction) * (echo ? 0.5 : 1));   // an echo hit charges at 50 % of its own (k-scaled) base
   // skill ranks: a cast counts once, on its first hit on a real enemy (training dummies don't rank skills)
-  if (sk && c.slot && !c.hit && !o.dot && !e.dummy) { c.hit = true; addSkillHit(p, sk); }
+  if (sk && c.slot && !c.hit && !o.dot && !e.dummy && !echo) { c.hit = true; addSkillHit(p, sk); }
   if (cx && cx.onHit.length) for (const fn of cx.onHit) fn(e, dmg, o);
   // numbers coloured by damage type; WEAK big + yellow, RESIST grey, IMMUNE spelled out
   if (eff >= 1) text(e.x, e.y, e.z + e.hgt, 'IMMUNE', '#9a92b0');
   else dmgText(e.x, e.y, e.z + e.hgt, Math.round(dmg) + (crit ? '!' : ''), res < 0 ? '#ffe36a' : res > 0 ? '#a7a3b8' : EL_COL[el] || '#ffffff', crit || res < 0,
-    { e, v: dmg, kind: res < 0 ? 'weak' : crit ? 'crit' : res > 0 ? 'resist' : 'normal' });
+    { e, v: dmg, r, kind: res < 0 ? 'weak' : crit ? 'crit' : res > 0 ? 'resist' : 'normal' });
   if (res && !e.dummy) discoverRes(e, el, res);
-  const fxx = o.fx != null ? o.fx : p.x, fyy = o.fy != null ? o.fy : p.y;
+  const src = echo && c.caster ? c.caster : p, fxx = o.fx != null ? o.fx : src.x, fyy = o.fy != null ? o.fy : src.y;   // knockback away from the spirit on its hits
+  // tumble (R1): a big non-lethal hit (r >= 0.3) on a non-boss, non-swarm enemy: knockback x1.5, 0.3 s stun and a hop
+  // (e.hopZ: a DRAW offset integrated in updateEnemies; e.z is never written)
+  const swarmM = e.swarm && e.knockK != null, tumble = !o.dot && !e.boss && !e.dummy && !swarmM && r >= 0.3 && e.hp > 0;
   if (o.knock && !e.boss && !e.dummy) {
     const d = dist(fxx, fyy, e.x, e.y) || 1;
     const kk = e.knockK != null ? e.knockK : 1;   // swarm members barely budge (parts.js), so a cleave keeps them together
-    e.kx += (e.x - fxx) / d * o.knock * 9 * kk; e.ky += (e.y - fyy) / d * o.knock * 9 * kk;
+    const kv = o.knock * 9 * kk * (0.7 + 0.6 * r) * (tumble ? 1.5 : 1);   // knockback by r
+    e.kx += (e.x - fxx) / d * kv; e.ky += (e.y - fyy) / d * kv;
   }
+  if (tumble) { e.stunT = Math.max(e.stunT, 0.3); e.hopV = 2.5; e.hopZ = Math.max(e.hopZ || 0, 0.001); }
   if (o.stun) e.stunT = Math.max(e.stunT, o.stun * (cx ? cx.stun : 1) * (e.boss ? 0.25 : 1));
   if (o.freeze) e.frozen = o.stun;
   if (o.slow) e.slowT = Math.max(e.slowT, o.slow * 2 * (cx ? cx.slow : 1));
-  if (o.burn) { e.burnT = o.burn * (cx ? cx.burn : 1); e.burnTick = 0.5; e.burnCast = c; }
-  if (!o.dot) { burst(e.x, e.y, e.z + e.hgt * 0.6, 5, ['#ffffff', e.blood || '#c7a8ff'], 2.5); sfx('hit'); }
-  if (e.hp <= 0) killEnemy(e);
+  if (o.burn && !(echo && e.burnT > 0 && e.burnCast && e.burnCast.src !== 'echo')) { e.burnT = o.burn * (cx ? cx.burn : 1); e.burnTick = 0.5; e.burnCast = c; }   // an echo Burn never overwrites the hero's own
+  const A = HITAGG;
+  if (!o.dot) {
+    // hit particles 5 + 8r (max 12); inside a cast at most 24 in all, 2 per target beyond the 4th
+    let np = Math.min(12, Math.round(5 + 8 * r)); if (echo) np = Math.round(np / 2);
+    if (A) { np = Math.max(0, Math.min(A.n < 4 ? np : 2, 24 - A.parts)); A.parts += np; A.n++; }
+    if (np) burst(e.x, e.y, e.z + e.hgt * 0.6, np, ['#ffffff', e.blood || '#c7a8ff'], 2.5);
+    sfx('hit', null, { pitch: clamp(-100 * r * 6, -600, 0) });   // heavier = lower
+  }
+  if (!o.dot && eff < 1 && !e.dead && !echo) emitEffects('hit', { e, el, dmg, o, cast: c, crit });
+  if (!o.dot && !e.dead) hitlag(e, r, c, crit, broke, o, A, echo);
+  if (e.hp <= 0 && !e.dead) killEnemy(e, o.dot ? 0 : dmg, o);
   return true;
+}
+// the hitlag of one hit (R2): target-only freeze always, a global freeze request by the table (per cast via HITAGG)
+function hitlag(e, r, c, crit, broke, o, A, echo) {
+  const sk = c && c.skill, ult = !!(c && c.slot === 'r');
+  const w = (sk && SKILLS[sk] && SKILLS[sk].weight) || (ult ? 2 : 1);   // skill weight: basic 1, heavy 1.5, ultimate 2
+  const mode = hitlagMode();
+  const ft = mode === 'off' || echo ? 2 : clamp(Math.round((2 + 6 * r) * w), 2, 8);
+  e.hitFreeze = Math.max(e.hitFreeze || 0, ft);
+  if (echo) return;   // a §30 echo hit: target-only, 2 steps, never a global freeze (nor a budget fold-in)
+  let fg = 0;   // dummies and a piercing shot's 2nd+ target: target-only
+  if (!e.dummy && !o.nofg) {
+    if (crit) fg = 3;
+    if (e.hp <= 0 && !e.boss) fg = Math.max(fg, 3);
+    if (r >= 0.25) fg = Math.max(fg, 4);
+    if (r >= 0.5 || (ult && !c.ultFg)) { fg = Math.max(fg, 6); if (ult) c.ultFg = true; }   // the ultimate row: once per cast
+    if (broke) fg = 8;
+  }
+  if (A) { if (A.hit.indexOf(e) < 0) A.hit.push(e); if (fg > A.fg) A.fg = fg; if (r > A.r) A.r = r; return; }
+  if (o.nofg) return;
+  if (fg > 0 && hitstop(fg) < 0) e.hitFreeze = Math.max(e.hitFreeze, fg);   // over budget: target-only
+  shake(Math.min(6, 1.5 + 4 * r));   // one shake per cast, by r
 }
 // the first weak/resist hit on an enemy type pops a nameplate; from then on its icons show by its HP bar (saved)
 const sighting = type => G.seen[type] || (G.seen[type] = { kills: 0, res: {} });
@@ -649,13 +1003,15 @@ function discoverRes(e, el, res) {
 }
 function hitArea(x, y, r, dmg, o = {}) {
   let n = 0; r *= castR();
+  const A = aggBegin();   // one global freeze + shake per cast (aggEnd)
   for (const e of G.enemies.slice()) if (!e.dead && dist(x, y, e.x, e.y) < r + e.r) { if (damageEnemy(e, dmg, Object.assign({ fx: x, fy: y }, o))) n++; }
-  if (n) shake(1.5);
+  aggEnd(A);
   return n;
 }
 function hitCone(x, y, a, arc, r, dmg, o = {}) {
   let n = 0; r *= castR();
   if (typeof IN !== 'undefined' && IN.assist()) arc *= 1.15;   // melee cones widen 15 % on pad / touch
+  const A = aggBegin();
   for (const e of G.enemies.slice()) {
     if (e.dead) continue;
     const d = dist(x, y, e.x, e.y);
@@ -663,18 +1019,20 @@ function hitCone(x, y, a, arc, r, dmg, o = {}) {
     if (d > e.r && Math.abs(angDiff(a, Math.atan2(e.y - y, e.x - x))) > arc / 2 + Math.atan2(e.r, d)) continue;
     if (damageEnemy(e, dmg, o)) n++;
   }
-  if (n) { shake(1.5); hitstop(0.035); }
+  aggEnd(A);   // the flat 0.035 s melee hitstop is gone: hitlag() scales it by r (R2)
   return n;
 }
 function hitLine(x, y, a, len, w, dmg, o = {}) {
   w *= castR();
-  const ex = x + Math.cos(a) * len, ey = y + Math.sin(a) * len;
+  const ex = x + Math.cos(a) * len, ey = y + Math.sin(a) * len, A = aggBegin();
   for (const e of G.enemies.slice()) if (!e.dead && segDist(e.x, e.y, x, y, ex, ey) < w + e.r) damageEnemy(e, dmg, o);
+  aggEnd(A);
 }
 
 // ===== projectiles ===================================================================
 function spawnProj(o) {
   const p = Object.assign({ t: 0, hit: new Set(), pierce: 0, friendly: true, cast: CAST }, o);
+  const hero = G.player; if (p.friendly && hero && hero.sum && hero.sum.pierce && p.pierce < 99) p.pierce += hero.sum.pierce;   // +N pierce (bow implicits, ring boon)
   // 6° projectile magnetism on pad / touch (never mouse)
   if (p.friendly && typeof IN !== 'undefined' && IN.assist() && typeof aimAssistCone === 'function' && aimAssistCone() > 0) {
     const tgt = autoTarget(G.player, (o.speed || 10) * (o.life || 1), [Math.cos(o.ang), Math.sin(o.ang)], 6 * Math.PI / 180);
@@ -701,7 +1059,7 @@ function updateProjs(dt) {
         if (e.dead || e.spawnT > 0 || p.hit.has(e)) continue;
         if (dist(p.x, p.y, e.x, e.y) < p.r + e.r) {
           p.hit.add(e);
-          damageEnemy(e, p.dmg, { knock: p.knock || 0.12, slow: p.slow, burn: p.burn, fx: p.x - p.vx, fy: p.y - p.vy, cast: p.cast });
+          damageEnemy(e, p.dmg, { knock: p.knock || 0.12, slow: p.slow, burn: p.burn, fx: p.x - p.vx, fy: p.y - p.vy, cast: p.cast, nofg: p.hit.size > 1 });   // pierce: global freeze on the first target only
           if (p.pierce-- <= 0) { p.dead = true; if (p.explode) explodeProj(p); break; }
         }
       }
@@ -756,7 +1114,7 @@ const STAGGER_CAP = 12, STAGGER_DECAY = 1.2;   // boss stagger bar: heavy hits a
 // the bare instance (no parts): swarm members and twins are made with this, then initParts()
 function spawnEnemyRaw(type, x, y, spawnT = 0.9) {
   const d = ENEMY[type], dummy = d.ai === 'dummy', boss = d.ai === 'boss', lvl = dummy ? 1 : enemyLevel(type), hp = dummy ? d.hp : Math.round(d.hp * enemyHpMul(lvl));
-  const e = { type, def: d, x, y, z: 0, r: d.r || 0.4, hp, maxHp: hp, lvl, dm: dummy ? 1 : enemyDmgMul(lvl), el: d.element || 'slash', res: d.res || {}, tags: d.tags || [], hgt: d.hgt || 3, blood: d.blood || '#c7a8ff', kx: 0, ky: 0, flash: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss, dummy, parts: [], acts: [], pp: {}, pcd: {} };
+  const e = { type, def: d, x, y, z: 0, r: d.r || 0.4, hp, maxHp: hp, lvl, dm: dummy ? 1 : enemyDmgMul(lvl), el: d.element || 'slash', res: d.res || {}, tags: d.tags || [], hgt: d.hgt || 3, blood: d.blood || '#c7a8ff', kx: 0, ky: 0, flash: 0, hitFreeze: 0, hopZ: 0, hopV: 0, stunT: 0, slowT: 0, burnT: 0, burnTick: 0, state: 'chase', st: 0, cd: rand(0.5, 1.5), spawnT, face: 1, anim: Math.random() * 6, boss, dummy, parts: [], acts: [], pp: {}, pcd: {} };
   if (SPAWN_TRIG) e.trig = SPAWN_TRIG;
   if (G.arena && !G.arena.done && G.arena.map === (G.map && G.map.id)) e.arena = G.arena.id;
   G.enemies.push(e);
@@ -774,19 +1132,91 @@ function spawnEnemy(type, x, y, spawnT = 0.9, o = {}) {
   if (o.elite && !e.dummy) makeElite(e, o.elite === true ? null : o.elite);
   return e;
 }
-function killEnemy(e) {
+// dmg / o = the killing hit (damageEnemy); 0 / {} for a DoT tick or a scripted kill (clear_enemies): the body slumps
+function killEnemy(e, dmg = 0, o = {}) {
   e.dead = true; sfx('die');
   if (e.boss && typeof AUDIO !== 'undefined') AUDIO.onBossKilled(e);   // victory stinger, the boss song bows out
   const was = SPAWN_TRIG; SPAWN_TRIG = e.trig || null;
   const counts = e.dummy || partsDeath(e);   // split / zone-on-death; a swarm or twin counts once, on its last member
   SPAWN_TRIG = was;
   if (counts && !e.noXp) onEnemyKilled(e);   // XP + loot (items.js)
+  if (counts && !e.dummy) emitEffects('kill', { e });
   if (counts) { G.kills[e.type] = (G.kills[e.type] || 0) + 1; G.kills.any = (G.kills.any || 0) + 1; if (!e.dummy) sighting(e.type).kills++; }
-  burst(e.x, e.y, e.z + e.hgt * 0.5, e.boss ? 120 : 24, [e.blood, '#ffffff', '#ffb0e0'], e.boss ? 7 : 3.5);
+  // R1 death fling: a corpse record carries the body (and 16 of the 24 motes, or a boss's 3 staged bursts of 40);
+  // the rest bursts here now. Loot, XP, counters and triggers above stay immediate (e.dead is already true).
+  const cp = spawnCorpse(e, dmg, o);
+  burst(e.x, e.y, e.z + e.hgt * 0.5, e.boss ? (cp ? 40 : 120) : cp ? 8 : 24, [e.blood, '#ffffff', '#ffb0e0'], e.boss ? 7 : 3.5);
   fx({ type: 'ring', x: e.x, y: e.y, r: e.boss ? 4 : 1.2, col: e.blood, life: 0.4 });
   // spirit motes drift up toward the player — a little healing
-  if (!e.boss) delay(0.2, () => { healPlayer(G.player, 14); G.player.mp = Math.min(G.player.maxMp, G.player.mp + 10); });
-  if (e.boss) { shake(14); hitstop(0.25); G.slowmo = 1.4; G.shrink = null; }
+  if (!e.boss) delay(0.2, () => { const q = G.player; healPlayer(q, 14 * (1 + ((q.sum && q.sum.killHeal) || 0))); q.mp = Math.min(q.maxMp, q.mp + 10); });   // belt killHeal boon
+  if (e.boss) { shake(14); hitstop(15, true); G.slowmo = 1.4; G.shrink = null; }   // 15 steps = 0.25 s real (main.js counts it before slow-mo)
+}
+
+// ===== corpses: the death fling (DESIGN §27, meeting R1) ===========================================================
+// Not a ragdoll: a pooled record per body (cap 8 phone / 12 desktop; full -> the oldest dissolves now). Never a
+// nameplate, light or hit target (it is not in G.enemies). Pixel sprites are never rotated (render.js drawCorpse).
+//   fling : arcs away from the hit (speed 2.5 + 5r t/s, vz 3 + 5r, grav 14), bounces once (vz x -0.35, v x 0.5, squash
+//           0.3 for 0.12 s), death frames over 0.55 s, then 16 motes and a 0.25 s fade. Flying enemies: vz 1 from their hover.
+//   slump : DoT / scripted kills and r < 0.08: in place, squash 0.25, 0.45 s.
+//   boss  : no fling: a death pose for 1.2 s with bursts of 40 at 0 / 0.5 / 1.0 s, then a 0.4 s dissolve.
+// Swarm members get no record: a squash-pop ghost (a 'ghost' effect with sq) plus today's burst.
+// G.corpses holds the live records; c.e keeps the dead enemy object for its look (type, face, blood, elite).
+const CORPSE = { cap: (typeof PHONE !== 'undefined' && PHONE) ? 8 : 12, pool: [] };
+for (let i = 0; i < CORPSE.cap; i++) CORPSE.pool.push({ kind: 'corpse', key: 0, e: null, img: null, sc: 1, art: null, x: 0, y: 0, z: 0, gz: 0, vx: 0, vy: 0, vz: 0, face: 1, t: 0, life: 0, fade: 0, sq: 0, sqT: 0, bounced: false, mode: '', grav: 14, bursts: 0 });
+function corpseBurst(c, n) { const e = c.e; burst(c.x, c.y, c.gz + c.z + e.hgt * 0.3, n, [e.blood, '#ffffff', '#ffb0e0'], c.mode === 'boss' ? 7 : 3); }
+function resetCorpses() { for (const c of G.corpses) { c.e = null; c.img = null; CORPSE.pool.push(c); } G.corpses.length = 0; }
+function spawnCorpse(e, dmg, o) {
+  if (e.dummy || e.under || e.mimic) return null;
+  if (e.swarm && e.knockK != null) {   // swarm member: squash-pop, no record
+    const L = typeof corpseLook === 'function' ? corpseLook(e) : null;
+    if (L && L.img) fx({ type: 'ghost', x: e.x, y: e.y, z: e.z + L.hover, spr: L.img, sc: L.sc, col: e.blood, life: 0.16, sq: true });
+    return null;
+  }
+  let c = CORPSE.pool.pop();
+  if (!c) {   // full: the oldest non-boss body dissolves now (its landing motes included)
+    let i = 0; while (i < G.corpses.length - 1 && G.corpses[i].mode === 'boss') i++;
+    c = G.corpses[i]; G.corpses.splice(i, 1);
+    if (!c.bursts) corpseBurst(c, c.mode === 'boss' ? 40 : 16);
+  }
+  const r = clamp(dmg / (e.maxHp || 1), 0, 1), L = typeof corpseLook === 'function' ? corpseLook(e) : null;
+  const fly = e.tags && e.tags.indexOf('flying') >= 0;
+  c.e = e; c.img = L ? L.img : null; c.sc = L ? L.sc : 1; c.art = L ? L.art : null; c.fly = L ? L.hover : 0;
+  c.x = e.x; c.y = e.y; c.gz = e.z; c.z = 0; c.vx = c.vy = c.vz = 0; c.t = 0; c.sq = 0; c.sqT = 0; c.bounced = false; c.bursts = 0; c.grav = 14;
+  c.face = e.face || 1;
+  if (e.boss) { c.mode = 'boss'; c.life = 1.2; c.fade = 0.4; c.bursts = 1; }   // burst #1 is killEnemy's own
+  else if (o.dot || r < 0.08) { c.mode = 'slump'; c.life = 0.45; c.fade = 0.25; c.sq = 0.25; c.sqT = 0.12; if (fly) { c.z = c.fly; c.vz = 0; c.bounced = false; } }
+  else {
+    const p = G.player, fx0 = o.fx != null ? o.fx : p.x, fy0 = o.fy != null ? o.fy : p.y, d = dist(fx0, fy0, e.x, e.y) || 1;
+    const dx = (e.x - fx0) / d, dy = (e.y - fy0) / d, sp = 2.5 + 5 * r;
+    c.mode = 'fling'; c.life = 0.55; c.fade = 0.25;
+    c.vx = dx * sp; c.vy = dy * sp; c.vz = fly ? 1 : 3 + 5 * r; if (fly) c.z = c.fly;
+    const sx = dx - dy;   // iso screen x of the fling direction: the body faces back toward the hit
+    if (Math.abs(sx) > 0.05) c.face = sx > 0 ? -1 : 1;
+  }
+  G.corpses.push(c);
+  return c;
+}
+// dt = the game step (a global hitlag freeze holds the body too); constant work per record, no allocation
+function updateCorpses(dt) {
+  const L = G.corpses; let j = 0;
+  for (let i = 0; i < L.length; i++) {
+    const c = L[i];
+    c.t += dt; if (c.sqT > 0) c.sqT -= dt;
+    if (c.mode === 'fling' || (c.mode === 'slump' && c.z > 0)) {
+      c.x += c.vx * dt; c.y += c.vy * dt; const k = Math.pow(0.002, dt); c.vx *= k; c.vy *= k;
+      c.vz -= c.grav * dt; c.z += c.vz * dt;
+      if (c.z < 0) {
+        c.z = 0;
+        if (!c.bounced) { c.bounced = true; c.vz *= -0.35; c.vx *= 0.5; c.vy *= 0.5; c.sq = 0.3; c.sqT = 0.12; }
+        else { c.vz = 0; c.vx *= 0.5; c.vy *= 0.5; }
+      }
+    }
+    if (c.mode === 'boss') { if (c.bursts < 3 && c.t >= c.bursts * 0.5) { c.bursts++; corpseBurst(c, 40); } }
+    else if (!c.bursts && c.t >= c.life) { c.bursts = 1; corpseBurst(c, 16); }   // the other 16 motes, at the landing point
+    if (c.t < c.life + c.fade) L[j++] = c;
+    else { c.e = null; c.img = null; CORPSE.pool.push(c); }
+  }
+  L.length = j;
 }
 const enemyTimeScale = () => G.player.buffs.dreamveil ? 0.35 : 1;
 
@@ -853,6 +1283,7 @@ function updateEnemies(dt) {
   if (typeof updateArena === 'function') updateArena(dt);
   enemySleepPass();
   cullFar();
+  hitlagBudgetTick(); updateCorpses(dt);
   for (const e of G.enemies) {
     if (e.dead) continue;
     if (e.dormant) { enemyHeartbeat(e, dt); continue; }
@@ -860,7 +1291,14 @@ function updateEnemies(dt) {
     e.flash -= dt; e.anim += dt;
     if (e.stagger > 0) e.stagger = Math.max(0, e.stagger - dt * STAGGER_DECAY);
     if (e.spawnT > 0) { e.spawnT -= dt; continue; }
+    // target-only hitlag (R2): counted in steps (unscaled), skips AI / move / knockback; render shows the hit frame.
+    // A boss only shows it: its AI keeps running (boss crowd control is already quartered, e.g. stun x0.25).
+    if (e.hitFreeze > 0) { e.hitFreeze--; if (!e.boss) continue; }
     if (e.dummy) continue;
+    if (e.hopZ > 0) {   // tumble hop: a draw offset only (render.js), never e.z
+      e.hopV -= 12 * dt; e.hopZ += e.hopV * dt;
+      if (e.hopZ <= 0) { e.hopZ = 0; e.hopV = 0; e.squash = 0.3; }
+    }
     const edt = dt * ts * (e.slowT > 0 ? 0.55 : 1);
     e.slowT -= dt;
     if (e.burnT > 0) { e.burnT -= dt; e.burnTick -= dt; if (e.burnTick <= 0) { e.burnTick = 0.5; damageEnemy(e, 14, { dot: true, cast: e.burnCast || null }); if (Math.random() < 0.5) burst(e.x, e.y, e.z + 1, 2, ['#ff9a4a', '#ffd27a'], 1); } if (e.dead) continue; }
@@ -999,6 +1437,74 @@ function startTriggers() {
   }
   OBJ_REPLAY = null;
   setObjective();   // death / re-entry: the tracker comes from the saved objective log, not the cards' array order
+  openingOnEnter(m);
+}
+// ===== §28 the opening: a bare start, the HUD one noun at a time, Pip's light ===================================================
+// G.prog.secrets.opening = 'bare' marks a game that STARTED bare (set when a bare level-1 hero first enters the world's start map
+// with nothing settled there: New Dream). Saves from before §28 never carry it, so they keep the full HUD and every opening card
+// they settled (the opening cards' actions are also guarded by state: a filled slot never gets a pickup). Only that game's HUD
+// fades in per noun; the pieces it has shown are saved as G.prog.secrets['hud:<piece>'].
+// A bare hero dropped into a LATER map by a dev URL (?map=, ?playtest) gets the four first-kit Commons instead.
+function openingOnEnter(m) {
+  const p = G.player, S = G.prog.secrets || (G.prog.secrets = {});
+  if (!p || !G.world) return;
+  if (!S.opening && isBare(p) && p.level === 1 && m.id === G.world.start && !(G.prog.trig[m.id] || []).length) S.opening = 'bare';
+  else if (isBare(p) && m.id !== G.world.start && !S.opening) { for (const k of SLOTS) p.equip[k] = firstKitPiece(k); recalcStats(p, true); }
+  if (S.opening === 'bare' && m.id !== G.world.start) hudNoun('all');   // leaving the Vale: whatever the opening did not show, shows now
+  if (!G.pip || G.pip.map !== m.id) G.pip = { map: m.id, x: p.x + PIP.ox, y: p.y + PIP.oy, z: p.z + PIP.oz, goal: null };
+}
+// the HUD pieces (hud.js draws each with hudShown(piece) as its alpha): bars (portrait, HP / MP / ST / XP, status row), tracker,
+// map (minimap), lmb q e r f c shift (skill chips), skills (1 2 3), pot. Nouns map to pieces; slot chips also need their skill.
+const HUD_PIECES = ['bars', 'tracker', 'map', 'lmb', 'q', 'e', 'r', 'f', 'c', 'shift', 'skills', 'pot'];
+const HUD_NOUNS = { move: ['bars', 'tracker', 'lmb'], vale: ['map'], weapon: ['q'], dodge: ['shift'], skill: ['e'], ultimate: ['r'],
+  chest: ['f'], head: ['c'], boots: ['shift'], level: ['skills'], potion: ['pot'], all: HUD_PIECES };
+const HUD_FADE = 0.6, HUD_T = {};
+function hudNoun(noun) {
+  if (!openingActive()) return;
+  const S = G.prog.secrets, list = HUD_NOUNS[noun] || [];
+  for (const k of list) if (!S['hud:' + k]) { S['hud:' + k] = 1; if (noun !== 'all') HUD_T[k] = G.t; }   // 'all' (leaving the Vale, L3) is instant
+}
+// 0..1: the piece's fade-in (a piece shown in an earlier session is simply on)
+function hudShown(piece) {
+  if (!openingActive() || G.state === 'title') return 1;
+  if (!G.prog.secrets['hud:' + piece]) return 0;
+  const t0 = HUD_T[piece]; return t0 == null ? 1 : clamp((G.t - t0) / HUD_FADE, 0, 1);
+}
+// nouns read from play state each step (the ones no single call site owns)
+function hudWatch(p) {
+  if (!openingActive()) return;
+  const T = G.trig, S = G.prog.secrets;
+  if (p.equip.weapon && !S['hud:q']) hudNoun('weapon');
+  if (p.equip.chest && !S['hud:f']) hudNoun('chest');
+  if (p.equip.head && !S['hud:c']) hudNoun('head');
+  if (p.equip.boots && !S['hud:shift']) hudNoun('boots');
+  if (p.equip.weapon && (p.ult || 0) >= ultNeed(p) && !S['hud:r']) hudNoun('ultimate');
+  if (p.level >= 2 && !S['hud:skills']) hudNoun('level');
+  if (p.level >= 3) hudNoun('all');
+  if (p.hp < p.maxHp - 0.5 && T && T.fired.garden_ambush && !S['hud:pot']) hudNoun('potion');
+}
+// Pip (§28): a small warm light parented to the hero (offset up-left, a slow bob). An objective card with x / y sends it drifting
+// up to 2 tiles toward that point for ~1 s, then it returns. No AI, not interactable (the full companion is M7). hud.js draws it;
+// pipLight() is the lights-pass record for render.js (render lane).
+const PIP = { ox: -0.9, oy: 0.3, oz: 3.4, bob: 0.18, lead: 2, leadT: 1, follow: 5 };   // offset: up-left of the hero, head height
+function pipPoint(x, y) { if (G.pip && isFinite(x) && isFinite(y)) G.pip.goal = { x, y, t: G.t }; }
+function updatePip(dt) {
+  const p = G.player, P = G.pip; if (!p || !P) return;
+  let tx = p.x + PIP.ox, ty = p.y + PIP.oy;
+  const g = P.goal;
+  if (g) {
+    const age = G.t - g.t, k = age < PIP.leadT ? Math.sin(Math.min(1, age / PIP.leadT) * Math.PI / 2) : Math.max(0, 1 - (age - PIP.leadT) / 0.6);
+    const dx = g.x - p.x, dy = g.y - p.y, l = Math.hypot(dx, dy) || 1, d = Math.min(PIP.lead, l);
+    tx += dx / l * d * k; ty += dy / l * d * k;
+    if (age > PIP.leadT + 0.6) P.goal = null;
+  }
+  const f = 1 - Math.exp(-dt * PIP.follow);
+  P.x += (tx - P.x) * f; P.y += (ty - P.y) * f;
+  P.z += (p.z + PIP.oz + Math.sin(G.t * 2.2) * PIP.bob - P.z) * f;
+}
+function pipLight() {
+  const P = G.pip; if (!P || !G.player || G.player.dead) return null;
+  return { sx: isoX(P.x, P.y), sy: isoY(P.x, P.y, P.z), r: 40 + 4 * Math.sin(G.t * 3.1), col: '#ffd9a0', a: 0.75 };
 }
 // ===== retries: once-per-save presentation, and the objective from progress (QA m1 / m2) =====================
 // G.prog.once['zone:<map>' | 'dlg:<id>' | 'dlg:<map>:<card>' | 'banner:<map>:<card>'] = 1: zone banners (main.js
@@ -1078,6 +1584,7 @@ function triggerCandidates(m, T) {
 function updateTriggers(dt) {
   const m = G.map, T = G.trig; if (!T) return;
   T.t += dt;
+  updatePip(dt); if (G.player) hudWatch(G.player);
   updateWarp(dt);
   updateDiscovery(m, T);
   let prev = -1;
@@ -1085,6 +1592,7 @@ function updateTriggers(dt) {
     if (i === prev) continue; prev = i;
     const tr = m.triggers[i];
     if (tr.disabled) continue;
+    if (tr.opening && !openingActive()) continue;   // §28 `opening: true`: a bare-start beat; never plays for a save from before §28
     const once = tr.once !== false;
     if (once && T.fired[tr.id]) continue;
     if ((tr.requires || []).some(id => !T.fired[id])) continue;
@@ -1142,7 +1650,9 @@ function runAction(a) {
     case 'banner': { const k = onceKey('banner', a); if (k && onceSeen(k)) break; }
       G.banner = { s: a.title || '', sub: a.sub || '', t: a.boss ? 3.4 : 2.6, max: a.boss ? 3.4 : 2.6, boss: !!a.boss }; if (a.boss) { sfx('roar'); shake(6); } break;
     case 'message': say(a.text || ''); break;
-    case 'objective': recordObjective(a.text); if (!OBJ_REPLAY) setObjective(); break;
+    case 'objective': recordObjective(a.text); if (!OBJ_REPLAY) { setObjective(); if (a.x != null && a.x !== '') pipPoint(+a.x, +a.y); } break;
+    case 'gear': gearAction(a); break;   // §28 a first-kit piece lying in the world (items.js)
+    case 'noun': hudNoun(a.noun); break;   // §28 a HUD piece fades in (game.js hudNoun)
     case 'heal': healPlayer(p, p.maxHp * (+a.pct || 0) / 100); break;
     case 'open_portal': case 'close_portal': {
       const byId = a.id != null && a.id !== '';
@@ -1161,6 +1671,7 @@ function runAction(a) {
     case 'teleport': if (G.world.maps[a.map]) transition(a.map); break;
     case 'checkpoint': { const has = v => v != null && v !== ''; setCheckpoint(has(a.x) ? +a.x : p.x, has(a.y) ? +a.y : p.y, a.text); break; }
     case 'loot': lootAction(a); break;
+    case 'vantage': if (typeof startVantage === 'function') startVantage(a); break;   // §29 G3 the vantage reveal (screens.js)
   }
 }
 // x/y given: scatter around that point; otherwise somewhere on the island away from the player
@@ -1216,6 +1727,39 @@ function spawnPack(a) {
     G.pendingSpawns++;
     delay(0.15 * i, () => { G.pendingSpawns--; const e = tagSpawn(spawnAt(type, cx + Math.cos(ang) * R, cy + Math.sin(ang) * R, 0.4, a.instant, i === 0 ? a.elite : null), src); if (e) e.pack = pk.id; });
   });
+}
+// ===== §29 G3 root ladders + drop-down ledges ===================================================================================
+// startClimb(o): o = a root_ladder object (maps.js). Up: rise along the roots at the foot, then step onto the top; down: step to the
+// lip, then sink down the roots. p.climb = { t, dur, a, b, z0, z1, up } (the hero is rooted and untouchable meanwhile).
+const CLIMB_T = 0.6, FALL_G = 70;
+function startClimb(o) {
+  const p = G.player, m = G.map; if (!p || p.dead || p.climb || p.dash || G.warp || !o || !o.src || !o.src.to) return false;
+  const to = { x: +o.src.to.x, y: +o.src.to.y }, up = (+o.src.h || 0) > 0;
+  p.climb = { t: 0, dur: CLIMB_T, a: { x: o.x, y: o.y }, b: to, z0: tileH(m, o.x, o.y), z1: tileH(m, to.x, to.y), up };
+  p.x = o.x; p.y = o.y; p.z = p.climb.z0; p.fall = null;
+  sfx('pickup');
+  return true;
+}
+function updateClimb(p, dt) {
+  const c = p.climb, foot = c.up ? c.a : c.b;
+  c.t += dt; const k = clamp(c.t / c.dur, 0, 1);
+  p.rootT = Math.max(p.rootT, 0.05); p.invulnT = Math.max(p.invulnT, 0.1); p.moving = true; p.walkT += dt; p.back = c.up;
+  if (c.up) { const kz = clamp(k / 0.8, 0, 1), kx = clamp((k - 0.8) / 0.2, 0, 1); p.z = lerp(c.z0, c.z1, kz * kz * (3 - 2 * kz)); p.x = lerp(foot.x, c.b.x, kx); p.y = lerp(foot.y, c.b.y, kx); }
+  else { const kx = clamp(k / 0.2, 0, 1), kz = clamp((k - 0.2) / 0.8, 0, 1); p.x = lerp(c.a.x, foot.x, kx); p.y = lerp(c.a.y, foot.y, kx); p.z = lerp(c.z0, c.z1, kz * kz * (3 - 2 * kz)); }
+  if (Math.random() < dt * 10) burst(p.x, p.y, p.z + 0.4, 1, ['#8a7a5a', '#c8b090'], 1);
+  if (k >= 1) { p.x = c.b.x; p.y = c.b.y; p.z = tileH(G.map, p.x, p.y); p.climb = null; p.moving = false; }
+}
+// a drop: once the ground is more than 1.6 levels below the hero, gravity takes over (FALL_G levels / s^2; 9 levels ~ 0.5 s)
+function updateFall(p, th, dt) {
+  if (!p.fall && p.z - th > 1.6) p.fall = { vz: 0, from: p.z };
+  if (!p.fall) { p.z = lerp(p.z, th, Math.min(1, dt * 14)); return; }
+  p.fall.vz -= FALL_G * dt; p.z += p.fall.vz * dt; p.invulnT = Math.max(p.invulnT, 0.15);
+  if (p.z <= th) {
+    const h = p.fall.from - th; p.z = th; p.fall = null; p.landT = 0.18; p.rootT = Math.max(p.rootT, 0.12);
+    burst(p.x, p.y, th + 0.1, Math.min(22, 8 + Math.round(h)), ['#c8b090', '#e8dcc0', '#8a7a5a'], 2.4);
+    for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; addPart({ x: p.x + Math.cos(a) * 0.3, y: p.y + Math.sin(a) * 0.3, z: th + 0.1, vx: Math.cos(a) * 2.2, vy: Math.sin(a) * 2.2, vz: 0.4, life: 0.5, t: 0, col: '#e8dcc0', grav: 0.6, size: 2, glow: false }); }
+    shake(Math.min(5, 1.5 + h * 0.25)); sfx('boom');
+  }
 }
 // ===== warps (same map, 0.4 s fade) ===========================================================================
 // startWarp(to, { door }) -> false when the target does not resolve or a warp is already running. G.warp = { t, dur,

@@ -19,7 +19,7 @@ const ROOT = path.join(__dirname, '..');
 // after items.js and js/sfxdata.js after maps.js. js/music.js is appended when index.html does not load it.
 function loadOrder() {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-  const names = [...html.matchAll(/<script\s+src="js\/([a-z0-9_]+)\.js"/g)].map((m) => m[1]);
+  const names = [...html.matchAll(/<script\s+src="js\/([a-z0-9_-]+)\.js"/g)].map((m) => m[1]);
   const insertAfter = (list, after, name) => {
     if (!list.includes(name)) list.splice(list.indexOf(after) + 1, 0, name);
   };
@@ -144,6 +144,7 @@ function main() {
   const DIALOGUE = get('DIALOGUE'), QUESTS = get('QUESTS'), BESTIARY_LORE = get('BESTIARY_LORE');
   const SFX_RECIPES = get('SFX_RECIPES'), WARN_SFX = get('WARN_SFX'), SFX_CAPTIONS = get('SFX_CAPTIONS');
   const MUSIC = get('MUSIC'), MUSIC_PATCHES = get('MUSIC_PATCHES');
+  const WEAPONS = get('WEAPONS'), ARMOUR = get('ARMOUR'), VARIANT_RENAME = get('VARIANT_RENAME'), FAMILY_TIERS = get('FAMILY_TIERS') || {};
 
   const skillIds = new Set(Object.keys(SKILLS || {}));
   const baseIds = new Set(Object.keys(BASES || {}));
@@ -190,12 +191,80 @@ function main() {
   for (const b of Object.values(BASES || {})) {
     const fams = (ITEMS && ITEMS[b.slot]) || [];
     if (!fams.some((f) => f.id === b.family)) fail(F.items, 'base', b.id, `family "${b.family}" in slot "${b.slot}"`);
+    if (b.variant !== b.family || !b.class) fail(F.items, 'base', b.id, `variant "${b.variant}" + class "${b.class}"`);
   }
+  // ---- §23 / §24 variant structure: live rows have 5 FAMILY_TIERS; planned rows are name-only (nothing can drop them);
+  // every pre-v4 rename target exists
+  const variantRows = [];
+  for (const [cls, C] of Object.entries(WEAPONS || {})) for (const [id, v] of Object.entries(C.variants || {})) variantRows.push({ id, v, cls, where: `WEAPONS.${cls}.variants.${id}` });
+  for (const [cls, C] of Object.entries(ARMOUR || {})) for (const [sid, S] of Object.entries(C.suits || {})) {
+    variantRows.push({ id: sid, v: { planned: S.planned }, cls, where: `ARMOUR.${cls}.suits.${sid}`, suit: true });
+    for (const [slot, pc] of Object.entries(S.pieces || {})) if (pc) variantRows.push({ id: pc.id, v: pc, cls, where: `ARMOUR.${cls}.suits.${sid}.pieces.${slot}` });
+  }
+  for (const r of variantRows) {
+    if (r.v.id !== undefined && r.v.id !== r.id) fail(F.data, 'variant', r.where, `id "${r.v.id}"`);
+    if (r.suit) continue;
+    if (r.v.planned) { if (FAMILY_TIERS[r.id] || r.v.q || r.v.basic) fail(F.data, 'planned variant', r.where, 'name-only (no tiers / skills)'); }
+    else if (!FAMILY_TIERS[r.id] || FAMILY_TIERS[r.id].length !== 5) fail(F.items, 'FAMILY_TIERS', r.id, `5 tiers for ${r.where}`);
+  }
+  for (const [from, to] of Object.entries(VARIANT_RENAME || {})) if (!variantRows.some((r) => r.id === to)) fail(F.data, 'VARIANT_RENAME', from, `target "${to}"`);
+  for (const id of Object.keys(FAMILY_TIERS || {})) if (!Object.values(ITEMS).some((l) => l.some((f) => f.id === id))) fail(F.items, 'FAMILY_TIERS', id, 'live family in ITEMS');
 
-  // ---- IMPLICITS and FLAVOR versus base ids (and unique ids for FLAVOR)
+  // ---- IMPLICITS and FLAVOR versus base ids (and unique / trinket base / origin ring ids for FLAVOR)
+  const trinketIds = [...(TRINKET_BASES || []).map((t) => t.id), ...(ORIGIN_RINGS || []).map((o) => o.id)];
   for (const k of Object.keys(IMPLICITS || {})) if (!baseIds.has(k)) fail(F.itemdata, 'IMPLICITS', k, 'base id');
   for (const k of Object.keys(FLAVOR || {})) {
-    if (!baseIds.has(k) && !uniqueList.some((x) => x.id === k)) fail(F.itemdata, 'FLAVOR', k, 'base or unique id');
+    if (!baseIds.has(k) && !uniqueList.some((x) => x.id === k) && !trinketIds.includes(k)) fail(F.itemdata, 'FLAVOR', k, 'base, unique, trinket base or origin ring id');
+  }
+  for (const id of trinketIds) if (!(FLAVOR || {})[id]) fail(F.itemdata, 'trinket', id, 'FLAVOR entry');
+  for (const { id } of uniqueList) if (!(FLAVOR || {})[id]) warn(F.itemdata, 'unique', id, 'FLAVOR entry');
+
+  // ---- §19 v2 item ids: affixes, implicits, boons, trinkets, caps (M3 step 2)
+  const AFFIX_V2 = get('AFFIX_V2') || { prefix: {}, suffix: {} }, SUFFIX_NOUN = get('SUFFIX_NOUN') || {}, STAT_NAME = get('STAT_NAME') || {};
+  const MYTHIC_NAMES = get('MYTHIC_NAMES') || [], CAPS = get('CAPS') || {}, RARITY = get('RARITY') || {};
+  const statKey = (k) => Object.prototype.hasOwnProperty.call(STAT_NAME, k);
+  for (const kind of ['prefix', 'suffix']) for (const [id, rows] of Object.entries(AFFIX_V2[kind] || {})) {
+    if (!statKey(id)) fail(F.itemdata, `affix ${kind}`, id, 'a stat key (items.js STAT_NAME)');
+    if (!Array.isArray(rows) || rows.length !== 3) { fail(F.itemdata, `affix ${kind}`, id, '3 named tiers'); continue; }
+    rows.forEach((r, i) => {
+      if (!r.name || !Array.isArray(r.r) || !(r.r[0] <= r.r[1])) fail(F.itemdata, `affix ${kind}`, `${id}[T${i + 1}]`, 'name + r: [lo, hi]');
+      if (i && rows[i - 1].r && r.r && !(r.r[0] >= rows[i - 1].r[1])) fail(F.itemdata, `affix ${kind}`, `${id}[T${i + 1}]`, 'range above the tier below');
+      if (r.minRarity && !RARITY[r.minRarity]) fail(F.itemdata, `affix ${kind}`, `${id}.minRarity`, r.minRarity);
+    });
+    if (kind === 'suffix' && !SUFFIX_NOUN[id]) fail(F.itemdata, 'affix suffix', id, 'SUFFIX_NOUN entry');
+    if (kind === 'prefix' && (AFFIX_V2.suffix || {})[id]) fail(F.itemdata, 'affix', id, 'prefix OR suffix, not both');
+  }
+  for (const k of Object.keys(SUFFIX_NOUN)) if (!(AFFIX_V2.suffix || {})[k]) fail(F.itemdata, 'SUFFIX_NOUN', k, 'AFFIX_V2 suffix id');
+  if (MYTHIC_NAMES.length !== 30 || new Set(MYTHIC_NAMES).size !== 30) fail(F.itemdata, 'MYTHIC_NAMES', String(MYTHIC_NAMES.length), '30 distinct names');
+  for (const [id, im] of Object.entries(IMPLICITS || {})) if (!statKey(im.stat) || typeof im.v !== 'number') fail(F.itemdata, 'implicit', id, `stat key "${im.stat}"`);
+  const trinketRows = [...(TRINKET_BASES || []), ...(TRINKET_UNIQUES || []), ...(WORLD_UNIQUES || [])];
+  for (const t of trinketRows) if (t.implicit && (!statKey(t.implicit.stat) || typeof t.implicit.v !== 'number')) fail(F.itemdata, 'trinket implicit', t.id, `stat key "${t.implicit.stat}"`);
+  for (const t of TRINKET_BASES || []) {
+    if (![1, 2, 3].includes(t.tier) || [1, 16, 32][t.tier - 1] !== t.reqLvl) fail(F.itemdata, 'trinket base', t.id, 'tier 1/2/3 at req 1/16/32');
+    if (t.slot === 'belt' && !(t.implicit && t.implicit.stat === 'potionCharge' && t.implicit.v === 1)) fail(F.itemdata, 'belt', t.id, 'implicit +1 potionCharge');
+  }
+  const trkAll = [...trinketRows.map((t) => t.id), ...(ORIGIN_RINGS || []).map((o) => o.id)], seenTrk = new Set();
+  for (const id of trkAll) { if (seenTrk.has(id) || baseIds.has(id) || (UNIQUES || {})[id]) fail(F.itemdata, 'trinket id', id, 'unique across BASES / UNIQUES / trinket tables'); seenTrk.add(id); }
+  for (const [slot, list] of Object.entries(BOONS || {})) for (const b of list) {
+    if (!b.minor || !b.major || typeof b.text !== 'string') fail(F.itemdata, 'boon', b.id, 'minor + major values and text');
+  }
+  const EFFECT_IMPL = get('typeof EFFECT_IMPL !== "undefined" ? EFFECT_IMPL : null'), EFFECT_BY_ID = get('typeof EFFECT_BY_ID !== "undefined" ? EFFECT_BY_ID : null');
+  if (EFFECT_IMPL && EFFECT_BY_ID) {
+    for (const id of Object.keys(EFFECT_IMPL)) if (!(BOONS && Object.values(BOONS).some((l) => l.some((b) => b.id === id))) && !(ORIGIN_RINGS || []).some((o) => o.boon.id === id)) fail(F.game, 'EFFECT_IMPL', id, 'a BOONS / origin boon id');
+    for (const list of Object.values(BOONS || {})) for (const b of list) { const r = EFFECT_BY_ID[b.id]; if (!r || r.src !== 'trinket') fail(F.game, 'EFFECTS', b.id, "a src:'trinket' row"); }
+    for (const o of ORIGIN_RINGS || []) { const r = EFFECT_BY_ID[o.boon.id]; if (!r || r.src !== 'trinket') fail(F.game, 'EFFECTS', o.boon.id, "a src:'trinket' row"); }
+  } else warn(F.game, 'EFFECTS', 'table', 'game.js did not load in the stub context (boon rows unchecked)');
+  for (const k of ['cdr', 'crit', 'haste', 'gearPower', 'reactionBonus', 'markCap', 'potions', 'trinketResLine', 'trinketResAll', 'heroResMin', 'heroResMax']) if (typeof CAPS[k] !== 'number') fail(F.itemdata, 'CAPS', k, 'a number');
+  // enemy loot pools (enemydata.js `loot`): common_* names must be a LOOT_POOLS key (boss rows carry notes, not pools)
+  const LOOT_POOLS = get('LOOT_POOLS') || {};
+  for (const [id, e] of Object.entries(ENEMY || {})) if (typeof e.loot === 'string' && /^common_/.test(e.loot) && !LOOT_POOLS[e.loot]) fail('js/enemydata.js', 'loot pool', id, e.loot);
+  // world chest markers (level lane contract): loot names a trinket slot, guaranteed names a rarity
+  for (const [mid, m] of Object.entries((WORLD_DATA && WORLD_DATA.maps) || {})) {
+    const walk = (o) => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { if (o.t === 'chest') {
+      if (o.loot !== undefined && !TRINKET_SLOTS.includes(o.loot)) fail(F.world, 'chest loot', `${mid}@${o.x},${o.y}`, `"${o.loot}" (ring | amulet | belt)`);
+      if (o.guaranteed !== undefined && !RARITY[o.guaranteed]) fail(F.world, 'chest guaranteed', `${mid}@${o.x},${o.y}`, `rarity "${o.guaranteed}"`);
+    } for (const v of Object.values(o)) if (v && typeof v === 'object') walk(v); } };
+    walk(m);
   }
   for (const id of baseIds) {
     if (!(IMPLICITS || {})[id]) fail(F.itemdata, 'base', id, 'IMPLICITS entry');
@@ -203,6 +272,16 @@ function main() {
   }
   for (const { id, u } of uniqueList.filter((x) => x.u.base !== undefined)) {
     if (!baseIds.has(u.base)) fail(F.items, 'unique', id, u.base);
+  }
+  // §30 / §19.5: the unique budget is 19 (the 19th is Echo, a weapon legendary); anyWeapon / late uniques need a weapon base
+  // and a level gate; a unique id is unique across UNIQUES and the trinket / world tables
+  const UNIQUE_CAP = 19;
+  if (uniqueList.length > UNIQUE_CAP) fail(F.items, 'unique budget', String(uniqueList.length), `at most ${UNIQUE_CAP} uniques (§30)`);
+  { const seen = new Set(); for (const { id, file } of uniqueList) { if (seen.has(id)) fail(file, 'unique', id, 'unique id across UNIQUES / TRINKET_UNIQUES / WORLD_UNIQUES'); seen.add(id); } }
+  if (UNIQUES && !UNIQUES.echo) fail(F.items, 'unique', 'echo', '§30 Echo (rule id "echo") in UNIQUES');
+  for (const [id, u] of Object.entries(UNIQUES || {})) {
+    if (u.anyWeapon && !(BASES && BASES[u.base] && BASES[u.base].slot === 'weapon')) fail(F.items, 'unique', id, 'anyWeapon needs a weapon base');
+    if (u.late != null && !(u.late >= 1 && u.late <= 40)) fail(F.items, 'unique', id, `late gate level "${u.late}"`);
   }
 
   // ---- boons and uniques that name a slot

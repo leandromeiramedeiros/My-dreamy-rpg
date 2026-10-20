@@ -402,6 +402,7 @@ function renderMapPanel(P) {
       h('div', { class: 'row' }, thumb(def.img()[(o.v || 0) % n], 48, 48), h('b', null, def.label)),
       h('div', { class: 'row' }, h('label', null, 'Position'), numIn(o.x, v => { o.x = def.house ? Math.round(+v) : +v; commit(def.house); }), numIn(o.y, v => { o.y = def.house ? Math.round(+v) : +v; commit(def.house); })),
       n > 1 ? h('div', { class: 'row' }, h('label', null, 'Variant'), Array.from({ length: n }, (_, i) => h('button', { class: 'mini ' + ((o.v || 0) === i ? 'on' : ''), onclick: () => { if (i) o.v = i; else delete o.v; commit(false); renderPanel(); } }, String(i + 1)))) : null,
+      def.warpdoor ? h('div', { class: 'row' }, ['id', 'key', 'label', 'boss'].map(k => fieldEl(o, k, 'text', k === 'boss' ? 'boss (Recommended ilvl)' : k, d, null))) : null,
       def.house ? null : h('div', { class: 'row' }, h('label', null, 'Mirror'), h('input', { type: 'checkbox', checked: !!o.f, onchange: e => { if (e.target.checked) o.f = 1; else delete o.f; commit(false); } })),
       h('div', { class: 'row' }, h('button', { class: 'danger', onclick: () => { d.objects.splice(sel.index, 1); ED.sel = null; commit(def.house); renderPanel(); } }, 'Delete prop')));
   }
@@ -435,7 +436,7 @@ const ACTIONS = {
   spawn_boss: { label: 'Spawn the boss', f: [['x', 'num', 'x'], ['y', 'num', 'y'], ['pick', 'pick']] },
   banner: { label: 'Show big banner', f: [['title', 'text', 'title'], ['sub', 'text', 'subtitle'], ['boss', 'bool', 'boss style']] },
   message: { label: 'Show message', f: [['text', 'text', 'text']] },
-  objective: { label: 'Set objective', f: [['text', 'text', 'text']] },
+  objective: { label: 'Set objective', f: [['text', 'text', 'text'], ['x', 'num', 'Pip points at x'], ['y', 'num', 'y'], ['pick', 'pick']] },   // x/y optional (§28 pipPoint)
   heal: { label: 'Heal player', f: [['pct', 'num', '% of max HP']] },
   open_portal: { label: 'Open portal', f: [['index', 'portal']] },
   close_portal: { label: 'Close portal', f: [['index', 'portal']] },
@@ -444,7 +445,9 @@ const ACTIONS = {
   sound: { label: 'Play sound', f: [['name', 'sound']] },
   teleport: { label: 'Send player to map', f: [['map', 'map']] },
   checkpoint: { label: 'Set checkpoint (respawn here)', f: [['x', 'num', 'x'], ['y', 'num', 'y'], ['pick', 'pick']] },
-  loot: { label: 'Drop loot (room reward)', f: [['count', 'num', '×'], ['rarity', 'rarity', 'at least'], ['x', 'num', 'x'], ['y', 'num', 'y'], ['pick', 'pick']] },
+  loot: { label: 'Drop loot (room reward)', f: [['count', 'num', '×'], ['rarity', 'rarity', 'at least'], ['x', 'num', 'x'], ['y', 'num', 'y'], ['pick', 'pick'], ['item', 'text', 'item / key id'], ['slot', 'text', 'slot'], ['fallback', 'rarity', 'fallback'], ['ilvl', 'num', 'min ilvl']] },
+  gear: { label: 'Lay a first-kit piece (§28)', f: [['item', 'text', 'item base'], ['x', 'num', 'x'], ['y', 'num', 'y'], ['pick', 'pick']] },
+  noun: { label: 'Show a HUD piece (§28)', f: [['noun', 'text', 'noun']] },
   wait: { label: 'Wait before the next action', f: [['seconds', 'num', 'seconds']] },
 };
 function uid(d, base) { let i = 1, id = base; while ((d.triggers || []).some(t => t.id === id)) id = base + (++i); return id; }
@@ -504,6 +507,7 @@ function triggerCard(tr, i, d) {
       h('button', { class: 'mini', onclick: () => { tr.actions.push({ type: 'message', text: '' }); commit(false); renderPanel(); } }, '+ action'),
       h('span', { style: 'flex:1' }),
       h('label', null, h('input', { type: 'checkbox', checked: tr.once === false, onchange: e => { if (e.target.checked) tr.once = false; else delete tr.once; commit(false); } }), ' repeat'),
+      h('label', { title: '§28: plays only in a bare-start game' }, h('input', { type: 'checkbox', checked: !!tr.opening, onchange: e => { if (e.target.checked) tr.opening = true; else delete tr.opening; commit(false); } }), ' opening'),
       h('label', null, h('input', { type: 'checkbox', checked: !!tr.disabled, onchange: e => { if (e.target.checked) tr.disabled = true; else delete tr.disabled; commit(false); renderPanel(); } }), ' disabled')));
   return card;
 }

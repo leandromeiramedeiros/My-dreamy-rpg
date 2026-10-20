@@ -137,6 +137,7 @@ function catmull(pts, step) {
 // collider radius r and default spacing sp (min centre distance to other props, averaged between the two)
 const PROP = {
   tree_round: { r: 0.32, sp: 1.6 }, tree_poplar: { r: 0.32, sp: 1.3 }, tree_blossom: { r: 0.32, sp: 1.8 }, tree_teal: { r: 0.32, sp: 1.5 },
+  tree_oak: { r: 0.34, sp: 1.8 }, tree_birch: { r: 0.26, sp: 1.0 },   // §29 G2 forest broadleaves (js/maps.js OBJ_TYPES)
   tree_dead: { r: 0.3, sp: 1.4 }, bush: { r: 0.2, sp: 0.8 }, rock: { r: 0.28, sp: 0.9 }, rock_dark: { r: 0.28, sp: 0.9 },
   grass: { r: 0, sp: 0.45 }, mushroom: { r: 0, sp: 0.5 }, lantern: { r: 0.12, sp: 2 }, lantern_blue: { r: 0.12, sp: 2 },
   crystal: { r: 0.25, sp: 1 }, crystal_violet: { r: 0.25, sp: 1 }, sign: { r: 0.15, sp: 1 }, shrine: { r: 0.35, sp: 2 }, brazier: { r: 0.3, sp: 2 },
@@ -169,7 +170,10 @@ const COMPAT_ENEMY = { shaman: 'ogre', mossjaw: 'troll', bramblehorn: 'troll' };
 // Builders producing exactly the card format used in js/world.js
 const T = {
   banner: (title, sub, boss) => Object.assign({ type: 'banner', title, sub: sub || '' }, boss ? { boss: true } : {}),
-  objective: text => ({ type: 'objective', text }),
+  // x, y: where Pip points (§28; game.js pipPoint), emitted only when given
+  objective: (text, x, y) => Object.assign({ type: 'objective', text }, x != null ? { x: r2(x), y: r2(y) } : {}),
+  noun: noun => ({ type: 'noun', noun }),   // §28 a HUD piece fades in (game.js hudNoun)
+  gear: (item, x, y, extra) => Object.assign({ type: 'gear', item, x: r2(x), y: r2(y) }, extra || {}),   // §28 a first-kit piece lying in the world (items.js gearAction)
   message: text => ({ type: 'message', text }),
   heal: pct => ({ type: 'heal', pct }),
   wait: seconds => ({ type: 'wait', seconds }),
@@ -220,6 +224,8 @@ const T = {
   enemy(name) { return this.mode === 'future' ? name : (COMPAT_ENEMY[name] || name); },
   dialogue(speaker, lines) { return this.mode === 'future' ? { type: 'dialogue', speaker, lines } : { type: 'message', text: speaker + ': ' + lines.join(' ') }; },
   openGate(id) { return this.mode === 'future' ? { type: 'openGate', id } : { type: 'sound', name: 'portal' }; },
+  // §29 G3 the vantage reveal (screens.js startVantage): the camera eases down-slope, the fog lifts in r tiles, a 2.5 s map cinematic
+  vantage: (id, r, o) => Object.assign({ type: 'vantage', id, r: r || 24 }, o || {}),
   timer: (id, name, seconds, after, actions, requires) => Object.assign({ id, name, when: { type: 'timer', seconds, after } }, requires ? { requires } : {}, { actions }),
 };
 
@@ -242,6 +248,7 @@ class MapGen {
     this.objs = []; this.portals = []; this.triggers = []; this.markers = []; this.notes = [];
     this.sections = []; this.voids = []; this.warps = []; this.anchors = {}; this.pois = []; this.dead = [];
     this.startPos = null; this.sigil = null;
+    this.stacks = []; this.climbs = []; this.drops = []; this.spans = [];   // §29 G3 tall set pieces
     this.type = grid(this.W, this.H, '.'); this.h = grid(this.W, this.H, 0);
     this.land = grid(this.W, this.H, false); this.zone = grid(this.W, this.H, 0);   // zone: ZONE bits below
     this.occ = grid(this.W, this.H, null);
@@ -253,7 +260,7 @@ class MapGen {
   room(id, o) {
     const r = Object.assign({ id, kind: 'clearing', r: 5, lvl: 0, clear: false, walled: false, isolated: false, label: id, shape: 'blob', enemies: false }, o);
     if (r.kind === 'plaza' || r.kind === 'arena') r.shape = r.shape === 'blob' ? 'round' : r.shape;
-    r.ph = this.rng.range(0, 100);
+    r.ph = (r.side ? this.sideRng() : this.rng).range(0, 100);   // side: an add-on room (its own RNG stream: the rest of the map rolls as before)
     this.rooms.push(r); this.roomBy[id] = r; return r;
   }
   // pond: open water disc (fishing). Makes its own land + flat terrace so banks are walkable.
@@ -286,6 +293,46 @@ class MapGen {
   poi(kind, x, y, o = {}) { this.pois.push(Object.assign({ kind, x, y }, o)); }
   bridge(o) { this.bridges.push(Object.assign({ axis: 'x', len: 4, w: 2 }, o)); }
 
+  // ---------------------------- §29 G3 tall set pieces ----------------------------------
+  // stack(id, o): leaning stacked plateaus (world-art minutes §3.1.2). o = { x, y, levels: [4, 9, 14], r: [10, 7, 4.5],
+  //   lean (tiles of centre shift per tile of radius lost, default 0.6), ang (lean direction, rad), spin (rad the lean turns per ring),
+  //   rough (blob radius noise 0..0.3), centres: [[x, y] | null per ring] (explicit ring centres), land: true = ring 0 IS the land
+  //   (void stays void around it; else ring 0 is added as a lobe and the coast grows around it), bare: [ring indices without
+  //   colliding props], floor: [tile type per ring | null] }. Written in _tiles after the rooms (where walled rooms already go) and
+  //   before the corridors, so a switchback cuts its ramp through the rings. A tile is ring k when it lies inside rings 0..k.
+  stack(id, o) {
+    const s = Object.assign({ id, lean: 0.6, ang: 0, spin: 0.5, rough: 0.16, bare: [], floor: [], land: false }, o);
+    s.rings = s.levels.map((lvl, k) => {
+      const sh = s.lean * (s.r[0] - s.r[k]), a = s.ang + s.spin * k, c = s.centres && s.centres[k];
+      return { k, lvl, r: s.r[k], x: c ? c[0] : s.x + Math.cos(a) * sh, y: c ? c[1] : s.y + Math.sin(a) * sh, ph: 13.7 * (k + 1) + id.length * 3.1 };
+    });
+    this.stacks.push(s);
+    if (!s.land) this.lobe(s.rings[0].x, s.rings[0].y, s.r[0] + 1.2, s.levels[0]);
+    return s;
+  }
+  ringD(s, rg, x, y) {   // signed distance to a ring's blob edge (< 0 inside)
+    const dx = x - rg.x, dy = y - rg.y, a = Math.atan2(dy, dx);
+    return Math.hypot(dx, dy) - rg.r * (1 + s.rough * (this.n2.v(Math.cos(a) * 1.3 + rg.ph, Math.sin(a) * 1.3 + rg.ph * 0.7) - 0.5) * 2);
+  }
+  // the ring a point belongs to: the highest ring containing it whose lower rings all contain it too, or that is `over` (o.over: [ring
+  // indices]): an over ring may poke out past the rings below it, so its wall drops sheer to the ground outside the stack
+  stackRing(s, x, y) { let k = -1, chain = true; for (const rg of s.rings) { const inside = this.ringD(s, rg, x, y) <= 0; if (inside && (chain || (s.over || []).includes(rg.k))) k = rg.k; chain = chain && inside; } return k; }
+  // switchback(id, o): a climbing path of `legs` with 180-degree turns (minutes §3.1.3). o = { from (as path), pts: [[x, y, lvl, hold], ...]
+  //   (the leg ends and turn landings), w }. No meander: the legs follow the control points; _pathsPass's Lipschitz profile + _stairs
+  //   emit the ramps and 's' tiles. Its own RNG stream (side), so the rest of the map rolls as before.
+  switchback(id, o) { return this.path(id, Object.assign({ kind: 'branch', w: 2, meander: 0, every: 99, step: 0.4, side: true, stack: true, stairs: false }, o)); }
+  // climb(id, o): a root ladder up a wall (minutes §3.1.4): Interact at either end = a 0.6 s climb (game.js startClimb). o = { x, y (the foot,
+  //   on the low side, in front of a S / E facing wall), to: { x, y } (the top) }. Emitted as a root_ladder object pair.
+  climb(id, o) { const c = Object.assign({ id }, o); this.climbs.push(c); return c; }
+  // drop(id, o): a drop-down ledge (minutes §3.1.5): the landing tiles [x0, y0, x1, y1) accept a step DOWN of any height from a neighbour
+  //   (maps.js walkable, one-way). Emitted as map.drops [[x, y, w, h], ...].
+  drop(id, o) {
+    const d = Object.assign({ id }, o); this.drops.push(d);
+    if (this.built) { const [a, b, c, e] = d.rect; for (let y = Math.max(0, b - 1); y < Math.min(this.H, e + 1); y++) for (let x = Math.max(0, a - 1); x < Math.min(this.W, c + 1); x++) this.zone[y][x] |= ZONE.drop; }   // the landing + a 1-tile margin
+    return d;
+  }
+  inDrop(x, y) { for (const d of this.drops) { const [a, b, c, e] = d.rect; if (x >= a && x < c && y >= b && y < e) return true; } return false; }
+
   // ------------------------------- build ---------------------------------------
   build() {
     if (this.built) return this; this.built = true;
@@ -299,6 +346,7 @@ class MapGen {
     this._bridges();
     this._relax();
     this._stairs();
+    for (const d of this.drops) { const [a, b, c, e] = d.rect; for (let y = Math.max(0, b); y < Math.min(this.H, e); y++) for (let x = Math.max(0, a); x < Math.min(this.W, c); x++) this.zone[y][x] |= ZONE.drop; }
     this._finalizeFields();
     return this;
   }
@@ -340,13 +388,13 @@ class MapGen {
       let prev = base;
       for (const c of cps) { if (c.dl != null) c.lvl = prev + c.dl; if (c.lvl == null) c.lvl = prev; prev = c.lvl; }
       // meander: insert displaced intermediate points
-      const wound = [cps[0]];
-      let sg = this.rng.sign();
+      const wound = [cps[0]], RG = p.side ? this.sideRng() : this.rng;   // side: an add-on path on its own RNG stream (DESIGN 26.2 pockets)
+      let sg = RG.sign();
       for (let i = 1; i < cps.length; i++) {
         const a = cps[i - 1], b = cps[i], len = Math.hypot(b.x - a.x, b.y - a.y), k = Math.floor(len / p.every);
         const nx = -(b.y - a.y) / (len || 1), ny = (b.x - a.x) / (len || 1);
         for (let m = 1; m <= k; m++) {
-          const t = m / (k + 1), off = p.meander * sg * (0.5 + this.rng.range(0, 0.9)) * Math.sin(Math.PI * t * 0.5 + 0.9) ; sg = -sg;
+          const t = m / (k + 1), off = p.meander * sg * (0.5 + RG.range(0, 0.9)) * Math.sin(Math.PI * t * 0.5 + 0.9) ; sg = -sg;
           wound.push({ x: clamp(lerp(a.x, b.x, t) + nx * off, 3, this.W - 4), y: clamp(lerp(a.y, b.y, t) + ny * off, 3, this.H - 4), orig: false });
         }
         wound.push(b);
@@ -418,7 +466,7 @@ class MapGen {
   _coast() {
     const W = this.W, H = this.H, srcs = [];
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      if (this.cor[y][x] && this.paths[this.cor[y][x].p].kind !== 'bridge') srcs.push({ i: x, j: y, d0: 0 });
+      if (this.cor[y][x] && this.paths[this.cor[y][x].p].kind !== 'bridge' && !this.paths[this.cor[y][x].p].stack) srcs.push({ i: x, j: y, d0: 0 });   // §29 G3: a switchback grows no coast
     }
     for (const rm of this.rooms) {
       if (rm.isolated) continue;
@@ -479,11 +527,62 @@ class MapGen {
     this.land = land;
   }
 
+  // §29 island edge v2 -- the raised NORTH / WEST coast band. In this projection a north- or west-facing face projects behind its own
+  // top, so those coasts showed no thickness. Land within 2-3 tiles of void lying straight / diagonally to its -x / -y side (the _coast
+  // land mask; gutters count as void) is raised by `up` (default this.step; the outermost tile +1 more where n1 is high), so its S/E
+  // walls render through rasterColumn as a rim and every island reads as a bowl. Run AFTER populate (generate() below) so the scatter
+  // context (cliff / height) and every object stay exactly as they were. Never raised (with a 1-tile clearance): paths, rooms, fights,
+  // water, bridges, stairs and non-grass tiles, islets under `minComp` tiles, and the surroundings of the start, anchors, warps,
+  // portals, enter_area triggers (r + 0.5) and every non-decor object (1 tile). Raised fragments under 3 tiles are dropped.
+  coastBand(o = {}) {
+    const W = this.W, H = this.H, band = o.band || 3, up = o.up || this.step, minComp = o.minComp || 150;
+    const isLand = (x, y) => x >= 0 && y >= 0 && x < W && y < H && this.type[y][x] !== '.';
+    const comp = new Int32Array(W * H).fill(-1), size = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (!isLand(x, y) || comp[y * W + x] >= 0) continue;
+      const id = size.length, st = [[x, y]]; comp[y * W + x] = id; let n = 0;
+      while (st.length) { const [cx, cy] = st.pop(); n++; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = cx + dx, ny = cy + dy; if (isLand(nx, ny) && comp[ny * W + nx] < 0) { comp[ny * W + nx] = id; st.push([nx, ny]); } } }
+      size.push(n);
+    }
+    const bad = grid(W, H, false), Z = ZONE.path | ZONE.room | ZONE.fight | ZONE.water | ZONE.bridge | ZONE.stairs | ZONE.stack | ZONE.drop;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (!isLand(x, y)) continue;
+      if ((this.zone[y][x] & Z) || (this.cor && this.cor[y][x]) || !'gfd'.includes(this.type[y][x])) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (y + dy >= 0 && x + dx >= 0 && y + dy < H && x + dx < W) bad[y + dy][x + dx] = true;
+    }
+    const keepOut = (cx, cy, r) => { for (let y = Math.floor(cy - r); y <= cy + r; y++) for (let x = Math.floor(cx - r); x <= cx + r; x++) if (x >= 0 && y >= 0 && x < W && y < H && Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r + 0.71) bad[y][x] = true; };
+    const DECOR = /^(tree_|pine|bush$|rock|grass$|mushroom|moss$|log$|stump$|sunbeam$)/;
+    for (const ob of this.objs) if (!DECOR.test(ob.t)) keepOut(ob.x, ob.y, 1);
+    if (this.startPos) keepOut(this.startPos.x, this.startPos.y, 3);
+    for (const a of Object.values(this.anchors)) keepOut(a.x, a.y, 1.5);
+    for (const w of this.warps) { keepOut(w.x, w.y, 1.5); if (w.to && w.to.x != null) keepOut(w.to.x, w.to.y, 1.5); }
+    for (const p of this.portals) keepOut(p.x, p.y, 2);
+    for (const t of this.triggers) if (t.when && t.when.type === 'enter_area') keepOut(t.when.x, t.when.y, (t.when.r || 1) + 0.5);
+    const add = grid(W, H, 0);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (!isLand(x, y) || bad[y][x] || size[comp[y * W + x]] < minComp) continue;
+      const n = this.n1.fbm(x * 0.21 + 13, y * 0.21 + 7, 2), depth = band - (n < 0.45 ? 1 : 0);
+      let k = 0;
+      for (let d = 1; d <= depth && !k; d++) if (!isLand(x - d, y) || !isLand(x, y - d) || (d < depth && !isLand(x - d, y - d))) k = d;
+      if (k) add[y][x] = up + (k === 1 && n > 0.6 ? 1 : 0);
+    }
+    // drop raised fragments under 3 tiles
+    const seen = grid(W, H, false); let raised = 0;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (!add[y][x] || seen[y][x]) continue;
+      const cells = [], st = [[x, y]]; seen[y][x] = true;
+      while (st.length) { const [cx, cy] = st.pop(); cells.push([cx, cy]); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = cx + dx, ny = cy + dy; if (nx >= 0 && ny >= 0 && nx < W && ny < H && add[ny][nx] && !seen[ny][nx]) { seen[ny][nx] = true; st.push([nx, ny]); } } }
+      if (cells.length < 3) continue;
+      for (const [cx, cy] of cells) { this.h[cy][cx] = Math.min(35, this.h[cy][cx] + add[cy][cx]); raised++; }
+    }
+    this.notes.push(`coast band: ${raised} north/west coast tiles raised`);
+    return raised;
+  }
+
   // terrace levels for the whole island -> this.Q
   _levels() {
     const W = this.W, H = this.H, step = this.step, srcs = [];
     this.paths.forEach((p, pi) => {
-      if (p.kind === 'bridge') return;
+      if (p.kind === 'bridge' || p.stack) return;   // §29 G3: a switchback's levels are the stack's, not the terrain's
       p.samples.forEach((sm, i) => srcs.push({ i: Math.floor(sm.x), j: Math.floor(sm.y), d0: 0, lvl: p.tgt[i] }));
     });
     for (const rm of this.rooms) {
@@ -554,6 +653,23 @@ class MapGen {
         this.sigil = { x: rm.x, y: rm.y };
       }
     }
+    // §29 G3 stacked plateaus (after the rooms, before the corridors: a switchback cuts its ramp through the rings)
+    for (const s of this.stacks) {
+      const R = s.r[0] * 1.4 + 2, r0 = s.rings[0];
+      for (let y = Math.max(0, Math.floor(r0.y - R)); y <= Math.min(H - 1, r0.y + R); y++) for (let x = Math.max(0, Math.floor(r0.x - R)); x <= Math.min(W - 1, r0.x + R); x++) {
+        const k = this.stackRing(s, x + 0.5, y + 0.5); if (k < 0 || this.inVoid(x + 0.5, y + 0.5)) continue;
+        if (!this.land[y][x]) { if (!s.land) continue; this.land[y][x] = true; this.type[y][x] = 'g'; }
+        this.h[y][x] = s.levels[k]; this.zone[y][x] |= ZONE.stack | (s.bare.includes(k) ? ZONE.bare : 0);
+        if (s.floor[k]) this.type[y][x] = s.floor[k];
+        (this.stackK || (this.stackK = grid(W, H, -1)))[y][x] = k;
+      }
+      // the apron: no tree / rock within 3 tiles in front (+x / +y) of the stack's walls, so its faces read from the road
+      for (let y = Math.max(0, Math.floor(r0.y - R)); y <= Math.min(H - 1, r0.y + R + 4); y++) for (let x = Math.max(0, Math.floor(r0.x - R)); x <= Math.min(W - 1, r0.x + R + 4); x++) {
+        if (!this.land[y][x]) continue;
+        let wall = false; for (let b = 0; b <= 3 && !wall; b++) for (let a = 0; a <= 3 && !wall; a++) { const yy = y - b, xx = x - a; if ((a || b) && yy >= 0 && xx >= 0 && (this.zone[yy][xx] & ZONE.stack) && this.h[yy][xx] >= this.h[y][x] + 3) wall = true; }
+        if (wall) this.zone[y][x] |= ZONE.bare;
+      }
+    }
     // corridors (owner path decides height and tile type)
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const c = this.cor[y][x]; if (!c) continue;
@@ -562,7 +678,7 @@ class MapGen {
       this.land[y][x] = true;
       if (!this.type[y][x] || this.type[y][x] === '.') this.type[y][x] = p.type;
       const inRoom = this.zone[y][x] & ZONE.room;
-      const rmHere = inRoom ? this.rooms.find(rm => rm.kind !== 'flat' && this.roomD(rm, x + 0.5, y + 0.5) <= 0) : null;
+      const rmHere = inRoom && !p.stack ? this.rooms.find(rm => rm.kind !== 'flat' && this.roomD(rm, x + 0.5, y + 0.5) <= 0) : null;   // §29 G3: a switchback cuts through rooms too
       if (!rmHere) { this.type[y][x] = p.type; this.h[y][x] = Math.round(p.prof[c.i]); this.zone[y][x] |= ZONE.path; if (p.kind !== 'main') this.zone[y][x] |= ZONE.side; if (p.kind === 'secret') this.zone[y][x] |= ZONE.secret; }
       else { this.zone[y][x] |= ZONE.path; if (rmHere.kind === 'plaza' || rmHere.kind === 'arena') { /* keep floor */ } }
     }
@@ -639,11 +755,14 @@ class MapGen {
       for (let k = 0; k < b.len; k++) for (let m = 0; m < b.w; m++) tiles.push(b.axis === 'x' ? [b.x + k, b.y + m] : [b.x + m, b.y + k]);
       let lvl = b.lvl;
       if (lvl == null) { const [sx, sy] = b.axis === 'x' ? [b.x - 1, b.y] : [b.x, b.y - 1]; lvl = this.h[sy] && this.h[sy][sx] || 0; }
+      const over = b.span ? tiles.filter(([x, y]) => x >= 0 && y >= 0 && x < this.W && y < this.H && !this.land[y][x]) : [];
       for (const [x, y] of tiles) {
         if (x < 0 || y < 0 || x >= this.W || y >= this.H) continue;
         this.type[y][x] = 'b'; this.h[y][x] = lvl; this.land[y][x] = true; this.zone[y][x] |= ZONE.bridge | ZONE.path;
       }
       b.tiles = tiles; b.lvl = lvl;
+      // §29 G3 span: the part of a bridge over the void (the fallen giant pine): maps.js draws a log there, no ground, no skirt below it
+      if (over.length) { const x0 = Math.min(...over.map(t => t[0])), y0 = Math.min(...over.map(t => t[1])); this.spans.push([x0, y0, Math.max(...over.map(t => t[0])) - x0 + 1, Math.max(...over.map(t => t[1])) - y0 + 1]); }
     }
   }
 
@@ -660,6 +779,9 @@ class MapGen {
           const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H || !this.land[ny][nx]) continue;
           if (!isFix(nx, ny) && !(this.zone[ny][nx] & ZONE.room)) continue;
           if (this.type[ny][nx] === 'w') continue;
+          const cs = this.cor[y][x], sp = cs && this.paths[cs.p].stack;   // §29 G3: a switchback ramp only levels against its own lane
+          if (sp && !(this.cor[ny][nx] && this.cor[ny][nx].p === cs.p)) continue;
+          if (this.farLeg(x, y, nx, ny)) continue;   // §29 G3: two legs of one switchback side by side are separate lanes
           const d = this.h[y][x] - this.h[ny][nx];
           if (Math.abs(d) > 1 && !(this.zone[y][x] & ZONE.bridge)) { this.h[y][x] -= Math.sign(d) * (Math.abs(d) - 1); ch++; }
         }
@@ -668,6 +790,10 @@ class MapGen {
     }
   }
 
+  farLeg(x, y, nx, ny) {
+    const a = this.cor[y][x], b = this.cor[ny][nx]; if (!a || !b || a.p !== b.p) return false;
+    const p = this.paths[a.p]; return !!p.stack && Math.abs(p.samples[a.i].s - p.samples[b.i].s) > 3.5;
+  }
   _stairs() {
     const W = this.W, H = this.H;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -675,7 +801,7 @@ class MapGen {
       const p = this.paths[c.p]; if (!p.stairs || !(this.zone[y][x] & ZONE.path) || (this.zone[y][x] & ZONE.room)) continue;
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
-        if (this.cor[ny][nx] && this.h[ny][nx] !== this.h[y][x] && this.type[ny][nx] !== 'w' && this.type[ny][nx] !== 'b') { this.type[y][x] = 's'; this.zone[y][x] |= ZONE.stairs; break; }
+        if (this.cor[ny][nx] && this.h[ny][nx] !== this.h[y][x] && this.type[ny][nx] !== 'w' && this.type[ny][nx] !== 'b' && !this.farLeg(x, y, nx, ny)) { this.type[y][x] = 's'; this.zone[y][x] |= ZONE.stairs; break; }
       }
     }
     // arena pillars (standing stones) ringing the arena floor, leaving the entrances open
@@ -741,7 +867,7 @@ class MapGen {
     ob.sp = o.sp != null ? o.sp : def.sp;
     this.objs.push(ob);
     const i = Math.floor(x), j = Math.floor(y);
-    if (i >= 0 && j >= 0 && i < this.W && j < this.H) (this.occ[j][i] = this.occ[j][i] || []).push({ x, y, sp: ob.sp, t });
+    if (i >= 0 && j >= 0 && i < this.W && j < this.H) (this.occ[j][i] = this.occ[j][i] || []).push({ x, y, sp: ob.sp, t, v: ob.v || 0, ob });
     return ob;
   }
   // rich marker (chest, tablet, shrine...). kind may be a future kind; resolved at emit time.
@@ -757,9 +883,16 @@ class MapGen {
     if (def.r > 0) {
       if (tt === 'p' || tt === 'x' || tt === 'r') return false;
       const pc = ctx ? ctx.dPath : this.pathClear(x, y);
-      if (pc < def.r + 0.55) return false;
+      if (pc < def.r + (def.r <= 0.22 ? 0.15 : 0.55)) return false;   // §29 G2: small props (r <= 0.22) may stand in the corridor verge
       const z = this.zoneAt(x, y);
-      if (z & ZONE.fight) return false;
+      if (z & (ZONE.fight | ZONE.bare | ZONE.drop)) return false;   // §29 G3: a drop's landing stays clear
+      // §29 G3: no collider (tree / rock) on a plateau with a higher ring within 3 tiles in front (+x / +y): it would sort over that wall;
+      // a stack's upper rings are thinned (o.sparse[k] = the share kept, hashed per spot) so the silhouette reads over the trees
+      if (z & ZONE.stack) {
+        const h0 = this.hAt(x, y); for (let b = 0; b <= 3; b++) for (let a = 0; a <= 3; a++) if ((a || b) && this.hAt(x + a, y + b) > h0 + 1) return false;
+        const k = this.stackK ? this.stackK[Math.floor(y)][Math.floor(x)] : -1;
+        for (const st of this.stacks) if (st.sparse && st.sparse[k] != null && this.stackRing(st, x, y) === k && ihash(Math.floor(x * 3), Math.floor(y * 3), 71) > st.sparse[k]) return false;
+      }
     }
     return true;
   }
@@ -797,14 +930,37 @@ class MapGen {
           if (rule.types && !rule.types.includes(gc.type)) continue;
           if (!this.placeOk(rule.t, gx, gy, gc)) continue;
           if (!rule.force && !this.free(gx, gy, sp)) continue;
-          const opts = {}; if (rule.v) opts.v = this.rng.int(0, rule.v - 1); if (rule.flip && this.rng.chance(0.5)) opts.f = 1; if (rule.sp != null) opts.sp = sp;
-          const ob = this.addObj(rule.t, gx, gy, opts); if (rule.then) rule.then(ob, gc, this);
+          const opts = {}; if (rule.v) opts.v = this.variantFor(rule.t, gx, gy, rule.v); if (rule.flip && this.rng.chance(0.5)) opts.f = 1; if (rule.sp != null) opts.sp = sp;
+          const ob = this.addObj(rule.t, gx, gy, opts); ob._sc = true; if (rule.then) rule.then(ob, gc, this);
           placed++;
         }
       }
       stats[rule.t] = (stats[rule.t] || 0) + placed;
     }
     return stats;
+  }
+  // remove the scatter-rule props (ob._sc) that keep (x, y) from being free for spacing sp; true if it is free afterwards
+  clearScatter(x, y, sp) {
+    const bi = Math.floor(x), bj = Math.floor(y), R = 3, gone = new Set();
+    for (let dj = -R; dj <= R; dj++) for (let di = -R; di <= R; di++) {
+      const c = this.occ[bj + dj] && this.occ[bj + dj][bi + di]; if (!c) continue;
+      for (let k = c.length - 1; k >= 0; k--) { const o = c[k]; if (o.ob && o.ob._sc && Math.hypot(o.x - x, o.y - y) < (o.sp + sp) / 2) { gone.add(o.ob); c.splice(k, 1); } }
+    }
+    if (gone.size) this.objs = this.objs.filter(o => !gone.has(o));
+    return this.free(x, y, sp);
+  }
+  // §29 G2 variation budget: no identical (type, variant) within 3 tiles. A random variant, then the next free one in order
+  // (one rng draw whatever happens, so the stream stays aligned); all taken -> the one whose nearest copy is farthest.
+  variantFor(t, x, y, n) {
+    const v0 = this.rng.int(0, n - 1); if (n < 2) return v0;
+    const near = new Array(n).fill(9), bi = Math.floor(x), bj = Math.floor(y);   // per variant: the nearest copy within 3 tiles
+    for (let dj = -3; dj <= 3; dj++) for (let di = -3; di <= 3; di++) {
+      const c = this.occ[bj + dj] && this.occ[bj + dj][bi + di]; if (!c) continue;
+      for (const o of c) if (o.t === t) { const d = Math.hypot(o.x - x, o.y - y); if (d < 3 && d < near[o.v % n]) near[o.v % n] = d; }
+    }
+    let best = v0;
+    for (let k = 0; k < n; k++) { const v = (v0 + k) % n; if (near[v] >= 3) return v; if (near[v] > near[best]) best = v; }
+    return best;   // all taken (a dense grove): the variant whose nearest copy is farthest
   }
   // ring of props around a room (e.g. standing stones), skipping places that block walkways
   ring(roomId, t, n, frac, o = {}) {
@@ -836,7 +992,8 @@ class MapGen {
   }
   // a small themed set-piece (counts as a point of interest). set: 'forest' | 'cave'
   dress(set, k, x, y, side = 1, poiOpts = {}) {
-    const put = (t, dx, dy, o = {}) => { const q = this.nearWalkable(x + dx, y + dy, 0.9); if (!this.free(q.x, q.y, 0.5) && !o.force) return; this.addObj(t, q.x, q.y, Object.assign({ sp: 0.6, force: true }, o)); };
+    // §29 G2: a set-piece outranks scattered props (density x2.5 would otherwise crowd out its sign / lantern / camp): it clears them
+    const put = (t, dx, dy, o = {}) => { const q = this.nearWalkable(x + dx, y + dy, 0.9); if (!this.free(q.x, q.y, 0.5) && !o.force && !this.clearScatter(q.x, q.y, 0.5)) return; this.addObj(t, q.x, q.y, Object.assign({ sp: 0.6, force: true }, o)); };
     if (set === 'cave') {
       const kk = ['crystals', 'shrooms', 'rubble'][k % 3];
       if (kk === 'crystals') { put('crystal', 0, 0, { v: 0 }); put('crystal_violet', 0.9 * side, 0.6); put('crystal', -0.7, 0.9); put('lantern_blue', -1.4 * side, -0.4); }
@@ -879,7 +1036,7 @@ class MapGen {
   landmark(x, y, set = 'forest') {
     if (set === 'cave') { this.addObj('brazier', x, y, { force: true, sp: 2 }); for (const [dx, dy] of [[-1.5, -1], [1.6, -0.8], [0.2, 1.7]]) this.addObj('crystal_violet', x + dx, y + dy, { force: true, sp: 1 }); }
     else {
-      for (const [dx, dy] of [[-2, -2], [2.2, -1.4], [0.3, 2.4]]) { const px = x + dx, py = y + dy, tt = this.tileAt(px, py); if ('gfd'.includes(tt) && !(this.zoneAt(px, py) & ZONE.fight) && this.pathClear(px, py) > 1.0) this.addObj('pine_giant', px, py, { v: 1, force: true, sp: 2.5 }); }
+      [[-2, -2], [2.2, -1.4], [0.3, 2.4]].forEach(([dx, dy], k) => { const px = x + dx, py = y + dy, tt = this.tileAt(px, py); if ('gfd'.includes(tt) && !(this.zoneAt(px, py) & ZONE.fight) && this.pathClear(px, py) > 1.0) this.addObj('pine_giant', px, py, { v: k, force: true, sp: 2.5 }); });   // §29 G2: three different giants
       this.addObj('sunbeam', x, y, { force: true, sp: 2 });
     }
     this.poi('landmark', x, y);
@@ -902,14 +1059,21 @@ class MapGen {
 
   // ---------------------------------- portals/start ----------------------------
   house(x, y) { x = Math.round(x); y = Math.round(y); this.blockers = this.blockers || []; this.blockers.push({ x0: x, y0: y, x1: x + 2, y1: y + 2 }); return this.addObj('house', x, y, { force: true, sp: 3.5 }); }
+  // a second seeded stream for add-on content (side: true rooms / paths, zone.js pockets): adding it leaves the main stream untouched
+  sideRng() { return this._side || (this._side = makeRng((this.seed * 7919 + 17) | 0)); }
   setStart(x, y) { this.startPos = { x: r2(x), y: r2(y) }; }
   portal(x, y, to, o = {}) { const p = Object.assign({ x: r2(x), y: r2(y), to, open: true, marker: false }, o); this.portals.push(p); return p; }
 
   // ---------------------------------- output ------------------------------------
   toMap() {
     const portals = this.portals.map(p => Object.assign({}, p)), objects = this.objs.map(o => this._emitObj(o)).filter(Boolean);
+    for (const c of this.climbs) {   // §29 G3 root ladder pair: the foot climbs up, the top climbs down (game.js startClimb)
+      const h0 = this.hAt(c.x, c.y), h1 = this.hAt(c.to.x, c.to.y);
+      objects.push({ t: 'root_ladder', id: c.id, x: r2(c.x), y: r2(c.y), to: { x: r2(c.to.x), y: r2(c.to.y) }, h: h1 - h0 });
+      objects.push({ t: 'root_ladder', id: c.id + '_top', x: r2(c.to.x), y: r2(c.to.y), to: { x: r2(c.x), y: r2(c.y) }, h: h0 - h1 });
+    }
     for (const w of this.warps) {
-      if (T.warpMode === 'door') objects.push(Object.assign({ t: 'warpdoor', id: w.id, x: r2(w.x), y: r2(w.y), to: { x: r2(w.to.x), y: r2(w.to.y) } }, w.key ? { key: w.key } : {}, w.label ? { label: w.label } : {}, w.open === false ? { open: false } : {}));   // open:false = sealed until a trigger openGate { id }
+      if (T.warpMode === 'door') objects.push(Object.assign({ t: 'warpdoor', id: w.id, x: r2(w.x), y: r2(w.y), to: { x: r2(w.to.x), y: r2(w.to.y) } }, w.key ? { key: w.key } : {}, w.label ? { label: w.label } : {}, w.open === false ? { open: false } : {}, w.boss ? { boss: w.boss } : {}));   // boss: the door's prompt shows "Recommended ilvl" (items.js); open:false = sealed until a trigger openGate { id }
       else portals.push(Object.assign({ x: r2(w.x), y: r2(w.y), to: this.id, open: w.open !== false, marker: !!w.marker, id: w.id, arrive: { x: r2(w.to.x), y: r2(w.to.y) } }, w.label ? { label: w.label } : {}));
     }
     const m = {
@@ -926,6 +1090,13 @@ class MapGen {
     // M2c: sections (bounds, kind, ambient light, palette name), void gutters and warp anchors ride along as plain map fields
     if (this.sections.length) m.sections = this.sections.map(sc => { const b = sc.bounds, o = { id: sc.id, name: sc.name, kind: sc.kind, x: b[0], y: b[1], w: b[2] - b[0], h: b[3] - b[1] }; for (const k of ['ambient', 'dark']) if (sc[k] != null) o[k] = sc[k]; return o; });
     if (Object.keys(this.anchors).length) m.anchors = Object.values(this.anchors).map(a => Object.assign({}, a));
+    if (this.drops.length) m.drops = this.drops.map(d => [d.rect[0], d.rect[1], d.rect[2] - d.rect[0], d.rect[3] - d.rect[1]]);   // §29 G3 maps.js walkable
+    if (this.spans.length) m.spans = this.spans.map(r => r.slice());   // §29 G3 log bridges with nothing under them
+    if (this.stacks.length) {   // §29 G3 the stack's tiles show rock faces (maps.js rasterColumn): rows of [x0, y, length] runs
+      const runs = []; for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) { if (!(this.zone[y][x] & ZONE.stack) || !this.land[y][x]) continue; let n = 1; while (x + n < this.W && (this.zone[y][x + n] & ZONE.stack) && this.land[y][x + n]) n++; runs.push([x, y, n]); x += n - 1; }
+      m.rock = runs;
+    }
+    if (this.levelAreas && this.levelAreas.length) m.levelAreas = this.levelAreas.map(z => Object.assign({}, z));   // §26.2 pockets: items.js enemyLevel
     m.triggers = this.triggers;
     return m;
   }
@@ -939,7 +1110,7 @@ class MapGen {
       else if (si) { out.role = o.t; }
       if (this.kinds === 'future' && ENGINE_KIND[o.t]) { const ek = ENGINE_KIND[o.t]; out.role = o.t; out.t = ek.t; for (const k of Object.keys(ek)) if (k !== 't' && o[k] == null) out[k] = ek[k]; }
     }
-    for (const k of Object.keys(o)) if (!['t', 'x', 'y', 'v', 'f', 'sp', 'marker'].includes(k) && out[k] == null) out[k] = o[k];
+    for (const k of Object.keys(o)) if (!['t', 'x', 'y', 'v', 'f', 'sp', 'marker', '_sc'].includes(k) && out[k] == null) out[k] = o[k];
     return out;
   }
 
@@ -970,14 +1141,18 @@ class MapGen {
       if (!seen[k0]) { seen[k0] = 1; q.push(k0); }
     }
     const hOf = k => this.h[((k / W) | 0) / S | 0][((k % W) / S) | 0];
+    const dropOf = k => this.drops.length && this.inDrop(((k % W) / S) | 0, ((k / W) | 0) / S | 0);   // the landing rects exactly (maps.js dropIn)
+    const climbAt = []; for (const c of this.climbs) for (const [a, b] of [[c, c.to], [c.to, c]]) climbAt.push({ k: Math.floor(a.y * S) * W + Math.floor(a.x * S), x: a.x, y: a.y, to: b });
     for (let qi = 0; qi < q.length; qi++) {
       const k = q[qi], cx = k % W, cy = (k / W) | 0, h0 = hOf(k);
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
         const nk = ny * W + nx; if (seen[nk] || blocked[nk]) continue;
-        if (Math.abs(hOf(nk) - h0) > 1.05) continue;
+        if (Math.abs(hOf(nk) - h0) > 1.05 && !(dropOf(nk) && hOf(nk) < h0)) continue;   // a drop-down ledge: one way, down
         seen[nk] = 1; q.push(nk);
       }
+      // a root ladder: within 0.7 tiles of either end, the other end is reachable
+      for (const c of climbAt) if (Math.hypot((cx + 0.5) / S - c.x, (cy + 0.5) / S - c.y) < 0.7) { const tk = Math.floor(c.to.y * S) * W + Math.floor(c.to.x * S); if (tk >= 0 && tk < W * H && !seen[tk]) { blocked[tk] = 0; seen[tk] = 1; q.push(tk); } }
     }
     return { has: (x, y) => { const cx = Math.floor(x * S), cy = Math.floor(y * S); return cx >= 0 && cy >= 0 && cx < W && cy < H && !!seen[cy * W + cx]; }, count: q.length, seen, S, W, H };
   }
@@ -1024,6 +1199,19 @@ class MapGen {
       if (tr.when.type === 'enter_area') chk('enter_area ' + tr.id, tr.when.x, tr.when.y);
       for (const a of tr.actions) if (a.type === 'spawn' || a.type === 'spawn_boss') { if (a.x != null) chk(`spawn ${tr.id}`, a.x, a.y); } else if (a.type === 'spawnPack') chk(`spawnPack ${tr.id}`, a.at.x, a.at.y);
     }
+    // §29 G3: climbs and drops are on real walls; no fight room directly north of (behind) a wall taller than 4 levels
+    for (const c of this.climbs) { const d = this.hAt(c.to.x, c.to.y) - this.hAt(c.x, c.y); if (d < 2) errs.push(`climb ${c.id}: the top is not above the foot (dh ${d})`); if (!this.walkTile(c.x, c.y) || !this.walkTile(c.to.x, c.to.y)) errs.push(`climb ${c.id}: an end is not walkable`); }
+    for (const d of this.drops) { let lip = 0; const [a, b, c, e] = d.rect; for (let y = b; y < e; y++) for (let x = a; x < c; x++) for (const [dx, dy] of [[-1, 0], [0, -1], [1, 0], [0, 1]]) if (this.walkTile(x + dx, y + dy) && this.hAt(x + dx, y + dy) >= this.hAt(x, y) + 2) lip++; if (!lip) errs.push(`drop ${d.id}: no higher ground beside the landing`); }
+    this.tallBehind = [];
+    const spawnAt = []; for (const tr of this.triggers) for (const a of tr.actions || []) if (a.type === 'spawn' && a.x != null) spawnAt.push([a.x, a.y]); else if (a.type === 'spawnPack') spawnAt.push([a.at.x, a.at.y]);
+    for (const rm of this.rooms) if (rm.kind !== 'flat' && !rm.isolated && spawnAt.some(([x, y]) => this.roomD(rm, x, y) < 1)) {
+      let worst = 0;
+      for (let y = Math.floor(rm.y - rm.r); y <= rm.y + rm.r; y++) for (let x = Math.floor(rm.x - rm.r); x <= rm.x + rm.r; x++) {
+        if (this.roomD(rm, x + 0.5, y + 0.5) > 0) continue;
+        for (let k = 1; k <= 3; k++) for (const [a, b] of [[k, 0], [0, k], [k, k]]) { const t = this.tileAt(x + a, y + b); if (t !== '.' && t !== 'v' && t !== 'k' && (this.zoneAt(x + a, y + b) & ZONE.stack)) worst = Math.max(worst, this.hAt(x + a, y + b) - rm.lvl); }   // a stack's wall
+      }
+      if (worst > 4) { this.tallBehind.push(`${rm.id} (+${worst})`); if (this.stacks.length) errs.push(`fight room ${rm.id} sits behind a wall ${worst} levels taller (cutaway fight)`); }
+    }
     for (const p of this.portals) if (Math.hypot(p.x - m.start.x, p.y - m.start.y) < 2) warns.push(`portal ${p.to} within 2 tiles of start (instant bounce risk)`);
     // secrets: reachable but off the main route
     for (const p of this.paths) if (p.kind === 'secret') {
@@ -1045,7 +1233,7 @@ class MapGen {
   }
 }
 
-const ZONE = { path: 1, room: 2, fight: 4, water: 8, bridge: 16, side: 32, secret: 64, stairs: 128 };
+const ZONE = { path: 1, room: 2, fight: 4, water: 8, bridge: 16, side: 32, secret: 64, stairs: 128, stack: 256, bare: 512, drop: 1024 };
 
 // generate(recipe, opts) -> { gen, map, report }
 function generate(recipe, opts = {}) {
@@ -1054,6 +1242,7 @@ function generate(recipe, opts = {}) {
   recipe.layout(g, T);
   g.build();
   recipe.populate(g, T);
+  if (recipe.coastBand !== false && !opts.noCoastBand) g.coastBand(recipe.coastBand || {});   // §29: after populate, so objects stay put
   const rep = g.validate();
   return { gen: g, map: g.toMap(), report: rep };
 }

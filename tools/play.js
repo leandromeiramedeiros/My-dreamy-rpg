@@ -174,7 +174,7 @@ const PAD_STUB = () => {
   check('combat: ultimate gated by the charge bar (0..100), consumed on cast', ultGate.r1 === false && ultGate.r2 === true && ultGate.after === 0, ultGate);
   await wait(800);
   const cancel = await ev(() => {
-    const p = G.player; p.wsk.dawnblade.e = 'whirl'; recalcStats(p); p.cds = {}; p.mp = 200; p.st = p.maxSt; p.dash = null;
+    const p = G.player; p.wsk.sword.e = 'whirl'; recalcStats(p); p.cds = {}; p.mp = 200; p.st = p.maxSt; p.dash = null;
     useSkill(p, 'e'); return { mpAfterCast: p.mp, dur: p.cast && p.cast.dur };
   });
   await page.keyboard.down('ShiftLeft'); await wait(40); await page.keyboard.up('ShiftLeft');   // within 0.1 s: buffered
@@ -203,9 +203,9 @@ const PAD_STUB = () => {
       wsk: { dawnblade: { q: 'heroic', e: 'dashstrike', r: 'judgement' } }, csk: ['orbit', 'chain'], prog: { chests: { 'vale:4.5,17.2': true }, firsts: { 'ruins:boss': true }, trig: { vale: ['t1'] } },
       seen: { slime: { kills: 4, res: { slash: -0.5 } } }, cp: { map: 'vale', x: 2, y: 3 }, uid: 99 };
     const s = migrate(JSON.parse(JSON.stringify(v2))); const q = makePlayer(); applySave(q, s);
-    return { v: s.version, level: q.level, xp: q.xp, dust: q.dust, q: q.wsk.dawnblade.q, csk: q.csk.join(), chest: !!G.prog.chests['vale:4.5,17.2'], boss: !!G.prog.firsts['ruins:boss'], trig: G.prog.trig.vale.join(), slime: G.seen.slime.kills, res: G.seen.slime.res.slash, cp: G.checkpoint.x, bag: q.bag.filter(Boolean).length === p.bag.filter(Boolean).length };
+    return { v: s.version, level: q.level, xp: q.xp, dust: q.dust, q: q.wsk.sword.q, csk: q.csk.join(), chest: !!G.prog.chests['vale:4.5,17.2'], boss: !!G.prog.firsts['ruins:boss'], trig: G.prog.trig.vale.join(), slime: G.seen.slime.kills, res: G.seen.slime.res.slash, cp: G.checkpoint.x, bag: q.bag.filter(Boolean).length === p.bag.filter(Boolean).length };
   });
-  check('save: v2 -> v3 migration keeps everything', mig.v === 3 && mig.level === 7 && mig.xp === 120 && mig.dust === 33 && mig.q === 'heroic' && mig.csk === 'orbit,chain' && mig.chest && mig.boss && mig.trig === 't1' && mig.slime === 4 && mig.res === -0.5 && mig.cp === 2 && mig.bag, mig);
+  check('save: v2 -> v4 migration keeps everything (pre-v4 wsk key dawnblade -> sword)', mig.v === 4 && mig.level === 7 && mig.xp === 120 && mig.dust === 33 && mig.q === 'heroic' && mig.csk === 'orbit,chain' && mig.chest && mig.boss && mig.trig === 't1' && mig.slime === 4 && mig.res === -0.5 && mig.cp === 2 && mig.bag, mig);
   const st = await ev(() => { const a = setSetting('difficulty', 'story'), b = setSetting('shake', 999), c = damageTakenMul(); setSetting('difficulty', 'normal'); setSetting('shake', 100); return { a, b, c }; });
   check('settings: validated setters + Story difficulty x0.6', st.a === 'story' && st.b === 100 && st.c === 0.6, st);
   // ---------- 3b. §20.5 MP builder: once per swing, 40 MP/s cap; ultimate gain cap ----------
@@ -382,7 +382,7 @@ const PAD_STUB = () => {
   check('aim: circle reticle clamped to the range circle (clamped flag, |to-from| = range)', circ && circ.shape === 'circle' && circ.clamped && Math.abs(circ.d - circ.range) < 1e-6, circ);
   await aimShot('touch-aim-circle-clamped'); await endAim();
   // line: equip the Moonbow ultimate (moonbeam)
-  await ev(() => { __reset(); const p = G.player; p.equip.weapon = makeItem('moonbow', 'rare', p.level, { sockets: 0 }); recalcStats(p); p.wsk.moonbow.r = 'moonbeam'; p.ult = 100; });
+  await ev(() => { __reset(); const p = G.player; p.equip.weapon = makeItem('moonbow', 'rare', p.level, { sockets: 0 }); recalcStats(p); p.wsk.bow.r = 'moonbeam'; p.ult = 100; });
   await dragAim('r', -120, -40);
   const line = await ev(() => { const a = currentAim(); return a && a.aim.shape; });
   check('aim: line indicator (Moonbeam)', line === 'line', line);
@@ -483,7 +483,7 @@ const PAD_STUB = () => {
   });
   await shotM2b('bramblehorn_stomp_telegraph');
   const bh2 = await ev(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); await w(700); const p = G.player, b = G.boss; const r = { hurt: p.hp < p.maxHp, fair: bossFairness('bramblehorn').length === 0 && bossFairness('mossjaw').length === 0 }; return r; });
-  check('boss: Bramblehorn stomp telegraph (circle r3, wind 0.9 >= 0.6, open 1.5 >= 1.2, warnSfx hook) and its hit lands', bh.boss && bh.name === 'Old Bramblehorn' && bh.type === 'circle' && bh.move === 'stomp' && bh.wind >= 0.6 && bh.open >= 1.2 && bh.sfx === 'warn_circle' && bh.r === 3 && bh.phases === 2 && bh2.hurt && bh2.fair, Object.assign(bh, bh2));
+  check('boss: Bramblehorn stomp telegraph (circle r3, wind 0.9 >= 0.6, open 1.5 >= 1.2, warnSfx hook) and its hit lands', bh.boss && bh.name === 'Old Bramblehorn' && bh.type === 'circle' && bh.move === 'stomp' && bh.wind >= 0.6 && bh.open >= 1.2 && bh.sfx === 'warn_circle' && bh.r === 3 && bh.phases === 3 && bh2.hurt && bh2.fair, Object.assign(bh, bh2));
   const bhp2 = await ev(async () => { const w = ms => new Promise(r => setTimeout(r, ms)), b = G.boss; G.player.invulnT = 99; b.bk.mv = null; b.hp = b.maxHp * 0.45; await w(400); const q = b.bk.phase; await w(2600); return { phase: q, shrink: !!G.shrink }; });
   check('boss: Bramblehorn phase 2 at 50 % (onEnter: root wall shrinks the arena)', bhp2.phase === 1 && bhp2.shrink, bhp2);
   await ev(() => { G.enemies.length = 0; G.boss = null; G.shrink = null; G.effects.length = 0; G.player.invulnT = 0; G.player.hp = G.player.maxHp; });
@@ -663,7 +663,7 @@ const PAD_STUB = () => {
     const old = JSON.parse(JSON.stringify(d)); delete old.world.fog; delete old.world.sections; delete old.world.shrines; const mo = migrate(old);
     return { vis0, vis1, same, len: str.length, secs, shr, keys, v, migFog: JSON.stringify(mo.world.fog), migSec: JSON.stringify(mo.world.sections), secAfter: (G.prog.sections.synth112 || []).length };
   });
-  check('save: fog bitmap + discovered sections / shrines persist per map in world (v3, same top-level keys, migration defaults)', fog.vis0 > 300 && fog.vis1 === fog.vis0 && fog.same && fog.len < 3000 && fog.secs === 'arena,main,outer,under,vault'.split(',').filter(s => fog.secs.includes(s)).join() && fog.secs.includes('under') && fog.shr >= 2 && fog.v === 3 && fog.keys === 'bestiary,bindings,bosses,fishing,player,quests,settings,skills,slot,stats,t,version,world,zone100' && fog.migFog === '{}' && fog.migSec === '{}' && fog.secAfter >= 4, fog);
+  check('save: fog bitmap + discovered sections / shrines persist per map in world (v4, same top-level keys, migration defaults)', fog.vis0 > 300 && fog.vis1 === fog.vis0 && fog.same && fog.len < 3000 && fog.secs === 'arena,main,outer,under,vault'.split(',').filter(s => fog.secs.includes(s)).join() && fog.secs.includes('under') && fog.shr >= 2 && fog.v === 4 && fog.keys === 'bestiary,bindings,bosses,fishing,player,quests,settings,skills,slot,stats,t,version,world,zone100' && fog.migFog === '{}' && fog.migSec === '{}' && fog.secAfter >= 4, fog);
   // settling is per trigger: walking away from a live pack (it goes dormant) and dying must respawn it, not clear it
   const stl = await ev(async () => {
     const w = ms => new Promise(r => setTimeout(r, ms)), m = G.map, p = G.player, tr = m.triggers.find(t => t.id === 'pack0').when;
@@ -860,6 +860,148 @@ const PAD_STUB = () => {
     check('touch: zone banner draws below the top-left buttons', tb.touch === true && (tb.bottom === 0 || tb.bottom <= 164), tb);
     await tp.close();
   }
+  // ---------- 4f. M3 step 2 engine: items v2, trinkets, boons, CAPS, temper / imbue, chest contract ----------
+  {
+    const v2 = await ev(async () => {
+      const w = ms => new Promise(r => setTimeout(r, ms)), out = {};
+      G.enemies.length = 0; G.drops.length = 0;
+      // a new game's hero: the Origin starter ring (Rusty Blade -> blades -> Knight), boon live
+      const np = makePlayer(), kit = starterLoot(np), sr = kit.find(d => d.kind === 'item' && d.it.slot === 'ring');
+      out.starter = { bare: np.equip.ring1 === null, kit: kit.map(d => d.kind === 'gem' ? 'gem:' + d.gem : d.it.base + '/' + d.it.rarity + '/' + d.it.sockets.length).join(), base: sr && sr.it.base };
+      G.player = np; if (sr) equipItem(np, sr.it); out.starter.boon = !!(np.boons && np.boons.originKnight); out.starter.name = sr && itemName(sr.it);
+      const p = G.player = makePlayer(); p.level = 14; p.x = G.map.start.x; p.y = G.map.start.y; p.equip.weapon = firstKitPiece('weapon'); recalcStats(p, true);   // §28: makePlayer is bare
+      // an L14 drop: every affix T2 (ilvl 14..15 -> T2), the name from the T2 prefix / suffix noun, req = max(base, ilvl - 2), flavour + hist
+      const bad = [];
+      for (let k = 0; k < 40; k++) {
+        const it = rollItem(14, pick2(['uncommon', 'rare', 'epic']), pick2(['weapon', 'head', 'chest', 'boots'])), b = baseOf(it.base), why = [];
+        if (it.affixes.some(a => a.tier !== 2)) why.push('tier');
+        const [np2, ns2] = [it.affixes.filter(a => a.kind === 'P').length, it.affixes.filter(a => a.kind === 'S').length];
+        if (it.rarity === 'uncommon' && np2 + ns2 !== 1 || it.rarity === 'rare' && (np2 !== 1 || ns2 !== 1) || it.rarity === 'epic' && np2 + ns2 !== 3) why.push('counts');
+        const P = it.affixes.find(a => a.kind === 'P'), S = it.affixes.find(a => a.kind === 'S');
+        const pre = P && AFFIX_V2.prefix[P.id][1].name, suf = S && 'of the ' + SUFFIX_NOUN[S.id];
+        const want = it.rarity === 'uncommon' ? [pre || null, pre ? null : suf] : [pre || null, suf || null];
+        if (it.name.prefix !== want[0] || it.name.suffix !== want[1] || itemName(it) !== [want[0], b.name, want[1]].filter(Boolean).join(' ')) why.push('name ' + itemName(it));
+        if (it.req !== Math.max(b.reqLvl, it.ilvl - 2) || !itemFlavor(it) || !it.hist || it.implicit.id !== IMPLICITS[it.base].stat) why.push('req/flavour/hist/implicit');
+        if (why.length) bad.push(why.join(','));
+      }
+      out.l14 = { bad, sample: itemName(rollItem(14, 'rare', 'weapon')) };
+      // implicits apply: the Rusty Blade's +4 % slash damage lands in p.sum
+      out.implicit = +(p.sum.slashDmg || 0).toFixed(3);
+      // CAPS: stack cdr (T3 cdr on every gear slot, a cdr ring) -> p.cdr stays 0.40; crit 0.60; haste 0.50; potions 5
+      const stack = (id, n) => ['weapon', 'head', 'chest', 'boots'].forEach(s => { p.equip[s] = makeTestItem({ slot: s, rarity: 'legendary', ilvl: 34, affixes: [{ id, tier: 3, v: n }] }); });
+      p.level = 40;
+      stack('cdr', 0.15); p.equip.ring2 = makeTestItem({ slot: 'ring', rarity: 'rare', affixes: [{ id: 'cdr', tier: 3, v: 0.08 }] }); recalcStats(p, true);
+      out.cdr = { sum: +p.sum.cdr.toFixed(3), cdr: p.cdr };
+      stack('crit', 0.2); recalcStats(p, true); out.crit = { sum: +p.sum.crit.toFixed(3), crit: p.crit };
+      stack('haste', 0.2); recalcStats(p, true); out.haste = p.haste;
+      stack('power', 0.5); recalcStats(p, true); out.power = { sum: +p.sum.power.toFixed(2), bonus: p.bonus };
+      p.equip.belt = makeTestItem({ slot: 'belt', rarity: 'rare', boon: 'potionCap', affixes: [{ id: 'resFire', tier: 3, v: 0.2 }, { id: 'resAll', tier: 3, v: 0.1 }] });
+      p.equip.amulet = makeTestItem({ slot: 'amulet', rarity: 'legendary', affixes: [{ id: 'resAll', tier: 3, v: 0.1 }] });
+      recalcStats(p, true); out.pot = p.maxPotions; out.res = { fire: +(p.sum.resFire || 0).toFixed(3), all: +p.sum.resAll.toFixed(3) };
+      // belt implicit: +1 potion charge alone -> 4, and pickup fills to it
+      p.equip.belt = makeTestItem({ slot: 'belt', rarity: 'uncommon', boon: 'killHeal', affixes: [] }); recalcStats(p, true); p.potions = 3;
+      pickup(p, { kind: 'potion', x: p.x, y: p.y, z: 0, rar: 'uncommon' }); out.belt = { max: p.maxPotions, potions: p.potions };
+      // boon ids never stack; two same-element rings resonate (+25 % to that element's reaction, inside the 50 % cap)
+      p.equip.ring1 = makeTestItem({ slot: 'ring', rarity: 'rare', boon: 'fireBurn' }); p.equip.ring2 = makeTestItem({ slot: 'ring', rarity: 'rare', boon: 'fireBurn' }); recalcStats(p, true);
+      out.stack = { boons: Object.keys(p.boons).filter(k => k === 'fireBurn').length, fireDmg: +(p.sum.fireDmg || 0).toFixed(3), res: p.resonance };
+      // keyless equip of a third ring replaces the WEAKER ring (an Uncommon ring1 vs a Rare ring2)
+      p.equip.ring1 = makeTestItem({ slot: 'ring', rarity: 'uncommon', boon: 'projPierce' }); const keep = p.equip.ring2, nr = makeTestItem({ slot: 'ring', rarity: 'epic', boon: 'holyPower' });
+      p.bag = Array(BAG_SIZE).fill(null); bagAdd(p, nr); equipItem(p, nr); out.ringRule = p.equip.ring1 === nr && p.equip.ring2 === keep;
+      // temper: Rare 20 Dust, one tier up, once; the prefix name follows the tier; refusals
+      const it = makeItem('dawnblade', 'rare', 14, { affixes: ['power', 'hp'], q: 0.5 }); p.dust = 100;
+      const t0 = { v: it.affixes[0].v, name: itemName(it) }, r1 = temperItem(it, 'power', p);
+      out.temper = { r1, tier: it.affixes[0].tier, v0: t0.v, v1: it.affixes[0].v, name0: t0.name, name1: itemName(it), dust: p.dust, again: temperItem(it, 'hp', p), tempered: it.tempered,
+        unc: temperItem(makeItem('dawnblade', 'uncommon', 14), 'power', p), t3: temperItem(makeItem('sunforged', 'rare', 30, { affixes: ['power', 'hp'] }), 'power', p) };
+      p.dust = 5; out.temper.poor = temperItem(makeItem('dawnblade', 'epic', 14, { affixes: ['power', 'crit', 'hp'] }), 'crit', p);
+      // imbue: +1 socket for Dust up to the rarity max; rings never
+      p.dust = 200; const im = makeItem('dawnblade', 'rare', 14, { sockets: 1 });
+      out.imbue = { r1: imbueItem(im, p), n: im.sockets.length, dust: p.dust, full: imbueItem(im, p), ring: imbueItem(makeTestItem({ slot: 'ring' }), p) };
+      // the chest contract: loot 'ring' -> one extra ring >= Uncommon; 'amulet' -> a Rare amulet (and the trinket-drop gate opens)
+      const chest = loot => ({ x: p.x + 2, y: p.y, z: 0, chest: true, src: { x: 900 + G.drops.length, y: 900, tier: 'wood', loot } });
+      G.drops.length = 0; G.prog.secrets = {}; openChest(chest('ring')); await w(900);
+      const ring = G.drops.filter(d => d.kind === 'item' && d.it.slot === 'ring').pop();   // the marker's trinket is pushed last (a random L14 trinket drop may come first)
+      G.drops.length = 0; openChest(chest('amulet')); await w(900);
+      const amu = G.drops.filter(d => d.kind === 'item' && d.it.slot === 'amulet').pop();
+      out.chest = { ring: ring && ring.it.rarity, ringBoon: !!(ring && ring.it.boon), amulet: amu && amu.it.rarity, gate: trinketDropsOn(p) };
+      // trinkets are ~15 % of item drops once the gate is open
+      let n = 0; for (let k = 0; k < 2000; k++) if (isTrinket(rollItem(20, 'rare'))) n++; out.share = n / 2000;
+      G.drops.length = 0;
+      return out;
+    });
+    check('v2: a new game starts ring-less; the first Vale chest gives Common Iron Mail (1 socket) + the Origin ring (Knight, boon live) + a Chipped gem', v2.starter.bare && v2.starter.kit === 'ironmail/common/1,origin_knight/uncommon/0,gem:ruby_1' && v2.starter.base === 'origin_knight' && v2.starter.boon, v2.starter);
+    check(`v2: L14 drops roll T2 affixes with the §19.1 counts and grammar names, req = max(base, ilvl - 2), flavour + hist (${v2.l14.sample})`, v2.l14.bad.length === 0, v2.l14.bad.slice(0, 5));
+    check('v2: implicits apply in statsOf (Rusty Blade +4 % slash damage)', v2.implicit === 0.04, v2.implicit);
+    check('CAPS: stacked cdr gear stays at 40 % (crit 60 %, haste 50 %, gear power 150 %)', v2.cdr.sum > 0.4 && v2.cdr.cdr === 0.4 && v2.crit.crit === 0.6 && v2.haste === 0.5 && v2.power.bonus === 1.5, { cdr: v2.cdr, crit: v2.crit, haste: v2.haste, power: v2.power });
+    check('CAPS: potions 5; trinket resists +10 % per line, +15 % resAll across trinkets', v2.pot === 5 && v2.res.fire === 0.1 && Math.abs(v2.res.all - 0.15) < 1e-9, { pot: v2.pot, res: v2.res });
+    check('belt: implicit +1 potion charge (max 4), pickup fills to it', v2.belt.max === 4 && v2.belt.potions === 4, v2.belt);
+    check('boons: ids never stack (two Ember Sign rings = one +15 % fire); same-element rings resonate +25 %', v2.stack.boons === 1 && v2.stack.fireDmg === 0.15 && v2.stack.res && v2.stack.res.el === 'fire' && v2.stack.res.bonus === 0.25, v2.stack);
+    check('rings: a keyless equip with both ring slots full replaces the weaker ring', v2.ringRule === true);
+    const T = v2.temper;
+    check(`temper: Rare costs 20 Dust, +1 tier once, value + name follow (${T.name0} -> ${T.name1})`, T.r1 === '' && T.tier === 3 && T.v1 > T.v0 && T.dust === 80 && T.name1 !== T.name0 && T.tempered && T.tempered.affix === 'power' && T.again === 'Already tempered', T);
+    check('temper: refuses Uncommon, a T3 affix and too little Dust', /Rare or better/.test(T.unc) && /highest tier/.test(T.t3) && /Needs 60 Dust/.test(T.poor), { unc: T.unc, t3: T.t3, poor: T.poor });
+    check('imbue: +1 socket for 60 Dust (Rare), refuses past the rarity max and on rings', v2.imbue.r1 === '' && v2.imbue.n === 2 && v2.imbue.dust === 140 && /No room/.test(v2.imbue.full) && /Rings/.test(v2.imbue.ring), v2.imbue);
+    check("chest contract: loot 'ring' drops a ring >= Uncommon with a boon, 'amulet' a Rare amulet; trinket drops unlock", ['uncommon', 'rare', 'epic'].includes(v2.chest.ring) && v2.chest.ringBoon && v2.chest.amulet === 'rare' && v2.chest.gate, v2.chest);
+    check(`drops: trinkets are ~15 % of item drops after Act I (${(v2.share * 100).toFixed(1)} %)`, v2.share > 0.12 && v2.share < 0.18, v2.share);
+  }
+  // ---------- 4g. §29 G2 world art: trees v2, canopy over the hero, sway, directional shadows, ground decals ----------
+  {
+    const tp = await br.newPage({ viewport: { width: 960, height: 540 } }); tp.on('pageerror', e => errs.push('pageerror(g2): ' + e.message));
+    await tp.goto(`${base}/index.html?map=vale`, { waitUntil: 'load' });
+    await tp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    const T = await tp.evaluate(() => {
+      const kinds = ['round', 'poplar', 'blossom', 'teal', 'oak', 'birch'], pk = ['giant', 'tall', 'young'];
+      const ok = c => !!(c && c.trunk && c.canopy && c.canopyF && c.canopyF.length === 3 && c.swayF && c.swayF[1] === c && c.cbox && c.cbox[3] > c.cbox[1]);
+      const sheets = kinds.map(k => ART.trees[k]).concat(pk.map(k => ART.pines[k]));
+      const m = G.map, trees = m.objects.filter(o => o.tree);
+      return {
+        frozen: !TREES_LIVE && kinds.every(k => SPRITE_ART['tree_' + k + '_00']) && pk.every(k => SPRITE_ART['pine_' + k + '_00']) && !SPRITE_ART.tree_round_0,
+        counts: kinds.map(k => ART.trees[k].length).concat(pk.map(k => ART.pines[k].length)), allSplit: sheets.every(a => a.every(ok)),
+        bush: ART.bush.length && !!ART.bush[0].canopy, trees: trees.length, flipped: trees.filter(o => o.flip).length,
+        litRight: m.theme.moon.x >= RW / 2, ruinsLeft: THEMES.ruins.moon.x < RW / 2,
+        sway: trees.filter(o => o.img.swayF).length ? trees.filter(o => hash2(Math.floor(o.x * 7), Math.floor(o.y * 7), 77) < 0.25).length / trees.length : 0,
+      };
+    });
+    check('trees v2: frozen sheets (js/sprites.js, 2 frames trunk|canopy; the old lollipop tree_*_0..3 gone) load as composites with trunk / canopy / 3 sway frames / canopy box; 12 sheets a broadleaf, 3 / 6 / 6 pines; bushes v2', T.frozen && T.allSplit && T.counts.join() === '12,12,12,12,12,12,3,6,6' && T.bush, T);
+    check('trees v2: lit-side sheets, no random flip (the Vale is right-lit: 0 mirrored trees; the left-lit ruins theme mirrors them)', T.litRight && T.ruinsLeft && T.trees > 300 && T.flipped === 0, { trees: T.trees, flipped: T.flipped });
+    check('sway: about 1 tree in 4 is in the swaying subset', T.sway > 0.2 && T.sway < 0.3, +T.sway.toFixed(3));
+    // the hero steps under a wide canopy beside its trunk: the canopy splits off, fades 1 -> 0.35 within ~0.2 s, and fades back after
+    const F = await tp.evaluate(async () => {
+      const m = G.map, p = G.player, raf = () => new Promise(r => requestAnimationFrame(r));
+      const place = (x, y) => { p.x = x; p.y = y; p.z = tileH(m, x, y); p.dash = null; p.invulnT = 9999; G.cam.x = isoX(x, y); G.cam.y = isoY(x, y, p.z) - 12; G.enemies.length = 0; G.state = 'play'; };
+      let pick = null;
+      for (const o of m.objects.filter(o => o.tree && o.img.swayF && o.img.width >= 30).sort((a, b) => Math.hypot(a.x - m.start.x, a.y - m.start.y) - Math.hypot(b.x - m.start.x, b.y - m.start.y))) {
+        for (const [dx, dy] of [[0.3, -0.55], [-0.55, 0.3], [0.2, -0.6]]) { const x = o.x + dx, y = o.y + dy; if (walkable(m, x, y, tileH(m, x, y)) && Math.abs(tileH(m, x, y) - o.z) < 0.1 && !nearColliders(m, x, y, 0.5).some(c => c !== o && dist(x, y, c.x, c.y) < c.r + 0.3)) { pick = { o, x, y }; break; } }
+        if (pick) break;
+      }
+      if (!pick) return { pick: false };
+      place(pick.o.x + 1.6, pick.o.y + 1.6); for (let k = 0; k < 20; k++) await raf();
+      const front = pick.o._fade;
+      place(pick.x, pick.y); const t0 = G.t; let tReach = null;
+      for (let k = 0; k < 40; k++) { await raf(); if (tReach == null && pick.o._fade <= TREE_FADE + 0.001) tReach = G.t - t0; }
+      const under = { fade: pick.o._fade, split: pick.o._split };
+      place(pick.o.x + 2.2, pick.o.y + 2.2); for (let k = 0; k < 40; k++) await raf();
+      return { pick: true, front, tReach: tReach == null ? null : +tReach.toFixed(3), under, back: pick.o._fade, backSplit: pick.o._split };
+    });
+    check('canopy: in front of a tree it is one composite (fade 1); under it the canopy splits off and fades to 0.35 within ~0.2 s; walking out fades it back', F.pick && F.front === 1 && F.under.split && Math.abs(F.under.fade - 0.35) < 0.002 && F.tReach != null && F.tReach <= 0.3 && F.back === 1 && !F.backSplit, F);
+    const S = await tp.evaluate(async () => {
+      const m = G.map, raf = () => new Promise(r => requestAnimationFrame(r)), seen = new Set(); let maxN = 0;
+      for (let k = 0; k < 150; k++) { await raf(); maxN = Math.max(maxN, TREE_FRAME.n); for (const o of m.objects) if (o.tree && o._sw && o._fr) seen.add(o._fr); }
+      const ts = shadowTiles(m); let dirShadows = 0; for (const L of ts.tiles.values()) for (const e of L.list) if (e.ts) dirShadows++;
+      const g = groundPrep(m); let dec = 0, kinds = new Set();
+      for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) for (const d of decalsAt(m, i, j)) { dec++; kinds.add(d.k); }
+      return { frames: [...seen].sort(), maxN, cap: TREE_SWAY_MAX, dirShadows, decals: dec, kinds: kinds.size, set: DECALS_OF(m).length, perTile: +(dec / g.W * 32).toFixed(2) };
+    });
+    check('sway: the gust moves swaying trees to both -1 and +1 px frames; at most 60 sway a frame (near band)', S.frames.includes(-1) && S.frames.includes(1) && S.maxN <= S.cap && S.maxN > 0, S);
+    check('shadows (desktop): trees bake directional silhouettes into the static shadow tiles (0 live draws)', S.dirShadows > 300, S.dirShadows);
+    check('decals: 16 kinds per zone, all used on the Vale, baked (no objects)', S.set === 16 && S.kinds === 16 && S.decals > 2000, S);
+    await tp.close();
+    const pp = await br.newPage({ viewport: { width: 960, height: 540 } }); pp.on('pageerror', e => errs.push('pageerror(g2 phone): ' + e.message));
+    await pp.goto(`${base}/index.html?map=pinewood&phone=1`, { waitUntil: 'load' });
+    await pp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    const P = await pp.evaluate(() => { const ts = shadowTiles(G.map); let dir = 0, ell = 0; for (const L of ts.tiles.values()) for (const e of L.list) { if (e.ts) dir++; else ell++; } const sp = new Set(G.map.objects.filter(o => o.tree).map(o => o.src.t)); return { dir, ell, species: [...sp].sort() }; });
+    check('shadows (phone): trees keep the ellipse; Pinewood has >= 5 tree species (pines x3, oak, birch, dead)', P.dir === 0 && P.ell > 500 && ['pine', 'pine_giant', 'pine_young', 'tree_birch', 'tree_oak'].every(k => P.species.includes(k)), P);
+    await pp.close();
+  }
   // ---------- 5. frame time ----------
   await page.reload({ waitUntil: 'load' });
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
@@ -868,6 +1010,23 @@ const PAD_STUB = () => {
   ft.splice(0, 5); ft.sort((a, b) => a - b);
   const avg = ft.reduce((a, b) => a + b, 0) / ft.length, p95 = ft[Math.floor(ft.length * 0.95)];
   check('perf: 60 fps (avg frame <= 17.5 ms)', avg <= 17.5, { avg: +avg.toFixed(2), p95: +p95.toFixed(2), frames: ft.length });
+  // DESIGN §26.4 step 2: the frame split by phase (?perf=flush: each phase's deferred raster forced into it), with loose per-phase
+  // budgets that catch an algorithmic regression (an O(n) pass, an uncached per-pixel draw), not load noise. Off = nothing installed.
+  {
+    const off = await ev(() => ({ on: PERF.on, native: /\[native code\]/.test(CanvasRenderingContext2D.prototype.drawImage.toString()), tier: QUALITY.tier }));
+    const pp = await br.newPage({ viewport: { width: 960, height: 540 } }); pp.on('pageerror', e => errs.push('pageerror(perf split): ' + e.message));
+    await pp.goto(`${base}/index.html?scene=play&perf=flush`, { waitUntil: 'load' });
+    await pp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    await wait(500); await pp.evaluate(() => __perf(true, true)); await wait(4000);
+    const pf = await pp.evaluate(() => __perf(true)), ph = pf.ph, sum = (...k) => +k.reduce((a, q) => a + (ph[q] || 0), 0).toFixed(2);
+    const split = { ground: sum('chunks', 'ground', 'falls', 'sea'), sky: sum('sky.base', 'sky.moon', 'sky.mtn', 'sky'), entities: sum('decals', 'entities', 'fx'), fog: sum('fog.1', 'fog'), lights: sum('lights.lm', 'lights.mul', 'lights'), bloom: sum('bloom', 'grade.soft', 'grade'), hud: sum('blit', 'hud'), update: sum('update') };
+    const BUDGET = { ground: 4, sky: 4, entities: 5, fog: 2.5, lights: 4.5, bloom: 4.5, hud: 7, update: 3 };
+    const over = Object.keys(BUDGET).filter(k => split[k] > BUDGET[k]);
+    check('perf: phase split under budget (ms/frame, ?perf=flush)', over.length === 0 && pf.draws > 0, { split, over, draws: pf.draws, parts: pf.parts });
+    const ov = await pp.evaluate(() => { const c = DISP.getContext('2d').getImageData(330 * HUD_K, 10 * HUD_K, 1, 1).data; return { txt: !!PERF_RING.txt, px: [c[0], c[1], c[2]] }; });
+    check('perf: ?perf overlay draws its readout; with ?perf unset nothing is wrapped (native drawImage, PERF.on false), desktop tier high', ov.txt && !off.on && off.native && off.tier === 'high', { ov, off });
+    await pp.close();
+  }
   // ---------- 6. HUD at min(DPR, 2) ----------
   const ctx2 = await br.newContext({ viewport: { width: 960, height: 540 }, deviceScaleFactor: 2 });
   const p2 = await ctx2.newPage(); p2.on('pageerror', e => errs.push('pageerror(dpr2): ' + e.message));
@@ -879,6 +1038,49 @@ const PAD_STUB = () => {
   const st2 = await p2.evaluate(() => G.state);
   check('dpr 2: HUD backing store 1920x1080, title click still lands', w2.w === 1920 && w2.k === 2 && st2 === 'play', { w2, st2 });
   await ctx2.close();
+  // ---------- 6a. §28 the bare start: null gear slots everywhere (stats, skills, attack, menus, save / load, pickups) ----------
+  {
+    const bp = await br.newPage({ viewport: { width: 960, height: 540 } }); const berr = []; bp.on('pageerror', e => berr.push(e.message));
+    await bp.goto(`${base}/index.html?map=vale`, { waitUntil: 'load' });
+    await bp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    const b28 = await bp.evaluate(async () => {
+      const w = ms => new Promise(r => setTimeout(r, ms)), out = {};
+      G.state = 'play'; G.banner = null; const p = G.player = makePlayer(); p.x = G.map.start.x; p.y = G.map.start.y; p.z = tileH(G.map, p.x, p.y); p.invulnT = 99;
+      out.bare = { slots: EQUIP_SLOTS.filter(k => p.equip[k]).length, gear: Object.values(p.gear).join(), wdmg: p.wdmg, dmgBase: +p.dmgBase.toFixed(2), skills: ['q', 'e', 'r', 'f', 'c', 'shift'].map(k => slotSkill(p, k)).join() };
+      // the shove: 1 damage-ish (no sword damage), knockback; Q refuses, the barefoot roll dodges
+      G.enemies.length = 0; const e = spawnEnemy('slime', p.x + 0.9, p.y, 0); e.spawnT = 0; const hp0 = e.hp; p.aim = 0; p.atkT = 0; basicAttack(p); await w(120);
+      out.shove = { dmg: +(hp0 - e.hp).toFixed(1), lmb: skillSlotState(p, 'lmb').name, q: useSkill(p, 'q'), roll: (p.st = p.maxSt, useSkill(p, 'shift')) };
+      G.enemies.length = 0; p.dash = null; await w(300);
+      // menus with every slot empty: character, inventory, loadout panel
+      for (const t of ['skills', 'inv']) { openInv(t); await w(200); } G.ui.sel = null; await w(150); closeInv();
+      // save / load: empty slots stay empty; an unreadable gear item falls back to the slot's first-kit Common (never a lost slot)
+      const s1 = migrate(JSON.parse(JSON.stringify(saveData()))), q1 = makePlayer(); applySave(q1, s1);
+      out.load = { empty: EQUIP_SLOTS.filter(k => q1.equip[k]).length };
+      const s2 = migrate(JSON.parse(JSON.stringify(saveData()))); s2.player.equip.head = { id: 'i_9', base: 'no_such_base', rarity: 'rare', affixes: [], sockets: [] };
+      const q2 = makePlayer(); applySave(q2, s2); out.load.fallback = q2.equip.head && q2.equip.head.base + '/' + q2.equip.head.rarity; out.load.others = ['weapon', 'chest', 'boots'].filter(k => q2.equip[k]).length;
+      G.player = p;
+      // pickups flagged `equip` go on when the slot is empty, into the bag when it is not
+      const cap = makeItem('ironcap', 'common', 1); pickup(p, { kind: 'item', it: cap, rar: 'common', x: p.x, y: p.y, z: p.z, equip: true });
+      const cap2 = makeItem('ironcap', 'common', 1); pickup(p, { kind: 'item', it: cap2, rar: 'common', x: p.x, y: p.y, z: p.z, equip: true });
+      out.wear = { head: p.equip.head === cap, second: p.bag.includes(cap2), c: slotSkill(p, 'c') };
+      // the ambush's fixed boots: Common Iron Boots for an empty slot; a hero already in boots gets the old Uncommon+ roll
+      const L0 = []; const dl = window.dropLoot; window.dropLoot = (x, y, list) => L0.push(list.map(d => d.it ? d.it.base + '/' + d.it.rarity : d.kind));
+      lootAction({ type: 'loot', item: 'ironboots', rarity: 'common', x: p.x, y: p.y }); p.equip.boots = makeItem('ironboots', 'common', 1); recalcStats(p, false);
+      lootAction({ type: 'loot', item: 'ironboots', rarity: 'common', x: p.x, y: p.y }); window.dropLoot = dl;
+      out.boots = { fresh: L0[0].join(), worn: L0[1].length === 1 && !/^ironboots/.test(L0[1][0]) && !/\/common$/.test(L0[1][0]) };
+      // a game that did not start bare (every save from before §28): the HUD is whole
+      const sec = G.prog.secrets.opening; G.prog.secrets.opening = undefined; out.hudWhole = ['bars', 'map', 'q', 'pot', 'skills'].every(k => hudShown(k) === 1); G.prog.secrets.opening = sec;
+      return out;
+    });
+    check('§28 bare hero: every slot null; p.gear keeps default ids for render; wdmg 1; no Q E R F C, SHIFT = barefoot Roll', b28.bare.slots === 0 && b28.bare.wdmg === 1 && b28.bare.skills === ',,,,,roll' && b28.bare.gear === 'sword,knighthelm,warden,knightgreaves', b28.bare);
+    check('§28 bare hero: LMB is a weak Shove (<= 3 damage), Q refuses, the roll dodges', b28.shove.lmb === 'Shove' && b28.shove.dmg > 0 && b28.shove.dmg <= 3 && b28.shove.q === false && b28.shove.roll === true, b28.shove);
+    check('§28 save / load: empty gear slots stay empty; an unreadable gear item becomes the slot\'s first-kit Common', b28.load.empty === 0 && b28.load.fallback === 'ironcap/common' && b28.load.others === 0, b28.load);
+    check('§28 pickups: a first-kit piece goes on into an empty slot, a second one goes to the bag', b28.wear.head && b28.wear.second && b28.wear.c === 'warcry', b28.wear);
+    check('§28 garden boots: fixed Common Iron Boots (no roll); a hero already in boots gets the old Uncommon+ roll instead', b28.boots.fresh === 'ironboots/common' && b28.boots.worn, b28.boots);
+    check('§28 a game that did not start bare keeps the whole HUD', b28.hudWhole);
+    check('§28 bare-hero menus, attack and save paths raise no page errors', berr.length === 0, berr.slice(0, 3));
+    await bp.close();
+  }
   // ---------- 6b. phone settings (?phone=1): 256 px chunks, 12 resident, 16 awake; touring the synthetic zone stays under the cap ----------
   const p3 = await br.newPage({ viewport: { width: 960, height: 540 } }); p3.on('pageerror', e => errs.push('pageerror(phone): ' + e.message));
   await p3.goto(`${base}/index.html?scene=play&phone=1`, { waitUntil: 'load' });
@@ -890,10 +1092,605 @@ const PAD_STUB = () => {
     for (const s of m.sections.filter(q => q.tiles)) { p.x = s.cx; p.y = s.cy; p.z = tileH(m, p.x, p.y); G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12; for (let k = 0; k < 50; k++) { await w(30); maxRes = Math.max(maxRes, CHUNK.cache.size); } }
     for (let k = 0; k < 200 && (GROUND_STATS.visMissing || CHUNK.jobs.size); k++) await w(25);
     const e0 = CHUNK.thrash; await w(2500);
-    return { size: CHUNK.size, max: CHUNK.max, cap: SLEEP.cap, coarse: COARSE_POINTER, maxRes, evicted: CHUNK.evicted, thrash: CHUNK.thrash - e0, tourThrash: CHUNK.thrash };
+    return { size: CHUNK.size, max: CHUNK.max, cap: SLEEP.cap, coarse: COARSE_POINTER, maxRes, evicted: CHUNK.evicted, thrash: CHUNK.thrash - e0, tourThrash: CHUNK.thrash, tier: QUALITY.tier, partCap: PART.cap, hudK: HUD_K, gov: GOV.on, rung: GOV.rungs[GOV.ri] };
   }, SYN);
+  check('phone: §26.4 caps - quality tier phone (or low), particle cap 300, the resolution governor on (DPR rung 0.5..1; at DPR 1 the store stays 1x)', ['phone', 'low'].includes(ph.tier) && ph.partCap === 300 && ph.gov && ph.rung >= 0.5 && ph.rung <= 1 && ph.hudK === 1, { tier: ph.tier, partCap: ph.partCap, hudK: ph.hudK, gov: ph.gov, rung: ph.rung });
   check('phone: ?phone=1 -> 256 px chunks, <= 12 resident while touring (LRU evicts, no thrash), 16 awake, one fog layer', ph.size === 256 && ph.max === 12 && ph.cap === 16 && ph.coarse && ph.maxRes <= 12 && ph.evicted > 0 && ph.thrash === 0, ph);
   await p3.close();
+  // ======================= M3 UI lane (tooltip v2, paper doll, ring rule, ICONS routing) — owned by the UI agent =======================
+  {
+    const pg = await br.newPage({ viewport: { width: 960, height: 540 } });
+    pg.on('pageerror', e => errs.push('pageerror(m3-ui): ' + e.message));
+    pg.on('console', m => { if (m.type() === 'error') errs.push('console(m3-ui): ' + m.text()); });
+    await pg.goto(`${base}/index.html?scene=play`, { waitUntil: 'load' });
+    await pg.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    if (!(await pg.evaluate(() => typeof ICONS !== 'undefined'))) await pg.addScriptTag({ path: path.join(ROOT, 'js', 'icons.js') });
+    await wait(300);
+    const m3 = (fn, arg) => pg.evaluate(fn, arg);
+    // fill the 8 slots + bag with makeTestItem items; trap the legacy mirrors (reqLvl / uid / affix.stat) and spy on ICONS.item
+    await m3(() => {
+      const p = G.player; p.level = 40; window.__legacy = 0; window.__iconArgs = [];
+      const trap = it => { for (const k of ['reqLvl', 'uid']) Object.defineProperty(it, k, { get() { window.__legacy++; return k === 'uid' ? this.id : this.req; }, configurable: true });
+        for (const a of it.affixes) Object.defineProperty(a, 'stat', { get() { window.__legacy++; return this.id; }, configurable: true }); return it; };
+      window.__trap = trap;
+      const t = o => trap(makeTestItem(o));
+      p.equip.weapon = t({ slot: 'weapon', variant: 'sword', tier: 1, rarity: 'rare', ilvl: 12, sockets: ['ruby_2', null] });
+      p.equip.head = t({ slot: 'head', variant: 'knighthelm', tier: 1, rarity: 'uncommon' });
+      p.equip.chest = t({ slot: 'chest', variant: 'warden', tier: 2, rarity: 'epic', ilvl: 16, sockets: ['diamond_2', null], tempered: true });
+      p.equip.boots = t({ slot: 'boots', variant: 'knightgreaves', tier: 1, rarity: 'rare' });
+      p.equip.ring1 = t({ slot: 'ring', rarity: 'rare', boon: 'fireBurn' });
+      p.equip.ring2 = t({ slot: 'ring', tier: 1, rarity: 'epic', ilvl: 18, boon: 'frostPower' });
+      p.equip.amulet = t({ slot: 'amulet', rarity: 'rare' });
+      p.equip.belt = t({ slot: 'belt', rarity: 'uncommon' });
+      p.bag = Array(BAG_SIZE).fill(null);
+      window.__sword = t({ slot: 'weapon', variant: 'sword', tier: 2, rarity: 'rare', ilvl: 18, sockets: ['topaz_1'] });
+      window.__ring = t({ slot: 'ring', rarity: 'legendary', tier: 2, ilvl: 30 });
+      window.__lantern = t({ unique: 'pipslantern', hist: { found: 'spire', kills: 0, bossKills: 0 } });
+      [window.__sword, window.__ring, window.__lantern, t({ unique: 'rootcrown' })].forEach(e => bagAdd(p, e));
+      recalcStats(p, true);
+      const f = ICONS.item; ICONS.item = function (b, ...r) { window.__iconArgs.push(b); return f.call(this, b, ...r); };
+      openInv('inv'); G.ui.sel = null;
+    });
+    await wait(500);
+    // -- paper doll: the 4 trinket slots at the §19.4 positions (relative to the panel), all 8 slots focusable / hit-testable
+    const doll = await m3(() => ({ rel: EQ_REL, pos: EQ_POS, keys: EQUIP_SLOTS, ids: UI.focus.list.map(r => r.id).filter(i => i.startsWith('eq:')) }));
+    check('paper doll: ring1 (24,88) ring2 (176,88) amulet (100,64) from the panel origin, belt tightened to (100,256) (R3 #6); 8 slots registered',
+      JSON.stringify([doll.rel.ring1, doll.rel.ring2, doll.rel.amulet, doll.rel.belt]) === '[[24,88],[176,88],[100,64],[100,256]]' && doll.keys.every(k => doll.ids.includes('eq:' + k)) && doll.ids.length === 8, doll);
+    // -- tooltip rows: <= 12 lines for every kind, name in rarity colour, v2 names only (legacy mirrors never read)
+    const tip = await m3(() => {
+      const p = G.player, out = [];
+      const all = EQUIP_SLOTS.map(k => p.equip[k]).concat(p.bag.filter(Boolean));
+      for (const it of all) for (const touch of [false, true]) {
+        const T = itemTipRows(p, it, { w: 308, touch, cmp: replacedBy(p, it) });
+        out.push({ n: T.count, k: T.rows.map(r => r.k).join(','), touch, col: T.rows[0].col === rarityCol(it.rarity), name: T.rows[0].lines.join(' ') === itemName(it) || T.rows[0].lines.length > 1 });
+      }
+      return { out, legacy: window.__legacy };
+    });
+    check('tooltip v2: <= 12 lines for all 8 slots + bag items, desktop and touch', tip.out.every(o => o.n <= 12), tip.out.map(o => o.n));
+    check('tooltip v2: name first, in rarity colour; touch collapses affixes (chips) and drops family / synergy / flavour',
+      tip.out.every(o => o.k.startsWith('name,head,lv') && o.col) && tip.out.filter(o => o.touch).every(o => !/\baff\b|family|syn|flavor/.test(o.k)) && tip.out.filter(o => !o.touch).some(o => /aff/.test(o.k)), tip.out.slice(0, 4));
+    // -- compare: the Rare bag sword vs the equipped Rare sword shows deltas; the legendary trinket shows boon + rule + synergy
+    const cmpT = await m3(() => {
+      const p = G.player, T = itemTipRows(p, window.__sword, { w: 308, touch: false, cmp: replacedBy(p, window.__sword) }), L = itemTipRows(p, window.__lantern, { w: 308, touch: false, cmp: null });
+      const head = T.rows.find(r => r.k === 'head'), aff = T.rows.filter(r => r.k === 'aff');
+      return { dmgDelta: head.stats[0].d, affD: aff.map(a => +a.d.toFixed(3)), hasCmp: aff.every(a => a.hasCmp), lk: L.rows.map(r => r.k) };
+    });
+    check('tooltip v2: Rare weapon has compare deltas vs the equipped weapon; unique trinket shows boon + gold rule + synergy + footer',
+      cmpT.dmgDelta > 0 && cmpT.hasCmp && cmpT.affD.length === 2 && ['boon', 'rule', 'syn', 'flavor', 'footer'].every(k => cmpT.lk.includes(k)), cmpT);
+    // -- ICONS routing: every ICONS.item call got a BASE id (never a variant / suit id); trinkets resolved through baseOf
+    const ic = await m3(() => {
+      const bad = window.__iconArgs.filter(b => !baseOf(b) || ['sword', 'staff', 'bow', 'warden', 'dreamweave', 'stalker', 'ring', 'amulet', 'belt'].includes(b));
+      return { n: window.__iconArgs.length, bad: [...new Set(bad)], toast: (() => { const e = G.player.bag.find(x => x && x.rarity === 'rare'); const q = UI.toast({ text: itemName(e), rarity: 'rare' }); return { framed: !!q.framed, w: q.icon && q.icon.width }; })() };
+    });
+    check('icons: ICONS.item only with base ids; loot toast uses the 24 px ICONS art', ic.n > 0 && ic.bad.length === 0 && ic.toast.framed && ic.toast.w === 24, ic);
+    // -- drop labels / pickup toast use the generated v2 name
+    const drop = await m3(() => {
+      const it = makeTestItem({ slot: 'weapon', variant: 'sword', tier: 1, rarity: 'rare', ilvl: 12 }); G.drops = [];
+      spawnDrop(G.player.x + 1, G.player.y, { kind: 'item', it }); const d = G.drops[0];
+      return { name: d.name, want: itemName(it), rar: d.rar, hasPart: !!(it.name.prefix || it.name.suffix) };
+    });
+    check('drop label: the generated v2 name in rarity colour', drop.name === drop.want && drop.rar === 'rare' && drop.hasPart, drop);
+    // -- ring rule. 1) empty ring slot fills first, no prompt. 2) both full: the bag ring enters pick mode, focus on the weaker ring, confirm replaces ONLY that one
+    const ring = await m3(() => {
+      const p = G.player, r = {}; G.ui.ringPick = null;
+      const ring1 = p.equip.ring1, ring2 = p.equip.ring2, spare = window.__ring, bi = p.bag.indexOf(spare);
+      r.weaker = weakerRing(p);                                  // ring1 is Rare, ring2 Epic -> ring1
+      bagClickMenu(bi, false);
+      r.pick = G.ui.ringPick === spare; r.stillBag = p.bag.includes(spare); r.unchanged = p.equip.ring1 === ring1 && p.equip.ring2 === ring2;
+      r.focus = UI.focus.id; r.cmp = replacedBy(p, spare, null) === ring1;
+      clickEquipSlot('ring2');                                    // the player chose ring2 (the stronger one): that one is replaced
+      r.after = { ring1: p.equip.ring1 === ring1, ring2: p.equip.ring2 === spare, oldInBag: p.bag.includes(ring2), pickCleared: !G.ui.ringPick };
+      // empty slot first: clear ring2, equip another ring from the bag -> straight into ring2, no pick
+      const other = makeTestItem({ slot: 'ring', rarity: 'uncommon' }); p.equip.ring2 = null; bagAdd(p, other);
+      bagClickMenu(p.bag.indexOf(other), false);
+      r.empty = { in2: p.equip.ring2 === other, noPick: !G.ui.ringPick };
+      return r;
+    });
+    check('ring rule: empty slot fills first; both full -> pick mode (focus on the weaker ring, compare vs it), confirm replaces only the chosen ring',
+      ring.weaker === 'ring1' && ring.pick && ring.stillBag && ring.unchanged && ring.focus === 'eq:ring1' && ring.cmp && ring.after.ring1 && ring.after.ring2 && ring.after.oldInBag && ring.after.pickCleared && ring.empty.in2 && ring.empty.noPick, ring);
+    // -- mouse: real hit-test on the doll slot; pad: focus.move reaches every slot; touch: tap compares first, second tap confirms
+    await m3(() => { const p = G.player; p.equip.ring2 = makeTestItem({ slot: 'ring', rarity: 'rare' }); window.__ring2 = makeTestItem({ slot: 'ring', rarity: 'epic', ilvl: 20 }); bagAdd(p, window.__ring2); G.ui.ringPick = null; G.ui.sel = null; });
+    await wait(300);
+    const mouse = await m3(() => {
+      const p = G.player, e = window.__ring2, before = p.equip.ring1;
+      const [bx, by] = (() => { const i = p.bag.indexOf(e); return [COL2 + 10 + (i % 6) * 54 + 10, 108 + Math.floor(i / 6) * 54 + 10]; })();
+      UI.click(bx, by);                                           // mouse click on the bag ring -> pick mode
+      const pick = G.ui.ringPick === e;
+      const [rx, ry] = EQ_POS.ring1; UI.click(rx + 10, ry + 10);   // click the ring1 doll slot
+      return { pick, equipped: p.equip.ring1 === e, oldOut: !p.equip.ring1 || p.equip.ring1 !== before };
+    });
+    check('mouse: click bag ring then the ring1 doll slot replaces ring1', mouse.pick && mouse.equipped && mouse.oldOut, mouse);
+    await m3(() => { const p = G.player; window.__ring3 = makeTestItem({ slot: 'ring', rarity: 'legendary', tier: 2, ilvl: 30 }); bagAdd(p, window.__ring3); G.ui.sel = null; G.ui.ringPick = null; UI.focus.set('eq:ring1', true); });
+    await wait(250);
+    const pad = await m3(() => {
+      // every doll slot is reachable from every other with d-pad moves (BFS over UI.focus.move), and ring1 -> right goes toward ring2 / amulet
+      const ids = EQUIP_SLOTS.map(k => 'eq:' + k), edges = {};
+      for (const id of ids) { edges[id] = []; for (const d of ['up', 'down', 'left', 'right']) { UI.focus.set(id, true); const r = UI.focus.move(d); if (r && ids.includes(r.id)) edges[id].push(r.id); } }
+      const seen = new Set(['eq:ring1']), q = ['eq:ring1']; while (q.length) for (const n of edges[q.shift()]) if (!seen.has(n)) { seen.add(n); q.push(n); }
+      return { reach: seen.size, edges };
+    });
+    check('pad / keyboard focus: all 8 paper-doll slots are reachable with the d-pad', pad.reach === 8, pad);
+    const touch = await m3(() => {
+      const p = G.player, e = window.__ring3, r = {}; G.touch = true; IN.device = 'touch'; G.ui.sel = null; G.ui.ringPick = null;
+      const bi = p.bag.indexOf(e), keep1 = p.equip.ring1, keep2 = p.equip.ring2;
+      bagClickMenu(bi, false); r.first = { pick: !G.ui.ringPick, sel: G.ui.sel === e };          // first tap only shows the ring
+      bagClickMenu(bi, false); r.second = { pick: G.ui.ringPick === e };                         // second tap starts the pick
+      clickEquipSlot('ring2'); r.cand = { cand: G.ui.ringCand === 'ring2', unchanged: p.equip.ring2 === keep2 };   // tap a ring: compare only
+      clickEquipSlot('ring2'); r.done = { ring2: p.equip.ring2 === e, ring1: p.equip.ring1 === keep1 };            // tap again: replace
+      const T = itemTipRows(p, e, { w: 308, touch: true }); r.touchRows = T.rows.map(x => x.k);
+      G.touch = false; IN.device = 'kbm'; return r;
+    });
+    check('touch: tap shows the ring, second tap starts the pick, tap a ring slot compares, tap again replaces; tooltip collapsed',
+      touch.first.pick && touch.first.sel && touch.second.pick && touch.cand.cand && touch.cand.unchanged && touch.done.ring2 && touch.done.ring1 && touch.touchRows.includes('chips'), touch);
+    check('legacy mirrors (reqLvl / affix.stat / uid) were never read by the UI render, tooltip or equip paths', (await m3(() => window.__legacy)) === 0);
+    await pg.close();
+  }
+  // ======================= end M3 UI lane =======================
+  // ======================= UI fixes R3 (docs/meetings/2026-10-20-feel-ui.md "R3 Prioritized UI fixes") — owned by the UI agent =======================
+  {
+    const mk = async (opts, url = '?scene=play') => {
+      const c = await br.newContext(opts), pg = await c.newPage();
+      pg.on('pageerror', e => errs.push('pageerror(r3): ' + e.message));
+      pg.on('console', m => { if (m.type() === 'error') errs.push('console(r3): ' + m.text()); });
+      await pg.goto(`${base}/index.html${url}`, { waitUntil: 'load' });
+      await pg.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+      if (!(await pg.evaluate(() => typeof ICONS !== 'undefined'))) await pg.addScriptTag({ path: path.join(ROOT, 'js', 'icons.js') });
+      await wait(300);
+      return { c, pg, e: (f, a) => pg.evaluate(f, a) };
+    };
+    const frames = (pg, n = 3) => pg.evaluate(n => new Promise(r => { const f = () => (--n <= 0 ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
+    const { c: c1, pg: pg1, e } = await mk({ viewport: { width: 960, height: 540 } });
+    // 1. help overlay: the buttons clear the last row, the whole panel is on the canvas (keyboard rows and touch rows)
+    const help = {};
+    for (const touch of [false, true]) {
+      await e(t => { G.touch = t; IN.device = t ? 'touch' : 'kbm'; G.ui.help = true; }, touch); await frames(pg1);
+      help[touch ? 'touch' : 'kbm'] = await e(() => { const r = HUD.helpRect; G.ui.help = false; return { clear: r.btnY - r.lastRowY, top: r.y, bottom: r.y + r.h }; });
+    }
+    await e(() => { G.touch = false; IN.device = 'kbm'; });
+    check('R3 #1 help overlay: SETTINGS / CLOSE sit below the last row (>= 40 px), panel inside 540 px, keyboard and touch rows',
+      Object.values(help).every(h => h.clear >= 40 && h.top >= 0 && h.bottom <= 540), help);
+    // 3. tracker: wraps at the minimap's left edge in <= 2 lines + ellipsis; "Foes left" only in a live wave; the banner clears the touch buttons
+    const trk = await e(() => {
+      const long = 'Open the chest west of the glade. Then find the Stone\'s lantern and bring it back to the Elder Stone, then talk to Pip about the rift beyond the old bridge.';
+      const L = hudWrapLines(long, TRACKER_RIGHT - 16 - 20, 'body', 2), r = { n: L.length, w: Math.max(...L.map(l => UI.measure(l, 'body'))), ell: /…$/.test(L[L.length - 1]), right: TRACKER_RIGHT };
+      G.pendingSpawns = 0; G.arena = { id: 'a', map: G.map.id, done: true, gates: [] }; G.enemies.push({ type: 'slime', hp: 5, maxHp: 5, dead: false, x: 1, y: 1, z: 0, arena: 'a' });
+      r.doneArena = waveLive(); G.arena = { id: 'a', map: G.map.id, done: false, gates: [] }; r.liveArena = waveLive();
+      G.arena = null; r.idle = waveLive(); G.pendingSpawns = 1; r.pending = waveLive(); G.pendingSpawns = 0; G.enemies.pop();
+      return r;
+    });
+    check('R3 #3 tracker: objective wraps at x < 816 (2 lines + "..."); "Foes left" only while a wave / live arena runs (not after the arena, not idle)',
+      trk.n === 2 && trk.w <= trk.right - 16 - 20 && trk.ell && !trk.doneArena && trk.liveArena && !trk.idle && trk.pending, trk);
+    const bn = await e(() => { G.touch = true; IN.device = 'touch'; G.banner = { s: 'Test', sub: 'x', t: 5, max: 5 }; return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => { const m = touchMenu()[0]; const o = { by: HUD.bannerY, btnBottom: m.y + m.h }; G.banner = null; G.touch = false; IN.device = 'kbm'; r(o); }))); });
+    check('R3 #3 touch: the zone banner starts below the three icon buttons', bn.by >= bn.btnBottom + 8, bn);
+    // 4. tooltip copy: units, "0%", zone display names, a compact compare, skill names
+    await e(() => {
+      const p = G.player; p.level = 30;
+      p.equip.weapon = makeTestItem({ slot: 'weapon', variant: 'sword', tier: 1, rarity: 'rare', ilvl: 12, sockets: ['ruby_2', null], hist: { found: 'pinewood', kills: 3, bossKills: 0 } });
+      window.__r3 = makeTestItem({ slot: 'weapon', variant: 'sword', tier: 2, rarity: 'rare', ilvl: 18, sockets: ['topaz_1'], hist: { found: 'spire', kills: 0, bossKills: 0 } });
+      window.__r3l = makeTestItem({ unique: 'pipslantern', hist: { found: 'spire', kills: 0, bossKills: 0 } });
+      p.bag = Array(BAG_SIZE).fill(null); bagAdd(p, window.__r3); bagAdd(p, window.__r3l); p.cdr = 0.0004; p.skillDmg = -0.003; p.haste = 0; recalcStats(p, true); p.cdr = 0.0004; p.skillDmg = -0.003;
+    });
+    const copy = await e(() => {
+      const p = G.player, cmp = replacedBy(p, window.__r3), T = itemTipRows(p, window.__r3, { w: 308, touch: false, cmp }), TT = itemTipRows(p, window.__r3, { w: 308, touch: true, cmp }), L = itemTipRows(p, window.__r3l, { w: 308 });
+      const D = compareDeltas(window.__r3, cmp), rows = statRows(p, false), short = statRows(p, true).map(r => r[0]), skills = TT.rows.find(r => r.k === 'skills');
+      const hp = p.equip.weapon.affixes[0];
+      return {
+        zones: [zoneName('spire'), zoneName('pinewood'), zoneName('caldera'), zoneName('nowhere_land')], found: L.rows.find(r => r.k === 'footer').parts[0],
+        negZero: rows.concat(statRows(p, true)).some(r => /-0%/.test(String(r[1]))) || /-0%/.test(affixText('cdr', -0.0004)) || /-0%/.test(affixText('skillDmg', -0.001)), cdr: rows.find(r => r[0] === 'CDR')[1],
+        deltas: D.map(d => d.text), nDelta: D.length, labels: rows.map(r => r[0]), short, chip: chipText('hp', 63), unit: affixText('hp', 63), skillNames: skills && skills.skills.length === 3, touchK: TT.rows.map(r => r.k).join(','),
+        n: [T.count, TT.count], hasChips: TT.rows.some(r => r.k === 'chips')
+      };
+    });
+    check('R3 #4 copy: zone display names ("Sleepless Spire", not "spire"), no "-0%" anywhere, units on affixes and touch chips ("+63 HP")',
+      copy.zones[0] === 'Sleepless Spire' && copy.zones[1] === 'Misty Pinewood' && copy.zones[2] === 'Emberfall Caldera' && copy.zones[3] === 'Nowhere land' && copy.found === 'Found: Sleepless Spire' && !copy.negZero && copy.cdr === '0%' && copy.chip === '+63 HP' && copy.unit === '+63 HP', copy);
+    check('R3 #4 compare: up to 3 stat deltas (damage first, with units); Q/E/R names row at touch width; tooltip within 12 lines',
+      copy.nDelta >= 1 && copy.nDelta <= 3 && copy.deltas.every(t => /^[+-]\d/.test(t) && !/^[+-]0/.test(t)) && copy.skillNames && copy.hasChips && copy.n.every(n => n <= 12), copy);
+    // draw it for real (the compare block, no "vs equipped: <name>" line) and the idle loadout pane
+    await e(() => { G.touch = false; IN.device = 'kbm'; openInv('inv'); G.ui.sel = window.__r3; }); await frames(pg1);
+    const drawn = await e(() => ({ ids: UI.focus.list.map(r => r.id), tip: true }));
+    check('R3 #4 compare: EQUIP / SELL stay below the compare block (no overlap)', drawn.ids.includes('btn:equip') && drawn.ids.includes('btn:sell2'), drawn.ids.length);
+    await e(() => { G.ui.sel = null; }); await frames(pg1);
+    const idle = await e(() => { const p = G.player; return { shown: Math.abs(G.t - HUD.loadoutT) < 0.2, gap: EQ_POS.belt[1] - (EQ_POS.chest[1] + 48), labels: statRows(p, false).map(r => r[0]), short: statRows(p, true).map(r => r[0]) }; });
+    check('R3 #6 inventory idle: loadout summary shows when nothing is selected; belt sits <= 16 px under the boots; full stat words (short only on phone)',
+      idle.shown && idle.gap <= 16 && ['Skill dmg', 'Regen', 'Potions', 'Speed'].every(l => idle.labels.includes(l)) && ['SkDmg', 'Rgn', 'Pots', 'Spd'].every(l => idle.short.includes(l)) && !['SkDmg', 'Rgn', 'Pots', 'Spd'].some(l => idle.labels.includes(l)), idle);
+    // 5. quest log: only started quests under ACTIVE (no spoilers at level 1); full titles; no "not started"
+    const quests = {};
+    for (const [k, st] of [['none', {}], ['one', { vale_lantern: { step: 0 } }], ['done', { vale_lantern: 'done', pinewood_foxkit: { step: 1 } }]]) {
+      await e(st => { G.player.level = 1; G.prog.quests = st; G.ui.qSel = null; openInv('quests'); }, st); await frames(pg1);
+      quests[k] = await e(() => ({ ids: UI.focus.list.map(r => r.id).filter(i => i.startsWith('q:')), head: QUESTS.length }));
+    }
+    check('R3 #5 quest log: ACTIVE lists only started quests (0 at level 1 with none started, no caldera / spire spoilers); finished ones move to DONE',
+      quests.none.ids.length === 0 && quests.one.ids.join() === 'q:vale_lantern' && quests.done.ids.length === 2 && quests.none.head >= 7, quests);
+    const titleFmt = await e(() => ({ lines: wrapLines("The Stone's Lost Lantern of the Elder", 'small', 192, 2), ok: !String(drawQuestsTab).includes('not started') }));
+    check('R3 #5 quest log: titles wrap to 2 lines; the "not started" state is gone', titleFmt.lines.length <= 2 && titleFmt.ok, titleFmt.lines);
+    await e(() => { closeInv(); G.prog.quests = {}; });
+    // 8. HUD juice is live: ghost bar after damage, skill-ready flash, HP < 25% pulse, level-up ring (pixel reads on the display canvas)
+    const px = (x, y) => e(([x, y]) => { const d = DISP.getContext('2d').getImageData(Math.round(x * HUD_K), Math.round(y * HUD_K), 1, 1).data; return [d[0], d[1], d[2]]; }, [x, y]);
+    await e(() => { const p = G.player; p.hp = p.maxHp; G.t += 0; }); await frames(pg1, 4);
+    await e(() => { const p = G.player; p.hp = p.maxHp * 0.7; }); await frames(pg1, 3);
+    const ghost = await px(310, 465);
+    check('R3 #8 HUD ghost bar: after damage a light fill trails the HP bar (live)', ghost.every(v => v > 170), ghost);
+    await e(() => { const p = G.player; p.hp = p.maxHp * 0.2; }); await frames(pg1, 4);
+    const red = []; for (let i = 0; i < 12; i++) { red.push((await px(18, 488))[0]); await wait(45); }
+    check('R3 #8 HUD low-HP pulse: the portrait frame breathes red at 2 Hz (red channel varies)', Math.max(...red) - Math.min(...red) > 25, red);
+    await e(() => { const p = G.player; p.hp = p.maxHp; p.cds = p.cds || {}; p.cds[skillSlotState(p, 'q').id] = 0.25; }); await wait(120);
+    const rdy = await e(() => new Promise(r => { let seen = false, n = 0; const f = () => { const h = HUD.ready.q; if (h && h.t != null && G.t - h.t < 0.13) seen = true; if (++n < 40) requestAnimationFrame(f); else r({ seen, cd: G.player.cds.q }); }; requestAnimationFrame(f); }));
+    check('R3 #8 skill-ready rim flash fires when a cooldown ends (HUD.ready.q.t within 120 ms)', rdy.seen, rdy);
+    const ring = await e(() => { const p = G.player; HUD.lvl.n = p.level; p.level += 1; return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); }).then(() => px(160, 508));
+    check('R3 #8 level-up gold ring is drawn around the XP bar', ring[0] > 200 && ring[1] > 150 && ring[2] < 160, ring);
+    await e(() => { G.player.level -= 1; });
+    // boss bar, phase model: one full-width bar at frac; n - i filled diamonds, the rest faded; a break (i 1 -> 2) fades the rightmost
+    // filled diamond and refills the bar from empty during the transition; no bossBars -> the single bar, no diamonds
+    const seg = await e(() => new Promise(r => {
+      const keep = window.bossBars, kb = G.boss, out = {}; G.state = 'play';
+      G.boss = { hp: 500, maxHp: 1500, dead: false, spawnT: 0, res: {}, stagger: 0, phase2: false, boss: true, x: 0, y: 0, z: 0, type: 'boss', hgt: 3 };
+      let st = { n: 3, i: 1, frac: 0.5, transition: false }; window.bossBars = () => st;
+      const fr = (n, f) => { const g = () => (--n <= 0 ? f() : requestAnimationFrame(g)); requestAnimationFrame(g); };
+      fr(3, () => {
+        out.before = Object.assign({}, HUD.bossSegs);
+        st = { n: 3, i: 2, frac: 0, transition: true };
+        fr(3, () => {
+          out.mid = Object.assign({}, HUD.bossSegs); out.midFading = HUD.bossSegs.dia.includes('fading');
+          setTimeout(() => {
+            st = { n: 3, i: 2, frac: 0.8, transition: false };
+            fr(3, () => {
+              out.after = Object.assign({}, HUD.bossSegs); window.bossBars = undefined; HUD.bossSegs = null;
+              fr(3, () => { out.fallbackNoSegs = !HUD.bossSegs; window.bossBars = keep; G.boss = kb; r(out); });
+            });
+          }, 700);
+        });
+      });
+    }));
+    check('R3 boss bar: n=3 i=1 -> one bar at frac, 2 filled + 1 faded diamond; a break i 1 -> 2 fades the rightmost filled diamond and refills the bar from empty (SHIELDED); after: 1 filled; no bossBars -> single bar',
+      seg.before.bar === 0.5 && seg.before.dia.join() === 'full,full,faded' && seg.mid.refill && seg.mid.bar < 0.5 && seg.mid.dia.join() === 'full,fading,faded' && seg.after.dia.join() === 'full,faded,faded' && seg.after.bar === 0.8 && seg.fallbackNoSegs, seg);
+    await c1.close();
+    // 2. phone portrait: the rotate card flag follows the orientation on a touch device (and never trips on desktop)
+    {
+      const { c, pg } = await mk({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+      const up = await pg.evaluate(() => G.portrait);
+      await pg.setViewportSize({ width: 844, height: 390 }); await wait(250);
+      const side = await pg.evaluate(() => G.portrait);
+      await pg.setViewportSize({ width: 390, height: 844 }); await wait(250);
+      const again = await pg.evaluate(() => G.portrait);
+      const desk = await mk({ viewport: { width: 540, height: 960 } }); const dp = await desk.pg.evaluate(() => G.portrait); await desk.c.close();
+      check('R3 #2 portrait: touch device upright -> rotate card; sideways -> no card; a tall desktop window (mouse) never shows it', up === true && side === false && again === true && dp === false, { up, side, again, desktopTall: dp });
+      await c.close();
+    }
+    // 8. title: one box width for slots and entries, 2 px rules, a "?" entry instead of the controls text wall
+    {
+      const { c, pg } = await mk({ viewport: { width: 960, height: 540 } }, '');
+      await pg.evaluate(() => { newGame(); saveGame(); G.state = 'title'; G.save = readSave(); G.ui.slotInfo = null; G.ui.settings = false; G.ui.help = false; });
+      await wait(500);
+      const t = await pg.evaluate(() => ({ list: UI.focus.list.filter(r => r.id.startsWith('title:')).map(r => ({ id: r.id, w: r.w })), wall: typeof titleControlsHint !== 'undefined' }));
+      const ws = [...new Set(t.list.filter(r => /slot|continue|new|settings/.test(r.id)).map(r => r.w))];
+      check('R3 #8 title: slot boxes and entries share one width; "?" help entry exists; the controls text wall is gone', ws.length === 1 && t.list.some(r => r.id === 'title:help') && !t.wall, t);
+      await pg.evaluate(() => { G.ui.help = true; }); await wait(300);
+      const th = await pg.evaluate(() => ({ ids: UI.focus.list.map(r => r.id), started: G.state }));
+      check('R3 #8 title "?" opens the help overlay (SETTINGS / CLOSE) without starting the game', th.ids.includes('btn:help-close') && th.started === 'title', th);
+      await c.close();
+    }
+  }
+  // ======================= end UI fixes R3 =======================
+  // ---------- hit feel (DESIGN §27, meeting 2026-10-20 R1 + R2): hitlag by power, death fling, tumble ----------
+  {
+    const FEEL_DIR = path.join(__dirname, 'shots', 'm3-feel'); fs.mkdirSync(FEEL_DIR, { recursive: true });
+    const injectHF = () => ev(() => {
+      // a controlled bench: no crits, no buffs, a 1e6-HP slime so r = dmg / maxHp is chosen exactly (frand +-10 % aside)
+      window.__hf = {
+        reset() { G.state = 'play'; G.ui.open = false; G.ui.pause = false; G.ui.help = false; G.banner = null; G.enemies.length = 0; G.projs.length = 0; G.zones.length = 0; G.delays.length = 0; resetCorpses(); hitlagReset(); setSetting('hitstop', 'full'); const p = G.player; p.crit = 0; p.critR = null; p.buffs = {}; p.dead = false; p.hp = p.maxHp; },
+        mob(type, dx, dy, hp) { const p = G.player, e = spawnEnemy(type, p.x + dx, p.y + dy, 0); e.hp = e.maxHp = hp; e.cd = 9; return e; },
+        // the base damage that lands about frac of the target's max HP (measured on a scratch enemy, then scaled)
+        base(frac, hp) { const e = __hf.mob('slime', 5, 5, 1e9); damageEnemy(e, 100, {}); const per = (1e9 - e.hp) / 100; G.enemies.splice(G.enemies.indexOf(e), 1); hitlagReset(); return frac * hp / per; },
+        steps(n) { for (let i = 0; i < n; i++) { let rdt = STEP; const fr = hitlagStep(); if (G.slowmo > 0) { G.slowmo -= rdt; rdt *= 0.35; } update(fr ? 0 : rdt, rdt); } },
+      };
+    });
+    await injectHF();
+    // 1. a 5 % hit freezes the target ~2 steps and no global freeze; a 40 % hit freezes it longer, freezes the world (r >= 0.25: 4)
+    //    and tumbles it (stun 0.3, a hop that is a draw offset: e.z untouched); flash, knockback, number size and pitch follow r
+    const H = await ev(() => {
+      __hf.reset(); const out = {}, pitches = [], keep = AUDIO.sfx;
+      AUDIO.sfx = (id, pos, o) => { if (id === 'hit') pitches.push(o && o.pitch || 0); return false; };
+      try {
+        for (const [k, frac] of [['weak', 0.05], ['heavy', 0.4]]) {
+          __hf.reset(); const hp = 1e6, b = __hf.base(frac, hp), e = __hf.mob('slime', 1.2, 0, hp);
+          pitches.length = k === 'weak' ? 0 : 1; damageEnemy(e, b, { knock: 0.3 });
+          const t = G.texts[G.texts.length - 1];
+          const o = { r: +((hp - e.hp) / hp).toFixed(3), ft: e.hitFreeze, fg: G.hitstopF, flash: +e.flash.toFixed(3), kx: +Math.hypot(e.kx, e.ky).toFixed(2), stun: e.stunT, hop: e.hopZ > 0, numR: t && t.r };
+          let n = 0; while (e.hitFreeze > 0 && n < 20) { updateEnemies(STEP); n++; }
+          o.frozenSteps = n; let maxHop = 0; for (let i = 0; i < 40; i++) { updateEnemies(STEP); maxHop = Math.max(maxHop, e.hopZ); }
+          o.maxHop = +maxHop.toFixed(2); o.zKept = Math.abs(e.z - tileH(G.map, e.x, e.y)) < 0.1; out[k] = o;
+        }
+      } finally { AUDIO.sfx = keep; }
+      out.pitches = pitches; return out;
+    });
+    check('hit feel: a 5 % hit freezes only the target, ~2 steps (no global freeze, no tumble)', H.weak.ft === 2 && H.weak.frozenSteps === 2 && H.weak.fg === 0 && !H.weak.hop, H.weak);
+    check('hit feel: a 40 % hit freezes the target longer (4-5 steps) and the world 4 steps (r >= 0.25); it tumbles (0.3 s stun, a hop drawn as an offset, e.z untouched)',
+      H.heavy.ft >= 4 && H.heavy.ft <= 5 && H.heavy.frozenSteps === H.heavy.ft && H.heavy.fg === 4 && H.heavy.hop && H.heavy.stun >= 0.29 && H.heavy.maxHop > 0.1 && H.heavy.zKept, H.heavy);
+    check('hit feel: companion signals scale with r: flash 0.1 + 0.1r, knockback x(0.7 + 0.6r) (x1.5 tumble), number r carried, hit sound pitched lower',
+      Math.abs(H.weak.flash - (0.1 + 0.1 * H.weak.r)) < 0.01 && Math.abs(H.heavy.flash - (0.1 + 0.1 * H.heavy.r)) < 0.01 && H.heavy.kx > H.weak.kx * 1.5 && H.weak.numR < 0.06 && H.heavy.numR > 0.33
+      && H.pitches.length === 2 && H.pitches[0] > -60 && H.pitches[1] < -200, { weak: H.weak, heavy: H.heavy, pitches: H.pitches });
+    // 1b. a §30 spirit-clone replay (cast src 'echo'): target-only <= 2 steps, never global, no MP, half ult charge
+    const Ec = await ev(() => {
+      __hf.reset(); const p = G.player, hp = 1e6, b = __hf.base(0.6, hp), e = __hf.mob('slime', 1.2, 0, hp), mp0 = p.mp = 10;
+      p.mpHits = []; damageEnemy(e, b, { cast: { basic: true, src: 'echo' } }); const echo = { ft: e.hitFreeze, fg: G.hitstopF, mp: p.mp - mp0 };
+      __hf.reset(); const e2 = __hf.mob('slime', 1.2, 0, hp); p.mp = 10; p.ult = 0; p.mpHits = []; damageEnemy(e2, b, { cast: { basic: true } });
+      const real = { ft: e2.hitFreeze, fg: G.hitstopF, mp: p.mp - 10 };
+      p.ult = 0; damageEnemy(e2, 20, { cast: { basic: true, src: 'echo' } }); echo.ult = p.ult; p.ult = 0; damageEnemy(e2, 20, { cast: { basic: true } }); real.ult = p.ult;   // small hits: the charge never caps
+      return { echo, real };
+    });
+    check('hit feel: a src:echo hit is target-only (2 steps), never a global freeze, gains no MP and half the ult charge',
+      Ec.echo.ft === 2 && Ec.echo.fg === 0 && Ec.echo.mp === 0 && Ec.real.fg > 0 && Ec.real.mp > 0 && Ec.echo.ult > 0 && Math.abs(Ec.echo.ult / Ec.real.ult - 0.5) < 0.15, Ec);
+    // 2. AoE: one global freeze per cast from the largest r, never per target / summed; every target still gets its own freeze;
+    //    hit particles are capped per cast
+    const A = await ev(() => {
+      __hf.reset(); const p = G.player, hp = 1e6, b = __hf.base(0.3, hp), es = [];
+      for (let k = 0; k < 6; k++) es.push(__hf.mob('slime', 1.5 + Math.cos(k) * 0.6, Math.sin(k) * 0.6, hp));
+      G.parts.length = 0; const s0 = G.hitstopSpent;
+      const n = hitArea(p.x + 1.5, p.y, 1.6, b, {});
+      return { n, spent: G.hitstopSpent - s0, fg: G.hitstopF, ft: es.map(e => e.hitFreeze), parts: G.parts.length };
+    });
+    check('hit feel: AoE cast on 6 targets (r ~0.3) = ONE global freeze of 4 steps (budget charged 4, not 24); each target frozen; <= 24 hit particles',
+      A.n === 6 && A.fg === 4 && A.spent === 4 && A.ft.every(f => f >= 3) && A.parts <= 24, A);
+    // 3. the budget: 12 global steps per rolling 0.5 s (30 steps); a request over budget becomes target-only
+    const B = await ev(() => {
+      __hf.reset(); const frozen = [], spent = []; let refused = 0;
+      for (let i = 0; i < 120; i++) { if (hitstop(6) < 0) refused++; hitlagBudgetTick(); frozen.push(hitlagStep() ? 1 : 0); spent.push(G.hitstopSpent); }
+      let win = 0; for (let i = 0; i + 30 <= frozen.length; i++) { let s = 0; for (let j = i; j < i + 30; j++) s += frozen[j]; win = Math.max(win, s); }
+      __hf.reset(); const hp = 1e6, b = __hf.base(0.4, hp), e = __hf.mob('slime', 1.2, 0, hp);
+      G.hitstopSpent = 12;   // a saturated window: the 40 % hit's 4-step global request is refused and lands on the target
+      damageEnemy(e, b, {});
+      return { refused, maxSpent: Math.max(...spent), win, total: frozen.reduce((a, b) => a + b, 0), overF: G.hitstopF === 0, overFt: e.hitFreeze };
+    });
+    check('hit feel: global freeze budget holds (<= 12 steps granted per rolling 30-step window, max 6 per request + 6 carried); over budget -> target-only',
+      B.refused > 0 && B.maxSpent <= 12 && B.win <= 18 && B.total <= 4 * 12 + 6 && B.overF && B.overFt >= 4, B);
+    // 4. corpses: a fling for a real hit, a slump for a DoT kill, a squash-pop (no record) for a swarm member, the pool cap,
+    //    and loot / XP / counters immediate (e.dead the same step)
+    const C = await ev(() => {
+      __hf.reset(); const out = {}, p = G.player;
+      let e = __hf.mob('slime', 1.2, 0, 100); const k0 = G.kills.any || 0;
+      damageEnemy(e, 1e5, {}); out.deadNow = e.dead; out.killedNow = (G.kills.any || 0) === k0 + 1;
+      const c = G.corpses[0]; out.fling = c && c.mode; out.vAway = c && c.vx > 0; out.fg = G.hitstopF;
+      __hf.steps(20); out.flew = c && Math.hypot(c.x - e.x, c.y - e.y); out.inList = G.enemies.includes(e);
+      e = __hf.mob('slime', -1.2, 0, 100); damageEnemy(e, 1e5, { dot: true }); out.dot = G.corpses[G.corpses.length - 1].mode;
+      const n0 = G.corpses.length, sw = spawnEnemy('dreammoth', p.x + 2, p.y + 2, 0), mem = G.enemies.filter(q => q.swarm === sw.swarm);
+      damageEnemy(mem[1], 1e6, {}); out.swarmNoCorpse = G.corpses.length === n0; out.pop = G.effects.some(f => f.type === 'ghost' && f.sq);
+      for (let k = 0; k < 20; k++) { const m = __hf.mob('slime', 1 + (k % 5) * 0.3, (k / 5 | 0) * 0.3, 50); damageEnemy(m, 1e5, {}); }
+      out.cap = CORPSE.cap; out.n = G.corpses.length; out.pooled = G.corpses.length + CORPSE.pool.length;
+      __hf.steps(90); out.after = G.corpses.length; out.poolBack = CORPSE.pool.length;
+      return out;
+    });
+    check('hit feel R1: a kill flings a corpse away from the hit (pooled record, e.dead + kill counted the same step; an r = 1 kill freezes 6 steps); DoT kill slumps; a swarm member squash-pops with no record',
+      C.deadNow && C.killedNow && C.fling === 'fling' && C.vAway && C.flew > 0.3 && C.fg === 6 && !C.inList && C.dot === 'slump' && C.swarmNoCorpse && C.pop, C);
+    check(`hit feel R1: corpse cap holds (desktop ${C.cap}): 22 kills keep ${C.cap} records, the pool never grows, all return after they dissolve`,
+      C.cap === 12 && C.n === 12 && C.pooled === 12 && C.after === 0 && C.poolBack === 12, C);
+    // 5. boss death: the 15-step freeze is ~0.25 s of real time inside the boss slow-mo (the old loop stretched it to ~0.7 s);
+    //    the boss holds a death pose (no fling)
+    const D = await ev(() => new Promise(res => {
+      __hf.reset(); const p = G.player, b = spawnEnemy('boss', p.x + 3, p.y, 0); b.cd = 9;
+      b.hp = 0; killEnemy(b, b.maxHp, {});   // the killing-blow path (damageEnemy -> killEnemy), past any phase gate
+      const c = G.corpses.find(q => q.e === b), t0 = performance.now(), f0 = G.hitstopF;
+      const tick = () => { if (G.hitstopF > 0 && performance.now() - t0 < 3000) requestAnimationFrame(tick); else res({ f0, ms: Math.round(performance.now() - t0), slowmo: G.slowmo > 0, mode: c && c.mode, still: c && c.vx === 0 && c.vy === 0 }); };
+      requestAnimationFrame(tick);
+    }));
+    check('hit feel: boss death freeze = 15 steps ~0.25 s real time under slow-mo (was ~0.7 s); the boss holds a death pose, no fling',
+      D.f0 === 15 && D.ms >= 180 && D.ms <= 340 && D.slowmo && D.mode === 'boss' && D.still, D);
+    // 6. settings: the old boolean migrates before validation (applySettings / setSetting / the stored localStorage block);
+    //    Off = no global freeze, target 2 steps, signals still scale; Light caps the global freeze at 3
+    const S = await ev(() => {
+      const out = {};
+      applySettings(Object.assign(settingsData(), { hitstop: false })); out.applyFalse = SETTINGS.hitstop;
+      applySettings(Object.assign(settingsData(), { hitstop: true })); out.applyTrue = SETTINGS.hitstop;
+      out.setFalse = setSetting('hitstop', false); out.setLight = setSetting('hitstop', 'light'); out.bad = setSetting('hitstop', 'loud');
+      const run = mode => { __hf.reset(); setSetting('hitstop', mode); const hp = 1e6, b = __hf.base(0.7, hp), e = __hf.mob('slime', 1.2, 0, hp); damageEnemy(e, b, { knock: 0.3 }); return { fg: G.hitstopF, ft: e.hitFreeze, flash: +e.flash.toFixed(2), kx: +Math.hypot(e.kx, e.ky).toFixed(2) }; };
+      out.off = run('off'); out.light = run('light'); out.full = run('full');
+      const s = settingsData(); s.hitstop = false; localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+      return out;
+    });
+    await page.reload({ waitUntil: 'load' });
+    await page.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    S.stored = await ev(() => { const v = SETTINGS.hitstop; setSetting('hitstop', 'full'); return v; });
+    check('hit feel: setting hitstop Off / Light / Full; boolean true -> full, false -> off (apply, set, stored block) BEFORE validation; Off: no global, target 2, flash + knockback still scale; Light caps the global at 3',
+      S.applyFalse === 'off' && S.applyTrue === 'full' && S.setFalse === 'off' && S.setLight === 'light' && S.bad === 'full' && S.stored === 'off'
+      && S.off.fg === 0 && S.off.ft === 2 && S.off.flash > 0.15 && S.off.kx > 4 && S.light.fg === 3 && S.full.fg === 6, S);
+    // 7. frame strips (tools/shots/m3-feel): a weak hit, a heavy hit (tumble), a kill fling, on the freshly reloaded page; the loop
+    //    is paused and stepped by hand, one screenshot per listed step count
+    await injectHF();
+    const shotFrames = async (name, setup, plan) => {
+      await ev(setup);
+      const files = [];
+      for (const [i, n] of plan.entries()) {
+        await ev(n => { __hf.steps(n); render(); }, n);
+        const f = path.join(FEEL_DIR, `${name}-${String(i).padStart(2, '0')}.png`); await page.screenshot({ path: f, clip: { x: 420, y: 140, width: 380, height: 200 } }); files.push(f);
+      }
+      return files;
+    };
+    await ev(() => { running = false; });
+    await wait(100);
+    const clean = 'G.drops.length = 0; G.texts.length = 0; G.banner = null; G.msg = null; G.effects.length = 0; G.parts.length = 0;';
+    const setupHit = frac => `(() => { __hf.reset(); ${clean} const hp = 1e6, b = __hf.base(${frac}, hp); G.texts.length = 0; const p = G.player; G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
+      const e = __hf.mob('thornbackboar', 1.9, -0.9, hp); e.state = 'idle'; __hf.steps(2); damageEnemy(e, b, { knock: 0.4 }); })()`;
+    const weak = await shotFrames('1-weak-hit', setupHit(0.05), [0, 1, 1, 1, 2, 4]);
+    const heavy = await shotFrames('2-heavy-hit', setupHit(0.4), [0, 2, 2, 3, 3, 4, 6, 10]);
+    const kill = await shotFrames('3-kill-fling', `(() => { __hf.reset(); ${clean} const p = G.player; G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
+      const e = __hf.mob('thornbackboar', 1.5, -0.8, 300); const s = __hf.mob('slime', 1.4, 0.2, 300); __hf.steps(2); damageEnemy(e, 5000, { knock: 0.4 }); damageEnemy(s, 5000, { knock: 0.4 }); })()`, [0, 3, 4, 5, 6, 6, 6, 8, 8, 10]);
+    await ev(() => { running = true; last = performance.now(); acc = 0; requestAnimationFrame(loop); });
+    // one strip per sequence (frames left to right) for review
+    const strip = (files, out) => require('child_process').spawnSync('python3', ['-c', `import sys\nfrom PIL import Image\nfs=sys.argv[2:]\nim=[Image.open(f) for f in fs]\nw,h=im[0].size\ns=Image.new('RGB',(w*len(im),h))\nfor i,m in enumerate(im): s.paste(m,(i*w,0))\ns.save(sys.argv[1])`, out, ...files]);
+    const st = [strip(weak, path.join(FEEL_DIR, 'strip-1-weak-hit.png')), strip(heavy, path.join(FEEL_DIR, 'strip-2-heavy-hit.png')), strip(kill, path.join(FEEL_DIR, 'strip-3-kill-fling.png'))];
+    check('hit feel: frame strips written to tools/shots/m3-feel (weak hit, heavy hit, kill fling)', weak.length && heavy.length && kill.length && fs.existsSync(path.join(FEEL_DIR, 'strip-3-kill-fling.png')), { frames: weak.length + heavy.length + kill.length, strips: st.map(s => s.status) });
+    // 8. phone caps: the corpse pool is 8
+    {
+      const pp = await br.newPage({ viewport: { width: 960, height: 540 } }); pp.on('pageerror', e => errs.push('pageerror(feel phone): ' + e.message));
+      await pp.goto(`${base}/index.html?scene=play&phone=1`, { waitUntil: 'load' });
+      await pp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+      const ph = await pp.evaluate(() => { G.enemies.length = 0; const p = G.player; for (let k = 0; k < 12; k++) { const e = spawnEnemy('slime', p.x + 1 + k * 0.1, p.y, 0); e.hp = e.maxHp = 50; damageEnemy(e, 1e5, {}); } return { cap: CORPSE.cap, n: G.corpses.length, pooled: G.corpses.length + CORPSE.pool.length }; });
+      check('hit feel: phone corpse cap 8 (12 kills keep 8 records)', ph.cap === 8 && ph.n === 8 && ph.pooled === 8, ph);
+      await pp.close();
+    }
+  }
+  // ---------- boss phases (§26.1 multi-bar phases, cunning forms, fairness; bosses.js / enemydata.js) ----------
+  {
+    const bp = await br.newPage({ viewport: { width: 960, height: 540 } }); bp.on('pageerror', e => errs.push('pageerror(boss phases): ' + e.message));
+    await bp.goto(`${base}/index.html?scene=play`, { waitUntil: 'load' });
+    await bp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    const w = ms => bp.evaluate(ms => new Promise(r => setTimeout(r, ms)), ms);
+    const bars = await bp.evaluate(() => {
+      G.enemies.length = 0; G.effects.length = 0; const p = G.player; p.invulnT = 999;
+      const m = BOSSES.mossjaw, bh = BOSSES.bramblehorn, b = spawnEnemy('bramblehorn', p.x + 6, p.y, 0); b.spawnT = 0; b.cd = 99; G.boss = b;
+      const bb0 = bossBars(b), hp0 = b.hp;
+      const r1 = damageEnemy(b, 1e7, { el: 'fire' }); const bb1 = bossBars(b), f1 = b.hp / b.maxHp;
+      const r2 = damageEnemy(b, 1e7, { el: 'fire' }); const hp2 = b.hp;   // inside the transition: invulnerable
+      window.__bph = { b };
+      return { p3: bh.phases[2].hpBelow, mBars: m.bars && m.phases.length, bBars: bh.bars && bh.phases.length, total: b.maxHp === hp0, bb0, r1, bb1, f1, floor: bh.phases[1].hpBelow, r2, same: hp2 === b.hp && Math.abs(hp2 - b.maxHp * bh.phases[1].hpBelow) < 1,
+        warden: bossBars(spawnEnemy('boss', p.x - 8, p.y, 0)).n, lastBar: G.lastBar && G.lastBar.bar };
+    });
+    await w(1800);
+    const bars2 = await bp.evaluate(() => {
+      const b = window.__bph.b, bb = bossBars(b), r = damageEnemy(b, 10, { el: 'fire' }), hp = b.hp;
+      damageEnemy(b, 1e7, { el: 'fire' }); const bb3 = bossBars(b);   // bar 2 -> clamps at bar 3's top
+      return { transOver: bb.transition === 0, hits: r && hp < b.maxHp * BOSSES.bramblehorn.phases[1].hpBelow, i2: bb3.i, f2: +(b.hp / b.maxHp).toFixed(3), max2: Math.round(bb3.max), alive: !b.dead };
+    });
+    await w(1800);
+    const bars3 = await bp.evaluate(() => { const b = window.__bph.b; damageEnemy(b, 1e8, { el: 'fire' }); const out = { dead: b.dead }; G.enemies.length = 0; G.boss = null; G.effects.length = 0; return out; });
+    check('boss phases: Mossjaw 2 bars, Bramblehorn 3; e.maxHp = total; one 1e7 hit clamps at bar 1\'s end (no skipped phase) and starts a 1.2-1.8 s invulnerable transition; bar 2 clamps too; the last bar kills; bossBars { n, i, frac, max, transition }; the Warden stays 1 bar',
+      bars.mBars === 2 && bars.bBars === 3 && bars.total && bars.bb0.n === 3 && bars.bb0.i === 0 && bars.bb0.frac > 0.999 && Math.abs(bars.bb0.max - bars.bb1.max * (1 - bars.floor) / (bars.floor - bars.p3)) < 2 && bars.r1 === true && bars.bb1.i === 1 && Math.abs(bars.f1 - bars.floor) < 1e-3
+        && bars.bb1.transition >= 1.2 && bars.bb1.transition <= 1.8 && bars.r2 === false && bars.same && bars.lastBar === 1 && bars.warden === 1
+        && bars2.transOver && bars2.hits && bars2.i2 === 2 && Math.abs(bars2.f2 - bars.p3) < 2e-3 && bars2.alive && bars3.dead, { bars, bars2, bars3 });
+    // cunning forms: Mossjaw bar 2 lunge feint (fake wind-up, then the real one); Bramblehorn bar 2 trunkSwipe -> backhand (delayed second hit); bar 3 rootGrab lead-aim
+    const cun = await bp.evaluate(async () => {
+      const wt = ms => new Promise(r => setTimeout(r, ms)), p = G.player, out = {}; p.invulnT = 999; G.enemies.length = 0; G.effects.length = 0;
+      const m = spawnEnemy('mossjaw', p.x + 5, p.y, 0); m.spawnT = 0; m.cd = 99; m.hp = m.maxHp * 0.4; await wt(100);
+      m.bk.mv = null; m.bk.queue.length = 0; m.cd = 99; startMove(m, 'lunge'); out.feint = G.lastWarn.feint; out.tele0 = G.effects.some(e => e.type === 'tele' && e.src === m);
+      for (let k = 0; k < 30 && !G.lastWarn.afterFeint; k++) await wt(50); out.feintAt = +(G.t - G.lastWarn.t).toFixed(2); out.afterFeint = !!G.lastWarn.afterFeint && G.lastWarn.move === 'lunge'; out.realWind = G.lastWarn.wind; out.phaseM = m.bk.phase; G.enemies.length = 0; G.effects.length = 0;
+      const b = spawnEnemy('bramblehorn', p.x + 2, p.y, 0); b.spawnT = 0; b.hp = b.maxHp * 0.5; await wt(100);
+      b.bk.mv = null; b.bk.queue.length = 0; b.cd = 99; startMove(b, 'trunkSwipe'); out.then = G.lastWarn.then; out.p2 = b.bk.phase;
+      await wt(1700); out.second = G.lastWarn.move;
+      b.hp = b.maxHp * 0.2; await wt(100); b.bk.mv = null; b.bk.queue.length = 0; b.cd = 99; G.effects.length = 0;
+      b.bk.pv = { x: p.x, y: p.y, vx: 0, vy: 3 }; startMove(b, 'rootGrab'); const t = G.effects.find(e => e.type === 'tele' && e.src === b && e.kind === 'line');
+      out.lead = G.lastWarn.lead; out.p3 = b.bk.phase; out.leadOff = t ? Math.abs(angDiff(t.ang, Math.atan2(p.y - b.y, p.x - b.x))) : 0;
+      out.fair = bossFairness('mossjaw').length + bossFairness('bramblehorn').length;
+      BOSSES.__ft = { kind: 'mini', bars: true, transition: 2.5, r: 0.9, moveDefs: { c: { type: 'cone', arc: 100, r: 3, wind: 0.6, feint: 0.2, open: 1.2 }, l: { type: 'line', w: 0.6, wind: 0.8, lead: 0.9 } },
+        phases: [{ hpBelow: 1, moves: { c: 1 }, forms: {} }, { hpBelow: 0.5, moves: { c: 1, l: 1 }, forms: {} }] };
+      out.rules = bossFairness('__ft').map(f => f.rule.split(':')[0].split(' ')[0]).sort().join(); delete BOSSES.__ft;
+      G.enemies.length = 0; G.boss = null; G.effects.length = 0; return out;
+    });
+    check('boss phases: cunning forms — Mossjaw bar 2 lunge feints (0.4 s fake, re-aimed real wind-up >= 0.55 s); Bramblehorn bar 2 trunkSwipe -> backhand; bar 3 rootGrab lead-aims; bossFairness clean for both and flags fast cones (walk-out), short feints, long leads, bad transitions, missing onEnter',
+      cun.feint === 0.4 && cun.tele0 && cun.afterFeint && cun.realWind >= 0.55 && cun.phaseM === 1 && cun.then === 'backhand' && cun.p2 === 1 && cun.second === 'backhand' && cun.lead === 0.45 && cun.p3 === 2 && cun.leadOff > 0.05 && cun.fair === 0
+        && ['a', 'bar', 'feint', 'lead-aim', 'walk-out'].every(k => cun.rules.split(',').includes(k)), cun);
+    // the tamed howl (QA run-big M3): at most 2 hounds, a 12 s rest, hounds -20 % HP / -30 % bite, a readable cue, and they flee when Mossjaw dies
+    const howl = await bp.evaluate(async () => {
+      const wt = ms => new Promise(r => setTimeout(r, ms)), p = G.player, out = {}; p.invulnT = 999; G.enemies.length = 0; G.effects.length = 0; G.shrink = null;   // Bramblehorn's root ring from the check above
+      const m = spawnEnemy('mossjaw', p.x + 2, p.y, 0); m.spawnT = 0; m.hp = m.maxHp * 0.4; syncPhase(m); await wt(100); m.bk.mv = null; m.bk.queue.length = 0; m.cd = 99;
+      startMove(m, 'howl'); out.wind = G.lastWarn.wind; out.sfx = G.lastWarn.sfx; out.rest = +(m.bk.rest.howl - G.t).toFixed(1); await wt(1300);
+      const hs = G.enemies.filter(e => e.summoner === m && !e.dead), base = Math.round(ENEMY.shadehound.hp * enemyHpMul(hs[0] ? hs[0].lvl : 1));
+      out.n = hs.length; out.hpK = hs[0] ? +(hs[0].maxHp / base).toFixed(2) : 0; out.dmK = hs[0] ? +(hs[0].dm / enemyDmgMul(hs[0].lvl)).toFixed(2) : 0;
+      out.max = BOSSES.mossjaw.moveDefs.howl.max;
+      m.bk.rest.howl = 0; m.bk.mv = null; m.cd = 99; startMove(m, 'howl'); await wt(1300); out.capped = G.enemies.filter(e => e.summoner === m && !e.dead).length;
+      m.hp = 1; m.bk.transT = 0; damageEnemy(m, 1e6, { el: 'fire' }); out.bossDead = m.dead; for (let k = 0; k < 40 && G.enemies.some(e => e.summoner === m && !e.dead); k++) await wt(100); /* the boss-death slowmo stretches the 1.2 s flee */ out.left = G.enemies.filter(e => e.summoner === m && !e.dead).length;
+      G.enemies.length = 0; G.boss = null; G.effects.length = 0; return out;
+    });
+    check('boss phases: Mossjaw howl — max 2 hounds (a recast at 2 adds none), 12 s rest, hounds x0.8 HP / x0.7 bite, cue >= 0.55 s, hounds flee + despawn on the boss death',
+      howl.n === 2 && howl.max === 2 && howl.capped === 2 && howl.rest >= 11.5 && howl.hpK > 0.75 && howl.hpK < 0.85 && Math.abs(howl.dmK - 0.7) < 0.02 && howl.wind >= 0.55 && howl.bossDead && howl.left === 0, howl);
+    await bp.close();
+  }
+  // ---------- §30 Echo: the spirit clone (game.js ECHO, rule 'echo'; render.js drawEcho; strip: tools/shots/m3-echo) ----------
+  {
+    const ECHO_DIR = path.join(__dirname, 'shots', 'm3-echo'); fs.mkdirSync(ECHO_DIR, { recursive: true });
+    const xp = await br.newPage({ viewport: { width: 960, height: 540 } }); xp.on('pageerror', e => errs.push('pageerror(echo): ' + e.message));
+    await xp.goto(`${base}/index.html?scene=play`, { waitUntil: 'load' });
+    await xp.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    await xp.evaluate(() => { running = false; });
+    await wait(100);
+    const X = await xp.evaluate(() => {
+      const p = G.player, out = {};
+      const steps = (n, vx = 0) => { for (let i = 0; i < n; i++) { const fr = hitlagStep(); if (vx) p.x += vx; update(fr ? 0 : STEP, STEP); } };
+      const attackStep = () => { const h = IN.held; IN.held = a => a === 'attack'; try { steps(1); } finally { IN.held = h; } };   // a basic attack inside a game step (handleInput -> playerActions)
+      const reset = () => { G.state = 'play'; G.ui.open = false; G.banner = null; G.msg = null; G.enemies.length = 0; G.projs.length = 0; G.zones.length = 0; G.delays.length = 0; G.effects.length = 0; G.echo = null;
+        hitlagReset(); p.cast = null; p.dash = null; p.atkT = 0; p.cds = {}; p.buffs = {}; p.invulnT = 999; p.mp = p.maxMp; p.ult = 0; p.crit = 0; p.critR = null; p.autoAtk = false; };
+      // the unique: a Legendary on the finder's own weapon variant, rule + unique 'echo', the 19th unique
+      p.equip.weapon = makeItem('dawnblade', 'rare', 12); recalcStats(p, true);
+      const U = makeUnique('echo', 24); out.item = { unique: U.unique, rule: U.rule, rarity: U.rarity, variant: BASES[U.base].variant, hero: p.gear.weapon, name: itemName(U), slot: U.slot,
+        count: Object.keys(UNIQUES).length + TRINKET_UNIQUES.length + WORLD_UNIQUES.length };
+      // the Act III+ gate: a boss-class first kill below L17 drops nothing extra, at L17+ once per save
+      G.prog.secrets = G.prog.secrets || {}; delete G.prog.secrets['unique:echo'];
+      out.gate = [lateUniqueDrop({ lvl: 12 }, 'boss'), lateUniqueDrop({ lvl: 20 }, 'elite'), lateUniqueDrop({ lvl: 20 }, 'boss'), lateUniqueDrop({ lvl: 30 }, 'boss')];
+      delete G.prog.secrets['unique:echo'];
+      p.equip.weapon.rule = 'echo';
+      const Q = slotSkill(p, 'q'), E = slotSkill(p, 'e'); out.q = Q; out.e = E;
+      // 1. spawn delay: the spirit forms on the 24th fixed step (0.4 s) after the attack, where the hero stood then
+      reset(); p.aim = 0; G.mouse.wx = p.x + 3; G.mouse.wy = p.y; attackStep(); const x0 = p.x, s1 = { alive: !!(G.echo && G.echo.alive), n: G.echo ? G.echo.count : -1, q: G.echo ? G.echo.q.length : 0 };
+      let k = 0; while (k < 60 && !(G.echo && G.echo.count)) { steps(1, 0.05); k++; }
+      out.spawn = { s1, steps: k, at: { x: +G.echo.g.x.toFixed(2), x0: +x0.toFixed(2) }, heroX: +(p.x - x0).toFixed(2) };
+      // 2. replay order: basic, Q, E in succession, replayed in the same order; the queue holds at most 4 (the oldest dropped)
+      reset(); const ord = []; const D0 = damageEnemy;
+      p.aim = 0; basicAttack(p); steps(2); p.cast = null; p.dash = null; useSkill(p, 'q'); steps(2); p.cast = null; p.dash = null; p.swing = null; useSkill(p, 'e'); out.qLen = G.echo.q.map(r => r.slot).join();
+      steps(60); out.order = G.echo.log.slice();
+      reset(); for (let i = 0; i < 6; i++) { p.atkT = 0; p.cast = null; basicAttack(p); } out.queued = G.echo.q.length; steps(40); out.replayed6 = G.echo.count;
+      // 3. never R: an ultimate is not recorded or replayed
+      reset(); p.ult = 100; const okR = useSkill(p, 'r'); out.r = { cast: okR, queued: G.echo ? G.echo.q.length : 0 }; steps(40); out.r.replays = G.echo ? G.echo.count : 0;
+      // 4. retyping: the hero's most-amplified element, arcane when none; never slash
+      reset(); const sum = p.sum, keep = Object.assign({}, sum); for (const el of DMG_ELS) sum[el + 'Dmg'] = 0; p.amp = {};
+      out.el0 = echoElement(p); sum.fireDmg = 0.1; sum.frostDmg = 0.3; sum.slashDmg = 0.9; out.el1 = echoElement(p); sum.slashDmg = 0;
+      const hits = []; damageEnemy = function (e, b, o = {}) { const c = o.cast !== undefined ? o.cast : CAST; const h0 = e.hp, r = D0(e, b, o); hits.push({ echo: !!(c && c.src === 'echo'), el: c && c.el, dmg: h0 - e.hp }); return r; };
+      const m = spawnEnemy('slime', p.x + 1.1, p.y, 0); m.hp = m.maxHp = 1e9; m.res = {}; m.cd = 99; m.stunT = 99;
+      p.aim = 0; basicAttack(p); steps(40); damageEnemy = D0;
+      const hh = hits.filter(h => h.echo), hr = hits.filter(h => !h.echo);
+      out.retype = { echoHits: hh.length, els: [...new Set(hh.map(h => h.el))].join(), heroEl: hr.length && hr[0].el, ratio: hh.length && hr.length ? +(hh[0].dmg / hr[0].dmg).toFixed(2) : 0, kf: +(ECHO.k * echoFocus(p, 'frost')).toFixed(2) };
+      Object.assign(sum, keep);
+      // 5. the §27 echo guard on a replayed hit: no MP, half (k-scaled) ult charge, target-only freeze <= 2, no global freeze, no
+      //    'hit' EFFECTS, no skill-rank progress, no Veil consumed; a replayed dash moves the spirit, never the hero; not a summon
+      reset(); const m2 = spawnEnemy('slime', p.x + 1.1, p.y, 0); m2.hp = m2.maxHp = 1e9; m2.res = {}; m2.cd = 99; m2.stunT = 99;
+      const ranks0 = (p.ranks[Q] && p.ranks[Q].hits) || 0, E0 = emitEffects, fxHit = []; emitEffects = (w, c) => { if (w === 'hit' && c.cast && c.cast.src === 'echo') fxHit.push(c); return E0(w, c); };
+      p.aim = 0; useSkill(p, 'q');   // the hero's own Sunslash lands now (its MP / charge / rank before the snapshot)
+      const ranks1 = (p.ranks[Q] && p.ranks[Q].hits) || 0, mpR = p.mpRegen; p.mpRegen = 0;
+      p.mp = 10; p.mpHits = []; p.ult = 0; hitlagReset(); m2.hitFreeze = 0; p.buffs.veil = { t: 9, max: 9 }; const hx = p.x, hy = p.y; let maxF = 0, maxG = 0, n0 = G.echo.count;
+      for (let i = 0; i < 30; i++) { steps(1); maxF = Math.max(maxF, m2.hitFreeze || 0); maxG = Math.max(maxG, G.hitstopF); }
+      emitEffects = E0; p.mpRegen = mpR;
+      out.guard = { replays: G.echo.count - n0, mp: +(p.mp - 10).toFixed(3), ult: +p.ult.toFixed(3), maxF, maxG, fxHit: fxHit.length, rank: ((p.ranks[Q] && p.ranks[Q].hits) || 0) - ranks1, heroRank: ranks1 - ranks0, veil: !!p.buffs.veil, heroMoved: +Math.hypot(p.x - hx, p.y - hy).toFixed(3),
+        hpLost: m2.maxHp - m2.hp > 0, summon: G.enemies.includes(G.echo.g) || !!(G.summons && G.summons.includes(G.echo.g)) };
+      // a dash skill replayed by the spirit: the hero stays put
+      const dashId = ['dashstrike', 'heroic', 'tumble'].find(id => SKILLS[id]); reset(); const g0 = echoState(p).g; const hx2 = p.x; echoReplay(p, G.echo, { id: dashId, slot: 'e', basic: false, a: 0, dx: 0, dy: 0, combo: 0, ctx: newCtx(SKILLS[dashId].element) });
+      steps(30); out.dash = { id: dashId, heroMoved: +Math.abs(p.x - hx2).toFixed(3), spiritDash: g0 === G.echo.g };
+      // 6. fade: full alpha while idle < 1.5 s, fading over the last 0.5 s, gone after 2 s idle; it re-forms on the next attack
+      reset(); p.aim = 0; attackStep(); steps(24); const a0 = G.echo.alive; steps(60); const a1 = G.echo.alpha; steps(45); const a2 = G.echo.alpha; steps(20); const a3 = G.echo.alive;
+      p.atkT = 0; attackStep(); steps(24); out.fade = { a0, a1: +a1.toFixed(2), a2: +a2.toFixed(2), gone: !a3, reform: G.echo.alive, count: G.echo.count };
+      // 7. the rule off: no state, no ring
+      reset(); p.equip.weapon.rule = null; basicAttack(p); steps(30); out.off = G.echo === null;
+      p.equip.weapon.rule = 'echo'; reset();
+      return out;
+    });
+    check('echo: the 19th unique (Twice-Told): a Legendary weapon with rule + unique "echo" on the finder\'s own weapon variant; drops once on a boss-class kill at L17+ (Act III)',
+      X.item.unique === 'echo' && X.item.rule === 'echo' && X.item.rarity === 'legendary' && X.item.slot === 'weapon' && X.item.variant === X.item.hero && X.item.name === 'Twice-Told' && X.item.count <= 19
+      && X.gate[0] === null && X.gate[1] === null && X.gate[2] === 'echo' && X.gate[3] === null, { item: X.item, gate: X.gate });
+    check('echo: the spirit forms 0.4 s (24 fixed steps) after the attack, standing where the hero stood then (an after-image: it trails a moving hero)',
+      !X.spawn.s1.alive && X.spawn.s1.n === 0 && X.spawn.s1.q === 1 && X.spawn.steps === 24 && Math.abs(X.spawn.at.x - X.spawn.at.x0) < 0.06 && X.spawn.heroX > 1, X.spawn);
+    check('echo: replays basic, Q, E in the order cast; the queue holds 4 (6 rapid basics replay 4)',
+      X.qLen === 'lmb,q,e' && X.order.join() === ['lmb', X.q, X.e].join() && X.queued === 4 && X.replayed6 === 4, { qLen: X.qLen, order: X.order, queued: X.queued, replayed6: X.replayed6 });
+    check('echo: never R (an ultimate is neither recorded nor replayed)', X.r.cast && X.r.queued === 0 && X.r.replays === 0, X.r);
+    check('echo: retyped to the most-amplified element (arcane with none, never slash); a replayed hit is that element at k x focus of the hero\'s hit',
+      X.el0 === 'arcane' && X.el1 === 'frost' && X.retype.echoHits >= 1 && X.retype.els === 'frost' && X.retype.heroEl === 'slash' && X.retype.ratio > X.retype.kf * 0.7 && X.retype.ratio < X.retype.kf * 1.6, { el0: X.el0, el1: X.el1, retype: X.retype });
+    check('echo: the §27 guard on replayed hits: no MP, half k-scaled ult charge, target-only freeze <= 2, no global freeze, no "hit" EFFECTS, no skill ranks, Veil kept, hero unmoved, not a summon; a replayed dash moves only the spirit',
+      X.guard.replays >= 1 && X.guard.hpLost && X.guard.mp === 0 && X.guard.ult > 0 && X.guard.maxF <= 2 && X.guard.maxF >= 1 && X.guard.maxG === 0 && X.guard.fxHit === 0 && X.guard.rank === 0 && X.guard.veil
+      && X.guard.heroMoved === 0 && !X.guard.summon && X.dash.heroMoved === 0 && X.dash.spiritDash, { guard: X.guard, dash: X.dash });
+    check('echo: fades after 2 s idle (full until 1.5 s, then fading) and re-forms on the next attack; no state without the rule',
+      X.fade.a0 && X.fade.a1 === 1 && X.fade.a2 > 0 && X.fade.a2 < 1 && X.fade.gone && X.fade.reform && X.off, { fade: X.fade, off: X.off });
+    // the strip: the hero walks right swinging; the spirit trails 0.4 s behind, replaying each swing in the echo's element
+    const files = [];
+    await xp.evaluate(() => {
+      const p = G.player; G.enemies.length = 0; G.projs.length = 0; G.effects.length = 0; G.parts.length = 0; G.texts.length = 0; G.drops.length = 0; G.echo = null; G.banner = null; G.msg = null;
+      p.sum.fireDmg = 0.35; p.cast = null; p.atkT = 0; p.aim = 0; p.face = 1; p.invulnT = 999;
+      for (let k = 0; k < 3; k++) { const e = spawnEnemy('thornbackboar', p.x + 1.4 - k * 0.5, p.y + 0.6 + k * 1.3, 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.stunT = 99; e.state = 'idle'; }
+      window.__es = (n) => { for (let i = 0; i < n; i++) { const fr = hitlagStep(); if (!fr) { p.x -= 0.03; p.y += 0.06; p.moving = true; p.walkT += STEP; } if (p.atkT <= 0 && !p.cast) { p.aim = 0; basicAttack(p); } update(fr ? 0 : STEP, STEP); p.moving = true; } G.cam.x = isoX(p.x, p.y) - 20; G.cam.y = isoY(p.x, p.y, p.z) - 12; render(); };
+    });
+    for (const [i, n] of [20, 6, 6, 6, 6, 6, 6, 6].entries()) {
+      await xp.evaluate(n => __es(n), n);
+      const f = path.join(ECHO_DIR, `echo-${String(i).padStart(2, '0')}.png`); await xp.screenshot({ path: f, clip: { x: 300, y: 130, width: 360, height: 220 } }); files.push(f);
+    }
+    const alive = await xp.evaluate(() => !!(G.echo && G.echo.alive && G.echo.count > 0));
+    const strip = require('child_process').spawnSync('python3', ['-c', `import sys\nfrom PIL import Image\nfs=sys.argv[2:]\nim=[Image.open(f) for f in fs]\nw,h=im[0].size\ns=Image.new('RGB',(w*len(im),h))\nfor i,m in enumerate(im): s.paste(m,(i*w,0))\ns.save(sys.argv[1])`, path.join(ECHO_DIR, 'strip-echo.png'), ...files]);
+    check('echo: frame strip written to tools/shots/m3-echo (8 frames, the spirit replaying the hero\'s swings)', alive && files.length === 8 && strip.status === 0 && fs.existsSync(path.join(ECHO_DIR, 'strip-echo.png')), { frames: files.length, alive, status: strip.status });
+    await xp.close();
+  }
   check('no page errors', errs.length === 0, errs.slice(0, 5));
   await br.close(); srv.close();
   console.log(fails ? `\n${fails} check(s) failed` : '\nAll play checks passed');

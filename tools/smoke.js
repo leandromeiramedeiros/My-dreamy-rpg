@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Smoke test: opens every game/editor page in headless Chromium, pokes some input,
 // saves a screenshot and fails on any console error or uncaught page exception, then runs tools/balsim.js --quiet
-// and fails on any of its red flags (DESIGN §20.7).
+// and fails on any of its red flags (DESIGN §20.7), then runs tools/save-migrate.js (the save v3 -> v4 gate).
 // Usage: node tools/smoke.js [extra-scene-name ...]
 const http = require('http');
 const fs = require('fs');
@@ -14,8 +14,8 @@ const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css
   '.json': 'application/json', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
 
 const PAGES = ['index.html', 'index.html?scene=play', 'index.html?scene=arena', 'index.html?scene=boss',
-  'index.html?scene=loadout', 'index.html?scene=portal', 'index.html?scene=play&weapon=starfall',
-  'index.html?scene=play&weapon=moonbow', 'editor.html',
+  'index.html?scene=loadout', 'index.html?scene=portal', 'index.html?scene=play&weapon=staff',
+  'index.html?scene=play&weapon=bow', 'editor.html',
   ...process.argv.slice(2).map((s) => `index.html?scene=${s}`)];
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -92,5 +92,10 @@ async function smokeOne(browser, base, rel) {
   // §20.7: the balance sim's CI red flags fail the smoke run too
   const sim = require('child_process').spawnSync(process.execPath, [path.join(__dirname, 'balsim.js'), '--quiet'], { stdio: 'inherit' });
   console.log(sim.status === 0 ? 'balsim: no red flags' : `balsim: RED FLAGS (exit ${sim.status})`);
-  process.exit(failed || sim.status !== 0 ? 1 : 0);
+  // the save v3 -> v4 ship gate (genuine v3 fixtures in tools/fixtures)
+  const mig = require('child_process').spawnSync(process.execPath, [path.join(__dirname, 'save-migrate.js')], { stdio: ['ignore', 'pipe', 'inherit'], encoding: 'utf8' });
+  const migOut = String(mig.stdout || '');
+  for (const l of migOut.split('\n')) if (/^FAIL/.test(l)) console.log('save-migrate: ' + l);
+  console.log(mig.status === 0 ? `save-migrate: ${(migOut.match(/^PASS/gm) || []).length} checks passed` : `save-migrate: FAILED (exit ${mig.status})`);
+  process.exit(failed || sim.status !== 0 || mig.status !== 0 ? 1 : 0);
 })();

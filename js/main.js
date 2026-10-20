@@ -6,14 +6,48 @@ const DISP = document.getElementById('game');
 const dctx = DISP.getContext('2d');
 // HUD at min(devicePixelRatio, 2) (§16.6.6): the backing store is DW*k x DH*k and every draw keeps using the
 // 960x540 coordinate space through one transform; the scene stays 480x270 and is scaled up into it.
+// Phones (maps.js PHONE) start at k = 0.5 x DPR (>= 1; §26.4 step 3, capped DPR) and the governor below moves it: the browser
+// upscales the store with smoothing off (index.html image-rendering), and the per-frame scene blit + HUD fill fewer pixels.
 let HUD_K = 1;
+const HUD_K_MAX = 2;
+// ===== resolution governor (phones; Lumina ResolutionGovernor rules, docs/CREDITS.md; DESIGN §26.4 step 3) ====================
+// The phone backing store runs at a DPR rung (GOV.rungs: 0.5 .. 1.0 of the device ratio, 0.125 steps; k = rung x DPR, whole
+// eighths, 1..2). Timing source: the CPU frame time of loop() (update + render; no GPU timer in Canvas 2D), averaged per 0.5 s
+// sample; decisions on the median of the last 5 samples (one slow burst is no trend). Down one rung after 4 slow medians
+// (> GOV.slow ms), up after 20 fast ones (< GOV.fast ms), never twice within 3 s (cooldown, then fresh samples). Below the
+// lowest rung the next step down is the 'low' quality tier (render.js QUALITY), and the first step up leaves it. It replaces the
+// old EMA tier switch, which flapped. Desktop never runs it; ?quality=... pins the tier and turns it off.
+const GOV = { on: PHONE && !QUALITY.pinned, rungs: [0.5, 0.625, 0.75, 0.875, 1], ri: 0, slow: 14, fast: 9, acc: 0, n: 0, timer: 0, cooldown: 2, samples: [], sorted: [], nSlow: 0, nFast: 0, med: 0 };
+function governorStep(work, dt) {
+  const G2 = GOV; if (!G2.on) return;
+  G2.acc += work; G2.n++; G2.cooldown -= dt; G2.timer += dt;
+  if (G2.timer < 0.5) return;
+  const ms = G2.acc / Math.max(1, G2.n); G2.acc = 0; G2.n = 0; G2.timer = 0;
+  const S = G2.samples; S.push(ms); if (S.length > 5) S.shift();
+  if (S.length < 3) return;
+  const so = G2.sorted; so.length = 0; for (const v of S) so.push(v); so.sort((a, b) => a - b);
+  G2.med = so[so.length >> 1];
+  G2.nSlow = G2.med > G2.slow ? G2.nSlow + 1 : 0; G2.nFast = G2.med < G2.fast ? G2.nFast + 1 : 0;
+  if (G2.cooldown > 0) return;
+  if (G2.nSlow >= 4) {
+    if (G2.ri > 0) { G2.ri--; fit(); } else if (QUALITY.tier !== 'low') setQuality('low'); else return;
+    governorSettle();
+  } else if (G2.nFast >= 20) {
+    if (QUALITY.tier === 'low') setQuality('phone'); else if (G2.ri < G2.rungs.length - 1) { G2.ri++; fit(); } else return;
+    governorSettle();
+  }
+}
+function governorSettle() { GOV.cooldown = 3; GOV.nSlow = GOV.nFast = 0; GOV.samples.length = 0; }
 function fit() {
   const s = Math.min(window.innerWidth / DW, window.innerHeight / DH);
   DISP.style.width = Math.floor(DW * s) + 'px';
   DISP.style.height = Math.floor(DH * s) + 'px';
-  const k = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+  const dpr = window.devicePixelRatio || 1;
+  const k = PHONE ? clamp(Math.round(dpr * GOV.rungs[GOV.ri] * 8) / 8, 1, HUD_K_MAX) : Math.min(HUD_K_MAX, Math.max(1, dpr));
   if (k !== HUD_K || DISP.width !== DW * k) { HUD_K = k; DISP.width = DW * k; DISP.height = DH * k; }
   dctx.setTransform(HUD_K, 0, 0, HUD_K, 0, 0); dctx.imageSmoothingEnabled = false;
+  // R3 #2: a touch device held upright gets the "rotate to play" card (screens.js drawRotateCard) instead of a 40 % letterbox
+  G.portrait = !!(TOUCH_CAPABLE && window.innerHeight > window.innerWidth && !(window.matchMedia && matchMedia('(hover: hover)').matches && !matchMedia('(pointer: coarse)').matches));
 }
 window.addEventListener('resize', fit); fit();
 IN.init(DISP);
@@ -32,7 +66,9 @@ function enterMap(id, at) {
   for (const pt of m.portals) pt.open = (G.world.maps[id].portals.find(q => q.x === pt.x && q.y === pt.y) || pt).open !== false;
   G.enemies = []; G.projs = []; G.effects = []; G.zones = []; G.parts = []; G.texts = []; G.delays = []; G.amb = []; G.drops = [];
   G.boss = null; G.tablet = null;
-  p.x = at ? at.x : m.start.x; p.y = at ? at.y : m.start.y; p.z = tileH(m, p.x, p.y); p.dash = null;
+  if (typeof resetCorpses === 'function') resetCorpses();   // R1 corpse records (pooled) and the hitlag clock
+  if (typeof hitlagReset === 'function') hitlagReset();
+  p.x = at ? at.x : m.start.x; p.y = at ? at.y : m.start.y; p.z = tileH(m, p.x, p.y); p.dash = null; p.climb = null; p.fall = null; G.vantage = null; G.camBias = null;
   syncChests(m);
   G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
   if (!(typeof onceSeen === 'function' && onceSeen('zone:' + id))) G.banner = { s: m.name, sub: m.sub, t: 3.2, max: 3.2 };   // once per save: a respawn never replays it
@@ -85,7 +121,7 @@ const deathXpLoss = p => Math.min(Math.floor(p.xp), Math.round(xpToNext(p.level)
 function respawn() {
   const p = G.player;
   p.xp -= deathXpLoss(p);
-  p.dead = false; p.buffs = {}; p.cds = {}; p.cast = null; p.ult = 0; recalcStats(p, true); p.potions = MAX_POTIONS;
+  p.dead = false; p.buffs = {}; p.cds = {}; p.cast = null; p.ult = 0; recalcStats(p, true); p.potions = p.maxPotions || MAX_POTIONS;
   G.state = 'play';
   const cp = G.checkpoint && G.world.maps[G.checkpoint.map] ? G.checkpoint : null;
   enterMap(cp ? cp.map : G.map.id, cp);
@@ -131,10 +167,32 @@ function update(dt, rdt) {
   G.shakeA = Math.max(0, G.shakeA - rdt * 30);
   updateCamera(rdt);
 }
+// §29 G3 camera height bias (world-art minutes §3.3 fix 3): on a summit the camera leads down-slope (up to 36 px toward the lowest
+// ground within 6 tiles in the facing direction) so you see the view, not your own mountain; at a wall's foot it leads up by half the
+// wall's height (max 24 px) so the wall does not fill the frame. The bias eases on its own (~0.6 s), then the usual lerp follows.
+function cameraBias(p, dt) {
+  const m = G.map, B = G.camBias || (G.camBias = { x: 0, y: 0 });
+  if (G.noCamBias) { B.x = B.y = 0; return B; }   // fixed-camera tools (tools/maps/art-audit.js)
+  let bx = 0, by = 0;
+  if (m && G.state === 'play' && !p.dead) {
+    const a = p.moving && IN && IN.move && IN.move.mag ? Math.atan2(IN.move.y - IN.move.x, IN.move.x + IN.move.y) : p.aim || 0;   // facing, in world axes
+    const fx = Math.cos(a), fy = Math.sin(a), z = p.climb || p.fall ? tileH(m, p.x, p.y) : p.z;
+    let lo = z, hi = z;
+    for (let d = 1; d <= 6; d++) { const x = p.x + fx * d, y = p.y + fy * d; if (!typeAt(m, Math.floor(x), Math.floor(y))) continue; const h = tileH(m, x, y); if (h < lo) lo = h; if (d <= 3 && h > hi) hi = h; }
+    const down = z - lo >= 4 ? Math.min(36, (z - lo) * 2) : 0, up = hi - z >= 4 ? Math.min(24, (hi - z) * ZS * 0.5) : 0;   // only real summits / walls (4+ levels)
+    if (down > 0) { const sx = (fx - fy) * 16, sy = (fx + fy) * 8, l = Math.hypot(sx, sy) || 1; bx = sx / l * down; by = sy / l * down; }
+    if (up > 0) by -= up;
+  }
+  if (G.vantage && G.vantage.lead) { bx += G.vantage.lead[0]; by += G.vantage.lead[1]; }   // the reveal's 40 px ease down-slope (screens.js)
+  const k = 1 - Math.exp(-dt * 1.8); B.x += (bx - B.x) * k; B.y += (by - B.y) * k;
+  return B;
+}
 function updateCamera(dt) {
   const p = G.player;
   let tx = isoX(p.x, p.y), ty = isoY(p.x, p.y, p.z) - 12;
   if (G.state === 'title') { tx += Math.sin(G.t * 0.25) * 40 + 40; ty += -10 + Math.cos(G.t * 0.2) * 12; }
+  else { const B = cameraBias(p, dt); tx += B.x; ty += B.y; }
+  if (G.camHold) { tx = G.camHold.x; ty = G.camHold.y; }   // tools (shots): hold the camera on a world-screen point
   const k = 1 - Math.exp(-dt * 6);
   G.cam.x += (tx - G.cam.x) * k; G.cam.y += (ty - G.cam.y) * k;
 }
@@ -143,23 +201,30 @@ function render() {
   drawScene();
   dctx.imageSmoothingEnabled = false;
   dctx.drawImage(SCN.c, 0, 0, DW, DH);
+  perfMark('blit', dctx);
   UI.begin();
   drawHUD(dctx);   // draws its own toasts and focus ring per screen
+  if (G.vantage && typeof drawVantage === 'function') drawVantage(dctx);   // §29 G3 the vantage reveal cinematic, over the HUD (screens.js)
   if (typeof AUDIO !== 'undefined') AUDIO.drawCaptions(dctx);   // sound captions (setting), bottom-left
+  perfMark('hud', dctx);
   G.ui.wheel = 0;
   if (G.fade > 0) {
     const g = dctx.createRadialGradient(DW / 2, DH / 2, 0, DW / 2, DH / 2, DW * 0.7);
     g.addColorStop(0, `rgba(255,240,255,${G.fade})`); g.addColorStop(1, `rgba(199,168,255,${G.fade})`);
     dctx.fillStyle = g; dctx.fillRect(0, 0, DW, DH);
   }
+  if (PERF.on) drawPerfOverlay(dctx);
 }
 
 // Fixed-step update at 1/60 s with an accumulator (§16.6.3): deterministic reactions, hitstop and scripted
 // tests; render once per display frame. Slow-mo and hitstop scale/zero the game step, never its size.
+// Hitstop is counted in unscaled steps BEFORE slow-mo (game.js hitlagStep, DESIGN §27): a 15-step boss-death freeze is
+// 0.25 s of real time even inside the boss slow-mo (it used to stretch to ~0.7 s).
 const STEP = 1 / 60;
 let last = performance.now(), acc = 0, running = true, frameEma = 16.7;
 function loop(now) {
   if (!running) return;
+  if (PERF.on) perfBegin(now - last);
   const fdt = Math.min(0.25, (now - last) / 1000); last = now;
   frameEma += (fdt * 1000 - frameEma) * 0.05;
   // particle budget follows the measured frame time: shed motes first when a device struggles
@@ -169,18 +234,83 @@ function loop(now) {
   let n = 0;
   while (acc >= STEP && n < 5) {
     let rdt = STEP;
+    const frozen = hitlagStep();
     if (G.slowmo > 0) { G.slowmo -= rdt; rdt *= 0.35; }
-    let dt = rdt;
-    if (G.hitstopT > 0) { G.hitstopT -= rdt; dt = 0; }
-    update(dt, rdt);
+    update(frozen ? 0 : rdt, rdt);
     acc -= STEP; n++;
   }
   if (n === 5) acc = 0;   // spiral-of-death guard after a long stall
+  perfMark('update');
   render();
   if (PRELOAD) preloadStep(clamp(PRELOAD_FRAME - (performance.now() - frameT0), 2, PRELOAD_MS));   // a portal fade's map load (see transition)
   else if (G.state === 'dead') prebuildRespawn(clamp(PRELOAD_FRAME - (performance.now() - frameT0), 2, PRELOAD_MS));
   if (typeof AUDIO !== 'undefined') AUDIO.frame(fdt);   // music director: song / stems / intensity / ducking (notes are timed by its 25 ms audio-clock tick)
+  const workMs = performance.now() - frameT0;
+  governorStep(workMs, fdt);   // phone: DPR rung / quality tier from the CPU frame time (GOV below)
+  if (PERF.on) perfEnd(workMs, n);
   requestAnimationFrame(loop);
+}
+
+// ===== ?perf=1: the on-screen frame readout (DESIGN §26.4 step 1: measure on the real device) =============================
+// Top-centre box, refreshed 4x a second from a 240-frame ring (~4 s): fps, frame avg / p95 (the rAF delta), work avg / p95 (CPU inside
+// loop(): update + render + preload), draw calls (2D context calls this frame, counted by wrappers installed only when ?perf
+// is set), particles (pooled + ambient), and the per-phase split (render.js perfMark). Off: `PERF.on` is false, nothing is
+// wrapped, the loop pays two boolean tests. window.__perf() returns the same numbers for tools.
+const PERF_N = 240, PERF_RING = { f: new Float32Array(PERF_N), w: new Float32Array(PERF_N), i: 0, n: 0, ph: {}, phN: 0, tot: {}, totN: 0, slow: {}, slowN: 0, steps: 0, dtot: {}, txt: null, at: 0 };
+function perfBegin(dms) {
+  const R = PERF_RING; R.f[R.i] = dms; PERF.t = performance.now(); PERF.draws = 0; PERF.d0 = 0;
+  for (const k in PERF.ph) PERF.ph[k] = 0;
+  for (const k in PERF.dph) PERF.dph[k] = 0;
+}
+function perfEnd(work, steps) {
+  const R = PERF_RING; R.w[R.i] = work; R.i = (R.i + 1) % PERF_N; R.n = Math.min(PERF_N, R.n + 1);
+  for (const k in PERF.ph) { R.ph[k] = (R.ph[k] || 0) + PERF.ph[k]; R.tot[k] = (R.tot[k] || 0) + PERF.ph[k]; }
+  R.phN++; R.totN++; R.steps = (R.steps || 0) + steps;
+  for (const k in PERF.dph) R.dtot[k] = (R.dtot[k] || 0) + PERF.dph[k];
+  if (work > 18) { R.slowN = (R.slowN || 0) + 1; for (const k in PERF.ph) R.slow[k] = (R.slow[k] || 0) + PERF.ph[k]; }   // what the slow frames are made of
+  R.draws = PERF.draws;
+}
+// perfStats(true): the phase split averaged since the last perfStats(true, true) reset (tools/perf.js), not the overlay's 250 ms window
+function perfStats(total, reset) {
+  const R = PERF_RING, n = R.n; if (!n) return null;
+  if (reset) { R.tot = {}; R.totN = 0; R.slow = {}; R.slowN = 0; R.steps = 0; R.dtot = {}; return null; }
+  const q = a => { const s = Array.from(a.subarray(0, n)).sort((x, y) => x - y); return { avg: s.reduce((x, y) => x + y, 0) / n, p95: s[Math.min(n - 1, Math.floor(n * 0.95))] }; };
+  const f = q(R.f), w = q(R.w), ph = {};
+  const src = total ? R.tot : R.ph, sn = total ? R.totN : R.phN;
+  for (const k in src) ph[k] = +(src[k] / Math.max(1, sn)).toFixed(2);
+  const out = { fps: 1000 / f.avg, frame: f, work: w, draws: R.draws, parts: G.parts.length + (G.amb ? G.amb.length : 0), ph, tier: QUALITY.tier, rung: GOV.on ? GOV.rungs[GOV.ri] : null, govMed: GOV.on ? +GOV.med.toFixed(1) : null };
+  if (total) {   // tools: update steps per frame, and the phase split of the frames whose work went over 18 ms
+    out.steps = +(R.steps / Math.max(1, R.totN)).toFixed(2); out.slowFrames = R.slowN || 0; out.slow = {};
+    for (const k in R.slow) out.slow[k] = +(R.slow[k] / Math.max(1, R.slowN)).toFixed(2);
+    out.drawsBy = {}; for (const k in R.dtot) if (R.dtot[k]) out.drawsBy[k] = Math.round(R.dtot[k] / Math.max(1, R.totN));
+  }
+  return out;
+}
+window.__perf = perfStats;
+function drawPerfOverlay(ctx) {
+  const R = PERF_RING, t = performance.now();
+  if (!R.txt || t - R.at > 250) {
+    const s = perfStats(); R.at = t;
+    if (s) {
+      const ph = Object.entries(s.ph).filter(([, v]) => v >= 0.05).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v.toFixed(1));
+      R.txt = [`${s.fps.toFixed(0)} fps  frame ${s.frame.avg.toFixed(1)} / p95 ${s.frame.p95.toFixed(1)} ms`, `work ${s.work.avg.toFixed(1)} / p95 ${s.work.p95.toFixed(1)} ms  q:${s.tier}${s.rung ? ' dpr x' + s.rung + ' k' + HUD_K : ''}`,
+        `draws ${s.draws}  parts ${s.parts}`].concat(ph.reduce((rows, x, i) => { if (i % 4 === 0) rows.push(x); else rows[rows.length - 1] += '  ' + x; return rows; }, []));
+      for (const k in R.ph) R.ph[k] = 0; R.phN = 0;
+    }
+  }
+  if (!R.txt) return;
+  ctx.save(); ctx.setTransform(HUD_K, 0, 0, HUD_K, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.font = '11px monospace'; ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+  const X = 320, W = 320;   // top centre: clear of the zone name / tracker (left) and the minimap (right)
+  ctx.fillStyle = 'rgba(5,3,12,0.72)'; ctx.fillRect(X, 4, W, 6 + R.txt.length * 13);
+  ctx.fillStyle = '#c8ffd8'; R.txt.forEach((l, i) => ctx.fillText(l, X + 5, 8 + i * 13));
+  ctx.restore();
+}
+if (PERF.on) {   // count 2D draw calls (only with ?perf: the wrappers cost a little)
+  const P = CanvasRenderingContext2D.prototype;
+  for (const k of ['drawImage', 'fillRect', 'fill', 'stroke', 'strokeRect', 'fillText', 'strokeText', 'putImageData', 'clearRect']) {
+    const f = P[k]; P[k] = function () { PERF.draws++; return f.apply(this, arguments); };
+  }
 }
 // pause the loop while the tab is hidden; resume without a time jump
 document.addEventListener('visibilitychange', () => {
@@ -207,6 +337,7 @@ function handleInput() {
   if (G.state === 'title') {
     menuNav();
     if (G.ui.settings) { if (IN.pressed('back') || IN.pressed('pause')) { G.ui.settings = false; used(); return; } }
+    if (G.ui.help) { if (IN.pressed('back') || IN.pressed('help') || IN.pressed('pause')) { G.ui.help = false; used(); return; } }   // the title's "?" help (R3 #8)
     if (IN.pressed('accept') || IN.pressed('interact') || (IN.pressed('pause') && IN.device === 'pad' && !G.ui.settings)) { initAudio(); if (!UI.focus.accept()) { if (!G.ui.settings) titleDefault(); } used(); }
     return;
   }
@@ -286,6 +417,7 @@ function loadWorld() {
   return WORLD_DATA;
 }
 async function boot() {
+  if (PHONE) PART.cap = 300;   // §26.4 step 4: the phone particle cap (game.js pool: 600 on desktop; PART.budget still sheds below it)
   await loadSprites();
   buildArt(); initPost();
   G.world = loadWorld();
@@ -297,11 +429,11 @@ async function boot() {
   // instead of in the frame a portal lands in (prepTheme in enterMap then finds it cached)
   for (const id in G.world.maps) { const t = G.world.maps[id].theme, th = THEMES[t]; if (th && !th._bg) prepTheme({ theme: th, themeId: t }); }
   G.player = makePlayer();
-  // ?map=<id> (play-test / showcase), ?scene=play|arena|boss|loadout|portal|inventory, &weapon=starfall|moonbow
+  // ?map=<id> (play-test / showcase), ?scene=play|arena|boss|loadout|portal|inventory, &weapon=staff|bow (pre-v4 ids starfall|moonbow work too)
   // showcase scenes get a mid-level (L14) kit; they never read or write the real save
-  const w = PARAMS.get('weapon'), wf = w && ITEMS.weapon.some(i => i.id === w) ? w : null;
+  const w = PARAMS.get('weapon') && variantId(PARAMS.get('weapon')), wf = w && ITEMS.weapon.some(i => i.id === w) ? w : null;
   const scene = PARAMS.get('scene');
-  if (scene) showcaseKit(G.player, wf || 'dawnblade');
+  if (scene) showcaseKit(G.player, wf || 'sword');
   else if (wf) { G.player.equip.weapon = makeItem(FAMILY_TIERS[wf][0].split(':')[0], 'common', 1, { sockets: 0 }); recalcStats(G.player, true); }
   if (scene === 'inventory') sampleBag(G.player);
   let start = PARAMS.get('map') || G.world.start;

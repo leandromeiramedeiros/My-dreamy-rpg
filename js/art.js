@@ -91,9 +91,56 @@ const HEAD_OVERLAYS = {
   },
 };
 
-// The sprite seam: takes the equipped gear INSTANCES ({ slot: { base, ... } }, items.js) or plain family ids.
-// M1 still draws by family; M3 swaps this body for HERO.build(equippedVisual(...)).
+// ===== The hero sprite seam (M3): the layered paper-doll in js/hero.js ===================================================
+// buildPlayerSprites(equip) takes the equipped gear INSTANCES ({ slot: { base, rarity, sockets, tempered, implicit } }, items.js, all
+// EQUIP_SLOTS keys) or plain family ids, and returns the p.spr shape the game and HUD read ({front, back, frontF, backF, white,
+// portrait, w, h, ox}) plus `hero` (the HERO.build result: 7 cached frames per view, a held weapon and rim layers) and `sig`.
+// Cost: ~10 ms once per equip change (renderFrame x 14); the rim layers (~25 ms more) are built one per frame afterwards (HERO.warmStep, from
+// drawPlayer); drawPlayer itself only blits cached canvases (~25-70 us a frame).
+// Item rules: the family is the item's VARIANT / suit (hero.js keys: sword staff bow, warden dreamweave stalker, ...), the tier is
+// the BASES tier index 0..4 (trinkets 0..2, hero.js wants 1..3), a belt's family is its BASE id (its colour), never the variant.
+function heroSig(equip) {          // cheap (per frame) change detector; the key of what is drawn, not of what is rolled
+  let s = '';
+  for (let i = 0; i < HERO_SLOTS.length; i++) {
+    const v = equip[HERO_SLOTS[i]];
+    s += v ? (typeof v === 'string' ? v : v.base + (v.rarity || '') + (v.tempered ? 'T' : '') + (v.sockets ? v.sockets.join('') : '') + (v.implicit ? v.implicit.id : '')) + '|' : '|';
+  }
+  return s;
+}
+const HERO_SLOTS = ['weapon', 'head', 'chest', 'boots', 'belt', 'amulet', 'ring1', 'ring2'];
+function heroLookOf(equip) {
+  const gemType = g => String(g).split('_')[0];
+  const part = (slot, trinket) => {
+    const v = equip[slot]; if (!v) return null;
+    if (typeof v === 'string') return { family: v, tier: 1 };           // a bare family id (tools, old callers)
+    const b = baseOf(v.base); if (!b) return null;
+    const el = v.implicit && /Dmg$/.test(v.implicit.id) ? v.implicit.id.slice(0, -3) : null;
+    const o = { family: trinket ? v.base : b.variant, tier: trinket ? b.tier + 1 : b.tier, rarity: v.rarity, tempered: !!v.tempered };
+    if (trinket) o.element = el; else o.gems = (v.sockets || []).filter(Boolean).map(gemType);
+    return o;
+  };
+  const rings = ['ring1', 'ring2'].map(k => part(k, true)).filter(Boolean);
+  return { weapon: part('weapon'), head: part('head'), chest: part('chest'), boots: part('boots'), belt: part('belt', true), amulet: part('amulet', true), ring: rings.length ? rings : null };
+}
+const HERO_PORTRAIT_OX = 2;
 function buildPlayerSprites(equip) {
+  if (typeof HERO === 'undefined') return buildLegacyPlayerSprites(equip);
+  const hero = HERO.build(heroLookOf(equip)), W = hero.w, H = hero.h;
+  const pick4 = v => [hero[v][0], hero[v][3], hero[v][0], hero[v][5]];                   // idle, stride, idle, stride (old p.spr layout)
+  const out = { hero, sig: heroSig(equip), front: pick4('front'), back: pick4('back') };
+  out.frontF = out.front.map(flipH); out.backF = out.back.map(flipH);
+  out.white = silhouette(out.front[0], '#ffffff');
+  // portrait: hud.js crops 16x16 at (ox, ox); centre the face in it (head spans x 7..16, y 2..15 of the 24x34 frame)
+  const pc = makeCanvas(20, 20); pc.x.drawImage(hero.front[0], -2, 0);
+  out.portrait = pc.c; out.w = W; out.h = H; out.ox = HERO_PORTRAIT_OX;
+  let top = 'common';                                                                     // best rarity worn: drives the aura, light and particles
+  for (const k of HERO_SLOTS) { const v = equip[k]; if (v && typeof v !== 'string' && RARITY[v.rarity] && RARITY[v.rarity].i > RARITY[top].i) top = v.rarity; }
+  out.top = top === 'common' ? null : top;
+  return out;                                                                             // rim layers warm up a few per frame (HERO.warmStep, from drawPlayer)
+}
+
+// the M1 sprite builder: kept only as the fallback for pages that load art.js without hero.js
+function buildLegacyPlayerSprites(equip) {
   const gear = {};
   for (const s of ['weapon', 'head', 'chest', 'boots']) { const v = equip[s]; gear[s] = typeof v === 'string' ? v : (v && familyOf(v.base)) || ITEMS[s][0].id; }
   const head = ITEMS.head.find(i => i.id === gear.head);
@@ -180,8 +227,8 @@ function applySprites() {
   ART.hound = { n: h, f: h.map(flipH), w: silhouette(h[0]), wf: silhouette(flipH(h[0])) };
   const b = sprOne('boss');
   ART.boss = { n: b, f: flipH(b), w: silhouette(b), wf: silhouette(flipH(b)) };
-  for (const k of ['round', 'poplar', 'blossom', 'teal', 'dead']) ART.trees[k] = sprFamily('tree_' + k + '_');
-  ART.bush = sprFamily('bush_');
+  { const dead = sprFamily('tree_dead_'); if (dead.length) ART.trees.dead = dead; }   // trees v2 come from frozenTrees (buildTreesV2), not this loop
+  ART.bush = ART.bushV2 || sprFamily('bush_');   // §29 G2: cluster bushes (no full outline) replace the frozen blob bushes
   ART.grass = sprFamily('grass_');
   ART.rock = sprFamily('rock_') .filter(c => !sprFamily('rock_dark_').includes(c));
   ART.rockDark = sprFamily('rock_dark_');
@@ -332,8 +379,6 @@ function buildBoss() {
 
 // ===== Flora ===================================================================
 const PAL_LEAF = ramp(['#16353b', '#1f4e4c', '#2b6b5a', '#3f8b63', '#62aa6c', '#94cf7f', '#d2f0a6']);
-const PAL_LEAF_TEAL = ramp(['#132f40', '#1b4a5a', '#27686f', '#3a8b84', '#5cb19a', '#95d7b6', '#d8f6e2']);
-const PAL_BLOSSOM = ramp(['#4a2348', '#7a3a6e', '#b45a92', '#e184b6', '#f6b1d2', '#ffe0ee', '#ffffff']);
 const PAL_BARK = ramp(['#24162a', '#3e2834', '#5e3d40', '#80594f']);
 const PAL_DEAD = ramp(['#120a1a', '#24172e', '#3a2747', '#56396a', '#7b5a96']);
 
@@ -381,14 +426,9 @@ function blobTree(seed, opt) {
 }
 
 function buildFlora() {
-  ART.trees = { round: [], poplar: [], blossom: [], teal: [], dead: [] };
-  for (let i = 0; i < 4; i++) {
-    ART.trees.round.push(blobTree(100 + i, { w: 30, h: 42, trunkTop: 26, trunkW: 4, cy: 16, blobs: 6, spread: 6, squash: 0.8, rmin: 5, rmax: 9, vstretch: 1, pal: PAL_LEAF, flecks: { n: 6, c: ['#ffe9a8', '#fff6dc'] } }));
-    ART.trees.poplar.push(blobTree(200 + i, { w: 18, h: 50, trunkTop: 38, trunkW: 3, cy: 21, blobs: 6, spread: 4, squash: 3.2, rmin: 4, rmax: 7, vstretch: 2.2, pal: PAL_LEAF_TEAL }));
-    ART.trees.blossom.push(blobTree(300 + i, { w: 32, h: 42, trunkTop: 25, trunkW: 4, cy: 15, blobs: 7, spread: 7, squash: 0.7, rmin: 5, rmax: 9, vstretch: 0.95, pal: PAL_BLOSSOM, flecks: { n: 18, c: ['#ffffff', '#fff0f7'] } }));
-    ART.trees.teal.push(blobTree(400 + i, { w: 26, h: 38, trunkTop: 24, trunkW: 3, cy: 14, blobs: 5, spread: 5, squash: 0.9, rmin: 4, rmax: 8, vstretch: 1, pal: PAL_LEAF_TEAL, flecks: { n: 5, c: ['#bff7ff'] } }));
-    ART.trees.dead.push(deadTree(500 + i));
-  }
+  // §29 G2: the broadleaves are trees v2 (canopyTree, frozen sheets or ?trees=live); the old one-ellipse blobTree lollipops are gone
+  ART.trees = { dead: [] };
+  for (let i = 0; i < 4; i++) ART.trees.dead.push(deadTree(500 + i));
   ART.bush = [0, 1, 2].map(i => blobTree(600 + i, { w: 16, h: 12, trunkTop: 99, trunkW: 0, cy: 7, blobs: 4, spread: 3, squash: 0.6, rmin: 3, rmax: 5, vstretch: 0.85, pal: PAL_LEAF, flecks: { n: 3, c: ['#ffb3d1', '#ffffff'] } }));
   ART.grass = [0, 1].map(f => {
     const pb = new PixBuf(9, 8);
@@ -415,6 +455,322 @@ function deadTree(seed) {
   const pb = new PixBuf(28, 44); pb.img = x.getImageData(0, 0, 28, 44); pb.d = pb.img.data;
   for (let yy = 0; yy < 44; yy++) for (let xx = 0; xx < 28; xx++) if (pb.a(xx, yy)) pb.set(xx, yy, rampDither(PAL_DEAD, 0.25 + (14 - xx) / 40 + (44 - yy) / 120, xx, yy));
   return pb.toCanvas();
+}
+
+// ===== Trees v2 (DESIGN §29 G2; world-art minutes §2.1) ==============================================================
+// canopyTree(seed, S) (broadleaf) and pineTree2(seed, S) return the COMPOSITE canvas (trunk + canopy: what the editor, the
+// shadow tiles, hit tests and audits read; ART.trees.* / ART.pines.* stay canvas arrays) carrying the parts render.js splits:
+//   c.trunk    trunk, root toes, branches, baked 4 px AO ellipse        c.canopy  the leaves (drawn OVER the hero, fades)
+//   c.canopyF  the canopy with its top 60 % shifted -1 / 0 / +1 px      c.swayF   the composite in those 3 sway frames
+//   c.cbox     the canopy's opaque box [x0, y0, x1, y1] (the hero-under-canopy test)
+// Light is on the RIGHT (Vale moon x 470, forest sun x 360): every sheet is right-lit and a left-lit theme mirrors it
+// (maps.js placeObjects sets a tree's flip from the theme, never at random). No full outline: a 1 px darker edge on the shadow
+// side only. Approved output is frozen into js/sprites.js (tools/freeze-trees.js: frames [trunk, canopy]); ?trees=live
+// builds them here instead. Lift: the crown = leaf clusters on Fibonacci points of a flattened ellipsoid, darker inside and
+// underneath (Lumina src/engine/world/props/Trees.js buildBroadleaf; docs/CREDITS.md), drawn as three 2D pixel masses.
+const GOLDEN = Math.PI * (3 - Math.sqrt(5));
+const B2X2 = [0.125, 0.625, 0.875, 0.375];
+// ordered 2x2 dither between ADJACENT ramp steps only (never a per-pixel hash)
+function ramp2(r, v, x, y) { const f = clamp(v, 0, 0.9999) * (r.length - 1), i = Math.floor(f); return r[(f - i) > B2X2[((y & 1) << 1) | (x & 1)] ? Math.min(i + 1, r.length - 1) : i]; }
+const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const LEAF2 = ramp(['#1b2142', '#1d3f4c', '#245d55', '#33805c', '#5aa564', '#93cb72', '#d6eca0']);
+const TEAL2 = ramp(['#191f46', '#1a3c5a', '#21606c', '#2f8582', '#4fae98', '#8bd6b4', '#d2f4df']);
+const BLOSSOM2 = ramp(['#3a1f4a', '#68336f', '#9f4f8e', '#d277ae', '#f1a3ca', '#ffd2e6', '#fff2f8']);
+const AMBER2 = ramp(['#1c1a2e', '#33292a', '#544024', '#7d5a26', '#a9782f', '#d29d46', '#f2ca7a']);
+const BIRCH2 = ramp(['#1c2236', '#2b3d33', '#45603a', '#678443', '#93a94e', '#c4cd6a', '#eeeaa2']);
+const BARK2 = ramp(['#1c1226', '#352235', '#553644', '#7a5150', '#a07468']);
+const BARK_BIRCH = ramp(['#2a2638', '#59536a', '#9a94a8', '#cfcad6', '#f2eef4']);
+const PINE2 = ramp(['#0b1424', '#10232a', '#173328', '#204630', '#2f5c3a', '#4a7a44', '#7c9a54']);
+const PINE_BARK2 = ramp(['#1a1018', '#33201a', '#4a2e22', '#64402e', '#86583c']);
+const AO_RGB = hexToRgb('#140a24');
+const RIM_VALE = hexToRgb('#ffd6ec'), RIM_FOREST = hexToRgb('#d0904a');
+// split helpers: the 3 sway frames and the composite (shared by the live builders and the frozen sheets)
+function opaqueBox(c) {
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (d[(y * c.width + x) * 4 + 3] > 0) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return x1 < 0 ? [0, 0, 0, 0] : [x0, y0, x1 + 1, y1 + 1];
+}
+function treeFromParts(trunk, canopy) {
+  const W = trunk.width, H = trunk.height, cut = Math.round(H * 0.6);
+  const shift = dx => { const { c, x } = makeCanvas(W, H); x.drawImage(canopy, 0, cut, W, H - cut, 0, cut, W, H - cut); x.drawImage(canopy, 0, 0, W, cut, dx, 0, W, cut); return c; };
+  const canopyF = [shift(-1), canopy, shift(1)];
+  const swayF = canopyF.map(f => { const { c, x } = makeCanvas(W, H); x.drawImage(trunk, 0, 0); x.drawImage(f, 0, 0); return c; });
+  const c = swayF[1];
+  c.trunk = trunk; c.canopy = canopy; c.canopyF = canopyF; c.swayF = swayF; c.cbox = opaqueBox(canopy);
+  return c;
+}
+function treeAO(pb, cx, yb, w) {   // the 4 px ground-contact ellipse baked into the base (2 alpha levels, no smooth ramp)
+  const rx = w * 0.9 + 2, ry = 2.2;
+  for (let y = yb - 2; y <= yb + 1; y++) for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+    const d = ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - yb) / ry) ** 2; if (d < 1) pb.set(x, y, AO_RGB, d < 0.45 ? 130 : 75);
+  }
+}
+// trunk from yb (base) up to yt: 1 px dark side, 1 px warm lit side, a 5-step bark ramp with vertical streaks, a flare at the
+// foot and a knot. Returns xc(y), the trunk's centre line (a gentle bend of `lean` px at the top).
+function treeTrunk(pb, S, cx, yb, yt, lean, seed) {
+  const bark = S.bark, span = Math.max(1, yb - yt), xc = y => cx + lean * Math.pow(clamp((yb - y) / span, 0, 1), 1.6);
+  for (let y = yt; y <= yb; y++) {
+    const t = (yb - y) / span, w = lerp(S.trunkW[0], S.trunkW[1], Math.pow(t, 0.6)) + Math.max(0, 3 - (yb - y)) * 1.3;
+    const xa = Math.round(xc(y) - w / 2 + 0.01), xb = Math.max(xa + 1, Math.round(xc(y) + w / 2 - 0.01));   // width steps alternate sides (no ledges)
+    for (let x = xa; x < xb; x++) {
+      const u = (x + 0.5 - xa) / (xb - xa);
+      let c = ramp2(bark, 0.22 + u * 0.58 + (vnoise(x * 0.9, y * 0.08, seed + 5) - 0.5) * 0.3, x, y);
+      if (S.birch && vnoise(x * 0.6, y * 0.55, seed + 6) > 0.72) c = bark[1];   // birch: dark lenticel bands
+      if (x === xa && xb - xa > 1) c = bark[0];
+      else if (x === xb - 1 && xb - xa > 2) c = mixRgb(bark[bark.length - 1], S.rim, 0.35);
+      pb.set(x, y, c);
+    }
+  }
+  const ky = Math.round(lerp(yb - 4, yt + span * 0.4, rand(0.2, 0.7))), kx = Math.round(xc(ky) + rand(-0.5, 0.8));   // a knot
+  pb.set(kx, ky, bark[0]); pb.set(kx, ky + 1, bark[0]); pb.set(kx + 1, ky + 1, bark[3]);
+  return xc;
+}
+function treeRoots(pb, S, xc, yb) {   // 2-3 root toes of 3 px reaching out and down from the flare
+  const n = rand() < 0.55 ? 3 : 2, w = S.trunkW[0];
+  for (let k = 0; k < n; k++) {
+    const s = k === 2 ? (rand() < 0.5 ? -1 : 1) : k ? 1 : -1, bx = xc(yb) + s * (w / 2 + 1.5) - (k === 2 ? s * 2.5 : 0);
+    for (let q = 0; q < 3; q++) {
+      const x = Math.round(bx + s * q), y = yb - 1 + (q >> 1) + (k === 2 ? 1 : 0), c = S.bark[s > 0 ? 3 : 1];
+      pb.set(x, y, c); if (q === 0) pb.set(x, y - 1, S.bark[s > 0 ? 2 : 1]);
+    }
+  }
+}
+function treeLine(pb, x0, y0, x1, y1, w0, w1, c0, c1) {   // a tapering branch, dark side below-left
+  const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0)));
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, x = lerp(x0, x1, t), y = lerp(y0, y1, t), w = lerp(w0, w1, t);
+    pb.set(Math.round(x), Math.round(y), c1); if (w > 1.4) pb.set(Math.round(x), Math.round(y) + 1, c0);
+  }
+}
+// leaf pixels of one layer: rim light on the lit side of EVERY cluster (where its right / upper-right / upper neighbour is a
+// cluster drawn earlier or nothing), a 1 px cast shade under a nearer cluster, and the darker edge on the shadow side only
+function leafPasses(C, own, S, cl) {
+  const W = C.w, H = C.h, o = (x, y) => x < 0 || y < 0 || x >= W || y >= H ? -1 : own[y * W + x], rim = [], shade = [], edge = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const k = own[y * W + x]; if (k < 0) continue;
+    const c = cl[k], ord = c.ord, nb = [o(x + 1, y), o(x + 1, y - 1), o(x, y - 1)];
+    const litHalf = (x + 0.5 - c.sx) * 0.8 + (c.sy - y - 0.5) > -0.25 * c.r;
+    if (litHalf && nb.some(j => j < 0 || cl[j].ord < ord)) { rim.push([x, y, (nb[0] < 0 || nb[2] < 0 ? 1.2 : 0.85) * (c.mass ? S.rimMix : S.rimMix * 0.55)]); continue; }
+    const up = o(x + 1, y - 1); if (up >= 0 && cl[up].ord > ord && cl[up].mass >= c.mass) shade.push([x, y]);
+    if (o(x - 1, y) < 0 || o(x, y + 1) < 0) edge.push([x, y]);
+  }
+  for (const [x, y, a] of runsOnly(rim, W)) C.set(x, y, mixRgb(C.get(x, y), S.rim, a));
+  for (const [x, y] of shade) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.38));
+  for (const [x, y] of edge) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.55));
+}
+// silhouette clean-up before the rim passes: a leaf pixel with <= 1 leaf 4-neighbour goes, a 1 px hole with >= 3 leaf 4-neighbours
+// is filled from its darkest neighbour (both read as specks against a bright sky)
+function despeckle(C, own) {
+  const W = C.w, H = C.h, o = (x, y) => x < 0 || y < 0 || x >= W || y >= H ? -1 : own[y * W + x];
+  for (let pass = 0; pass < 2; pass++) {
+    const drop = [], fill = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const nb = [o(x - 1, y), o(x + 1, y), o(x, y - 1), o(x, y + 1)], n = nb.filter(k => k >= 0).length;
+      if (o(x, y) >= 0) { if (n <= 1) drop.push([x, y]); }
+      else if (n >= 3) { let best = null, bl = 1e9, bk = -1; for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) if (o(x + dx, y + dy) >= 0) { const c = C.get(x + dx, y + dy), l = c[0] + c[1] + c[2]; if (l < bl) { bl = l; best = c; bk = o(x + dx, y + dy); } } fill.push([x, y, best, bk]); }
+    }
+    for (const [x, y] of drop) { C.set(x, y, [0, 0, 0], 0); own[y * W + x] = -1; }
+    for (const [x, y, c, k] of fill) { C.set(x, y, c); own[y * W + x] = k; }
+  }
+}
+// a highlight pixel with no 4-neighbour in its own set reads as a speck (> 60 luma off all 4 neighbours): keep runs of >= 2 only
+function runsOnly(list, W) { const k = new Set(list.map(([x, y]) => y * W + x)); return list.filter(([x, y]) => k.has(y * W + x - 1) || k.has(y * W + x + 1) || k.has((y - 1) * W + x) || k.has((y + 1) * W + x)); }
+function canopyTree(seed, S) {
+  seedRng(seed);
+  const W = S.W, H = S.H, yb = H - 2, cx = W / 2 + rand(-0.8, 0.8);
+  const T = new PixBuf(W, H), C = new PixBuf(W, H), own = new Int16Array(W * H).fill(-1);
+  // ---- crown layout in unit space (x radius 1, y radius S.asp): Fibonacci points + a crown top + inner clusters
+  const n = randi(S.clusters[0], S.clusters[1]), off = rand(), cl = [];
+  for (let i = 0; i < n; i++) {
+    const t = (i + off) / n, py = 1 - t * 1.8, pr = Math.sqrt(Math.max(0, 1 - py * py)), th = i * GOLDEN + rand(-0.3, 0.3), k = rand(0.52, 0.8);
+    cl.push({ X: Math.cos(th) * pr * k, Y: py * k, Z: Math.sin(th) * pr * k, r: rand(S.card[0], S.card[1]), inner: false });
+  }
+  cl.push({ X: rand(-0.12, 0.12), Y: 0.66, Z: 0.1, r: rand(S.card[0], S.card[1]) * 0.85, inner: false });
+  for (let i = 0; i < S.inner; i++) { const a = i / S.inner * 6.283 + rand(-0.4, 0.4); cl.push({ X: Math.cos(a) * 0.3, Y: rand(-0.25, 0.15), Z: Math.sin(a) * 0.3 - 0.25, r: S.card[1] * 1.05, inner: true }); }
+  for (const c of cl) {
+    c.occ = c.inner ? 0.5 : clamp(0.66 + 0.5 * Math.hypot(c.X, c.Y, c.Z), 0.6, 1.05) * (0.8 + 0.2 * sstep(-0.8, 0.6, c.Y));
+    c.L = c.X * 0.7 + c.Y * 0.9 + c.Z * 0.35;   // facing the light: upper right, a little toward the viewer
+  }
+  // three masses: shadow (inner + the least lit 30 %), lit (the most lit 28 %, smaller cards), mid (the rest)
+  const outer = cl.filter(c => !c.inner).sort((a, b) => a.L - b.L);
+  outer.forEach((c, i) => { c.mass = i < outer.length * 0.3 ? 0 : i >= outer.length * 0.72 ? 2 : 1; });
+  for (const c of cl) { if (c.inner) c.mass = 0; if (c.mass === 2) c.r *= 0.82; }
+  // fit the crown into the top of the sprite: x within the width, y from row 1 down to the crown bottom
+  const crownBot = Math.round(H * (1 - S.trunk));
+  for (const c of cl) { c.ux = c.X + (c.mass === 0 ? -0.1 : 0); c.uy = -c.Y * S.asp * 0.9 + c.Z * S.asp * 0.3 + (c.mass === 0 ? 0.1 : 0); }
+  let bx0 = 1e9, bx1 = -1e9, by0 = 1e9, by1 = -1e9;
+  for (const c of cl) { bx0 = Math.min(bx0, c.ux - c.r); bx1 = Math.max(bx1, c.ux + c.r); by0 = Math.min(by0, c.uy - c.r); by1 = Math.max(by1, c.uy + c.r); }
+  const scx = (W - 2) / (bx1 - bx0), scy = Math.min(scx * 1.25, (crownBot - 1) / (by1 - by0));   // x fills the width, y the crown band
+  for (const c of cl) { c.sx = cx + (c.ux - (bx0 + bx1) / 2) * scx; c.sy = 1 + (c.uy - by0) * scy; c.ry = c.r * scy; c.r *= scx; if (c.mass === 0 && !c.inner) { c.sx -= 2; c.sy += 2; } }   // the shadow mass sits 2 px down-left
+  const cyc = 1 + ((0 - by0) * scy), botY = 1 + (by1 - by0) * scy;
+  // ---- trunk (into the crown), roots, AO, 2-3 branches toward low clusters
+  treeAO(T, cx, yb, S.trunkW[0]);
+  const xc = S.bush ? null : treeTrunk(T, S, cx, yb, Math.round(cyc), rand(-1.2, 1.2), seed);
+  if (xc) treeRoots(T, S, xc, yb);
+  const low = cl.filter(c => !c.inner).sort((a, b) => b.sy - a.sy), nb = xc ? randi(2, 3) : 0;
+  for (let i = 0; i < nb && i < low.length; i++) {
+    const tg = low[(i * 2) % low.length], sy = Math.round(lerp(cyc, botY, rand(0.55, 0.9)));
+    treeLine(T, xc(sy), sy, lerp(xc(sy), tg.sx, 0.8), lerp(sy, tg.sy, 0.7), 2, 1, S.bark[0], S.bark[tg.sx > xc(sy) ? 3 : 1]);
+  }
+  // ---- leaf clusters, back to front (inner, then by depth; the lit mass last)
+  cl.sort((a, b) => ((a.inner ? -10 : 0) + a.mass * 0.6 + a.Z) - ((b.inner ? -10 : 0) + b.mass * 0.6 + b.Z));
+  cl.forEach((c, i) => { c.ord = i; });
+  const BASE = [0.13, 0.42, 0.7], LO = [0, 0.28, 0.6], HI = [0.36, 0.74, 0.98];
+  cl.forEach((c, ci) => {
+    const r = c.r, ry = c.ry * (S.squash || 0.92);
+    for (let y = Math.floor(c.sy - ry - 1); y <= Math.ceil(c.sy + ry + 1); y++) for (let x = Math.floor(c.sx - r - 1); x <= Math.ceil(c.sx + r + 1); x++) {
+      if (x < 0 || y < 0 || x >= W || y >= H) continue;
+      const dx = (x + 0.5 - c.sx) / r, dy = (y + 0.5 - c.sy) / ry, d2 = dx * dx + dy * dy;
+      if (d2 > 1 - 0.25 * vnoise(x * 0.5 + ci * 5.3, y * 0.5, seed + 21)) continue;   // the edge eroded into 3-5 px leaf clumps
+      const nz = Math.sqrt(Math.max(0, 1 - d2)), lam = dx * 0.6 - dy * 0.68 + nz * 0.42;
+      const q = vnoise(x * 0.42 + ci * 3.1, y * 0.42, seed + 11);
+      let v = BASE[c.mass] + (c.occ - 0.85) * 0.3 + lam * 0.2 + (q - 0.5) * 0.16 - (q < 0.24 ? 0.1 : 0);
+      C.set(x, y, ramp2(S.pal, clamp(v, LO[c.mass], HI[c.mass]), x, y)); own[y * W + x] = ci;
+    }
+  });
+  despeckle(C, own);
+  leafPasses(C, own, S, cl);
+  // flecks (blossom / fruit / glints): 2 px pairs on mid / lit clusters, never a lone pixel (a lone one reads as a speck)
+  if (S.flecks) for (let i = 0; i < S.flecks.n; i++) {
+    const cs = cl.filter(c => c.mass > 0), c = cs[Math.floor(rand() * cs.length)], a = rand(0, 6.283), d = rand(0, c.r * 0.75);
+    const x = Math.round(c.sx + Math.cos(a) * d), y = Math.round(c.sy + Math.sin(a) * d * 0.9), col = hexToRgb(S.flecks.c[Math.floor(rand() * S.flecks.c.length)]);
+    if (C.a(x, y) && C.a(x + 1, y)) { C.set(x, y, col); C.set(x + 1, y, col); }
+  }
+  return treeFromParts(T.toCanvas(), C.toCanvas());
+}
+// pine v2: asymmetric tiers (each side's reach 0.6-1.1 independently), 6-9 tiers drawn bottom-up so every tier's drooping tips
+// hang over the one below (with a cast shade under it), per-tier needle gaps, a bare tip, broken lower branches on giants,
+// rim light on the lit side of every tier and dust on the tier tops; lit-side sheet, no outline
+function pineTree2(seed, S) {
+  seedRng(seed);
+  const W = S.W, H = S.H, yb = H - 2, cx = W / 2;
+  const T = new PixBuf(W, H), C = new PixBuf(W, H), own = new Int16Array(W * H).fill(-1);
+  const tip = randi(S.tip[0], S.tip[1]), crownTop = 1 + tip, crownBot = Math.floor(H * (1 - S.bare));
+  treeAO(T, cx, yb, S.trunkW[0]);
+  const xc = treeTrunk(T, S, cx, yb, 1, rand(-0.7, 0.7), seed);
+  treeRoots(T, S, xc, yb);
+  for (let k = 0; k < (S.broken || 0); k++) {   // broken lower branches on the bare trunk
+    const y = Math.round(lerp(crownBot + 3, yb - 12, rand())), s = k % 2 ? 1 : -1, len = randi(3, 6);
+    for (let q = 1; q <= len; q++) T.set(Math.round(xc(y) + s * (S.trunkW[1] + 1 + q)), y + Math.round(q * 0.45), S.bark[s > 0 ? 2 : 0]);
+  }
+  const n = randi(S.tiers[0], S.tiers[1]), step = (crownBot - crownTop) / n, cl = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const y0 = crownTop + i * step + rand(-0.6, 0.6), k = (i + 1) / n, base = 1.5 + k * (W / 2 - 2.5), gs = seed * 7 + i * 31;
+    const ci = cl.length; cl.push({ ord: n - 1 - i, mass: 1, sx: xc(y0), sy: y0 + step * 0.4, r: base });
+    for (const s of [-1, 1]) {
+      const rx = Math.max(1.5, base * rand(0.6, 1.1)), ry = step * 0.75 + 1, ccx = xc(y0) + s * rx * 0.42, ccy = y0 + step * 0.5;
+      for (let y = Math.floor(ccy - ry - 1); y <= Math.ceil(ccy + ry * 1.8); y++) for (let x = Math.floor(ccx - rx - 1); x <= Math.ceil(ccx + rx + 1); x++) {
+        if (x < 0 || y < 0 || x >= W || y >= H) continue;
+        const dx = (x + 0.5 - ccx) / rx, dy = (y + 0.5 - ccy - Math.abs(dx) * ry * 0.6) / ry;   // droop toward the tips
+        if (dx * dx + dy * dy > 1 - vnoise(x * 0.7, y * 0.7, gs) * 0.45) continue;
+        if (vnoise(x * 0.32, y * 0.6, gs + 7) > 0.82) continue;   // gaps show the sky: their own holes on every tier
+        const v = 0.6 - dy * 0.4 + (s > 0 ? 0.1 : -0.1) - (Math.abs(x + 0.5 - xc(y)) < 2 ? 0.06 : 0) - k * 0.14 + (vnoise(x * 0.9, y * 0.3, gs + 3) - 0.5) * 0.1;
+        C.set(x, y, ramp2(S.pal, v, x, y)); own[y * W + x] = ci;
+      }
+    }
+  }
+  despeckle(C, own);
+  // rim on every tier's lit edge (x right of the trunk), dust on lit tier tops, cast shade under the tier above, shadow-side edge
+  const o = (x, y) => x < 0 || y < 0 || x >= W || y >= H ? -1 : own[y * W + x], rim = [], dust = [], shade = [], edge = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const k = o(x, y); if (k < 0) continue;
+    // open = sky, not a needle hole: the gap runs >= 3 px (or off the sprite), so holes get no rim and no dust (no confetti)
+    const right = x + 0.5 > xc(y) + 1, r1 = o(x + 1, y), openR = r1 < 0 && o(x + 2, y) < 0 && o(x + 3, y) < 0, openU = o(x, y - 1) < 0 && o(x, y - 2) < 0;
+    if (right && (openR || (r1 >= 0 && cl[r1].ord < cl[k].ord))) { rim.push([x, y]); continue; }
+    if (right && openU && vnoise(x * 0.35, y * 0.2, seed + 9) > 0.4) { dust.push([x, y]); continue; }
+    const a1 = o(x, y - 1), a2 = o(x, y - 2), a3 = o(x, y - 3), up = j => j >= 0 && cl[j].ord > cl[k].ord;
+    if (up(a1) || (a1 === k && (up(a2) || (a2 === k && up(a3))))) { shade.push([x, y]); continue; }   // a 3 px cast shade under the tier above
+    if (o(x - 1, y) < 0 || o(x, y + 1) < 0) edge.push([x, y]);
+  }
+  for (const [x, y] of runsOnly(rim, W)) C.set(x, y, mixRgb(C.get(x, y), S.rim, 0.55));
+  for (const [x, y] of runsOnly(dust, W)) C.set(x, y, mixRgb(C.get(x, y), S.rim, 0.3));
+  for (const [x, y] of shade) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.5));
+  for (const [x, y] of edge) C.set(x, y, mixRgb(C.get(x, y), S.pal[0], 0.5));
+  return treeFromParts(T.toCanvas(), C.toCanvas());
+}
+// Species: per zone 3+ species x 6 variants x 2 sizes, ordered big0, small0, big1, small1, ... so the data's variant index
+// (o.v % n) walks both sizes. `trunk` = the bare trunk's share of the sprite height (35-45 % broadleaf), asp = crown height / width.
+const TREE_SPECIES = {
+  round: { sizes: [[38, 60], [28, 44]], trunk: 0.36, asp: 0.9, clusters: [9, 11], card: [0.42, 0.56], inner: 4, pal: LEAF2, bark: BARK2, trunkW: [7, 3], rim: RIM_VALE, rimMix: 0.55, flecks: { n: 3, c: ['#f4d98a'] }, seed: 1100 },
+  poplar: { sizes: [[22, 64], [18, 46]], trunk: 0.24, asp: 2.5, clusters: [13, 16], card: [0.5, 0.66], inner: 4, squash: 1.1, pal: TEAL2, bark: BARK2, trunkW: [5, 2.5], rim: RIM_VALE, rimMix: 0.55, seed: 1200 },
+  blossom: { sizes: [[38, 58], [28, 42]], trunk: 0.38, asp: 0.78, clusters: [9, 11], card: [0.4, 0.54], inner: 4, pal: BLOSSOM2, bark: BARK2, trunkW: [6, 3], rim: hexToRgb('#fff0f6'), rimMix: 0.5, flecks: { n: 10, c: ['#ffffff', '#fff0f7'] }, seed: 1300 },
+  teal: { sizes: [[34, 56], [26, 40]], trunk: 0.36, asp: 1.05, clusters: [9, 11], card: [0.42, 0.56], inner: 4, pal: TEAL2, bark: BARK2, trunkW: [6, 3], rim: RIM_VALE, rimMix: 0.55, flecks: { n: 3, c: ['#bff7ff'] }, seed: 1400 },
+  // forest broadleaves (step-4 density: Pinewood's 2nd / 3rd species beside the pines)
+  oak: { sizes: [[40, 64], [28, 44]], trunk: 0.4, asp: 0.8, clusters: [9, 12], card: [0.4, 0.54], inner: 4, pal: AMBER2, bark: PINE_BARK2, trunkW: [7, 3], rim: RIM_FOREST, rimMix: 0.55, seed: 1500 },
+  birch: { sizes: [[24, 62], [18, 44]], trunk: 0.44, asp: 1.9, clusters: [8, 10], card: [0.44, 0.6], inner: 2, squash: 1.05, pal: BIRCH2, bark: BARK_BIRCH, trunkW: [4, 2], birch: true, rim: RIM_FOREST, rimMix: 0.5, seed: 1600 },
+};
+const PINE_SPECIES = {
+  giant: { W: 60, H: 140, bare: 0.44, tiers: [8, 10], tip: [3, 5], broken: 3, trunkW: [10, 3], n: 3, seed: 1900 },
+  tall: { W: 36, H: 82, bare: 0.3, tiers: [6, 9], tip: [3, 5], broken: 0, trunkW: [6, 1.5], n: 6, seed: 1910 },
+  young: { W: 20, H: 42, bare: 0.12, tiers: [6, 7], tip: [3, 4], broken: 0, trunkW: [3, 1], n: 6, seed: 1930 },
+};
+const TREES_LIVE = typeof location !== 'undefined' && /[?&]trees=live\b/.test(location.search || '');
+function buildTreeSpecies(kind) {
+  const S = TREE_SPECIES[kind], out = [];
+  for (let v = 0; v < 6; v++) for (let z = 0; z < 2; z++) {
+    const [w, h] = S.sizes[z], sk = z ? 0.78 : 1;
+    out.push(canopyTree(S.seed + v * 10 + z, Object.assign({}, S, { W: w, H: h, clusters: z ? [S.clusters[0] - 2, S.clusters[1] - 2] : S.clusters, card: S.card.map(c => c / sk), trunkW: z ? S.trunkW.map(t => Math.max(1, t - 1)) : S.trunkW })));
+  }
+  return out;
+}
+function buildPineSpecies(kind) {
+  const S = PINE_SPECIES[kind], out = [];
+  for (let v = 0; v < S.n; v++) out.push(pineTree2(S.seed + v, Object.assign({ pal: PINE2, bark: PINE_BARK2, rim: RIM_FOREST }, S)));
+  return out;
+}
+// the frozen sheets (js/sprites.js 'tree_<kind>_NN' / 'pine_<kind>_NN', 2 frames: trunk, canopy) -> composites; null = build live
+function frozenTrees(prefix) {
+  if (TREES_LIVE) return null;
+  const keys = Object.keys(ART.img).filter(k => k.startsWith(prefix) && /_\d\d$/.test(k)).sort();
+  if (!keys.length || keys.some(k => ART.img[k].length < 2)) return null;
+  return keys.map(k => treeFromParts(ART.img[k][0], ART.img[k][1]));
+}
+// bushes v2: the same cluster crown with no trunk (the crown sits on its AO), no full outline; frozen as 'bush2_NN' (2 frames)
+const BUSH_SPECIES = { w: 18, h: 13, trunk: 0.02, asp: 0.62, clusters: [5, 6], card: [0.5, 0.64], inner: 2, pal: LEAF2, bark: BARK2, trunkW: [5, 2], rim: RIM_VALE, rimMix: 0.5, bush: true, flecks: { n: 2, c: ['#ffb3d1'] } };
+function buildBushes() { return [0, 1, 2, 3].map(v => canopyTree(1700 + v, Object.assign({}, BUSH_SPECIES, { W: BUSH_SPECIES.w + (v % 2) * 2, H: BUSH_SPECIES.h }))); }
+function buildTreesV2() {
+  for (const k of Object.keys(TREE_SPECIES)) ART.trees[k] = frozenTrees('tree_' + k + '_') || buildTreeSpecies(k);
+  ART.pines = {};
+  for (const k of Object.keys(PINE_SPECIES)) ART.pines[k] = frozenTrees('pine_' + k + '_') || buildPineSpecies(k);
+  ART.bushV2 = frozenTrees('bush2_') || buildBushes();
+}
+
+// ===== ground decals (DESIGN §29 G2; world-art minutes §2.3) ========================================================
+// 16 flat kinds per zone, coloured from the theme's own ramps, baked into the ground chunks / column tops by maps.js (never in
+// the y-sort, no collider). Each kind has 2-3 shape variants. Every mark is >= 2 px in some direction and sits 1-2 ramp steps from
+// the ground it lies on, so a decal never reads as a speck. DECAL_KINDS order = the kind index maps.js stores.
+const DECAL_KINDS = ['tuft', 'tuftPale', 'flowers', 'litterA', 'litterB', 'litterC', 'needles', 'pebbles', 'rootA', 'rootB', 'rootC', 'rootD', 'moss', 'puddle', 'cobble', 'fern'];
+function buildDecalSet(th, seed) {
+  if (th._decals) return th._decals;
+  const keepRng = _rng; seedRng(seed * 977 + 5);   // built lazily (first chunk): never disturb the shared seeded stream
+  const G = th.grass, E = th.earth, S = th.stone, P = th.path, Wt = th.water, Wd = th.wood || E;
+  const warm = th.flowers.map(hexToRgb), set = {};
+  const mk = (w, h, draw) => { const pb = new PixBuf(w, h); draw(pb, w, h); const c = pb.toCanvas(); c.ax = w >> 1; c.ay = h - 1; return c; };
+  const blade = (pb, x, h, lean, cols, y0) => { for (let y = 0; y < h; y++) pb.set(Math.round(x + lean * y), y0 - y, cols[Math.min(cols.length - 1, Math.floor(y / h * cols.length))]); };
+  set.tuft = [0, 1, 2].map(v => mk(7, 6, (pb) => { const n = 3 + (v % 2); for (let b = 0; b < n; b++) blade(pb, 1 + b * 1.6, 3 + ((b + v) % 3), (b % 2 ? 0.2 : -0.15), [G[2], G[3], G[4]], 5); }));
+  set.tuftPale = [0, 1].map(v => mk(7, 6, (pb) => { for (let b = 0; b < 4; b++) blade(pb, 1 + b * 1.5, 3 + ((b + v) % 2) * 1.5, (b % 2 ? 0.18 : -0.12), [G[3], G[4], G[5]], 5); }));
+  set.flowers = [0, 1, 2].map(v => mk(8, 5, (pb) => {
+    for (let k = 0; k < 3; k++) { const x = 1 + k * 2.4 + (v === 1 && k === 1 ? 0.6 : 0), y = 1 + ((k + v) % 2), c = warm[(k + v) % warm.length]; blade(pb, x + 0.5, 4 - y, 0, [G[2], G[3]], 4); pb.set(Math.round(x), y, c); pb.set(Math.round(x) + 1, y, c); }
+  }));
+  const leafy = (cols, n) => mk(9, 5, (pb) => { for (let k = 0; k < n; k++) { const x = Math.floor(rand(0, 7)), y = Math.floor(rand(0, 4)), c = cols[Math.floor(rand() * cols.length)]; pb.set(x, y, c); pb.set(x + 1, y, c); if (rand() < 0.4) pb.set(x + 1, y + 1, cols[0]); } });
+  set.litterA = [0, 1].map(() => leafy([E[3], E[4], Wd[2]], 5));
+  set.litterB = [0, 1].map(() => leafy([E[4], E[5], warm[0]], 4));
+  set.litterC = [0, 1].map(() => leafy([G[2], E[3], Wd[3]], 6));
+  set.needles = [0, 1].map(() => mk(10, 4, (pb) => { for (let k = 0; k < 7; k++) { const x = Math.floor(rand(0, 8)), y = Math.floor(rand(0, 4)), c = [E[2], E[3], Wd[1]][k % 3]; pb.set(x, y, c); pb.set(x + 1, y, c); pb.set(x + 2, y, c); } }));
+  set.pebbles = [0, 1, 2].map(v => mk(8, 4, (pb) => { for (let k = 0; k < 2 + v % 2; k++) { const x = 1 + k * 3, y = 1 + ((k + v) % 2); pb.set(x, y, S[4]); pb.set(x + 1, y, S[3]); pb.set(x, y + 1, S[2]); pb.set(x + 1, y + 1, S[1]); } }));
+  // roots: from the trunk foot (the anchor, top-centre of the decal) out and down, 2 px thick for the first half
+  const root = (dir, len, drop) => { const w = len + 3, pb = new PixBuf(w * 2, drop + 3); const cx = w; for (let q = 0; q < len; q++) { const x = cx + dir * q, y = Math.round(q / len * drop); pb.set(x, y, Wd[q < len / 2 ? 2 : 1]); if (q < len / 2) pb.set(x, y + 1, Wd[0]); } const c = pb.toCanvas(); c.ax = cx; c.ay = 0; return c; };
+  set.rootA = [root(-1, 6, 2), root(1, 6, 2)]; set.rootB = [root(-1, 8, 3), root(1, 8, 3)];
+  set.rootC = [root(-1, 5, 3), root(1, 5, 3)]; set.rootD = [root(-1, 9, 2), root(1, 9, 2)];
+  set.moss = [0, 1].map(v => mk(11, 5, (pb, w, h) => { for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const d = ((x + 0.5 - w / 2) / (w / 2)) ** 2 + ((y + 0.5 - h / 2) / (h / 2)) ** 2; if (d < 1 - 0.3 * vnoise(x * 0.6, y * 0.6, seed + v)) pb.set(x, y, ramp2([G[1], G[2], G[3]], 0.75 - d * 0.6, x, y)); } }));
+  set.puddle = [0, 1].map(v => mk(11 + v * 2, 5, (pb, w, h) => { for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const d = ((x + 0.5 - w / 2) / (w / 2)) ** 2 + ((y + 0.5 - h / 2) / (h / 2)) ** 2; if (d < 1) pb.set(x, y, d > 0.6 ? E[1] : y === 1 && x > 2 && x < w - 3 ? Wt[4] : Wt[2]); } }));
+  set.cobble = [0, 1, 2].map(v => mk(10, 4, (pb) => { for (let k = 0; k < 3; k++) { const x = k * 3 + (v % 2), y = (k + v) % 2; for (let q = 0; q < 3; q++) pb.set(x + q, y, q === 2 ? P[1] : P[3]); for (let q = 0; q < 3; q++) pb.set(x + q, y + 1, P[1]); } }));
+  set.fern = [0, 1].map(v => mk(11, 7, (pb) => {
+    for (const s of [-1, 1]) for (let q = 0; q < 5; q++) { const x = 5 + s * q, y = 6 - Math.round(q * 0.9 + (q > 2 ? -(q - 2) * 0.6 : 0)) - (v && s > 0 ? 1 : 0); pb.set(x, y, G[q < 2 ? 2 : 3]); if (q % 2) pb.set(x, y - 1, G[4]); }
+    pb.set(5, 6, G[1]); pb.set(5, 5, G[2]);
+  }));
+  _rng = keepRng;
+  return (th._decals = DECAL_KINDS.map(k => set[k]));
 }
 
 // ===== Props ===================================================================
@@ -656,6 +1012,22 @@ function buildCloud(seed, w, h, pal, alpha = 255) {
   return pb.toCanvas();
 }
 
+// cloud sea tile (DESIGN §29 island edge v2): a 256 x 96 band of soft, dense cloud, tileable in x (period-8 noise over 256 px),
+// billowy and lit on top, opaque at the bottom (drawCloudSea fills below it with `base`). layer 0 = the far layer, 1 = the near one.
+// Pure hash noise (no seedRng), so building it never disturbs seeded generation.
+function buildSeaTile(th, seed, layer) {
+  const W = 256, H = 96, pb = new PixBuf(W, H), pal = th.cloud, n = pal.length - 1;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const nz = fbm(x / 32, y / 20 + layer * 3.7, 4, seed, 8), t = y / H;
+    const a = clamp((nz * 0.95 + t * 1.1 - 0.62) / 0.22, 0, 1);
+    if (a <= 0) continue;
+    const v = clamp(0.92 - t * 0.55 + (nz - 0.5) * 0.35 - (1 - a) * 0.15 - layer * 0.08, 0, 1);
+    const f = v * n, i = Math.floor(f), c = pal[(f - i) > ((((y & 1) << 1) | (x & 1)) * 0.25 + 0.125) && i < n ? i + 1 : i];
+    pb.set(x, y, c, Math.round(smooth(a) * 255));
+  }
+  return pb.toCanvas();
+}
+
 function buildFog(seed, hex) {
   const S = 128, pb = new PixBuf(S, S), c = hexToRgb(hex);
   for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
@@ -667,46 +1039,10 @@ function buildFog(seed, hex) {
 }
 
 // ===== forest ===================================================================
-const PAL_PINE = ramp(['#0c1a16', '#132a22', '#1b3a2c', '#264c34', '#36623e', '#4f7c46']);
-const PAL_PINE_BARK = ramp(['#1e120c', '#33201a', '#4a2e22', '#64402e', '#80563c']);
-const RIM = hexToRgb('#d0904a');
-// A conifer like the reference: bare lower trunk, drooping tiers of needles with sky gaps,
-// warm sunset rim-light on the right edge.
-function pineTree(seed, W, H, bare, tierStep) {
-  seedRng(seed);
-  const pb = new PixBuf(W, H), cx = W / 2, top = 2, crownBottom = Math.floor(H * (1 - bare));
-  // trunk
-  for (let y = top; y < H; y++) {
-    const t = (y - top) / (H - top), w = Math.max(2, Math.round(1 + t * W * 0.16)) + (y > H - 4 ? (y - (H - 4)) * 2 : 0);
-    for (let x = Math.floor(cx - w / 2); x < Math.ceil(cx + w / 2); x++) {
-      const u = (x - (cx - w / 2)) / w;
-      let v = 0.25 + u * 0.55 + (vnoise(x * 0.9, y * 0.12, seed) - 0.5) * 0.45;
-      pb.set(x, y, rampDither(PAL_PINE_BARK, v, x, y));
-    }
-  }
-  // needle tiers from the top down
-  const tiers = Math.max(3, Math.floor((crownBottom - top) / tierStep));
-  for (let i = 0; i < tiers; i++) {
-    const y0 = top + i * tierStep + rand(-1, 1), k = (i + 1) / tiers;
-    const reach = (2 + k * (W / 2 - 3)) * rand(0.7, 1.05);
-    for (const s of [-1, 1]) {
-      const rx = reach * rand(0.75, 1), ry = tierStep * 0.7 + 1, ccx = cx + s * rx * 0.45, ccy = y0 + tierStep * 0.45;
-      for (let y = Math.floor(ccy - ry - 1); y <= ccy + ry + 2; y++) for (let x = Math.floor(ccx - rx); x <= ccx + rx; x++) {
-        const dx = (x - ccx) / rx, dy = (y - ccy - Math.abs(dx) * ry * 0.6) / ry;   // droop toward the tips
-        if (dx * dx + dy * dy > 1 - vnoise(x * 0.7, y * 0.7, seed + i) * 0.45) continue;
-        if (vnoise(x * 0.5, y * 0.9, seed + 7) > 0.78) continue;                     // gaps show the sky
-        const v = 0.55 - dy * 0.35 + (s > 0 ? 0.08 : -0.06) - k * 0.12 + (hash2(x, y, seed) - 0.5) * 0.2;
-        pb.set(x, y, rampDither(PAL_PINE, v, x, y));
-      }
-    }
-  }
-  // sunset rim light on right-facing edges
-  for (let y = 0; y < crownBottom + 4; y++) for (let x = Math.floor(cx); x < W; x++) if (pb.a(x, y) && !pb.a(x + 1, y) && hash2(x, y, seed + 3) < 0.55) pb.set(x, y, mixRgb(pb.get(x, y), RIM, 0.55));
-  pb.outline(0.4);
-  return pb.toCanvas();
-}
+const PAL_PINE_BARK = ramp(['#1e120c', '#33201a', '#4a2e22', '#64402e', '#80563c']);   // logs / stumps
+// (pine v1, pineTree: mirror-symmetric tiers with a hard-coded right rim, is replaced by pineTree2 above, §29 G2)
 function buildForest() {
-  ART.pines = { giant: [0, 1, 2].map(i => pineTree(900 + i, 58, 136, 0.42, 9)), tall: [0, 1, 2, 3].map(i => pineTree(910 + i, 36, 80, 0.2, 7)), young: [0, 1, 2].map(i => pineTree(920 + i, 20, 40, 0.08, 5)) };
+  buildTreesV2();   // §29 G2: canopyTree broadleaves + pine v2 (ART.trees.*, ART.pines.*)
   ART.mushroomRed = asciiSprite([
     '..KKKK..', '.KRRWRK.', 'KRWRRRRK', 'KRRRRWRK', '.KKSSKK.', '...SS...', '...SS...', '..KSSK..',
   ], { K: '#3a1410', R: '#d23a2a', W: '#f4ece0', S: '#e8dcc8' });

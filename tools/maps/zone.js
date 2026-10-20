@@ -39,6 +39,9 @@ function zone(S) {
       }
       for (const [k, r] of Object.entries(S.ponds || {})) g.pond(k, r);
       for (const b of S.bridges || []) g.bridge(b);
+      // §29 G3 tall set pieces: stacked plateaus + switchbacks (the climbs, drops and the vantage are placed in populate)
+      for (const [k, st] of Object.entries(S.stacks || {})) g.stack(k, st);
+      for (const [k, sw] of Object.entries(S.switchbacks || {})) g.switchback(k, sw);
     },
     populate(g, T) { populate(S, g, T); },
   };
@@ -46,6 +49,7 @@ function zone(S) {
 
 function populate(S, g, T) {
   const R = g.roomBy, E = S.enemies, X = S.text, SAY = S.say, tr = g.triggers;
+  const lootOf = k => (S.chestLoot && S.chestLoot[k]) ? { loot: S.chestLoot[k] } : {};   // DESIGN 19.4: a chest marker's `loot` guarantees one trinket of that slot (passes through gen -> world.js)
   const snap = (x, y, r = 1.6) => g.nearWalkable(x, y, r);
   const r2 = v => Math.round(v * 100) / 100;
   const doorMode = T.warpMode === 'door';
@@ -62,7 +66,7 @@ function populate(S, g, T) {
   for (const sg of S.signs || []) { const rm = R[sg.room]; g.marker('sign', rm.x + sg.dx, rm.y + sg.dy, { label: 'sign', text: sg.text }); g.poi('sign', rm.x + sg.dx, rm.y + sg.dy); }
   const shr = {};
   for (const [k, sh] of Object.entries(S.shrines)) {
-    const rm = R[sh.room]; shr[k] = { x: rm.x, y: rm.y };
+    const rm = sh.at ? { x: sh.at[0], y: sh.at[1] } : R[sh.room]; shr[k] = { x: rm.x, y: rm.y };   // at: [x, y] -- §29 G3 shrine 3 on Hawk's Rest
     g.marker('shrine', rm.x, rm.y, { id: k, name: sh.name, label: 'checkpoint', warp: true }); g.poi('shrine', rm.x, rm.y);
     g.anchor(k + '_land', rm.x + 1.7, rm.y + 0.9);
   }
@@ -122,7 +126,28 @@ function populate(S, g, T) {
   // the elite guards the Hollow key
   const el = R.elite;
   tr.push(T.enter('elite', 'Elite guarding the key', el.x, el.y, el.r + 0.2, [T.banner(E.elite.title, E.elite.sub, true), T.spawn(E.elite.enemy, 1, el.x - 1, el.y, 1.2, { elite: 'shielded' })], ['r1_done']));
-  tr.push(T.allDead('elite_done', 'Elite defeated', ['elite'], [T.message(X.eliteDone), T.loot('rare', 1, el.x, el.y, { item: S.key }), T.dialogue('Pip', [X.keyLine]), T.step(S.quest, 1), T.objective(X.keyObjective)]));
+  tr.push(T.allDead('elite_done', 'Elite defeated', ['elite'], [T.message(X.eliteDone), T.loot('rare', 1, el.x, el.y, Object.assign({ item: S.key }, E.elite.lootSlot ? { slot: E.elite.lootSlot } : {})), T.dialogue('Pip', [X.keyLine]), T.step(S.quest, 1), T.objective(X.keyObjective)]));
+
+  // ============================================================== FOREST: elite pockets (DESIGN 26.2, the gear loop)
+  // S.pockets: [{ id, room, boss, name, sub?, elite, mod, mobs: [[enemy, n], ...] }]. Each pocket is an off-path clearing near its boss:
+  //   <id>       enter_area, once: false + a cooldown longer than any visit: it fires once per map entry (G.trig resets on entry and on
+  //              respawn) and never settles, so the pocket RESPAWNS on map re-entry. 1 elite (spawn elite: mod) + 3-5 commons.
+  //   <id>_done  all_enemies_dead on that card's spawns, once: true -> settles, so only the FIRST clear pays the guarantee: one Rare+ at
+  //              item level >= (boss level - 2) in slot 'upgrade' (items.js upgradeSlot: weapon > chest > head > boots, the first worn piece it beats that no earlier pocket
+  //              filled, in the family worn there). Later clears drop only the elite's own rollLoot('elite') (normal elite rates).
+  const keepRng = g.rng; g.rng = g.sideRng();   // pockets + their shrine on the side stream: the rest of the map places exactly as before
+  const BOSS_LVL = id => { const b = (require('./gamedata.js').BOSS_DATA || {})[id]; if (!b || !b.level) throw new Error('pocket boss without a level: ' + id); return b.level; };
+  for (const pk of S.pockets || []) {
+    const rm = R[pk.room], floor = BOSS_LVL(pk.boss) - 2, n = pk.mobs.reduce((a, m) => a + m[1], 0);
+    if (n < 3 || n > 5) throw new Error(`pocket ${pk.id}: ${n} commons (DESIGN 26.2: 3-5)`);
+    g.ring(pk.room, 'lantern', 3, 0.92, { rot: 0.4 }); g.poi('pocket', rm.x, rm.y);
+    const spawns = [T.banner(pk.name, pk.sub || 'Elite pocket'), T.spawn(pk.elite, 1, rm.x, rm.y - 0.5, 0.5, { elite: pk.mod })];
+    let k = 0; for (const [en, c] of pk.mobs) for (let i = 0; i < c; i++, k++) { const a = 0.5 + k * 2 * Math.PI / n, q = snap(rm.x + Math.cos(a) * 2.1, rm.y + Math.sin(a) * 2.1, 1); spawns.push(T.spawn(en, 1, q.x, q.y, 0.5)); }
+    tr.push(Object.assign(T.enter(pk.id, pk.name, rm.x, rm.y, rm.r + 0.4, spawns), { once: false, cooldown: 100000 }));
+    (g.levelAreas || (g.levelAreas = [])).push({ id: pk.id, x: rm.x, y: rm.y, r: r2(rm.r + 2.5), level: BOSS_LVL(pk.boss) });   // the pack spawns at the boss's level (elite +2)
+    tr.push(T.allDead(pk.id + '_done', pk.name + ': first clear', [pk.id], [T.message(pk.done || 'The pocket is quiet. Something good was guarded here.'), T.loot('rare', 1, rm.x, rm.y, { slot: 'upgrade', ilvl: floor })]));
+  }
+  g.rng = keepRng;
 
   // ============================================================== FOREST: secrets (crack, bridge lever, env pond, cross-section cache)
   const secretTriggers = [];
@@ -178,8 +203,13 @@ function populate(S, g, T) {
   {   // keyed door into the Hollow
     const kd = nearRoomEdge(g, 'hdoor', 'hdoor', -1, 1.0);
     if (!doorMode) g.addObj('keydoor', kd.x, kd.y, { id: 'door_key', key: S.key, ang: r2(kd.ang), len: S.w.branch, force: true, sp: 0.1 });
-    g.warp('hollow_door', { x: hd.x, y: hd.y - 0.2, to: { x: hst.x + 1.4, y: hst.y - 0.3 }, key: S.key, label: 'Root Hollow', marker: true });
+    g.warp('hollow_door', { x: hd.x, y: hd.y - 0.2, to: { x: hst.x + 1.4, y: hst.y - 0.3 }, key: S.key, label: 'Root Hollow', marker: true, boss: E.den.doorBoss });
     g.anchor('hollow_in', hst.x + 1.4, hst.y - 0.3); g.poi('door', hd.x, hd.y);
+    if (S.doorShrine) {   // DESIGN 26.2 cheap retries: a warp shrine at the boss door, beside the Mossjaw pockets
+      const keep = g.rng; g.rng = g.sideRng(); const q = snap(hd.x + S.doorShrine.dx, hd.y + S.doorShrine.dy, 1.2); g.rng = keep;
+      g.marker('shrine', q.x, q.y, { id: 'door_shrine', name: S.doorShrine.name, label: 'checkpoint', warp: true }); g.poi('shrine', q.x, q.y); g.anchor('door_shrine_land', q.x + 1.2, q.y + 0.6);
+      tr.push(repeat(T.enter('door_shrine', S.doorShrine.name, q.x, q.y, 2.2, [T.checkpoint('Checkpoint: ' + S.doorShrine.name), T.heal(100)])));
+    }
     tr.push(T.enter('hdoor_hint', 'The root door', kd.x, kd.y, 3.2, [T.message(X.locked)]));
   }
   {   // the root-stair out: sealed until Mossjaw falls; lands beside shrine 3. Door mode: a warpdoor with open:false that a trigger openGate opens;
@@ -207,6 +237,15 @@ function populate(S, g, T) {
   g.poi('start', hst.x, hst.y);
   tr.push(T.enter('h_intro', 'Pip in the dark', hst.x, hst.y, 5, [T.say(SAY.hollow), T.step(S.quest, 2), T.objective(X.hollowObjective)]));
   tr.push(repeat(T.enter('h_shrine', 'Midpoint shrine', hs.x, hs.y, 2.2, [T.checkpoint('Checkpoint: ' + X.hollowShrineName), T.heal(100)])));
+  if (S.denShrine) {   // DESIGN 26.2: a warp shrine just outside Mossjaw's gate. Dying in the den respawns here (~6 tiles from the fight), and any
+    // forest shrine (door_shrine by the pockets) warps here. Found only past the keyed door and the gallery, so it opens no sequence break:
+    // the root-stair out stays sealed until Mossjaw falls, and warping out to a forest shrine only skips a walk.
+    const hp = g.pathBy.h_main, want = den.r + S.denShrine.back;
+    let best = null; for (const sm of hp.samples) { if (sm.x > den.x) continue; const d = Math.abs(Math.hypot(sm.x - den.x, sm.y - den.y) - want); if (!best || d < best.d) best = { d, x: sm.x, y: sm.y }; }
+    const keep = g.rng; g.rng = g.sideRng(); const q = snap(best.x, best.y - 1.3, 1.2); g.rng = keep;
+    g.marker('shrine', q.x, q.y, { id: 'den_shrine', name: S.denShrine.name, label: 'checkpoint', warp: true }); g.poi('shrine', q.x, q.y);
+    tr.push(repeat(T.enter('den_shrine', S.denShrine.name, q.x, q.y, 2.2, [T.checkpoint('Checkpoint: ' + S.denShrine.name), T.heal(100)])));
+  }
   fightIn(T, g, tr, 'h_r1', E.h_r1, null);
   tr.push(T.enter('h_r2', E.h_r2.name, h2.x, h2.y, h2.r - 1.5, waveActions(T, g, h2, E.h_r2.waves, E.h_r2.gap, E.h_r2.banner), ['h_r1_done', 'h_shrine']));
   tr.push(T.allDead('h_r2_done', 'Gallery cleared', ['h_r2'], [T.message(E.h_r2.clear), T.heal(25), T.loot('uncommon', 1, h2.x, h2.y), T.objective('Pull the lever to raise the gate')]));
@@ -229,7 +268,7 @@ function populate(S, g, T) {
   // ============================================================== WARRENS (vault: a noise puzzle, 3 sleepers)
   {
     const wd = R.w_door, wh = R.w_hall, wv = R.w_vault, W = E.warrens;
-    g.marker('chest_gold', wv.x, wv.y - 0.5, { label: 'warrens-chest', guaranteed: 'epic' }); g.poi('chest', wv.x, wv.y);
+    g.marker('chest_gold', wv.x, wv.y - 0.5, Object.assign({ label: 'warrens-chest', guaranteed: 'epic' }, lootOf('vault'))); g.poi('chest', wv.x, wv.y);
     for (const k of ['w_hall', 'w_vault']) { g.ring(k, 'crystal', 4, 0.9); g.poi('room', R[k].x, R[k].y); }
     g.poi('start', wd.x, wd.y);
     tr.push(T.enter('w_enter', 'Fox Warrens', wd.x, wd.y, 4, [T.banner(W.title, W.sub), T.dialogue('Pip', W.pip), T.objective(W.objective)]));
@@ -246,9 +285,9 @@ function populate(S, g, T) {
     const ag = nearRoomEdge(g, 'main', 'arena', -1, 1.4);
     g.addObj('gate', ag.x, ag.y, { id: 'arena_gate', ang: r2(ag.ang), len: S.w.main, force: true, sp: 0.1 }); g.poi('gate', ag.x, ag.y);
     g.ring('arena', 'brazier', 4, 0.62, { rot: 0.8 });
-    g.marker('chest_gold', A.x + A.r * 0.55, A.y - A.r * 0.55, { label: 'boss-chest' });
+    g.marker('chest_gold', A.x + A.r * 0.55, A.y - A.r * 0.55, Object.assign({ label: 'boss-chest' }, lootOf('boss')));
     shrineTrig('shrine3');
-    tr.push(T.enter('arena_hint', 'The rooted arena gate', ag.x, ag.y, 3.4, [T.message(X.arenaSealed)], ['shrine3']));
+    tr.push(T.enter('arena_hint', 'The rooted arena gate', ag.x, ag.y, 3.4, [T.message(X.arenaSealed)], ['r3_done']));   // §29 G3: shrine 3 is up on Hawk's Rest now
     const B = E.boss;
     tr.push(T.enter('boss', B.title, A.x, A.y, A.r - 2, [
       ...T.arena('bramble_arena', 'arena_gate', A.x, A.y, A.r),
@@ -262,6 +301,21 @@ function populate(S, g, T) {
       T.openPortalId('next'), T.openPortalId('home_arena'), T.objective(X.after), T.sound('portal'),
     ]));
   }
+
+  // ============================================================== §29 G3 tall set pieces: root ladders, drop-down ledges, the vantage
+  for (const [k, c] of Object.entries(S.climbs || {})) g.climb(k, c);
+  for (const [k, d] of Object.entries(S.drops || {})) g.drop(k, d);
+  if (S.vantage) {
+    const V = S.vantage, [vx, vy] = V.at;
+    tr.push(T.enter(V.id, V.title, vx, vy, V.r || 2, [T.vantage(V.id, V.reveal || 30, { title: V.title, sub: V.sub || '' }), ...(V.pip ? [T.wait(3.7), T.dialogue('Pip', V.pip)] : [])]));   // Pip speaks once the cinematic (3.5 s) is over
+    g.poi('landmark', vx, vy);
+  }
+  for (const sp of Object.values(S.setPiece || {})) {   // the summit's lone giant pine (the hawk's perch) and boulders at the foot
+    if (sp.pine) g.addObj('pine_giant', sp.pine[0], sp.pine[1], { v: 1, force: true, sp: 2.5 });
+    for (const [x, y] of sp.boulders || []) if (g.walkTile(x, y)) g.addObj('rock_dark', x, y, { v: 0, force: true, sp: 0.9 });
+  }
+  if (S.summitObjective) { const O = S.summitObjective; tr.push(T.enter(O.id, O.text, O.at[0], O.at[1], O.r || 2, [T.objective(O.text, O.to[0], O.to[1])], O.requires)); }
+  for (const L of S.ledgeHints || []) tr.push(T.enter(L.id, L.name, L.at[0], L.at[1], L.r || 1.6, [T.dialogue('Pip', L.pip)]));
 
   // ============================================================== scatter (per section) + density fill
   for (const sc of S.sections) {

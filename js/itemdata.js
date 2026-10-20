@@ -372,6 +372,7 @@ const FLAVOR = {
   tideedge: 'The sea remembers every blade it has ever swallowed.',
   cinderstride: 'The boots still glow where a king once walked.',
   morrowbane: 'It was forged to end a dream, and it does so gently.',
+  echo: 'Whatever you do, it does again: a breath behind you, and a little brighter.',
   // Trinket uniques
   pipslantern: 'A small lantern that still remembers its first light.',
   drownedcompass: 'It points toward the things the water was keeping.',
@@ -379,6 +380,22 @@ const FLAVOR = {
   kindredband: 'Two bands that sing louder when they are near each other.',
   cindersash: 'Ember-red cloth, warm long after the fire has gone.',
   quietgirdle: 'It loosens at dusk, the way a tired traveller does.',
+  // Trinket bases (§19.4)
+  tarnished_band: 'A plain band, dull until someone needs it to shine.',
+  dreamsilver_band: 'Silver drawn from a dream just before waking.',
+  starmetal_band: 'It fell from the sky and chose a finger to stay on.',
+  lantern_charm: 'A tiny lantern that hums when the night is long.',
+  dreamglass_pendant: 'Hold it to the light and a dream looks back.',
+  starhollow_amulet: 'There is a small sky inside, and it is waiting.',
+  rope_sash: 'Knotted by tired hands for a long walk home.',
+  mistwoven_belt: 'Woven from morning mist that forgot to lift.',
+  moonlit_girdle: 'It keeps the moon close when the road is dark.',
+  // Origin rings (§17.1): the starter ring of each origin
+  origin_knight: 'Your first oath, small enough to wear every day.',
+  origin_mystic: 'It remembers the first dream you ever kept.',
+  origin_ranger: 'Worn smooth by every trail you have not walked yet.',
+  origin_thief: 'Nobody saw you take it. Nobody ever does.',
+  origin_warrior: 'A promise to stand, made before you knew why.',
   // World uniques
   cometband: 'A band of falling light, caught and kept for a while.',
   tidewovenclasp: 'Woven from sea grass, it holds the garden close.',

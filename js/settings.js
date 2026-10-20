@@ -12,7 +12,8 @@
 //   settingsData() / applySettings(obj)   the save's `settings` block (also mirrored to localStorage
 //                                 'dreamy.settings.v1' so they hold on the title screen and across New Dream)
 //   onSettingsChange(fn)          fn(key, value) after every change
-//   Getters used by the game:  sfxVol() musicVol() shakeMul() hitstopOn() flashCap() damageNumbersOn()
+//   Getters used by the game:  sfxVol() musicVol() shakeMul() hitstopOn() hitstopMode() flashCap() flashReduceOn() damageNumbersOn()
+//     hitstopMode(): 'off' | 'light' | 'full' (DESIGN §27; a pre-M3 boolean migrates true -> full, false -> off)
 //     damageTakenMul() (Story 0.6, Normal 1) bossHitCap() (max share of max HP per telegraphed boss hit: Story 0.30, Normal 0.45) aimAssistCone() (radians half-angle; off 0 / low 6° / high 10° = the
 //     20° cone) attackToggle() textPx() (body px 14/18/22) moveDeadzone() aimDeadzone()
 // ---------------------------------------------------------------------------
@@ -28,7 +29,7 @@ const SETTINGS_SCHEMA = [
   { key: 'reduceBass', label: 'Reduce bass', group: 'audio', type: 'toggle', def: false },
   { key: 'difficulty', label: 'Difficulty', group: 'game', type: 'choice', def: 'normal', options: [{ v: 'story', label: 'Story' }, { v: 'normal', label: 'Normal' }] },
   { key: 'shake', label: 'Screen shake', group: 'display', type: 'slider', min: 0, max: 100, step: 25, def: 100 },
-  { key: 'hitstop', label: 'Hitstop', group: 'display', type: 'toggle', def: true },
+  { key: 'hitstop', label: 'Hitstop', group: 'display', type: 'choice', def: 'full', options: [{ v: 'off', label: 'Off' }, { v: 'light', label: 'Light' }, { v: 'full', label: 'Full' }] },
   { key: 'flashReduce', label: 'Reduce flashes', group: 'display', type: 'toggle', def: false },
   { key: 'damageNumbers', label: 'Damage numbers', group: 'display', type: 'toggle', def: true },
   { key: 'damageNumberSize', label: 'Damage number size', group: 'display', type: 'choice', def: 'M', options: [{ v: 'S', label: 'S' }, { v: 'M', label: 'M' }, { v: 'L', label: 'L' }] },
@@ -46,7 +47,13 @@ const SETTINGS_SCHEMA = [
 const SETTINGS = {};
 const SETTINGS_KEY = 'dreamy.settings.v1';
 const _settingsFns = [];
+// old saved values -> the current schema, BEFORE validation (which would snap an unknown value to the default)
+function _migrateSetting(d, v) {
+  if (d.key === 'hitstop' && typeof v === 'boolean') return v ? 'full' : 'off';   // M3: the toggle became Off / Light / Full
+  return v;
+}
 function _validSetting(d, v) {
+  v = _migrateSetting(d, v);
   if (d.type === 'toggle') return typeof v === 'boolean' ? v : d.def;
   if (d.type === 'choice') return d.options.some(o => o.v === v) ? v : d.def;
   const n = +v; if (!isFinite(n)) return d.def;
@@ -74,8 +81,10 @@ const onSettingsChange = fn => { _settingsFns.push(fn); };
 const sfxVol = () => SETTINGS.muted ? 0 : SETTINGS.sfx / 0.75;          // 0.75 = the volume the synth was tuned at
 const musicVol = () => SETTINGS.muted ? 0 : SETTINGS.music;
 const shakeMul = () => SETTINGS.shake / 100;
-const hitstopOn = () => SETTINGS.hitstop;
+const hitstopMode = () => SETTINGS.hitstop;
+const hitstopOn = () => SETTINGS.hitstop !== 'off';
 const flashCap = () => SETTINGS.flashReduce ? 0.5 : 1;                     // render.js: bloom + light flash multiplier
+const flashReduceOn = () => !!SETTINGS.flashReduce;                        // game.js: the enemy hit flash stays 0.1 s (R2)
 const damageNumbersOn = () => SETTINGS.damageNumbers;
 const damageTakenMul = () => SETTINGS.difficulty === 'story' ? 0.6 : 1;
 // DESIGN §20.3 "one mistake never kills": no single telegraphed boss hit takes more than this share of the hero's ACTUAL max HP

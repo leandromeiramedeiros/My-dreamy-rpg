@@ -97,10 +97,31 @@ function titleLogo() {
   if (!uiReady() || !UI.image(FONT_ART.body.src)) return null;
   return hudCached('logo', 340, 40, x => { UI.text(x, 'MY DREAMY RPG', 170, 6, 'heading', UC.gold, 'center'); });
 }
-function titleControlsHint() {
-  if (IN.device === 'touch' || TOUCH_CAPABLE && IN.device !== 'kbm' && IN.device !== 'pad') return 'Left thumb moves   hold the big button to attack   tap or drag skills to cast   hold a skill for the bag';
-  if (IN.device === 'pad') return `${IN.glyph('skillQ')} ${IN.glyph('skillE')} skills   ${IN.glyph('attack')} attack   ${IN.glyph('dodge')} dodge   ${IN.glyph('interact')} interact   ${IN.glyph('inventory')} bag   ${IN.glyph('pause')} pause`;
-  return `WASD move   mouse aim   ${IN.glyph('attack')} attack   Q E R F C ${IN.glyph('dodge')} 1 2 3 skills   ${IN.glyph('potion')} potion   ${IN.glyph('inventory')} bag   ${IN.glyph('pause')} pause`;
+// R3 #2: "rotate to play". A touch device held upright shows the 960x540 canvas at ~40 % height; until the player turns the phone
+// (tryFullscreen locks landscape on the first tap), the whole canvas is this card: title art, a phone turning on its side, one line.
+// G.portrait is kept by main.js fit(); hud.js drawHUD calls this instead of the HUD. The type is drawn large because the canvas
+// is only ~390 css px wide in portrait.
+function drawRotateCard(ctx) {
+  const t = G.t || performance.now() / 1000;
+  ctx.fillStyle = '#0b0716'; ctx.globalAlpha = 0.9; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
+  const logo = titleLogo(), bob = Math.round(Math.sin(t * 1.2) * 2) * 2;
+  if (logo) { ctx.imageSmoothingEnabled = false; ctx.drawImage(logo, 480 - 255, 26 + bob, 510, 60); } else UI.text(ctx, 'MY DREAMY RPG', 480, 40 + bob, 'heading', UC.gold, 'center');
+  // the phone: an upright frame that swings onto its side and back (ease in-out, 2.4 s loop)
+  const k = (t % 2.4) / 2.4, e = k < 0.45 ? 0 : k < 0.7 ? easeOut((k - 0.45) / 0.25) : k < 0.92 ? 1 : 1 - (k - 0.92) / 0.08, ang = e * Math.PI / 2;
+  ctx.save(); ctx.translate(480, 218); ctx.rotate(-ang);
+  ctx.fillStyle = UC.edge; ctx.fillRect(-42, -72, 84, 144);
+  ctx.fillStyle = UC.line; ctx.fillRect(-38, -68, 76, 136);
+  ctx.fillStyle = UC.bg; ctx.fillRect(-32, -60, 64, 120);
+  ctx.fillStyle = UC.gold; ctx.fillRect(-8, -48, 16, 16); ctx.fillStyle = UC.hpHi; ctx.fillRect(-20, -8, 40, 6); ctx.fillStyle = UC.mpHi; ctx.fillRect(-20, 6, 28, 6);
+  ctx.fillStyle = UC.line; ctx.fillRect(-10, 64, 20, 4);
+  ctx.restore();
+  ctx.globalAlpha = 1 - e * 0.6; ctx.fillStyle = UC.gold;   // two chevrons showing the turn direction
+  for (const [cx, cy] of [[576, 150], [584, 218], [576, 286]]) { ctx.fillRect(cx, cy, 8, 8); ctx.fillRect(cx - 8, cy + 8, 8, 8); ctx.fillRect(cx, cy + 16, 8, 8); }
+  ctx.globalAlpha = 1;
+  const big = (s, y, size, col, kk) => { ctx.save(); ctx.translate(480, y); ctx.scale(kk, kk); UI.text(ctx, s, 0, 0, size, col, 'center'); ctx.restore(); };
+  big('ROTATE TO PLAY', 366, 'heading', UC.gold, 1.5);
+  big('Turn your phone sideways', 434, 'body', UC.text, 1.6);
+  big('The game fills the screen in landscape', 480, 'small', UC.dim, 1.6);
 }
 function drawTitle(ctx) {
   const u = G.ui;
@@ -108,16 +129,18 @@ function drawTitle(ctx) {
   const bob = Math.round(Math.sin(G.t * 1.2) * 2) * 2, logo = titleLogo();
   if (logo) { ctx.imageSmoothingEnabled = false; ctx.drawImage(logo, 480 - 340, 160 - 40 + bob, 680, 80); } else UI.text(ctx, 'MY DREAMY RPG', 480, 140 + bob, 'heading', UC.gold, 'center');
   UI.text(ctx, 'a high-fantasy dream above the clouds', 480, 216, 'small', UC.dim, 'center');
+  if (u.help) { drawHelp(ctx); return; }   // the "?" entry (below): the same overlay as in play, no title controls underneath
   const s = G.save && G.save.player ? { level: G.save.player.level, map: G.save.world && G.save.world.map } : null;
   const sure = u.confirmNew > G.t;
+  const BOX = 196, RULE = 2;   // one box width for the slots and the three entries; 2 px rules (2x grid)
   // save slots (M2b): pick one, then Continue / New Dream act on it
   if (!u.settings && typeof saveSlots === 'function' && SAVE_ON) {
     if (!u.slotInfo || G.t > u.slotInfoT) { u.slotInfo = saveSlots(); u.slotInfoT = G.t + 1; }
     u.slotInfo.forEach((info, i) => {
-      const n = i + 1, w = 196, x = 480 - (w * 3 + 16) / 2 + i * (w + 8), y = 258, cur = (G.saveSlot || 1) === n;
+      const n = i + 1, w = BOX, x = 480 - (w * 3 + 16) / 2 + i * (w + 8), y = 258, cur = (G.saveSlot || 1) === n;
       const r = mnRegion(x, y, w, 40, 'title:slot' + n, () => { initAudio(); selectSlot(n); u.confirmNew = 0; u.slotInfo = null; });
       ctx.fillStyle = cur ? 'rgba(255,211,90,0.16)' : 'rgba(255,255,255,0.05)'; ctx.fillRect(x, y, w, 40);
-      ctx.fillStyle = cur ? UC.gold : r.on ? UC.text : UC.bevel; ctx.fillRect(x, y + 39, w, 1);
+      ctx.fillStyle = cur ? UC.gold : r.on ? UC.text : UC.bevel; ctx.fillRect(x, y + 40 - RULE, w, RULE);
       UI.text(ctx, `SLOT ${n}`, x + 8, y + 5, 'small', cur ? UC.gold : UC.text);
       UI.text(ctx, info ? fitText(`Lv ${info.level}  ${(G.world.maps[info.map] || {}).name || ''}`, w - 16) : 'empty', x + 8, y + 22, 'small', UC.dim);
     });
@@ -128,16 +151,19 @@ function drawTitle(ctx) {
     { id: 'settings', label: 'SETTINGS', fn: () => { u.settings = true; } },
   ];
   if (!u.settings) items.forEach((it, i) => {
-    const y = 320 + i * 36, w = Math.max(200, UI.measure(it.label, 'body') + 40), x = 480 - w / 2;
+    const y = 320 + i * 36, w = BOX, x = 480 - w / 2;
     if (it.off) { UI.text(ctx, it.label, 480, y + 6, 'body', UC.bevel, 'center'); return; }
     const r = mnRegion(x, y, w, 32, 'title:' + it.id, () => { initAudio(); it.fn(); }, { def: s ? it.id === 'continue' : it.id === 'new' });
-    if (r.on || UI.focus.is('title:' + it.id)) { UI.sprite(ctx, 'bullet', x - 8, y + 9, { scale: 2, tint: UC.gold, alpha: 0.7 + 0.3 * Math.sin(G.t * 6) }); }
-    UI.text(ctx, it.label, 480, y + 6, 'body', r.on ? UC.gold : UC.text, 'center');
+    const on = r.on || UI.focus.is('title:' + it.id);
+    if (on) { ctx.fillStyle = 'rgba(255,211,90,0.12)'; ctx.fillRect(x, y, w, 32); ctx.fillStyle = UC.gold; ctx.fillRect(x, y + 32 - RULE, w, RULE); UI.sprite(ctx, 'bullet', x - 20, y + 9, { scale: 2, tint: UC.gold, alpha: 0.7 + 0.3 * Math.sin(G.t * 6) }); }
+    UI.text(ctx, fitText(it.label, w - 8, 'body'), 480, y + 6, 'body', r.on ? UC.gold : UC.text, 'center');
     if (it.sub) UI.text(ctx, it.sub, x + w + 12, y + 9, 'small', UC.dim);
   });
   UI.focus.current();   // validate the default focus so the cursor shows on the first frame
-  UI.text(ctx, titleControlsHint(), 480, 500, 'small', UC.dim, 'center');
-  if (TOUCH_CAPABLE && window.innerHeight > window.innerWidth) UI.text(ctx, 'Turn your device sideways for the best view', 480, 460, 'small', UC.hpHi, 'center');
+  if (!u.settings) {   // a single "?" entry replaces the controls text wall (as in play): pad / keys reach it by focus
+    const hr = mnRegion(928, 480, 24, 24, 'title:help', () => { u.help = true; UI.focus.set('btn:help-close', true); });
+    UI.sprite(ctx, hr.on ? 'helpHover' : 'help', 928, 480, { scale: 2 });
+  }
   if (u.settings) { ctx.fillStyle = '#05030c'; ctx.globalAlpha = 0.5; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1; drawSettingsPanel(ctx, 'title'); }
   UI.focus.draw(ctx);
 }
@@ -208,6 +234,18 @@ function fullMapCanvas(m) {
   mi.fullKey = key;
   return c;
 }
+// one section row: its inset (the section's rects mapped into mini space, the bounding box of their corners) + name + kind
+function sectionInset(ctx, m, sc, CX, y, CW, IH, cur, known, full) {
+  const mi = m.mini;
+  ctx.fillStyle = cur ? 'rgba(158,240,255,0.14)' : 'rgba(255,255,255,0.05)'; ctx.fillRect(CX, y, CW, IH);
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const [rx, ry, rw, rh] of sc.rects || [[0, 0, m.W, m.H]]) for (const [cx, cy] of [[rx, ry], [rx + rw, ry], [rx, ry + rh], [rx + rw, ry + rh]]) { const a = mi.ox + cx - cy, b = mi.oy + cx + cy; x0 = Math.min(x0, a); x1 = Math.max(x1, a); y0 = Math.min(y0, b); y1 = Math.max(y1, b); }
+  const iw = IH - 8, sk = Math.min(iw / Math.max(1, x1 - x0), iw / Math.max(1, y1 - y0));
+  if (known || !sc.under) { ctx.imageSmoothingEnabled = false; ctx.drawImage(full, x0, y0, x1 - x0, y1 - y0, CX + 4, y + 4, (x1 - x0) * sk, (y1 - y0) * sk); }
+  else { ctx.fillStyle = '#05030c'; ctx.fillRect(CX + 4, y + 4, iw, iw); }
+  UI.text(ctx, known ? fitText(sc.name || sc.id, CW - IH - 12) : '???', CX + IH + 4, y + 8, 'small', known ? UC.text : UC.dim);
+  UI.text(ctx, sc.kind || '', CX + IH + 4, y + 26, 'small', UC.dim);
+}
 function drawFullMap(ctx) {
   const m = G.map, u = G.ui.map, p = G.player; if (!m.mini) return;
   const mi = m.mini, found = (G.prog.sections && G.prog.sections[m.id]) || [];
@@ -247,19 +285,108 @@ function drawFullMap(ctx) {
     UI.text(ctx, 'SECTIONS', CX, 80, 'small', UC.gold);
     const secs = (m.sections || []).filter(sc => sc.id !== 'main' || m.sections.length === 1);
     const cur = sectionAt(m, p.x, p.y), full = fullMapCanvas(m), IH = Math.min(70, Math.floor(400 / Math.max(1, secs.length)) - 6);
-    secs.forEach((sc, i) => {
-      const y = 98 + i * (IH + 6), known = found.includes(sc.id);
-      ctx.fillStyle = sc === cur ? 'rgba(158,240,255,0.14)' : 'rgba(255,255,255,0.05)'; ctx.fillRect(CX, y, CW, IH);
-      // inset: the section's rects mapped into mini space (bounding box of their corners)
-      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-      for (const [rx, ry, rw, rh] of sc.rects || [[0, 0, m.W, m.H]]) for (const [cx, cy] of [[rx, ry], [rx + rw, ry], [rx, ry + rh], [rx + rw, ry + rh]]) { const a = mi.ox + cx - cy, b = mi.oy + cx + cy; x0 = Math.min(x0, a); x1 = Math.max(x1, a); y0 = Math.min(y0, b); y1 = Math.max(y1, b); }
-      const iw = IH - 8, sk = Math.min(iw / Math.max(1, x1 - x0), iw / Math.max(1, y1 - y0));
-      if (known || !sc.under) { ctx.imageSmoothingEnabled = false; ctx.drawImage(full, x0, y0, x1 - x0, y1 - y0, CX + 4, y + 4, (x1 - x0) * sk, (y1 - y0) * sk); }
-      else { ctx.fillStyle = '#05030c'; ctx.fillRect(CX + 4, y + 4, iw, iw); }
-      UI.text(ctx, known ? fitText(sc.name || sc.id, CW - IH - 12) : '???', CX + IH + 4, y + 8, 'small', known ? UC.text : UC.dim);
-      UI.text(ctx, sc.kind || '', CX + IH + 4, y + 26, 'small', UC.dim);
-    });
+    secs.forEach((sc, i) => sectionInset(ctx, m, sc, CX, 98 + i * (IH + 6), CW, IH, sc === cur, found.includes(sc.id), full));
   }
   const hint = IN.device === 'pad' ? `${IN.glyph('back')} close` : 'M / Esc close';
   UI.text(ctx, u.mode === 'shrine' && targets.length ? hint + '   arrows pick   Enter warp' : hint, 480, 496, 'small', UC.dim, 'center');
+}
+
+// ===== §29 G3 the vantage reveal (world-art minutes §3.1.6) =======================================================================
+// A trigger action { type: 'vantage', id, r, title, sub } (game.js runAction -> startVantage) on a summit:
+//   0 - 0.6 s   the camera eases 40 px down-slope (main.js cameraBias reads G.vantage.lead), letterbox bars slide in;
+//   0.6 s       the fog of war lifts within r tiles (hud.js miniRevealArea);
+//   0.6 - 3.1 s the cinematic: desktop first pulls back (a half-scale snapshot of the real world, drawn ONCE: preview + resident chunks
+//               + the columns and props of a 2x view, through drawItem under a 0.5 transform), then both tiers cross to the 1/4-res
+//               ground preview (maps.js groundPreview) centred on the hero, the fog edge growing outward, shrine / portal dots, the
+//               section insets and the vantage name;
+//   3.1 - 3.5 s back to the live scene. Phones never render a bigger scene: the preview blit only. ~1 ms a frame, no new raster.
+const VANTAGE_T = { ease: 0.6, film: 2.5, out: 0.4 };
+const rgbCss = c => (typeof c === 'string' ? c : `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`);
+function startVantage(a) {
+  const p = G.player, m = G.map; if (!p || !m || G.vantage) return false;
+  // down-slope: the direction (of 8) whose ground 4-8 tiles out is lowest
+  let best = null;
+  for (let k = 0; k < 8; k++) { const ang = k * Math.PI / 4, fx = Math.cos(ang), fy = Math.sin(ang); let lo = 0, n = 0; for (let d = 4; d <= 8; d++) { const x = p.x + fx * d, y = p.y + fy * d; if (typeAt(m, Math.floor(x), Math.floor(y))) { lo += tileH(m, x, y); n++; } else { lo -= 2; n++; } } const v = lo / Math.max(1, n); if (!best || v < best.v) best = { v, fx, fy }; }
+  const sx = (best.fx - best.fy) * 16, sy = (best.fx + best.fy) * 8, l = Math.hypot(sx, sy) || 1;
+  G.vantage = { id: a.id || 'vantage', t0: G.t, r: +a.r || 24, x: p.x, y: p.y, lead: [0, 0], aim: [sx / l * 40, sy / l * 40], title: a.title || (sectionAt(m, p.x, p.y) || {}).name || m.name, sub: a.sub || '', revealed: false, snap: null };
+  sfx('shrine');
+  return true;
+}
+function vantageSnapshot(m) {   // desktop pull-back: the world at 0.5x around the camera, drawn once into a scene-sized canvas
+  const V = makeCanvas(RW, RH), x = V.x, th = m.theme, bg = th._bg, k = 0.5;
+  x.imageSmoothingEnabled = false;
+  if (bg && bg.sky) x.drawImage(bg.sky.c, 0, 0, bg.sky.c.width, bg.sky.c.height, 0, 0, RW, RH * 1.4);
+  x.setTransform(k, 0, 0, k, RW / 2 * (1 - k), RH / 2 * (1 - k));
+  const g = m.gp, pv = groundPreview(m);
+  x.drawImage(pv, Math.round(g.minSX - camX + RW / 2), Math.round(-camY + RH / 2), pv.width * 4, pv.height * 4);
+  const cg = chunkGrid(m);
+  for (const [, ch] of CHUNK.cache) if (ch.m === m) { const ci = ch.idx % cg.nx, cj = (ch.idx / cg.nx) | 0; x.drawImage(ch.c, Math.round(ci * cg.S + g.minSX - camX + RW / 2), Math.round(cj * cg.S - camY + RH / 2)); }
+  const pts = [[-RW, -RH - 120], [RW * 2, -RH - 120], [-RW, RH * 2 + 240], [RW * 2, RH * 2 + 240]].map(([vx, vy]) => toWorld(vx - RW / 2 + camX, vy - RH / 2 + camY));
+  const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]), items = [];
+  for (const c of gridQuery(m, 'cols', Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys))) if (!c.gone && c.img) items.push(c);
+  for (const o of gridQuery(m, 'objs', Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys))) if (o.kind === 'sprite' && !o.gone && o.img && !o.critter) items.push(o);
+  items.sort((a, b) => a.key - b.key);
+  for (const it of items) { if (it.kind === 'sprite' && it.tree && it._split) continue; drawItem(x, it, []); }
+  x.setTransform(1, 0, 0, 1, 0, 0);
+  x.globalCompositeOperation = 'soft-light'; x.globalAlpha = 0.25; if (GRADE[m.themeId]) x.drawImage(GRADE[m.themeId], 0, 0); x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
+  return V.c;
+}
+function drawVantage(ctx) {
+  const V = G.vantage, m = G.map, p = G.player; if (!V || !m) return;
+  const t = G.t - V.t0, T1 = VANTAGE_T.ease, T2 = T1 + VANTAGE_T.film, T3 = T2 + VANTAGE_T.out;
+  if (t >= T3) { G.vantage = null; return; }
+  p.rootT = Math.max(p.rootT, 0.1); p.invulnT = Math.max(p.invulnT, 0.2);
+  const e = clamp(t / T1, 0, 1); V.lead = [V.aim[0] * e * e * (3 - 2 * e), V.aim[1] * e * e * (3 - 2 * e)];
+  if (t >= T1 && !V.revealed) { V.revealed = true; if (typeof miniRevealArea === 'function') V.newTiles = miniRevealArea(m, V.x, V.y, V.r); }
+  const bars = Math.round(54 * clamp(Math.min(t / 0.35, (T3 - t) / 0.35), 0, 1));
+  if (t >= T1) {
+    const u = (t - T1) / VANTAGE_T.film, fade = clamp(Math.min(u / 0.08, (T3 - t) / VANTAGE_T.out), 0, 1);
+    ctx.save(); ctx.imageSmoothingEnabled = false;
+    // the pull-back (desktop): the snapshot zooms from 1:1 with the live frame (display scale 4) to half scale (2)
+    const pull = !PHONE ? clamp(u / 0.36, 0, 1) : 1, mapA = clamp((u - (PHONE ? 0 : 0.3)) / 0.14, 0, 1);
+    // the backdrop: the zone's sky over its cloud sea (the island floats in it); under the pull-back too, so the HUD never shows through
+    const th = m.theme, bgk = V.bgk || (V.bgk = (() => { const gr = ctx.createLinearGradient(0, 0, 0, DH); gr.addColorStop(0, th.sky[1] || '#140c28'); gr.addColorStop(0.55, th.sky[Math.min(th.sky.length - 1, 4)] || '#3a2e7a'); gr.addColorStop(1, rgbCss(th.cloud[2] || [200, 190, 230])); return gr; })());
+    ctx.globalAlpha = fade * (PHONE ? mapA : 1); ctx.fillStyle = bgk; ctx.fillRect(0, 0, DW, DH);
+    if (!PHONE && mapA < 1) {
+      if (!V.snap) V.snap = vantageSnapshot(m);
+      const e2 = pull * pull * (3 - 2 * pull), s = 4 - 2.8 * e2, w = RW * s, h = RH * s;   // display scale 4 (1:1 with the live frame) -> 1.2 (the map's 0.3)
+      ctx.globalAlpha = fade; ctx.drawImage(V.snap, Math.round(DW / 2 - w / 2), Math.round(DH / 2 - h / 2), Math.round(w), Math.round(h));
+    }
+    if (mapA > 0) {
+      ctx.globalAlpha = fade * mapA; ctx.fillStyle = bgk; ctx.fillRect(0, 0, DW, DH);
+      const g = m.gp, pv = groundPreview(m), ws = 0.3 - 0.1 * clamp(u, 0, 1), ps = 8 * ws;   // world scale 0.3 -> 0.2 (~60 x 60 tiles in view); a preview px = 4 world px
+      const hx = (isoX(V.x, V.y) - g.minSX) / 4, hy = isoY(V.x, V.y, 0) / 4, ox = DW / 2 - hx * ps, oy = DH / 2 + 20 - hy * ps;
+      const R = V.r * 16 * 2 * ws * clamp((u - 0.05) / 0.55, 0.08, 1), cx = DW / 2, cy = DH / 2 + 20;   // the fog edge: an iso circle growing out
+      ctx.globalAlpha = fade * mapA * 0.22; ctx.drawImage(pv, Math.round(ox), Math.round(oy), Math.round(pv.width * ps), Math.round(pv.height * ps));
+      ctx.save(); ctx.beginPath(); ctx.ellipse(cx, cy, R * 1.41, R * 0.71, 0, 0, Math.PI * 2); ctx.clip();
+      ctx.globalAlpha = fade * mapA; ctx.drawImage(pv, Math.round(ox), Math.round(oy), Math.round(pv.width * ps), Math.round(pv.height * ps));
+      ctx.restore();
+      // the sections a summit cannot see (underground, vaults) and their void gutters go back under the cloud sea
+      const at0 = (x, y) => [ox + (isoX(x, y) - g.minSX) / 4 * ps, oy + isoY(x, y, 0) / 4 * ps];
+      ctx.globalAlpha = fade * mapA; ctx.fillStyle = bgk;
+      for (const sc of m.sections || []) if (sc.under || sc.kind === 'vault') for (const [rx, ry, rw, rh] of sc.rects || []) {
+        const P = [[rx - 2.5, ry - 0.5], [rx + rw + 2.5, ry - 0.5], [rx + rw + 2.5, ry + rh + 2], [rx - 2.5, ry + rh + 2]].map(([x, y]) => at0(x, y));
+        ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]); for (let k = 1; k < 4; k++) ctx.lineTo(P[k][0], P[k][1]); ctx.closePath(); ctx.fill();
+      }
+      ctx.globalAlpha = fade * mapA * 0.85; ctx.strokeStyle = '#e8dcff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(cx, cy, R * 1.41, R * 0.71, 0, 0, Math.PI * 2); ctx.stroke();
+      const at = (x, y) => [ox + (isoX(x, y) - g.minSX) / 4 * ps, oy + isoY(x, y, 0) / 4 * ps];
+      ctx.globalAlpha = fade * mapA;
+      const unseen = (x, y) => { const sc = sectionAt(m, x, y); return !!(sc && (sc.under || sc.kind === 'vault')); };
+      for (const o of (typeof shrinesOf === 'function' ? shrinesOf(m) : [])) if (!unseen(o.x, o.y)) { const [sx, sy] = at(o.x, o.y); ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(sx) - 5, UI.snap(sy) - 5, 10, 10); ctx.fillStyle = '#9ef0ff'; ctx.fillRect(UI.snap(sx) - 3, UI.snap(sy) - 3, 6, 6); }
+      for (const pt of m.portals) if (!unseen(pt.x, pt.y)) { const [qx, qy] = at(pt.x, pt.y); ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(qx) - 4, UI.snap(qy) - 4, 8, 8); ctx.fillStyle = pt.open ? UC.gold : '#8a7aa8'; ctx.fillRect(UI.snap(qx) - 2, UI.snap(qy) - 2, 4, 4); }
+      const [hx2, hy2] = at(V.x, V.y); ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(hx2) - 5, UI.snap(hy2) - 5, 10, 10); ctx.fillStyle = '#ffffff'; ctx.fillRect(UI.snap(hx2) - 3, UI.snap(hy2) - 3, 6, 6);
+      // the section insets (the full map's), right column
+      if (m.mini) {
+        const secs = (m.sections || []).filter(sc => sc.id !== 'main' || m.sections.length === 1), found = (G.prog.sections && G.prog.sections[m.id]) || [], full = fullMapCanvas(m), cur = sectionAt(m, V.x, V.y);
+        const IH = Math.min(52, Math.floor(300 / Math.max(1, secs.length)) - 6), slide = 1 - clamp((u - (PHONE ? 0.04 : 0.32)) / 0.1, 0, 1);
+        secs.forEach((sc, i) => sectionInset(ctx, m, sc, DW - 236 + Math.round(slide * 260), 92 + i * (IH + 6), 212, IH, sc === cur, found.includes(sc.id) || sc === cur, full));
+      }
+    }
+    ctx.restore();
+  }
+  if (bars > 0) { ctx.fillStyle = '#05030c'; ctx.fillRect(0, 0, DW, bars); ctx.fillRect(0, DH - bars, DW, bars); }
+  if (t >= T1) {
+    const a = clamp(Math.min((t - T1 - 0.35) / 0.4, (T3 - 0.2 - t) / 0.3), 0, 1);
+    if (a > 0) { ctx.globalAlpha = a; UI.text(ctx, String(V.title).toUpperCase(), DW / 2, 14, 'body', UC.gold, 'center'); if (V.sub) UI.text(ctx, V.sub, DW / 2, DH - 40, 'small', UC.text, 'center'); ctx.globalAlpha = 1; }
+  }
 }

@@ -45,6 +45,11 @@ module.exports = zone({
     shr2: { kind: 'nook', x: 66, y: 60, r: 2, lvl: 4 },
     shr3: { kind: 'nook', x: 84, y: 36, r: 2, lvl: 4 },
     arena: { kind: 'arena', x: 100, y: 31, r: 8.5, lvl: 4, walled: true, pillars: 4, rune: 3, wall: 2.2 },
+    // §26.2 elite pockets: off-path clearings near the bosses (2 by Mossjaw's Hollow door, 2 by Bramblehorn's Clearing)
+    pk_moss_w: { kind: 'clearing', x: 31, y: 31, r: 3.4, lvl: 4, side: true },
+    pk_moss_e: { kind: 'clearing', x: 57, y: 31, r: 3.4, lvl: 4, side: true },
+    pk_bram_n: { kind: 'clearing', x: 74, y: 27, r: 3.4, lvl: 4, side: true },
+    pk_bram_s: { kind: 'clearing', x: 89, y: 53, r: 3.2, lvl: 4, side: true },
     // ---- hollow
     h_start: { kind: 'clearing', x: 5.5, y: 10, r: 3, lvl: 0 },
     h_r1: { kind: 'chamber', x: 15, y: 12, r: 4, lvl: 0, walled: true },
@@ -76,6 +81,10 @@ module.exports = zone({
     cache: { from: { room: 'r2' }, w: 1.6, pts: [[17, 56, 4], 'cache'] },
     fish_b: { from: { path: 'loop2', near: [73, 58] }, w: 1.6, pts: [[79, 58.4, 4], [83.2, 59.2, 4]] },
     hdoor: { from: { path: 'main', near: [44, 47] }, pts: [[44, 41, 4], 'hdoor'] },
+    pk_moss_w: { from: { room: 'hdoor' }, pts: [[37.5, 33.5, 4], 'pk_moss_w'], side: true },
+    pk_moss_e: { from: { room: 'hdoor' }, pts: [[50.5, 33.5, 4], 'pk_moss_e'], side: true },
+    pk_bram_n: { from: { path: 'main', near: [84, 41] }, pts: [[79, 31, 4], 'pk_bram_n'], side: true },
+    pk_bram_s: { from: { path: 'main', near: [80, 46] }, pts: [[85, 50, 4], 'pk_bram_s'], side: true },
     // ---- hollow
     h_main: { kind: 'main', meander: 2.2, every: 6, type: 'p', pts: ['h_start', 'h_r1', [20, 10, 1], 'h_shrine', [29, 8, 3], 'h_r2', [39, 11, 3], 'h_den'] },
     h_lever: { from: { path: 'h_main', near: [37, 12] }, type: 'p', pts: [[36, 14.4, 3], 'h_lever'] },
@@ -87,19 +96,52 @@ module.exports = zone({
   },
   rivers: { creek: { w: 2.6, banks: 4.2, bankLvl: [[0, 4], [24, 4], [44, 3], [58, 2], [68, 4], [112, 4]], pts: [[0, 61], [14, 67], [32, 69.5], [46, 68], [60, 66.5], [72, 64], [84, 62], [98, 58], [112, 56]] } },
   ponds: { hidden: { x: 97.8, y: 48.4, r: 1.7, lvl: 4 } },
-  bridges: [{ x: 9, y: 32, axis: 'y', len: 5, w: 2, lvl: 4 }],
+  // §29 G3 HAWK'S REST (world-art minutes §3.2): a leaning bluff 4 / 10 / 16 (96 px) rising out of the void bay north of r3, walls at
+  // step 3 (ledges at 7 and 13). The approach: a fallen giant pine (h 6) across the chasm from the west shore to the 7 shoulder; two
+  // switchback legs up the south face (7 -> 10 east, 10 -> 13 west); a root ladder 13 -> 16. Shrine 3 on the summit (the Hollow's
+  // root-stair lands beside it); the vantage looks over the Clearing road and the forest; the drop from the 10 lands on the gate road.
+  // Signature moment: the forest and the Clearing's road seen from the summit (camera: the summit, facing east).
+  stacks: {
+    // level rhythm (minutes §3.1.1): two granite knolls, walls at step 3-4 -- the arrival glade's and the Hollow door's foothill
+    knollStart: { land: true, levels: [4], r: [2.3], centres: [[10.2, 99.6]], rough: 0.24, sparse: { 0: 0.5 } },
+    knollDoor: { land: true, levels: [7], r: [1.9], centres: [[55.2, 35.2]], rough: 0.24, sparse: { 0: 0 } },
+    hawk: { land: true, levels: [4, 16, 13, 10], r: [5.9, 4.4, 1.7, 2.3], centres: [[70, 37], [68.8, 37.2], [73.1, 36.6], [73.6, 39.6]], over: [1, 2, 3], rough: 0.3, bare: [1], sparse: { 2: 0, 3: 0 } },
+  },
+  switchbacks: {
+    hawkApproach: { from: { path: 'main', near: [56, 46] }, w: 2, pts: [[58, 41.6, 4], [59.2, 38.6, 5.4]] },
+    hawkUp: { w: 1.8, pts: [[64.6, 38.8, 6], [65.8, 40.9, 6, 0.3], [72.6, 41.1, 10, 0.4], [74, 40.2, 10, 0.4], [72.8, 39.2, 10.3, 0.2], [66.4, 39.1, 14.2, 0.2], [65.4, 37.4, 16, 0.3], [66.6, 36.6, 16]] },
+  },
+  bridges: [{ x: 9, y: 32, axis: 'y', len: 5, w: 2, lvl: 4 }, { x: 60, y: 37, axis: 'x', len: 4, w: 3, lvl: 6, span: true }],
+  drops: { hawk_drop: { rect: [75, 37, 78, 42] } },
+  setPiece: { hawk: { pine: [70.6, 33.4], boulders: [[64.6, 41.6], [74.8, 42.2], [76.4, 40.8]] } },
+  vantage: { id: 'hawks_rest', at: [68.3, 34.6], r: 1.9, reveal: 34, title: 'Hawk\'s Rest', sub: 'The Clearing road, and something big asleep at its end', pip: ['From up here it\'s small. It isn\'t.'] },
+  // after Mossjaw the root-stair lands here: point the way down (the objective + Pip's light at the drop lip)
+  summitObjective: { id: 'hawk_way_down', at: [69.3, 34.9], r: 2.4, requires: ['h_boss_done'], text: 'Drop from Hawk\'s Rest onto the Clearing road', to: [75, 38.2] },
+  ledgeHints: [{ id: 'hawk_ledge', name: 'The gate road below', at: [75, 38.2], pip: ['The road to the Clearing is right below. Jump, Aerin.'] }],
   portals: {
     home: { room: 'start', dx: -3, dy: 2.6, to: 'vale', arrive: 'vale.pine' },
     home_arena: { room: 'arena', dx: 2.5, dy: -4, to: 'vale', open: false, arrive: 'vale.pine' },
     next: { room: 'arena', dx: -2.5, dy: -4, to: 'ruins', open: false, marker: true },
   },
-  shrines: { shrine1: { room: 'shr1', name: 'The road to the plaza' }, shrine2: { room: 'shr2', name: 'The creek ford' }, shrine3: { room: 'shr3', name: 'The Clearing gate' } },
+  // §26.2 the gear loop: elite pockets near each boss (zone.js emits them; first clear = a Rare >= boss level - 2 in a rotating slot)
+  pockets: [
+    { id: 'pk_moss_w', room: 'pk_moss_w', boss: 'mossjaw', name: 'The Mossbound Hollow', sub: 'Elite pocket: a Gnarlroot Brute and its pack', elite: 'gnarlbrute', mod: 'shielded', mobs: [['gloomslime', 2], ['shadehound', 1], ['brambleshaman', 1]] },
+    { id: 'pk_moss_e', room: 'pk_moss_e', boss: 'mossjaw', name: 'The Root Bend', sub: 'Elite pocket: a Gnarlroot Brute and its pack', elite: 'gnarlbrute', mod: 'vampiric', mobs: [['ogre', 1], ['shadehound', 2]] },
+    { id: 'pk_bram_n', room: 'pk_bram_n', boss: 'bramblehorn', name: 'Thornsow Wallow', sub: 'Elite pocket: a Thornsow Matriarch and her sounder', elite: 'thornsow', mod: 'burning', mobs: [['thornbackboar', 1], ['gloomslime', 2], ['brambleshaman', 1]] },
+    { id: 'pk_bram_s', room: 'pk_bram_s', boss: 'bramblehorn', name: 'The Bramble Pit', sub: 'Elite pocket: a Thornsow Matriarch and her sounder', elite: 'thornsow', mod: 'storm', mobs: [['ogre', 1], ['shadehound', 2], ['gloomslime', 1], ['brambleshaman', 1]] },
+  ],
+  // §26.2 cheap retries: a warp shrine at Mossjaw's boss door (the Hollow door, beside its pockets) and one just outside Mossjaw's den gate;
+  // Bramblehorn's is shrine3 (§29 G3: on Hawk's Rest; the drop from its 10 lands on the gate road). Shrine warp = the full-map screen (game.js shrineWarp).
+  doorShrine: { name: 'The root door', dx: 2.2, dy: 1.4 },
+  denShrine: { name: 'Mossjaw\'s gate', back: 2.6 },
+  shrines: { shrine1: { room: 'shr1', name: 'The road to the plaza' }, shrine2: { room: 'shr2', name: 'The creek ford' }, shrine3: { room: 'shr3', at: [67.6, 34.0], name: 'Hawk\'s Rest' } },
   landmark: [65, 69.5],
   fish: [[52, 70], [84, 60.5]],
   trail: [0.05, 0.14, 0.24, 0.35, 0.47, 0.6, 0.74, 0.88],
   ambush: [{ id: 'ford', name: 'Thornbacks at the ford', at: { path: 'main', frac: 0.335 }, r: 4.2, pack: 'pw_boar_pierce', requires: ['r1_done'], banner: ['Thornback Boars', 'Arrows glance off their bristles (resist pierce)'], clear: { text: 'The ford is quiet again.', heal: 20 } }],
   signs: [{ room: 'start', dx: 3.2, dy: -3.4, text: 'North: the Root Hollow. Mind the creek.' }, { room: 'r1', dx: -4.5, dy: -5.5, text: 'Danger: ogres in the clearing' }],
   startOff: [-0.5, 0.8],
+  chestLoot: { boss: 'amulet', vault: 'belt' },   // DESIGN 19.4: Bramblehorn's chest -> amulet; the first secret vault (Fox Warrens) -> belt
   text: {
     intro: ['The animals are running.', 'Something big has woken in the wood.'],
     tablet: 'Bramblehorn kept the roots. He loved the roots too much.',
@@ -119,10 +161,10 @@ module.exports = zone({
     r1: { name: 'Ogres in the clearing', banner: ['Ogre!', 'A brute guards the sunlit clearing'], gap: 9, waves: [[{ pack: 'pw_ogre_run' }]], clear: { text: 'Heavy footsteps echo to the north...', objective: 'Take the key to the root door' } },
     r2: { name: 'The Stone Plaza', banner: ['The Stone Plaza', 'Kill the shaman first: it keeps the boar standing'], gap: 12, waves: [[{ pack: 'pw_boar_shaman' }], [{ pack: 'pw_ogre_slimes' }]], clear: { text: 'The way to the grove is clear.', heal: 30, objective: 'Enter the Warden\'s Grove' } },
     r3: { name: 'The Warden\'s Grove', banner: ['The Warden\'s Grove', 'A shaman chants in the dark', true], gap: 12, waves: [[{ pack: 'pw_ogre_grove', press: 2 }], [{ pack: 'pw_boar_last' }]], clear: { text: 'The shaman falls silent.', heal: 40, rarity: 'rare', objective: 'Take the key to the root door' } },
-    elite: { title: 'Gnarlroot Ogre', sub: 'Guardian of the Root Hollow key', enemy: 'ogre' },
+    elite: { title: 'Gnarlroot Ogre', sub: 'Guardian of the Root Hollow key', enemy: 'ogre', lootSlot: 'weapon' },   // §28 ~9:00: the elite's Rare is a WEAPON
     h_r1: { name: 'First cavern', banner: ['Root Cavern', 'Thorn-touched brutes in numbers'], gap: 8, waves: [[{ pack: 'rh_ogre_pack' }]], clear: 'The roots go still.' },
     h_r2: { name: 'Gate gallery', banner: ['The Gallery', 'Something large is sleeping at the far end'], gap: 14, waves: [[{ pack: 'rh_boar_wrong' }], [{ pack: 'rh_troll_sleeper', toward: 'h_den', dist: 0.7 }]], clear: 'Silence. A lever waits nearby.' },
-    den: { name: 'Mossjaw\'s den', title: 'Mossjaw', sub: 'Moss-gorged root wolf — mini-boss', enemy: 'mossjaw', add: 'ogre' },
+    den: { name: 'Mossjaw\'s den', title: 'Mossjaw', sub: 'Moss-gorged root wolf — mini-boss', enemy: 'mossjaw', add: 'ogre', doorBoss: 'mossjaw' },   // doorBoss: the Hollow door shows "Recommended ilvl" for Mossjaw (§26.2)
     warrens: {
       title: 'The Fox Warrens', sub: 'Do not wake what sleeps here', enemy: 'mountaintroll', pip: ['Quiet, Aerin. Big things sleep in the tunnels.'], objective: 'Sneak past the sleepers to the vault',
       hall: [[0, -3.5], [0, 3.5]], vault: [[2.6, -2.4]],   // >= 3.4 tiles from the trigger centre: a sleeper's wake radius is 3, so the middle of each room is the quiet way through
@@ -146,10 +188,14 @@ module.exports = zone({
     { sec: 'hollow', at: 'h_lever', pause: 5, wind: 1.3, label: 'lever' },
     { sec: 'hollow', at: 'h_den', fight: 80, pause: 8, wind: 1.3, label: 'Mossjaw' },
     { sec: 'hollow', at: 'h_stair', pause: 3, wind: 1.2 },
-    { sec: 'forest', at: 'shr3', warp: true, pause: 4 },
+    { sec: 'forest', at: [67.6, 34.0], warp: true, pause: 4, label: 'shrine 3 on Hawk\'s Rest (the root-stair; the vantage)' },
+    { sec: 'forest', at: [77, 37.5], pause: 0, wind: 1.4, label: 'down the leg, the drop to the gate road' },
     { sec: 'clearing', at: 'arena', on: 'main', fight: 175, pause: 14, label: 'Bramblehorn' },
   ],
   optional: [
     { sec: 'warrens', label: 'secrets + Fox Warrens (env pond, 3 sleepers)', walk: 80, fight: 70, pause: 25 },
+    // §26.2: farming budget ~6 min of the 24-min cap. Each pocket: spur walk there and back + a 1 elite / 3-5 commons fight + loot pause
+    { sec: 'forest', label: 'elite pockets x2 by the Hollow door (Mossjaw)', walk: 40, fight: 120, pause: 16 },
+    { sec: 'forest', label: 'elite pockets x2 by the Clearing (Bramblehorn)', walk: 60, fight: 130, pause: 16 },
   ],
 });

@@ -1,0 +1,495 @@
+{
+ "level": 10,
+ "xp": 655,
+ "maxHp": 1176,
+ "maxMp": 280,
+ "maxSt": 100,
+ "power": 2.3056596000000003,
+ "dmgBase": 2.0828,
+ "wdmg": 82,
+ "bonus": 0.10700000000000001,
+ "def": 0.2642514494246446,
+ "crit": 0.11599999999999999,
+ "critDmg": 1.082,
+ "haste": 0,
+ "cdr": 0.045,
+ "skillDmg": 0.073,
+ "regen": 3,
+ "mpRegen": 7.56,
+ "speed": 4.11,
+ "dust": 0,
+ "potions": 3,
+ "res": {
+  "slash": 0.27,
+  "pierce": 0.27,
+  "fire": 0.1,
+  "frost": 0.04,
+  "nature": 0.22999999999999998,
+  "lightning": -0.21000000000000002,
+  "arcane": 0.16,
+  "gloom": 0.13999999999999999
+ },
+ "amp": {
+  "ruby": 5,
+  "sapphire": 1,
+  "emerald": 1,
+  "topaz": 3,
+  "amethyst": 0,
+  "diamond": 2
+ },
+ "gear": {
+  "weapon": "dawnblade",
+  "head": "knighthelm",
+  "chest": "knightplate",
+  "boots": "clothsandals"
+ },
+ "slots": {
+  "1": "orbit",
+  "2": "chain",
+  "3": "bless",
+  "q": "heroic",
+  "e": "dashstrike",
+  "r": "dawnwave",
+  "f": "bulwark",
+  "c": "warcry",
+  "shift": "blink"
+ },
+ "equip": {
+  "weapon": {
+   "uid": "i_53",
+   "base": "dawnblade",
+   "rarity": "epic",
+   "ilvl": 10,
+   "reqLvl": 8,
+   "affixes": [
+    "skillDmg=0.073",
+    "power=0.067",
+    "critDmg=0.202"
+   ],
+   "sockets": [
+    "ruby_1",
+    "topaz_2"
+   ],
+   "unique": null,
+   "stats": {
+    "dmg": 82,
+    "skillDmg": 0.073,
+    "power": 0.10700000000000001,
+    "critDmg": 0.28200000000000003
+   }
+  },
+  "head": {
+   "uid": "i_51",
+   "base": "knighthelm",
+   "rarity": "rare",
+   "ilvl": 10,
+   "reqLvl": 8,
+   "affixes": [
+    "speed=0.23",
+    "resNature=0.19"
+   ],
+   "sockets": [
+    "ruby_2"
+   ],
+   "unique": null,
+   "stats": {
+    "def": 0.11124,
+    "speed": 0.23,
+    "resNature": 0.19,
+    "hp": 46,
+    "resFire": 0.04
+   }
+  },
+  "chest": {
+   "uid": "i_47",
+   "base": "ironmail",
+   "rarity": "epic",
+   "ilvl": 10,
+   "reqLvl": 8,
+   "affixes": [
+    "resArcane=0.14",
+    "resGloom=0.12",
+    "crit=0.026"
+   ],
+   "sockets": [
+    "ruby_2",
+    "diamond_2"
+   ],
+   "unique": null,
+   "stats": {
+    "def": 0.24792,
+    "hp": 245.76000000000002,
+    "resSlash": 0.25,
+    "resPierce": 0.25,
+    "resLightning": -0.25,
+    "resArcane": 0.14,
+    "resGloom": 0.12,
+    "crit": 0.026,
+    "resFire": 0.04,
+    "resAll": 0.02
+   }
+  },
+  "boots": {
+   "uid": "i_48",
+   "base": "ropesandals",
+   "rarity": "epic",
+   "ilvl": 11,
+   "reqLvl": 9,
+   "affixes": [
+    "mpRegen=2.3",
+    "cdr=0.045",
+    "speed=0.18"
+   ],
+   "sockets": [
+    "sapphire_1",
+    "topaz_1",
+    "emerald_1"
+   ],
+   "unique": null,
+   "stats": {
+    "mpRegen": 5.56,
+    "cdr": 0.045,
+    "speed": 0.18,
+    "mp": 20,
+    "resFrost": 0.02,
+    "crit": 0.01,
+    "resLightning": 0.02,
+    "regen": 1,
+    "resNature": 0.02
+   }
+  }
+ },
+ "bag": [
+  null,
+  "item:i_45:knightplate",
+  "item:i_46:mossmantle",
+  "item:i_3:ironmail",
+  "item:i_4:ironboots",
+  "item:i_49:starfall",
+  null,
+  null,
+  "item:i_50:knighthelm",
+  "item:i_2:ironcap",
+  "item:i_52:ironcap",
+  null,
+  "item:i_1:rustyblade",
+  "item:i_54:ironmail",
+  "item:i_55:knighthelm",
+  "item:i_56:knightgreaves",
+  "item:i_57:cometrod",
+  "item:i_58:silverwing",
+  "item:i_59:sunforged",
+  "item:i_60:nightcoat",
+  "item:i_61:sunguard",
+  "item:i_62:sungreaves",
+  null,
+  null,
+  null,
+  "gem:diamond_1x1",
+  "gem:amethyst_1x1",
+  null,
+  null,
+  null
+ ],
+ "wsk": {
+  "dawnblade": {
+   "q": "heroic",
+   "e": "dashstrike",
+   "r": "dawnwave"
+  },
+  "starfall": {
+   "q": "firebolt",
+   "e": "barrage",
+   "r": "meteor"
+  },
+  "moonbow": {
+   "q": "multishot",
+   "e": "snare",
+   "r": "arrowrain"
+  }
+ },
+ "csk": [
+  "orbit",
+  "chain",
+  "bless"
+ ],
+ "runes": [
+  "socket_rune",
+  "skill_rune",
+  "socket_rune",
+  "socket_rune",
+  "skill_rune"
+ ],
+ "ranks": {
+  "sunslash": {
+   "hits": 60
+  },
+  "dashstrike": {
+   "hits": 30
+  }
+ },
+ "mods": {},
+ "map": "vale",
+ "checkpoint": {
+  "map": "vale",
+  "x": 33,
+  "y": 55.2
+ },
+ "prog": {
+  "quests": {
+   "vale_lantern": "done",
+   "shard_root": "done"
+  },
+  "chests": 1,
+  "firsts": [
+   "pinewood:mossjaw",
+   "pinewood:bramblehorn"
+  ],
+  "trig": {
+   "vale": [
+    "bridge_lanterns_hint",
+    "bridge_arena_hint",
+    "lanterns_islet",
+    "arena_islet",
+    "moon_gate_hint",
+    "moon_pond",
+    "wake",
+    "yard_teach",
+    "elder",
+    "chest",
+    "fish_hint",
+    "gems",
+    "tablet",
+    "garden_ambush",
+    "garden_done",
+    "lantern_found",
+    "lantern_return"
+   ],
+   "pinewood": [
+    "intro",
+    "trail",
+    "fish_intro",
+    "tablet",
+    "r1",
+    "r1_done",
+    "ford",
+    "ford_done",
+    "r2",
+    "r2_done",
+    "r3",
+    "r3_done",
+    "elite",
+    "elite_done",
+    "crack_hum",
+    "crack_open",
+    "crack_loot",
+    "bridge_pip",
+    "islet_loot",
+    "env_hint",
+    "env_open",
+    "cache_hint",
+    "cache_loot",
+    "hdoor_hint",
+    "h_intro",
+    "h_r1",
+    "h_r1_done",
+    "h_r2",
+    "h_r2_done",
+    "h_ceiling",
+    "h_gate_hint",
+    "h_boss",
+    "h_boss_done",
+    "h_crack_hum",
+    "h_crack_open",
+    "h_crack_loot",
+    "w_enter",
+    "w_hall",
+    "w_vault",
+    "w_done",
+    "arena_hint",
+    "boss",
+    "victory"
+   ]
+  },
+  "secrets": {
+   "key:key_spire": false,
+   "key:key_act4": false,
+   "key:key_roothollow": true,
+   "key:key_rootcache": true,
+   "key:key_dream": true
+  },
+  "gates": {
+   "vale:bridge_lanterns": true,
+   "vale:gate_moon": true,
+   "pinewood:wall_crack": true,
+   "pinewood:bridge_gate": true,
+   "pinewood:wall_env": true,
+   "pinewood:hollow_door": true,
+   "pinewood:gate_h_r2": true,
+   "pinewood:wall_h_crack": true,
+   "pinewood:gate_h_short": true,
+   "pinewood:hollow_exit": true,
+   "pinewood:arena_gate": true,
+   "pinewood:door_cache": true,
+   "vale:bridge_arena": true
+  },
+  "sections": {
+   "vale": [
+    "hub",
+    "moon",
+    "lanterns",
+    "arena"
+   ],
+   "pinewood": [
+    "forest",
+    "warrens",
+    "hollow",
+    "clearing"
+   ]
+  },
+  "shrines": {
+   "vale": [
+    "shrine_start",
+    "shrine_terrace"
+   ],
+   "pinewood": [
+    "shrine1",
+    "shrine2",
+    "hollow_shrine",
+    "shrine3"
+   ]
+  },
+  "once": {
+   "zone:vale": 1,
+   "dlg:vale_banner": 1,
+   "dlg:vale_wake": 1,
+   "dlg:vale:wake": 1,
+   "dlg:vale:yard_teach": 1,
+   "dlg:vale_elder": 1,
+   "dlg:vale:elder": 1,
+   "dlg:vale:chest": 1,
+   "dlg:vale_chest": 1,
+   "dlg:vale:fish_hint": 1,
+   "dlg:vale_tablet": 1,
+   "dlg:vale_rift": 1,
+   "dlg:vale:lantern_return": 1,
+   "dlg:vale:bridge_lanterns_hint": 1,
+   "dlg:vale:lanterns_islet": 1,
+   "dlg:vale:moon_pond": 1,
+   "zone:pinewood": 1,
+   "dlg:pinewood_banner": 1,
+   "dlg:pinewood:intro": 1,
+   "dlg:pinewood_fox": 1,
+   "dlg:pinewood:fish_intro": 1,
+   "dlg:pinewood_tablet": 1,
+   "banner:pinewood:r3:The Warden's Grove": 1,
+   "banner:pinewood:elite:Gnarlroot Ogre": 1,
+   "dlg:pinewood:elite_done": 1,
+   "dlg:pinewood:crack_hum": 1,
+   "dlg:pinewood:bridge_pip": 1,
+   "dlg:pinewood:env_hint": 1,
+   "dlg:pinewood:env_open": 1,
+   "dlg:pinewood:w_enter": 1,
+   "dlg:pinewood_hollow": 1,
+   "dlg:pinewood:h_ceiling": 1,
+   "dlg:pinewood:h_gate_hint": 1,
+   "dlg:pinewood:h_crack_hum": 1,
+   "banner:pinewood:h_boss:Mossjaw": 1,
+   "dlg:pinewood:h_boss_done": 1,
+   "banner:pinewood:boss:Old Bramblehorn": 1,
+   "dlg:boss_bramblehorn_intro": 1,
+   "dlg:boss_bramblehorn_death": 1
+  },
+  "obj": {
+   "vale": [
+    {
+     "id": "wake",
+     "text": "Hit the training dummies"
+    },
+    {
+     "id": "yard_teach",
+     "text": "Follow the path to the Elder Stone"
+    },
+    {
+     "id": "elder",
+     "text": "Open the chest, then find the lantern",
+     "done": true
+    },
+    {
+     "id": "lantern_found",
+     "text": "Return the lantern to the Stone"
+    },
+    {
+     "id": "garden_done",
+     "text": "Take the rift to the Pinewood"
+    }
+   ],
+   "pinewood": [
+    {
+     "id": "trail",
+     "text": "Follow the animals up the road"
+    },
+    {
+     "id": "r1_done",
+     "text": "Take the key to the root door"
+    },
+    {
+     "id": "r2_done",
+     "text": "Enter the Warden's Grove"
+    },
+    {
+     "id": "r3_done",
+     "text": "Take the key to the root door"
+    },
+    {
+     "id": "elite_done",
+     "text": "Find the root door of the Hollow"
+    },
+    {
+     "id": "w_enter",
+     "text": "Sneak past the sleepers to the vault",
+     "done": true
+    },
+    {
+     "id": "h_intro",
+     "text": "Defeat Mossjaw in the Root Hollow"
+    },
+    {
+     "id": "h_r1_done",
+     "text": "Rest at the shrine, then press on"
+    },
+    {
+     "id": "h_r2_done",
+     "text": "Pull the lever to raise the gate"
+    },
+    {
+     "id": "h_boss",
+     "text": "Defeat Mossjaw",
+     "done": true
+    },
+    {
+     "id": "h_boss_done",
+     "text": "Climb the root-stair to the Clearing"
+    },
+    {
+     "id": "boss",
+     "text": "Defeat Old Bramblehorn",
+     "done": true
+    },
+    {
+     "id": "victory",
+     "text": "Take a rift: home or the Ruins"
+    }
+   ]
+  },
+  "fogMaps": [
+   "vale",
+   "pinewood"
+  ]
+ },
+ "seen": 10,
+ "stats": {
+  "playtime": 1501,
+  "deaths": 1
+ }
+}

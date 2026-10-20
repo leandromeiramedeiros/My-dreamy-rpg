@@ -18,8 +18,14 @@ const SLOT_PITCH = 48, SLOT_Y = 484, SLOT = 44, POTION_X = 858;
 const SLOT_LABEL = { lmb: 'LMB', q: 'Q', e: 'E', r: 'R', f: 'F', c: 'C', shift: 'SHF', 1: '1', 2: '2', 3: '3', pot: '4' };
 const EL_ICON_COL = { slash: 'physical', pierce: 'physical' };
 const uiReady = () => !!(typeof UI_ART !== 'undefined' && UI.image(UI_ART.src));
-const elColor = el => UI.el(EL_ICON_COL[el] || el);
+// element -> rim colour, cached (UI.el asks ICONS each call; ~20 calls a frame from the skill bar). Cached only once ICONS is
+// loaded, so an early fallback colour is never pinned.
+const EL_COLOR_CACHE = new Map();
+const elColor = el => { let c = EL_COLOR_CACHE.get(el); if (c === undefined) { c = UI.el(EL_ICON_COL[el] || el); if (typeof ICONS !== 'undefined') EL_COLOR_CACHE.set(el, c); } return c; };
 const easeOut = k => 1 - (1 - k) * (1 - k);
+// the ultimate's charge as a fraction of what R needs now (some amulets / boons let R fire below 100): ultNeed(p), game.js
+const ultFrac = p => { const n = typeof ultNeed === 'function' ? ultNeed(p) : 100; return n <= 0 ? 1 : clamp((p.ult || 0) / n, 0, 1); };
+const potionMax = p => p.maxPotions || MAX_POTIONS;
 const pctText = v => Math.round((v || 0) * 100) + '%';
 
 // ---- offscreen cache -------------------------------------------------------------------------------------------
@@ -52,7 +58,8 @@ function grayOf(img) {
   return g;
 }
 function hudIcon(ctx, img, x, y, o = {}) {
-  const s = (o.size || 32);
+  let s = (o.size || 32);
+  if (!o.size && img.width === 24) { s = 24; x += 4; y += 4; }   // icons.js art is 24 px: draw it 1:1, centred in the 32 px box (no uneven 1.5x)
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(o.gray ? grayOf(img) : img, UI.snap(x), UI.snap(y), s, s);
 }
@@ -89,9 +96,13 @@ function drawDamageNumbers(ctx) {
     let size = 'small', col = t.col, a = 1 - Math.max(0, k - 0.6) / 0.4;
     if (kind === 'crit') { size = dsz === 'S' ? 'body' : 'heading'; col = UC.gold; }
     else if (kind === 'weak') { size = dsz === 'S' ? 'body' : 'heading'; col = UC.weak; }
-    else if (kind === 'resist') { col = UC.resist; a *= 0.6; }
     else if (kind === 'big') size = 'body';
-    else if (dsz === 'L') size = 'body';
+    else {   // normal / resist: the size follows hit power r = dmg / bar max (DESIGN §27): < 5 % small, < 20 % body, else heading
+      const r = t.r || 0, tier = r >= 0.2 ? 2 : r >= 0.05 ? 1 : 0;
+      const lv = Math.min(dsz === 'S' ? 1 : 2, Math.max(dsz === 'L' ? 1 : 0, tier));
+      size = lv === 2 ? 'heading' : lv === 1 ? 'body' : 'small';
+      if (kind === 'resist') { col = UC.resist; a *= 0.6; }
+    }
     const pop = t.t < 0.034 ? -4 : 0;   // 2-frame pop
     const x = vx * 2 + (t.vx || 0) * t.t * 40, y = vy * 2 - rise + pop;
     UI.text(ctx, t.s, x, y, size, col, 'center', { alpha: clamp(a, 0, 1) });
@@ -125,7 +136,7 @@ function drawDropNames(ctx) {
     cand.push({ d, i, dd, range, fade });
   }
   const groups = new Map();   // duplicates merge into one label: "Knight Helm ×2" (anchored on the nearest copy)
-  for (const c of cand.sort((a, b) => a.dd - b.dd)) { const g = groups.get(c.d.name + '|' + c.d.rar); if (g) g.n++; else { c.n = 1; groups.set(c.d.name + '|' + c.d.rar, c); } }
+  for (const c of cand.sort((a, b) => a.dd - b.dd)) { const gk = (c.d.it ? itemName(c.d.it) : c.d.name) + '|' + c.d.rar, g = groups.get(gk); if (g) g.n++; else { c.n = 1; groups.set(gk, c); } }
   cand.length = 0; for (const g of groups.values()) cand.push(g);
   cand.sort((a, b) => b.i - a.i || a.dd - b.dd);
   const lh = UI.lineH('small') + 6, placed = []; HUD.dropLabels = placed;
@@ -133,7 +144,8 @@ function drawDropNames(ctx) {
   for (const c of cand) {
     if (!all && shown >= DROP_LABELS) break;
     const d = c.d, [vx, vy] = worldToView(d.x, d.y, d.z), h = DROP_FX[c.i].h * Math.min(1, (d.t - 0.3) * 2.5);
-    const label = c.n > 1 ? `${d.name} ×${c.n}` : d.name, w = UI.measure(label, 'small') + 8, x = vx * 2;
+    const nm = d.it ? itemName(d.it) : d.name;   // the generated v2 name, always in rarity colour
+    const label = c.n > 1 ? `${nm} ×${c.n}` : nm, w = UI.measure(label, 'small') + 8, x = vx * 2;
     let y = (vy - Math.max(10, h) - 5) * 2;
     for (let guard = 0; guard < 24; guard++) {
       const hit = placed.find(r => Math.abs(r.x - x) < (r.w + w) / 2 + 4 && Math.abs(r.y - y) < lh);
@@ -200,9 +212,11 @@ function drawPortrait(ctx, p) {
   const xf = p.level >= MAX_LEVEL ? 1 : p.xp / xpToNext(p.level);
   UI.bar(ctx, 100, 512, 236, 4, xf, { id: 'hud-xp', col: UC.xp, hi: UC.xp, ghost: false });
   const ra = G.t - HUD.lvl.t;
-  if (ra < 1.2) {   // level-up: gold ring on the bar
-    ctx.globalAlpha = 1 - ra / 1.2; ctx.fillStyle = UC.gold;
-    ctx.fillRect(96, 508, 244, 2); ctx.fillRect(96, 518, 244, 2); ctx.fillRect(96, 508, 2, 12); ctx.fillRect(338, 508, 2, 12); ctx.globalAlpha = 1;
+  if (ra < 1.2) {   // level-up (R3 #8): a gold ring on the XP bar that opens outward over 1.2 s, plus a gold wipe along the bar
+    const k = ra / 1.2, g = 2 * Math.round(easeOut(k) * 4), x0 = 96 - g, y0 = 508 - g, w = 244 + g * 2, h = 12 + g * 2;
+    ctx.globalAlpha = 1 - k; ctx.fillStyle = UC.gold;
+    ctx.fillRect(x0, y0, w, 2); ctx.fillRect(x0, y0 + h - 2, w, 2); ctx.fillRect(x0, y0, 2, h); ctx.fillRect(x0 + w - 2, y0, 2, h);
+    ctx.globalAlpha = (1 - k) * 0.7; ctx.fillStyle = '#ffffff'; ctx.fillRect(100, 512, Math.round(236 * Math.min(1, k * 2.5)), 4); ctx.globalAlpha = 1;
   }
   if (UI.mouseIn(100, 478, 236, 32)) {   // MP / ST numbers on hover
     UI.text(ctx, `MP ${Math.floor(p.mp)}/${p.maxMp}   ST ${Math.floor(p.st)}/${p.maxSt}`, 100, 434, 'small', UC.text);
@@ -226,20 +240,46 @@ function drawStatusRow(ctx, p, x0, y0, rightAlign) {
 
 // ===== skill bar ==================================================================================================================
 function slotIcon(p, st) {
-  if (st.slot === 'lmb') return itemIcon(p.equip.weapon);
+  if (st.slot === 'lmb') return uiItemIcon(p.equip.weapon);
   if (st.slot === 'pot') return miscIcon('potion');
   return st.id ? skillIcon(st.id) : null;
+}
+// ===== §28 the HUD fades in one piece per noun (game.js hudNoun / hudShown) ======================================================
+// hudFaded(ctx, a, fn): fn draws at full alpha (a >= 1), not at all (a <= 0: no hit regions either), or, during its 0.6 s fade-in,
+// into an offscreen copy blitted at alpha a (the HUD helpers set globalAlpha absolutely, so a plain multiply would not hold).
+let HUD_FADE_C = null;
+function hudFaded(ctx, a, fn) {
+  if (a >= 1) return fn(ctx);
+  if (!(a > 0)) return undefined;
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  if (!HUD_FADE_C || HUD_FADE_C.width !== W || HUD_FADE_C.height !== H) { HUD_FADE_C = document.createElement('canvas'); HUD_FADE_C.width = W; HUD_FADE_C.height = H; }
+  const o = HUD_FADE_C.getContext('2d');
+  o.setTransform(1, 0, 0, 1, 0, 0); o.globalAlpha = 1; o.globalCompositeOperation = 'source-over'; o.clearRect(0, 0, W, H);
+  o.setTransform(ctx.getTransform()); o.imageSmoothingEnabled = false;
+  const r = fn(o);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = a; ctx.imageSmoothingEnabled = false; ctx.drawImage(HUD_FADE_C, 0, 0); ctx.restore();
+  return r;
+}
+const hudPieceOf = slot => (slot === '1' || slot === '2' || slot === '3' || slot === 1 || slot === 2 || slot === 3 ? 'skills' : String(slot));
+const hudA = piece => (typeof hudShown === 'function' ? hudShown(piece) : 1);
+// a chip's alpha: its piece's fade; in a bare opening a chip whose slot grants nothing (no weapon, no helm...) stays hidden
+function chipAlpha(p, slot) {
+  const a = hudA(hudPieceOf(slot));
+  if (a > 0 && slot !== 'lmb' && slot !== 'pot' && typeof openingActive === 'function' && openingActive() && !slotSkill(p, slot)) return 0;
+  return a;
 }
 function drawSkillBar(ctx, p, inert) {
   let hover = null;
   const flashTag = [];
   for (const grp of SLOT_GROUPS) grp.slots.forEach((slot, i) => {
     const x = grp.x + i * SLOT_PITCH;
-    if (drawSkillSlot(ctx, p, slot, x, SLOT_Y)) hover = { slot, x };
+    if (hudFaded(ctx, chipAlpha(p, slot), c => drawSkillSlot(c, p, slot, x, SLOT_Y))) hover = { slot, x };
   });
-  if (drawSkillSlot(ctx, p, 'pot', POTION_X, SLOT_Y)) hover = { slot: 'pot', x: POTION_X };
-  // potion charge pips
-  for (let k = 0; k < MAX_POTIONS; k++) UI.sprite(ctx, k < p.potions ? 'pipFull' : 'pipEmpty', POTION_X + 5 + k * 12, 530, { scale: 2 });
+  if (hudFaded(ctx, chipAlpha(p, 'pot'), c => {
+    const h = drawSkillSlot(c, p, 'pot', POTION_X, SLOT_Y);
+    for (let k = 0; k < potionMax(p); k++) UI.sprite(c, k < p.potions ? 'pipFull' : 'pipEmpty', POTION_X + 5 + k * 12, 530, { scale: 2 });   // potion charge pips
+    return h;
+  })) hover = { slot: 'pot', x: POTION_X };
   HUD.hoverSlot = hover && !inert && IN.device === 'kbm' ? hover.slot : null;   // render.js: faint range ring
   if (hover && !inert && (IN.device === 'kbm')) skillTooltip(ctx, p, hover);
 }
@@ -247,7 +287,7 @@ function drawSkillSlot(ctx, p, slot, x, y) {
   const st = skillSlotState(p, slot), icon = slotIcon(p, st), ult = slot === 'r', pot = slot === 'pot';
   const ready = pot ? (st.cd <= 0 && st.potions > 0) : st.ready !== false && !st.cdFrac;
   // ready flash: cooldown just ended -> 120 ms white rim + a 2 px icon pop
-  const prev = HUD.ready[slot]; if (prev && prev.cd && !(st.cd > 0)) prev.t = G.t; HUD.ready[slot] = Object.assign(prev || {}, { cd: st.cd > 0 || (ult && st.charge < 1) });
+  const prev = HUD.ready[slot]; if (prev && prev.cd && !(st.cd > 0)) prev.t = G.t; HUD.ready[slot] = Object.assign(prev || {}, { cd: st.cd > 0 || (ult && ultFrac(p) < 1) });
   const flashK = prev && prev.t != null ? 1 - (G.t - prev.t) / 0.12 : 0;
   const rim = !icon ? UC.bevel : ult ? UC.gold : pot ? UC.hp : slot === 'lmb' ? UC.line : elColor(st.element);
   const empty = !icon;
@@ -255,14 +295,17 @@ function drawSkillSlot(ctx, p, slot, x, y) {
   hudSlot(ctx, x, y, SLOT, empty ? UC.bevel : rim, icon, { gray: !!st.mpShort || !!st.stShort || (pot && !st.potions), dy });
   const ix = x + 6, iy = y + 6;
   if (!empty) {
-    if (ult && st.charge < 1) { UI.sweep(ctx, x + 4, y + 4, 36, 36, 1 - st.charge, { label: Math.floor(st.charge * 100) + '', col: UC.edge }); }
+    if (ult && ultFrac(p) < 1) { UI.sweep(ctx, x + 4, y + 4, 36, 36, 1 - ultFrac(p), { label: Math.floor(ultFrac(p) * 100) + '', col: UC.edge }); }
     else if (st.cdFrac > 0) UI.sweep(ctx, x + 4, y + 4, 36, 36, st.cdFrac, { label: st.cd >= 1 ? Math.ceil(st.cd) + '' : st.cd.toFixed(1) });
     else if (pot && st.cd > 0) UI.sweep(ctx, x + 4, y + 4, 36, 36, st.cd, {});
-    if (ult && st.ready && st.charge >= 1) { ctx.globalAlpha = 0.25 + 0.25 * Math.sin(G.t * 8); ctx.fillStyle = UC.gold; ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; hudFrame(ctx, x, y, SLOT, SLOT, 'slotRim', { tint: UC.gold, alpha: 1 }); }
+    if (ult && ultFrac(p) >= 1) { ctx.globalAlpha = 0.25 + 0.25 * Math.sin(G.t * 8); ctx.fillStyle = UC.gold; ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; hudFrame(ctx, x, y, SLOT, SLOT, 'slotRim', { tint: UC.gold, alpha: 1 }); }
     if (st.unavailable) { ctx.fillStyle = UC.edge; ctx.globalAlpha = 0.5; ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; }
     if (st.flash > 0) { ctx.fillStyle = '#ffffff'; ctx.globalAlpha = Math.min(0.6, st.flash * 2); ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; }
   }
-  if (flashK > 0) { ctx.globalAlpha = flashK; hudFrame(ctx, x, y, SLOT, SLOT, 'slotRim', { tint: '#ffffff' }); ctx.globalAlpha = 1; }
+  if (flashK > 0) {   // skill ready (R3 #8): a 120 ms white rim + a soft white fill + a 2 px halo, so it reads at a glance
+    ctx.globalAlpha = flashK * 0.35; ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 4, y + 4, 36, 36);
+    ctx.globalAlpha = flashK; hudFrame(ctx, x, y, SLOT, SLOT, 'slotRim', { tint: '#ffffff' }); UI.frame(ctx, x - 4, y - 4, SLOT + 8, SLOT + 8, 'focus', { tint: '#ffffff' }); ctx.globalAlpha = 1;
+  }
   if (pot) UI.text(ctx, st.potions, x + 40, y + 28, 'small', UC.text, 'right');
   // key tag sits above the slot's top-left corner, outside the icon art
   const label = st.glyph || SLOT_LABEL[slot];
@@ -275,8 +318,8 @@ function drawSkillSlot(ctx, p, slot, x, y) {
 }
 function skillTooltip(ctx, p, h) {
   const st = skillSlotState(p, h.slot); let c;
-  if (h.slot === 'pot') c = { title: 'Health Potion', titleCol: UC.hpHi, lines: [`Heal 40% of max HP. ${p.potions}/${MAX_POTIONS} charges, refilled at checkpoints.`] };
-  else if (h.slot === 'lmb') { const w = item('weapon', p.gear.weapon); c = { title: w.basic.name, lines: [`Basic attack of the ${w.name}. Builds MP on hit.`] }; }
+  if (h.slot === 'pot') c = { title: 'Health Potion', titleCol: UC.hpHi, lines: [`Heal 40% of max HP. ${p.potions}/${potionMax(p)} charges, refilled at checkpoints.`] };
+  else if (h.slot === 'lmb') { const w = weaponOf(p); c = { title: w.basic.name, lines: [p.equip.weapon ? `Basic attack of the ${w.name}. Builds MP on hit.` : 'Bare hands: a weak shove. Find a weapon.'] }; }
   else if (!st.id) return;
   else {
     const s = SKILLS[st.id];
@@ -310,6 +353,21 @@ function miniBuild(m) {
     for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) if (saved[j * m.W + i]) { m.mini.vis[j * m.W + i] = 1; rx.fillRect(ox + i - j - 2, oy + i + j - 1, 4, 3); }
   }
   HUD.fogTile = '';
+}
+// §29 G3 the vantage reveal: explore every tile within R of (x, y) at once (the same rev-canvas stamp as miniReveal); returns how many
+// tiles were new. Only land tiles in the hero's section kind family count, so an underground section stays dark from a summit.
+function miniRevealArea(m, x, y, R) {
+  if (!m.mini || m.mini.prog !== G.prog) miniBuild(m);
+  const mi = m.mini, rx = mi.rev.getContext('2d'); rx.fillStyle = '#fff'; let n = 0;
+  const under = sec => !!(sec && sec.under);
+  for (let j = Math.max(0, Math.floor(y - R)); j <= Math.min(m.H - 1, Math.ceil(y + R)); j++) for (let i = Math.max(0, Math.floor(x - R)); i <= Math.min(m.W - 1, Math.ceil(x + R)); i++) {
+    if (Math.hypot(i + 0.5 - x, j + 0.5 - y) > R || mi.vis[j * m.W + i]) continue;
+    if (m.sections && under(m.sections[m.secAt[j * m.W + i]])) continue;
+    mi.vis[j * m.W + i] = 1; n++;
+    rx.fillRect(mi.ox + i - j - 2, mi.oy + i + j - 1, 4, 3);
+  }
+  if (n) { mi.dirty = true; HUD.fogTile = null; mi.fullKey = null; }
+  return n;
 }
 // mini-map pixel of a world point
 const miniAt = (mi, x, y) => [mi.ox + (x - y), mi.oy + (x + y)];
@@ -394,6 +452,14 @@ function hudWrapLines(s, w, size, maxLines) {
 const bossBarUp = () => { const b = G.boss; return !!(b && !b.dead && !(b.spawnT > 0.8)); };
 const bossIntro = () => { const b = G.boss, bn = G.banner; return !!((bn && bn.boss && bn.t > 0) || (b && !b.dead && b.spawnT > 0)); };
 function currentObjectiveText() { return (typeof currentObjective === 'function' ? currentObjective() : G.objective) || ''; }
+// R3 #3: the tracker never runs under the minimap (its left edge is x 816 on both layouts), the objective wraps to 2 lines + "...",
+// "Foes left" shows only while a wave / arena fight is live, and on touch nothing runs into the three icon buttons under it.
+const TRACKER_RIGHT = 816;
+const waveLive = () => {
+  if (G.pendingSpawns > 0) return true;
+  const ar = G.arena;
+  return !!(ar && !ar.done && ar.map === G.map.id && G.enemies.some(e => !e.dummy && !e.dead && e.arena === ar.id));
+};
 function drawTracker(ctx, x, y) {
   const m = G.map, obj = currentObjectiveText(), ql = questLines(), key = m.id + '|' + obj + '|' + ql.join();
   if (HUD.trk.key !== key) { HUD.trk.key = key; HUD.trk.t0 = G.t; }
@@ -401,37 +467,67 @@ function drawTracker(ctx, x, y) {
   const age = G.t - HUD.trk.t0, a = age < 6 ? 1 : Math.max(0.45, 1 - (age - 6) * 2);
   // boss bar up: desktop moves the tracker below it (bar ends at y 84); touch keeps the corner but shrinks to the column left of the bar
   if (bar && !touch) y = Math.max(y, 96);
-  const colW = bar && touch ? 240 - x - 12 : 784 - x - 20;
+  const colW = bar && touch ? 240 - x - 12 : TRACKER_RIGHT - x - 20;
+  const floorY = touch ? touchMenu()[0].y + 2 : 1e9;   // touch: the bag / help / fullscreen buttons start here
   ctx.globalAlpha = bar && touch ? Math.min(a, 0.7) : a;
   UI.text(ctx, fitText(m.name, colW + 20, 'body'), x, y, 'body', UC.gold);
   let yy = y + 24;
   if (obj) {
-    const L = hudWrapLines(obj, colW, 'body', bar && touch ? 2 : 2), lh = UI.lineH('body') + 4;
+    const L = hudWrapLines(obj, colW, 'body', 2), lh = UI.lineH('body') + 4;
     UI.text(ctx, '◆', x, yy, 'body', UC.gold);
     for (const l of L) { UI.text(ctx, l, x + 20, yy, 'body', UC.text); yy += lh; }
     yy += 24 - lh;
   }
   if (!(bar && touch)) {
-    const wave = G.pendingSpawns > 0 || (G.arena && G.enemies.some(e => !e.dummy));
-    if (wave && !bossIntro()) { const n = G.enemies.filter(e => !e.dummy && !e.dead).length; UI.text(ctx, `Foes left ${n}`, x + 20, yy, 'small', UC.hpHi); yy += 18; }
-    for (const t of ql) { UI.text(ctx, fitText(t, colW, 'small'), x + 20, yy, 'small', UC.dim); yy += 18; }
+    if (waveLive() && !bossIntro() && yy + 14 <= floorY) { const n = G.enemies.filter(e => !e.dummy && !e.dead).length; UI.text(ctx, `Foes left ${n}`, x + 20, yy, 'small', UC.hpHi); yy += 18; }
+    for (const t of ql) { if (yy + 14 > floorY) break; UI.text(ctx, fitText(t, colW, 'small'), x + 20, yy, 'small', UC.dim); yy += 18; }
   }
   ctx.globalAlpha = 1;
   return yy;
 }
 
 // ===== boss bar ===========================================================================================================================
+// Boss bar, phase model (DESIGN §26.1, client): bossBars(e) -> { n, i, frac, transition }. ONE full-width bar shows the current phase's
+// HP; under it one yellow diamond per phase still to fight (n - i, the current one included), beaten phases are faded outlines
+// (none for n = 1). When the bar empties (ghost-lag drain) the rightmost filled diamond flashes and dims over 0.4 s, then during
+// `transition` the bar refills from empty to full with a pulsing "SHIELDED" look: that is the next phase's health bar.
+const BOSS_REFILL = 1.2;
+function drawBossPhases(ctx, bb, x, y, w, h, sh) {
+  const n = bb.n, filled = Math.max(0, n - bb.i);
+  if (HUD.phaseI != null && bb.i > HUD.phaseI) { HUD.diaBreak = { k: filled, t: G.t }; HUD.refillT = G.t; }
+  HUD.phaseI = bb.i;
+  let v = clamp(bb.frac, 0, 1), refill = false;
+  if (bb.transition) { if (HUD.refillT == null || G.t - HUD.refillT > 5) HUD.refillT = G.t; v = easeOut(clamp((G.t - HUD.refillT) / (bb.tmax || BOSS_REFILL), 0, 1)); refill = true; }
+  UI.bar(ctx, x, y, w, h, v, { id: 'boss-hp', col: UC.danger, hi: UC.hpHi });
+  if (refill) {
+    ctx.globalAlpha = 0.2 + 0.25 * (0.5 + 0.5 * Math.sin(G.t * 10)); ctx.fillStyle = UC.mpHi; ctx.fillRect(x, y, w, h); ctx.globalAlpha = 1;
+    UI.text(ctx, 'SHIELDED', 480 + sh, y + 1, 'small', '#ffffff', 'center');
+  }
+  const dia = [];
+  if (n > 1) for (let k = 0; k < n; k++) {
+    const dx = 480 + sh + (k - (n - 1) / 2) * 24 - 7, dy = 58, brk = HUD.diaBreak && HUD.diaBreak.k === k ? G.t - HUD.diaBreak.t : 9;
+    let state = k < filled ? 'full' : 'faded';
+    if (brk < 0.4) {   // the diamond that just went: a white flash, then it dims to an outline
+      state = 'fading'; const f = brk / 0.4;
+      UI.sprite(ctx, 'bulletHollow', dx, dy, { scale: 2, tint: UC.dim });
+      UI.sprite(ctx, 'bullet', dx, dy, { scale: 2, tint: brk < 0.1 ? '#ffffff' : UC.gold, alpha: brk < 0.1 ? 1 : 1 - f });
+    } else if (state === 'full') UI.sprite(ctx, 'bullet', dx, dy, { scale: 2, tint: UC.gold });
+    else UI.sprite(ctx, 'bulletHollow', dx, dy, { scale: 2, tint: UC.dim, alpha: 0.6 });
+    dia.push(state);
+  }
+  HUD.bossSegs = { n, filled, dia, bar: v, refill, t: G.t };
+}
 function drawBossBar(ctx) {
   const b = G.boss; if (!b || b.dead || b.spawnT > 0.8) return;
   if (b.phase2 && !HUD.bossPhase) HUD.bossShakeT = G.t;
   HUD.bossPhase = !!b.phase2;
   const sh = G.t - HUD.bossShakeT < 0.4 ? (Math.floor(G.t * 40) % 2 ? 2 : -2) : 0;
   const x = 240 + sh, y = 34;
-  const pips = '◆' + (b.phase2 ? '◆' : '◇');
-  UI.text(ctx, ENEMY.boss.name.toUpperCase() + '  ' + pips, 480 + sh, 8, 'body', UC.gold, 'center');
-  UI.bar(ctx, x, y, 480, 14, b.hp / b.maxHp, { id: 'boss-hp', col: UC.danger, hi: UC.hpHi });
+  UI.text(ctx, ENEMY.boss.name.toUpperCase(), 480 + sh, 8, 'body', UC.gold, 'center');
+  const bb = typeof bossBars === 'function' ? bossBars(b) : null;
+  if (bb) drawBossPhases(ctx, bb, x, y, 480, 14, sh); else UI.bar(ctx, x, y, 480, 14, b.hp / b.maxHp, { id: 'boss-hp', col: UC.danger, hi: UC.hpHi });
   const cap = STAGGER_CAP, f = clamp((b.stagger || 0) / cap, 0, 1), broke = G.t - (b.breakT || -9) < 0.8;
-  const sc = broke ? '#ffffff' : mixHex('#ffffff', '#ff8a2a', f);
+  const sc = broke ? (typeof flashReduceOn === 'function' && flashReduceOn() ? '#ff8a2a' : '#ffffff') : mixHex('#ffffff', '#ff8a2a', f);   // reduce flashing: no white BREAK frame
   UI.bar(ctx, x, 50, 480, 4, broke ? 1 : f, { id: 'boss-stg', col: sc, hi: sc, ghost: false, wipe: false });
   if (broke && Math.floor(G.t * 10) % 2) UI.text(ctx, 'BREAK', 480 + sh, 56, 'small', '#ff8a2a', 'center');
   let wx = x, rx = x + 480 - 20;
@@ -452,7 +548,8 @@ function drawBanner(ctx, p) {
     return;
   }
   ctx.globalAlpha = a;   // zone / boss entry: a 960x64 letterbox strip at y=112
-  const by = G.touch ? 164 : 112;   // touch: below the tracker and the three top-left buttons (they end at y 152)
+  const by = G.touch ? touchMenu()[0].y + 40 + 12 : 112;   // touch: below the three top-left buttons (R3 #3), wherever the safe area puts them
+  HUD.bannerY = by;
   ctx.fillStyle = UC.edge; ctx.globalAlpha = a * 0.78; ctx.fillRect(0, by, DW, 64); ctx.globalAlpha = a;
   ctx.fillStyle = bn.boss ? UC.danger : UC.line; ctx.fillRect(0, by, DW, 2); ctx.fillRect(0, by + 62, DW, 2);
   UI.text(ctx, bn.s, 480, by + 6, 'heading', bn.boss ? UC.danger : UC.gold, 'center');
@@ -460,13 +557,30 @@ function drawBanner(ctx, p) {
   ctx.globalAlpha = 1;
 }
 function drawSay(ctx) {
+  if (G.tablet && G.tablet.src && G.state === 'play') return;   // an open tablet panel owns that band (the Elder Stone double render, QA kbm-004)
   if (G.msg && G.msg.t > 0) UI.text(ctx, G.msg.s, 480, 404, 'body', UC.text, 'center', { alpha: Math.min(1, G.msg.t * 2) });
+}
+// ===== Pip (§28): a small warm light parented to the hero (state + drift: game.js updatePip). Drawn here, over the lit scene, as an
+// additive halo and a 3 px core; the lightmap entry (game.js pipLight) is the render lane's to add to drawScene's lights.
+function drawPip(ctx) {
+  const P = G.pip, p = G.player; if (!P || !p || p.dead || !G.map || typeof worldToView !== 'function') return;
+  const [vx, vy] = worldToView(P.x, P.y, P.z), x = Math.round(vx * 2), y = Math.round(vy * 2);
+  if (x < -60 || x > DW + 60 || y < -60 || y > DH + 60) return;
+  const fl = 0.86 + 0.14 * Math.sin(G.t * 7.3) * Math.sin(G.t * 2.9);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createRadialGradient(x, y, 0, x, y, 44);   // warm amber, so it never reads as one of the Vale's green fireflies
+  g.addColorStop(0, `rgba(255,200,120,${0.8 * fl})`); g.addColorStop(0.3, `rgba(255,160,80,${0.32 * fl})`); g.addColorStop(1, 'rgba(255,140,60,0)');
+  ctx.fillStyle = g; ctx.fillRect(x - 44, y - 44, 88, 88);
+  ctx.globalAlpha = fl; ctx.fillStyle = '#ffb860'; ctx.fillRect(x - 4, y - 2, 8, 4); ctx.fillRect(x - 2, y - 4, 4, 8);
+  ctx.fillStyle = '#fff1d0'; ctx.fillRect(x - 2, y - 2, 4, 4);
+  ctx.restore();
 }
 function drawInteractPrompt(ctx) {
   const ip = interactPrompt(); if (!ip || G.touch) return;
-  const gw = hudGlyphW('interact'), tw = UI.measure(ip.text, 'body'), w = gw + 8 + tw, x = 480 - w / 2;
-  hudGlyph(ctx, 'interact', x, 432);
-  UI.text(ctx, ip.text, x + gw + 8, 434, 'body', UC.gold);
+  const gw = hudGlyphW('interact'), tw = UI.measure(ip.text, 'body'), w = gw + 8 + tw, tab = !!(G.tablet && G.tablet.src && G.state === 'play');
+  const x = tab ? 824 - w : 480 - w / 2, y = tab ? 384 : 432;   // an open tablet panel (372-484): the prompt moves to its top-right corner (QA kbm-004)
+  hudGlyph(ctx, 'interact', x, y);
+  UI.text(ctx, ip.text, x + gw + 8, y + 2, 'body', UC.gold);
 }
 function drawTablet(ctx) {
   if (!(G.tablet && G.tablet.src && G.state === 'play' && !G.ui.open)) return;
@@ -478,9 +592,6 @@ function drawTablet(ctx) {
 // ===== help overlay ("?" button / H / pad menu) ==========================================================================================
 function drawHelp(ctx) {
   ctx.fillStyle = UC.edge; ctx.globalAlpha = 0.6; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
-  const x = 200, y = 80, w = 560, h = 380;
-  UI.frame(ctx, x, y, w, h, 'primary');
-  UI.text(ctx, 'HOW TO PLAY', 480, y + 18, 'heading', UC.gold, 'center');
   const rows = G.touch ? [
     ['Left thumb', 'Joystick: move'], ['Big button (hold)', 'Weapon basic attack'], ['Tap a skill', 'Cast at the nearest enemy'], ['Drag a skill', 'Aim, release to cast'],
     ['Hold a skill', 'Open the bag'], ['Potion', 'Drink a potion (40% HP)'], ['Bag / ? / full', 'Top-left buttons'],
@@ -488,14 +599,21 @@ function drawHelp(ctx) {
     ['move', 'Move'], ['aim', 'Aim'], ['attack', 'Attack (builds MP)'], ['skillQ', 'Weapon skills Q E R (R = ultimate)'], ['skillF', 'Chest skill (C = helmet)'],
     ['dodge', 'Dodge (boots skill)'], ['s1', 'Character skills 1 2 3'], ['potion', 'Potion'], ['interact', 'Interact / talk'], ['inventory', 'Bag, character, bestiary, quests'], ['pause', 'Pause and settings'],
   ];
-  let yy = y + 66;
+  // the panel grows with the row count (R3 #1): heading, rows, one dim line, then the buttons, all inside the 540 px canvas
+  const ROW = 26, top = 62, x = 180, w = 600;
+  const footY = top + rows.length * ROW + 8, btnY = footY + 26, h = btnY + 36 + 18, y = Math.max(8, UI.snap((DH - h) / 2));
+  UI.frame(ctx, x, y, w, h, 'primary');
+  UI.text(ctx, 'HOW TO PLAY', 480, y + 16, 'heading', UC.gold, 'center');
+  let yy = y + top;
   for (const [k, v] of rows) {
     if (G.touch) UI.text(ctx, k, x + 32, yy + 2, 'body', UC.stHi); else { const gw = hudGlyph(ctx, k, x + 32, yy - 2); if (!gw) UI.text(ctx, IN.glyph(k), x + 32, yy + 2, 'body', UC.stHi); }
-    UI.text(ctx, v, x + 200, yy + 2, 'body', UC.text); yy += 28;
+    UI.text(ctx, v, x + 200, yy + 2, 'body', UC.text); yy += ROW;
   }
-  UI.text(ctx, 'You are what you wear: gear decides Q E R F C SHIFT.', 480, y + h - 84, 'small', UC.dim, 'center');
-  UI.button(ctx, 480 - 170, y + h - 52, 160, 36, 'SETTINGS', { id: 'btn:help-settings', size: 'small', fn: () => { G.ui.help = false; G.ui.pause = true; } });
-  UI.button(ctx, 480 + 10, y + h - 52, 160, 36, 'CLOSE', { id: 'btn:help-close', size: 'small', def: true, fn: () => { G.ui.help = false; } });
+  UI.text(ctx, 'You are what you wear: gear decides Q E R F C SHIFT.', 480, y + footY, 'small', UC.dim, 'center');
+  const title = G.state === 'title';
+  UI.button(ctx, 480 - 170, y + btnY, 160, 36, 'SETTINGS', { id: 'btn:help-settings', size: 'small', fn: () => { G.ui.help = false; if (title) G.ui.settings = true; else G.ui.pause = true; } });
+  UI.button(ctx, 480 + 10, y + btnY, 160, 36, 'CLOSE', { id: 'btn:help-close', size: 'small', def: true, fn: () => { G.ui.help = false; } });
+  HUD.helpRect = { x, y, w, h, btnY: y + btnY, lastRowY: y + top + (rows.length - 1) * ROW };
   UI.focus.draw(ctx);
 }
 
@@ -509,12 +627,13 @@ function drawPlayHud(ctx, p, inert) {
   const touch = G.touch;
   const mirror = touch && leftHanded();   // the thumb cluster sits bottom-left, so the portrait + bars move to the other corner
   if (mirror) { ctx.save(); ctx.translate(DW - 24 - 340, 0); }
-  drawPortrait(ctx, p);
+  hudFaded(ctx, hudA('bars'), c => drawPortrait(c, p));
   if (mirror) ctx.restore();
-  drawStatusRow(ctx, p, touch ? DW - 24 : 100, touch ? 148 : 428, touch);
+  hudFaded(ctx, hudA('bars'), c => drawStatusRow(c, p, touch ? DW - 24 : 100, touch ? 148 : 428, touch));
   if (!touch) drawSkillBar(ctx, p, inert);
-  drawMinimap(ctx, p, touch ? DW - 24 - 112 : 832, touch ? 24 : 16);
-  drawTracker(ctx, touch ? 24 : 16, touch ? 24 : 16);
+  if (!(hudA('map') > 0)) { const m = G.map; if (!m.mini || m.mini.prog !== G.prog) miniBuild(m); miniReveal(m, p); }   // hidden (§28): the fog still records the walk
+  hudFaded(ctx, hudA('map'), c => drawMinimap(c, p, touch ? DW - 24 - 112 : 832, touch ? 24 : 16));
+  hudFaded(ctx, hudA('tracker'), c => drawTracker(c, touch ? 24 : 16, touch ? 24 : 16));
   drawBossBar(ctx);
   drawTablet(ctx);
   drawSay(ctx);
@@ -528,8 +647,10 @@ function drawPlayHud(ctx, p, inert) {
 function drawHUD(ctx) {
   ctx.imageSmoothingEnabled = false;
   G.ui.btns = [];   // legacy list read by main.js uiClick; hit regions live in UI now
+  if (G.portrait && typeof drawRotateCard === 'function') { drawRotateCard(ctx); return; }   // R3 #2: phone held upright (screens.js)
   if (G.state === 'title') { drawTitle(ctx); return; }
   const p = G.player, u = G.ui;
+  drawPip(ctx);
   drawDamageNumbers(ctx); drawDropNames(ctx); drawNameplates(ctx);
   if (u.open) {   // Tab screens: scene dimmed to 35 %, play HUD hidden
     ctx.fillStyle = '#05030c'; ctx.globalAlpha = 0.65; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
@@ -556,7 +677,7 @@ function touchBtn(ctx, x, y, r, col, o = {}) {
   if (o.lift) { ctx.fillStyle = '#05030c'; ctx.globalAlpha *= 0.4; ctx.beginPath(); ctx.arc(x, y + 2, r, 0, 7); ctx.fill(); ctx.globalAlpha /= 0.4; y -= o.lift; }
   ctx.fillStyle = '#15102a'; ctx.globalAlpha *= 0.8; ctx.beginPath(); ctx.arc(x, y, r - 2, 0, 7); ctx.fill(); ctx.globalAlpha /= 0.8;
   ctx.lineWidth = 2; ctx.strokeStyle = '#0b0716'; ctx.beginPath(); ctx.arc(x, y, r - 1, 0, 7); ctx.stroke();
-  if (o.icon) hudIcon(ctx, o.icon, x - 16, y - 16, { gray: o.gray, size: o.iconSize || 32 });
+  { const is = o.iconSize || 32; if (o.icon) hudIcon(ctx, o.icon, x - is / 2, y - is / 2, { gray: o.gray, size: is }); }
   if (o.cdFrac > 0) {   // clockwise radial wipe at 70 % dark
     ctx.save(); ctx.beginPath(); ctx.arc(x, y, r - 4, 0, 7); ctx.clip();
     ctx.fillStyle = '#0b0716'; ctx.globalAlpha *= 0.7; ctx.beginPath(); ctx.moveTo(x, y);
@@ -578,10 +699,10 @@ function touchSkillBtn(ctx, p, b, held, aiming, a = 1) {
   const short = !!(st.mpShort || st.stShort), rim = !st.id ? UC.bevel : short ? UC.mp : ult ? UC.gold : elColor(st.element);
   let icon = st.id ? skillIcon(st.id) : (b.slot === 'shift' ? miscIcon('dust') : null);
   const lock = st.unavailable ? 0.5 : 1;
-  touchBtn(ctx, b.x, b.y, b.r, rim, { icon, gray: short, cdFrac: ult ? (st.charge < 1 ? 1 - st.charge : 0) : st.cdFrac, held, lift: aiming ? 4 : 0, flash: fl, alpha: a * lock });
+  touchBtn(ctx, b.x, b.y, b.r, rim, { icon, gray: short, cdFrac: ult ? (ultFrac(p) < 1 ? 1 - ultFrac(p) : 0) : st.cdFrac, held, lift: aiming ? 4 : 0, flash: fl, alpha: a * lock });
   if (st.id && a > 0.5) {
     const y = b.y - (aiming ? 4 : 0);
-    if (ult && st.charge < 1) UI.text(ctx, Math.floor(st.charge * 100) + '', b.x, y - 7, 'small', UC.text, 'center');
+    if (ult && ultFrac(p) < 1) UI.text(ctx, Math.floor(ultFrac(p) * 100) + '', b.x, y - 7, 'small', UC.text, 'center');
     else if (cd > 0) UI.text(ctx, cd >= 1 ? Math.ceil(cd) + '' : cd.toFixed(1), b.x, y - 7, 'small', UC.text, 'center');
   }
 }
@@ -615,11 +736,12 @@ function drawTouchControls(ctx) {
   for (const b of touchButtons()) {
     const held = heldSlots.has(b.slot), aiming = aimSlot === b.slot;
     if (b.slot === 'toggle') { toggle = b; continue; }
+    if (b.slot !== 'interact' && b.slot !== 'atk' && !(chipAlpha(p, b.slot === 'pot' ? 'pot' : b.slot) > 0)) continue;   // §28: hidden until its noun
     if (b.slot === 'pot') {
       const st = skillSlotState(p, 'pot'), n = p.potions || 0;
       touchBtn(ctx, b.x, b.y, b.r, UC.hp, { icon: miscIcon('potion'), gray: !n, cdFrac: st.cd > 0 ? st.cd / 1 : 0, held });
-      for (let i = 0; i < MAX_POTIONS; i++) {   // one pip per potion on the rim
-        const a = (270 + (i - (MAX_POTIONS - 1) / 2) * 24) * TDEG, px = b.x + Math.cos(a) * (b.r - 3), py = b.y + Math.sin(a) * (b.r - 3);
+      for (let i = 0; i < potionMax(p); i++) {   // one pip per potion on the rim
+        const a = (270 + (i - (potionMax(p) - 1) / 2) * 24) * TDEG, px = b.x + Math.cos(a) * (b.r - 3), py = b.y + Math.sin(a) * (b.r - 3);
         ctx.fillStyle = '#0b0716'; ctx.beginPath(); ctx.arc(px, py, 4, 0, 7); ctx.fill();
         ctx.fillStyle = i < n ? UC.hpHi : UC.bevel; ctx.beginPath(); ctx.arc(px, py, 2.5, 0, 7); ctx.fill();
       }
@@ -627,8 +749,8 @@ function drawTouchControls(ctx) {
     }
     if (b.slot === 'interact') { touchBtn(ctx, b.x, b.y, b.r, UC.gold, { held, label: G.prompt ? G.prompt.text.split(' ')[0].toUpperCase() : 'USE' }); continue; }
     if (b.slot === 'atk') {
-      touchBtn(ctx, b.x, b.y, b.r, UC.line, { held, icon: itemIcon(p.equip.weapon), iconSize: 48 });
-      const ch = ultCharge(p);
+      touchBtn(ctx, b.x, b.y, b.r, UC.line, { held, icon: uiItemIcon(p.equip.weapon), iconSize: 48 });
+      const ch = ultFrac(p);
       UI.ring(ctx, b.x, b.y, b.r - 2, 1, UC.edge, 3);   // the rim doubles as the ultimate charge ring
       UI.ring(ctx, b.x, b.y, b.r - 2, ch, UC.gold, 3);
       if (ch >= 1) { ctx.save(); ctx.globalAlpha = 0.35 + 0.35 * Math.sin(now * 8); UI.ring(ctx, b.x, b.y, b.r + 1, 1, UC.gold, 3); ctx.restore(); }

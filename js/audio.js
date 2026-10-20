@@ -12,7 +12,7 @@
 //   AUDIO.state()                'none' (no context yet) | 'suspended' | 'running' | 'closed' | 'interrupted'
 //   AUDIO.sfx(id, pos?, opts?)   play an SFX_RECIPES id. pos = { x, y } world tiles (an entity works) -> pan + distance
 //                                attenuation from its screen position; omitted -> PART_SRC (the acting enemy) or, for warn_*
-//                                cues, the boss; else centred. opts = { gain, at (s from now) }. Returns true if voiced.
+//                                cues, the boss; else centred. opts = { gain, at (s from now), pitch (cents, + up / - down) }. Returns true if voiced.
 //                                game.js sfx(id) is a thin wrapper. Unknown ids are ignored (drop6.. fold to drop5).
 //   AUDIO.frame(dt)              once per display frame (main.js loop): the director. Reads G and decides the wanted
 //                                song, stems, intensity, ducking and telegraph fallbacks; the 25 ms tick applies them on
@@ -548,6 +548,7 @@ const AUDIO = (() => {
     let rate = 1, fk = 1;
     if (R.vary && R.bus !== 'ui') rate *= 1 + (Math.random() * 2 - 1) * R.vary;
     if (/^(hit|dmg_)/.test(id)) { const k = this.variant[id] = ((this.variant[id] || 0) + 1) % 3; rate *= [1, 1.045, 0.955][k]; fk = [1, 1.15, 0.87][k]; }
+    if (o.pitch) { rate *= Math.pow(2, o.pitch / 1200); this.stats.lastPitch = o.pitch; }   // opts.pitch in cents (game.js: heavier hits lower)
     let end = ts;
     for (const Ly of R.layers) {
       const st = ts + Math.min(Ly.delay || 0, this.cfg.maxSfx - 0.05), dur = Math.max(0.002, Math.min(Ly.dur, this.cfg.maxSfx - (st - ts)));

@@ -46,7 +46,7 @@ function installHooks() {
   const RES = 0.5;
   let grid = null; Q.avoid = [];
   function buildGrid(margin) {
-    const m = G.map, W = Math.ceil(m.W / RES), H = Math.ceil(m.H / RES), pass = new Uint8Array(W * H), hh = new Float32Array(W * H);
+    const m = G.map, W = Math.ceil(m.W / RES), H = Math.ceil(m.H / RES), pass = new Uint8Array(W * H), hh = new Float32Array(W * H), drop = new Uint8Array(W * H);
     const cols = m.colliders.filter(c => c.r > 0);
     for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
       const x = (i + 0.5) * RES, y = (j + 0.5) * RES, h = tileH(m, x, y); hh[j * W + i] = h;
@@ -55,20 +55,21 @@ function installHooks() {
       if (ok) for (const c of cols) { if (Math.abs(c.z - h) > 1.5) continue; if (Math.hypot(x - c.x, y - c.y) < c.r + 0.28 + margin) { ok = false; break; } }
       if (ok) for (const a of Q.avoid) if (a.map === m.id && Math.hypot(x - a.x, y - a.y) < 0.9) { ok = false; break; }
       pass[j * W + i] = ok ? 1 : 0;
+      if (m.dropIn && m.dropIn[Math.floor(y) * m.W + Math.floor(x)]) drop[j * W + i] = 1;   // §29 G3 drop-down landing: any step DOWN into it
     }
-    return { W, H, pass, hh, key: m.id + '|' + m.colliders.length + '|' + margin + '|' + Q.avoid.length, margin };
+    return { W, H, pass, hh, drop, key: m.id + '|' + m.colliders.length + '|' + margin + '|' + Q.avoid.length, margin };
   }
   function getGrid(margin) { const k = G.map.id + '|' + G.map.colliders.length + '|' + margin + '|' + Q.avoid.length; if (!grid || grid.key !== k) grid = buildGrid(margin); return grid; }
   function stepOK(g, i, j, ni, nj) {
     if (ni < 0 || nj < 0 || ni >= g.W || nj >= g.H || !g.pass[nj * g.W + ni]) return false;
-    if (Math.abs(g.hh[nj * g.W + ni] - g.hh[j * g.W + i]) > 1.0) return false;
+    const dh = g.hh[nj * g.W + ni] - g.hh[j * g.W + i]; if (Math.abs(dh) > 1.0 && !(dh < 0 && g.drop[nj * g.W + ni])) return false;
     if (ni !== i && nj !== j && (!g.pass[j * g.W + ni] || !g.pass[nj * g.W + i])) return false;
     return true;
   }
   function los(g, ax, ay, bx, by) {
     const d = Math.hypot(bx - ax, by - ay), n = Math.ceil(d / 0.25);
     let pi = Math.floor(ax / RES), pj = Math.floor(ay / RES);
-    for (let k = 1; k <= n; k++) { const x = ax + (bx - ax) * k / n, y = ay + (by - ay) * k / n, i = Math.floor(x / RES), j = Math.floor(y / RES); if (i === pi && j === pj) continue; if (!g.pass[j * g.W + i] || Math.abs(g.hh[j * g.W + i] - g.hh[pj * g.W + pi]) > 1.0) return false; pi = i; pj = j; }
+    for (let k = 1; k <= n; k++) { const x = ax + (bx - ax) * k / n, y = ay + (by - ay) * k / n, i = Math.floor(x / RES), j = Math.floor(y / RES); if (i === pi && j === pj) continue; const dh = g.hh[j * g.W + i] - g.hh[pj * g.W + pi]; if (!g.pass[j * g.W + i] || (Math.abs(dh) > 1.0 && !(dh < 0 && g.drop[j * g.W + i]))) return false; pi = i; pj = j; }
     return true;
   }
   Q.path = (tx, ty, margin = 0.12) => {
@@ -155,7 +156,7 @@ function installHooks() {
   Q.canvas = () => { const r = DISP.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height, DW, DH }; };
   Q.objects = () => G.map.objects.filter(o => o.warpdoor || o.shrineId || o.chest || o.lever || o.checkpoint || o.tablet || o.use || o.fish || o.barrier).map(o => ({ warp: !!o.warpdoor, shrineId: o.shrineId || null, x: +o.x.toFixed(2), y: +o.y.toFixed(2), chest: !!o.chest && !o.opened, lever: !!o.lever, pulled: !!o.pulled, shrine: !!o.checkpoint, tablet: !!o.tablet, use: o.use ? o.use.kind : null, barrier: o.barrier || null, gid: o.gid || null, fish: !!o.fish, id: o.src && o.src.id, label: o.src && o.src.label, title: o.src && o.src.title, tier: o.src && o.src.tier }));
   Q.isEq = (slot, uid) => !!(G.player.equip[slot] && G.player.equip[slot].uid === uid);
-  Q.bag = () => G.player.bag.map((it, i) => it && !it.gem ? { i, uid: it.uid, slot: it.slot, rarity: it.rarity, base: it.base, ilvl: it.ilvl, reqLvl: it.reqLvl, name: itemName(it), fam: (typeof FAMILY_TIERS !== 'undefined' && Object.keys(FAMILY_TIERS).find(f => FAMILY_TIERS[f].some(t => t.split(':')[0] === it.base))) || null, curFam: G.player.gear.weapon, score: itemScore(it), eq: itemScore(G.player.equip[it.slot]) } : null).filter(Boolean);
+  Q.bag = () => G.player.bag.map((it, i) => it && !it.gem ? { i, uid: it.uid, slot: it.slot, rarity: it.rarity, base: it.base, ilvl: it.ilvl, reqLvl: it.req != null ? it.req : it.reqLvl, name: itemName(it), fam: (typeof FAMILY_TIERS !== 'undefined' && Object.keys(FAMILY_TIERS).find(f => FAMILY_TIERS[f].some(t => t.split(':')[0] === it.base))) || null, curFam: G.player.gear.weapon, score: itemScore(it), eq: itemScore(G.player.equip[it.slot]) } : null).filter(Boolean);
   function itemScore(it) { if (!it) return 0; const r = RARITY[it.rarity] ? RARITY[it.rarity].i : 0; return r * 1000 + (it.ilvl || it.reqLvl || 0) * 10 + (it.dmg || it.power || 0); }
   Q.focusList = () => UI.focus.list.map(r => ({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h }));
   Q.touchBtns = () => touchButtons().map(b => ({ slot: b.slot, x: b.x, y: b.y, r: b.r }));
@@ -218,7 +219,7 @@ class Bot {
       // boss timer
       if (s.boss && !this.bossRun) { this.bossRun = { type: s.boss.type, lvl: s.p.lvl, bossLvl: s.boss.lvl, at: +this.el(), t0: Date.now(), deaths0: s.deaths, hp: s.boss.max, pot0: s.p.pot, map: s.map, maxHp: s.p.maxHp, wk: s.p.wid }; this.log('BOSS START ' + s.boss.type, this.bossRun); }
       if (this.bossRun && s.boss) this.bossRun.minHpPct = Math.min(this.bossRun.minHpPct == null ? 100 : this.bossRun.minHpPct, Math.round(s.p.hp / s.p.maxHp * 100));
-      if (this.bossRun && !s.boss && s.st === 'play') { const b = this.bossRun; this.bossRun = null; b.dur = +((Date.now() - b.t0) / 1000).toFixed(1); b.deaths = s.deaths - b.deaths0; b.killed = !!this.bossKilled; this.bossKilled = null; b.potions = Math.max(0, b.pot0 - s.p.pot); this.out.bosses.push(b); this.log('BOSS END ' + b.type, b); this.save(); }
+      if (this.bossRun && !s.boss && s.st === 'play') { const b = this.bossRun; this.bossRun = null; b.dur = +((Date.now() - b.t0) / 1000).toFixed(1); b.deaths = s.deaths - b.deaths0; b.killed = !!this.bossKilled || s.deaths === b.deaths0;   /* the boss bar went away without a death = a kill (the kill event's boss flag is not always set) */ this.bossKilled = null; b.potions = Math.max(0, b.pot0 - s.p.pot); this.out.bosses.push(b); this.log('BOSS END ' + b.type, b); this.save(); }
       // enemy stuck in wall check
       this.enemyStuck(s);
     }

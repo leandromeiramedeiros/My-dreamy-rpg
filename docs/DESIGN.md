@@ -1319,16 +1319,16 @@ The look on the hero escalates through the tiers: grey → ornate → sun- or mo
 | Sword | Rusty Blade | Dawnblade | Sunforged Blade | Aurora Edge | Dawn Eternal | Morrowbane |
 | Rapier | Tin Needle | Moonpoint | Silver Estoc | Starpoint | Needle Eternal | *Sorrel's Needle* |
 | Mace | Iron Cudgel | Dawnmace | Sunwarden Mace | Aurora Maul | Vow Eternal | *Lamplighter* |
-| Axe | Splitting Axe | Dawnbreaker | Sunforged Axe | Aurora Cleaver | Dawn Colossus | Kharzul's Anvil-Axe |
-| Hammer | Sledge | Sunhammer | Mountain Maul | Aurora Anvil | Hammer Eternal | The Unmaking |
-| Halberd | Pike | Dawnglaive | Sun Halberd | Aurora Partisan | Reach Eternal | Vigil's Pole |
-| Bow | Hunter's Bow | Moonbow | Silverwing | Eclipse Longbow | Moon Eternal | Sorrel's Bow |
-| Crossbow | Hand Crossbow | Dawn Arbalest | Sunbolt | Aurora Ballista | Bolt Eternal | Morrow's Quiet |
+| Axe | Splitting Axe | Dawnbreaker | Sunforged Axe | Aurora Cleaver | Dawn Colossus | Forgehand |
+| Hammer | Sledge | Sunhammer | Mountain Maul | Aurora Anvil | Hammer Eternal | Chainbreaker |
+| Halberd | Pike | Dawnglaive | Sun Halberd | Aurora Partisan | Reach Eternal | Vigil's Glaive |
+| Bow | Hunter's Bow | Moonbow | Silverwing | Eclipse Longbow | Moon Eternal | Moonmaw's Bow |
+| Crossbow | Hand Crossbow | Dawn Arbalest | Sunbolt | Aurora Ballista | Bolt Eternal | Four Wardens |
 | Chakram | Rim | Moon Chakram | Silverring | Eclipse Ring | Ring Eternal | Aerin's Halo |
-| Staff | Willow Wand | Starfall Staff | Comet Rod | Nebula Sceptre | Night Eternal | Morrow's Lullaby |
+| Staff | Willow Wand | Starfall Staff | Comet Rod | Nebula Sceptre | Night Eternal | Emberfall |
 | Spellbook | Primer | Dreambook | Sun Codex | Aurora Grimoire | Book Eternal | The Names on the Pillars |
 | Orb | Glass Bauble | Starfall Orb | Comet Orb | Nebula Sphere | Orb Eternal | *Last Light* |
-| Daggers | (§17 tiers) | | | | | |
+| Daggers | (§17 tiers) | | | | | Reliquary |
 | Claws | Bone Claws | Nightclaws | Silvertalon | Eclipse Claws | Claws Eternal | Bramblehorn's Roots |
 | Fans | Paper Fans | Moonfans | Silverplume | Eclipse Fans | Fans Eternal | Mirelle's Tide |
 
@@ -1427,11 +1427,11 @@ freely.
 
 Tier names and per-tier visuals follow the expert's table, kept in the production log.
 * Examples:
-  * Warden: Iron Mail → Knight Plate → Sunforged Plate → Aurora Plate → Aegis of Dawn
-  * Duelist: Swordsman's Coat → … → Blade Eternal, Mythic *Aerin's Coat*
+  * Warden: Iron Mail → Knight Plate → Sunforged Plate → Aurora Plate → Aegis of Dawn → Mythic Shardheart Plate
+  * Duelist: Swordsman's Coat → … → Blade Eternal, Mythic Oathless Jacket
 * **Director ruling on Mythic names:** there are too many "Sorrel's" and "Pip's" items, and "Warden's Lantern" collides
   with the Lantern Plate. All Mythic names get one naming pass across §23 and §24 before M7, so each story name is used
-  once.
+  once. Done: see §24.2.
 * **Combos** use tags, never slot checks. Examples:
   * Rapier + Duelist: two parries sharing one ICD
   * Hammer + Juggernaut: the "Faultline" Duo; their cracks share a tag
@@ -1471,6 +1471,41 @@ the schedule:
 * The weapon and armour **parts kit** is built in M3, before any variant art.
 * Art runs as a continuous lane: one art agent on variants and one on enemies, in parallel with maps.
 * The cut orders in §23.6 and §24 stay on file as emergency levers only.
+
+### 24.2 Mythic names (naming pass)
+Naming pass over the 15 weapon variants (§23.3) and 12 suits (§24), per the director ruling above. Each story name is used by
+one Mythic only. The director renames (*Sorrel's Needle*, *Lamplighter*, *Last Light*) and the existing uniques (Pip's
+Lantern, Sorrel's Vow, Morrowbane) are kept. No name gives away the twist (STORY.md).
+
+| Class | Variant | Mythic name | Refers to |
+|---|---|---|---|
+| Blades | Sword | Morrowbane | Morrow's boss drop at the Spire (existing unique) |
+| Blades | Rapier | *Sorrel's Needle* | Sorrel, the exiled fifth Warden (director rename) |
+| Blades | Mace | *Lamplighter* | Pip, the last light (director rename) |
+| Greatarms | Axe | Forgehand | Kharzul, who forged the Shards in Emberfall Caldera |
+| Greatarms | Hammer | Chainbreaker | Caldera tablet: "He forged the chains after." |
+| Greatarms | Halberd | Vigil's Glaive | The Twin Vigils who guard the Spire gauntlet |
+| Shots | Bow | Moonmaw's Bow | Moonmaw of the Starlit Shoals (Mythic chance) |
+| Shots | Crossbow | Four Wardens | Tablet "Four Wardens. One would not wake."; four-bolt clip |
+| Shots | Chakram | Aerin's Halo | Aerin, Morrow's daughter; the disc returns in a ring |
+| Foci | Staff | Emberfall | Emberfall Caldera; the fire the staff calls down (Meteor) |
+| Foci | Spellbook | The Names on the Pillars | Gloomspire plaza pillars; each page is a name |
+| Foci | Orb | *Last Light* | Pip's light (director rename) |
+| Shadows | Daggers | Reliquary | Oath Reliquary's mimic vault; the Thief's backstab and Marks |
+| Shadows | Claws | Bramblehorn's Roots | Bramblehorn, keeper of Misty Pinewood's roots |
+| Shadows | Fans | Mirelle's Tide | Lady Mirelle of the Sunken Grotto |
+| Heavy | Warden | Shardheart Plate | The Shards, glowing at the chest (replaces Warden's Lantern) |
+| Heavy | Crusader | Gloomspire Vestment | Gloomspire Ruins, where the Wardens swore |
+| Heavy | Juggernaut | Forge Deep Cuirass | Forge Deep, where Slagheart the armoured golem stands; the tank's chest |
+| Caster | Dreamweave | Nightlong Shroud | Spire ascent tablet: "He said: one more night." |
+| Caster | Frostweave | Brinemother's Veil | Brinemother of the Drowned Vault |
+| Caster | Stormweave | Gravewind | The Drifting Isles, the Wardens' graves; their storm lightning |
+| Medium | Stalker | Pinewood Mist | Misty Pinewood, where the trees are running |
+| Medium | Thornwarden | Briarwatch Mantle | Bramblehorn's Clearing, the briar-ringed arena at Misty Pinewood's heart |
+| Medium | Duelist | Oathless Jacket | The Oathless, the armoured knight of the Oath Reliquary |
+| Shadow | Shade | Gloamveil | Woven from the Gloaming Below, where Morrow buried his nightmares |
+| Shadow | Nightshade | Mossjaw's Skin | Mossjaw, the Root Hollow mini-boss |
+| Shadow | Mirage | Glasswarp Silk | The Unmade (Spire enemy) copies your silhouette; mirror images |
 
 ## 25. Fewer, bigger maps: 4× area (client decision; expert plan; director-approved; supersedes §22's map list, keeps every hook)
 
@@ -1536,3 +1571,417 @@ Morrow keeps his own map.
 **Flags:**
 * If the client later wants *more* maps at this size, the art lane breaks first.
 * Eight full rasters must never be resident at once. The chunk cache is mandatory on phones.
+
+## 26. Multi-bar boss phases, the gear loop, skill-variant legendaries (client request; expert-designed; director-approved)
+
+### 26.1 Boss phases: one HP bar per phase
+* **Bar count:** mini-boss 2, guardian 3, act boss 4, Morrow 5. Each bar is its own pool.
+  * Damage clamps at the end of the bar, so one burst can't skip a phase.
+  * Between bars there is a 1.2–1.8 s transition with the onEnter telegraph.
+  * The HUD shows a segmented bar.
+* **Each new phase turns three knobs:**
+  1. One new move.
+  2. One existing move gains a *cunning* form: a feint, a delayed second hit, or aim at the hero's predicted position.
+  3. More aggression: `windMul` goes 1.0 → 0.85 → 0.7 → … and the gaps between moves get shorter.
+* **Fairness floors still apply:**
+  * Melee-range telegraphs keep a wind-up of at least ~0.55 s, so a 0.3 s reaction plus a sidestep fits.
+  * The 45 % hit cap (Story 30 %) and `bossFairness` stay.
+* **Harder through pattern, not numbers:**
+  * The §20 fight-length bands stay.
+  * Difficulty comes from the extra phases and the cunning forms.
+  * A Hard mode arrives later as an NG+ modifier.
+* **Engine:** `bosses.js` already supports `phases[].hpBelow / moves / onEnter / windMul`. The new work is the bar clamp,
+  the segmented bar, cunning move forms and data for every boss. Mossjaw (2 bars) and Bramblehorn (3 bars) are rebuilt first.
+
+### 26.2 The gear loop: farm until you can beat the boss
+* **The balsim live table target changes** (this reverses the M2b ruling that an under-geared hero must always win):
+  * at −1 gear tier: **3–4 / 6 wins**
+  * at reference gear: **6 / 6 wins**
+  * Red flags: a −1-tier win rate outside 3–4/6, or anything under 6/6 at reference. On Story, also 0/6 at −2 tiers.
+* **The boss door shows "Recommended ilvl N · yours M".** This is information, never a lock.
+* **Elite pockets:** each map has 2–3 near its boss. The first clear of each guarantees a Rare at or above (boss ilvl − 2).
+  This farming is optional and fits inside the 24-min map cap (about 6 min of it).
+* **Retries are cheap:** a shrine-to-boss warp makes a retry cost about 20 s, not a walk.
+* Caves, vaults and side sections are where the loop happens. They exist already, so the loop adds content density,
+  not map count.
+
+### 26.3 Skill-variant legendaries: borrowed verbs
+* A skill-variant legendary is an **aspect that swaps one skill slot for a sibling variant's skill in the same class**.
+  * Example: a Sword legendary carries the Rapier's Q while keeping the Sword's E and R.
+  * It reuses §23's cast functions, so it adds zero new casts against the 36 cap.
+  * It enables cross-variant builds.
+* **Count:** one per class, 5 in total, *inside* the 18-unique budget. They are the 5 world uniques of §19.5, found in
+  vaults or by fishing: discoveries, not boss drops.
+* **Balance:** the borrowed skill uses the host weapon's power (pp units), and its rune slot is locked while the legendary
+  is equipped.
+* They ship as each sibling variant lands (M4–M7).
+
+### 26.4 Mobile performance: stay on Canvas 2D (expert ruling)
+* **Why no engine switch:** every hitch found so far was algorithmic (the synchronous map build, a per-pixel moon
+  redraw), not a Canvas 2D ceiling. The file:// and no-build constraints plus the working codebase make a rewrite a
+  milestone-sized risk.
+* **Perf lane order:**
+  1. Measure on a real device, using an on-screen p95 readout behind `?perf=1`.
+  2. Split the play.js perf budget by phase: ground, entities, lights, bloom, HUD.
+  3. On phone, render at 0.5–0.75 DPR with smoothing off, then upscale.
+  4. Lights and bloom at quarter resolution with a light cap. On phone, a particle cap and frame-skip. No per-frame
+     allocations.
+  5. Static layers go to offscreen canvases (the same pattern as the cached hero).
+* **Switch criterion:** only if, after steps 1–5, a mid-range Android still shows p95 > 25 ms *and* the profile is
+  draw-call bound. Even then, swap only render.js's sprite path to a thin WebGL batcher behind the same draw API.
+  That is a renderer swap, never a game-engine switch.
+
+## 27. Hit feel: power-scaled hitlag, death fling and tumble (expert meeting 2026-10-20; director-approved)
+Full minutes: `docs/meetings/2026-10-20-feel-ui.md` (R1, R2). Summary:
+* **Hitlag**
+  * **Formula:**
+    * Computed in one place, `damageEnemy`, using `r = dmg / e.maxHp` (the phase bar's max once §26.1 lands) and the skill
+      weight `w` (basic 1.0, heavy 1.5, ultimate 2.0).
+    * **Target-only freeze** on every hit, projectiles included: `clamp(round((2 + 6r) * w), 2, 8)` steps. It adds zero
+      input latency.
+    * **Global freeze** (largest applicable row, in steps):
+
+      | Trigger | Steps |
+      |---|---|
+      | crit | 3 |
+      | kill | 3 |
+      | r ≥ 0.25 | 4 |
+      | r ≥ 0.5, or an ultimate | 6 |
+      | boss BREAK | 8 |
+
+      A budget of 12 steps per rolling 0.5 s applies. Any request over budget becomes target-only.
+  * **AoE:** one global freeze per cast, taken from the highest r. Damage-over-time ticks never hitlag.
+  * **Loop fix:** count freeze in unscaled steps, before slowmo is applied. This fixes the boss-death freeze stretching to 0.7 s.
+  * **Setting:** Off / Light / Full. The companion signals below stay on even when it is Off.
+  * **Companion signals** (all scale with r):
+    * damage-number size
+    * enemy flash
+    * knockback × (0.7 + 0.6r)
+    * hit particles 5 + 8r
+    * the hit sound pitches lower on heavier hits
+* **"Ragdoll" means a death fling, not physics.**
+  * Corpse records are pooled: 8 on phone, 12 on desktop.
+  * The body arcs away from the hit, bounces once, squashes and dissolves into motes. Speed and height scale with r.
+  * Pixel sprites are never rotated.
+  * Loot, XP and triggers stay immediate.
+  * **Exceptions:**
+    * Damage-over-time kills slump in place.
+    * Swarm members squash-pop.
+    * Bosses hold a death pose and dissolve in stages. They never fling.
+* **Tumble:** a non-boss hit with r ≥ 0.3 adds knockback ×1.5, a 0.3 s stun and a visual hop. The hop is a draw offset only;
+  it never writes `e.z`.
+* **Cut:** verlet bodies, gibs, sprite rotation, boss fling, camera zoom punch, slowmo on ordinary kills, additive hitstop.
+
+## 28. The opening: the hero starts bare (story & pacing expert 2026-10-20; director-approved; supersedes §16.2 timings and §17.1 "starting kit")
+Full feedback: `docs/meetings/2026-10-20-opening.md`.
+* **Start:** the hero wakes in the Dreamer's bed in a nightshirt, empty-handed. Pip is a small warm light. The HUD fades in
+  one piece per new noun.
+* **When each slot fills:**
+
+  | Time | What fills |
+  |---|---|
+  | 0:45 | the weapon, a sword standing in the grass |
+  | ~2:00 | the first chest: Common Iron Mail + the Origin ring + a Chipped gem; the bag opens on the mail |
+  | 2:20 | a fishing gem goes into the mail's socket |
+  | 3:50 | the Iron Cap, lying on a child's bed in the cottage (a silent twist seed) |
+  | 4:50 | the boots, dropped by the slime ambush |
+  | ~7:00 | the first Uncommon, from Pinewood room 1 |
+  | ~9:00 | the elite's Rare weapon, dropped with the key |
+  | 10:00 | the Hollow door shows "Recommended ilvl", which introduces the §26.2 loop |
+
+* **The Origin ring is found, never pre-equipped.** The ledge chest's `loot:'ring'` is removed.
+* **The twist is seeded by placement and silence.** The only new line is Pip's "Three days. You've been asleep three days."
+  Every STORY.md line stays.
+* **Pip gets a body now:** a light parented to the hero that drifts toward each objective. The full companion stays M7.
+
+## 29. World art pass: ground, cliffs, island edges, trees, density, tall set pieces (expert level designer 2026-10-20; director-approved)
+The full report is `docs/meetings/2026-10-20-world-art.md`, with renders in `docs/meetings/world-art/`. Client complaints: the
+look of the tile maps, ugly trees, no volume or density, floaty borders. Client wants tall set pieces and vantage points.
+
+### 29.1 Diagnosis
+* **Ground speckle:** per-pixel hash jitter and "flecks" make the ground read as confetti (`maps.js:surfaceColor`).
+* **Hard joins:** there are no transition tiles between ground types.
+* **Lollipop trees:** the Vale trees are frozen PNG sheets (`sprites.js`, applied over `art.js` by `applySprites`). Each is one
+  ellipse with an outline.
+* **Cardboard cliffs:** cliffs have 1 strata row and no occlusion (shadowing at the base), overhang or cast shadow.
+* **Flat maps:** 83 % of the Vale is flat.
+* **Bald paths:** trees are spaced at 5 per 10×10 tiles, and paths are bald.
+* **North/west coasts have no thickness:** this is the biggest floaty cue. The underside curtain is uniform and ends in a line.
+
+### 29.2 Fix groups, each its own PR, in this order
+1. **Ground grammar, cliff faces v2, island edge v2, palette pass:** ~5 agent-days.
+   * Ground and cliffs:
+     * Remove the speckle.
+     * 4 variants per tile.
+     * 47-blob transitions.
+     * Lip highlights.
+     * 3-band strata with occlusion at the base, an overhang lip and baked wedge shadows.
+     * Height fog.
+   * Coasts:
+     * A raised north/west coast band.
+     * A 3-band skirt: lobes, then roots, then an alpha fade.
+     * The island's shadow on a 2-layer cloud sea.
+     * Hue-shifted 7-step ramps.
+2. **Trees v2, a canopy layer over the hero with fade, density ×2.5, 16 ground-decal kinds per zone:** ~5 agent-days.
+3. **Tall set pieces:** ~6 agent-days.
+   * New generator pieces: `stack`, `switchback`, root ladder and drop-down ledge.
+   * The Vale's *Dreamer's Cairn* (h 14) and Pinewood's *Hawk's Rest* (h 16).
+   * A vantage reveal cinematic: fog fill plus a full-map blit.
+   * Occlusion fixes: hero silhouette, cutaway, camera height bias, culling pads, sort key.
+* **Later zones** get one signature tall piece and one vantage each:
+
+  | Zone | Tall piece | Height |
+  |---|---|---|
+  | Ruins | Broken Stair | h 20 |
+  | Grotto | Tide Well, inverted | — |
+  | Caldera | Rim Walk | h 24 |
+  | Spire | 6 ledges | to h 30 |
+
+### 29.3 Process
+* Each zone gets a mood board (`docs/art/<zone>.md`).
+* Each section names one signature moment.
+* Landmark briefs, variation budgets and anti-samey generator rules are audited by `build.js`.
+* Art stays procedural in code. Approved output is frozen to sprite sheets. Props of 24 px or less are hand-written ASCII.
+* **Hero zone:** the Misty Pinewood outer section is polished to the bar first, then the rules port to the Vale.
+
+### 29.4 Acceptance bar
+Measured on 6 fixed camera shots in each PR:
+* Silhouette test at 120×68.
+* At least 5 value bands.
+* Fewer than 50 specks per frame.
+* Density per frame: at least 10 trees and 20 clutter items.
+* No edge without thickness, and at least 3 strata per cliff.
+* At least 3 height levels in 4 of the 6 shots.
+* Trees show three leaf masses and a rim light.
+* Perf gate: phone p95 ≤ 25 ms after the pass, and ≤ 20 ms before M4 ships.
+
+## 30. Legendary: the spirit clone, "Echo" (client request, inspired by Dragon's Dogma "Wild Fury"; director-approved)
+* **Fantasy:** a colourful, translucent spirit of the hero appears just after you attack and repeats your attacks in
+  succession while you keep fighting.
+* **Mechanics**
+  * Every basic attack and Q/E cast is recorded as `{skillId, aimRel}`.
+  * **Position:** the clone stands where the hero was 0.4 s ago, read from a 24-frame ring buffer. It is an after-image,
+    not a pet, so it follows you through a dodge.
+  * **Timing:** it replays each recorded attack 0.4 s later through the existing cast functions, with `src:'echo'`. That
+    adds no new casts.
+  * **Queue:** at most 4 attacks; the oldest is dropped.
+  * **Lifetime:** it fades after 2 s without an attack and re-forms on the next one.
+  * **Damage:** the original hit's final damage × **k = 0.4** (a start value; balsim decides). It is **retyped to magic**:
+    the element with your highest amplification (`argmax` of the element % bonuses), arcane by default, never
+    slash/physical. Reactions apply, so a fire build's echo Burns.
+* **Exclusions** (these are the balance):
+  * **Never R.** This also stops it stacking with Pip's Lantern.
+  * No MP on hit, and ult charge at 50 %.
+  * **No on-hit procs:** an EFFECTS chain guard means echo hits can't trigger boons, affix triggers or the echo itself.
+  * Not a summon: untargetable, no aggro, and it doesn't count toward the §24 summon cap.
+  * **Hit feel:** target-only hitlag of at most 2 steps, never a global freeze. Half particles.
+* **Balance gate (balsim):** on reference gear at its drop level, an element-focused build gains +25–30 % DPS and an
+  unfocused build at most +15 %. Bramblehorn-class fights must stay inside their length band. If they don't, lower k first.
+* **Visual:** the cached layered hero, tinted, at alpha ~0.5 with additive blending and the mythic aura's hue cycle. It is
+  made of cached blits only.
+* **Engine:** one new EFFECTS hook, `when:'cast'`, in `useSkill`. It is built right after the §27 hit-feel lane, because it
+  shares that pipeline.
+* **Name and placement:** the rule id is `echo`. The story expert names it at placement (no reused character names). It
+  drops late (Act III+) as a reward for a built character.
+* **Unique budget:** a **19th unique (client decision)**, on a weapon legendary that works with every weapon class. It is the one deliberate exception to the §19.5 cap of 18; the cap stays at 19 from here on.
+
+## 31. Lumina study: adoption decisions (client + expert game director, 2026-10-20)
+Source: gitlab.com/stubborn-hug/lumina. Minutes: docs/meetings/2026-10-20-lumina.md. Client decision: the author confirmed
+it is open source; we may copy code/data, crediting every lift in docs/CREDITS.md. Take techniques, never identity
+(no gold/navy UI, no compositions, no Cinderheart-as-a-whole).
+* **Tilt-shift: none.** Keep the crisp look; no band blur, no bokeh-disc pass.
+* **Combat VFX:** pixel FX atlas (grey-level frames tinted per element, dithered fade, data-driven effect table).
+  Prototype 3 effects first (slash, fire burst, frost hit); the client approves them before the full swap in M5.
+* **Lock-on: never.** Free aim only; the melee magnet (M4) covers target assist.
+* **Time of day / weather: named moods only.** A fixed mood per section or vantage, taken from Lumina's keyframe table and
+  recoloured to our ramps; mist/overcast as a mood in M5. No running clock, no rain or snow.
+* **Stamina at 0:** "winded" (the action fires; recovery ×1.35). Never refused.
+* **Kharzul:** takes at most two of Cinderheart's eight mechanics, never the brazier charge; the rest are spread across
+  the other bosses as §26.1 cunning-form data.
+* **M3 rides existing lanes:**
+  * Perf lane: emitter-only bloom, governor hysteresis, light-cap hysteresis, fog clear zone (desktop tier).
+  * §29 G2: leaf-cluster crowns, the ground-detail scatter grammar and travelling gusts.
+  * §27: victim jitter of ±1 px.
+* **M4 (about 18 days):**
+  * input buffer and cancel windows
+  * melee magnet
+  * poise and rear crits
+  * attack tokens (melee 3 / ranged 2)
+  * a global telegraph grammar
+  * pickups v2
+  * a trigger condition grammar (StoryCondition)
+  * quest stages with live counters
+  * perfect dodge
+  * the Cinderheart knobs as boss data
+
+## 32. Element particle language and status visuals (expert VFX director, 2026-10-20; director-approved)
+Full minutes: `docs/meetings/2026-10-20-element-vfx.md`, which is the build spec. This section is the summary; §33 rules the
+status *mechanics*.
+
+* **Client request:** every element shows its own particles everywhere it appears, HUD and menus included.
+* **One registry, `ELFX` (new `js/elfx.js`):** per element it holds a 4-colour ramp, a motif in pixels, a motion model,
+  rates, light, and HUD colour. The five divergent colour tables are derived from it, and so is the §31 pixel-FX atlas.
+* **Motifs:**
+
+  | Element | Motif |
+  |---|---|
+  | fire | rising, flickering ember diamonds |
+  | frost | falling 5 px snowflakes |
+  | lightning | jittering 2-frame zigzag strobe |
+  | nature | tumbling leaves |
+  | arcane | rising bars, plus runes orbiting the target |
+  | holy | slow motes that blink into a cross |
+  | slash | streaks |
+  | pierce | darts |
+  | shatter | bouncing shards |
+  | wind | per the A9 template, see §33 |
+
+  Lightning and holy are told apart by shape, motion and lifetime.
+* **Rendering:** grey-level sheets are baked once and tinted per element through one tint cache, shared with the atlas.
+  Motion is closed-form, so frame-skip stays safe. World particles join `G.parts`, inside the existing caps. A separate
+  screen-space `UIP` pool serves HUD and menus (48 / 24 / 12 slots).
+* **Where particles never go:** damage numbers, HP bars, tooltip text, touch controls, the minimap, the bag at rest.
+* **Budget:** zero net cost on phone (moves per-draw spawns into update), parts phase ≤ 0.6 ms on phone. Particles never
+  enter bloom.
+* **Settings:** a new `particles` setting (Full / Reduced / Off), defaulting to Reduced under prefers-reduced-motion.
+* **Status visuals:** each status gets a tint key, a cached overlay (char, ice, vine, rent), a pose (Frozen holds,
+  Shocked jitters), a decal, and an 8×8 over-head glyph with a stack digit.
+* **The §31 prototype board** becomes:
+  * 3 atlas effects (slash, fire burst, frost hit);
+  * the slash, fire and frost particle sets;
+  * the lightning/holy 16 px chip pair;
+  * the perf pair.
+* **Estimates:** P0–P7 ≈ 7.5 agent-days and S1–S5 ≈ 7 agent-days (see the minutes). Each added element costs about
+  +0.5 agent-days.
+
+## 33. Elements: roles, statuses, reactions and world verbs (elements meeting 2026-10-20; director-approved; client decided C1 (Wind yes), C3 (Opal yes), C6 (world keys on the main path), C8 (new M4b); the rest default to the recommendation)
+Full minutes: `docs/meetings/2026-10-20-elements.md`. Supersedes §5b's status table and §15.4's "seven, no more"; amends
+§20.2 (system 3 = "elements, reactions and world verbs"), §23.2 (Bow E, Halberd Q, Fans Q, Orb R lines) and the VFX
+minutes' B2/B3 draft. The visual and data contract (VFX A2, A9, B4, B5) stands unchanged.
+
+### 33.1 Roster
+* **Hero damage elements (9):** slash, pierce (physical, kept split), fire, frost, lightning, nature, arcane, holy, **wind**
+  (story name *Breath*). `DMG_ELS` and `RES_ELS` both list wind (`RES_SHORT.wind = 'Wi'`).
+* **shatter** stays in `DMG_ELS` as the Shatter reaction's damage type only (no ladder, resist, gem or skill).
+* **gloom** is enemy-only (Dread / Gloomed on the hero). **Wet** is a surface flag on bodies (no damage, resist or gem).
+* Rejected or merged: earth → Rent + cracks + glyphs; water → Wet; light/dark → holy/gloom; poison → nature; blood → slash;
+  void → gloom/arcane; time/gravity → tags; sound → cut.
+
+### 33.2 Build-up and ladders (one mechanism; `js/status.js`, VFX B5 shape)
+* Every elemental hit adds **build** = `25 · w · proc · (1 + statusChance + elementAmp)`; `w` = §27 weight, `proc` = §18.6
+  proc coefficient (basic 1.0, projectile 0.6, zone tick 0.3, reflected 0.3, summon 0.4, Echo 0.5). Weak ×1.5, resist ×0.5,
+  immune 0. Bosses ×0.25, elites ×0.5. Tiers at **50 / 100**. Decay 20/s after 1.5 s without a hit.
+* **Two ladders live per body** (+ Wet + the stagger bar). Poison stacks ×3, Marks ×5; everything else refreshes.
+* A reaction consumes its ladder and starts a **4 s (boss 8 s) reaction cooldown** on that body's tier 2. This is a cooldown,
+  never a resistance: bosses are never immune to statuses (§5b).
+* Cast options `burn / slow / freeze / stun` become build amounts through one mapping table (`freeze: true` = tier-2 build at
+  once, so Frost Nova still freezes). Heals carry the `heal` tag, no element.
+* Hero side: tier 2 is never a hard CC. Frozen → **Numb** (0.5 s root, dodge breaks it); Lifted → a 1-tile knockback; Rooted
+  as today (dodge i-frames beat it); Dazzled → aim assist off 1 s; Shocked → MP regen 0 for 2 s; DoTs tick 2 % max HP / 0.5 s.
+  Cleanse: potions (Cleansing Sash), shrines, holy skills, Dreamveil.
+
+| Element | Role | Tier 1 | Tier 2 | Boss | Gem / hooks |
+|---|---|---|---|---|---|
+| fire | explosive force + burning | **Burning** 3 s: 14 / 0.5 s, +10 % fire dmg taken | **Ablaze** 4 s: tick ×2; every fire hit on it splashes 30 % to 1 tile; expiry burst applies Burning 1 tile | Ablaze allowed, tick ×0.5 | Ruby; `fireDmg`; `fireBurn`; Ashen Signet |
+| frost | slow → stop → break | **Chilled** 3 s: speed ×0.6, wind-up ×1.2 | **Frozen** 1 s (boss 0.25 s): no action; **any physical hit Shatters**, a fire hit Thaws | never twice in 8 s | Sapphire; `frostDmg`; `frostPower`, `shatterRadius`; Tide-Edge (+Wet trail) |
+| lightning | mini-stuns → chains | **Jolted** 3 s: 0.15 s micro-stun on apply (interrupts wind-ups ≤ 0.3 s; ICD 1.5 s; bosses flinch only), next lightning hit crits | **Shocked** 2.5 s: +20 % dmg taken; Shocked bodies ≤ 2 tiles arc to each other 10 % / 0.5 s | +10 %; arcs boss → minions only | Topaz (+1 jump / 2 grades); `lightningPower` (+1 s Shock), `conductJump` |
+| nature | attrition + roots; the enabler | **Poisoned** 5 s: 8 / 0.5 s ×3 stacks, −20 % healing | **Rooted** 1.2 s: can attack, can't move | Rooted → 1 s Chilled | Emerald; `naturePower` |
+| arcane | reliable neutral; marks | **Marked** ×5, 6 s: +4 % taken / mark; ignores 50 % resist | **Unravelled**: 5 marks → 30 % weapon dmg each, 1 s speed ×0.5 | marks ×0.25 build | Amethyst; `markCap` (un-dormed at S4), `arcanePower` |
+| holy | gloom answer; cleanse, reveal | **Smitten** 4 s: +50 % holy taken if gloom, +15 % else | **Dazzled** 1.5 s (boss 0.4 s, once / 10 s): loses its target | reveals Morrow's mirror | no gem; `holyDmg`, `resHoly`, `holyPower` |
+| slash | wounds, armour break | **Bleeding** 4 s: 6 / 0.5 s, ×2 while moving | **Rent** 4 s: −15 % def (boss −8 %), +1 stagger per hit | stagger bar = tier 3 | `slashDmg`; implicits |
+| pierce | precision, exposure | **Pierced** 3 s: +10 % crit vs it | **Pinned** 0.6 s (boss 0): stun + stagger +1 | Pierced only | `pierceDmg`, `pierce` |
+| **wind** | displacement + spread | **Buffeted** 3 s: pushed 1 tile along the gust; wind-up ×1.2; its projectiles drift 15° | **Lifted** 0.8 s (elite 0.4 s, boss never): knocked up (hop offset, still hittable), drawn 1 tile to the gust's centre, lands with 0.3 s stun; flying = grounded 1.2 s; armoured → Buffeted only | never Lifted; Buffeted = 0.5-tile shove in `open ≥ 1 s` moves | **Opal** (C3): armour speed / `resWind`, weapon chargeSpeed, amp = radius; `windPower`, `driftReach` |
+| Wet (surface) | enabler | standing in / under water, rain zones, Tide-Edge trail; lasts 4 s | – | only by arena rule (Mirelle bar 2) | – |
+| gloom (enemy) | hero debuff | **Dread**: −15 % dmg dealt, −20 % MP regen | **Gloomed** 3 s: vignette, −10 % resists in gloom areas | – | `resGloom`, Amethyst |
+
+### 33.3 Reactions: eight named, all readable (ceiling 8)
+| Reaction | Trigger | Effect |
+|---|---|---|
+| Shatter | physical (slash / pierce / stagger ≥ 1) on Frozen or 3× Chill | consumes; 150 % weapon dmg AoE 1.5 tiles, typed shatter |
+| Wildfire | fire on Poisoned | consumes; Burning spreads 2 tiles |
+| Conduct | lightning on Chilled **or Wet** | Shock jumps to every Chilled / Wet body within 3 tiles |
+| Overload | arcane on Shocked | consumes; +40 % dmg, −1 s cooldown |
+| Purify | holy on Burning / Poisoned | consumes; heals 5 % max HP, +50 % vs gloom |
+| Rupture | pierce on a full stagger bar | consumes the break; guaranteed crit (Medium rule: spreads Poison) |
+| Detonate | stagger ≥ 3 on Burning | consumes Burn, 30 % weapon dmg per stack |
+| **Drift** | wind on a body with any tier-1 status | that status is carried to every body in the gust (≤ 6, build ×0.5, 1 Poison stack / 1 Mark, never tier 2) |
+* Each has a unique input pair, a name pop, its own sfx (`rx_drift` added) and motif, and a bestiary line.
+* **Silent interactions (no pop, no sfx; 4, may grow to 6):** Thaw (fire on Frozen: ends it, +15 %, cosmetic steam that never
+  hides a telegraph), Quench (frost ends Burning, applies Chilled), Flash-freeze (frost on Wet → Frozen at once, ICD 6 s),
+  Dry (fire or 2 s of wind ends Wet).
+* **Cascade bound:** a status applied by a reaction is `viaReaction` (1 s lockout, build ×0.5); chain depth 2; reaction dmg
+  ≤ 300 % weapon dmg/s per body; the shatter-typed AoE starts no ladder. Reaction share stays 20-30 % of DPS (≤ 40 %).
+
+### 33.4 Wiring
+* **Skills:** Gale (new character skill, Act I tome at Hawk's Rest on the main route: cone gust, Buffeted, the Drift
+  carrier); Bow E Tumble adds a 0-dmg gust on its aim side; Halberd Q Sweep → wind (Storm Sweep = wind + lightning); Fans Q
+  Veil Dance → wind; Orb R Tempest = lightning + wind; Gravity Well keeps arcane and gains the `vortex` tag; Dreamveil applies
+  no ladder. Every class reaches fire, frost or lightning plus wind through a variant, rune or character skill; nothing is
+  mandatory (the Duelist build stays whole). ≤ 3 wind casts; the §23 cap of 36 holds.
+* **Gems:** `elementAmp` adds build as well as damage. A **Radiant** element gem in the weapon retypes 30 % of basic-attack
+  damage to its element (build ×0.3) and counts as that element for world receivers (tooltip says so).
+* **Affixes / boons / uniques:** `windDmg`, `resWind` fall out of the lists; `statusChance` un-dormed at S1, `markCap` at S4;
+  ring boons `windPower`, `driftReach` (in `RING_EL`); Tide-Edge's trail is frost + Wet; Root-Crown reads "bosses stay Rooted
+  1 s"; no new uniques (cap 19).
+* **Echo (§30):** wind is excluded from the argmax; Echo hits apply no wind status; Echo build ×0.5.
+* **Enemies:** family rows — beast neutral; armoured resist wind (Lifted → Buffeted); amorphous resist pierce and Lifted;
+  ethereal and flying weak wind; fire-aligned immune Burn; frost-aligned weak lightning (Wet); gloom weak holy. The elite
+  `frozen` mod becomes **Rime** (Chill aura + the elite is Wet) and is no longer rare.
+* **Bosses:** `phases[].res / el` may shift a weakness **once per fight**, re-revealed on the bar (Mirelle bar 2 = Wet arena,
+  bar 3 weak fire; Kharzul bar 4 weak stagger). Act I bosses do not shift.
+* **Consumables:** Dream Oil per element (Elder Stone, Dust): coats the weapon 60 s, basics count as that element (build ×0.3);
+  a world key. Cooked fish keep §13's resist / element lines.
+* **Pip:** carries a **charge** from a world source (lit brazier = fire, rime crystal = frost, storm crystal = lightning, dawn
+  shrine = holy) to a receiver within 8 tiles (a 3 s flight on the §28 light); M7 companion rule "flare" Dazzles the enemy
+  attacking you (ICD 12 s).
+* **Gear loop:** each elite pocket near a boss is themed on the boss's weakness and guarantees a matching-element Rare on
+  first clear.
+* **Saves:** no item fields; `e.status` is runtime; `G.prog.state[map][id]` is a tolerant addition; no version bump.
+
+### 33.5 World verbs (elements on objects: the same registry, receivers, build)
+* **Primitives:** a **receiver** (`el: { accept, build, oil }` on an object, hit through `hitReceivers(x, y, r, el, w)` from
+  the four hit sites), a **state** (`o.state` from `states[]`, action `setState`, saved and replayed on settle like
+  `openGate`), a **condition** (WHEN `object_state`, WHEN `element_hit`; StoryCondition atoms `state:`, `hits:`), plus
+  `tilePatch { tiles, life }` with `dirtyChunk` (≤ 4 chunks, time-sliced; also the Grotto's tide).
+* **Objects (15):** torch, brazier (lit / unlit), bramble, icewall, seed (vine), conduit, fogbank, windmill, raft (two bridge
+  tile sets A / B, never animated), glyph, seal, crystal_wall, vent, rime_crystal, storm_crystal (+ the shrine as a dawn
+  source). Tiles `i` ice and `o` obsidian appear only through patches, inherit the bank's height, revert on expiry and push
+  the hero to the bank. Grass props burn (fire zone r 0.7, spreads 0.4 s / tile, cap 16 tiles, 4 emitting, one fire per map).
+* **Verbs:** light / extinguish torches and braziers · burn brambles and webs · melt ice walls · freeze rivers, ponds and
+  tide pools into bridges · freeze waterfalls into climbs · thaw · power conduits (the Wardens' wire) · blow fog and cloud
+  banks · spin windmills · push rafts · grow vines and bridges · reveal glyphs and hidden walls · break holy seals · shatter
+  crystal walls (frost then physical) · Wet surfaces · grass and oil fire spread · freeze a lava crossing (Caldera, 8 s).
+* **Rules:** (1) **never gate main progress on a specced element**: every main-path verb has a world source within 20 tiles
+  (Pip's charge) or a Dream Oil at the Stone; the generator audit fails any main route that needs a `via`; (2) one of the
+  five secrets per map is the elemental secret, skill-only (`oil: false`), hinted by Pip; (3) **3 verb puzzles per big map**
+  (teach / shortcut / secret), 1 in the Vale, 0 in arenas; (4) one new verb per section; (5) nothing is a trap (thaw pushes
+  you out, fire never blocks the only exit, rafts wait); (6) lasting states persist (lit, grown, broken), transient ones
+  reset (ice, fog, fire).
+* **Placement:** Vale: the torch room under the Dreamer's Cairn (3 sconces, Pip carries the hearth's flame, the hidden door).
+  Pinewood: brambles on the Warrens door, the creek freeze at the ford islet (replaces the lever bridge), the grass-fire boar
+  den from Hawk's Rest (+ the Gale tome). Ruins: conduits across the plaza to the Crypt, the Reliquary's holy seal, the
+  Belfry glyphs (the Names). Grotto: freeze the tide pool, melt the Vault's ice wall, shatter the Shallows' crystal wall.
+  Caldera: the Forge Deep windmill, the frozen lava path, extinguish the four forge braziers. Spire: blow the cloud bank,
+  the Vigil Walk seal, the void raft. Isles: rafts as the rift-hop, a three-isle conduit chain.
+* **Editor / generator:** state dropdown + preview, four new cards, a `tilePatch` ghost, a problems check; `OBJ` rows,
+  `via` secrets, five puzzle stamps (torchRing, fordFreeze, grassRing, wireRun, sealDoor).
+
+### 33.6 Visuals (per the VFX minutes; nothing new per frame)
+Wind = the A9 curl row (teal, `dash`, no light); Buffeted = tint + 1 px sideways offset; Lifted = the §27 hop offset ×1.5 +
+3 curls. Drift = the carried element's motif in a ring. Wet = tint + a 1 px highlight, droplets on apply, a baked 2 px rim
+on wet tiles. Ice tiles and walls use the frost ramp with ≤ 1 glint light per 4 tiles. Holy base colour is pale white-gold
+(D1 B). Phone p95 ≤ 20.0 ms with 6 status bodies and one burning grass ring in view (A7 gate).
+
+### 33.7 Schedule and scope (≈ 36 agent-days of new work; client-authorised)
+* **M4a** Act II Ruins + statuses S1-S5 + the eight reactions + Wind combat (Gale, Tumble gust) + bestiary + combo layer +
+  Thief/Origins (+ ≈ 6.5 d on the planned lanes).
+* **M4b (new) Elements in the world** (~4 weeks, two agents + art): receivers, states, `tilePatch`, Pip's charge, Dream Oil,
+  Opal, 15 objects, grass fire, generator + editor, the Vale / Pinewood / Ruins puzzles, balsim + CI (≈ 22 d).
+* **M5** + Wet, icefall, crystal, tide patch, Grotto puzzles, Mirelle's shift (+4 d) · **M6** + windmill, vents, frozen lava,
+  extinguish, Caldera puzzles, Kharzul's shift (+3.5 d) · **M7** + fog banks, rafts, Pip's flare, Spire / Isles puzzles (+3 d).
+* **CI red flags added:** a Lifted boss; more than 8 named reactions; a main route that needs a `via`; reaction share > 40 %
+  with Drift; an ice patch over 24 tiles; two grass fires on one map.
+* **Cut order if M4b slips:** raft → windmill frames → fog bank → Opal (Wind amplifies through rings only) → the Ruins'
+  shortcut puzzle. Never cut: Pip's charge, the torch room, brambles, the creek freeze, Gale, Drift.
+* **Client approval (2026-10-20):** the FX board in tools/shots/m3-fxboard (3 atlas effects, 11 particle sets, statuses,
+  HUD mock) is **APPROVED** as the look. The full rollout (P2–P6, S1–S5) is scheduled in M4a/M5, gated on no net phone cost.

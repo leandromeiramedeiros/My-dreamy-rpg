@@ -20,12 +20,13 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 |---|---|
 | M1 Foundation + inventory & loot | **LIVE** (PR #1 merged, deploy green) |
 | M2a HUD rework, input/gamepad, combat feel, settings, perf items | **LIVE** (PR #2) |
-| M2b Act I slice (Pinewood 56 + Root Hollow + Bramblehorn, Vale 40, boss system, dialogue, quests, audio engine, music, 3 save slots, first 10 minutes) | next |
-| M3 Hero (`js/hero.js`) + icons (`js/icons.js`) wired in, enemies rescaled, **items v2 + trinkets core (DESIGN §19)** | planned |
-| M4 Act II Ruins + statuses/reactions + bestiary + combo layer + Thief/Origins | planned |
-| M5 Act III Grotto + Warrior + aspects | planned |
-| M6 Act IV Caldera + arena | planned |
-| M7 Finale Spire + Morrow + endings + NG+ | planned |
+| M2b Act I slice (Vale 80 + Pinewood 112 with sections, Mossjaw + Bramblehorn, boss system, dialogue, quests, audio engine, music, 3 save slots, first 10 minutes) | **LIVE** (PR #3) |
+| M3 Hero (`js/hero.js`) + icons (`js/icons.js`) wired in, enemies rescaled, **items v2 + trinkets core (DESIGN §19)**, weapon/armour variant structure + parts kit (§23/§24), save v4, phone perf | **in progress** |
+| M4a Act II Ruins + statuses/reactions (8, incl. Drift) + Wind (Gale) + element particles + bestiary + combo layer + Thief/Origins | planned |
+| M4b Elements in the world: receivers, object states, ice tiles, grass fire, Pip's charge, Dream Oil, Opal, generator/editor verbs, Vale+Pinewood+Ruins puzzles (DESIGN §33) | planned (new; client-authorised scope) |
+| M5 Act III Grotto + Warrior + aspects + Wet / icefall / crystal / tide verbs + Grotto puzzles + full pixel-FX atlas swap | planned |
+| M6 Act IV Caldera + arena + wind verbs (windmill, vent, frozen lava) + Caldera puzzles | planned |
+| M7 Finale Spire + Morrow + endings + NG+ + fog / raft verbs + Spire & Isles puzzles | planned |
 | M8 Polish, timed 2 h / 100 % runs | planned |
 
 ## M2a work items
@@ -49,6 +50,7 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * `js/hero.js` (layered 24×34 hero, rarityFx), `js/icons.js` (24×24 icons, ICONS API) — not wired in yet.
 
 ## Director decisions log (non-obvious)
+* Elements (§33, client 2026-10-20): 9 hero elements (+Wind "Breath"), Opal gem, shatter demoted to a reaction type, Wet as a surface, 8 named reactions (ceiling 8, incl. Drift), world keys (Pip's charge / Dream Oil) on the main path and skill-only secrets, M4 split into M4a/M4b. Element particles: §32.
 * Interact on Space; dodge on Shift/RMB. Origins named Knight/Mystic/Ranger/**Thief/Warrior**.
 * Thornmail restored (Pacifist build); Stormcall cut; new-cast cap 22.
 * Audio: no sample files; hard timbres rendered at boot via OfflineAudioContext.
@@ -82,7 +84,48 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * Bag/gear still use the old 16 px icons until M3 wires `js/icons.js`.
 * Boss bar shows 2 phase pips (engine has one phase flag) until the boss system lands in M2b.
 
-## Status snapshot (M2b in progress)
+## M3 plan (director, after expert review)
+* Step 1 — Opus engine A: variant data structure (`WEAPONS[class].variants`, FAMILY_TIERS by variant, runes `variant:slot`),
+  id migrations, save v4 + `migrate()`, **real v3 save fixture round-trip test**, published v2 item shape. Haiku: Mythic naming pass (docs only).
+* Step 2 (parallel) — Opus engine B: makeItem v2, trinkets + equip, CAPS, temper/imbue engine, starter ring, balsim reference gear v2,
+  validate-ids for boons/implicits · Sonnet UI: tooltip v2, 4 paper-doll slots, drop names, ICONS in bag/gear ·
+  Sonnet art: wire hero.js + icons.js, enemy rescale, parts-kit system proven on existing 5 weapons / 4 suits (no new variants) ·
+  Sonnet level: Act I trinket sources (Vale chest ring, Bramblehorn chest amulet, first vault belt).
+* Step 3 — Opus perf pass on phone after art lands. Non-goals: Elder Stone panel (M5), new variants (M4+), Pip's Lantern (M7).
+* Step 3 lanes (after engine B + art land, game.js/render.js free): Opus feel lane §27 (hitlag core + loop fix → death fling/tumble → companion signals; re-measure phone p95) · opening lane §28 (bare start, sword pickup, chest kit, cottage cap, ambush boots, Pip light, HUD fade-in, Elder double-render fix; ~5–6 dev-days, Sonnet level + Opus engine bits) · Sonnet UI fixes R3 #1–6, #8 (started now).
+* After step 2: Opus boss lane — §26.1 multi-bar phases (Mossjaw 2, Bramblehorn 3) + §26.2 gear loop (balsim −1 tier 3–4/6, boss-door ilvl hint, elite pockets). Opus perf lane — §26.4 after art lands; ask client for a real-phone `?perf=1` reading.
+* M2b note: Opus lowered boss HP (Mossjaw 8560→6000, Bramblehorn 21470→17200) so an under-geared melee hero wins;
+  reference-gear fights now run short (Mossjaw ~50 s vs 60–90 target). Revisit after items v2 changes the power curve.
+
+## Status snapshot (M3 in progress, 2026-10-20)
+* Done: variant structure + save v4; items v2 + trinkets; tooltip v2 / paper doll / UI fixes / boss bar (one bar per phase + phase diamonds);
+  layered hero + parts kit; Act I trinket chests; Mythic naming (§24.2).
+* Also done:
+  * hit feel (§27)
+  * Echo legendary (§30), with an element-coloured spirit
+  * multi-bar boss phases, cunning forms and gear-loop balsim (§26.1/26.2); Mossjaw retuned (HP 10000, howl capped at 2 hounds)
+  * world art group 1 (§29: ground, cliffs, skirt, cloud sea)
+  * bare-start opening (§28)
+  * perf pass (§26.4): quality tiers, resolution governor, emitter-only bloom, light pool, ?perf=1 overlay; desktop 16.7 ms, phone p95 ~20.3
+  * Lumina study, with decisions in §31 and credits in docs/CREDITS.md
+* Running:
+  * recipe sync + elite pockets + shrine warp (§26.2)
+  * HUD text cache (phone p95)
+  * world art group 2: trees/density (density waits for the pockets lane)
+* Queue:
+  1. world art group 3 (tall set pieces)
+  2. pixel FX prototype: DONE and APPROVED by the client (tools/fx-board.html; js/elfx.js)
+  3. QA full bot run
+  4. ship M3 (PR #4)
+  PAUSED 2026-10-20 until Friday; see RESUME.md §5 for the resume order.
+  5. Wind-as-a-force meeting (expert environmental & gameplay systems designer): ambient wind pushes/pulls trees and small objects; wind spells push/pull them harder
+  6. Lighting meeting (expert lighting director): dynamic lights, shadows, rim light; bloom and additive light that stays cohesive and not washed out; keep/improve/remove godrays and volumetrics; lit status effects on enemies and hero (burning blooms and emits light)
+  6b. Hero art meeting (expert senior artist), held at the same time as 5 and 6: redesign the hero sprite using the client's two reference images (chibi 3-view trio; isometric red adventurer); client verdict: current hero is too ugly
+  7. docs/organisation meeting with the expert game director, which also folds meetings 5–6 back into spells and the whole game (spells cast light and wind, etc.); apply its ruling
+  8. RESUME.md resume kit, then pause until Friday
+* Done: the elements meeting (§33) and the element VFX language (§32); both are scheduled into M4a/M4b/M5
+
+## Status snapshot (M2b shipped)
 * Done on branch `claude/m2b-act1`: enemy behaviour parts (js/parts.js), boss move library + Mossjaw/Bramblehorn/Warden
   port (js/bosses.js), map objects + trigger actions, tools/balsim.js, 3 save slots, Pinewood enemy data + art
   (js/enemydata.js, js/enemyart.js), Touch v2 circular wheel + skill `aim` blocks.
@@ -95,19 +138,19 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * §23 weapon variants adopted: 5 classes × 3 variants; parts kit + refactor + save migration in M3; variants roll out M4–M7.
 
 
-## §24 suit tier names (T1 → T5 · Mythic, names pending a naming pass)
-* Warden: Iron Mail · Knight Plate · Sunforged Plate · Aurora Plate · Aegis of Dawn · Mythic (lantern at the heart)
-* Crusader: Acolyte Mail · Dawn Vestment Plate · Sun Crusader · Aurora Templar · Oath Eternal
-* Juggernaut: Scrap Plate · Bulwark Plate · Sunforged Bastion · Aurora Colossus · Mountain Eternal
-* Dreamweave: Linen Robe · Dreamweave Robe · Starwoven Robe · Nebula Vestments · Eternal Dreamshroud · The Lullaby Shroud
-* Frostweave: Woollen Robe · Frostweave · Glacier Vestment · Aurora Rime · Winter Eternal
-* Stormweave: Grey Robe · Stormweave · Thunder Vestment · Aurora Tempest · Storm Eternal
-* Stalker: Leather Jerkin · Stalker Jacket · Nightstalker Coat · Shadowweave Jacket · Eclipse Garb
-* Thornwarden: Ranger Garb · Thornwarden · Mossmantle Coat · Aurora Thorn · Root Eternal · Bramblehorn's Hide
-* Duelist: Swordsman's Coat · Duelist Jacket · Silver Fencer · Aurora Brocade · Blade Eternal · Aerin's Coat
-* Shade: Scout Leathers · Shade Leathers · Nightshade Harness · Eclipse Shade · Shadow Eternal
-* Nightshade: Tanner's Leathers · Nightshade · Hemlock Harness · Aurora Venom · Blight Eternal · Mossjaw's Skin
-* Mirage: Trickster Leathers · Mirage · Glass Harness · Aurora Mirage · Mirror Eternal · The Unmade's Skin
+## §24 suit tier names (T1 → T5 · Mythic; naming pass done, see DESIGN §24.2)
+* Warden: Iron Mail · Knight Plate · Sunforged Plate · Aurora Plate · Aegis of Dawn · Mythic: Shardheart Plate
+* Crusader: Acolyte Mail · Dawn Vestment Plate · Sun Crusader · Aurora Templar · Oath Eternal · Mythic: Gloomspire Vestment
+* Juggernaut: Scrap Plate · Bulwark Plate · Sunforged Bastion · Aurora Colossus · Mountain Eternal · Mythic: Forge Deep Cuirass
+* Dreamweave: Linen Robe · Dreamweave Robe · Starwoven Robe · Nebula Vestments · Eternal Dreamshroud · Mythic: Nightlong Shroud
+* Frostweave: Woollen Robe · Frostweave · Glacier Vestment · Aurora Rime · Winter Eternal · Mythic: Brinemother's Veil
+* Stormweave: Grey Robe · Stormweave · Thunder Vestment · Aurora Tempest · Storm Eternal · Mythic: Gravewind
+* Stalker: Leather Jerkin · Stalker Jacket · Nightstalker Coat · Shadowweave Jacket · Eclipse Garb · Mythic: Pinewood Mist
+* Thornwarden: Ranger Garb · Thornwarden · Mossmantle Coat · Aurora Thorn · Root Eternal · Mythic: Briarwatch Mantle
+* Duelist: Swordsman's Coat · Duelist Jacket · Silver Fencer · Aurora Brocade · Blade Eternal · Mythic: Oathless Jacket
+* Shade: Scout Leathers · Shade Leathers · Nightshade Harness · Eclipse Shade · Shadow Eternal · Mythic: Gloamveil
+* Nightshade: Tanner's Leathers · Nightshade · Hemlock Harness · Aurora Venom · Blight Eternal · Mythic: Mossjaw's Skin
+* Mirage: Trickster Leathers · Mirage · Glass Harness · Aurora Mirage · Mirror Eternal · Mythic: Glasswarp Silk
 * Visual rule: each tier = class palette ramp + trim, crest/pauldron, hem/glow part swaps; T5 = made of light.
 
 ## §25 Pinewood 112×112 zone recipe (expert draft for the level designer)

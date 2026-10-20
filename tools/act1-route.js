@@ -111,14 +111,34 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
     return mode;
   };
   const dist2 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  // §29 G3: hold movement keys (screen directions) for ms, then report where the hero is
+  const walkKeys = async (keys, ms) => { for (const k of keys) await page.keyboard.down(k); await wait(ms); for (const k of keys) await page.keyboard.up(k); await wait(250); return ev(() => ({ x: G.player.x, y: G.player.y, z: G.player.z, h: tileH(G.map, G.player.x, G.player.y), fall: !!G.player.fall })); };
+  const vantageDone = () => wf(() => !G.vantage, null, 8000);
+  // a root ladder by id: Interact at its end (the engine's use.fn), then wait for the 0.6 s climb
+  const climbLadder = async id => { const r = await ev(id => { const o = G.map.objects.find(q => q.ladder && q.src.id === id); if (!o) return null; window.__tp(o.x, o.y); const z0 = G.player.z; o.use.fn(o); return { z0, text: o.use.text(o), climbing: !!G.player.climb }; }, id); await wf(() => !G.player.climb, null, 3000); await wait(200); return r && Object.assign(r, await ev(() => ({ z1: G.player.z, x: G.player.x, y: G.player.y }))); };
 
   // =================================================================== THE VALE (80x80)
   check('vale: 80x80, level band [1,3]', await ev(() => G.map.id === 'vale' && G.map.W === 80 && G.map.H === 80 && JSON.stringify(G.world.maps.vale.level) === '[1,3]'));
   const secs = await ev(() => G.world.maps.vale.sections.map(s => s.id + ':' + s.kind).join());
   check('vale: sections hub, Moon Pond, Pip\'s Lanterns, Dream Arena', secs === 'hub:outer,moon:outer,lanterns:outer,arena:arena', secs);
-  const wakeInfo = { wake: await wf(() => G.trig.fired.wake), talks: await ev(() => window.__log.talks.map(t => t.id)), line: await ev(() => DIALOGUE.vale_wake.lines[0]) };
+  // §28: the hero wakes BARE (every gear + trinket slot empty, empty bag), the game is marked as a bare opening, Pip's light is up
+  const bare = await ev(() => ({ slots: EQUIP_SLOTS.filter(k => G.player.equip[k]), bag: G.player.bag.filter(Boolean).length, opening: G.prog.secrets.opening, pip: !!G.pip && Math.hypot(G.pip.x - G.player.x, G.pip.y - G.player.y) < 3,
+    q: slotSkill(G.player, 'q'), f: slotSkill(G.player, 'f'), shift: slotSkill(G.player, 'shift'), lmb: skillSlotState(G.player, 'lmb').name, wdmg: G.player.wdmg, sign: G.map.objects.some(o => o.src && o.src.t === 'sign') }));
+  check('vale (§28): the hero starts bare (no gear, no ring, empty bag); LMB is a 1-damage Shove, no Q / F, a barefoot Roll on SHIFT; Pip\'s light rides along; the arrival sign is gone', !bare.slots.length && !bare.bag && bare.opening === 'bare' && bare.pip && !bare.q && !bare.f && bare.shift === 'roll' && bare.lmb === 'Shove' && bare.wdmg === 1 && !bare.sign, bare);
+  const wakeInfo = { wake: await wf(() => G.trig.fired.wake), said: await wf(() => window.__log.talks.some(t => t.id === 'vale_wake'), null, 8000), talks: await ev(() => window.__log.talks.map(t => t.id)), line: await ev(() => DIALOGUE.vale_wake.lines[0]) };
   check('vale: banner + Pip wakes you ("Up. You were sleeping like you meant it.")', wakeInfo.wake && wakeInfo.talks.includes('vale_wake') && wakeInfo.talks.includes('vale_banner') && wakeInfo.line === 'Up. You were sleeping like you meant it.', wakeInfo);
+  await wf(() => hudShown('bars') > 0 && hudShown('lmb') > 0, null, 3000);   // the 'move' noun lands on the same tick as vale_wake; its fade starts a frame later
+  const hud0 = await ev(() => ({ bars: hudShown('bars'), lmb: hudShown('lmb'), map: hudShown('map'), q: hudShown('q'), pot: hudShown('pot') }));
+  check('vale (§28): the HUD fades in per noun: after the wake, bars + tracker + LMB only (no minimap, Q or potion yet)', hud0.bars > 0 && hud0.lmb > 0 && hud0.map === 0 && hud0.q === 0 && hud0.pot === 0, hud0);
+  await ev(() => { G.trig.t += 20; });
+  check('vale (§28): Pip\'s one new line fires ("Three days. You\'ve been asleep three days.") and the minimap fades in', await wf(() => G.trig.fired.days, null, 6000) && await ev(() => window.__log.talks.some(t => t.first === "Three days. You've been asleep three days.")) && await wf(() => hudShown('map') > 0, null, 3000));
   check('vale: two training dummies stand in the yard', await ev(() => G.enemies.filter(e => e.dummy).length === 2));
+  // §28 0:45: the sword stands in the grass beside the yard; walking onto it puts it on (Q fades in)
+  const sw = await ev(() => { const d = G.drops.find(q => q.found === 'rustyblade'); if (!d) return null; const at = { x: d.x, y: d.y, dStart: +Math.hypot(d.x - G.map.start.x, d.y - G.map.start.y).toFixed(1) }; window.__tp(d.x, d.y); return at; });
+  check('vale (§28 0:45): the Rusty Blade lies in the grass ~10 tiles from the bed, beside the yard', !!sw && sw.dStart >= 8 && sw.dStart <= 11, sw);
+  const armed = await wf(() => G.player.equip.weapon && G.player.equip.weapon.base === 'rustyblade', null, 4000);
+  const ar = await ev(() => ({ q: slotSkill(G.player, 'q'), wdmg: G.player.wdmg, lmb: skillSlotState(G.player, 'lmb').name, found: !!G.prog.secrets['found:rustyblade'], hudQ: hudShown('q') >= 0, gone: !G.drops.some(q => q.found === 'rustyblade') }));
+  check('vale (§28): picking the sword up equips it (Q skill live, sword damage, recorded so it is never placed again)', armed && ar.q === 'sunslash' && ar.wdmg > 1 && ar.lmb !== 'Shove' && ar.found && ar.gone, ar);
   check('vale: the Pinewood rift starts CLOSED', (await portalOpen('pinewood')) === false);
   const geo = await ev(() => { const s = [G.world.maps.vale.start.x, G.world.maps.vale.start.y], at = id => window.__at(id), o = G.map.objects, ch = o.find(q => q.chest && q.src.starter); return { s, yard: at('yard_teach'), stone: at('elder'), chest: ch && [ch.x, ch.y], dummies: G.enemies.filter(e => e.dummy).map(e => [e.x, e.y]) }; });
   check('vale: the dummies and the Elder Stone are within 15 tiles of the start, the first chest at 10', geo.dummies.every(d => dist2(d, geo.s) <= 15) && dist2(geo.stone, geo.s) <= 15 && Math.abs(dist2(geo.chest, geo.s) - 10) <= 1, { dummies: geo.dummies.map(d => +dist2(d, geo.s).toFixed(1)), stone: +dist2(geo.stone, geo.s).toFixed(1), chest: +dist2(geo.chest, geo.s).toFixed(1) });
@@ -129,19 +149,48 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('vale: shrine checkpoint (start)', await goto('shrine') && await ev(() => !!G.checkpoint));
   check('vale: Elder Stone speaks (vale_elder) and starts "Stone\'s lost lantern" (step 0)', await goto('elder') && await said('vale_elder') && (await quest('vale_lantern')) === 0);
   check('vale: Elder Stone is a visible tablet object', await objectsOf("o.tablet && o.src && o.src.title === 'Elder Stone'") === 1); await shot('vale_elder_stone');
+  // the Elder Stone double render (QA kbm-004): the tablet no longer repeats the trigger's vale_elder line, and an open tablet
+  // panel hides the say line beneath it
+  const dbl = await ev(() => { const o = G.map.objects.find(q => q.tablet && q.src.title === 'Elder Stone'); return { text: o.src.text, repeats: DIALOGUE.vale_elder.lines.some(l => o.src.text.includes(l)) }; });
+  check('vale: the Elder Stone renders once (tablet text is not the trigger dialogue)', !dbl.repeats, dbl);
   check('vale: first chest trigger fires, Pip says "That glow? Keep it. Gear remembers you."', await goto('chest') && await wf(() => window.__log.talks.some(t => t.id === 'vale_chest'), null, 9000));
-  const ch = await ev(() => { const o = G.map.objects.find(q => q.chest && q.src.starter); if (!o) return null; window.__loot.length = 0; openChest(o); return { tier: o.src.tier, opened: o.opened }; });
+  const ch = await ev(() => { const o = G.map.objects.find(q => q.chest && q.src.starter); if (!o) return null; window.__loot.length = 0; openChest(o); return { tier: o.src.tier, opened: o.opened, loot: o.src.loot }; });
   await wait(900);
   const kit = await ev(() => window.__loot.slice());
-  check('vale: starter chest exists, opens, drops weapon + armour + gem', !!ch && ch.opened && kit.length >= 3 && kit.some(k => k.startsWith('gem')), kit); await shot('vale_first_chest');
+  check('vale (§28 ~2:00): the first chest (loot: ring) drops exactly Common Iron Mail + the Origin ring + a gem', !!ch && ch.opened && ch.loot === 'ring' && kit.join() === 'item:chest/common,item:ring/uncommon,gem', kit); await shot('vale_first_chest');
+  // the kit flies to the hero: the ring goes on, the bag opens on the mail with EQUIP focused
+  const taught = await wf(() => G.ui.open && G.ui.sel && G.ui.sel.base === 'ironmail', null, 6000); await wait(300);
+  const tk = await ev(() => ({ ring: G.player.equip.ring1 && G.player.equip.ring1.base, boon: !!(G.player.boons && G.player.boons.originKnight), focus: UI.focus.id, gem: G.player.bag.some(e => e && e.gem === 'ruby_1') }));
+  await shot('vale_bag_on_mail');
+  check('vale (§28): the Origin ring is put on (boon live), the gem is in the bag, and the bag opens on the mail with EQUIP focused', taught && tk.ring === 'origin_knight' && tk.boon && tk.gem && tk.focus === 'btn:equip', tk);
+  const worn = await ev(() => { const p = G.player, m = p.bag.find(e => e && e.base === 'ironmail'); const r = equipItem(p, m); closeInv(); return { r, chest: p.equip.chest && p.equip.chest.base, f: slotSkill(p, 'f') }; });
+  check('vale: EQUIP puts the mail on (the torso changes; F = Bulwark)', worn.r === '' && worn.chest === 'ironmail' && worn.f === 'bulwark', worn);
   check('vale: fishing stub beside the chest (visible, interactable)', await objectsOf('o.fish') >= 3 && await goto('fish_hint'));
+  // §28 2:20: ONE cast at the spot beside the chest lands a gem; the bag opens with it picked and it goes into the mail's socket
+  await ev(() => { const o = G.map.objects.find(q => q.fish && q.src.pool === 'vale_a'); window.__tp(o.x + 0.9, o.y + 0.6); });
+  await wait(300);
+  const cast = await ev(() => ({ prompt: G.prompt && G.prompt.text, did: interact(G.player) }));
+  const sock = await wf(() => G.ui.open && G.ui.gem != null, null, 6000);
+  const sk = await ev(() => { const p = G.player, mail = p.equip.chest, gem = G.ui.sel && G.ui.sel.gem; clickItem(mail); const r = { gem, sockets: mail.sockets.slice(), cast: !!G.prog.fishing.valeCast }; closeInv(); return r; });
+  check('vale (§28 2:20): one guaranteed cast -> a Chipped gem; the bag opens with it picked; it sockets into the mail', cast.prompt === 'Fish' && sock && sk.gem === 'sapphire_1' && sk.sockets[0] === 'sapphire_1' && sk.cast, { cast, sk });
   check('vale: cottage tablet', await goto('tablet') && await said('vale_tablet'));
+  // §28 3:50: the Iron Cap lies on the cottage step (no line: silence is the seed)
+  const capAt = await ev(() => { const d = G.drops.find(q => q.found === 'ironcap'); if (!d) return null; const n = window.__log.talks.length; window.__tp(d.x, d.y); window.__n = n; return { x: d.x, y: d.y }; });
+  const capped = await wf(() => G.player.equip.head && G.player.equip.head.base === 'ironcap', null, 4000);
+  check('vale (§28 3:50): the Iron Cap by the cottage goes on when you reach it (C = War Cry); Pip says nothing', !!capAt && capped && await ev(() => slotSkill(G.player, 'c') === 'warcry' && window.__log.talks.length === window.__n), capAt); await shot('vale_cottage_cap');
   check('vale: lantern trigger needs the Stone first, then advances quest to step 1', await goto('lantern_found') && (await quest('vale_lantern')) === 1); await shot('vale_lost_lantern');
   check('vale: garden ambush: 3 slimes', await goto('garden_ambush') && await wf(() => window.__live().length === 3, null, 6000)); await shot('vale_garden_ambush');
   const slimes = await ev(() => window.__live());
   check('vale: ambush slimes are gloomslime', slimes.every(t => t === 'gloomslime'), slimes);
+  await ev(() => { window.__loot.length = 0; });
   await fight('garden_done');
   check('vale: ambush cleared -> rift opens (portal, banner, vale_rift, shard_root step 0)', await wf(() => G.trig.fired.garden_done) && (await portalOpen('pinewood')) === true && await said('vale_rift') && (await quest('shard_root')) === 0); await shot('vale_rift_open');
+  await wait(600);
+  const bootLoot = await ev(() => window.__loot.slice());
+  await ev(() => { const d = G.drops.find(q => q.kind === 'item' && q.it.base === 'ironboots'); if (d) window.__tp(d.x, d.y); });
+  // re-step onto the boots while they settle (a drop still arcing to the ground is not picked up yet)
+  const booted = await wf(() => { if (G.player.equip.boots && G.player.equip.boots.base === 'ironboots') return true; const d = G.drops.find(q => q.kind === 'item' && q.it.base === 'ironboots'); if (d) window.__tp(d.x, d.y); return false; }, null, 6000);
+  check('vale (§28 4:50): the garden ambush drops the Common Iron Boots (no random roll) and they go on (SHIFT = Charge); the potion chip is in', bootLoot.includes('item:boots/common') && await ranAction("a.type === 'loot' && a.item === 'ironboots' && !a.count") && booted && await ev(() => slotSkill(G.player, 'shift') === 'charge' && hudShown('pot') > 0), { bootLoot, booted, why: await ev(() => ({ shift: slotSkill(G.player, 'shift'), pot: hudShown('pot'), boots: G.player.equip.boots && G.player.equip.boots.base, drop: G.drops.filter(q => q.kind === 'item').map(q => q.it.base) })) });
   check('vale: lantern returned -> quest done + reward', await goto('lantern_return') && (await quest('vale_lantern')) === 'done' && await ranAction("a.type === 'loot' && a.item === 'socket_rune'"));
   check('vale: hidden gem cache', await goto('gems'));
   // the three sections beyond the hub: each bridge / gate is a keyed barrier that stays shut until its key is held
@@ -155,8 +204,22 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('vale: the fallen-tree gate opens once its key (Act IV) is held', mo && mo.open, mo); await dropKey('key_act4');
   check('vale: Moon Pond beat (night fishing, section moon)', await goto('moon_pond') && (await secOf()) === 'moon'); await shot('vale_moon_pond');
   check('vale: Dream Arena islet beat (section arena)', await goto('arena_islet') && (await secOf()) === 'arena'); await shot('vale_dream_arena');
+  // ---- §29 G3 the Dreamer's Cairn: root ladder 9 -> 14, the Stone's Crown vantage (fog lifts, the cinematic runs), the drop home
+  const lad = await climbLadder('cairn_roots');
+  check('vale (§29 G3): the root ladder climbs the Crown (9 -> 14 in ~0.6 s, Interact "Climb")', lad && lad.climbing && lad.text === 'Climb' && Math.abs(lad.z0 - 9) < 0.2 && Math.abs(lad.z1 - 14) < 0.2, lad);
+  const fog0 = await ev(() => G.map.mini ? G.map.mini.vis.reduce((a, b) => a + b, 0) : 0);
+  check('vale (§29 G3): the Stone\'s Crown starts the vantage reveal', await goto('crown') && await ev(() => !!G.vantage && G.vantage.id === 'crown')); await wait(1700); await shot('vale_crown_vantage');
+  await vantageDone();
+  check('vale (§29 G3): Pip speaks on the Crown after the reveal, not under it', await wf(() => !G.vantage && ((G.msg && /whole dream/.test(G.msg.s)) || (G.talk || []).some(l => /whole dream/.test(l))), null, 6000));   // showing, or queued behind earlier lines
+  const fog1 = await ev(() => G.map.mini ? G.map.mini.vis.reduce((a, b) => a + b, 0) : 0);
+  check('vale (§29 G3): the reveal lifts the fog of war over the Vale (>= 600 new tiles) and ends by itself', fog1 - fog0 >= 600 && await ev(() => !G.vantage), { fog0, fog1 });
+  const down = await climbLadder('cairn_roots_top');
+  check('vale (§29 G3): the root ladder climbs back down (14 -> 9)', down && down.text === 'Climb down' && Math.abs(down.z1 - 9) < 0.2, down);
+  check('vale (§29 G3): Pip at the garden ledge', await goto('cairn_ledge'));
+  const drop = await walkKeys(['a', 's'], 900);
+  check('vale (§29 G3): walking off the 9 ledge drops into the garden lawn (lands at 0), and the wall is one-way', drop.h === 0 && !drop.fall && Math.abs(drop.z) < 0.1 && drop.y > 20.9 && await ev(() => { const t = window.__at('cairn_ledge'); return tileH(G.map, t[0], t[1]) === 9 && !walkable(G.map, t[0], t[1], 0) && walkable(G.map, t[0], t[1] + 1, 9); }), drop);
   // shrine-to-shrine warp: both shrines discovered, refused while an enemy is awake
-  check('vale: rift terrace shrine fires; both shrines are discovered', await goto('shrine_terrace') && await ev(() => { const L = (G.prog.shrines || {}).vale || []; return L.includes('shrine_terrace'); }));
+  check('vale: rift terrace shrine fires; both shrines are discovered', await goto('shrine_terrace') && await wf(() => ((G.prog.shrines || {}).vale || []).includes('shrine_terrace'), null, 3000));
   await goto('shrine'); await ev(() => { G.prog.shrines.vale = ['shrine_start', 'shrine_terrace']; });
   const refused = await ev(() => { const e = spawnEnemy('gloomslime', G.player.x + 3, G.player.y, 0); const r = shrineWarp('shrine_terrace'); G.enemies = G.enemies.filter(q => q !== e); return r; });
   check('vale: shrine warp is refused while an enemy is awake', refused === false);
@@ -182,13 +245,13 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   const packs = await ev(() => { const ids = new Set(), types = new Set(); for (const t of G.map.triggers) for (const a of t.actions) { if (a.pack) ids.add(a.pack); if (a.type === 'spawnPack') { ids.add(a.id); types.add('spawnPack'); } } return { ids: [...ids].sort().join(), types: [...types].join() }; });
   check('pinewood: every §21 pack is placed, with spawnPack (6 pw_* + 3 rh_*)', packs.ids === 'pw_boar_last,pw_boar_pierce,pw_boar_shaman,pw_ogre_grove,pw_ogre_run,pw_ogre_slimes,rh_boar_wrong,rh_ogre_pack,rh_troll_sleeper' && packs.types === 'spawnPack', packs);
   const shr = await ev(() => G.map.objects.filter(o => o.shrineId).map(o => o.shrineId + (o.src.warp === false ? '(plain)' : '')).sort());
-  check('pinewood: 3 warp shrines in the forest + the Hollow midpoint checkpoint', shr.join() === 'hollow_shrine(plain),shrine1,shrine2,shrine3', shr);
-  check('pinewood: shrine 1 attunes', await goto('shrine1') && await ev(() => (G.prog.shrines.pinewood || []).includes('shrine1')));
+  check('pinewood: 3 road warp shrines + the root-door and Mossjaw\'s-gate warp shrines (§26.2) + the Hollow midpoint checkpoint', shr.join() === 'den_shrine,door_shrine,hollow_shrine(plain),shrine1,shrine2,shrine3', shr);
+  check('pinewood: shrine 1 attunes', await goto('shrine1') && await wf(() => (G.prog.shrines.pinewood || []).includes('shrine1'), null, 3000));
   check('pinewood: r1 ogre pack', await goto('r1')); const r1 = await fight('r1_done');
   check('pinewood: r1 spawned ogre + gloomslime + shadehound; cleared', r1.includes('ogre') && r1.includes('gloomslime') && r1.includes('shadehound') && await fired('r1_done'), r1); await shot('pinewood_r1_ogres');
   // the ford ambush: the wrong-weapon pack, on the road between r1 and r2
   check('pinewood: ford ambush (boars resist pierce)', await goto('ford')); const ford = await fight('ford_done'); check('pinewood: ford pack = boar + slime + hound', ford.includes('thornbackboar') && await fired('ford_done'), ford);
-  check('pinewood: shrine 2 attunes', await goto('shrine2') && await ev(() => (G.prog.shrines.pinewood || []).includes('shrine2')));
+  check('pinewood: shrine 2 attunes', await goto('shrine2') && await wf(() => (G.prog.shrines.pinewood || []).includes('shrine2'), null, 3000));
   check('pinewood: r2 plaza: boar + shaman first (support), then ogre pack', await goto('r2')); const r2 = await fight('r2_done', 8); check('pinewood: r2 cleared with a shaman in it', r2.includes('brambleshaman') && r2.includes('thornbackboar') && r2.includes('ogre') && await fired('r2_done'), r2);
   check('pinewood: r3 grove: ogre grove + boar last', await goto('r3')); const r3 = await fight('r3_done', 8);
   check('pinewood: r3 cleared with a shaman in it', await fired('r3_done') && r3.includes('brambleshaman'), r3);
@@ -197,11 +260,52 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('pinewood: elite ogre guards the key', await goto('elite')); await wf(() => window.__live().length >= 1, null, 5000);
   const el = await ev(() => G.enemies.filter(e => !e.dummy).map(e => ({ t: e.type, elite: !!e.elite, mods: e.mods || [] })));
   await shot('pinewood_elite');
+  await ev(() => { window.__loot.length = 0; });
   await fight('elite_done');
+  await wait(400);
+  const eliteLoot = await ev(() => window.__loot.slice());
+  check('pinewood (§28 ~9:00): the elite drops a Rare+ WEAPON with the key (loot slot: weapon)', await ranAction("a.type === 'loot' && a.slot === 'weapon' && a.item === 'key_roothollow'") && eliteLoot.some(k => /^item:weapon\/(rare|epic|legendary|mythic)/.test(k)), eliteLoot);
   check('pinewood: the elite is a Shielded ogre and drops the root key', pre.length === 0 && el.length === 1 && el[0].t === 'ogre' && el[0].elite && el[0].mods.includes('shielded') && await ev(() => hasKey('key_roothollow')) && (await quest('shard_root')) === 1, { pre, el });
   // landmarks + waysides: a point of interest every <=15 tiles of road, shown by the object counts
   const dens = await ev(() => ({ giants: G.map.objects.filter(o => o.src && o.src.t === 'pine_giant').length, beams: G.map.objects.filter(o => o.beam).length, signs: G.map.objects.filter(o => o.src && o.src.t === 'sign').length }));
   check('pinewood: landmarks (giant-pine groups with a beam) are placed along the road', dens.beams >= 12 && dens.giants >= 24, dens);
+
+  // ---- §26.2 elite pockets: 1 elite + 3-5 commons, the first clear guarantees a Rare+ at ilvl >= boss level - 2 in a rotating, usable
+  // slot (the hero's weakest worn gear slot, in the family worn there); the pocket respawns on map re-entry and later clears pay no guarantee
+  const PK = path.join(__dirname, 'shots', 'm3-pockets'); fs.mkdirSync(PK, { recursive: true });
+  const pkShot = async name => { await wait(1400); await page.screenshot({ path: path.join(PK, name + '.png') }); };
+  await ev(() => { window.__items = []; const dl = window.dropLoot; window.dropLoot = (x, y, list) => { for (const d of list) if (d.kind === 'item') window.__items.push({ slot: d.it.slot, rarity: d.it.rarity, ilvl: d.it.ilvl, base: d.it.base, req: d.it.req, src: TRIG_SRC, lvl: G.player.level }); return dl(x, y, list); }; });
+  const pockets = await ev(() => G.map.triggers.filter(t => /^pk_[a-z_]+$/.test(t.id) && !/_done$/.test(t.id)).map(t => ({ id: t.id, once: t.once, elite: t.actions.find(a => a.elite), commons: t.actions.filter(a => a.type === 'spawn' && !a.elite).length, floor: (G.map.triggers.find(q => q.id === t.id + '_done').actions.find(a => a.type === 'loot') || {}).ilvl, blvl: (G.world.maps.pinewood.levelAreas.find(z => z.id === t.id) || {}).level })));
+  check('pinewood (§26.2): 4 elite pockets (2 by the Hollow door, 2 by the Clearing), each 1 elite + 3-5 commons, re-arming (once: false)', pockets.length === 4 && pockets.every(q => q.once === false && q.elite && q.commons >= 3 && q.commons <= 5), pockets);
+  const pkSlots = [];
+  for (const pk of pockets) {
+    await ev(() => { window.__items.length = 0; window.__killAll(); });
+    const before = await ev(() => ({ equip: Object.fromEntries(['weapon', 'head', 'chest', 'boots'].map(k => [k, G.player.equip[k] ? G.player.equip[k].base : null])), gear: Object.assign({}, G.player.gear), level: G.player.level }));
+    const ok = await goto(pk.id); await wf(id => G.enemies.filter(e => e.trig === id && !e.dead).length >= 4, pk.id, 5000);
+    const comp = await ev(id => G.enemies.filter(e => e.trig === id && !e.dead).map(e => ({ t: e.type, elite: !!e.elite, mods: e.mods || [], lvl: e.lvl })), pk.id);
+    await pkShot(pk.id);
+    await fight(pk.id + '_done'); await wait(400);
+    const got = await ev(() => window.__items.slice());
+    const gs = got.filter(it => it.src === pk.id + '_done'), g = gs.length === 1 && ['weapon', 'head', 'chest', 'boots'].includes(gs[0].slot) && ['rare', 'epic', 'legendary', 'mythic'].includes(gs[0].rarity) && gs[0].ilvl >= pk.floor && gs[0].req <= gs[0].lvl ? gs[0] : null;   // the guarantee card's own drop (the elite's rollLoot is untagged)
+    const fam = g ? await ev(b => BASES[b].family, g.base) : null;
+    if (g) pkSlots.push(g.slot);
+    check(`pocket ${pk.id}: 1 ${pk.elite.enemy} elite (${pk.elite.elite}) at L${pk.blvl + 2} + ${comp.length - 1} commons at the boss's L${pk.blvl}; first clear -> a Rare+ ${g ? g.slot + ' ' + g.rarity + ' ilvl ' + g.ilvl : '?'} (floor ${pk.floor}) in the worn family`, ok && comp.filter(e => e.elite).length === 1 && comp.find(e => e.elite).t === pk.elite.enemy && comp.find(e => e.elite).mods.includes(pk.elite.elite) && comp.length - 1 === pk.commons && comp.every(e => e.lvl === pk.blvl + (e.elite ? 2 : 0)) && await fired(pk.id + '_done') && !!g && fam === before.gear[g.slot], { comp, got, fam, worn: before.gear });
+    // equip it (a player would): the next pocket's guarantee then targets another slot
+    await ev(b => { const i = G.player.bag.findIndex(it => it && it.base === b); for (const d of G.drops.slice()) if (d.kind === 'item' && d.it.base === b) { G.player.equip[d.it.slot] = d.it; } recalcStats(G.player, true); G.drops.length = 0; }, g ? g.base : null);
+  }
+  check('pockets: the four guarantees rotate through four different gear slots', new Set(pkSlots).size === 4, pkSlots);
+  // map re-entry: every pocket respawns; a second clear fires no guarantee (its _done card stays settled)
+  await wait(600);
+  await ev(() => enterMap('pinewood')); await wait(600); await ev(() => window.__hero());
+  const pk0 = pockets[0].id;
+  await ev(() => { window.__items.length = 0; });
+  const re = await goto(pk0); await wf(id => G.enemies.filter(e => e.trig === id && !e.dead).length >= 4, pk0, 5000);
+  const reN = await ev(id => G.enemies.filter(e => e.trig === id && !e.dead).length, pk0);
+  await fight(null, 3); await wait(500);
+  const reDone = await ev(id => ({ spawn: window.__fired['pinewood:' + id], done: window.__fired['pinewood:' + id + '_done'] }), pk0);
+  check(`pockets: ${pk0} respawns on map re-entry (${reN} enemies) and the second clear pays no guarantee (only the elite's own drop)`, re && reN === pockets[0].commons + 1 && reDone.spawn === 2 && reDone.done === 1, reDone);
+  // the root-door shrine by the Mossjaw pockets
+  check('pinewood (§26.2): the root-door warp shrine attunes', await goto('door_shrine') && await wf(() => (G.prog.shrines.pinewood || []).includes('door_shrine'), null, 3000)); await pkShot('door_shrine');
 
   // ---- secrets (5): crack gem, env pond -> Warrens, lever bridge -> islet, Hollow crack, cross-section cache
   check('pinewood: secret 1 - cracked wall: hum, wall solid, then opens', await (async () => {
@@ -243,7 +347,9 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   await goto('hdoor_hint');
   const hd0 = await ev(() => { const o = G.map.objects.find(q => (q.warpdoor || q.barrier === 'keydoor') && (q.gid === 'hollow_door' || q.gid === 'door_key') && (q.use)); window.__tp(o.x, o.y + 0.9); o.use.fn(o); return { warp: !!G.warp, text: o.use.text(o), kind: o.warpdoor ? 'warpdoor' : 'keydoor' }; });
   await wait(600);
+  const rec = await ev(() => ({ prompt: G.prompt && G.prompt.text, boss: ENEMY.mossjaw.level, mine: gearIlvl() }));
   check('pinewood: the Hollow door stays locked without the key (' + hd0.kind + ')', !hd0.warp && hd0.text === 'Locked' && (await secOf()) === 'forest', hd0);
+  check('pinewood (§28 10:00, §26.2): the Hollow door shows "Recommended ilvl N · yours M" (information, never a lock)', !!rec.prompt && rec.prompt.includes(`Recommended ilvl ${rec.boss}`) && rec.prompt.includes(`yours ${rec.mine}`), rec);
   await giveKey('key_roothollow');
   const hmode = await ev(() => { const o = G.map.objects.find(q => q.warpdoor && q.gid === 'hollow_door'); return o ? 'door' : 'portal'; });
   if (hmode === 'portal') await ev(() => { const o = G.map.objects.find(q => q.barrier === 'keydoor' && q.use); o.use.fn(o); });
@@ -277,8 +383,21 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   // the root-stair is sealed and the Clearing gate shut until Mossjaw falls
   const sealed = await ev(() => { const o = G.map.objects.find(q => q.warpdoor && q.gid === 'hollow_exit'); const gate = G.map.objects.some(q => q.barrier === 'gate' && q.gid === 'arena_gate' && !q.gone); return { door: !!o, locked: o ? !doorUnlocked(G.map, o) || (o.src && o.src.open === false && !gateOpen(G.map, 'hollow_exit')) : null, arenaGate: gate }; });
   check('hollow: before Mossjaw the root-stair is sealed and the Clearing gate is shut', sealed.arenaGate && (sealed.door ? sealed.locked : await ev(() => G.map.objects.some(q => q.barrier === 'gate' && q.gid === 'hollow_exit_gate' && !q.gone))), sealed);
+  // §26.2: Mossjaw's gate shrine; from the root-door shrine by the pockets, a shrine warp lands at the den gate
+  check('hollow (§26.2): Mossjaw\'s-gate warp shrine attunes', await goto('den_shrine') && await wf(() => (G.prog.shrines.pinewood || []).includes('den_shrine') && shrineTargets().some(o => o.shrineId === 'door_shrine'), null, 3000)); await pkShot('den_shrine');
+  await ev(() => { const o = G.map.objects.find(q => q.shrineId === 'door_shrine'); window.__tp(o.x, o.y); });
+  const swOk = await ev(() => shrineWarp('den_shrine')); await warpDone(); await wait(300); await ev(() => window.__hero());
+  const swAt = await ev(() => { const o = G.map.objects.find(q => q.shrineId === 'den_shrine'), w = window.__trg('h_boss').when; return { sec: window.__sec(), d: Math.hypot(G.player.x - o.x, G.player.y - o.y), toFight: Math.hypot(o.x - w.x, o.y - w.y) - w.r }; });
+  check('pinewood -> hollow (§26.2): a shrine warp from the root door lands at Mossjaw\'s gate, a few tiles from the den', swOk && swAt.sec === 'hollow' && swAt.d < 3 && swAt.toFight < 8, swAt);
   // Mossjaw
   check('hollow: Mossjaw den: boss spawns (G.boss set, mossjaw)', await goto('h_boss') && await wf(() => G.boss && G.boss.type === 'mossjaw', null, 9000)); await shot('hollow_mossjaw');
+  {   // a retry: dying to Mossjaw wakes at Mossjaw's gate, the den re-arms
+    await ev(() => { const p = G.player; p.invulnT = 0; p.hp = 1; hurtPlayer(99999, p.x + 1, p.y); });
+    await wf(() => G.state === 'dead', null, 3000); await wf(() => G.state === 'play' && !G.player.dead, null, 12000); await wait(600); await ev(() => window.__hero());
+    const rs = await ev(() => { const o = G.map.objects.find(q => q.shrineId === 'den_shrine'); return { near: Math.hypot(G.player.x - o.x, G.player.y - o.y) < 4, bossTrig: !!G.trig.fired.h_boss, sec: window.__sec() }; });
+    check('hollow (§26.2): dying to Mossjaw respawns at Mossjaw\'s gate (the den re-arms)', rs.near && !rs.bossTrig && rs.sec === 'hollow', rs);
+    await goto('h_boss'); await wf(() => G.boss && G.boss.type === 'mossjaw', null, 9000);
+  }
   const bossHp = await ev(() => G.boss ? { hp: G.boss.hp, lvl: G.boss.lvl } : null);
   await fight('h_boss_done', 8);
   check('hollow: Mossjaw falls -> quest step 3, the root-stair unseals, the Clearing gate opens', await wf(() => G.trig.fired.h_boss_done) && (await quest('shard_root')) === 3 && await ev(() => gateOpen(G.map, 'arena_gate') && (gateOpen(G.map, 'hollow_exit') || gateOpen(G.map, 'hollow_exit_gate'))), bossHp);
@@ -287,6 +406,13 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('hollow: the root-stair (warp door) leaves the Hollow up to shrine 3 (' + exitMode + ')', (await secOf()) === 'forest' && await ev(() => { const o = G.map.objects.find(q => q.shrineId === 'shrine3'); return Math.hypot(G.player.x - o.x, G.player.y - o.y) < 3.5; }));
   check('hollow: arriving at shrine 3 re-attunes it (the checkpoint follows the hero out of the Hollow)', await wf(() => { const o = G.map.objects.find(q => q.shrineId === 'shrine3'); return G.checkpoint && Math.hypot(G.checkpoint.x - o.x, G.checkpoint.y - o.y) < 2.6; }, null, 5000) && await fired('shrine3'));
 
+  // ---- §29 G3 Hawk's Rest: shrine 3 and the vantage on the summit (the root-stair lands there), the drop from the 10 onto the gate road
+  check('pinewood (§29 G3): shrine 3 stands on Hawk\'s Rest summit (h 16) and the vantage ran on arrival', await ev(() => { const o = G.map.objects.find(q => q.shrineId === 'shrine3'); return tileH(G.map, o.x, o.y) === 16; }) && await fired('hawks_rest'));
+  await vantageDone();
+  check('pinewood (§29 G3): Pip\'s line on Hawk\'s Rest shows once the reveal is over ("From up here it\'s small. It isn\'t.")', await wf(() => !G.vantage && G.msg && /small\. It isn't/.test(G.msg.s), null, 6000));
+  check('pinewood (§29 G3): Pip on the 10 ledge above the gate road', await goto('hawk_ledge'));
+  const hdrop = await walkKeys(['d', 's'], 900);
+  check('pinewood (§29 G3): walking off the 10 ledge drops onto the gate road (lands at 4)', hdrop.h === 4 && !hdrop.fall && Math.abs(hdrop.z - 4) < 0.1 && hdrop.x > 75, hdrop); await shot('pinewood_hawk_drop');
   // =================================================================== BRAMBLEHORN'S CLEARING (inline arena)
   await wait(300); await ev(() => window.__hero());
   check('clearing: the arena hint at the gate fires; arena_gate is open for good after Mossjaw', await goto('arena_hint') && await ev(() => gateOpen(G.map, 'arena_gate')));
@@ -320,6 +446,32 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   check('vale (return): settled beats stay settled - the rift is still open', (await portalOpen('pinewood')) === true);
   const da = await tryDoor('bridge_arena', 'barrier');
   check('vale (return): the Dream Arena bridge now opens with the key the Pinewood gave (after Act I)', da && da.open, da);
+
+  // =================================================================== M3 trinket sources (DESIGN 19.4 Acquisition): chest markers carry `loot`
+  // §28: the ring moved from the ledge chest to the tutorial chest (the Origin ring is the first chest's ring)
+  const wantLoot = [['vale', 'tutorial-chest', 'ring'], ['pinewood', 'boss-chest', 'amulet'], ['pinewood', 'warrens-chest', 'belt']];
+  const lootData = await ev(w => w.map(([m, label]) => { const o = G.world.maps[m].objects.filter(q => q.label === label); return { n: o.length, loot: o.length ? o[0].loot : null, chest: o.length ? o[0].t === 'chest' : false }; }), wantLoot);
+  wantLoot.forEach(([m, label, slot], i) => check(`trinket source: ${m} ${label} exists in world data with loot:'${slot}'`, lootData[i].n === 1 && lootData[i].chest && lootData[i].loot === slot, lootData[i]));
+  const lootOnlyOne = await ev(() => ['vale', 'pinewood'].flatMap(m => G.world.maps[m].objects.filter(q => q.loot).map(q => q.label)).sort().join());
+  check('trinket sources: only those three chests carry a loot field', lootOnlyOne === 'boss-chest,tutorial-chest,warrens-chest', lootOnlyOne);
+  // guarded: only once the engine honours the field (a trinketSlotOf helper, or openChest reading src.loot)
+  const engineLoot = await ev(() => typeof trinketSlotOf === 'function' || /\.loot\b/.test(String(openChest)));
+  if (engineLoot) {
+    for (const [m, label, slot] of wantLoot) {
+      const got = await ev(([mid, lb]) => { const src = G.world.maps[mid].objects.find(q => q.label === lb); window.__loot.length = 0; openChest({ x: src.x, y: src.y, z: 0, src, chest: true }); return window.__loot.slice(); }, [m, label]);
+      check(`trinket source: opening ${label} drops a ${slot} (engine active)${label === 'tutorial-chest' ? ': exactly one, the Origin ring' : ''}`, got.some(k => k.startsWith('item:' + slot + '/')) && (label !== 'tutorial-chest' || got.join() === 'item:chest/common,item:ring/uncommon,gem'), got);
+    }
+    const ledge = await ev(() => { const src = G.world.maps.vale.objects.find(q => q.label === 'ledge-chest'); return { loot: src.loot || null, placed: chestTrinket(src, 3).length }; });
+    check('trinket source: the ledge chest no longer places a ring (no loot field; random trinket drops aside)', !ledge.loot && ledge.placed === 0, ledge);
+    // chest marker guaranteed: 'epic' -> at least one Epic+ GEAR item (the belt of the Warrens chest stays Rare)
+    const RI = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4, mythic: 5 };
+    for (const label of ['mini-boss-chest', 'warrens-chest']) {
+      const runs = await ev(lb => { const src = G.world.maps.pinewood.objects.find(q => q.label === lb), out = []; for (let k = 0; k < 12; k++) { window.__loot.length = 0; openChest({ x: src.x, y: src.y, z: 0, src, chest: true }); out.push(window.__loot.slice()); } G.drops.length = 0; return out; }, label);
+      const bad = runs.filter(r => !(r.some(k => /^item:(weapon|head|chest|boots)\//.test(k) && RI[k.split('/')[1]] >= 3) && (label !== 'warrens-chest' || r.filter(k => k.startsWith('item:belt/')).pop() === 'item:belt/rare')));
+      check(`chest guaranteed: 'epic' -> ${label} always holds an Epic+ gear item (12 opens${label === 'warrens-chest' ? '; its loot belt stays Rare' : ''})`, !bad.length, bad.slice(0, 3));
+    }
+  } else console.log('  SKIP trinket-source open checks (engine does not honour chest loot yet)');
+  console.log('  guarded trinket open check active: ' + engineLoot);
 
   // =================================================================== every trigger card fired at least once
   const missing = await ev(() => { const out = {}; for (const id of ['vale', 'pinewood']) out[id] = G.world.maps[id].triggers.map(t => t.id).filter(t => !window.__fired[id + ':' + t]); return out; });

@@ -137,6 +137,36 @@ const UI = (() => {
       x += g.adv * sc;
     }
   }
+  // ---- text-run cache (DESIGN §26.4 step 5): a HUD frame drew ~300 glyph blits, each label 1-10 times (outline, shadow, fill).
+  // A run seen twice is rastered once - outline, shadow and fill, in the same order, into a canvas at the target's device scale
+  // - and blitted. Only under a plain whole-pixel transform at alpha 1 / source-over, so the pixels are the ones the direct
+  // draw makes; otherwise (fading text, a scaled menu, the fallback font) the direct path runs as before. TEXT_MAX entries;
+  // strings seen once (fresh damage numbers) never allocate.
+  const TEXT_CACHE = new Map(), TEXT_SEEN = new Map(), TEXT_MAX = 400, TEXT_PAD = 2;
+  function textCached(ctx, F, s, x, y, sz, col, outline, shadow, w) {
+    if (!API.textCache || ctx.globalAlpha !== 1 || ctx.globalCompositeOperation !== 'source-over') return false;
+    const T = ctx.getTransform(), K = T.a;
+    if (T.b !== 0 || T.c !== 0 || T.d !== K || K !== Math.round(K) || K < 1 || T.e !== Math.round(T.e) || T.f !== Math.round(T.f)) return false;
+    const k = s + '\u0001' + sz.face + '|' + sz.sc + '|' + col + '|' + (outline ? 1 : 0) + (shadow ? 1 : 0) + '|' + K;
+    let c = TEXT_CACHE.get(k);
+    if (!c) {
+      const n = (TEXT_SEEN.get(k) || 0) + 1;
+      if (n < 2) { if (TEXT_SEEN.size > TEXT_MAX * 4) TEXT_SEEN.clear(); TEXT_SEEN.set(k, n); return false; }
+      TEXT_SEEN.delete(k);
+      if (TEXT_CACHE.size >= TEXT_MAX) TEXT_CACHE.clear();
+      const P = TEXT_PAD, cw = Math.max(1, w + 2 * P + 4 * sz.sc), ch = F.f.h * sz.sc + 2 * P + 2 * sz.sc;
+      c = document.createElement('canvas'); c.width = cw * K; c.height = ch * K;
+      const x2 = c.getContext('2d'); x2.setTransform(K, 0, 0, K, 0, 0); x2.imageSmoothingEnabled = false;
+      if (outline) for (const [dx, dy] of OUTLINE) drawRun(x2, F, s, P + dx, P + dy, sz.sc, C.edge);
+      if (shadow) drawRun(x2, F, s, P + 2, P + 2, sz.sc, C.edge);
+      drawRun(x2, F, s, P, P, sz.sc, col);
+      c.cw = cw; c.ch = ch; TEXT_CACHE.set(k, c);
+    }
+    const sm = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(c, x - TEXT_PAD, y - TEXT_PAD, c.cw, c.ch);
+    ctx.imageSmoothingEnabled = sm;
+    return true;
+  }
   const OUTLINE = [[-2, 0], [2, 0], [0, -2], [0, 2], [-2, -2], [2, -2], [-2, 2], [2, 2]];
   function text(ctx, s, x, y, size = 'body', col = C.text, align = 'left', o = {}) {
     s = s == null ? '' : String(s); if (!s) return 0;
@@ -146,7 +176,8 @@ const UI = (() => {
     const outline = o.outline != null ? o.outline : size === 'heading', shadow = o.shadow !== false;
     const a0 = ctx.globalAlpha; if (o.alpha != null) ctx.globalAlpha = a0 * o.alpha;
     const F = face(sz.face);
-    if (F) {
+    if (F && textCached(ctx, F, s, x, y, sz, col, outline, shadow, w)) { /* one blit of the cached run */ }
+    else if (F) {
       if (outline) for (const [dx, dy] of OUTLINE) drawRun(ctx, F, s, x + dx, y + dy, sz.sc, C.edge);
       if (shadow) drawRun(ctx, F, s, x + 2, y + 2, sz.sc, C.edge);
       drawRun(ctx, F, s, x, y, sz.sc, col);
@@ -298,6 +329,10 @@ const UI = (() => {
   function toast(m) {
     const o = typeof m === 'string' ? { text: m } : Object.assign({}, m);
     o.t0 = now(); o.hold = o.hold || 3;
+    // loot toasts: icons.js art (24 px, frame baked in) for an item. Callers may pass { item }; items.js pickup() still passes the
+    // 16 px itemIcon, so a rarity toast finds the just-picked item in the bag by name instead (see uiToastItem)
+    if (!o.item && o.rarity && typeof uiToastItem === 'function') o.item = uiToastItem(o);
+    if (o.item && typeof uiItemIcon === 'function' && typeof ICONS !== 'undefined') { o.icon = uiItemIcon(o.item); o.framed = true; }
     toasts.push(o); while (toasts.length > 6) toasts.shift();
     return o;
   }
@@ -313,7 +348,8 @@ const UI = (() => {
       const a = age > q.hold ? 1 - (age - q.hold) / 0.3 : 1, x = X - w + slide;
       const ga = ctx.globalAlpha; ctx.globalAlpha = ga * clamp(a, 0, 1);
       frame(ctx, x, y - h, w, h, 'plain');
-      if (q.icon) { frame(ctx, x + 4, y - h + 2, 28, 28, q.rarity ? 'rarity' : 'slot', { rarity: q.rarity }); ctx.drawImage(q.icon, snap(x + 6), snap(y - h + 4), 24, 24); }
+      if (q.icon && q.framed) ctx.drawImage(q.icon, snap(x + 4), snap(y - h + 4), 24, 24);   // ICONS.item art carries its own rarity frame
+      else if (q.icon) { frame(ctx, x + 4, y - h + 2, 28, 28, q.rarity ? 'rarity' : 'slot', { rarity: q.rarity }); ctx.drawImage(q.icon, snap(x + 6), snap(y - h + 4), 24, 24); }
       text(ctx, q.text, x + 10 + iw, y - h + 8, 'body', col);
       ctx.globalAlpha = ga;
       y -= h + 4;
@@ -440,11 +476,45 @@ const UI = (() => {
     ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'butt';
     ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2); ctx.stroke(); ctx.restore();
   }
-  return {
+  const API = {
+    textCache: true,   // the text-run cache switch (tools: a same-frame cached vs direct comparison)
     S, snap, C, theme: C, SIZES: { small: 14, body: 18, heading: 27 }, el: elCol, rarityCol: rarCol, RARITY_SHAPE, ring,
     text, measure, lineH, wrap, frame, sprite, pad, bar, barReset, sweep, toast, toasts, drawToasts, tooltip, button,
     hit, click, mouseIn, begin, focus, image,
     // legacy colour keys some older call sites expect (hud.js keeps its own palette as HC until the rebuild)
     gold: C.gold, line: C.line, dim: C.dim, bg: C.bg,
   };
+  return API;
 })();
+
+// ===== item art routing (M3 UI lane): the ONE place the UI asks icons.js (ICONS) for item / gem / skill art ==========
+// ICONS.item(base, tier, rarity, gems, opts) takes the item's BASE id (never a variant or suit id) and bakes the rarity frame +
+// gem dots into a 24 px canvas. icons.js may not be loaded yet (editor.html, art lane mid-wire): every helper falls back to the
+// legacy 16 px icon routing in items.js, so callers can always drawImage the result.
+const ELEMENT_OF_DMG = { fireDmg: 'fire', frostDmg: 'frost', natureDmg: 'nature', lightningDmg: 'lightning', arcaneDmg: 'arcane', holyDmg: 'holy' };
+function uiItemIcon(it) {
+  if (!it) return null;
+  if (typeof ICONS !== 'undefined' && ICONS.item) {
+    try {
+      const b = typeof baseOf === 'function' ? baseOf(it.base) : null, el = it.implicit && ELEMENT_OF_DMG[it.implicit.id] || null;
+      return ICONS.item(it.base, it.tier != null ? it.tier : (b && b.tier) || 0, it.rarity, it.sockets || [], { element: el, implicit: el, tempered: !!it.tempered });
+    } catch (e) { /* fall back */ }
+  }
+  return itemIcon(it);
+}
+const uiArt = () => typeof ICONS !== 'undefined' && !!ICONS.item;   // true when the 24 px art (with its own frame) is available
+function uiGemIcon(gemId) {
+  const g = typeof gemParse === 'function' ? gemParse(gemId) : null; if (!g) return null;
+  if (typeof ICONS !== 'undefined' && ICONS.gem) { try { return ICONS.gem(g.type, g.grade - 1); } catch (e) { /* fall back */ } }   // ICONS grades are 0..2
+  return gemIcon(g.type, g.grade);
+}
+function uiSkillIcon(id) {
+  if (typeof ICONS !== 'undefined' && ICONS.skill) { try { return ICONS.skill(id); } catch (e) { /* fall back */ } }
+  return skillIcon(id);
+}
+// a rarity toast whose item is in the hero's bag (pickup adds it before toasting): newest match by display name
+function uiToastItem(o) {
+  const p = typeof G !== 'undefined' && G.player; if (!p || !p.bag || typeof itemName !== 'function') return null;
+  for (let i = p.bag.length - 1; i >= 0; i--) { const e = p.bag[i]; if (e && !e.gem && e.rarity === o.rarity && itemName(e) === o.text) return e; }
+  return null;
+}
