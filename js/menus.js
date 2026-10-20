@@ -327,12 +327,34 @@ const STAT_COL = { dmg: '#ff9a4a', power: '#ff9a4a', skillDmg: '#ffb86a', crit: 
   regen: '#8fe0a0', mpRegen: '#7aa0ff', speed: '#e7eeff', fireDmg: '#ff9a4a', frostDmg: '#9fe8ff', natureDmg: '#8fe0a0', lightningDmg: '#fff07a', arcaneDmg: '#d6b0ff', holyDmg: '#fff2b0' };
 const statCol = id => STAT_COL[id] || (/^res/.test(id) ? EL_COL[(id.slice(3, 4).toLowerCase() + id.slice(4))] || '#d6c2ff' : '#d6c2ff');
 // "+7% Damage", "+40 HP", "+1 Mark cap": fmtStat (items.js) for the M2 stats, a local label table for the v2-only ones
-function affixText(id, v, sign = true) {
+function affixText(id, v, sign = true) { return cleanZero(affixTextRaw(id, v, sign)); }
+function affixTextRaw(id, v, sign) {
   if (STAT_NAME[id]) return fmtStat(id, v, sign);
   const sg = sign ? (v >= 0 ? '+' : '-') : '', a = Math.abs(v), nm = AX_NAME[id] || id;
   return id === 'markCap' ? `${sg}${Math.round(a)} ${nm}` : `${sg}${+(a * 100).toFixed(a * 100 < 10 ? 1 : 0)}% ${nm}`;
 }
 const deltaText = (id, d) => '(' + (affixText(id, d, true).split(' ')[0]) + ')';
+// a delta that displays as zero ("+0%", "-0.0") is no delta: nothing is drawn
+const deltaShown = (id, d) => Math.abs(d) > 1e-3 && !/^\(?[+-]?0(\.0+)?%?\)?$/.test(affixText(id, d, true).split(' ')[0]);
+// short stat words for the touch chips ("+63 HP", "+7% Dmg"): the unit stays on the number, the word is trimmed to fit 100 px
+const CHIP_WORD = { dmg: 'Dmg', power: 'Dmg', hp: 'HP', mp: 'MP', def: 'Arm', crit: 'Crit', critDmg: 'CDmg', haste: 'Haste', cdr: 'CDR', skillDmg: 'Skill', regen: 'HP/s', mpRegen: 'MP/s', speed: 'Move',
+  statusChance: 'Status', markCap: 'Marks', chargeSpeed: 'Charge', onDodge: 'Dodge', onKill: 'Kill MP' };
+function chipText(id, v) {
+  const t = affixText(id, v, true), sp = t.indexOf(' '), num = sp < 0 ? t : t.slice(0, sp), nm = sp < 0 ? '' : t.slice(sp + 1);
+  const w = CHIP_WORD[id] || (/^res/.test(id) ? nm.replace(' res', ' r') : nm);
+  return w ? `${num} ${w}` : num;
+}
+// the compact compare (HUD.md): up to 3 stat deltas of `it` against the item it would replace, largest relative change first.
+// Totals are statsOf (base + implicit + affixes + gems), so a socketed gem or a different base counts too.
+function compareDeltas(it, cmp) {
+  if (!it || !cmp || typeof statsOf !== 'function') return [];
+  const a = statsOf(it), b = statsOf(cmp), out = [];
+  for (const k of new Set(Object.keys(a).concat(Object.keys(b)))) {
+    const d = (a[k] || 0) - (b[k] || 0); if (!STAT_NAME[k] || !deltaShown(k, d)) continue;
+    out.push({ id: k, d, text: cleanZero(fmtStat(k, d, true)), rel: Math.abs(d) / Math.max(Math.abs(a[k] || 0), Math.abs(b[k] || 0), 1e-6) });
+  }
+  return out.sort((x, y) => y.rel - x.rel).slice(0, 3);
+}
 function wrapLines(s, size, w, max) {
   const out = []; let line = '';
   for (const wd of String(s).split(' ')) { const t = line ? line + ' ' + wd : wd; if (UI.measure(t, size) > w && line) { out.push(line); line = wd; } else line = t; }
@@ -387,22 +409,23 @@ function itemTipRows(p, it, o = {}) {
   const fm = !isTrinket(it) ? item(it.slot, b.family) : null;
   if (fm) { if (it.slot === 'weapon') for (const k of ['q', 'e', 'r']) { if (fm[k] && fm[k][0] && SKILLS[fm[k][0]]) skills.push({ id: fm[k][0], key: k.toUpperCase() }); } else if (fm.skill && SKILLS[fm.skill]) skills.push({ id: fm.skill, key: SKILL_KEY[it.slot] }); }
   const gemText = it.sockets.filter(Boolean).map(g => { const gs = gemStats(g, it.slot); return Object.entries(gs).map(([k, v]) => fmtStat(k, v)).join(' '); }).join(', ');
-  if (it.sockets.length) add('sockets', 2, 30, { sockets: it.sockets, text: gemText, skills: touch ? skills : [] });
-  else if (touch && skills.length) add('sockets', 2, 30, { sockets: [], text: '', skills });
+  if (it.sockets.length) add('sockets', 2, 30, { sockets: it.sockets, text: gemText, skills: [] });
   // 7 trinket boon, unique rule
   if (it.boon && it.boon.text) add('boon', 2, 0, { lines: wrapLines((it.boon.grade === 'minor' ? 'Minor: ' : 'Boon: ') + it.boon.text, 'small', w, 2) });
   const rule = tipRuleText(it); if (rule) add('rule', 1, 0, { lines: wrapLines(rule, 'small', w, 2) });
   // 8 family line, 9 granted skills
   if (!touch) {
     const fl = tipFamily(p, it); if (fl) add('family', 5, LH, { s: fl });
-    if (skills.length) add('skills', 6, 30, { skills });
+  }
+  // granted skills with their names (R3 #4): Q E R at phone width too, so this sits outside the desktop-only block
+  if (skills.length) add('skills', touch ? 3 : 6, 44, { skills });
+  if (!touch) {
     const tags = tipTags(it); if (tags.length) add('syn', 8, 0, { lines: wrapLines('Synergises with: ' + tags.join(', '), 'small', w, 2) });
     const fv = typeof FLAVOR !== 'undefined' && (FLAVOR[it.unique] || FLAVOR[it.base]); if (fv) add('flavor', 7, 0, { lines: wrapLines(fv, 'small', w, 2) });
   }
   // 12 footer: Found / Kills / Tempered
   const h = it.hist || {}, parts = [];
-  const zone = h.found && G.world && G.world.maps && G.world.maps[h.found];
-  if (h.found) parts.push('Found: ' + ((zone && zone.name) || h.found));
+  if (h.found) parts.push('Found: ' + zoneName(h.found));
   if (it.slot === 'weapon' && (h.kills || 0) > 0) parts.push('Kills ' + h.kills);
   if (it.tempered) parts.push('Tempered');
   if (parts.length) add('footer', 4, LH, { parts, tempered: !!it.tempered });
@@ -426,7 +449,7 @@ function drawTipRows(ctx, T, x, y, w, o = {}) {
       const ic = r.icon; if (ic) { ctx.imageSmoothingEnabled = false; if (ic.width === 24) ctx.drawImage(ic, x, yy + 3, 24, 24); else ctx.drawImage(ic, x, yy + 1, 28, 28); }
       UI.text(ctx, r.label, x + 32, yy + 8, 'small', UC.text);
       r.stats.forEach((st, i) => {
-        const dt = st.d && Math.abs(st.d) > 1e-3 ? deltaText(st.id, st.d) : '', dw = dt ? UI.measure(dt, 'small') + 6 : 0, sy = yy + (r.stats.length > 1 ? i * 14 : 8) - (r.stats.length > 1 ? 1 : 0);
+        const dt = st.d && deltaShown(st.id, st.d) ? deltaText(st.id, st.d) : '', dw = dt ? UI.measure(dt, 'small') + 6 : 0, sy = yy + (r.stats.length > 1 ? i * 14 : 8) - (r.stats.length > 1 ? 1 : 0);
         if (dt) UI.text(ctx, dt, x + w, sy, 'small', st.d > 0 ? TIP_GREEN : UC.danger, 'right');
         UI.text(ctx, st.s, x + w - dw, sy, 'small', UC.text, 'right');
       });
@@ -438,14 +461,14 @@ function drawTipRows(ctx, T, x, y, w, o = {}) {
       const pc = r.tempered ? UC.gold : r.kind === 'P' ? UC.bright : UC.dim;
       UI.text(ctx, pips(r.tier), x, yy, 'small', pc);
       UI.text(ctx, fitText(r.text, w - 120, 'small'), x + 44, yy, 'small', UC.text);
-      if (r.hasCmp && Math.abs(r.d) > 1e-3) UI.text(ctx, deltaText(r.id, r.d), x + w, yy, 'small', r.d > 0 ? TIP_GREEN : UC.danger, 'right');
+      if (r.hasCmp && deltaShown(r.id, r.d)) UI.text(ctx, deltaText(r.id, r.d), x + w, yy, 'small', r.d > 0 ? TIP_GREEN : UC.danger, 'right');
     } else if (r.k === 'chips') {
       r.aff.forEach((a, i) => {
         const cx = x + (i % 3) * Math.floor(w / 3), cy = yy + Math.floor(i / 3) * 26;
         UI.sprite(ctx, 'bullet', cx, cy + 4, { scale: 2, tint: a.tempered ? UC.gold : statCol(a.id) });
-        const num = affixText(a.id, a.v, true).split(' ')[0];
-        const tw = UI.text(ctx, num, cx + 18, cy + 2, 'small', UC.text);
-        if (a.hasCmp && Math.abs(a.d) > 1e-3) UI.text(ctx, a.d > 0 ? '▲' : '▼', cx + 22 + tw, cy + 2, 'small', a.d > 0 ? TIP_GREEN : UC.danger);
+        const txt = chipText(a.id, a.v);
+        const tw = UI.text(ctx, fitText(txt, Math.floor(w / 3) - 36), cx + 18, cy + 2, 'small', UC.text);
+        if (a.hasCmp && deltaShown(a.id, a.d)) UI.text(ctx, a.d > 0 ? '▲' : '▼', cx + 22 + Math.min(tw, Math.floor(w / 3) - 36), cy + 2, 'small', a.d > 0 ? TIP_GREEN : UC.danger);
       });
     } else if (r.k === 'sockets') {
       const p = o.p, it = o.it; let cx = x;
@@ -466,7 +489,14 @@ function drawTipRows(ctx, T, x, y, w, o = {}) {
     } else if (r.k === 'boon') r.lines.forEach((l, i) => UI.text(ctx, l, x, yy + i * LH, 'small', TIP_BOON));
     else if (r.k === 'rule') r.lines.forEach((l, i) => UI.text(ctx, l, x, yy + i * LH, 'small', UC.gold));
     else if (r.k === 'family') UI.text(ctx, fitText(r.s, w, 'small'), x, yy, 'small', UC.bright);
-    else if (r.k === 'skills') { let sx = x; for (const s of r.skills) { ctx.imageSmoothingEnabled = false; ctx.drawImage(uiSkillIcon(s.id), sx, yy + 3, 24, 24); const tw = UI.text(ctx, s.key, sx + 28, yy + 8, 'small', UC.dim); sx += 36 + tw; } }
+    else if (r.k === 'skills') {   // icon + key on one line, the skill's name under it (fits three 100 px columns at phone width)
+      const sw = Math.floor(w / r.skills.length);
+      r.skills.forEach((s, i) => {
+        const sx = x + i * sw; ctx.imageSmoothingEnabled = false; ctx.drawImage(uiSkillIcon(s.id), sx, yy + 1, 24, 24);
+        UI.text(ctx, s.key, sx + 28, yy + 6, 'small', UC.dim);
+        UI.text(ctx, fitText((SKILLS[s.id] || {}).name || s.id, sw - 6), sx, yy + 28, 'small', UC.text);
+      });
+    }
     else if (r.k === 'syn') r.lines.forEach((l, i) => UI.text(ctx, l, x, yy + i * LH, 'small', UC.dim));
     else if (r.k === 'flavor') r.lines.forEach((l, i) => UI.text(ctx, l, x, yy + i * LH, 'small', '#7e72a8'));
     else if (r.k === 'footer') { let cx = x; r.parts.forEach((s, i) => { if (i) { ctx.fillStyle = UC.bevel; ctx.fillRect(cx + 2, yy + 6, 2, 2); cx += 10; } cx += UI.text(ctx, s, cx, yy, 'small', s === 'Tempered' ? UC.gold : UC.dim); }); }
