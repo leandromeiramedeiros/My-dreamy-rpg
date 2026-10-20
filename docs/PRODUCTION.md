@@ -19,7 +19,7 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 | Milestone | State |
 |---|---|
 | M1 Foundation + inventory & loot | **LIVE** (PR #1 merged, deploy green) |
-| M2a HUD rework, input/gamepad, combat feel, settings, perf items | in progress — branch `claude/m2a-hud-controls`, draft PR #2 |
+| M2a HUD rework, input/gamepad, combat feel, settings, perf items | **LIVE** (PR #2) |
 | M2b Act I slice (Pinewood 56 + Root Hollow + Bramblehorn, Vale 40, boss system, dialogue, quests, audio engine, music, 3 save slots, first 10 minutes) | next |
 | M3 Hero (`js/hero.js`) + icons (`js/icons.js`) wired in, enemies rescaled, **items v2 + trinkets core (DESIGN §19)** | planned |
 | M4 Act II Ruins + statuses/reactions + bestiary + combo layer + Thief/Origins | planned |
@@ -75,3 +75,10 @@ Live game: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys fro
 * Code still gives bosses 2 levels (§20.3: 1, mini 0.5) and 0.8× XP at +3 levels (§20.3: 10 %).
 * Hero DPS curve: 1.57× target at L1, 0.80× at L40 → flatter early, steeper tier steps.
 * Check: `ogre`/`troll` spawn ids vs ENEMY table (validate-ids).
+
+## Polish backlog (from M2a review)
+* Touch: zone banner overlaps the bag/help/fullscreen buttons — move buttons under the tracker or banner lower.
+* Tooltip "vs equipped:" line is empty when nothing to compare — hide it.
+* Bag/gear still use the old 16 px icons until M3 wires `js/icons.js`.
+* Boss bar shows 2 phase pips (engine has one phase flag) until the boss system lands in M2b.
+

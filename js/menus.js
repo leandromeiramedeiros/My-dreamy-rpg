@@ -91,7 +91,7 @@ function drawTabScreen(ctx) {
 const EQ_POS = { weapon: [40, 92], head: [184, 92], chest: [40, 176], boots: [184, 176] };
 const EQ_LABEL = { weapon: 'Weapon', head: 'Helm', chest: 'Chest', boots: 'Boots' };
 function statRows(p, short) {
-  const S = short ? { 'Crit dmg': 'CDmg', 'Skill dmg': 'SkDmg', Potions: 'Pots', Speed: 'Spd' } : {};
+  const S = short ? { 'Crit dmg': 'CDmg', 'Skill dmg': 'SkDmg', Potions: 'Pots', Speed: 'Spd', Regen: 'Rgn' } : {};
   return [['Atk', Math.round(item('weapon', p.gear.weapon).basic.dmg * p.power)], ['HP', p.maxHp], ['MP', p.maxMp], ['Def', pctText(p.def)], ['Crit', pctText(p.crit)], ['Crit dmg', '+' + pctText(p.critDmg)],
     ['Haste', '+' + pctText(p.haste)], ['CDR', '-' + pctText(p.cdr)], ['Skill dmg', '+' + pctText(p.skillDmg)], ['Regen', `${+p.regen.toFixed(1)}/s`], ['Potions', `${p.potions}/${MAX_POTIONS}`], ['Speed', `+${Math.round((p.speed / 3.7 - 1) * 100)}%`]].map(([k, v]) => [S[k] || k, v]);
 }
@@ -246,8 +246,8 @@ function drawItemPanel(ctx, p, x, y, w, what, hov, gemPick) {
   // skills with icons
   yy += 6; mnDivider(ctx, x + 8, yy, w - 16, 2); yy += 10;
   const fam = item(b.slot, b.family);
-  if (b.slot === 'weapon') for (const k of ['q', 'e', 'r']) { ctx.drawImage(skillIcon(fam[k][0]), x + 8, yy, 32, 32); UI.text(ctx, k.toUpperCase(), x + 46, yy + 2, 'small', UC.dim); UI.text(ctx, fitText(fam[k].map(id => SKILLS[id].name).join(' / '), w - 76), x + 66, yy + 2, 'small', UC.text); yy += 36; }
-  else { ctx.drawImage(skillIcon(fam.skill), x + 8, yy, 32, 32); UI.text(ctx, { chest: 'F', head: 'C', boots: 'SHF' }[b.slot], x + 46, yy + 2, 'small', UC.dim); UI.text(ctx, SKILLS[fam.skill].name, x + 66, yy + 2, 'small', UC.text); yy += 36; }
+  if (b.slot === 'weapon') for (const k of ['q', 'e', 'r']) { ctx.drawImage(skillIcon(fam[k][0]), x + 8, yy, 32, 32); UI.text(ctx, k.toUpperCase(), x + 46, yy + 2, 'small', UC.dim); UI.text(ctx, fitText(fam[k].map(id => SKILLS[id].name).join(' / '), w - 76), x + 84, yy + 2, 'small', UC.text); yy += 36; }
+  else { ctx.drawImage(skillIcon(fam.skill), x + 8, yy, 32, 32); UI.text(ctx, { chest: 'F', head: 'C', boots: 'SHF' }[b.slot], x + 46, yy + 2, 'small', UC.dim); UI.text(ctx, SKILLS[fam.skill].name, x + 84, yy + 2, 'small', UC.text); yy += 36; }
   if (what.eq || eq === it) UI.text(ctx, 'Equipped', x + 8, 432, 'small', UC.gold);
   else if (what.bi != null && what.bi >= 0) {
     UI.text(ctx, cmp ? 'vs equipped:' : 'Nothing equipped here', x + 8, 436, 'small', UC.dim);
@@ -428,6 +428,17 @@ function drawBestiaryTab(ctx, p) {
 }
 
 // ===== QUESTS ======================================================================================================================
+// a reward / extra is a string id or { kind, id?, n? } (rune, shard, gem, tome, dust, ...): icon + label, never "[object Object]"
+const REWARD_ICON = { shard: 'xp', rune: 'rune', socket_rune: 'rune', dust: 'dust', tome: 'chest', chest: 'chest', potion: 'potion', xp: 'xp' };
+function rewardChip(r) {
+  const kind = typeof r === 'string' ? r : (r && r.kind) || '?', id = r && typeof r === 'object' && r.id ? String(r.id) : '';
+  const nice = v => String(v).replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+  let img;
+  if (kind === 'gem') img = gemIcon('ruby');
+  else { const g = REWARD_ICON[kind] || (kind.includes('tome') ? 'chest' : 'chest'); try { img = miscIcon(g); } catch (e) { img = miscIcon('chest'); } }
+  const n = r && typeof r === 'object' && r.n > 1 ? ` x${r.n}` : '';
+  return [img, (id ? `${nice(kind)} of ${id}` : nice(kind)) + n];
+}
 const qDone = id => { const q = G.prog && G.prog.quests && G.prog.quests[id]; return q === 'done' || !!(q && q.done); };
 const qStep = id => { const q = G.prog && G.prog.quests && G.prog.quests[id]; return (q && q.step) || 0; };
 function drawQuestsTab(ctx, p) {
@@ -466,9 +477,8 @@ function drawQuestsTab(ctx, p) {
   });
   yy += 14; mnHead(ctx, 'REWARD', x, yy); yy += 22;
   const rw = sel.reward || {}, icons = [];
-  if (rw.kind === 'shard') icons.push([miscIcon('xp'), `Shard of ${rw.id}`]);
-  else if (rw.kind === 'choice') { icons.push([gemIcon('ruby'), 'Gem']); icons.push([miscIcon('dust'), 'Socket rune']); }
-  if (sel.extra) icons.push([miscIcon('chest'), String(sel.extra).replace(/_/g, ' ')]);
+  if (rw.kind === 'choice') { icons.push([gemIcon('ruby'), 'Gem']); icons.push([miscIcon('dust'), 'Socket rune']); } else icons.push(rewardChip(rw));
+  if (sel.extra) icons.push(rewardChip(sel.extra));
   let ix = x;
   icons.forEach(([img, label], i) => {
     hudFrame(ctx, ix, yy, 44, 44, 'slot'); ctx.drawImage(img, ix + 6, yy + 6, 32, 32); hudFrame(ctx, ix, yy, 44, 44, 'slotRim', { tint: UC.line });
