@@ -11,6 +11,22 @@
 // dark sections give the hero a lantern and thin the fog.
 // ---------------------------------------------------------------------------
 const SCN = makeCanvas(RW, RH), sctx = SCN.x;
+// ===== §26.4 perf instrumentation ==========================================================================================
+// ?perf=1: the on-screen readout (main.js drawPerfOverlay: fps, avg / p95 frame, work ms, draw calls, particles, the phase split).
+// perfMark(name) closes the phase that ended at this point of the frame (main.js perfBegin opens the frame). Off = one boolean
+// test per mark, nothing else installed. ?perf=flush also reads one scene pixel after each phase so the deferred raster work
+// lands in the phase that queued it (a profiling mode: the readback itself slows the frame).
+const PERF = (() => {
+  let q = null; try { q = new URLSearchParams(location.search).get('perf'); } catch (e) { /* no location */ }
+  return { on: !!q && q !== '0', flush: q === 'flush', t: 0, ph: {}, draws: 0 };
+})();
+// quality tiers (§26.4 steps 3-4): 'high' = desktop, the reference look; 'phone' = the ?phone=1 / coarse-pointer caps
+const QUALITY = { tier: 'high' };
+function perfMark(name, cx) {
+  if (!PERF.on) return;
+  if (PERF.flush) (cx || sctx).getImageData(0, 0, 1, 1);
+  const t = performance.now(); PERF.ph[name] = (PERF.ph[name] || 0) + t - PERF.t; PERF.t = t;
+}
 const LM = makeCanvas(RW / 2, RH / 2);
 const B1 = makeCanvas(RW / 4, RH / 4), BT = makeCanvas(RW / 4, RH / 4), B2 = makeCanvas(RW / 8, RH / 8), BC = makeCanvas(RW / 4, RH / 4);
 let VIGNETTE = null, GRADE = {};
@@ -192,7 +208,9 @@ function drawScene() {
   const lights = [];
   CHUNK.frame++;
   const sceneT0 = performance.now();
+  perfMark('other');
   groundTick(m, false);
+  perfMark('chunks');
   const look = sectionLook(m, p, th);
   const [vtx0, vty0, vtx1, vty1] = viewTiles();
   const viewObjs = gridQuery(m, 'objs', vtx0, vty0, vtx1, vty1);
@@ -248,6 +266,7 @@ function drawScene() {
     }
     ctx.globalCompositeOperation = 'source-over';
   }
+  perfMark('sky');
   // cloud sea far below
   const groundBot = (m.W + m.H) * 8 + 12;
   if (typeof drawCloudSea === 'function') drawCloudSea(ctx, m, camX, camY, G.t);   // §29: 2-layer cloud sea + island shadow (maps.js, cached)
@@ -258,9 +277,12 @@ function drawScene() {
     }
   });
 
+  perfMark('sea');
   // ---- island ----
   drawGround(ctx, m);
+  perfMark('ground');
   for (const f of m.falls) if (f.edge) drawFall(ctx, f, true);
+  perfMark('falls');
   drawWater(ctx, m, vtx0, vty0, vtx1, vty1);
   if (m.hasRunes) drawSigil(ctx, m, lights);
 
@@ -270,6 +292,7 @@ function drawScene() {
     ctx.globalAlpha = 0.85; ctx.drawImage(c, Math.round(x), Math.round(y)); ctx.globalAlpha = 1;
   });
 
+  perfMark('ground');
   // ---- ground decals: shadows, telegraphs, zones ----
   ctx.fillStyle = 'rgba(20,8,40,0.32)';
   const shadow = (x, y, z, r) => { const [vx, vy] = worldToView(x, y, z); ctx.beginPath(); ctx.ellipse(Math.round(vx), Math.round(vy), r, r * 0.45, 0, 0, Math.PI * 2); ctx.fill(); };
@@ -285,6 +308,7 @@ function drawScene() {
   if (aimNow) drawAimIndicator(aimNow.aim, aimNow.from, aimNow.to, aimNow);
   for (const e of G.effects) if (e.type === 'aimflash') drawAimIndicator(e.aim, e.from, e.to, { col: e.col, flash: true });
 
+  perfMark('decals');
   // ---- depth-sorted world ----
   const list = [];
   const inView = (sx, sy, w = 80) => { const vx = sx - camX + RW / 2, vy = sy - camY + RH / 2; return vx > -w && vx < RW + w && vy > -w * 1.5 && vy < RH + w * 1.5; };
@@ -307,12 +331,14 @@ function drawScene() {
   for (const it of list) drawItem(ctx, it, lights);
   if (aimNow) drawAimReticleTop(aimNow);   // the reticle again on top at 35 % so it reads over a boss
 
+  perfMark('entities');
   // ---- top effects + particles ----
   ctx.globalCompositeOperation = 'lighter';
   for (const e of G.effects) if (e.type !== 'tele' && e.type !== 'marker' && e.type !== 'line' && e.type !== 'ghost' && e.type !== 'summon' && e.type !== 'aimflash') drawEffect(ctx, e, lights);
   ctx.globalCompositeOperation = 'source-over';
   drawParticles(ctx, lights);
 
+  perfMark('fx');
   // ---- fog & mist ----
   const forest = m.themeId === 'forest', fk = 1 - look.dark * 0.7;
   drawFog(ctx, bg.fog, 256, 0.5, 7, 2.5, (forest ? 0.24 : m.themeId === 'vale' ? 0.15 : 0.18) * fk);
@@ -321,6 +347,7 @@ function drawScene() {
     if (forest) drawFog(ctx, bg.fog, 512, 1.1, 3, 0.6, 0.14 * fk);   // heavy low mist banks
   }
 
+  perfMark('fog');
   // ---- lighting ----
   lightsIn(m, camX - RW / 2, camY - RH / 2, camX + RW / 2, camY + RH / 2, lights);
   for (const o of viewObjs) if (o.brazier) { lights.push({ sx: isoX(o.x, o.y), sy: isoY(o.x, o.y, o.z) - 14, r: 70 + Math.sin(G.t * 13 + o.x) * 6, col: '#c77bff', a: 0.9 }); }
@@ -329,14 +356,18 @@ function drawScene() {
   if (heroL) lights.push(heroL);
   applyLighting(ctx, lights, th, look.css);
 
+  perfMark('lights');
   // ---- bloom + grade ----
   applyBloom(ctx, th.bloom * (typeof flashCap === 'function' ? flashCap() : 1));
+  perfMark('bloom');
   ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.22; ctx.drawImage(GRADE[m.themeId], 0, 0);
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   if (p.buffs.dreamveil) { ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = 'rgba(255,140,220,0.25)'; ctx.fillRect(0, 0, RW, RH); ctx.globalCompositeOperation = 'source-over'; }
   ctx.drawImage(VIGNETTE, 0, 0);
   if (p.hurtT > 0) { ctx.fillStyle = `rgba(255,40,90,${p.hurtT * 0.6})`; ctx.fillRect(0, 0, RW, RH); }
+  perfMark('grade');
   groundTick(m, true, performance.now() - sceneT0);   // idle prefetch with what is left of the frame
+  perfMark('chunks');
 }
 
 // perf: the moon disc was ~(2r+1)^2 fillRects + value-noise calls EVERY frame (~10 % of a play frame headless); it is

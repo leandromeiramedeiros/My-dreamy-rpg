@@ -147,15 +147,18 @@ function render() {
   drawScene();
   dctx.imageSmoothingEnabled = false;
   dctx.drawImage(SCN.c, 0, 0, DW, DH);
+  perfMark('blit', dctx);
   UI.begin();
   drawHUD(dctx);   // draws its own toasts and focus ring per screen
   if (typeof AUDIO !== 'undefined') AUDIO.drawCaptions(dctx);   // sound captions (setting), bottom-left
+  perfMark('hud', dctx);
   G.ui.wheel = 0;
   if (G.fade > 0) {
     const g = dctx.createRadialGradient(DW / 2, DH / 2, 0, DW / 2, DH / 2, DW * 0.7);
     g.addColorStop(0, `rgba(255,240,255,${G.fade})`); g.addColorStop(1, `rgba(199,168,255,${G.fade})`);
     dctx.fillStyle = g; dctx.fillRect(0, 0, DW, DH);
   }
+  if (PERF.on) drawPerfOverlay(dctx);
 }
 
 // Fixed-step update at 1/60 s with an accumulator (§16.6.3): deterministic reactions, hitstop and scripted
@@ -166,6 +169,7 @@ const STEP = 1 / 60;
 let last = performance.now(), acc = 0, running = true, frameEma = 16.7;
 function loop(now) {
   if (!running) return;
+  if (PERF.on) perfBegin(now - last);
   const fdt = Math.min(0.25, (now - last) / 1000); last = now;
   frameEma += (fdt * 1000 - frameEma) * 0.05;
   // particle budget follows the measured frame time: shed motes first when a device struggles
@@ -181,11 +185,65 @@ function loop(now) {
     acc -= STEP; n++;
   }
   if (n === 5) acc = 0;   // spiral-of-death guard after a long stall
+  perfMark('update');
   render();
   if (PRELOAD) preloadStep(clamp(PRELOAD_FRAME - (performance.now() - frameT0), 2, PRELOAD_MS));   // a portal fade's map load (see transition)
   else if (G.state === 'dead') prebuildRespawn(clamp(PRELOAD_FRAME - (performance.now() - frameT0), 2, PRELOAD_MS));
   if (typeof AUDIO !== 'undefined') AUDIO.frame(fdt);   // music director: song / stems / intensity / ducking (notes are timed by its 25 ms audio-clock tick)
+  if (PERF.on) perfEnd(performance.now() - frameT0);
   requestAnimationFrame(loop);
+}
+
+// ===== ?perf=1: the on-screen frame readout (DESIGN §26.4 step 1: measure on the real device) =============================
+// Top-left box, refreshed 4x a second from a 240-frame ring: fps, frame avg / p95 (the rAF delta), work avg / p95 (CPU inside
+// loop(): update + render + preload), draw calls (2D context calls this frame, counted by wrappers installed only when ?perf
+// is set), particles (pooled + ambient), and the per-phase split (render.js perfMark). Off: `PERF.on` is false, nothing is
+// wrapped, the loop pays two boolean tests. window.__perf() returns the same numbers for tools.
+const PERF_N = 240, PERF_RING = { f: new Float32Array(PERF_N), w: new Float32Array(PERF_N), i: 0, n: 0, ph: {}, phN: 0, tot: {}, totN: 0, txt: null, at: 0 };
+function perfBegin(dms) {
+  const R = PERF_RING; R.f[R.i] = dms; PERF.t = performance.now(); PERF.draws = 0;
+  for (const k in PERF.ph) PERF.ph[k] = 0;
+}
+function perfEnd(work) {
+  const R = PERF_RING; R.w[R.i] = work; R.i = (R.i + 1) % PERF_N; R.n = Math.min(PERF_N, R.n + 1);
+  for (const k in PERF.ph) { R.ph[k] = (R.ph[k] || 0) + PERF.ph[k]; R.tot[k] = (R.tot[k] || 0) + PERF.ph[k]; }
+  R.phN++; R.totN++;
+  R.draws = PERF.draws;
+}
+// perfStats(true): the phase split averaged since the last perfStats(true, true) reset (tools/perf.js), not the overlay's 250 ms window
+function perfStats(total, reset) {
+  const R = PERF_RING, n = R.n; if (!n) return null;
+  if (reset) { R.tot = {}; R.totN = 0; return null; }
+  const q = a => { const s = Array.from(a.subarray(0, n)).sort((x, y) => x - y); return { avg: s.reduce((x, y) => x + y, 0) / n, p95: s[Math.min(n - 1, Math.floor(n * 0.95))] }; };
+  const f = q(R.f), w = q(R.w), ph = {};
+  const src = total ? R.tot : R.ph, sn = total ? R.totN : R.phN;
+  for (const k in src) ph[k] = +(src[k] / Math.max(1, sn)).toFixed(2);
+  return { fps: 1000 / f.avg, frame: f, work: w, draws: R.draws, parts: G.parts.length + (G.amb ? G.amb.length : 0), ph, tier: QUALITY.tier };
+}
+window.__perf = perfStats;
+function drawPerfOverlay(ctx) {
+  const R = PERF_RING, t = performance.now();
+  if (!R.txt || t - R.at > 250) {
+    const s = perfStats(); R.at = t;
+    if (s) {
+      const ph = Object.entries(s.ph).filter(([, v]) => v >= 0.05).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v.toFixed(1));
+      R.txt = [`${s.fps.toFixed(0)} fps  frame ${s.frame.avg.toFixed(1)} / p95 ${s.frame.p95.toFixed(1)} ms`, `work ${s.work.avg.toFixed(1)} / p95 ${s.work.p95.toFixed(1)} ms  q:${s.tier}`,
+        `draws ${s.draws}  parts ${s.parts}`].concat(ph.reduce((rows, x, i) => { if (i % 4 === 0) rows.push(x); else rows[rows.length - 1] += '  ' + x; return rows; }, []));
+      for (const k in R.ph) R.ph[k] = 0; R.phN = 0;
+    }
+  }
+  if (!R.txt) return;
+  ctx.save(); ctx.setTransform(HUD_K, 0, 0, HUD_K, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.font = '11px monospace'; ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(5,3,12,0.72)'; ctx.fillRect(4, 4, 318, 6 + R.txt.length * 13);
+  ctx.fillStyle = '#c8ffd8'; R.txt.forEach((l, i) => ctx.fillText(l, 9, 8 + i * 13));
+  ctx.restore();
+}
+if (PERF.on) {   // count 2D draw calls (only with ?perf: the wrappers cost a little)
+  const P = CanvasRenderingContext2D.prototype;
+  for (const k of ['drawImage', 'fillRect', 'fill', 'stroke', 'strokeRect', 'fillText', 'strokeText', 'putImageData', 'clearRect']) {
+    const f = P[k]; P[k] = function () { PERF.draws++; return f.apply(this, arguments); };
+  }
 }
 // pause the loop while the tab is hidden; resume without a time jump
 document.addEventListener('visibilitychange', () => {

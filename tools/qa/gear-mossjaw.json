@@ -1,0 +1,149 @@
+{
+ "at": "2026-10-20T12:37:53.876Z",
+ "level": 8,
+ "maxHp": 967,
+ "def": 0.17898193760262726,
+ "power": 0.847,
+ "dmgBase": 0.847,
+ "bonus": 0,
+ "crit": 0.08,
+ "critDmg": 0.8,
+ "potions": 3,
+ "weapon": "sword",
+ "equip": {
+  "weapon": {
+   "id": "i_5",
+   "base": "rustyblade",
+   "variant": "sword",
+   "class": "blades",
+   "suit": null,
+   "slot": "weapon",
+   "tier": 0,
+   "rarity": "common",
+   "ilvl": 1,
+   "req": 1,
+   "implicit": {
+    "id": "slashDmg",
+    "v": 0.04,
+    "text": "+4% slash damage"
+   },
+   "affixes": [],
+   "sockets": [],
+   "boon": null,
+   "rule": null,
+   "unique": null,
+   "hist": {
+    "found": null,
+    "kills": 39,
+    "bossKills": 0
+   },
+   "tempered": null,
+   "name": {
+    "prefix": null,
+    "suffix": null
+   }
+  },
+  "head": {
+   "id": "i_6",
+   "base": "ironcap",
+   "variant": "knighthelm",
+   "class": "heavy",
+   "suit": "warden",
+   "slot": "head",
+   "tier": 0,
+   "rarity": "common",
+   "ilvl": 1,
+   "req": 1,
+   "implicit": {
+    "id": "def",
+    "v": 0.02,
+    "text": "+2 Armour"
+   },
+   "affixes": [],
+   "sockets": [],
+   "boon": null,
+   "rule": null,
+   "unique": null,
+   "hist": {
+    "found": null,
+    "kills": 0,
+    "bossKills": 0
+   },
+   "tempered": null,
+   "name": {
+    "prefix": null,
+    "suffix": null
+   }
+  },
+  "chest": {
+   "id": "i_7",
+   "base": "ironmail",
+   "variant": "warden",
+   "class": "heavy",
+   "suit": "warden",
+   "slot": "chest",
+   "tier": 0,
+   "rarity": "common",
+   "ilvl": 1,
+   "req": 1,
+   "implicit": {
+    "id": "hp",
+    "v": 15,
+    "text": "+15 HP"
+   },
+   "affixes": [],
+   "sockets": [
+    null
+   ],
+   "boon": null,
+   "rule": null,
+   "unique": null,
+   "hist": {
+    "found": null,
+    "kills": 0,
+    "bossKills": 0
+   },
+   "tempered": null,
+   "name": {
+    "prefix": null,
+    "suffix": null
+   }
+  },
+  "boots": {
+   "id": "i_8",
+   "base": "ironboots",
+   "variant": "knightgreaves",
+   "class": "heavy",
+   "suit": "warden",
+   "slot": "boots",
+   "tier": 0,
+   "rarity": "common",
+   "ilvl": 1,
+   "req": 1,
+   "implicit": {
+    "id": "hp",
+    "v": 10,
+    "text": "+10 HP"
+   },
+   "affixes": [],
+   "sockets": [],
+   "boon": null,
+   "rule": null,
+   "unique": null,
+   "hist": {
+    "found": null,
+    "kills": 0,
+    "bossKills": 0
+   },
+   "tempered": null,
+   "name": {
+    "prefix": null,
+    "suffix": null
+   }
+  },
+  "ring1": null,
+  "ring2": null,
+  "amulet": null,
+  "belt": null
+ }
+}
