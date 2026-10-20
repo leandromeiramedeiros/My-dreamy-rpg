@@ -39,7 +39,7 @@
 // (visible-missing first, nearest the camera). Only the chunk under the camera is built synchronously (behind the
 // fade / loading screen); a 1/4-res preview covers chunks still in the queue. Columns (elevated tiles) are rastered
 // with their chunk and freed with it. m.ground exists only in the editor (EDITOR_MODE: one full raster).
-// PHONE = pointer: coarse, or ?phone=1 / ?phone=0 to force (engine-check's phone pass).
+// PHONE = pointer: coarse, or ?phone=1 / ?phone=0 to force (the engine tour's phone pass: tools/engine-tour.js).
 // SPATIAL GRID (8x8-tile buckets): gridQuery(m, 'objs' | 'cols' | 'water', x0, y0, x1, y1, out) · nearColliders(m, x, y,
 // r, out) · lightsIn(m, sx0, sy0, sx1, sy1, out) (screen-space 256 px cells). Rebuilt lazily when the arrays change.
 // ---------------------------------------------------------------------------
@@ -330,7 +330,7 @@ function buildChunkStep(m, idx, ms) {
   let job = CHUNK.jobs.get(key);
   if (!job) { job = { m, idx, img: new ImageData(S, S), row: 0, col: 0 }; CHUNK.jobs.set(key, job); }
   job.touch = CHUNK.frame;
-  const BAND = PHONE ? 16 : 8;
+  const BAND = PHONE ? 8 : 4;   // rows per step: ~1 ms, so a frame budget is never overshot by much
   while (job.row < S) {
     rasterRect(m, job.img, ci * S, cj * S, ci * S, cj * S + job.row, S, Math.min(BAND, S - job.row));
     job.row += BAND;
@@ -346,6 +346,13 @@ function buildChunkStep(m, idx, ms) {
   CHUNK.cache.set(key, { m, idx, c: job.c, last: CHUNK.frame }); CHUNK.built++;
   chunkEvict(m);
   return true;
+}
+// a partial build abandoned (the camera moved on): its ImageData and the column images it already made are freed
+function dropChunkJob(key, job) {
+  CHUNK.jobs.delete(key);
+  const cols = chunkGrid(job.m).cols[job.idx];
+  for (let i = 0; i < Math.min(job.col, cols.length); i++) cols[i].img = null;
+  if (job.c) job.c.width = 0;
 }
 // LRU across every map; chunks of the current map drawn this frame are never evicted
 function chunkEvict(cur) {
@@ -624,7 +631,7 @@ function buildSections(m, d) {
   }
 }
 function sectionCentres(m) {
-  for (const sec of m.sections) {   // centre = the mean of its walkable tiles (engine-check tours these)
+  for (const sec of m.sections) {   // centre = the mean of its walkable tiles (tools/engine-tour.js and tools/maps/engine-check.js tour these)
     let n = 0, sx = 0, sy = 0;
     for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) if (m.secAt[j * m.W + i] === sec.i && m.type[j][i] && !m.block[j][i]) { n++; sx += i + 0.5; sy += j + 0.5; }
     sec.tiles = n; sec.cx = n ? sx / n : m.W / 2; sec.cy = n ? sy / n : m.H / 2;

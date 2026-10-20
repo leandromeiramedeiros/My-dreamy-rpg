@@ -32,17 +32,16 @@ const STOP_AFTER = process.argv[3] || 'all';
       let ok = false;
       if (r && PASS === 'touch') {
         await drv.clickDisp(r.x + r.w / 2, r.y + r.h / 2); await sleep(350); await drv.clickDisp(r.x + r.w / 2, r.y + r.h / 2); await sleep(450);
-        const bag2 = await page.evaluate(() => window.__qa.bag()); ok = !bag2.some(b => b.i === u.i && b.name === u.name);
+        ok = await page.evaluate(([sl, uid]) => window.__qa.isEq(sl, uid), [u.slot, u.uid]);
       } else if (r && PASS === 'pad') {
         await page.evaluate(id => { UI.focus.set(id, true); }, 'bag:' + u.i); await sleep(150); await drv.tap(0); await sleep(300); await drv.tap(0); await sleep(450);
-        const bag2 = await page.evaluate(() => window.__qa.bag()); ok = !bag2.some(b => b.i === u.i && b.name === u.name);
+        ok = await page.evaluate(([sl, uid]) => window.__qa.isEq(sl, uid), [u.slot, u.uid]);
       } else if (false) {
         await drv.clickDisp(r.x + r.w / 2, r.y + r.h / 2); await sleep(350); await drv.clickDisp(r.x + r.w / 2, r.y + r.h / 2); await sleep(450);
         const after = await bot.snap(); ok = true;
-        const bag2 = await page.evaluate(() => window.__qa.bag());
-        if (bag2.some(b => b.i === u.i && b.name === u.name)) { ok = false; }
+        ok = await page.evaluate(([sl, uid]) => window.__qa.isEq(sl, uid), [u.slot, u.uid]);
       }
-      if (!ok) { bot.find('minor', 'Equip by mouse (double-click bag slot) did not equip the upgrade', { item: u, hadRegion: !!r }, await bot.shot('equip-fail')); await page.evaluate(i => window.__qa.equip(i), u.i); }
+      if (!ok) { bot.find('minor', 'Equip by mouse (double-click bag slot) did not equip the upgrade', { item: u, hadRegion: !!r }, await bot.shot('equip-fail')); await page.evaluate(([sl, uid, i]) => { if (!window.__qa.isEq(sl, uid)) window.__qa.equip(i); }, [u.slot, u.uid, u.i]); }
       else bot.log('equipped via mouse', { name: u.name, slot: u.slot, rarity: u.rarity });
       await drv.closeMenu(); await sleep(400);
       const s2 = await bot.snap(); if (s2.ui.open) { await drv.closeMenu(); await sleep(300); }

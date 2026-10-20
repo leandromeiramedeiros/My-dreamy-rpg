@@ -118,11 +118,14 @@ function drawGround(ctx, m) {
   GROUND_STATS.visMissing = missing.length;
   return missing;
 }
-// one scheduling step per rendered frame (call before drawGround so finished chunks show this frame)
-function groundTick(m) {
+// scheduling: groundTick(m, false) before drawGround (the camera chunk synchronously, visible-missing chunks with a large
+// budget so they show this frame); groundTick(m, true) at the end of drawScene = the idle prefetch, which only spends
+// what is left of a ~14 ms scene (at most IDLE_MS) on the ring of chunks around the view.
+const IDLE_MS = PHONE ? 1.5 : 2.5;
+function groundTick(m, idle, sceneMs = 0) {
   const cg = chunkGrid(m), g = m.gp, S = cg.S, t0 = performance.now();
   const c0 = chunkAt(m, camX, camY);   // the chunk under the camera: always built now (start, respawn, warp arrival)
-  if (!cg.empty[c0] && !chunkResident(m, c0)) { buildChunkStep(m, c0, Infinity); GROUND_STATS.syncBuilds++; }
+  if (!idle && !cg.empty[c0] && !chunkResident(m, c0)) { buildChunkStep(m, c0, Infinity); GROUND_STATS.syncBuilds++; }
   const vx0 = camX - RW / 2 - g.minSX, vy0 = camY - RH / 2, want = [];
   const pre = S * 0.6, ci0 = Math.floor((vx0 - pre) / S), ci1 = Math.floor((vx0 + RW + pre) / S), cj0 = Math.floor((vy0 - pre) / S), cj1 = Math.floor((vy0 + RH + pre) / S);
   let vis = 0, visTotal = 0, ringRes = 0;
@@ -138,16 +141,18 @@ function groundTick(m) {
   // prefetch never builds past the resident cap (so the ring cannot thrash the LRU)
   let allowPre = Math.max(0, CHUNK.max - 1 - visTotal - ringRes);
   let ema = 16.7; try { ema = frameEma; } catch (e) { /* main.js not loaded (editor) */ }
-  const budget = vis ? (G.fade > 0.3 ? 14 : PHONE ? 6 : 8) : (ema > 18.5 ? 0 : PHONE ? 1.5 : 2.5);
+  if (!idle && !vis) { GROUND_STATS.lastTickMs = performance.now() - t0; return; }
+  const budget = !idle ? (G.fade > 0.3 ? 14 : PHONE ? 6 : 8) : ema > 17.2 ? 0 : clamp(14 - sceneMs, 0, IDLE_MS);   // idle = the frame rate is holding
   want.sort((a, b) => a.pri - b.pri);
   const keep = new Set(want.map(w => chunkKey(m, w.idx)));
-  for (const [k, job] of CHUNK.jobs) if (!keep.has(k) && (job.m !== m || CHUNK.frame - (job.touch || 0) > 60)) CHUNK.jobs.delete(k);   // stale partial builds
+  for (const [k, job] of CHUNK.jobs) if (!keep.has(k) && (job.m !== m || CHUNK.frame - (job.touch || 0) > 60)) dropChunkJob(k, job);   // stale partial builds
   for (const w of want) {
+    if (!idle && !w.visible) break;
     if (!w.visible && allowPre-- <= 0) break;
     const left = budget - (performance.now() - t0); if (left <= 0) break;
     if (!buildChunkStep(m, w.idx, left)) break;
   }
-  GROUND_STATS.lastTickMs = performance.now() - t0;
+  GROUND_STATS.lastTickMs = (idle ? GROUND_STATS.lastTickMs : 0) + performance.now() - t0;
 }
 // the tile-space box that can hold anything visible (tall sprites and columns rise above their base: pad below)
 function viewTiles(mx = 80, mTop = 40, mBot = 190) {
@@ -173,7 +178,8 @@ function drawScene() {
   camX = Math.round(G.cam.x + shx); camY = Math.round(G.cam.y + shy);
   const lights = [];
   CHUNK.frame++;
-  groundTick(m);
+  const sceneT0 = performance.now();
+  groundTick(m, false);
   const look = sectionLook(m, p, th);
   const [vtx0, vty0, vtx1, vty1] = viewTiles();
   const viewObjs = gridQuery(m, 'objs', vtx0, vty0, vtx1, vty1);
@@ -313,6 +319,7 @@ function drawScene() {
   if (p.buffs.dreamveil) { ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = 'rgba(255,140,220,0.25)'; ctx.fillRect(0, 0, RW, RH); ctx.globalCompositeOperation = 'source-over'; }
   ctx.drawImage(VIGNETTE, 0, 0);
   if (p.hurtT > 0) { ctx.fillStyle = `rgba(255,40,90,${p.hurtT * 0.6})`; ctx.fillRect(0, 0, RW, RH); }
+  groundTick(m, true, performance.now() - sceneT0);   // idle prefetch with what is left of the frame
 }
 
 function drawMoon(ctx, x, y, r, col) {

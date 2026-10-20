@@ -297,7 +297,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   await wf(() => window.__live().includes('sapling'), null, 20000).then(async ok => { await ev(() => { for (const d of G.delays) d.t = Math.min(d.t, 0.02); }); await wait(800); });
   check('clearing: the saplings wake (Bramblehorn with saplings)', await ev(() => window.__live().filter(t => t === 'sapling').length >= 3 || G.trig.fired.boss));
   // dying in the arena: respawn at the nearest shrine, the arena resets
-  const died = await ev(() => { const p = G.player; p.invulnT = 0; p.hp = 1; hurtPlayer ? hurtPlayer(p, 9999, null) : null; return !!(p.dead || G.state === 'dead'); }).catch(() => false);
+  const died = await ev(() => { const p = G.player; p.invulnT = 0; p.hp = 1; hurtPlayer(99999, p.x + 1, p.y); return !!(p.dead || G.state === 'dead'); }).catch(() => false);
   if (died || await wf(() => G.state === 'dead', null, 3000)) {
     await wf(() => G.state === 'play' && !G.player.dead, null, 12000); await wait(600); await ev(() => window.__hero());
     const rs = await ev(() => { const o = G.map.objects.find(q => q.shrineId === 'shrine3'); return { near: Math.hypot(G.player.x - o.x, G.player.y - o.y) < 4, enemies: window.__live().length, bossTrig: !!G.trig.fired.boss, gateOpen: gateOpen(G.map, 'arena_gate'), arenaDone: G.arena ? !!G.arena.done : null }; });
@@ -307,6 +307,10 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   await ev(() => { window.__loot.length = 0; });
   await fight('victory', 10);
   await wait(800);
+  // secret 5, forest end: the key from the Hollow ceiling opens the root-sealed cache (it is far behind us now; the walk is a teleport)
+  const cache1 = await tryDoor('door_cache', 'barrier');
+  check('pinewood: secret 5 - the Hollow key opens the root-sealed cache; it pays out', cache1 && cache1.open && await goto('cache_loot') && await ranAction("a.type === 'loot' && a.gem === true") && await objectsOf("o.chest && o.src.label === 'cache-chest'") === 1, cache1); await shot('pinewood_secret_cache');
+  await ev(() => window.__tp(100, 31));
   const drops = await ev(() => window.__loot.slice());
   check('clearing: death line + Root-Crown drops', await wf(() => G.trig.fired.victory) && await said('boss_bramblehorn_death') && drops.some(d => /rootcrown/i.test(d)), drops);
   check('clearing: shard quest done + both rifts open (home, Ruins), gate open, the Dream key is granted', (await quest('shard_root')) === 'done' && (await portalById('home_arena')) === true && (await portalById('next')) === true && await ev(() => gateOpen(G.map, 'arena_gate') && hasKey('key_dream'))); await shot('clearing_victory');

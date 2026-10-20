@@ -42,7 +42,7 @@ module.exports = {
     g.section('arena', { name: 'Dream Arena', kind: 'arena', bounds: [66, 34, 80, 48] });
     g.room('start', { kind: 'hub', x: 30, y: 56, r: 4.5, lvl: 0, label: 'ARRIVAL', clear: true });
     g.room('yard', { kind: 'clearing', x: 39, y: 64, r: 4.2, lvl: 0, label: 'DUMMY YARD', clear: true });
-    g.room('plaza', { kind: 'plaza', x: 40, y: 46, r: 5.5, lvl: 0, label: 'ELDER PLAZA', clear: true });
+    g.room('plaza', { kind: 'plaza', x: 39, y: 47.5, r: 5.5, lvl: 0, label: 'ELDER PLAZA', clear: true });
     g.room('cottage', { kind: 'clearing', x: 22, y: 26, r: 7.5, lvl: 0, label: 'COTTAGE', clear: true, floor: 'f', floorIn: 3 });
     g.room('garden', { kind: 'clearing', x: 36, y: 23, r: 5, lvl: 0, label: 'GARDEN', clear: true, floor: 'f', floorIn: 0.5 });
     g.room('terrace', { kind: 'plaza', x: 60, y: 22, r: 8.3, lvl: 4, label: 'RIFT TERRACE', clear: true });

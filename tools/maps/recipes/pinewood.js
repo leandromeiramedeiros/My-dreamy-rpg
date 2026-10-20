@@ -125,7 +125,8 @@ module.exports = zone({
     den: { name: 'Mossjaw\'s den', title: 'Mossjaw', sub: 'Moss-gorged root wolf — mini-boss', enemy: 'mossjaw', add: 'ogre' },
     warrens: {
       title: 'The Fox Warrens', sub: 'Do not wake what sleeps here', enemy: 'mountaintroll', pip: ['Quiet, Aerin. Big things sleep in the tunnels.'], objective: 'Sneak past the sleepers to the vault (or wake them one by one)',
-      hall: [[-2.8, -2.2], [2.9, 2.6]], vault: [[-2.2, 1.6]], done: 'The tunnels fall silent. The fox-gold is yours.',
+      hall: [[0, -3.5], [0, 3.5]], vault: [[2.6, -2.4]],   // >= 3.4 tiles from the trigger centre: a sleeper's wake radius is 3, so the middle of each room is the quiet way through
+       done: 'The tunnels fall silent. The fox-gold is yours.',
     },
     boss: { title: 'Old Bramblehorn', sub: 'The Troll King - Shard of Root', enemy: 'bramblehorn', victory: 'The Shard of Root is relit' },
   },
