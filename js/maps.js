@@ -2,6 +2,12 @@
 // ---------------------------------------------------------------------------
 // Map building: tile grids, per-pixel ground rasterisation, cliff columns,
 // floating-island underside, props, colliders and static lights.
+// M2b map engine: barrier objects { t: 'gate' | 'keydoor' | 'hidden', id, ang (the PASSAGE direction; the wall lies
+// across it), len, key? } become a row of collider props tagged with the id; openGate(id) clears them (persisted in
+// G.prog.gates['map:id']). lever { id, gate? } is an Interact prop (pulls open its gate: `gate`, else the gate whose
+// id shares its suffix: lever_r2 -> gate_r2); levers also flip when a trigger opens their gate. keydoor opens on
+// Interact while the hero holds its key (hasKey, from a loot card's item: 'key_*'). fishspot { pool } is a visible
+// stub with an Interact prompt (fishing lands later). Object x / y may be fractional for every kind (house cells floor).
 // ---------------------------------------------------------------------------
 const THEMES = {
   vale: {
@@ -324,6 +330,11 @@ const OBJ_TYPES = {
   log: { label: 'Fallen log', img: () => [ART.log], r: 0.45, shadow: 9 },
   stump: { label: 'Stump', img: () => [ART.stump], r: 0.3, shadow: 6 },
   sunbeam: { label: 'Sunbeam', img: () => [ART.sunIcon], beam: true, light: { r: 96, col: '#ffdca0', a: 0.85, h: 2 } },
+  gate: { label: 'Gate (id, ang, len): openGate opens it', barrier: 'gate' },
+  keydoor: { label: 'Key door (id, key, ang, len)', barrier: 'keydoor' },
+  hidden: { label: 'Hidden wall (id, ang, len): openGate reveals', barrier: 'hidden' },
+  lever: { label: 'Lever (id, gate?)', img: () => [ART.sign], r: 0.15, shadow: 4, lever: true, light: { r: 24, col: '#ffd35a', a: 0.6, h: 8 } },
+  fishspot: { label: 'Fishing spot (pool) - stub', img: () => [ART.sunIcon], fish: true },
   fox: { label: 'Fox (animal)', img: () => [ART.custom.fox || ART.sunIcon], critter: 'fox' },
   rabbit: { label: 'Rabbit (animal)', img: () => [ART.custom.rabbit || ART.sunIcon], critter: 'rabbit' },
 };
@@ -363,18 +374,80 @@ function placeObjects(m, d) {
   seedRng(m.id.length * 131 + d.W * 7 + d.H);
   for (const o of d.objects || []) {
     const def = OBJ_TYPES[o.t]; if (!def) continue;
-    if (def.house) {
-      for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) if (typeAt(m, o.x + dx, o.y + dy)) m.block[o.y + dy][o.x + dx] = true;
-      const H = ART.house, z = tileH(m, o.x, o.y);
-      if (!m.block[o.y]) continue;
-      const house = addProp(m, H.c, o.x + 1, o.y + 1, { ax: H.ox, ay: H.oy + 16, z, src: o });
-      house.lights = H.lights.map(L => ({ sx: isoX(o.x + L.x, o.y + L.y), sy: isoY(o.x + L.x, o.y + L.y, L.z + z), r: L.r, col: L.col, a: L.a }));
-      m.chimneys.push({ x: o.x + H.chimney.x, y: o.y + H.chimney.y, z: H.chimney.z + z });
+    if (!isFinite(+o.x) || !isFinite(+o.y)) continue;
+    if (def.house) {   // a 2x2 cell block: fractional coordinates snap to the cell (generator / editor drift)
+      const hx = Math.floor(+o.x), hy = Math.floor(+o.y);
+      for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) if (typeAt(m, hx + dx, hy + dy)) m.block[hy + dy][hx + dx] = true;
+      const H = ART.house, z = tileH(m, hx, hy);
+      if (!m.block[hy]) continue;
+      const house = addProp(m, H.c, hx + 1, hy + 1, { ax: H.ox, ay: H.oy + 16, z, src: o });
+      house.lights = H.lights.map(L => ({ sx: isoX(hx + L.x, hy + L.y), sy: isoY(hx + L.x, hy + L.y, L.z + z), r: L.r, col: L.col, a: L.a }));
+      m.chimneys.push({ x: hx + H.chimney.x, y: hy + H.chimney.y, z: H.chimney.z + z });
       continue;
     }
+    if (def.barrier) { placeBarrier(m, o, def.barrier); continue; }
     if (def.critter) { m.critterSpawns.push({ type: def.critter, x: o.x, y: o.y }); if (!window.EDITOR_MODE) continue; }
     const imgs = def.img(), img = imgs[(o.v || 0) % imgs.length];
-    addProp(m, img, o.x, o.y, { r: def.r || 0, shadow: def.shadow || 0, flip: !!o.f, grass: !!def.grass, sway: rand(0, 6.28), brazier: !!def.brazier, beam: !!def.beam && !window.EDITOR_MODE, chest: !!def.chest, checkpoint: !!def.checkpoint, tablet: !!def.tablet, light: def.light ? Object.assign({}, def.light) : undefined, src: o });
+    const ob = addProp(m, img, +o.x, +o.y, { r: def.r || 0, shadow: def.shadow || 0, flip: !!o.f, grass: !!def.grass, sway: rand(0, 6.28), brazier: !!def.brazier, beam: !!def.beam && !window.EDITOR_MODE, chest: !!def.chest, checkpoint: !!def.checkpoint, tablet: !!def.tablet, light: def.light ? Object.assign({}, def.light) : undefined, src: o });
+    if (def.lever) { ob.lever = true; ob.gid = o.gate || null; ob.use = LEVER_USE; }
+    if (def.fish) { ob.fish = true; ob.use = FISH_USE; if (o.hidden) ob.secret = true; }
   }
   for (const p of m.portals) m.objects.push({ kind: 'portal', x: p.x, y: p.y, z: p.z, key: p.x + p.y + p.z * 0.35, portal: p });
 }
+
+// ===== barriers: gate / keydoor / hidden wall ===============================================================
+const BARRIER_LOOK = {
+  gate: { img: () => ART.stump, r: 0.3, step: 0.42, col: null },
+  keydoor: { img: () => ART.crystalViolet, r: 0.28, step: 0.5, light: { r: 30, col: '#b36bff', a: 0.7, h: 10 } },
+  hidden: { img: () => ART.rockDark, r: 0.3, step: 0.4 },
+};
+function placeBarrier(m, o, kind) {
+  const L = BARRIER_LOOK[kind], len = +o.len || 2, a = (+o.ang || 0) + Math.PI / 2, n = Math.max(2, Math.ceil(len / L.step) + 1);
+  const id = o.id || `${kind}_${(+o.x).toFixed(1)}_${(+o.y).toFixed(1)}`;
+  for (let i = 0; i < n; i++) {
+    const t = n === 1 ? 0 : i / (n - 1) - 0.5, x = +o.x + Math.cos(a) * len * t, y = +o.y + Math.sin(a) * len * t;
+    const img = L.img(), ob = addProp(m, img, x, y, { r: L.r, shadow: 5, src: o, light: L.light && i === (n >> 1) ? Object.assign({}, L.light) : undefined });
+    ob.barrier = kind; ob.gid = id; ob.key = o.key || null;
+    if (kind === 'keydoor' && i === (n >> 1)) ob.use = KEYDOOR_USE;
+  }
+}
+const gateKey = (mapId, id) => `${mapId}:${id}`;
+const gateOpen = (m, id) => !!(G.prog && G.prog.gates && G.prog.gates[gateKey(m.id, id)]);
+// on map entry: gates opened in an earlier visit stay open, their levers stay pulled
+function syncGates(m) {
+  if (m._gateCol) m.colliders = m._gateCol.slice();   // restore after an earlier openGate in this session
+  for (const o of m.objects) {
+    if (o.barrier) o.gone = gateOpen(m, o.gid);
+    if (o.lever) o.pulled = gateOpen(m, leverGate(m, o) || '');
+  }
+  m._gateCol = m._gateCol || m.colliders.slice();
+  m.colliders = m.colliders.filter(c => !c.gone);
+}
+// the gate a lever works: explicit `gate`, else a barrier id sharing the lever id's suffix (lever_r2 -> gate_r2)
+function leverGate(m, lv) {
+  if (lv.gid) return lv.gid;
+  const suf = String(lv.src.id || '').replace(/^lever_?/, '');
+  const ids = [...new Set(m.objects.filter(o => o.barrier && o.barrier !== 'keydoor').map(o => o.gid))];
+  return ids.find(id => suf && (id.endsWith('_' + suf) || id.startsWith(suf + '_') || id === suf)) || null;
+}
+// open a barrier (trigger openGate, a lever, a key): its colliders go, the pieces sink in a burst
+function openGate(id, fromTrigger) {
+  const m = G.map; if (!m || !id) return false;
+  const parts = m.objects.filter(o => o.barrier && o.gid === id);
+  const was = gateOpen(m, id);
+  (G.prog.gates || (G.prog.gates = {}))[gateKey(m.id, id)] = true;
+  for (const o of parts) {
+    if (!o.gone) burst(o.x, o.y, o.z + 0.6, 6, o.barrier === 'hidden' ? ['#5a4a6a', '#8a7a9a'] : o.barrier === 'keydoor' ? ['#b36bff', '#ffffff'] : ['#8a6a4a', '#c8b090'], 2, { glow: o.barrier === 'keydoor' });
+    o.gone = true;
+  }
+  m.colliders = m.colliders.filter(c => !c.gone);
+  for (const o of m.objects) if (o.lever && leverGate(m, o) === id) o.pulled = true;
+  if (parts.length && !was) { shake(4); sfx(parts[0].barrier === 'hidden' ? 'boom' : 'portal'); if (parts[0].barrier === 'hidden') say('A hidden passage!'); }
+  return parts.length > 0;
+}
+const LEVER_USE = { kind: 'lever', reach: 1.4, on: o => !o.pulled, text: () => 'Pull lever',
+  fn(o) { const id = leverGate(G.map, o); o.pulled = true; sfx('trap'); if (id) openGate(id); else say('The lever clicks. Somewhere, something moved.'); } };
+const KEYDOOR_USE = { kind: 'keydoor', reach: 1.8, on: o => !o.gone, text: o => (hasKey(o.key) ? 'Unlock' : 'Locked'),
+  fn(o) { if (hasKey(o.key)) { openGate(o.gid); say('The key turns. The roots let go.'); } else { say('Locked. It needs a key.'); sfx('hurt'); } } };
+const FISH_USE = { kind: 'fishspot', reach: 1.6, on: () => true, text: () => 'Fish (coming soon)',
+  fn(o) { say('The water ripples. Fishing arrives in a later dream.'); fx({ type: 'ring', x: o.x, y: o.y, r: 0.8, col: '#9fe8ff', life: 0.6 }); sfx('blink'); } };
