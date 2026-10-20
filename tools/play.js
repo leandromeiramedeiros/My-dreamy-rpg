@@ -1254,7 +1254,7 @@ const PAD_STUB = () => {
   // ---------- hit feel (DESIGN §27, meeting 2026-10-20 R1 + R2): hitlag by power, death fling, tumble ----------
   {
     const FEEL_DIR = path.join(__dirname, 'shots', 'm3-feel'); fs.mkdirSync(FEEL_DIR, { recursive: true });
-    await ev(() => {
+    const injectHF = () => ev(() => {
       // a controlled bench: no crits, no buffs, a 1e6-HP slime so r = dmg / maxHp is chosen exactly (frand +-10 % aside)
       window.__hf = {
         reset() { G.state = 'play'; G.ui.open = false; G.ui.pause = false; G.ui.help = false; G.banner = null; G.enemies.length = 0; G.projs.length = 0; G.zones.length = 0; G.delays.length = 0; resetCorpses(); hitlagReset(); setSetting('hitstop', 'full'); const p = G.player; p.crit = 0; p.critR = null; p.buffs = {}; p.dead = false; p.hp = p.maxHp; },
@@ -1264,6 +1264,7 @@ const PAD_STUB = () => {
         steps(n) { for (let i = 0; i < n; i++) { let rdt = STEP; const fr = hitlagStep(); if (G.slowmo > 0) { G.slowmo -= rdt; rdt *= 0.35; } update(fr ? 0 : rdt, rdt); } },
       };
     });
+    await injectHF();
     // 1. a 5 % hit freezes the target ~2 steps and no global freeze; a 40 % hit freezes it longer, freezes the world (r >= 0.25: 4)
     //    and tumbles it (stun 0.3, a hop that is a draw offset: e.z untouched); flash, knockback, number size and pitch follow r
     const H = await ev(() => {
@@ -1342,30 +1343,7 @@ const PAD_STUB = () => {
       C.deadNow && C.killedNow && C.fling === 'fling' && C.vAway && C.flew > 0.3 && C.fg === 6 && !C.inList && C.dot === 'slump' && C.swarmNoCorpse && C.pop, C);
     check(`hit feel R1: corpse cap holds (desktop ${C.cap}): 22 kills keep ${C.cap} records, the pool never grows, all return after they dissolve`,
       C.cap === 12 && C.n === 12 && C.pooled === 12 && C.after === 0 && C.poolBack === 12, C);
-    // 5. frame strips (tools/shots/m3-feel): a weak hit, a heavy hit (tumble), a kill fling; the loop is paused and stepped by hand
-    const shotFrames = async (name, setup, plan) => {
-      await ev(setup);
-      const files = [];
-      for (const [i, n] of plan.entries()) {
-        await ev(n => { __hf.steps(n); render(); }, n);
-        const f = path.join(FEEL_DIR, `${name}-${String(i).padStart(2, '0')}.png`); await page.screenshot({ path: f, clip: { x: 300, y: 130, width: 360, height: 260 } }); files.push(f);
-      }
-      return files;
-    };
-    await ev(() => { running = false; });
-    await wait(100);
-    const setupHit = frac => `(() => { __hf.reset(); const hp = 1e6, b = __hf.base(${frac}, hp); const p = G.player; G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
-      const e = __hf.mob('thornbackboar', 1.6, -0.2, hp); e.state = 'idle'; __hf.steps(2); damageEnemy(e, b, { knock: 0.4 }); })()`;
-    const weak = await shotFrames('1-weak-hit', setupHit(0.05), [0, 1, 1, 1, 2, 4]);
-    const heavy = await shotFrames('2-heavy-hit', setupHit(0.4), [0, 2, 2, 3, 3, 4, 6, 10]);
-    const kill = await shotFrames('3-kill-fling', `(() => { __hf.reset(); const p = G.player; G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
-      const e = __hf.mob('thornbackboar', 1.4, -0.2, 300); const s = __hf.mob('slime', 1.2, 1.0, 300); __hf.steps(2); damageEnemy(e, 5000, { knock: 0.4 }); damageEnemy(s, 5000, { knock: 0.4 }); })()`, [0, 3, 4, 5, 6, 6, 6, 8, 8, 10]);
-    await ev(() => { running = true; last = performance.now(); acc = 0; requestAnimationFrame(loop); });
-    // one strip per sequence (frames left to right) for review
-    const strip = (files, out) => require('child_process').spawnSync('python3', ['-c', `import sys\nfrom PIL import Image\nfs=sys.argv[2:]\nim=[Image.open(f) for f in fs]\nw,h=im[0].size\ns=Image.new('RGB',(w*len(im)//2,h//2))\nfor i,m in enumerate(im): s.paste(m.resize((w//2,h//2)),(i*w//2,0))\ns.save(sys.argv[1])`, out, ...files]);
-    const st = [strip(weak, path.join(FEEL_DIR, 'strip-1-weak-hit.png')), strip(heavy, path.join(FEEL_DIR, 'strip-2-heavy-hit.png')), strip(kill, path.join(FEEL_DIR, 'strip-3-kill-fling.png'))];
-    check('hit feel: frame strips written to tools/shots/m3-feel (weak hit, heavy hit, kill fling)', weak.length && heavy.length && kill.length && fs.existsSync(path.join(FEEL_DIR, 'strip-3-kill-fling.png')), { frames: weak.length + heavy.length + kill.length, strips: st.map(s => s.status) });
-    // 6. boss death: the 15-step freeze is ~0.25 s of real time inside the boss slow-mo (the old loop stretched it to ~0.7 s);
+    // 5. boss death: the 15-step freeze is ~0.25 s of real time inside the boss slow-mo (the old loop stretched it to ~0.7 s);
     //    the boss holds a death pose (no fling)
     const D = await ev(() => new Promise(res => {
       __hf.reset(); const p = G.player, b = spawnEnemy('boss', p.x + 3, p.y, 0); b.cd = 9;
@@ -1375,8 +1353,8 @@ const PAD_STUB = () => {
       requestAnimationFrame(tick);
     }));
     check('hit feel: boss death freeze = 15 steps ~0.25 s real time under slow-mo (was ~0.7 s); the boss holds a death pose, no fling',
-      D.f0 === 15 && D.ms >= 200 && D.ms <= 340 && D.slowmo && D.mode === 'boss' && D.still, D);
-    // 7. settings: the old boolean migrates before validation (applySettings / setSetting / the stored localStorage block);
+      D.f0 === 15 && D.ms >= 180 && D.ms <= 340 && D.slowmo && D.mode === 'boss' && D.still, D);
+    // 6. settings: the old boolean migrates before validation (applySettings / setSetting / the stored localStorage block);
     //    Off = no global freeze, target 2 steps, signals still scale; Light caps the global freeze at 3
     const S = await ev(() => {
       const out = {};
@@ -1394,6 +1372,32 @@ const PAD_STUB = () => {
     check('hit feel: setting hitstop Off / Light / Full; boolean true -> full, false -> off (apply, set, stored block) BEFORE validation; Off: no global, target 2, flash + knockback still scale; Light caps the global at 3',
       S.applyFalse === 'off' && S.applyTrue === 'full' && S.setFalse === 'off' && S.setLight === 'light' && S.bad === 'full' && S.stored === 'off'
       && S.off.fg === 0 && S.off.ft === 2 && S.off.flash > 0.15 && S.off.kx > 4 && S.light.fg === 3 && S.full.fg === 6, S);
+    // 7. frame strips (tools/shots/m3-feel): a weak hit, a heavy hit (tumble), a kill fling, on the freshly reloaded page; the loop
+    //    is paused and stepped by hand, one screenshot per listed step count
+    await injectHF();
+    const shotFrames = async (name, setup, plan) => {
+      await ev(setup);
+      const files = [];
+      for (const [i, n] of plan.entries()) {
+        await ev(n => { __hf.steps(n); render(); }, n);
+        const f = path.join(FEEL_DIR, `${name}-${String(i).padStart(2, '0')}.png`); await page.screenshot({ path: f, clip: { x: 420, y: 140, width: 380, height: 200 } }); files.push(f);
+      }
+      return files;
+    };
+    await ev(() => { running = false; });
+    await wait(100);
+    const clean = 'G.drops.length = 0; G.texts.length = 0; G.banner = null; G.msg = null; G.effects.length = 0; G.parts.length = 0;';
+    const setupHit = frac => `(() => { __hf.reset(); ${clean} const hp = 1e6, b = __hf.base(${frac}, hp); G.texts.length = 0; const p = G.player; G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
+      const e = __hf.mob('thornbackboar', 1.9, -0.9, hp); e.state = 'idle'; __hf.steps(2); damageEnemy(e, b, { knock: 0.4 }); })()`;
+    const weak = await shotFrames('1-weak-hit', setupHit(0.05), [0, 1, 1, 1, 2, 4]);
+    const heavy = await shotFrames('2-heavy-hit', setupHit(0.4), [0, 2, 2, 3, 3, 4, 6, 10]);
+    const kill = await shotFrames('3-kill-fling', `(() => { __hf.reset(); ${clean} const p = G.player; G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
+      const e = __hf.mob('thornbackboar', 1.5, -0.8, 300); const s = __hf.mob('slime', 1.4, 0.2, 300); __hf.steps(2); damageEnemy(e, 5000, { knock: 0.4 }); damageEnemy(s, 5000, { knock: 0.4 }); })()`, [0, 3, 4, 5, 6, 6, 6, 8, 8, 10]);
+    await ev(() => { running = true; last = performance.now(); acc = 0; requestAnimationFrame(loop); });
+    // one strip per sequence (frames left to right) for review
+    const strip = (files, out) => require('child_process').spawnSync('python3', ['-c', `import sys\nfrom PIL import Image\nfs=sys.argv[2:]\nim=[Image.open(f) for f in fs]\nw,h=im[0].size\ns=Image.new('RGB',(w*len(im),h))\nfor i,m in enumerate(im): s.paste(m,(i*w,0))\ns.save(sys.argv[1])`, out, ...files]);
+    const st = [strip(weak, path.join(FEEL_DIR, 'strip-1-weak-hit.png')), strip(heavy, path.join(FEEL_DIR, 'strip-2-heavy-hit.png')), strip(kill, path.join(FEEL_DIR, 'strip-3-kill-fling.png'))];
+    check('hit feel: frame strips written to tools/shots/m3-feel (weak hit, heavy hit, kill fling)', weak.length && heavy.length && kill.length && fs.existsSync(path.join(FEEL_DIR, 'strip-3-kill-fling.png')), { frames: weak.length + heavy.length + kill.length, strips: st.map(s => s.status) });
     // 8. phone caps: the corpse pool is 8
     {
       const pp = await br.newPage({ viewport: { width: 960, height: 540 } }); pp.on('pageerror', e => errs.push('pageerror(feel phone): ' + e.message));

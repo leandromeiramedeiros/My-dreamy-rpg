@@ -158,7 +158,8 @@ const DECO = { k: -1, n: 0, x: [0, 0, 0], y: [0, 0, 0], c: [0, 0, 0] };
 function tileDeco(m, tx, ty) {
   const k = ty * m.W + tx; if (DECO.k === k && DECO.m === m) return DECO;
   DECO.k = k; DECO.m = m; const vr = (hash2(tx, ty, 91) * 4) | 0; DECO.vr = vr; DECO.n = 2 + (vr >> 1);
-  for (let q = 0; q < 3; q++) { DECO.x[q] = Math.floor((hash2(tx, ty, 100 + q) - 0.5) * 18); DECO.y[q] = 4 + Math.floor(hash2(tx, ty, 110 + q) * 8); DECO.c[q] = hash2(tx, ty, 120 + q); }
+  // decorations stay in the diamond's interior, where no transition tongue reaches (a half-covered flower would be a speck)
+  for (let q = 0; q < 3; q++) { DECO.x[q] = Math.floor((hash2(tx, ty, 100 + q) - 0.5) * 9); DECO.y[q] = 6 + Math.floor(hash2(tx, ty, 110 + q) * 4); DECO.c[q] = hash2(tx, ty, 120 + q); }
   return DECO;
 }
 // base colour of ground type `t` at (wx, wy); rx / ry = the pixel's offset from its tile's top vertex (decoration lookups)
@@ -235,9 +236,12 @@ function groundBase(m, t, wx, wy, px, py, dc, rx, ry, line, lipped) {
 function topColor(m, t, h, wx, wy, px, py, SX, SY) {
   const th = m.theme, tx = Math.floor(wx), ty = Math.floor(wy), fx = wx - tx, fy = wy - ty;
   let tt = t, line = 0;
-  // (c) 47-blob transition: the nearest lower-priority same-level neighbour (edge or corner) whose scalloped tongue reaches here
+  // (c) 47-blob transition: the nearest lower-priority same-level neighbour (edge or corner) whose scalloped tongue reaches here.
+  // Decided at the centre of the pixel's horizontal PAIR (screen x & ~1): iso edges run 2:1, so tongues and their lines come out in
+  // 2 px runs and never leave an isolated pixel.
   const pr = TPRI[t] || 0;
-  if (pr > 1 && (fx < 0.42 || fx > 0.58 || fy < 0.42 || fy > 0.58)) {
+  if (pr > 1 && (fx < 0.45 || fx > 0.55 || fy < 0.45 || fy > 0.55)) {
+    const [qx, qy] = toWorld(SX - (px & 1) + 0.5, SY), fx = qx - tx, fy = qy - ty, wx = qx, wy = qy;
     let best = 9, bu = null;
     for (let k = 0; k < 8; k++) {
       const dx = N8[k][0], dy = N8[k][1], nx = tx + dx, ny = ty + dy, u = typeAt(m, nx, ny), pu = u ? TPRI[u] : 0;
@@ -370,11 +374,12 @@ function rasterRect(m, out, ox, oy, x0, y0, w, h) {
     const i = (y * ow + x) * 4; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = a;
   };
   const xa = Math.max(0, x0), xb = Math.min(W, x0 + w), y1 = y0 + h, rimC = mixRgb(th.under[0], th.haze, 0.1);
-  for (let py = Math.max(0, y0 - 1); py < Math.min(y1, GB); py++) for (let px = xa; px < xb; px++) {
+  const rimTop = px => Math.max(top[px] - 2, Math.min(top[px], px > 0 && top[px - 1] >= 0 ? top[px - 1] : 1e9, px < W - 1 && top[px + 1] >= 0 ? top[px + 1] : 1e9) - 1);
+  for (let py = Math.max(0, y0 - 2); py < Math.min(y1, GB); py++) for (let px = xa; px < xb; px++) {
     if (top[px] < 0) continue;
-    if (py === top[px] - 1) {   // the 1 px dark rim above a back (north / west) edge that meets the sky
-      if (py < y0) continue;
-      const [wx, wy] = toWorld(px + minSX + 0.5, py + 1.5), tx = Math.floor(wx), ty = Math.floor(wy);
+    if (py < top[px] && py >= rimTop(px)) {   // the dark rim above a back (north / west) edge that meets the sky: 1 px, widened to
+      if (py < y0) continue;                  // the neighbours' top rows so a diamond's peak pixel is never alone
+      const [wx, wy] = toWorld(px + minSX + 0.5, top[px] + 0.5), tx = Math.floor(wx), ty = Math.floor(wy);
       if (typeAt(m, tx, ty) && !m.h[ty][tx]) put(px, py, rimC);
       continue;
     }
@@ -617,9 +622,10 @@ function rasterColumn(m, i, j) {
       if (pillar) c = rampQ(th.stone, 0.75 + (hash2(cx, cy, 9) - 0.5) * 0.12, cx, cy);
       pb.set(cx, cy, c); continue;
     }
-    if (cy < 9) {   // above the top diamond: the dark rim on a back edge (only the row just above the edge)
-      const [bx, by] = toWorld(SX, SY + 1);
-      if (bx >= i && bx < i + 1 && by >= j && by < j + 1 && (cx < 16 ? backL : backR)) pb.set(cx, cy, rimC);
+    if (cy < 9) {   // above the top diamond: the dark rim on a back edge, the row just above it (dilated 1 px sideways: no lone peak)
+      let on = false;
+      for (let k = -1; k <= 1 && !on; k++) { const [bx, by] = toWorld(SX + k, SY + 1); on = bx >= i && bx < i + 1 && by >= j && by < j + 1; }
+      if (on && (cx < 16 ? backL : backR)) pb.set(cx, cy, rimC);
       continue;
     }
     let top, lit, u, vd;
