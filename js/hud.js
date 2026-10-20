@@ -93,9 +93,13 @@ function drawDamageNumbers(ctx) {
     let size = 'small', col = t.col, a = 1 - Math.max(0, k - 0.6) / 0.4;
     if (kind === 'crit') { size = dsz === 'S' ? 'body' : 'heading'; col = UC.gold; }
     else if (kind === 'weak') { size = dsz === 'S' ? 'body' : 'heading'; col = UC.weak; }
-    else if (kind === 'resist') { col = UC.resist; a *= 0.6; }
     else if (kind === 'big') size = 'body';
-    else if (dsz === 'L') size = 'body';
+    else {   // normal / resist: the size follows hit power r = dmg / bar max (DESIGN §27): < 5 % small, < 20 % body, else heading
+      const r = t.r || 0, tier = r >= 0.2 ? 2 : r >= 0.05 ? 1 : 0;
+      const lv = Math.min(dsz === 'S' ? 1 : 2, Math.max(dsz === 'L' ? 1 : 0, tier));
+      size = lv === 2 ? 'heading' : lv === 1 ? 'body' : 'small';
+      if (kind === 'resist') { col = UC.resist; a *= 0.6; }
+    }
     const pop = t.t < 0.034 ? -4 : 0;   // 2-frame pop
     const x = vx * 2 + (t.vx || 0) * t.t * 40, y = vy * 2 - rise + pop;
     UI.text(ctx, t.s, x, y, size, col, 'center', { alpha: clamp(a, 0, 1) });
