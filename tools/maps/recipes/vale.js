@@ -51,7 +51,7 @@ module.exports = {
     g.room('gemNook', { kind: 'nook', x: 6, y: 21, r: 2.1, lvl: 0, label: 'SECRET', clear: true });
     g.room('ledge', { kind: 'nook', x: 57, y: 36, r: 2.3, lvl: 2, label: 'LEDGE', clear: true });
     g.room('moon', { kind: 'clearing', x: 66, y: 68, r: 5.5, lvl: 0, label: 'MOON POND', clear: true });
-    g.room('lanterns', { kind: 'islet', x: 13, y: 6, r: 3.6, lvl: 0, label: 'LANTERNS', isolated: true });
+    g.room('lanterns', { kind: 'islet', x: 13, y: 6, r: 3.6, lvl: 0, label: 'LANTERNS', isolated: true, shape: 'round' });
     g.room('dreamArena', { kind: 'arena', x: 74, y: 41, r: 5.6, lvl: 0, label: 'DREAM ARENA', isolated: true, rune: 2.4 });
     g.pond('pondW', { x: 15, y: 55.5, r: 3.2, lvl: 0 });
     g.pond('pondE', { x: 58, y: 51, r: 5.4, lvl: 0 });
@@ -66,7 +66,7 @@ module.exports = {
     g.path('chest', { kind: 'branch', w: 1.8, meander: 1.2, type: 'p', from: { room: 'start' }, pts: [[25, 52.5, 0], 'nookChest'] });
     g.path('ledge', { kind: 'branch', w: 1.8, meander: 1.2, type: 'p', from: { path: 'ruins', near: [52, 36] }, pts: [[55, 36.5, 2], 'ledge'] });
     g.path('secret', { kind: 'secret', w: 1.8, meander: 1, type: 'p', every: 5, from: { path: 'cottage', room: 'cottage' }, pts: [[11, 23, 0], 'gemNook'] });
-    g.bridge({ x: 12, y: 10, axis: 'y', len: 4, w: 2, lvl: 0 });   // Pip's Lanterns (NW)
+    g.bridge({ x: 12, y: 9, axis: 'y', len: 5, w: 2, lvl: 0 });   // Pip's Lanterns (NW)
     g.bridge({ x: 64, y: 40, axis: 'x', len: 5, w: 2, lvl: 0 });   // Dream Arena (E)
   },
   populate(g, T) {

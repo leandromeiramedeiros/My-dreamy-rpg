@@ -248,56 +248,75 @@ function skillTooltip(ctx, p, h) {
 }
 
 // ===== minimap: rounded diamond, fog of war, hero arrow, enemies as 4 px dots =========================================================
+// Big maps (DESIGN §25.2): the HUD shows a LOCAL window of MINI_WIN (24) tiles around the hero. m.mini.base is the whole map at
+// 1 px per tile step ((W + H) + 2 * pad square; tile (i, j) at (ox + i - j, oy + i + j), 2x1 px); m.mini.rev the explored mask
+// at the same scale; m.mini.vis the explored bitfield (saved: items.js world.fog, seeded here from G.prog.fog). The full-map
+// screen (screens.js drawFullMap) reuses base / rev. Gutter tiles draw dark; tapping / clicking the minimap opens the full map.
+const MINI_WIN = 24, MINI_PAD = 30, MINI_REVEAL = 9;
+const MINI_COL = { g: '#4a9a63', f: '#6db56a', p: '#cbc4e4', w: '#4a8fd0', b: '#a87a5c', s: '#9a92c0', x: '#4d4570', r: '#7a5ab0', d: '#2d5647', pillar: '#8a80b0' };
 function miniBuild(m) {
-  const mk = () => { const c = document.createElement('canvas'); c.width = c.height = 56; c.getContext('2d').imageSmoothingEnabled = false; return c; };
-  const base = mk(), x = base.getContext('2d'), s = 46 / (m.W + m.H), ox = 28 - (m.W - m.H) / 2 * s, oy = 5;
-  const rw = Math.max(2, Math.ceil(2 * s)), rh = Math.max(1, Math.ceil(s));
-  const col = (i, j) => {
-    const t = m.type[j][i]; if (!t) return null;
-    if (m.block[j][i] && t !== 'w' && t !== 'pillar') return '#b98a6a';
-    return { g: '#4a9a63', f: '#6db56a', p: '#cbc4e4', w: '#4a8fd0', b: '#a87a5c', s: '#9a92c0', x: '#4d4570', r: '#7a5ab0', d: '#2d5647', pillar: '#8a80b0' }[t] || '#888';
-  };
+  const s = 46 / (MINI_WIN * 2), N = m.W + m.H + MINI_PAD * 2;
+  const mk = (w = 56, h = 56) => { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').imageSmoothingEnabled = false; return c; };
+  const base = mk(N, N), x = base.getContext('2d'), ox = MINI_PAD + m.H, oy = MINI_PAD;
   for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) {
-    let c = col(i, j); if (!c) continue;
-    if (m.h[j][i] >= 4 && m.type[j][i] !== 'pillar') c = mixHex(c, '#ffffff', 0.2);
-    x.fillStyle = c; x.fillRect(Math.round(ox + (i - j) * s) - (rw >> 1), Math.round(oy + (i + j) * s), rw, rh);
+    const t = m.type[j][i], gt = m.gutter ? m.gutter[j * m.W + i] : 0;
+    let c = t ? (m.block[j][i] && t !== 'w' && t !== 'pillar' ? '#b98a6a' : MINI_COL[t] || '#888') : gt ? (gt === 1 ? '#1c142c' : '#0a0612') : null;
+    if (!c) continue;
+    if (t && m.h[j][i] >= 4 && t !== 'pillar') c = mixHex(c, '#ffffff', 0.2);
+    x.fillStyle = c; x.fillRect(ox + i - j - 1, oy + i + j, 2, 1);
   }
-  m.mini = { base, s, ox, oy, rw, rh, rev: mk(), tmp: mk(), shown: mk(), vis: new Uint8Array(m.W * m.H), dirty: true };
+  m.mini = { base, s, ox, oy, N, rev: mk(N, N), tmp: mk(), shown: mk(), vis: new Uint8Array(m.W * m.H), dirty: true, win: '' };
+  const saved = typeof fogDecode === 'function' && G.prog && G.prog.fog ? fogDecode(G.prog.fog[m.id], m.W, m.H) : null;
+  if (saved) {   // repaint the explored mask from the save
+    const rx = m.mini.rev.getContext('2d'); rx.fillStyle = '#fff';
+    for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) if (saved[j * m.W + i]) { m.mini.vis[j * m.W + i] = 1; rx.fillRect(ox + i - j - 2, oy + i + j - 1, 4, 3); }
+  }
+  HUD.fogTile = '';
 }
+// mini-map pixel of a world point
+const miniAt = (mi, x, y) => [mi.ox + (x - y), mi.oy + (x + y)];
 function miniReveal(m, p) {
   const mi = m.mini, tx = Math.floor(p.x), ty = Math.floor(p.y), key = tx + ',' + ty + m.id;
   if (key === HUD.fogTile) return; HUD.fogTile = key;
   const rx = mi.rev.getContext('2d'); rx.fillStyle = '#fff';
-  const R = 9;
+  const R = MINI_REVEAL;
   for (let j = Math.max(0, ty - R); j <= Math.min(m.H - 1, ty + R); j++) for (let i = Math.max(0, tx - R); i <= Math.min(m.W - 1, tx + R); i++) {
     if (Math.hypot(i - p.x, j - p.y) > R || mi.vis[j * m.W + i]) continue;
     mi.vis[j * m.W + i] = 1; mi.dirty = true;
-    rx.fillRect(Math.round(mi.ox + (i - j) * mi.s) - (mi.rw >> 1) - 1, Math.round(mi.oy + (i + j) * mi.s) - 1, mi.rw + 2, mi.rh + 2);
+    rx.fillRect(mi.ox + i - j - 2, mi.oy + i + j - 1, 4, 3);
   }
 }
-function miniCompose(m) {
-  const mi = m.mini, t = mi.tmp.getContext('2d'), s = mi.shown.getContext('2d');
-  t.globalCompositeOperation = 'source-over'; t.clearRect(0, 0, 56, 56); t.drawImage(mi.base, 0, 0);
-  t.globalCompositeOperation = 'destination-in'; t.drawImage(mi.rev, 0, 0);
+// the 56x56 local window (2x on screen = 112 px), recomposed when the hero crosses a pixel or the fog grows
+function miniCompose(m, wx, wy) {
+  const mi = m.mini, t = mi.tmp.getContext('2d'), s = mi.shown.getContext('2d'), sx = wx - 28, sy = wy - 28;
+  t.globalCompositeOperation = 'source-over'; t.clearRect(0, 0, 56, 56); t.drawImage(mi.base, sx, sy, 56, 56, 0, 0, 56, 56);
+  t.globalCompositeOperation = 'destination-in'; t.drawImage(mi.rev, sx, sy, 56, 56, 0, 0, 56, 56);
   s.globalCompositeOperation = 'source-over'; s.clearRect(0, 0, 56, 56);
-  s.globalAlpha = 0.18; s.drawImage(mi.base, 0, 0); s.globalAlpha = 1; s.drawImage(mi.tmp, 0, 0);
+  s.globalAlpha = 0.18; s.drawImage(mi.base, sx, sy, 56, 56, 0, 0, 56, 56); s.globalAlpha = 1; s.drawImage(mi.tmp, 0, 0);
   s.globalCompositeOperation = 'destination-in'; UI.sprite(s, 'minimapMask', 0, 0, { scale: 1 });
   s.globalCompositeOperation = 'source-over'; mi.dirty = false;
 }
 function drawMinimap(ctx, p, X, Y) {
   const m = G.map; if (!uiReady()) return;
   if (!m.mini) miniBuild(m);
-  const mi = m.mini; miniReveal(m, p); if (mi.dirty) miniCompose(m);
+  const mi = m.mini; miniReveal(m, p);
+  const [hx, hy] = miniAt(mi, p.x, p.y), wx = Math.round(hx), wy = Math.round(hy), win = wx + ',' + wy;
+  if (mi.dirty || mi.win !== win) { miniCompose(m, wx, wy); mi.win = win; }
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(mi.shown, X, Y, 112, 112);
   UI.sprite(ctx, 'minimap', X, Y, { scale: 2 });
-  const mp = (x, y) => [X + (mi.ox + (x - y) * mi.s) * 2, Y + (mi.oy + (x + y) * mi.s) * 2];
+  if (G.state === 'play' && !G.ui.map && !G.ui.open && !G.ui.pause && typeof openFullMap === 'function') UI.hit(X, Y, 112, 112, () => openFullMap(), { id: 'hud-minimap' });
+  const mp = (x, y) => { const [a, b] = miniAt(mi, x, y); return [X + (a - wx + 28) * 2, Y + (b - wy + 28) * 2]; };
   const inside = (px, py) => Math.abs(px - (X + 56)) + Math.abs(py - (Y + 56)) < 46;
   for (const e of G.enemies) {
     if (e.dummy || e.dead) continue;
     const [ex, ey] = mp(e.x, e.y), d = e.boss ? 6 : 4; if (!inside(ex, ey)) continue;
     ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(ex) - d / 2 - 2, UI.snap(ey) - d / 2 - 2, d + 4, d + 4);
     ctx.fillStyle = e.boss ? UC.danger : UC.hpHi; ctx.fillRect(UI.snap(ex) - d / 2, UI.snap(ey) - d / 2, d, d);
+  }
+  if (typeof shrinesOf === 'function') for (const o of shrinesOf(m)) if (shrineFound(m, o.shrineId)) {   // attuned shrines
+    const [qx, qy] = mp(o.x, o.y); if (!inside(qx, qy)) continue;
+    ctx.fillStyle = UC.edge; ctx.fillRect(UI.snap(qx) - 3, UI.snap(qy) - 3, 6, 6); ctx.fillStyle = '#9ef0ff'; ctx.fillRect(UI.snap(qx) - 1, UI.snap(qy) - 1, 2, 2);
   }
   for (const pt of m.portals) if (pt.open) {   // objective = a pulsing diamond
     const [qx, qy] = mp(pt.x, pt.y); if (!inside(qx, qy)) continue;
@@ -450,10 +469,11 @@ function drawHUD(ctx) {
     drawTabScreen(ctx);
     return;
   }
-  const modal = u.help || u.pause || G.state === 'dead';
+  const modal = u.help || u.pause || u.map || G.state === 'dead';
   if (TOUCH_AIM) updateTouchAim();   // drops a stale drag when a menu opens or the hero dies
   drawPlayHud(ctx, p, modal);
   if (G.touch && G.state === 'play' && !modal) drawTouchControls(ctx);
+  if (u.map && typeof drawFullMap === 'function') drawFullMap(ctx);   // full-map screen (screens.js)
   if (u.pause) drawPause(ctx);
   if (u.help) drawHelp(ctx);
   if (G.state === 'dead') drawDeath(ctx);
