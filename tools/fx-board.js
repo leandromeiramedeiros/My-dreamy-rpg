@@ -86,21 +86,21 @@ function check() {
     }
     near.push(`  ${el.padEnd(10)} ramp ${R.ramp.join(' ')}   ${cells.join('  ') || '(no live colour yet)'}`);
   }
-  // 4. frame-skip safety: the same particles on a 30 Hz and a 60 Hz clock
+  // 4. frame-skip safety (A7.4): two copies of each particle; the 60 Hz copy is evaluated on every step (including the ones
+  //    in between), the 30 Hz copy only on every other step. At each shared timestamp (the same float) both must give the
+  //    same pixel, frame and dissolve row: any hidden state, history or randomness in a model diverges here.
   let samples = 0;
   for (const el of E.ORDER) for (let k = 0; k < 16; k++) {
-    const p = E.spawn(el, 40, 30, 6, 0.5, k, { seed: 0.37, dir: 0.4, spread: 2, burst: k & 1 });
-    let t30 = 0.5, t60 = 0.5;
-    for (let i = 1; i <= 90; i++) {
-      t30 += 1 / 30; t60 += 1 / 60; t60 += 1 / 60;
-      const a = E.pos(p, t30, {}), b = E.pos(p, t60, {});
-      samples++;
-      if (a.vis !== b.vis || (a.vis && (Math.round(a.sx) !== Math.round(b.sx) || Math.round(a.sy) !== Math.round(b.sy) || a.f !== b.f || a.d !== b.d))) {
-        // a float tie at a frame / pixel boundary is not a model fault; only report real divergence
-        if (Math.abs(t30 - t60) < 1e-9) continue;
-        fails.push(`frame-skip ${el}#${k} at ${t30.toFixed(3)} s: 30 Hz ${JSON.stringify(a)} vs 60 Hz ${JSON.stringify(b)}`); break;
-      }
+    const p30 = E.spawn(el, 40, 30, 6, 0.5, k, { seed: 0.37, dir: 0.4, spread: 2, burst: k & 1 }), p60 = Object.assign({}, p30);
+    let bad = null;
+    for (let i = 1; i <= 180 && !bad; i++) {
+      const t = 0.5 + i / 60, b = E.pos(p60, t, {});
+      if (i & 1) continue;
+      const a = E.pos(p30, t, {}); samples++;
+      if (a.vis !== b.vis || (a.vis && (Math.round(a.sx) !== Math.round(b.sx) || Math.round(a.sy) !== Math.round(b.sy) || a.f !== b.f || a.d !== b.d))) bad = `frame-skip ${el}#${k} at ${t.toFixed(3)} s: 30 Hz ${JSON.stringify(a)} vs 60 Hz ${JSON.stringify(b)}`;
     }
+    if (bad) fails.push(bad);
+    if (JSON.stringify(p30) !== JSON.stringify(p60)) fails.push(`frame-skip ${el}#${k}: pos() mutated the particle`);
   }
   console.log(`ELFX check: ${E.ORDER.length} rows (${E.HERO_ELS.length} hero + shatter + gloom); DMG_ELS ${JSON.stringify(live.DMG_ELS)}; RES_ELS ${JSON.stringify(live.RES_ELS)}`);
   console.log(`derivation map: ${exact} cells exact, ${intended} intended changes, ${rowsOut.filter(r => r.includes('(new)')).length} new keys`);
