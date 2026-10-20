@@ -468,6 +468,7 @@ function drawBanner(ctx, p) {
   }
   ctx.globalAlpha = a;   // zone / boss entry: a 960x64 letterbox strip at y=112
   const by = G.touch ? touchMenu()[0].y + 40 + 12 : 112;   // touch: below the three top-left buttons (R3 #3), wherever the safe area puts them
+  HUD.bannerY = by;
   ctx.fillStyle = UC.edge; ctx.globalAlpha = a * 0.78; ctx.fillRect(0, by, DW, 64); ctx.globalAlpha = a;
   ctx.fillStyle = bn.boss ? UC.danger : UC.line; ctx.fillRect(0, by, DW, 2); ctx.fillRect(0, by + 62, DW, 2);
   UI.text(ctx, bn.s, 480, by + 6, 'heading', bn.boss ? UC.danger : UC.gold, 'center');

@@ -70,13 +70,21 @@ async function run(br, base, name, vp, opts, touch) {
   await ev(() => { G.player.level = 1; G.prog.quests = {}; openInv('quests'); }); await shot('5-quests-level1');
   await ev(() => { G.prog.quests = { vale_lantern: { step: 0 } }; G.ui.qSel = null; }); await shot('5-quests-started');
   await closeAll();
-  // 8 title
-  await ev(() => { G.state = 'title'; G.ui.settings = false; }); await shot('8-title');
-  await ev(() => { G.state = 'play'; });
   // 8 juice: low HP pulse + level-up ring + ghost bar
   await ev(() => { G.player.hp = G.player.maxHp * 0.2; HUD.lvl.n = G.player.level; G.player.level += 1; });
   await shot('8-hud-lowhp-levelup');
   await ctx.close();
+  // 8 title with a saved slot (a page without ?scene so SAVE_ON is true), then the "?" help opened from it
+  const c2 = await br.newContext(Object.assign({ viewport: vp }, opts)), pg = await c2.newPage();
+  pg.on('pageerror', e => errs.push(`${name}: pageerror: ${e.message}`));
+  await pg.goto(`${base}/index.html`, { waitUntil: 'load' });
+  await pg.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+  await wait(400);
+  await pg.evaluate(() => { newGame(); G.player.level = 7; saveGame(); G.state = 'title'; G.save = readSave(); G.ui.slotInfo = null; G.ui.settings = false; G.ui.help = false; });
+  const tshot = async n => { await wait(450); await pg.screenshot({ path: path.join(OUT, `${n}-${name}-${STAGE}.png`) }); console.log('shot', `${n}-${name}-${STAGE}`); };
+  await tshot('8-title');
+  await pg.evaluate(() => { G.ui.help = true; }); await tshot('8-title-help');
+  await c2.close();
 }
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
