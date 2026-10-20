@@ -102,13 +102,13 @@ module.exports = zone({
   // root-stair lands beside it); the vantage looks over the Clearing road and the forest; the drop from the 10 lands on the gate road.
   // Signature moment: the forest and the Clearing's road seen from the summit (camera: the summit, facing east).
   stacks: {
-    hawk: { land: true, levels: [4, 7, 10, 13, 16], r: [5.6, 5.0, 4.0, 2.8, 2.1], centres: [[70.5, 37], [70.8, 36.6], [72.5, 35.8], [71, 35], [70.2, 34.8]], over: [2], rough: 0.1, bare: [4], sparse: { 1: 0.3, 2: 0.2, 3: 0 } },
+    hawk: { land: true, levels: [4, 7, 10, 13, 16, 10], r: [5.6, 5.2, 3.9, 2.9, 2.1, 2.0], centres: [[70.6, 36], [69.5, 36], [69, 35.6], [68.6, 35], [68.3, 34.6], [74.2, 37.8]], over: [1, 5], rough: 0.08, bare: [4], sparse: { 1: 0.25, 2: 0, 3: 0, 5: 0 } },
   },
   switchbacks: {
-    hawkApproach: { from: { path: 'main', near: [56, 46] }, w: 2, pts: [[58.6, 41.4, 4], [59.6, 38.6, 6]] },
-    hawkUp: { w: 2, pts: [[66.2, 38.4, 7], [67.2, 40.6, 7, 0.4], [74.2, 40.6, 10, 0.4], [75, 39.4, 10, 0.3], [74.4, 38.4, 10, 0.3], [68.6, 38.6, 13, 0.4], [68.4, 37.6, 13]] },
+    hawkApproach: { from: { path: 'main', near: [56, 46] }, w: 2, pts: [[58, 41.6, 4], [59.2, 38.6, 5.4]] },
+    hawkUp: { w: 2, pts: [[64.6, 38.4, 7], [65.6, 40.3, 7, 0.4], [72.6, 40.4, 10, 0.3], [74, 39.6, 10, 0.3], [73.2, 38.6, 10, 0.3], [68.6, 38.6, 13, 0.3], [68.2, 37.8, 13]] },
   },
-  bridges: [{ x: 9, y: 32, axis: 'y', len: 5, w: 2, lvl: 4 }, { x: 60, y: 37, axis: 'x', len: 6, w: 3, lvl: 6, span: true }],
+  bridges: [{ x: 9, y: 32, axis: 'y', len: 5, w: 2, lvl: 4 }, { x: 60, y: 37, axis: 'x', len: 4, w: 3, lvl: 6, span: true }],
   portals: {
     home: { room: 'start', dx: -3, dy: 2.6, to: 'vale', arrive: 'vale.pine' },
     home_arena: { room: 'arena', dx: 2.5, dy: -4, to: 'vale', open: false, arrive: 'vale.pine' },

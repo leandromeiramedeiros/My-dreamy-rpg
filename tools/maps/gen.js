@@ -745,13 +745,14 @@ class MapGen {
       for (let k = 0; k < b.len; k++) for (let m = 0; m < b.w; m++) tiles.push(b.axis === 'x' ? [b.x + k, b.y + m] : [b.x + m, b.y + k]);
       let lvl = b.lvl;
       if (lvl == null) { const [sx, sy] = b.axis === 'x' ? [b.x - 1, b.y] : [b.x, b.y - 1]; lvl = this.h[sy] && this.h[sy][sx] || 0; }
+      const over = b.span ? tiles.filter(([x, y]) => x >= 0 && y >= 0 && x < this.W && y < this.H && !this.land[y][x]) : [];
       for (const [x, y] of tiles) {
         if (x < 0 || y < 0 || x >= this.W || y >= this.H) continue;
         this.type[y][x] = 'b'; this.h[y][x] = lvl; this.land[y][x] = true; this.zone[y][x] |= ZONE.bridge | ZONE.path;
       }
       b.tiles = tiles; b.lvl = lvl;
-      // §29 G3 span: a bridge with nothing under it (the fallen giant pine): maps.js draws a log, no ground, no skirt below it
-      if (b.span) { const x0 = Math.min(...tiles.map(t => t[0])), y0 = Math.min(...tiles.map(t => t[1])); this.spans.push([x0, y0, Math.max(...tiles.map(t => t[0])) - x0 + 1, Math.max(...tiles.map(t => t[1])) - y0 + 1]); }
+      // §29 G3 span: the part of a bridge over the void (the fallen giant pine): maps.js draws a log there, no ground, no skirt below it
+      if (over.length) { const x0 = Math.min(...over.map(t => t[0])), y0 = Math.min(...over.map(t => t[1])); this.spans.push([x0, y0, Math.max(...over.map(t => t[0])) - x0 + 1, Math.max(...over.map(t => t[1])) - y0 + 1]); }
     }
   }
 
