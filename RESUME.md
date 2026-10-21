@@ -10,7 +10,7 @@ Open a new Claude Code session on this repo (the default branch `claude/dreamy-r
 That is all. The session reads this file, takes the director role and restarts the team below. You do not need to explain the agents, the rules or the process.
 
 ## 2. The director's role (Claude, main session)
-- I am the **game director**. I don't write game code. I steer, write briefs, review results (suites, screenshots, numbers), commit, and ship a playable build every milestone.
+- I am the **game director**. I am a **Fable medium effort agent**. I don't write game code. I steer, write briefs, review results (suites, screenshots, numbers), commit, and ship a playable build every milestone.
 - **I deploy employees (sub-agents) for all the work.** On resume I restart the lanes in §5 without being asked.
 - **Reporting to the client:** substance only, with no commit/PR/merge chatter. A stop-hook nag about uncommitted files gets a silent WIP commit.
 - **Expert consults:** big design questions go to a **Fable** "renowned expert" (game director, VFX director, level designer, story director, and so on). The minutes go to `docs/meetings/`, the decisions to `docs/DESIGN.md`, and then I brief the client with choices.
@@ -18,10 +18,10 @@ That is all. The session reads this file, takes the director role and restarts t
 ## 3. The team (employees), and what each model is for
 | Model | Used for | Typical work |
 |---|---|---|
-| **Opus** | Heavy implementation lanes: engine, combat, bosses, render/perf, world art, opening, balance | hit feel §27, boss phases §26, Echo §30, world art G1/G2 §29, perf §26.4, opening §28, elite pockets |
-| **Sonnet** | Medium, well-specified lanes: data tables, UI polish, test additions, ports from specs | items/UI fixes, port jobs |
-| **Haiku** | Mechanical work: renames, migrations, lint-like sweeps, screenshot runs | ID renames, fixtures |
-| **Fable** | Expert consults and meetings (design only, no code) | Lumina ruling, element VFX, elements meeting, world art, opening |
+| **Opus at high effort** | Heavy implementation lanes: engine, combat, bosses, render/perf, world art, opening, balance | hit feel §27, boss phases §26, Echo §30, world art G1/G2 §29, perf §26.4, opening §28, elite pockets |
+| **Sonnet at high effort** | Medium, well-specified lanes: data tables, UI polish, test additions, ports from specs | items/UI fixes, port jobs |
+| **Haiku at high effort** | Mechanical work: renames, migrations, lint-like sweeps, screenshot runs | ID renames, fixtures |
+| **Fable at medium effort** | Expert consults and meetings (design only, no code) | Lumina ruling, element VFX, elements meeting, world art, opening |
 
 On resume I deploy these models myself. The client never has to ask for agents, name models or explain the workflow. Heavy lanes go to Opus, the medium ones to Sonnet, mechanical sweeps to Haiku, and every design question or meeting to a Fable expert. Several lanes run in parallel whenever their files don't overlap.
 
@@ -81,7 +81,7 @@ Two checks are known to flake: the play.js warp-fade check, and the perf check w
      - lit statuses on hero and enemies: a burning enemy blooms and emits light, frozen/shocked/etc. likewise;
      - the Hollow's black darkness band that shows from the Hawk's Rest summit.
      Start from the QUALITY tiers, emitter-only bloom, `lightPool`, the fog clear zone, ELFX and the §32 particle language.
-   - **c. Senior artist: hero redesign.** The client said the current hero is "too ugly". **The client must re-attach the two reference images on Friday**: the chibi 3-view trio with goggles, and the 4-direction isometric red adventurer. The session that received them is gone. Use them as style references only and don't copy them. Deliver a concept sheet for client approval before any sprite work.
+   - **c. Senior artist: hero redesign.** The client said the current hero is "too ugly". There is a Forge Branch that has an initial plan for how to develop the new hero and items and enemies. Discuss the clients needs as follow: The hero 
 4. **Documentation meeting** (Fable expert game director). How to tidy the docs and organise the project. It must also fold meetings a–c into spells and the whole game, so spells cast light and wind, statuses glow, and so on. Then apply its ruling.
 5. **Brief the client** with the decisions and choices, then plan M4a/M4b (`docs/PRODUCTION.md`).
 
