@@ -55,7 +55,12 @@ The essential problem is not that the team can't build these things; on this evi
 
 * the simulator says the bosses are fair;
 * the bot, in the team's own QA report, beat Mossjaw 3 times in 35 attempts and Bramblehorn 0 times in 19;
-* in my own full bot run on today's build, it reproduced the open QA stall in the Pinewood (§4.3).
+* in my own full bot run on today's build:
+  * it stalled 4 minutes at the Pinewood r2 plaza;
+  * it needed **6 attempts (5 deaths)** to beat Mossjaw;
+  * it then **never reached Bramblehorn**, stuck for about 34 minutes on Hawk's Rest under the objective "Drop from Hawk's Rest onto the Clearing road".
+
+  That is the same blocker `RESUME.md` lists as open (§4.3).
 
 ### 1.2 The eleven recommendations
 
@@ -82,7 +87,7 @@ The essential problem is not that the team can't build these things; on this evi
 | Combat readability | **4** | Bloom whites out the hero; purple telegraphs on purple floors; loot labels over fights |
 | Story and writing | **7** | Strong premise in a well-loved lineage (FFX, Link's Awakening); excellent voice rules |
 | Combat feel (as built) | **6** | Correct principles (telegraphs, scaled hitlag, i-frames); unproven by humans; boss spikes |
-| Level design (Act I) | **6** | Good grammar and secrets; stalls, stale objectives and dead time in practice |
+| Level design (Act I) | **5** | Good grammar and secrets; the required Hawk's Rest drop still blocks the bot run; stalls and stale objectives |
 | Systems design (as planned) | **4** | Individually clever, collectively overloaded for a "dreamy", short, phone-first game |
 | UI / UX | **5** | Coherent "Dream Glass" style; 11 skill slots and dense menus; poor colour-blind separation |
 | Technical foundation | **6** | Exceptional tooling and perf discipline; global-script architecture, no CI gate, unsafe publish path |
@@ -229,7 +234,21 @@ The team's bot played Act I from the title screen with real keyboard and mouse i
   * The bot logged four consecutive "dead time > 60 s" findings and a *major* "goal timed out: r2 clear".
   * Whether this is a game-state bug (r2 marked fired, room never resolved) or a harness assumption is still undiagnosed. Either way, `RESUME.md`'s Friday hot-fix acceptance ("`run-big.js kbm all` reaches the end of Act I with no blockers") is **not met** on this build.
 * **Polish findings repeated from the old report:** loot labels stacking (< 0.3 tiles), and an unattended drop (the intended Iron Cap).
-* **Later sections:** *see Appendix B for the full run (Hollow, Mossjaw, Clearing, Bramblehorn) as recorded.*
+* **Pinewood, after the stall:**
+  * r3 cleared at level 6;
+  * the Fox Warrens vault took 48 s;
+  * the Root Hollow gallery was cleared at level 9.
+* **Mossjaw: 6 attempts, 5 deaths, then a kill.**
+  * The bot was level 9 → 13, against a boss of level 5; max HP rose only from 902 to 980.
+  * Lost attempts lasted 27–75 s. Mossjaw was left at 54 %, 11 %, 6 %, 10 % and 55 %, so these were close fights, decided by two capped hits.
+  * Killing blows included Mossjaw's lunge and summoned shade hounds hitting for **418 (45 % of max HP)**.
+* **The open blocker in `RESUME.md` is still there.** After Mossjaw, the root-stair placed the hero on the Hawk's Rest switchbacks, with the objective "Drop from Hawk's Rest onto the Clearing road". The bot never found the drop:
+  * a *blocker* finding ("goal timed out: bramblehorn");
+  * 8 more retries of 200 s each;
+  * about **34 minutes** in total at (66.9, 37.8);
+  * the portal home was never opened.
+
+  The run was stopped at its time limit after 3,437 s of game time. Whether a human finds the drop is untested. That is exactly what a 3–5 person play-test answers in an afternoon. Either way, the Friday hot-fix acceptance ("`run-big.js kbm all` reaches the end of Act I with no blockers") **fails on the shipped build.**
 
 ### 4.4 My own measurements
 * **Desktop**, 960×540, Pinewood: load-to-play 1.8 s; frame time average 16.6 ms, p95 16.7 ms, max 16.8 ms. That is a locked 60 fps.
@@ -422,7 +441,10 @@ Outside research supports the caution:
 ### 7.2 Nobody knows whether it is fun
 * **The bot** (QA report, runs 1–6, pre-M3): Mossjaw killed **3/35**, Bramblehorn **0/19**. Two Mossjaw lunges killed weak-gear heroes in under 5 s.
 * **The sim** (today): reference gear wins 6/6, −1 tier wins ~3.5–3.8/6.
-* **My bot run** (today): the r2 stall reproduced, with 4 minutes of dead time (§4.3, Appendix B).
+* **My bot run** (today):
+  * the r2 stall reproduced, with 4 minutes of dead time;
+  * Mossjaw took **6 attempts** at hero level 9–13 against a level-5 boss;
+  * Bramblehorn was **never reached**, because the run was stuck about 34 minutes on Hawk's Rest (§4.3, Appendix B).
 
 Neither instrument is a person.
 
@@ -530,9 +552,11 @@ On `file://`, browsers historically shared or under-specified localStorage origi
   * damage scaled to a reference hero, not the real one (§7.2);
   * the Bramblehorn fight gap is 30 s against a 15–25 s target (`RESUME.md`);
   * the old QA report found the bot dying 13 times in a row at Bramblehorn, mostly to stomp and root-grab;
-  * the intro and banner repeat on every retry.
+  * the intro and banner repeat on every retry;
+  * **levels barely help.** Today's bot was **7–8 levels above** Mossjaw (level 12–13 against level 5), yet gained only about 8 % max HP over those levels (902 → 980), because per-level growth is +4 % base HP and big hits are capped at a share of max HP. By design (§26.2), only gear from farming elite pockets closes the gap. A narrative-first player who neither farms nor min-maxes has no "grind a bit and come back" fallback, the classic safety valve of action RPGs.
 * **Recommendations:**
   * scale damage partly to the real hero;
+  * let levels matter for retrying players: for example, boss damage falls about 5 % per level the hero is above the boss, capped at −30 %;
   * **one learnable signature per boss**, introduced alone before it is combined with anything;
   * skip the intro on retry;
   * a 10-second retry loop;
@@ -573,6 +597,7 @@ On `file://`, browsers historically shared or under-specified localStorage origi
 ### 8.6 Level design (Act I)
 * **Strengths:** points of interest every 12–15 tiles, landmarks, shortcut loops, signposted secrets ("the wall hums"), tall set pieces (Hawk's Rest, h 16) with a vantage reveal. The bot found every secret given the hints.
 * **Concerns:**
+  * **the Hawk's Rest exit** ("Drop from Hawk's Rest onto the Clearing road"): the bot stood about 34 minutes on the summit switchbacks today without finding the drop (§4.3). Drop-downs are one-way and invisible as paths, so any *required* drop needs an unmistakable tell: a ledge marker, a Pip line, a lit landing;
   * the r2 stall after a shrine warp (reproduced today);
   * stale objective text after deaths and vault clears (QA m1);
   * loot labels piling up (reproduced);
@@ -730,7 +755,7 @@ The team's suites are strong on engine invariants. They are weak on *experience*
 | # | Implement | Evidence | Size |
 |---|---|---|---|
 | 1 | **Human play-tests of Act I** (rounds of 3–5, observed; then 15–30) | §7.2; Children of Morta's weekly playtests | 2 weeks, then continuous |
-| 2 | **Fix the r2 stall and stale objectives;** derive objectives from trigger state | §4.3, QA m1 | 2–4 days |
+| 2 | **Fix the Hawk's Rest → Clearing blocker, the r2 stall and stale objectives;** derive objectives from trigger state; mark required drop-downs unmistakably | §4.3, QA m1, `RESUME.md` | 2–4 days |
 | 3 | **CI gate before the Pages deploy** | §9.2 | 1 hour |
 | 4 | **Editor Publish → pull request, with stale-SHA rejection** | §9.4 | 1 day |
 | 5 | **Save export/import, an iOS home-screen prompt, cloud save on Steam** | §7.7 | 2–3 days |
@@ -889,6 +914,8 @@ All runs were on an isolated copy of the repository (`/tmp/.../scratchpad/repo`)
   * saves `js/items.js:965–968`;
   * deploy `.github/workflows/pages.yml` (no test step).
 * **Colour-vision simulation:** Machado et al. (2009) severity-1 matrices on linear RGB, CIE Lab (D65), ΔE76; results in §8.11.
+* **White-out measure:** the share of pixels with min(r,g,b) ≥ 250 in a 64×64 window at the screen centre (the camera follows the hero), plus the worst window within ±80 px horizontally and ±60 px vertically. The bar is the team's own (element VFX minutes, "No white-out", ≤ 3 %). Results in §4.4.
+* **QA bot:** `node tools/qa/run-big.js kbm all` on the isolated copy, stopped by the 1-hour background limit at 3,437 s of game time; results in §4.3 and Appendix B.
 
 ## Appendix B: full QA-bot run on today's build (`run-big.js kbm all`)
 
@@ -900,7 +927,21 @@ All runs were on an isolated copy of the repository (`/tmp/.../scratchpad/repo`)
 | pinewood-r1-done 185.1 s | 2 | 0 | |
 | pinewood-key 223.7 s | 3 | 0 | Elite killed, key dropped |
 | r2 clear, timed out 555.4 s | 4 | 0 | **Stall:** 240 s at shrine 1 after a warp; tracker "Find the root door of the Hollow"; 4 × dead-time findings; 1 × major |
-| *(remaining markers: see the update below)* | | | |
+| pinewood-r3-done 676.1 s | 6 | 0 | |
+| warrens-enter 701.0 s → warrens-exit 749.3 s | 7 | 0 | Fox Warrens vault in 48 s |
+| hollow-enter 767.0 s → gallery-done 840.4 s → hollow-lever 844.8 s | 9 | 0 | |
+| Mossjaw attempt 1: 852 → 882 s | 9 | 1 | Boss left at 54 %; died to rootSpit and lunge pressure |
+| Mossjaw attempt 2: 890 → 946 s | 10 | 2 | Boss left at 11 %; killing hit: shade hound lunge 418 (45 % of 928 HP) |
+| Mossjaw attempt 3: 953 → 1,028 s | 11 | 3 | Boss left at 6 % |
+| Mossjaw attempt 4: 1,035 → 1,096 s | 12 | 4 | Boss left at 10 % |
+| Mossjaw attempt 5: 1,104 → 1,131 s | 12 | 5 | Boss left at 55 % |
+| Mossjaw attempt 6: 1,138 → 1,201 s | 12 | 5 | **Killed** (63 s; hero down to 2 % HP) |
+| mossjaw-done 1,210.5 s; clearing-arrive 1,219.8 s | 13 | 5 | Objective "Climb the root-stair to the Clearing", then "Drop from Hawk's Rest onto the Clearing road" |
+| goal "bramblehorn" timed out at 1,583 s | 13 | 5 | **Blocker:** stuck at (66.9, 37.8) on the Hawk's Rest switchbacks; 6 × dead-time findings |
+| 8 Bramblehorn retries, 1,588 → 3,229 s | 13 | 5 | Every retry timed out (200 s each); the boss was never engaged |
+| 3,437 s | 13 | 5 | *Blocker:* portal `home_arena` not open; boss chest timed out; run stopped at the 1-hour limit |
+
+Totals: Vale ~100 s; Pinewood to the Hollow door ~11 min (including the 4-min stall); 5 deaths, all at Mossjaw; **Bramblehorn never reached.** Screenshots `kbm-055`, `kbm-061` (Mossjaw) and `kbm-110` (Hawk's Rest) are in the bot's `tools/qa/shots/` on the isolated copy; they were not committed.
 
 ## Appendix C: comparables at a glance
 See §6.1 (shipped comparables), §6.2 (systems precedents) and §3.3 / §8.9 (narrative precedents).
