@@ -72,18 +72,50 @@ Two checks are known to flake: the play.js warp-fade check, and the perf check w
    - smoke, play.js and act1-route pass.
    Then merge the fix.
 2. (M3 is already shipped.)
-3. **Three Fable expert meetings, in parallel** (minutes go to `docs/meetings/`):
-   - **a. Environmental and gameplay systems designer: wind as a force.** Ambient wind pushes and pulls trees and small objects, and wind spells (Gale, §33) push and pull them harder. Build on the canopy gust sway, `tilePatch` and the §33 Wind/Drift rules.
-   - **b. Lighting director: a cohesive lighting pass.** Cover:
-     - dynamic lights, shadows and rim light;
-     - bloom and additive light that don't wash the image out;
-     - whether today's godrays and volumetrics stay, get better or go;
-     - lit statuses on hero and enemies: a burning enemy blooms and emits light, frozen/shocked/etc. likewise;
-     - the Hollow's black darkness band that shows from the Hawk's Rest summit.
-     Start from the QUALITY tiers, emitter-only bloom, `lightPool`, the fog clear zone, ELFX and the §32 particle language.
-   - **c. Senior artist: hero redesign.** The client said the current hero is "too ugly". There is a Forge Branch that has an initial plan for how to develop the new hero and items and enemies. Discuss the clients needs as follow: The hero 
-4. **Documentation meeting** (Fable expert game director). How to tidy the docs and organise the project. It must also fold meetings a–c into spells and the whole game, so spells cast light and wind, statuses glow, and so on. Then apply its ruling.
-5. **Brief the client** with the decisions and choices, then plan M4a/M4b (`docs/PRODUCTION.md`).
+3. **The Game Studio Experts meeting, they are in the same room, they share a fable model at high effort** (minutes go to `docs/meetings/`):
+creative-director, technical-director,  game-designer, lead-programmer, art-director, ,gameplay-programmer, engine-programmer, tools-programmer, ui-programmer, systems-designer, level-designer, technical-artist, ux-designer, go in this meeting:
+
+THE CLIENT WILL PROVIDE A LOCAL COMPUTER FOR EVERYTHING, SO NO NEED TO PLAN AROUND CLOUD SESSIONS.
+
+Part 1 - 
+The reference: hero and equipment styles are on reference website (https://www.slynyrd.com/blog/2025/10/2/pixelblog-58-top-down-character-animation-part-3 https://www.slynyrd.com/blog/2025/5/23/pixelblog-56-top-down-character-attack-animation https://www.slynyrd.com/blog/2025/3/24/pixelblog-55-top-down-character-animation). 
+
+Do your research to achieve this EXACT style on the character visuals and animations.
+
+The system: Every sprite that has 8 directions will be done via a deterministic local tool, this include but not limit to the Hero and its equipment, enemies and its equipment when applicable, NPCs. The resulting combination of Hero and Equipment will be layered at runtime resulting in an cohesive visual that encompass every piece of equipment showing (weapon, armor, ring, amulet, cape, belt, satchel, etc). Players will mix and match equipment and it needs to be rewarding visually. Every sprite will need to be redone to achieve this vision.
+
+Part 2 - 
+Lighting should be dynamic to accomodate the new elemental system, period. Dynamic lights, shadows and rimlights, combined with pixel effects and subtle particles that obey physics will add to immersion. Bloom and additive lighting must be carefully studied to not wash the image. Godrays, fog, mist should all be revised too to improve the visuals. We created a system to have ailments/statuses/elements show on the enemies, the hero and the world, this system shouldn't be drawn fixed on the spritesheet but rather applied on runtime, with the respective lighting and particles, even the UI/HUD shows these effects. Example: A burning enemy should have the pixel effects and particles layered on top of him, emiting a soft ember glow that lights the ground and entities around him. This needs to be planned with everything that is on the scope on mind.
+
+Part 3 - 
+Wind is a natural force of the world, so the trees push and pull naturally on the maps. Spells that have wind element should generate aditional wind force (vector, radial, push or pull, blast, etc) to the trees and small objects, and of course apply the appropriate ammount of push and pull force to move enemies (note that elites and bosses have statuses resistance 
+
+to this).
+
+Part 4 -
+No more hero skills. Everything comes from equipment. Weapons, armors, trinkets, MUST HAVE UNIQUE AND CAREFULLY CRAFTED visuals, getting fancier as the power progress.
+For example, T4 rapier much fancier than T1 rapier. So each variant and each tier must have uniquely crafted visuals, for weaponry and armory. Inside each variant and class, from tier to tier the visuals are consistant, but they get more intricate. For example, higher rarities should have glowy bits, light streaks, fancy pixel particles, add lights, add sounds, etc.
+
+HOTKEYS:
+HAND ACTION  = MOUSE 1
+OFFHAND ACTION = MOUSE 2
+HAND SPELL = Q
+OFFHAND SPELL E
+HAND ULTIMATE = SHIFT+Q
+OFFHAND ULTIMATE = SHIFT+E
+ARMOR/HEAD/BOOTS = R/D/F
+BELT OR SATCHEL = Z/X/C
+(can consumable items inside to fast use)
+
+Hand + Offhand system:
+YOU CHOOSE WHAT CAN BE EQUIPABLE IN WHICH SLOT, NEEDS TO BE DISCUSSED. EACH WEAPON VARIANT HAS 3 SKILLS. THEY INCREASE IN POWER WITH TIER AND RARITY. BUT CORE IS THE SAME.
+THEY HAVE FIXED HAND/OFFHAND ACTION, SPELL AND ULTIMATE. SO WHERE YOU PUT THEM IN YOUR CHARACTER MAKES ALL THE DIFFERENCE AND MAKES FOR GREAT FUN. NEEDS TO ADD SHIELD TO THE EQUATION. SKILL EXPRESSION COMES FROM THE COMBINATIONS OF EVERY PIECE OF EQUIPMENT AND THE ADDITIONAL PASSIVES, INTERACTIONS AND NEW SKILLS UNLOCKED. THIS NEEDS TO BE THOUGHT, SPEND YOUR TIME HERE DISCUSSING IDEAS AND HAVE THE BEST ONE IMPLEMENTED.
+
+PART 5 - 
+Think about deterministic tools to help cut costs and accelerate the development.
+Minimize the documentation, rework the plan so its only new references and drop old ideas, tidy up the project files footprint, remove old and unnecessary code/imagery etc. Best practices on game design.
+
+4. **Brief the client** with the decisions and choices, then plan M4a/M4b (`docs/PRODUCTION.md`).
 
 **Dropped by the client (don't offer again):** Godot "port-ready rules", the jade tint for the nature Echo, and real-phone `?perf=1` readings.
 
