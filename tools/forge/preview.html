@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Forge Dressing Room</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a stage (the hero, big, on a swatch of ground) beside a gear rack; under the stage the 8-direction turntable. One dusk look, like the game. */
+:root {
+  color-scheme: dark;
+  --bg: #15121e; --panel: #1d1a2a; --line: #2f2a48; --fg: #e4def5; --muted: #a49cc4; --accent: #ffd870; --accent-ink: #2a1d05;
+  --grass: #3f8b63; --stone: #6d6a92; --night: #0c0a14;
+  --display: 'Pixelify Sans', 'Courier New', monospace;
+  --body: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 var(--body);
+  padding-block: 20px 32px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 18px; }
+header { display: grid; gap: 6px; }
+h1 { font: 700 28px/1.1 var(--display); letter-spacing: 0.02em; margin: 0; color: var(--accent); text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 64ch; }
+.main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: 18px; align-items: start; }
+@media (max-width: 760px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.stage, .rack { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 12px; min-width: 0; }
+.ground { border-radius: 4px; display: grid; place-items: center; padding: 10px; background: var(--grass); min-height: 200px; }
+.ground[data-bg="stone"] { background: var(--stone); } .ground[data-bg="night"] { background: var(--night); }
+canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; max-width: 100%; }
+.readout { font: 12px/1.4 var(--mono); color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 16px; font-variant-numeric: tabular-nums; }
+.readout b { color: var(--fg); font-weight: 600; }
+.turntable { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 560px) { .turntable { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.dir { appearance: none; border: 1px solid var(--line); border-radius: 4px; background: var(--grass); padding: 4px 2px 2px; cursor: pointer; display: grid; justify-items: center; gap: 2px; color: var(--fg); font: 600 11px var(--mono); }
+.turntable[data-bg="stone"] .dir { background: var(--stone); } .turntable[data-bg="night"] .dir { background: var(--night); }
+.dir canvas { width: 100%; height: auto; }
+.dir[aria-pressed="true"] { outline: 2px solid var(--accent); outline-offset: 1px; }
+.rack h2 { font: 700 13px var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { appearance: none; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 999px; padding: 5px 12px; font: 14px var(--body); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+.slots { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 10px; align-items: center; }
+.slots.gear { grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); }
+.slots label { font: 600 12px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+select, input[type=range] { width: 100%; min-width: 0; }
+select { background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; font: 14px var(--body); }
+select:disabled { opacity: 0.5; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+</style></head><body>
+<div class="wrap">
+  <header>
+    <h1>Forge Dressing Room</h1>
+    <p>Every frame here is stacked live from baked forge layers: the bare body, its hair, and each piece you pick. A helm hides the hair, the weapon picks its own attack, and every slot has five tiers, from squire iron to radiant plate. Mix them freely.</p>
+  </header>
+  <div class="main">
+    <section class="stage" aria-label="Hero preview">
+      <div class="ground" id="ground"><canvas id="big" width="52" height="56" aria-label="Hero, current direction"></canvas></div>
+      <div class="readout" id="readout">Decoding layer sheets…</div>
+      <div class="turntable" id="turntable" role="group" aria-label="Facing direction"></div>
+    </section>
+    <aside class="rack" aria-label="Gear and animation">
+      <div><h2>Outfit</h2><div class="chips" id="presets"></div></div>
+      <div class="slots gear" id="slots"></div>
+      <div><h2>Animation</h2><div class="chips" id="anims"></div></div>
+      <div class="slots">
+        <label for="fps">Speed</label><input id="fps" type="range" min="2" max="14" value="7">
+        <label for="bg">Ground</label><select id="bg"><option value="grass">Grass</option><option value="stone">Stone</option><option value="night">Night</option></select>
+      </div>
+      <p class="note">Arrow keys turn the hero. Tap a direction below the stage to face it.</p>
+    </aside>
+  </div>
+</div>
+<script src="forge.js"></script>
+<script src="out/chibi-bank.js"></script>
+<script>
+'use strict';
+const NAMES = { knighthelm: 'Knight Helm', warden: 'Knight Plate', knightgreaves: 'Knight Greaves', sword: 'Sword', shield: 'Shield', cape: 'Cape',
+  arcanecowl: 'Arcane Cowl', wardenhood: 'Warden Hood', dreamweave: 'Dreamweave Robe', stalker: 'Stalker Jacket', clothsandals: 'Cloud Sandals', stalkershoes: 'Stalker Shoes', staff: 'Staff', bow: 'Bow' };
+const TIER_NAMES = { sword: ['Rusty Blade', 'Dawnblade', 'Sunforged Blade', 'Aurora Edge', 'Dawn Eternal'], staff: ['Willow Wand', 'Starfall Staff', 'Comet Rod', 'Nebula Sceptre', 'Night Eternal'],
+  bow: ["Hunter's Bow", 'Moonbow', 'Silverwing', 'Eclipse Longbow', 'Moon Eternal'], '*': ['Squire', 'Footman', 'Knight', 'Paladin', 'Radiant'] };
+const SLOT_ORDER = [['head', 'Head'], ['chest', 'Chest'], ['boots', 'Boots'], ['weapon', 'Weapon'], ['offhand', 'Off hand'], ['back', 'Back']];
+const ANIM_NAMES = { idle: 'Idle', walk: 'Walk', attack: 'Attack', cast: 'Cast', dash: 'Dash', hit: 'Hit' };
+const INFO = FORGE_BANK.model, DIRS = INFO.dirs, [FW, FH] = INFO.frame;
+const PIECES = Object.keys(FORGE_BANK.sheets).filter(id => id !== 'body').map(id => FORGE_BANK.sheets[id].meta);
+const familyOf = m => m.family || m.id;
+const SLOTS = SLOT_ORDER.filter(([s]) => PIECES.some(p => p.slot === s));
+const FAMILIES = {};                                  // slot -> family -> [{ id, tier }] (shape tiers: one baked piece each)
+for (const m of PIECES) ((FAMILIES[m.slot] = FAMILIES[m.slot] || {})[familyOf(m)] = FAMILIES[m.slot][familyOf(m)] || []).push({ id: m.id, tier: m.tier });
+for (const s in FAMILIES) for (const f in FAMILIES[s]) FAMILIES[s][f].sort((a, b) => (a.tier || 0) - (b.tier || 0));
+const ANIMS = [...new Set(INFO.layout.map(l => l[0].split(':')[0]))];
+const name = id => NAMES[id] || id.charAt(0).toUpperCase() + id.slice(1);
+const tierName = (fam, i) => `T${i + 1} ${(TIER_NAMES[fam] || TIER_NAMES['*'])[i] || ''}`.trim();
+// a look = { slot: { id, tier?, pal? } }; a preset comes from the bank's loadouts (ids, or { id, tier, pal } palette swaps)
+const lookOf = entries => { const L = {}; for (const e of entries) { const p = typeof e === 'string' ? { id: e } : e; L[FORGE_BANK.sheets[p.id].meta.slot] = Object.assign({}, p); } return L; };
+const PRESETS = FORGE_BANK.loadouts || { bare: [] };
+const first = ['knight', 'paladin'].find(k => PRESETS[k]) || Object.keys(PRESETS)[0];
+const state = { look: lookOf(PRESETS[first]), preset: first, anim: 'walk', dir: 'SE', frame: 0 };
+const $ = id => document.getElementById(id);
+function el(tag, attrs, text) { const e = document.createElement(tag); Object.assign(e, attrs || {}); if (text != null) e.textContent = text; return e; }
+
+function buildUi() {
+  for (const p in PRESETS) {
+    const b = el('button', { className: 'chip', type: 'button', id: 'preset-' + p }, p.charAt(0).toUpperCase() + p.slice(1));
+    b.onclick = () => { state.look = lookOf(PRESETS[p]); state.preset = p; syncUi(); };
+    $('presets').append(b);
+  }
+  for (const [slot, label] of SLOTS) {
+    const f = el('select', { id: 'slot-' + slot }), t = el('select', { id: 'tier-' + slot });
+    f.setAttribute('aria-label', label); t.setAttribute('aria-label', label + ' tier');
+    f.append(el('option', { value: '' }, 'None'));
+    for (const fam in FAMILIES[slot]) f.append(el('option', { value: fam }, name(fam)));
+    f.onchange = () => {
+      const opts = FAMILIES[slot][f.value], cur = state.look[slot], keep = cur && FORGE_BANK.sheets[cur.id].meta.tier;
+      if (!f.value) delete state.look[slot];
+      else state.look[slot] = { id: (opts.find(o => o.tier === keep) || opts[Math.min(opts.length - 1, 2)] || opts[0]).id };
+      state.preset = null; syncUi();
+    };
+    t.onchange = () => {
+      const cur = state.look[slot]; if (!cur) return;
+      const meta = FORGE_BANK.sheets[cur.id].meta, opts = FAMILIES[slot][familyOf(meta)];
+      if (opts.length > 1) state.look[slot] = { id: opts[+t.value].id };
+      else state.look[slot] = { id: cur.id, tier: +t.value };          // palette tiers of one baked piece
+      state.preset = null; syncUi();
+    };
+    $('slots').append(el('label', { htmlFor: f.id }, label), f, t);
+  }
+  for (const a of ANIMS) { const b = el('button', { className: 'chip', type: 'button', id: 'anim-' + a }, ANIM_NAMES[a] || a); b.onclick = () => { state.anim = a; state.frame = 0; syncUi(); }; $('anims').append(b); }
+  DIRS.forEach(d => {
+    const b = el('button', { className: 'dir', type: 'button', id: 'dir-' + d }); b.setAttribute('aria-label', 'Face ' + d);
+    b.append(el('canvas', { width: FW, height: FH }), el('span', {}, d)); b.onclick = () => { state.dir = d; syncUi(); };
+    $('turntable').append(b);
+  });
+  $('bg').onchange = () => { $('ground').dataset.bg = $('bg').value; $('turntable').dataset.bg = $('bg').value; };
+  addEventListener('keydown', e => {
+    if (e.target.tagName === 'SELECT' || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+    const i = DIRS.indexOf(state.dir); state.dir = DIRS[(i + (e.key === 'ArrowRight' ? 1 : DIRS.length - 1)) % DIRS.length]; syncUi(); e.preventDefault();
+  });
+}
+function syncUi() {
+  const L = state.look;
+  for (const [slot] of SLOTS) {
+    const f = $('slot-' + slot), t = $('tier-' + slot), cur = L[slot];
+    const meta = cur && FORGE_BANK.sheets[cur.id].meta, fam = meta && familyOf(meta), opts = fam ? FAMILIES[slot][fam] : [];
+    f.value = fam || ''; t.innerHTML = '';
+    if (opts.length > 1) { opts.forEach((o, i) => t.append(el('option', { value: String(i) }, tierName(fam, i)))); t.value = String(opts.findIndex(o => o.id === cur.id)); t.disabled = false; }
+    else if (meta && meta.tiers) { meta.tiers.forEach((_, i) => t.append(el('option', { value: String(i) }, tierName(fam, i)))); t.value = String(cur.tier != null ? cur.tier : 1); t.disabled = false; }
+    else { t.append(el('option', { value: '' }, meta ? 'One tier' : '—')); t.disabled = true; }
+  }
+  for (const p in PRESETS) $('preset-' + p).setAttribute('aria-pressed', String(p === state.preset));
+  for (const a of ANIMS) $('anim-' + a).setAttribute('aria-pressed', String(a === state.anim));
+  DIRS.forEach(d => $('dir-' + d).setAttribute('aria-pressed', String(d === state.dir)));
+  if (bank) draw();
+}
+
+// ---- runtime stacking: FORGE.compose on the decoded sheets ------------------------------------------------------------
+let bank = null, lastMs = 0;
+const cache = new Map(), tiles = {};
+const pieces = () => SLOT_ORDER.map(([s]) => state.look[s]).filter(Boolean);
+function frameCount(anim) {
+  const w = pieces().map(p => FORGE_BANK.sheets[p.id].meta).find(m => m.class), v = anim + ':' + (w ? w.class : 'none');
+  const real = INFO.anims.includes(v) ? v : anim;
+  return INFO.layout.filter(l => l[0] === real).length || 1;
+}
+function frameCanvas(dir, anim, frame) {
+  const ps = pieces(), key = JSON.stringify([ps, dir, anim, frame]);
+  if (cache.has(key)) return cache.get(key);
+  const t0 = performance.now(), out = FORGE.compose(bank, { dir, anim, frame, pieces: ps });
+  lastMs = performance.now() - t0;
+  const c = el('canvas', { width: out.w, height: out.h });
+  c.getContext('2d').putImageData(new ImageData(out.rgba, out.w, out.h), 0, 0);
+  if (cache.size > 4000) cache.clear();
+  cache.set(key, c);
+  return c;
+}
+function draw() {
+  const n = frameCount(state.anim), f = state.frame % n, big = $('big');
+  const scale = Math.max(2, Math.min(8, Math.floor(($('ground').clientWidth - 20) / FW)));
+  if (big.width !== FW * scale) { big.width = FW * scale; big.height = FH * scale; }
+  const g = big.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, big.width, big.height);
+  g.drawImage(frameCanvas(state.dir, state.anim, f), 0, 0, big.width, big.height);
+  DIRS.forEach(d => { const c = tiles[d] || (tiles[d] = $('dir-' + d).querySelector('canvas')), x = c.getContext('2d'); x.clearRect(0, 0, FW, FH); x.drawImage(frameCanvas(d, state.anim, f), 0, 0); });
+  const ps = pieces();
+  $('readout').innerHTML = `<span>frame <b>${f + 1}/${n}</b></span><span>${FW}×${FH} px</span><span><b>${ps.length}</b> pieces on the body</span><span>compose <b>${lastMs.toFixed(2)} ms</b></span>`;
+}
+let acc = 0, prev = 0;
+function loop(t) {
+  acc += Math.min(250, t - (prev || t)); prev = t;
+  if (acc >= 1000 / +$('fps').value) { acc = 0; state.frame++; draw(); }
+  requestAnimationFrame(loop);
+}
+async function decodeBank() {
+  const sheets = {};
+  await Promise.all(Object.entries(FORGE_BANK.sheets).map(([id, s]) => new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => { const c = el('canvas', { width: img.width, height: img.height }), x = c.getContext('2d'); x.drawImage(img, 0, 0); sheets[id] = { w: img.width, rgba: x.getImageData(0, 0, img.width, img.height).data, meta: s.meta }; res(); };
+    img.onerror = () => rej(new Error(`The ${id} layer sheet did not decode.`));
+    img.src = s.src;
+  })));
+  return { model: INFO, sheets };
+}
+buildUi(); syncUi();
+decodeBank().then(b => { bank = b; draw(); requestAnimationFrame(loop); })
+  .catch(err => { $('readout').textContent = err.message + ' Rebuild it with: node tools/forge/build.js chibi'; });
+</script>
+</body></html>
