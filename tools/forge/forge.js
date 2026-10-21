@@ -35,16 +35,19 @@
 // LAYER = { id, tag?, group?, bias?, mats, prims, stamps }
 //   tag: what equipment can hide (a helm hides 'hair');  group: parts of one group never get a dark line between them;
 //   bias: px towards the camera when stacking (cloth over a body that pokes through it by less than that)
-//   mats: { name: '#hex' | [4 hex] | { ramp, flat, lift, tones } }   ramp: '#hex' (auto) or [shadow, low, mid, high];
-//         flat: one tone, unshaded, never cleaned up;  lift: lowest lit tone (faces never sink to shadow);  tones: own thresholds
+//   mats: { name: '#hex' | [hex...] | { ramp, flat, lift, tones, spec } }   ramp: '#hex' (auto) or [shadow, low, mid, high, (spec)];
+//         flat: one tone, unshaded, never cleaned up;  lift: lowest lit tone (faces never sink to shadow);  tones: own thresholds;
+//         spec: n.H above this takes the ramp's last colour (a small glint on metal and gems)
 //   prims: { bone, mat, part?, shape:'ell'|'cap'|'box'|'line', ..., clip?, when?(anim, f) }
 //         ell: c, r     cap: a, b, ra, rb (a tapered capsule)     box: c, h (half sizes), round
+//         rot: [rx, ry, rz] turns an ell or box about its centre (a tilted feather, an angled plate)
 //         line: a, b (b on bone bB if given), tone: 1 px wide in screen space (strings, arrows), kept by every cleanup
 //         clip: [nx, ny, nz, k] (or a list) keeps the side where dot(p, n) <= k: a flat cut (a sole, a hair line)
 //         when: the prim exists only on the frames where it returns true (a drawn bowstring, a nocked arrow)
 //   stamps: { bone, at, n, facing, on?, px:[[dx, dy, '#hex' | mat], ...] }  pixels pinned to a surface point (eyes):
 //         drawn when the point faces the camera and is not hidden inside the layer; other layers can still cover them
-// PIECE = { id, slot, class?, hides:[tags], layers:[LAYER], pose?(anim, f), tiers?:[ { mat: ramp } ], sockets? }
+// PIECE = { id, slot, family?, tier?, class?, hides:[tags], layers:[LAYER], pose?(anim, f), tiers?:[ { mat: ramp } ], sockets? }
+//   family + tier: one baked piece per shape tier (knighthelm.t3); tiers: palette-only variants of one baked piece
 //   pose: partial poses for bones ONLY this piece uses (a weapon's hold); class: 'sword' | 'staff' | 'bow' ...
 // Pose: rot = Euler [rx, ry, rz] relative to the parent. aim / point = a direction in model space (before the facing yaw):
 //   aim lays the bone's +y along it (weapons), point lays its -y along it (limbs); roll hints where +z goes.
@@ -110,15 +113,16 @@ const FORGE = (function () {
   // ---- signed distance functions (local space) ------------------------------------------------------------------
   function sdf(pr, p) {
     let d;
+    const local = c => pr.rot ? mtv(pr._R || (pr._R = rot(pr.rot)), sub(p, c)) : sub(p, c);
     if (pr.shape === 'ell') {
-      const q = sub(p, pr.c), r = pr.r;
+      const q = local(pr.c), r = pr.r;
       const k0 = Math.hypot(q[0] / r[0], q[1] / r[1], q[2] / r[2]), k1 = Math.hypot(q[0] / (r[0] * r[0]), q[1] / (r[1] * r[1]), q[2] / (r[2] * r[2]));
       d = k1 === 0 ? -Math.min(r[0], r[1], r[2]) : k0 * (k0 - 1) / k1;
     } else if (pr.shape === 'cap') {
       const pa = sub(p, pr.a), ba = sub(pr.b, pr.a), t = clamp(dot(pa, ba) / (dot(ba, ba) || 1), 0, 1);
       d = len(sub(pa, mul(ba, t))) - (pr.ra + (pr.rb - pr.ra) * t);
     } else {                                                     // rounded box
-      const q = sub(p, pr.c), rr = pr.round || 0;
+      const q = local(pr.c), rr = pr.round || 0;
       const e = [Math.abs(q[0]) - pr.h[0] + rr, Math.abs(q[1]) - pr.h[1] + rr, Math.abs(q[2]) - pr.h[2] + rr];
       d = len([Math.max(e[0], 0), Math.max(e[1], 0), Math.max(e[2], 0)]) + Math.min(Math.max(e[0], e[1], e[2]), 0) - rr;
     }
@@ -156,6 +160,7 @@ const FORGE = (function () {
     if (layer._pl) return layer._pl;
     const names = [], index = {};
     for (const pr of layer.prims || []) { const n = pr.part || pr.bone; if (index[n] == null) { index[n] = names.length; names.push(n); } }
+    if (names.length > 16) throw new Error(`layer ${layer.id}: ${names.length} parts (16 at most)`);
     return (layer._pl = { names, index });
   }
   function palOf(layer, over) {                                 // per material: 4 rgb triples (a tier swaps colours only)
@@ -203,7 +208,7 @@ const FORGE = (function () {
       L: norm(model.light || [-0.55, 0.65, 0.52]), T: model.tones || [0.78, 0.3, -0.25], cover: model.coverage || 4 };
   }
   function raster(layer, W, cam, anim, frame, rootT) {
-    const { w, h, ox, oy, D, RT, UP, L, T } = cam, N = w * h, mt = matTable(layer), pl = partList(layer);
+    const { w, h, ox, oy, D, RT, UP, L, T } = cam, N = w * h, mt = matTable(layer), pl = partList(layer), H = norm(sub(L, D));
     const G = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), dq: new Uint8Array(N) };
     const dep = new Float32Array(N).fill(1e9);
     const proj = P => [ox + dot(P, RT), oy - dot(P, UP), dot(P, D) + FAR];
@@ -256,10 +261,11 @@ const FORGE = (function () {
       }
       let pick = null, pk = 0;
       for (const k in cnt) if (!pick || cnt[k].n > pick.n || (cnt[k].n === pick.n && cnt[k].t < pick.t)) { pick = cnt[k]; pk = +k; }
-      const i = py * w + px, s = dot(norm(pick.nn), L), M = mt.list[pick.m], TT = M.tones || T;
+      const i = py * w + px, nn = norm(pick.nn), s = dot(nn, L), M = mt.list[pick.m], TT = M.tones || T;
       G.cov[i] = 1; G.mat[i] = pick.m; G.part[i] = pk; dep[i] = pick.tt / pick.n;
       G.flat[i] = M.flat != null ? 1 : 0;
-      G.tone[i] = M.flat != null ? M.flat : Math.max(M.lift || 0, s > TT[0] ? 3 : s > TT[1] ? 2 : s > TT[2] ? 1 : 0);
+      let tn = 0; for (let k = 0; k < TT.length; k++) if (s > TT[k]) { tn = TT.length - k; break; }
+      G.tone[i] = M.flat != null ? M.flat : M.spec != null && dot(nn, H) > M.spec ? M.ramp.length - 1 : Math.max(M.lift || 0, tn);
     }
     // lines: 1 px in screen space, depth-tested inside the layer
     for (const pr of lines) {
@@ -336,7 +342,7 @@ const FORGE = (function () {
         const i = y * w + x; if (M[i] < 0 || F[i]) continue;
         const nb = []; let same = 0;
         for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] === M[i] && !F[j]) { nb.push(T[j]); if (T[j] === T[i]) same++; } }
-        if (nb.length >= 2 && !same) { const c = [0, 0, 0, 0]; nb.forEach(v => c[v]++); t0[i] = c.indexOf(Math.max(...c)); }
+        if (nb.length >= 2 && !same) { const c = [0, 0, 0, 0, 0, 0, 0, 0]; nb.forEach(v => c[v]++); t0[i] = c.indexOf(Math.max(...c)); }
       }
       T.set(t0);
     }
@@ -397,7 +403,7 @@ const FORGE = (function () {
 
   // ---- bake: the G-buffer sheet of the bare body or of one piece -------------------------------------------------
   // rows = layer x dir, cols = every frame of every real anim (another weapon class's attack stays empty for a weapon).
-  // RGBA: R = material, G = flat << 7 | part << 2 | tone, B = depth (1/6 px steps, 128 = the root), A = coverage
+  // RGBA: R = material, G = flat << 7 | part << 3 | tone, B = depth (1/6 px steps, 128 = the root), A = coverage
   function bakeLayout(model) {
     const out = [];
     for (const a in model.anims) for (let f = 0; f < model.anims[a].frames; f++) out.push([a, f]);
@@ -420,13 +426,14 @@ const FORGE = (function () {
           for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
             const i = y * w + x; if (!G.cov[i]) continue;
             const o = ((y0 + y) * SW + c * w + x) * 4;
-            rgba[o] = G.mat[i]; rgba[o + 1] = (G.flat[i] << 7) | (G.part[i] << 2) | G.tone[i]; rgba[o + 2] = G.dq[i]; rgba[o + 3] = 255;
+            rgba[o] = G.mat[i]; rgba[o + 1] = (G.flat[i] << 7) | (G.part[i] << 3) | G.tone[i]; rgba[o + 2] = G.dq[i]; rgba[o + 3] = 255;
           }
         });
       });
     });
     const meta = {
-      id: piece ? piece.id : 'body', slot: piece ? piece.slot : 'body', class: (piece && piece.class) || null, hides: (piece && piece.hides) || [],
+      id: piece ? piece.id : 'body', slot: piece ? piece.slot : 'body', family: (piece && piece.family) || null, tier: (piece && piece.tier) || null,
+      class: (piece && piece.class) || null, hides: (piece && piece.hides) || [],
       layers: layers.map(L => ({ id: L.id, tag: L.tag || null, group: L.group || (piece ? piece.id : 'body'), mats: matTable(L).names, ramps: matTable(L).list.map(m => m.ramp), parts: partList(L).names })),
       tiers: (piece && piece.tiers) || null, sockets,
     };
@@ -450,7 +457,7 @@ const FORGE = (function () {
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
         const o = ((y0 + y) * sh.w + c * w + x) * 4; if (!sh.rgba[o + 3]) continue;
         const i = y * w + x, g2 = sh.rgba[o + 1];
-        g.cov[i] = 1; g.mat[i] = sh.rgba[o]; g.flat[i] = g2 >> 7; g.part[i] = (g2 >> 2) & 31; g.tone[i] = g2 & 3; g.dq[i] = sh.rgba[o + 2];
+        g.cov[i] = 1; g.mat[i] = sh.rgba[o]; g.flat[i] = g2 >> 7; g.part[i] = (g2 >> 3) & 15; g.tone[i] = g2 & 7; g.dq[i] = sh.rgba[o + 2];
       }
       list.push({ g, pal: L.mats.map((n, i) => (over && over[n] ? toRamp(over[n]) : L.ramps[i]).map(hexRgb)), keys: L.parts.map(n => key(L.group + ':' + n)) });
     };

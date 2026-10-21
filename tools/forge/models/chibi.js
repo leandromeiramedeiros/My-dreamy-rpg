@@ -63,11 +63,11 @@ const layers = [
 
 module.exports = {
   name: 'chibi',
-  frame: [44, 48], origin: [22, 42],
+  frame: [52, 56], origin: [26, 49],
   cam: { elev: 28 },
   light: [-0.55, 0.7, 0.5],
   tones: [0.8, 0.3, -0.3],
-  outline: '#0c0714', innerLine: 2.5,
+  outline: '#0c0714', innerLine: 2.0,
   bones, layers, anims, sheetAnims,
   sockets: {
     handR: { bone: 'handR', at: [0, -0.6, 0] }, handL: { bone: 'handL', at: [0, -0.6, 0] },
