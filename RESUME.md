@@ -47,7 +47,6 @@ Two checks are known to flake: the play.js warp-fade check, and the perf check w
 - `docs/DESIGN.md` is the source of truth (§24–§31 are the recent work).
 - `docs/PRODUCTION.md` holds the milestones and the status snapshot.
 - `docs/meetings/` holds the expert minutes.
-- `docs/CREDITS.md` credits Lumina.
 - Build: plain JS, no build step; open `index.html`. Pages deploys from the default branch.
 
 ## 5. State at pause (2026-10-20), and what happens on Friday
