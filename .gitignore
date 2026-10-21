@@ -1,3 +1,7 @@
 node_modules/
 tools/shots/
 tools/qa/shots/
+tools/forge/out/*.board.png
+tools/forge/out/*-bank/
+tools/forge/out/*-bank.js
+tools/forge/out/*-preview.html

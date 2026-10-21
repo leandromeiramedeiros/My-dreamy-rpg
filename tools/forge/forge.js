@@ -1,12 +1,22 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// FORGE — a deterministic sprite renderer. A MODEL (3D volumes on a bone rig + materials + poses) becomes
-// pixel-art frames for every facing direction and animation frame. Same model + same options -> the same bytes.
-// Pure JS (no canvas, no DOM): runs in node (tools/forge/build.js) or in the browser (global FORGE).
+// FORGE — a deterministic sprite renderer and paper-doll compositor. A MODEL (3D volumes on a bone rig + materials +
+// poses) becomes pixel-art frames for every facing direction and animation frame. Same input -> the same bytes.
+// Pure JS (no canvas, no DOM): node (tools/forge/build.js) or the browser (global FORGE).
 //
-//   FORGE.render(model, { dir, anim, frame }) -> { w, h, rgba, sockets:{ name:{ x, y, front } } }
-//   FORGE.sheet(model)                        -> { w, h, rgba, cols, rows, layout }  every dir x every frame
-//   FORGE.ramp('#rrggbb')                     -> [shadow, low, mid, high] hue-shifted 4-tone ramp (hex)
+// Two stages, so equipment can be layered in the game:
+//   A  raster: one LAYER (body, hair, a helm ...) -> a G-buffer: coverage, material, part, tone (lit + quantised into the
+//      material's 4-step ramp), depth (quantised). Baked per piece by bake() as an RGBA sheet.
+//   B  resolve: any stack of G-buffers -> RGBA: nearest layer wins per pixel, a dark line where one part sits in front of
+//      another, stray-pixel cleanup, palette lookup (a tier or rarity = a palette swap), outline.
+// render() = A for every layer of a loadout + B. compose() runs B on baked sheets, so the game's composite of a loadout
+// equals the offline render pixel for pixel.
+//
+//   FORGE.render(model, { dir, anim, frame, pieces })  -> { w, h, rgba, sockets, anim }
+//   FORGE.sheet(model, { pieces, anims })              -> one loadout, rows = dirs, cols = every frame of every anim
+//   FORGE.bake(model, { piece? })                      -> { w, h, rgba (encoded G-buffer sheet), meta } for the body or a piece
+//   FORGE.compose(bank, { dir, anim, frame, pieces })  -> RGBA of one frame from baked sheets (the game's runtime path)
+//   FORGE.ramp('#rrggbb')                              -> [shadow, low, mid, high] hue-shifted ramp (hex)
 //
 // MODEL = {
 //   frame: [w, h], origin: [ox, oy]        frame size and the pixel the feet centre lands on
@@ -14,24 +24,31 @@
 //   light: [x, y, z]                       towards the light, camera space (fixed: turning the model re-lights it)
 //   tones: [t3, t2, t1]                    n.L thresholds for high / mid / low (below t1 = shadow)
 //   outline: '#hex', innerLine: px         outer outline colour; depth jump that draws a dark line between parts
-//   mats: { name: '#hex' | [4 hex] | { ramp, flat, lift, tones } }   ramp: '#hex' (auto) or [shadow, low, mid, high];
-//                                          flat: one tone, unshaded; lift: lowest lit tone (faces never sink to shadow);
-//                                          tones: this material's own thresholds (glossy hair = a smaller highlight)
 //   bones: [ { name, parent, at:[x,y,z] } ]  rest offsets in the parent's space; the first bone is the root
-//   prims: [ { bone, mat, part?, shape:'ell'|'cap'|'box', ... , clip?:[nx,ny,nz,k] } ]
-//            ell: c:[x,y,z], r:[rx,ry,rz]     cap: a, b, ra, rb     box: c, h:[hx,hy,hz], round
-//            clip keeps the side where dot(p, n) <= k (cuts a flat face, e.g. a boot sole or a hair line); a list = several cuts
-//   stamps: [ { bone, at, n, facing, on?, px:[[dx,dy,'#hex'], ...] } ]  screen-space pixels pinned to a surface point
-//            (eyes, blush): drawn only when the point faces the camera, is not hidden behind another volume and (on)
-//            lands on that material
-//   sockets: { name: { bone, at } }        exported per frame (weapon grip, head top, ...)
-//   anims: { name: { frames, pose(f) -> { bone: { rot:[rx,ry,rz], off:[x,y,z], scl:[sx,sy,sz] } } } }
-//            scl = squash & stretch: scales the bone's own volumes and its children's offsets (not their volumes)
 //   dirs: [ [name, yawDeg], ... ]           yaw 0 faces the camera (S), 90 faces screen-right (E)
+//   sockets: { name: { bone, at } }        exported per frame (hands, cast point, head top ...)
+//   anims: { name: { frames, pose(f) -> { bone: { rot, off, scl, aim, point, roll } } } }
+//            'attack:sword' style names: anim 'attack' picks the variant of the equipped weapon's class
+//   sheetAnims: ['idle', 'walk', ...]      the columns of a loadout sheet (default: every anim)
+//   layers: [ LAYER ]                      the bare body; a v1 model (mats / prims / stamps at the top level) = one layer
 // }
-// Pipeline per frame: pose the rig -> 3x3 rays per pixel against every volume (SDF march) -> majority vote of
-// coverage / part / normal -> one light, quantised into the material ramp -> dark line where a part sits in front
-// of another -> orphan-pixel cleanup -> stamps -> outline. No randomness anywhere.
+// LAYER = { id, tag?, group?, bias?, mats, prims, stamps }
+//   tag: what equipment can hide (a helm hides 'hair');  group: parts of one group never get a dark line between them;
+//   bias: px towards the camera when stacking (cloth over a body that pokes through it by less than that)
+//   mats: { name: '#hex' | [4 hex] | { ramp, flat, lift, tones } }   ramp: '#hex' (auto) or [shadow, low, mid, high];
+//         flat: one tone, unshaded, never cleaned up;  lift: lowest lit tone (faces never sink to shadow);  tones: own thresholds
+//   prims: { bone, mat, part?, shape:'ell'|'cap'|'box'|'line', ..., clip?, when?(anim, f) }
+//         ell: c, r     cap: a, b, ra, rb (a tapered capsule)     box: c, h (half sizes), round
+//         line: a, b (b on bone bB if given), tone: 1 px wide in screen space (strings, arrows), kept by every cleanup
+//         clip: [nx, ny, nz, k] (or a list) keeps the side where dot(p, n) <= k: a flat cut (a sole, a hair line)
+//         when: the prim exists only on the frames where it returns true (a drawn bowstring, a nocked arrow)
+//   stamps: { bone, at, n, facing, on?, px:[[dx, dy, '#hex' | mat], ...] }  pixels pinned to a surface point (eyes):
+//         drawn when the point faces the camera and is not hidden inside the layer; other layers can still cover them
+// PIECE = { id, slot, class?, hides:[tags], layers:[LAYER], pose?(anim, f), tiers?:[ { mat: ramp } ], sockets? }
+//   pose: partial poses for bones ONLY this piece uses (a weapon's hold); class: 'sword' | 'staff' | 'bow' ...
+// Pose: rot = Euler [rx, ry, rz] relative to the parent. aim / point = a direction in model space (before the facing yaw):
+//   aim lays the bone's +y along it (weapons), point lays its -y along it (limbs); roll hints where +z goes.
+//   off moves the joint, scl squashes / stretches the bone's own volumes and scales its children's offsets.
 // ---------------------------------------------------------------------------
 const FORGE = (function () {
   // ---- vectors / rotations -------------------------------------------------------------------------------------
@@ -39,6 +56,7 @@ const FORGE = (function () {
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
   const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
   const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
   const len = a => Math.sqrt(dot(a, a));
   const norm = a => { const l = len(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
   const mm = (A, B) => { const C = new Array(9); for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) C[i * 3 + j] = A[i * 3] * B[j] + A[i * 3 + 1] * B[3 + j] + A[i * 3 + 2] * B[6 + j]; return C; };
@@ -50,6 +68,13 @@ const FORGE = (function () {
   const ID = [1, 0, 0, 0, 1, 0, 0, 0, 1];
   const rot = r => r ? mm(ry(r[1] || 0), mm(rx(r[0] || 0), rz(r[2] || 0))) : ID;
   const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+  function look(dir, hint) {                                    // rotation whose +y runs along dir, +z towards hint
+    const Y = norm(dir);
+    let Z0 = hint ? norm(hint) : [0, 0, 1];
+    if (Math.abs(dot(Y, Z0)) > 0.97) Z0 = Math.abs(Y[1]) < 0.9 ? [0, 1, 0] : [0, 0, 1];
+    const X = norm(cross(Y, Z0)), Z = cross(X, Y);
+    return [X[0], Y[0], Z[0], X[1], Y[1], Z[1], X[2], Y[2], Z[2]];
+  }
 
   // ---- colour: hue-shifted ramps -------------------------------------------------------------------------------
   const hexRgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
@@ -80,6 +105,7 @@ const FORGE = (function () {
       rgbHex(hslRgb([toward(h, 50, 12), clamp(s * 0.92, 0, 1), Math.min(l * 1.45, l + (1 - l) * 0.38)])),
     ];
   }
+  const toRamp = m => typeof m === 'string' ? ramp(m) : Array.isArray(m) ? m : toRamp(m.ramp);
 
   // ---- signed distance functions (local space) ------------------------------------------------------------------
   function sdf(pr, p) {
@@ -111,47 +137,99 @@ const FORGE = (function () {
       sdf(pr, [p[0], p[1], p[2] + e]) - sdf(pr, [p[0], p[1], p[2] - e])]);
   }
 
+  // ---- model plumbing -------------------------------------------------------------------------------------------
+  const layersOf = model => model.layers || [{ id: 'main', mats: model.mats, prims: model.prims, stamps: model.stamps }];
+  const pieceList = pieces => (pieces || []).map(p => p.piece ? p : { piece: p });
+  function matTable(layer) {                                    // names, flags and default ramps; stamp / line colours join it
+    if (layer._mt) return layer._mt;
+    const names = Object.keys(layer.mats || {}), list = names.map(k => {
+      const m = layer.mats[k], o = (typeof m === 'string' || Array.isArray(m)) ? {} : Object.assign({}, m);
+      o.ramp = toRamp(m); return o;
+    });
+    const addHex = h => { if (typeof h === 'string' && h[0] === '#' && !names.includes(h)) { names.push(h); list.push({ ramp: [h, h, h, h], flat: 0 }); } };
+    for (const st of layer.stamps || []) for (const p of st.px) addHex(p[2]);
+    for (const pr of layer.prims || []) addHex(pr.mat);
+    const index = {}; names.forEach((n, i) => { index[n] = i; });
+    return (layer._mt = { names, list, index });
+  }
+  function partList(layer) {                                    // part names in prim order (stable: the baked index)
+    if (layer._pl) return layer._pl;
+    const names = [], index = {};
+    for (const pr of layer.prims || []) { const n = pr.part || pr.bone; if (index[n] == null) { index[n] = names.length; names.push(n); } }
+    return (layer._pl = { names, index });
+  }
+  function palOf(layer, over) {                                 // per material: 4 rgb triples (a tier swaps colours only)
+    const mt = matTable(layer);
+    return mt.names.map((n, i) => (over && over[n] ? toRamp(over[n]) : mt.list[i].ramp).map(hexRgb));
+  }
+  function assemble(model, pieces) {                            // body layers (minus hidden tags) + every piece's layers
+    const ps = pieceList(pieces), hidden = new Set();
+    ps.forEach(p => (p.piece.hides || []).forEach(t => hidden.add(t)));
+    const out = [];
+    for (const L of layersOf(model)) if (!hidden.has(L.tag)) out.push({ layer: L, group: L.group || 'body', over: null });
+    for (const p of ps) {
+      const over = p.tier != null && p.piece.tiers ? p.piece.tiers[p.tier] : p.pal || null;
+      for (const L of p.piece.layers) out.push({ layer: L, group: L.group || p.piece.id, over });
+    }
+    return out;
+  }
+  function animName(model, anim, pieces) {                      // 'attack' -> 'attack:<weapon class>' when the model has it
+    const wp = pieceList(pieces).find(p => p.piece.class);
+    const v = anim + ':' + (wp ? wp.piece.class : 'none');
+    return model.anims[v] ? v : model.anims[anim] ? anim : 'idle';
+  }
+
   // ---- rig ------------------------------------------------------------------------------------------------------
-  function pose(model, yaw, anim, frame) {
-    const P = (model.anims[anim] || model.anims.idle).pose(frame) || {}, W = {};
+  function pose(model, yaw, anim, frame, extra) {
+    const P = Object.assign({}, (model.anims[anim] || model.anims.idle).pose(frame) || {});
+    for (const fn of extra || []) { const q = fn(anim, frame) || {}; for (const k in q) P[k] = Object.assign({}, P[k] || {}, q[k]); }
+    const Y = ry(yaw), W = {};
     model.bones.forEach((b, i) => {
-      const p = P[b.name] || {}, at = add(b.at, p.off || [0, 0, 0]), sc = p.scl || [1, 1, 1];
-      let R = rot(p.rot);
-      if (i === 0) { R = mm(ry(yaw), R); W[b.name] = { R, t: mv(ry(yaw), at), s: sc }; return; }
-      const par = W[b.parent];
-      W[b.name] = { R: mm(par.R, R), t: add(par.t, mv(par.R, [at[0] * par.s[0], at[1] * par.s[1], at[2] * par.s[2]])), s: sc };
+      const p = P[b.name] || {}, at = add(b.at, p.off || [0, 0, 0]), s = p.scl || [1, 1, 1], par = i ? W[b.parent] : null;
+      const R = (p.aim || p.point) ? mm(Y, mm(look(p.aim || mul(p.point, -1), p.roll), rot(p.rot))) : mm(par ? par.R : Y, rot(p.rot));
+      const t = par ? add(par.t, mv(par.R, [at[0] * par.s[0], at[1] * par.s[1], at[2] * par.s[2]])) : mv(Y, at);
+      W[b.name] = { R, t, s };
     });
     return W;
   }
   const worldPoint = (W, bone, at) => { const B = W[bone]; return add(B.t, mv(B.R, [at[0] * B.s[0], at[1] * B.s[1], at[2] * B.s[2]])); };
 
-  // ---- render one frame -----------------------------------------------------------------------------------------
-  const SS = 3, FAR = 200;
-  function render(model, opt) {
-    const [w, h] = model.frame, [ox, oy] = model.origin;
-    const yaw = (opt.yaw != null ? opt.yaw : (model.dirs.find(d => d[0] === opt.dir) || [0, 0])[1]) * Math.PI / 180;
+  // ---- stage A: rasterise one layer -----------------------------------------------------------------------------
+  const SS = 3, FAR = 200, QS = 6;                              // 3x3 rays per pixel; depth stored in 1/6 px steps around the root
+  function camera(model) {
     const e = (model.cam && model.cam.elev != null ? model.cam.elev : 25) * Math.PI / 180;
-    const D = [0, -Math.sin(e), -Math.cos(e)], RT = [1, 0, 0], UP = [0, Math.cos(e), -Math.sin(e)];
-    const L = norm(model.light || [-0.55, 0.65, 0.52]);
-    const T = model.tones || [0.78, 0.3, -0.25];
-    const mats = matTable(model);
-    const W = pose(model, yaw, opt.anim || 'idle', opt.frame || 0);
-    const prims = model.prims.map((pr, i) => {
+    return { w: model.frame[0], h: model.frame[1], ox: model.origin[0], oy: model.origin[1],
+      D: [0, -Math.sin(e), -Math.cos(e)], RT: [1, 0, 0], UP: [0, Math.cos(e), -Math.sin(e)],
+      L: norm(model.light || [-0.55, 0.65, 0.52]), T: model.tones || [0.78, 0.3, -0.25], cover: model.coverage || 4 };
+  }
+  function raster(layer, W, cam, anim, frame, rootT) {
+    const { w, h, ox, oy, D, RT, UP, L, T } = cam, N = w * h, mt = matTable(layer), pl = partList(layer);
+    const G = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), dq: new Uint8Array(N) };
+    const dep = new Float32Array(N).fill(1e9);
+    const proj = P => [ox + dot(P, RT), oy - dot(P, UP), dot(P, D) + FAR];
+    const vol = [], lines = [];
+    for (const pr of layer.prims || []) {
+      if (pr.when && !pr.when(anim, frame)) continue;
+      if (pr.shape === 'line') { lines.push(pr); continue; }
       const B = W[pr.bone], [bc, br] = bound(pr), s = B.s;
-      return { pr, i, R: B.R, t: B.t, s, smin: Math.min(s[0], s[1], s[2]), bc: worldPoint(W, pr.bone, bc), br: br * Math.max(s[0], s[1], s[2]), part: pr.part || pr.bone, mat: pr.mat };
-    });
-    // per pixel: majority of SS x SS rays
-    const N = w * h, part = new Int32Array(N).fill(-1), tone = new Int8Array(N), dep = new Float32Array(N).fill(1e9), mat = new Array(N);
-    const partIds = {}; let nextPart = 0;
-    const pid = name => partIds[name] != null ? partIds[name] : (partIds[name] = nextPart++);
+      vol.push({ pr, R: B.R, t: B.t, s, smin: Math.min(s[0], s[1], s[2]), bc: worldPoint(W, pr.bone, bc), br: br * Math.max(s[0], s[1], s[2]), part: pl.index[pr.part || pr.bone], m: mt.index[pr.mat] });
+    }
+    // only the pixels under some volume's projected bounding circle
+    let x0 = w, x1 = -1, y0 = h, y1 = -1;
+    for (const q of vol) {
+      const [cx, cy] = proj(q.bc);
+      x0 = Math.min(x0, Math.floor(cx - q.br)); x1 = Math.max(x1, Math.ceil(cx + q.br));
+      y0 = Math.min(y0, Math.floor(cy - q.br)); y1 = Math.max(y1, Math.ceil(cy + q.br));
+    }
+    x0 = Math.max(x0, 0); y0 = Math.max(y0, 0); x1 = Math.min(x1, w - 1); y1 = Math.min(y1, h - 1);
     const hits = [];
-    for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) {
+    for (let py = y0; py <= y1; py++) for (let px = x0; px <= x1; px++) {
       hits.length = 0;
       for (let sy = 0; sy < SS; sy++) for (let sx = 0; sx < SS; sx++) {
         const u = px + (sx + 0.5) / SS - ox, v = oy - (py + (sy + 0.5) / SS);
         const o = add(add(mul(RT, u), mul(UP, v)), mul(D, -FAR));
         let best = null;
-        for (const q of prims) {
+        for (const q of vol) {
           const oc = sub(o, q.bc), b = dot(oc, D), c = dot(oc, oc) - q.br * q.br, disc = b * b - c;
           if (disc < 0) continue;
           const sq = Math.sqrt(disc); let t = -b - sq; const t1 = -b + sq;
@@ -170,110 +248,221 @@ const FORGE = (function () {
         }
         if (best) hits.push(best);
       }
-      if (hits.length < (model.coverage || 4)) continue;
+      if (hits.length < cam.cover) continue;
       const cnt = {};                                            // majority part; ties go to the nearest
-      for (const hh of hits) { const k = hh.q.part; cnt[k] = cnt[k] || { n: 0, t: 1e9, nn: [0, 0, 0], tt: 0, mat: hh.q.mat }; const C = cnt[k]; C.n++; C.tt += hh.t; C.nn = add(C.nn, hh.n); if (hh.t < C.t) { C.t = hh.t; C.mat = hh.q.mat; } }
-      let pick = null, pk = null;
-      for (const k in cnt) if (!pick || cnt[k].n > pick.n || (cnt[k].n === pick.n && cnt[k].t < pick.t)) { pick = cnt[k]; pk = k; }
-      const i = py * w + px, s = dot(norm(pick.nn), L);
-      part[i] = pid(pk); dep[i] = pick.tt / pick.n; mat[i] = pick.mat;
-      const M = mats[pick.mat];
-      const TT = M.tones || T;
-      tone[i] = M.flat != null ? M.flat : Math.max(M.lift || 0, s > TT[0] ? 3 : s > TT[1] ? 2 : s > TT[2] ? 1 : 0);
+      for (const hh of hits) {
+        const k = hh.q.part; const C = cnt[k] || (cnt[k] = { n: 0, t: 1e9, nn: [0, 0, 0], tt: 0, m: hh.q.m });
+        C.n++; C.tt += hh.t; C.nn = add(C.nn, hh.n); if (hh.t < C.t) { C.t = hh.t; C.m = hh.q.m; }
+      }
+      let pick = null, pk = 0;
+      for (const k in cnt) if (!pick || cnt[k].n > pick.n || (cnt[k].n === pick.n && cnt[k].t < pick.t)) { pick = cnt[k]; pk = +k; }
+      const i = py * w + px, s = dot(norm(pick.nn), L), M = mt.list[pick.m], TT = M.tones || T;
+      G.cov[i] = 1; G.mat[i] = pick.m; G.part[i] = pk; dep[i] = pick.tt / pick.n;
+      G.flat[i] = M.flat != null ? 1 : 0;
+      G.tone[i] = M.flat != null ? M.flat : Math.max(M.lift || 0, s > TT[0] ? 3 : s > TT[1] ? 2 : s > TT[2] ? 1 : 0);
+    }
+    // lines: 1 px in screen space, depth-tested inside the layer
+    for (const pr of lines) {
+      const a = proj(worldPoint(W, pr.bone, pr.a)), b = proj(worldPoint(W, pr.bB || pr.bone, pr.b));
+      const n = Math.max(1, Math.ceil(Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]))));
+      const m = mt.index[pr.mat], M = mt.list[m];
+      for (let k = 0; k <= n; k++) {
+        const f = k / n, x = Math.floor(a[0] + (b[0] - a[0]) * f), y = Math.floor(a[1] + (b[1] - a[1]) * f), t = a[2] + (b[2] - a[2]) * f;
+        if (x < 0 || y < 0 || x >= w || y >= h) continue;
+        const i = y * w + x;
+        if (G.cov[i] && t >= dep[i]) continue;
+        G.cov[i] = 1; G.mat[i] = m; G.part[i] = pl.index[pr.part || pr.bone]; G.flat[i] = 1; dep[i] = t;
+        G.tone[i] = pr.tone != null ? pr.tone : M.flat != null ? M.flat : 2;
+      }
+    }
+    // stamps: surface-pinned pixels, hidden when the point faces away or sits behind another volume of this layer
+    for (const st of layer.stamps || []) {
+      const P = worldPoint(W, st.bone, st.at), nn = mv(W[st.bone].R, norm(st.n || [0, 0, 1]));
+      if (-dot(nn, D) < (st.facing != null ? st.facing : 0.3)) continue;
+      const [sx, sy, st0] = proj(P), xs = Math.floor(sx), ys = Math.floor(sy);
+      if (xs < 0 || ys < 0 || xs >= w || ys >= h) continue;
+      const i0 = ys * w + xs;
+      if (!G.cov[i0] || Math.abs(dep[i0] - st0) > (st.depthTol || 2.5) || (st.on && G.mat[i0] !== mt.index[st.on])) continue;
+      for (const [dx, dy, col] of st.px) {
+        const x = xs + dx, y = ys + dy; if (x < 0 || y < 0 || x >= w || y >= h) continue;
+        const j = y * w + x; if (!G.cov[j]) continue;
+        const m = mt.index[col]; G.mat[j] = m; G.flat[j] = 1; G.tone[j] = mt.list[m].flat != null ? mt.list[m].flat : 2; dep[j] -= 0.15;
+      }
+    }
+    const bias = layer.bias || 0;                               // clothing wins over a body part poking through it by < bias px
+    for (let i = 0; i < N; i++) if (G.cov[i]) G.dq[i] = clamp(Math.round(128 + (rootT - dep[i] + bias) * QS), 1, 255);
+    return G;
+  }
+
+  // ---- stage B: resolve a stack of G-buffers ---------------------------------------------------------------------
+  // list: [{ g, pal: per material 4 rgb, keys: per part an int (same group + part name = same key) }]
+  const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  function resolve(list, w, h, opt) {
+    const N = w * h, M = new Int32Array(N).fill(-1), K = new Int32Array(N), T = new Uint8Array(N), F = new Uint8Array(N), Z = new Int16Array(N);
+    for (let i = 0; i < N; i++) {
+      let b = -1, bz = -1;
+      for (let l = 0; l < list.length; l++) { const g = list[l].g; if (g.cov[i] && g.dq[i] >= bz) { b = l; bz = g.dq[i]; } }
+      if (b < 0) continue;
+      const g = list[b].g; M[i] = b * 256 + g.mat[i]; K[i] = list[b].keys[g.part[i]]; T[i] = g.tone[i]; F[i] = g.flat[i]; Z[i] = bz;
     }
     const at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? -1 : y * w + x;
-    const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
     // dark line on the far side of a depth jump between two parts (an arm in front of the torso reads as separate)
-    const jump = model.innerLine != null ? model.innerLine : 2.5;
-    if (jump) {
-      const t0 = tone.slice();
+    if (opt.jumpQ) {
+      const t0 = T.slice();
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (part[i] < 0) continue;
-        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && part[j] >= 0 && part[j] !== part[i] && dep[i] > dep[j] + jump && mats[mat[i]].flat == null) { t0[i] = 0; break; } }
+        const i = y * w + x; if (M[i] < 0 || F[i]) continue;
+        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0 && K[j] !== K[i] && Z[j] > Z[i] + opt.jumpQ) { t0[i] = 0; break; } }
       }
-      tone.set(t0);
+      T.set(t0);
     }
-    // lone material pixel (one stray hand / belt pixel): it joins the commonest neighbouring material and part
+    // lone material pixel (one stray hand / belt pixel): it joins the commonest neighbouring material
     {
-      const m0 = mat.slice(), p0 = part.slice(), t0 = tone.slice();
+      const m0 = M.slice(), k0 = K.slice(), t0 = T.slice();
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (part[i] < 0) continue;
-        const nb = []; for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && part[j] >= 0) nb.push(j); }
-        if (nb.length < 3 || nb.some(j => mat[j] === mat[i])) continue;
-        const c = {}; nb.forEach(j => { c[mat[j]] = (c[mat[j]] || 0) + 1; });
-        const best = nb.reduce((a, j) => c[mat[j]] > c[mat[a]] ? j : a, nb[0]);
-        m0[i] = mat[best]; p0[i] = part[best]; t0[i] = tone[best];
+        const i = y * w + x; if (M[i] < 0 || F[i]) continue;
+        const nb = []; for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) nb.push(j); }
+        if (nb.length < 3 || nb.some(j => M[j] === M[i])) continue;
+        const cand = nb.filter(j => !F[j]); if (!cand.length) continue;
+        const c = {}; cand.forEach(j => { c[M[j]] = (c[M[j]] || 0) + 1; });
+        const best = cand.reduce((a, j) => c[M[j]] > c[M[a]] ? j : a, cand[0]);
+        m0[i] = M[best]; k0[i] = K[best]; t0[i] = T[best];
       }
-      for (let i = 0; i < N; i++) { mat[i] = m0[i]; } part.set(p0); tone.set(t0);
+      M.set(m0); K.set(k0); T.set(t0);
     }
     // orphan cleanup: a lone tone with no same-tone neighbour inside its material takes the commonest neighbour tone
     for (let pass = 0; pass < 2; pass++) {
-      const t0 = tone.slice();
+      const t0 = T.slice();
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (part[i] < 0 || mats[mat[i]].flat != null) continue;
+        const i = y * w + x; if (M[i] < 0 || F[i]) continue;
         const nb = []; let same = 0;
-        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && part[j] >= 0 && mat[j] === mat[i]) { nb.push(tone[j]); if (tone[j] === tone[i]) same++; } }
+        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] === M[i] && !F[j]) { nb.push(T[j]); if (T[j] === T[i]) same++; } }
         if (nb.length >= 2 && !same) { const c = [0, 0, 0, 0]; nb.forEach(v => c[v]++); t0[i] = c.indexOf(Math.max(...c)); }
       }
-      tone.set(t0);
+      T.set(t0);
     }
-    // colours
     const rgba = new Uint8ClampedArray(N * 4);
-    const put = (i, hex) => { const c = hexRgb(hex); rgba[i * 4] = c[0]; rgba[i * 4 + 1] = c[1]; rgba[i * 4 + 2] = c[2]; rgba[i * 4 + 3] = 255; };
-    for (let i = 0; i < N; i++) if (part[i] >= 0) put(i, mats[mat[i]].ramp[tone[i]]);
-    // stamps: surface-pinned screen pixels, depth-tested so hair or a hand hides an eye
-    const proj = P => [ox + dot(P, RT), oy - dot(P, UP), dot(P, D) + FAR];
-    for (const st of model.stamps || []) {
-      const P = worldPoint(W, st.bone, st.at), n = mv(W[st.bone].R, norm(st.n || [0, 0, 1]));
-      if (-dot(n, D) < (st.facing != null ? st.facing : 0.3)) continue;
-      const [sx, sy, st0] = proj(P), x0 = Math.floor(sx), y0 = Math.floor(sy), i0 = at(x0, y0);
-      if (i0 < 0 || part[i0] < 0 || Math.abs(dep[i0] - st0) > (st.depthTol || 2.5) || (st.on && mat[i0] !== st.on)) continue;
-      for (const [dx, dy, col] of st.px) { const j = at(x0 + dx, y0 + dy); if (j >= 0 && part[j] >= 0) put(j, col); }
-    }
-    // outline: every empty pixel touching the sprite
-    if (model.outline) {
-      const solid = new Uint8Array(N); for (let i = 0; i < N; i++) solid[i] = part[i] >= 0 ? 1 : 0;
+    for (let i = 0; i < N; i++) if (M[i] >= 0) { const c = list[M[i] >> 8].pal[M[i] & 255][T[i]]; rgba[i * 4] = c[0]; rgba[i * 4 + 1] = c[1]; rgba[i * 4 + 2] = c[2]; rgba[i * 4 + 3] = 255; }
+    if (opt.outline) {
+      const c = opt.outline;
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (solid[i]) continue;
-        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && solid[j]) { put(i, model.outline); break; } }
+        const i = y * w + x; if (M[i] >= 0) continue;
+        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) { rgba[i * 4] = c[0]; rgba[i * 4 + 1] = c[1]; rgba[i * 4 + 2] = c[2]; rgba[i * 4 + 3] = 255; break; } }
       }
     }
-    // sockets: projected anchor + whether it sits in front of the root
-    const sockets = {};
-    const rootT = proj(W[model.bones[0].name].t)[2];
-    for (const k in model.sockets || {}) {
-      const s = model.sockets[k], [x, y, t] = proj(worldPoint(W, s.bone, s.at));
-      sockets[k] = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, front: t < rootT };
-    }
-    return { w, h, rgba, sockets };
+    return rgba;
   }
-  function matTable(model) {
-    if (model._mats) return model._mats;
-    const out = {};
-    for (const k in model.mats) {
-      const m = model.mats[k], o = typeof m === 'string' ? { ramp: ramp(m) } : Array.isArray(m) ? { ramp: m } : Object.assign({}, m);
-      if (typeof o.ramp === 'string') o.ramp = ramp(o.ramp);
-      out[k] = o;
+  const resolveOpts = m => ({ outline: m.outline ? hexRgb(m.outline) : null, jumpQ: Math.round((m.innerLine != null ? m.innerLine : 2.5) * QS) });
+  function interner() { const m = new Map(); return s => { if (!m.has(s)) m.set(s, m.size); return m.get(s); }; }
+
+  // ---- render one frame of a loadout ----------------------------------------------------------------------------
+  const yawOf = (model, dir) => ((model.dirs.find(d => d[0] === dir) || [0, 0])[1]) * Math.PI / 180;
+  function frameSockets(model, W, cam, extra) {
+    const proj = P => [cam.ox + dot(P, cam.RT), cam.oy - dot(P, cam.UP), dot(P, cam.D)];
+    const rootT = proj(W[model.bones[0].name].t)[2], out = {}, all = Object.assign({}, model.sockets || {}, extra || {});
+    for (const k in all) {
+      const s = all[k]; if (!W[s.bone]) continue;
+      const [x, y, t] = proj(worldPoint(W, s.bone, s.at));
+      out[k] = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, front: t < rootT };
     }
-    return (model._mats = out);
+    return out;
+  }
+  function render(model, opt) {
+    const cam = camera(model), stack = assemble(model, opt.pieces), ps = pieceList(opt.pieces);
+    const anim = animName(model, opt.anim || 'idle', opt.pieces), f = opt.frame || 0;
+    const W = pose(model, opt.yaw != null ? opt.yaw * Math.PI / 180 : yawOf(model, opt.dir), anim, f, ps.filter(p => p.piece.pose).map(p => p.piece.pose));
+    const rootT = dot(W[model.bones[0].name].t, cam.D) + FAR, key = interner();
+    const list = stack.map(a => ({ g: raster(a.layer, W, cam, anim, f, rootT), pal: palOf(a.layer, a.over), keys: partList(a.layer).names.map(n => key(a.group + ':' + n)) }));
+    const sockets = frameSockets(model, W, cam, Object.assign({}, ...ps.map(p => p.piece.sockets || {})));
+    return { w: cam.w, h: cam.h, rgba: resolve(list, cam.w, cam.h, resolveOpts(model)), sockets, anim };
   }
 
-  // ---- sheet: rows = directions, columns = every frame of every animation (in model.anims order) -------------
+  // ---- sheet: one loadout, rows = directions, columns = every frame of every (logical) anim ----------------------
   function sheet(model, opt = {}) {
     const [w, h] = model.frame, dirs = model.dirs, layout = [];
-    for (const a in model.anims) for (let f = 0; f < model.anims[a].frames; f++) layout.push([a, f]);
-    const W = w * layout.length, H = h * dirs.length, rgba = new Uint8ClampedArray(W * H * 4), meta = {};
+    for (const a of opt.anims || model.sheetAnims || Object.keys(model.anims)) {
+      const real = animName(model, a, opt.pieces);
+      for (let f = 0; f < model.anims[real].frames; f++) layout.push([a, f]);
+    }
+    const SW = w * layout.length, SH = h * dirs.length, rgba = new Uint8ClampedArray(SW * SH * 4), sockets = {};
     dirs.forEach(([dn], r) => {
-      meta[dn] = {};
+      sockets[dn] = {};
       layout.forEach(([a, f], c) => {
-        const fr = render(model, { dir: dn, anim: a, frame: f });
-        for (let y = 0; y < h; y++) rgba.set(fr.rgba.subarray(y * w * 4, (y + 1) * w * 4), ((r * h + y) * W + c * w) * 4);
-        (meta[dn][a] = meta[dn][a] || [])[f] = fr.sockets;
+        const fr = render(model, { dir: dn, anim: a, frame: f, pieces: opt.pieces });
+        for (let y = 0; y < h; y++) rgba.set(fr.rgba.subarray(y * w * 4, (y + 1) * w * 4), ((r * h + y) * SW + c * w) * 4);
+        (sockets[dn][a] = sockets[dn][a] || [])[f] = fr.sockets;
       });
     });
-    return { w: W, h: H, rgba, cols: layout.length, rows: dirs.length, layout, frame: [w, h], sockets: meta };
+    return { w: SW, h: SH, rgba, cols: layout.length, rows: dirs.length, layout, frame: [w, h], sockets };
   }
 
-  return { render, sheet, ramp, hexRgb, rgbHex };
+  // ---- bake: the G-buffer sheet of the bare body or of one piece -------------------------------------------------
+  // rows = layer x dir, cols = every frame of every real anim (another weapon class's attack stays empty for a weapon).
+  // RGBA: R = material, G = flat << 7 | part << 2 | tone, B = depth (1/6 px steps, 128 = the root), A = coverage
+  function bakeLayout(model) {
+    const out = [];
+    for (const a in model.anims) for (let f = 0; f < model.anims[a].frames; f++) out.push([a, f]);
+    return out;
+  }
+  function bake(model, opt = {}) {
+    const cam = camera(model), piece = opt.piece || null, [w, h] = model.frame, layout = bakeLayout(model), dirs = model.dirs;
+    const layers = piece ? piece.layers : layersOf(model);
+    const SW = w * layout.length, SH = h * dirs.length * layers.length, rgba = new Uint8ClampedArray(SW * SH * 4), sockets = {};
+    const skip = a => piece && piece.class && a.includes(':') && a.split(':')[1] !== piece.class;
+    dirs.forEach(([dn], r) => {
+      sockets[dn] = {};
+      layout.forEach(([a, f], c) => {
+        if (skip(a)) return;
+        const W = pose(model, yawOf(model, dn), a, f, piece && piece.pose ? [piece.pose] : []);
+        const rootT = dot(W[model.bones[0].name].t, cam.D) + FAR;
+        (sockets[dn][a] = sockets[dn][a] || [])[f] = frameSockets(model, W, cam, piece ? piece.sockets : null);
+        layers.forEach((L, li) => {
+          const G = raster(L, W, cam, a, f, rootT), y0 = (li * dirs.length + r) * h;
+          for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+            const i = y * w + x; if (!G.cov[i]) continue;
+            const o = ((y0 + y) * SW + c * w + x) * 4;
+            rgba[o] = G.mat[i]; rgba[o + 1] = (G.flat[i] << 7) | (G.part[i] << 2) | G.tone[i]; rgba[o + 2] = G.dq[i]; rgba[o + 3] = 255;
+          }
+        });
+      });
+    });
+    const meta = {
+      id: piece ? piece.id : 'body', slot: piece ? piece.slot : 'body', class: (piece && piece.class) || null, hides: (piece && piece.hides) || [],
+      layers: layers.map(L => ({ id: L.id, tag: L.tag || null, group: L.group || (piece ? piece.id : 'body'), mats: matTable(L).names, ramps: matTable(L).list.map(m => m.ramp), parts: partList(L).names })),
+      tiers: (piece && piece.tiers) || null, sockets,
+    };
+    return { w: SW, h: SH, rgba, meta };
+  }
+  const bankInfo = model => ({ frame: model.frame, dirs: model.dirs.map(d => d[0]), layout: bakeLayout(model), anims: Object.keys(model.anims),
+    outline: model.outline || null, innerLine: model.innerLine != null ? model.innerLine : 2.5 });
+  // bank = { model: bankInfo(model), sheets: { body: { w, rgba, meta }, <pieceId>: { w, rgba, meta } } }  (rgba decoded from PNG)
+  function compose(bank, sel) {
+    const info = bank.model, [w, h] = info.frame, r = info.dirs.indexOf(sel.dir), N = w * h;
+    const ps = (sel.pieces || []).map(p => typeof p === 'string' ? { id: p } : p);
+    const wp = ps.map(p => bank.sheets[p.id].meta).find(m => m.class);
+    const v = (sel.anim || 'idle') + ':' + (wp ? wp.class : 'none');
+    const anim = info.anims.includes(v) ? v : info.anims.includes(sel.anim) ? sel.anim : 'idle';
+    const c = info.layout.findIndex(l => l[0] === anim && l[1] === (sel.frame || 0));
+    const hidden = new Set(); ps.forEach(p => bank.sheets[p.id].meta.hides.forEach(t => hidden.add(t)));
+    const key = interner(), list = [];
+    const take = (sh, li, L, over) => {
+      const g = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), dq: new Uint8Array(N) };
+      const y0 = (li * info.dirs.length + r) * h;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const o = ((y0 + y) * sh.w + c * w + x) * 4; if (!sh.rgba[o + 3]) continue;
+        const i = y * w + x, g2 = sh.rgba[o + 1];
+        g.cov[i] = 1; g.mat[i] = sh.rgba[o]; g.flat[i] = g2 >> 7; g.part[i] = (g2 >> 2) & 31; g.tone[i] = g2 & 3; g.dq[i] = sh.rgba[o + 2];
+      }
+      list.push({ g, pal: L.mats.map((n, i) => (over && over[n] ? toRamp(over[n]) : L.ramps[i]).map(hexRgb)), keys: L.parts.map(n => key(L.group + ':' + n)) });
+    };
+    const body = bank.sheets.body;
+    body.meta.layers.forEach((L, li) => { if (!hidden.has(L.tag)) take(body, li, L, null); });
+    for (const p of ps) {
+      const sh = bank.sheets[p.id], over = p.tier != null && sh.meta.tiers ? sh.meta.tiers[p.tier] : p.pal || null;
+      sh.meta.layers.forEach((L, li) => take(sh, li, L, over));
+    }
+    return { w, h, rgba: resolve(list, w, h, resolveOpts(info)), anim };
+  }
+
+  return { render, sheet, bake, bankInfo, compose, ramp, hexRgb, rgbHex };
 })();
 if (typeof module !== 'undefined') module.exports = FORGE;
