@@ -87,9 +87,7 @@ Part 2 -
 Lighting should be dynamic to accomodate the new elemental system, period. Dynamic lights, shadows and rimlights, combined with pixel effects and subtle particles that obey physics will add to immersion. Bloom and additive lighting must be carefully studied to not wash the image. Godrays, fog, mist should all be revised too to improve the visuals. We created a system to have ailments/statuses/elements show on the enemies, the hero and the world, this system shouldn't be drawn fixed on the spritesheet but rather applied on runtime, with the respective lighting and particles, even the UI/HUD shows these effects. Example: A burning enemy should have the pixel effects and particles layered on top of him, emiting a soft ember glow that lights the ground and entities around him. This needs to be planned with everything that is on the scope on mind.
 
 Part 3 - 
-Wind is a natural force of the world, so the trees push and pull naturally on the maps. Spells that have wind element should generate aditional wind force (vector, radial, push or pull, blast, etc) to the trees and small objects, and of course apply the appropriate ammount of push and pull force to move enemies (note that elites and bosses have statuses resistance 
-
-to this).
+Wind is a natural force of the world, so the trees push and pull naturally on the maps. Spells that have wind element should generate aditional wind force (vector, radial, push or pull, blast, etc) to the trees and small objects, and of course apply the appropriate ammount of push and pull force to move enemies (note that elites and bosses have statuses resistance to this).
 
 Part 4 -
 No more hero skills. Everything comes from equipment. Weapons, armors, trinkets, MUST HAVE UNIQUE AND CAREFULLY CRAFTED visuals, getting fancier as the power progress.
@@ -109,6 +107,7 @@ BELT OR SATCHEL = Z/X/C
 Hand + Offhand system:
 YOU CHOOSE WHAT CAN BE EQUIPABLE IN WHICH SLOT, NEEDS TO BE DISCUSSED. EACH WEAPON VARIANT HAS 3 SKILLS. THEY INCREASE IN POWER WITH TIER AND RARITY. BUT CORE IS THE SAME.
 THEY HAVE FIXED HAND/OFFHAND ACTION, SPELL AND ULTIMATE. SO WHERE YOU PUT THEM IN YOUR CHARACTER MAKES ALL THE DIFFERENCE AND MAKES FOR GREAT FUN. NEEDS TO ADD SHIELD TO THE EQUATION. SKILL EXPRESSION COMES FROM THE COMBINATIONS OF EVERY PIECE OF EQUIPMENT AND THE ADDITIONAL PASSIVES, INTERACTIONS AND NEW SKILLS UNLOCKED. THIS NEEDS TO BE THOUGHT, SPEND YOUR TIME HERE DISCUSSING IDEAS AND HAVE THE BEST ONE IMPLEMENTED.
+THERES NEED TO BE A WAY FOR MAGES TO HAVE A VAST ARSENAL OF SKILLS TO CAST. MAYBE EXPAND THIS MECHANIC TO OTHER WEAPON CLASSES TOO.
 
 PART 5 - 
 Think about deterministic tools to help cut costs and accelerate the development.
