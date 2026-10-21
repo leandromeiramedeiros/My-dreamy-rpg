@@ -16,6 +16,7 @@
 //   FORGE.sheet(model, { pieces, anims })              -> one loadout, rows = dirs, cols = every frame of every anim
 //   FORGE.bake(model, { piece? })                      -> { w, h, rgba (encoded G-buffer sheet), meta } for the body or a piece
 //   FORGE.compose(bank, { dir, anim, frame, pieces })  -> RGBA of one frame from baked sheets (the game's runtime path)
+//   FORGE.raw(model, { dir, anim, frame, pieces, scale }) -> the volumes before the pixel pass (smooth light; a modelling aid)
 //   FORGE.ramp('#rrggbb')                              -> [shadow, low, mid, high] hue-shifted ramp (hex)
 //
 // MODEL = {
@@ -37,10 +38,13 @@
 //   bias: px towards the camera when stacking (cloth over a body that pokes through it by less than that)
 //   mats: { name: '#hex' | [hex...] | { ramp, flat, lift, tones, spec } }   ramp: '#hex' (auto) or [shadow, low, mid, high, (spec)];
 //         flat: one tone, unshaded, never cleaned up;  lift: lowest lit tone (faces never sink to shadow);  tones: own thresholds;
-//         spec: n.H above this takes the ramp's last colour (a small glint on metal and gems)
+//         spec: n.H above this takes the ramp's last colour (a small glint on metal and gems);
+//         keep: shaded as usual but never absorbed by the stray-pixel cleanup (1 px straps and filigree survive)
 //   prims: { bone, mat, part?, shape:'ell'|'cap'|'box'|'line', ..., clip?, when?(anim, f) }
 //         ell: c, r     cap: a, b, ra, rb (a tapered capsule)     box: c, h (half sizes), round
-//         rot: [rx, ry, rz] turns an ell or box about its centre (a tilted feather, an angled plate)
+//         disc: c, r  a flat band: an r[0] x r[2] ellipse in local x-z, r[1] thick each way along y (belts, straps, trims)
+//         rot: [rx, ry, rz] turns an ell, disc or box about its centre (a tilted feather, a diagonal strap)
+//         weight: its rays count this many times in the pixel's vote, so a thin strap or trim wins its pixels over the plate
 //         line: a, b (b on bone bB if given), tone: 1 px wide in screen space (strings, arrows), kept by every cleanup
 //         clip: [nx, ny, nz, k] (or a list) keeps the side where dot(p, n) <= k: a flat cut (a sole, a hair line)
 //         when: the prim exists only on the frames where it returns true (a drawn bowstring, a nocked arrow)
@@ -118,6 +122,10 @@ const FORGE = (function () {
       const q = local(pr.c), r = pr.r;
       const k0 = Math.hypot(q[0] / r[0], q[1] / r[1], q[2] / r[2]), k1 = Math.hypot(q[0] / (r[0] * r[0]), q[1] / (r[1] * r[1]), q[2] / (r[2] * r[2]));
       d = k1 === 0 ? -Math.min(r[0], r[1], r[2]) : k0 * (k0 - 1) / k1;
+    } else if (pr.shape === 'disc') {                             // elliptic cylinder: flat sides, so a band stands proud at full width
+      const q = local(pr.c), r = pr.r;
+      const k0 = Math.hypot(q[0] / r[0], q[2] / r[2]), k1 = Math.hypot(q[0] / (r[0] * r[0]), q[2] / (r[2] * r[2]));
+      d = Math.max(k1 === 0 ? -Math.min(r[0], r[2]) : k0 * (k0 - 1) / k1, Math.abs(q[1]) - r[1]);
     } else if (pr.shape === 'cap') {
       const pa = sub(p, pr.a), ba = sub(pr.b, pr.a), t = clamp(dot(pa, ba) / (dot(ba, ba) || 1), 0, 1);
       d = len(sub(pa, mul(ba, t))) - (pr.ra + (pr.rb - pr.ra) * t);
@@ -130,7 +138,7 @@ const FORGE = (function () {
     return d;
   }
   function bound(pr) {                                          // local bounding sphere [centre, radius]
-    if (pr.shape === 'ell') return [pr.c, Math.max(...pr.r)];
+    if (pr.shape === 'ell' || pr.shape === 'disc') return [pr.c, Math.max(...pr.r)];
     if (pr.shape === 'cap') return [mul(add(pr.a, pr.b), 0.5), len(sub(pr.b, pr.a)) / 2 + Math.max(pr.ra, pr.rb)];
     return [pr.c, len(pr.h)];
   }
@@ -153,6 +161,7 @@ const FORGE = (function () {
     const addHex = h => { if (typeof h === 'string' && h[0] === '#' && !names.includes(h)) { names.push(h); list.push({ ramp: [h, h, h, h], flat: 0 }); } };
     for (const st of layer.stamps || []) for (const p of st.px) addHex(p[2]);
     for (const pr of layer.prims || []) addHex(pr.mat);
+    if (names.length > 128) throw new Error(`layer ${layer.id}: ${names.length} materials (128 at most)`);
     const index = {}; names.forEach((n, i) => { index[n] = i; });
     return (layer._mt = { names, list, index });
   }
@@ -207,18 +216,42 @@ const FORGE = (function () {
       D: [0, -Math.sin(e), -Math.cos(e)], RT: [1, 0, 0], UP: [0, Math.cos(e), -Math.sin(e)],
       L: norm(model.light || [-0.55, 0.65, 0.52]), T: model.tones || [0.78, 0.3, -0.25], cover: model.coverage || 4 };
   }
-  function raster(layer, W, cam, anim, frame, rootT) {
-    const { w, h, ox, oy, D, RT, UP, L, T } = cam, N = w * h, mt = matTable(layer), pl = partList(layer), H = norm(sub(L, D));
-    const G = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), dq: new Uint8Array(N) };
-    const dep = new Float32Array(N).fill(1e9);
-    const proj = P => [ox + dot(P, RT), oy - dot(P, UP), dot(P, D) + FAR];
-    const vol = [], lines = [];
+  function volumes(layer, W, anim, frame, mt, pl) {           // a layer's live volumes, posed: bounds in world space
+    const vol = [];
     for (const pr of layer.prims || []) {
-      if (pr.when && !pr.when(anim, frame)) continue;
-      if (pr.shape === 'line') { lines.push(pr); continue; }
+      if ((pr.when && !pr.when(anim, frame)) || pr.shape === 'line') continue;
       const B = W[pr.bone], [bc, br] = bound(pr), s = B.s;
       vol.push({ pr, R: B.R, t: B.t, s, smin: Math.min(s[0], s[1], s[2]), bc: worldPoint(W, pr.bone, bc), br: br * Math.max(s[0], s[1], s[2]), part: pl.index[pr.part || pr.bone], m: mt.index[pr.mat] });
     }
+    return vol;
+  }
+  function nearest(o, D, vol) {                                 // the first volume a ray meets: { t, q, n } or null (SDF march)
+    let best = null;
+    for (const q of vol) {
+      const oc = sub(o, q.bc), b = dot(oc, D), c = dot(oc, oc) - q.br * q.br, disc = b * b - c;
+      if (disc < 0) continue;
+      const sq = Math.sqrt(disc); let t = -b - sq; const t1 = -b + sq;
+      if (best && t > best.t) continue;
+      const s = q.s, l0 = mtv(q.R, sub(o, q.t)), l1 = mtv(q.R, D);
+      const lo = [l0[0] / s[0], l0[1] / s[1], l0[2] / s[2]], ld = [l1[0] / s[0], l1[1] / s[1], l1[2] / s[2]];
+      t = Math.max(t, 0);
+      for (let k = 0; k < 64 && t <= t1; k++) {
+        const lp = add(lo, mul(ld, t)), d = sdf(q.pr, lp) * q.smin;
+        if (d < 0.01) {
+          if (!best || t < best.t) { const g = normalAt(q.pr, lp); best = { t, q, n: norm(mv(q.R, [g[0] / s[0], g[1] / s[1], g[2] / s[2]])) }; }
+          break;
+        }
+        t += Math.max(d * 0.9, 0.01);
+      }
+    }
+    return best;
+  }
+  function raster(layer, W, cam, anim, frame, rootT) {
+    const { w, h, ox, oy, D, RT, UP, L, T } = cam, N = w * h, mt = matTable(layer), pl = partList(layer), H = norm(sub(L, D));
+    const G = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), keep: new Uint8Array(N), dq: new Uint8Array(N) };
+    const dep = new Float32Array(N).fill(1e9);
+    const proj = P => [ox + dot(P, RT), oy - dot(P, UP), dot(P, D) + FAR];
+    const vol = volumes(layer, W, anim, frame, mt, pl), lines = (layer.prims || []).filter(pr => pr.shape === 'line' && (!pr.when || pr.when(anim, frame)));
     // only the pixels under some volume's projected bounding circle
     let x0 = w, x1 = -1, y0 = h, y1 = -1;
     for (const q of vol) {
@@ -232,38 +265,20 @@ const FORGE = (function () {
       hits.length = 0;
       for (let sy = 0; sy < SS; sy++) for (let sx = 0; sx < SS; sx++) {
         const u = px + (sx + 0.5) / SS - ox, v = oy - (py + (sy + 0.5) / SS);
-        const o = add(add(mul(RT, u), mul(UP, v)), mul(D, -FAR));
-        let best = null;
-        for (const q of vol) {
-          const oc = sub(o, q.bc), b = dot(oc, D), c = dot(oc, oc) - q.br * q.br, disc = b * b - c;
-          if (disc < 0) continue;
-          const sq = Math.sqrt(disc); let t = -b - sq; const t1 = -b + sq;
-          if (best && t > best.t) continue;
-          const s = q.s, l0 = mtv(q.R, sub(o, q.t)), l1 = mtv(q.R, D);
-          const lo = [l0[0] / s[0], l0[1] / s[1], l0[2] / s[2]], ld = [l1[0] / s[0], l1[1] / s[1], l1[2] / s[2]];
-          t = Math.max(t, 0);
-          for (let k = 0; k < 64 && t <= t1; k++) {
-            const lp = add(lo, mul(ld, t)), d = sdf(q.pr, lp) * q.smin;
-            if (d < 0.01) {
-              if (!best || t < best.t) { const g = normalAt(q.pr, lp); best = { t, q, n: norm(mv(q.R, [g[0] / s[0], g[1] / s[1], g[2] / s[2]])) }; }
-              break;
-            }
-            t += Math.max(d * 0.9, 0.01);
-          }
-        }
+        const best = nearest(add(add(mul(RT, u), mul(UP, v)), mul(D, -FAR)), D, vol);
         if (best) hits.push(best);
       }
       if (hits.length < cam.cover) continue;
       const cnt = {};                                            // majority part; ties go to the nearest
       for (const hh of hits) {
         const k = hh.q.part; const C = cnt[k] || (cnt[k] = { n: 0, t: 1e9, nn: [0, 0, 0], tt: 0, m: hh.q.m });
-        C.n++; C.tt += hh.t; C.nn = add(C.nn, hh.n); if (hh.t < C.t) { C.t = hh.t; C.m = hh.q.m; }
+        const wt = hh.q.pr.weight || 1; C.n += wt; C.tt += hh.t * wt; C.nn = add(C.nn, mul(hh.n, wt)); C.w = (C.w || 0) + wt; if (hh.t < C.t) { C.t = hh.t; C.m = hh.q.m; }
       }
       let pick = null, pk = 0;
       for (const k in cnt) if (!pick || cnt[k].n > pick.n || (cnt[k].n === pick.n && cnt[k].t < pick.t)) { pick = cnt[k]; pk = +k; }
       const i = py * w + px, nn = norm(pick.nn), s = dot(nn, L), M = mt.list[pick.m], TT = M.tones || T;
-      G.cov[i] = 1; G.mat[i] = pick.m; G.part[i] = pk; dep[i] = pick.tt / pick.n;
-      G.flat[i] = M.flat != null ? 1 : 0;
+      G.cov[i] = 1; G.mat[i] = pick.m; G.part[i] = pk; dep[i] = pick.tt / pick.w;
+      G.flat[i] = M.flat != null ? 1 : 0; G.keep[i] = M.keep ? 1 : 0;
       let tn = 0; for (let k = 0; k < TT.length; k++) if (s > TT[k]) { tn = TT.length - k; break; }
       G.tone[i] = M.flat != null ? M.flat : M.spec != null && dot(nn, H) > M.spec ? M.ramp.length - 1 : Math.max(M.lift || 0, tn);
     }
@@ -304,12 +319,12 @@ const FORGE = (function () {
   // list: [{ g, pal: per material 4 rgb, keys: per part an int (same group + part name = same key) }]
   const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   function resolve(list, w, h, opt) {
-    const N = w * h, M = new Int32Array(N).fill(-1), K = new Int32Array(N), T = new Uint8Array(N), F = new Uint8Array(N), Z = new Int16Array(N);
+    const N = w * h, M = new Int32Array(N).fill(-1), K = new Int32Array(N), T = new Uint8Array(N), F = new Uint8Array(N), KP = new Uint8Array(N), Z = new Int16Array(N);
     for (let i = 0; i < N; i++) {
       let b = -1, bz = -1;
       for (let l = 0; l < list.length; l++) { const g = list[l].g; if (g.cov[i] && g.dq[i] >= bz) { b = l; bz = g.dq[i]; } }
       if (b < 0) continue;
-      const g = list[b].g; M[i] = b * 256 + g.mat[i]; K[i] = list[b].keys[g.part[i]]; T[i] = g.tone[i]; F[i] = g.flat[i]; Z[i] = bz;
+      const g = list[b].g; M[i] = b * 256 + g.mat[i]; K[i] = list[b].keys[g.part[i]]; T[i] = g.tone[i]; F[i] = g.flat[i]; KP[i] = g.keep[i]; Z[i] = bz;
     }
     const at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? -1 : y * w + x;
     // dark line on the far side of a depth jump between two parts (an arm in front of the torso reads as separate)
@@ -325,7 +340,7 @@ const FORGE = (function () {
     {
       const m0 = M.slice(), k0 = K.slice(), t0 = T.slice();
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (M[i] < 0 || F[i]) continue;
+        const i = y * w + x; if (M[i] < 0 || F[i] || KP[i]) continue;
         const nb = []; for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) nb.push(j); }
         if (nb.length < 3 || nb.some(j => M[j] === M[i])) continue;
         const cand = nb.filter(j => !F[j]); if (!cand.length) continue;
@@ -382,6 +397,26 @@ const FORGE = (function () {
     return { w: cam.w, h: cam.h, rgba: resolve(list, cam.w, cam.h, resolveOpts(model)), sockets, anim };
   }
 
+  // ---- raw: the volumes before the pixel pass (one ray per pixel at `scale`, smooth light, no ramps, outline or cleanup)
+  function raw(model, opt) {
+    const cam = camera(model), sc = opt.scale || 8, ps = pieceList(opt.pieces), anim = animName(model, opt.anim || 'idle', opt.pieces), f = opt.frame || 0;
+    const W = pose(model, yawOf(model, opt.dir), anim, f, ps.filter(p => p.piece.pose).map(p => p.piece.pose));
+    const layers = assemble(model, opt.pieces).map(a => { const mt = matTable(a.layer); return { vol: volumes(a.layer, W, anim, f, mt, partList(a.layer)), mt, pal: palOf(a.layer, a.over), bias: a.layer.bias || 0 }; });
+    const w = cam.w * sc, h = cam.h * sc, rgba = new Uint8ClampedArray(w * h * 4), H = norm(sub(cam.L, cam.D));
+    for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) {
+      const o = add(add(mul(cam.RT, (px + 0.5) / sc - cam.ox), mul(cam.UP, cam.oy - (py + 0.5) / sc)), mul(cam.D, -FAR));
+      let best = null, bl = null;
+      for (const L of layers) { const hh = nearest(o, cam.D, L.vol); if (hh && (!best || hh.t - L.bias < best.t - bl.bias)) { best = hh; bl = L; } }
+      if (!best) continue;
+      const M = bl.mt.list[best.q.m], base = bl.pal[best.q.m][Math.min(2, bl.pal[best.q.m].length - 1)];
+      const lit = M.flat != null ? 1 : 0.28 + 0.72 * Math.max(0, dot(best.n, cam.L)), gl = M.spec != null ? Math.pow(Math.max(0, dot(best.n, H)), 60) * 0.8 : 0;
+      const i = (py * w + px) * 4;
+      for (let k = 0; k < 3; k++) rgba[i + k] = base[k] * lit + 255 * gl;
+      rgba[i + 3] = 255;
+    }
+    return { w, h, rgba };
+  }
+
   // ---- sheet: one loadout, rows = directions, columns = every frame of every (logical) anim ----------------------
   function sheet(model, opt = {}) {
     const [w, h] = model.frame, dirs = model.dirs, layout = [];
@@ -403,7 +438,7 @@ const FORGE = (function () {
 
   // ---- bake: the G-buffer sheet of the bare body or of one piece -------------------------------------------------
   // rows = layer x dir, cols = every frame of every real anim (another weapon class's attack stays empty for a weapon).
-  // RGBA: R = material, G = flat << 7 | part << 3 | tone, B = depth (1/6 px steps, 128 = the root), A = coverage
+  // RGBA: R = keep << 7 | material, G = flat << 7 | part << 3 | tone, B = depth (1/6 px steps, 128 = the root), A = coverage
   function bakeLayout(model) {
     const out = [];
     for (const a in model.anims) for (let f = 0; f < model.anims[a].frames; f++) out.push([a, f]);
@@ -426,7 +461,7 @@ const FORGE = (function () {
           for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
             const i = y * w + x; if (!G.cov[i]) continue;
             const o = ((y0 + y) * SW + c * w + x) * 4;
-            rgba[o] = G.mat[i]; rgba[o + 1] = (G.flat[i] << 7) | (G.part[i] << 3) | G.tone[i]; rgba[o + 2] = G.dq[i]; rgba[o + 3] = 255;
+            rgba[o] = (G.keep[i] << 7) | G.mat[i]; rgba[o + 1] = (G.flat[i] << 7) | (G.part[i] << 3) | G.tone[i]; rgba[o + 2] = G.dq[i]; rgba[o + 3] = 255;
           }
         });
       });
@@ -452,12 +487,12 @@ const FORGE = (function () {
     const hidden = new Set(); ps.forEach(p => bank.sheets[p.id].meta.hides.forEach(t => hidden.add(t)));
     const key = interner(), list = [];
     const take = (sh, li, L, over) => {
-      const g = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), dq: new Uint8Array(N) };
+      const g = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), keep: new Uint8Array(N), dq: new Uint8Array(N) };
       const y0 = (li * info.dirs.length + r) * h;
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
         const o = ((y0 + y) * sh.w + c * w + x) * 4; if (!sh.rgba[o + 3]) continue;
         const i = y * w + x, g2 = sh.rgba[o + 1];
-        g.cov[i] = 1; g.mat[i] = sh.rgba[o]; g.flat[i] = g2 >> 7; g.part[i] = (g2 >> 3) & 15; g.tone[i] = g2 & 7; g.dq[i] = sh.rgba[o + 2];
+        g.cov[i] = 1; g.mat[i] = sh.rgba[o] & 127; g.keep[i] = sh.rgba[o] >> 7; g.flat[i] = g2 >> 7; g.part[i] = (g2 >> 3) & 15; g.tone[i] = g2 & 7; g.dq[i] = sh.rgba[o + 2];
       }
       list.push({ g, pal: L.mats.map((n, i) => (over && over[n] ? toRamp(over[n]) : L.ramps[i]).map(hexRgb)), keys: L.parts.map(n => key(L.group + ':' + n)) });
     };
@@ -470,6 +505,6 @@ const FORGE = (function () {
     return { w, h, rgba: resolve(list, w, h, resolveOpts(info)), anim };
   }
 
-  return { render, sheet, bake, bankInfo, compose, ramp, hexRgb, rgbHex };
+  return { render, raw, sheet, bake, bankInfo, compose, ramp, hexRgb, rgbHex };
 })();
 if (typeof module !== 'undefined') module.exports = FORGE;
