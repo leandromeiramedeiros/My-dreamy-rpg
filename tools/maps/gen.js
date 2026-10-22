@@ -993,7 +993,10 @@ class MapGen {
   // a small themed set-piece (counts as a point of interest). set: 'forest' | 'cave'
   dress(set, k, x, y, side = 1, poiOpts = {}) {
     // §29 G2: a set-piece outranks scattered props (density x2.5 would otherwise crowd out its sign / lantern / camp): it clears them
-    const put = (t, dx, dy, o = {}) => { const q = this.nearWalkable(x + dx, y + dy, 0.9); if (!this.free(q.x, q.y, 0.5) && !o.force && !this.clearScatter(q.x, q.y, 0.5)) return; this.addObj(t, q.x, q.y, Object.assign({ sp: 0.6, force: true }, o)); };
+    // M3 hot-fix: a solid piece (collider r >= 0.2) never stands inside a road corridor or on a ford / stair tile (a cairn's rocks walled
+    // off the creek ford). Skipped, not moved: no extra rng draw, so the rest of the map keeps its layout.
+    const blocksRoad = (t, q) => (PROP[t] ? PROP[t].r : 0) >= 0.2 && ('bs'.includes(this.tileAt(q.x, q.y)) || this.pathClear(q.x, q.y) < 0);
+    const put = (t, dx, dy, o = {}) => { const q = this.nearWalkable(x + dx, y + dy, 0.9); if (blocksRoad(t, q)) return; if (!this.free(q.x, q.y, 0.5) && !o.force && !this.clearScatter(q.x, q.y, 0.5)) return; this.addObj(t, q.x, q.y, Object.assign({ sp: 0.6, force: true }, o)); };
     if (set === 'cave') {
       const kk = ['crystals', 'shrooms', 'rubble'][k % 3];
       if (kk === 'crystals') { put('crystal', 0, 0, { v: 0 }); put('crystal_violet', 0.9 * side, 0.6); put('crystal', -0.7, 0.9); put('lantern_blue', -1.4 * side, -0.4); }

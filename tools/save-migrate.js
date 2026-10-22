@@ -246,6 +246,28 @@ const ROUND = () => {
     check('makeTestItem: no page errors', errs.length === 0, errs.slice(0, 3));
     await ctx.close();
   }
+  // Story difficulty removed (client ruling, M3 hot-fix): an old settings mirror and an old save carrying difficulty 'story' load
+  // cleanly; the key is dropped, every other setting is kept, and a v3 fixture save with it continues as before
+  {
+    const ctx = await br.newContext({ viewport: { width: 960, height: 540 } }), page = await ctx.newPage(), errs = [];
+    page.on('pageerror', e => errs.push(e.message));
+    await ctx.addInitScript(() => { try { if (!sessionStorage.getItem('sm-once')) { sessionStorage.setItem('sm-once', '1'); localStorage.setItem('dreamy.settings.v1', JSON.stringify({ difficulty: 'story', shake: 50, textSize: 'L' })); } } catch (e) { /* */ } });
+    await page.goto(`${base}/index.html?scene=play`, { waitUntil: 'load' });
+    await page.waitForFunction(() => window.__ready === true, null, { timeout: 120000 });
+    const fx = JSON.parse(fs.readFileSync(path.join(FIX, 'save-v3-vale-early.json'), 'utf8'));
+    fx.settings = Object.assign({}, fx.settings || {}, { difficulty: 'story', shake: 75 });
+    const t = await page.evaluate(sv => {
+      const boot = { has: 'difficulty' in SETTINGS, shake: SETTINGS.shake, text: SETTINGS.textSize, stored: JSON.parse(localStorage.getItem('dreamy.settings.v1')) };
+      const s = migrate(JSON.parse(JSON.stringify(sv))), q = makePlayer(); applySave(q, s);
+      const after = { has: 'difficulty' in SETTINGS, shake: SETTINGS.shake, saved: 'difficulty' in (saveData().settings || {}), level: q.level };
+      setSetting('shake', 100); setSetting('textSize', 'M');
+      return { boot, after };
+    }, fx);
+    check('settings: an old settings mirror with difficulty "story" loads clean (key ignored, shake / text size kept)', !t.boot.has && t.boot.shake === 50 && t.boot.text === 'L', t.boot);
+    check('save: a v3 save whose settings carry difficulty "story" migrates and applies clean (key dropped, not re-saved)', !t.after.has && t.after.shake === 75 && !t.after.saved && t.after.level >= 1, t.after);
+    check('story-difficulty saves: no page errors', errs.length === 0, errs.slice(0, 3));
+    await ctx.close();
+  }
   await br.close(); srv.close();
   console.log(fails ? `\n${fails} save-migrate check(s) failed` : '\nAll save-migrate checks passed');
   process.exit(fails ? 1 : 0);

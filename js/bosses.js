@@ -262,7 +262,7 @@ function bossBreak(b) {
 }
 // damage of a move hit: absolute (x level multiplier) or a fraction of the reference eHP at the boss level
 const moveDmg = (b, M) => M.dmg != null ? M.dmg * b.dm : (M.dmgPct || HIT_FRAC[M.hit] || 0.1) * REF_EHP(b.lvl);
-const bossHit = (b, M, x, y) => hurtPlayer(moveDmg(b, M), x != null ? x : b.x, y != null ? y : b.y, M.el || b.el, { boss: true });   // capped: bossHitCap()
+const bossHit = (b, M, x, y) => hurtPlayer(moveDmg(b, M), x != null ? x : b.x, y != null ? y : b.y, M.el || b.el, { boss: true });   // o.boss tags the hit (no cap: a boss hit can kill)
 const col0 = M => M.col || '#ff3a7a';
 const ghostOf = b => (b.type === 'boss' ? (b.face < 0 ? ART.boss.f : ART.boss.n) : null);
 

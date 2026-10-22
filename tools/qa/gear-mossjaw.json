@@ -1,25 +1,25 @@
 {
- "at": "2026-10-20T18:47:22.304Z",
- "level": 8,
- "maxHp": 1063,
- "def": 0.3252507368261954,
- "power": 1.4278,
- "dmgBase": 1.4278,
- "bonus": 0,
- "crit": 0.08,
- "critDmg": 0.8,
+ "at": "2026-10-22T12:46:06.223Z",
+ "level": 9,
+ "maxHp": 903,
+ "def": 0.13164293157346302,
+ "power": 1.4251568,
+ "dmgBase": 1.24,
+ "bonus": 0.14932,
+ "crit": 0.35100000000000003,
+ "critDmg": 0.881,
  "potions": 4,
  "weapon": "sword",
  "equip": {
   "weapon": {
-   "id": "i_25",
+   "id": "i_26",
    "base": "rustyblade",
    "variant": "sword",
    "class": "blades",
    "suit": null,
    "slot": "weapon",
    "tier": 0,
-   "rarity": "epic",
+   "rarity": "rare",
    "ilvl": 5,
    "req": 3,
    "implicit": {
@@ -31,162 +31,7 @@
     {
      "id": "lightningDmg",
      "tier": 1,
-     "v": 0.044,
-     "kind": "P"
-    },
-    {
-     "id": "fireDmg",
-     "tier": 1,
-     "v": 0.059,
-     "kind": "P"
-    },
-    {
-     "id": "def",
-     "tier": 1,
-     "v": 0.028,
-     "kind": "S"
-    }
-   ],
-   "sockets": [
-    null,
-    null
-   ],
-   "boon": null,
-   "rule": null,
-   "unique": null,
-   "hist": {
-    "found": "pinewood",
-    "kills": 14,
-    "bossKills": 0
-   },
-   "tempered": null,
-   "name": {
-    "prefix": "Crackling",
-    "suffix": "of the Badger"
-   }
-  },
-  "head": {
-   "id": "i_29",
-   "base": "ironcap",
-   "variant": "knighthelm",
-   "class": "heavy",
-   "suit": "warden",
-   "slot": "head",
-   "tier": 0,
-   "rarity": "rare",
-   "ilvl": 7,
-   "req": 5,
-   "implicit": {
-    "id": "def",
-    "v": 0.02,
-    "text": "+2 Armour"
-   },
-   "affixes": [
-    {
-     "id": "haste",
-     "tier": 1,
-     "v": 0.035,
-     "kind": "P"
-    },
-    {
-     "id": "hp",
-     "tier": 1,
-     "v": 27,
-     "kind": "S"
-    }
-   ],
-   "sockets": [
-    null
-   ],
-   "boon": null,
-   "rule": null,
-   "unique": null,
-   "hist": {
-    "found": "pinewood",
-    "kills": 0,
-    "bossKills": 0
-   },
-   "tempered": null,
-   "name": {
-    "prefix": "Quick",
-    "suffix": "of the Oak"
-   }
-  },
-  "chest": {
-   "id": "i_35",
-   "base": "ironmail",
-   "variant": "warden",
-   "class": "heavy",
-   "suit": "warden",
-   "slot": "chest",
-   "tier": 0,
-   "rarity": "epic",
-   "ilvl": 6,
-   "req": 4,
-   "implicit": {
-    "id": "hp",
-    "v": 15,
-    "text": "+15 HP"
-   },
-   "affixes": [
-    {
-     "id": "natureDmg",
-     "tier": 1,
-     "v": 0.058,
-     "kind": "P"
-    },
-    {
-     "id": "def",
-     "tier": 1,
-     "v": 0.028,
-     "kind": "S"
-    },
-    {
-     "id": "onKill",
-     "tier": 1,
-     "v": 0.029,
-     "kind": "S"
-    }
-   ],
-   "sockets": [
-    null,
-    null
-   ],
-   "boon": null,
-   "rule": null,
-   "unique": null,
-   "hist": {
-    "found": "pinewood",
-    "kills": 0,
-    "bossKills": 0
-   },
-   "tempered": null,
-   "name": {
-    "prefix": "Mossy",
-    "suffix": "of the Badger"
-   }
-  },
-  "boots": {
-   "id": "i_23",
-   "base": "ropesandals",
-   "variant": "clothsandals",
-   "class": "caster",
-   "suit": "dreamweave",
-   "slot": "boots",
-   "tier": 0,
-   "rarity": "epic",
-   "ilvl": 6,
-   "req": 4,
-   "implicit": {
-    "id": "mpRegen",
-    "v": 0.3,
-    "text": "+0.3 MP/s"
-   },
-   "affixes": [
-    {
-     "id": "cdr",
-     "tier": 1,
-     "v": 0.028,
+     "v": 0.043,
      "kind": "P"
     },
     {
@@ -194,11 +39,58 @@
      "tier": 1,
      "v": 1.3,
      "kind": "S"
+    }
+   ],
+   "sockets": [
+    null
+   ],
+   "boon": null,
+   "rule": null,
+   "unique": null,
+   "hist": {
+    "found": "pinewood",
+    "kills": 22,
+    "bossKills": 0
+   },
+   "tempered": null,
+   "name": {
+    "prefix": "Crackling",
+    "suffix": "of the Spring"
+   }
+  },
+  "head": {
+   "id": "i_19",
+   "base": "novicehood",
+   "variant": "arcanecowl",
+   "class": "caster",
+   "suit": "frostweave",
+   "slot": "head",
+   "tier": 0,
+   "rarity": "epic",
+   "ilvl": 4,
+   "req": 2,
+   "implicit": {
+    "id": "arcaneDmg",
+    "v": 0.03,
+    "text": "+3% arcane damage"
+   },
+   "affixes": [
+    {
+     "id": "crit",
+     "tier": 1,
+     "v": 0.028,
+     "kind": "P"
     },
     {
-     "id": "def",
+     "id": "power",
      "tier": 1,
-     "v": 0.029,
+     "v": 0.049,
+     "kind": "P"
+    },
+    {
+     "id": "hp",
+     "tier": 1,
+     "v": 35,
      "kind": "S"
     }
    ],
@@ -216,8 +108,109 @@
    },
    "tempered": null,
    "name": {
-    "prefix": "Patient",
-    "suffix": "of the Spring"
+    "prefix": "Sharpened",
+    "suffix": "of the Oak"
+   }
+  },
+  "chest": {
+   "id": "i_34",
+   "base": "stalkerjacket",
+   "variant": "stalker",
+   "class": "medium",
+   "suit": "stalker",
+   "slot": "chest",
+   "tier": 1,
+   "rarity": "rare",
+   "ilvl": 7,
+   "req": 8,
+   "implicit": {
+    "id": "haste",
+    "v": 0.04,
+    "text": "+4% attack speed"
+   },
+   "affixes": [
+    {
+     "id": "fireDmg",
+     "tier": 1,
+     "v": 0.048,
+     "kind": "P"
+    },
+    {
+     "id": "speed",
+     "tier": 1,
+     "v": 0.102,
+     "kind": "S"
+    }
+   ],
+   "sockets": [
+    null
+   ],
+   "boon": null,
+   "rule": null,
+   "unique": null,
+   "hist": {
+    "found": "pinewood",
+    "kills": 0,
+    "bossKills": 0
+   },
+   "tempered": null,
+   "name": {
+    "prefix": "Smoldering",
+    "suffix": "of the Fox"
+   }
+  },
+  "boots": {
+   "id": "i_28",
+   "base": "ironboots",
+   "variant": "knightgreaves",
+   "class": "heavy",
+   "suit": "warden",
+   "slot": "boots",
+   "tier": 0,
+   "rarity": "epic",
+   "ilvl": 6,
+   "req": 4,
+   "implicit": {
+    "id": "hp",
+    "v": 10,
+    "text": "+10 HP"
+   },
+   "affixes": [
+    {
+     "id": "critDmg",
+     "tier": 1,
+     "v": 0.081,
+     "kind": "P"
+    },
+    {
+     "id": "onDodge",
+     "tier": 1,
+     "v": 0.015,
+     "kind": "S"
+    },
+    {
+     "id": "mpRegen",
+     "tier": 1,
+     "v": 1,
+     "kind": "S"
+    }
+   ],
+   "sockets": [
+    null,
+    null
+   ],
+   "boon": null,
+   "rule": null,
+   "unique": null,
+   "hist": {
+    "found": "pinewood",
+    "kills": 0,
+    "bossKills": 0
+   },
+   "tempered": null,
+   "name": {
+    "prefix": "Heavy",
+    "suffix": "of the Swallow"
    }
   },
   "ring1": {
@@ -263,8 +256,8 @@
    "slot": "belt",
    "tier": 0,
    "rarity": "rare",
-   "ilvl": 6,
-   "req": 4,
+   "ilvl": 7,
+   "req": 5,
    "implicit": {
     "id": "potionCharge",
     "v": 1,
@@ -272,15 +265,15 @@
    },
    "affixes": [
     {
-     "id": "resArcane",
+     "id": "mpRegen",
      "tier": 1,
-     "v": 0.075,
+     "v": 0.9,
      "kind": "S"
     },
     {
-     "id": "regen",
+     "id": "resPierce",
      "tier": 1,
-     "v": 1.2,
+     "v": 0.075,
      "kind": "S"
     }
    ],
@@ -288,9 +281,9 @@
     null
    ],
    "boon": {
-    "id": "dodgeIframe",
+    "id": "flaskRegen",
     "grade": "major",
-    "text": "Dodge i-frame window 0.1 s longer"
+    "text": "Potions heal 3% of max HP per second for 4 s"
    },
    "rule": null,
    "unique": null,
@@ -302,7 +295,7 @@
    "tempered": null,
    "name": {
     "prefix": null,
-    "suffix": "of the Moth"
+    "suffix": "of the Owl"
    }
   }
  }

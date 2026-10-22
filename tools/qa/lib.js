@@ -6,7 +6,17 @@ const fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const ROOT = path.join(__dirname, '..', '..'), QA = __dirname, SHOTS = path.join(QA, 'shots');
 fs.mkdirSync(SHOTS, { recursive: true });
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+// ---- the bot's clock. Realtime: the wall clock. Turbo (launch({ turbo: true }) -> ?turbo, js/main.js): the page sim only moves
+// when we say so - every wait is `__advance(round(ms / step))` and now() is GAME time, so goal timeouts, dead-time, dodge /
+// potion cooldowns and the decision cadence keep their game-time meaning while the run takes a fraction of the real time.
+const CLK = { turbo: false, page: null, vt: 0, stepMs: 1000 / 60, adv: 0 };
+const now = () => (CLK.turbo ? CLK.vt : Date.now()), clk = now;
+const realSleep = ms => new Promise(r => setTimeout(r, ms));
+async function sleep(ms) {
+  if (!CLK.turbo || !CLK.page) return realSleep(ms);
+  const n = Math.max(1, Math.round(ms / CLK.stepMs)); CLK.vt += n * CLK.stepMs; CLK.adv++;
+  try { await CLK.page.evaluate(k => window.__advance(k), n); } catch (e) { if (!/closed|Target/.test(e.message)) throw e; }
+}
 
 const PAD_STUB = () => {
   const mk = id => ({ id, index: 0, connected: true, mapping: 'standard', timestamp: 0, axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, touched: false, value: 0 })) });
@@ -33,6 +43,7 @@ function installHooks() {
     return r;
   };
   function teleNowCovers() { try { return G.effects.some(f => f.type === 'tele'); } catch (e) { return false; } }
+  Q.inter = []; const it = interact; window.interact = p => { const q = G.prompt; Q.inter.push({ gt: +G.t.toFixed(2), kind: q ? q.kind : null, id: q && q.obj && q.obj.src ? q.obj.src.id : null }); if (Q.inter.length > 20) Q.inter.shift(); return it(p); };   // observe only
   const ke = killEnemy; window.killEnemy = e => { if (!e.dead && !e.dummy) { Q.kills[e.type] = (Q.kills[e.type] || 0) + 1; log('kill', { type: e.type, boss: !!e.boss }); } return ke(e); };
   const dl = dropLoot; window.dropLoot = (x, y, list) => { log('loot', { n: list.length, kinds: list.map(d => d.kind === 'item' ? 'item:' + d.it.slot + '/' + d.it.rarity : d.kind) }); return dl(x, y, list); };
   let last = performance.now();
@@ -44,8 +55,10 @@ function installHooks() {
 
   // ---------- grid pathfinder over the real walkable() / colliders (planning only; the bot still has to walk it with keys)
   const RES = 0.5;
-  let grid = null; Q.avoid = [];
-  function buildGrid(margin) {
+  Q.avoid = [];
+  // open portals the bot is NOT heading for are walls (main.js: any step within 0.85 of an open rift warps you off the map; 1.8 leaves room for string-pull cuts + 8-way keys)
+  const ptlSig = () => G.map.portals.filter(pt => pt.open && G.world.maps[pt.to]).map(pt => pt.x + ',' + pt.y).join(';');
+  function buildGrid(margin, ptl) {
     const m = G.map, W = Math.ceil(m.W / RES), H = Math.ceil(m.H / RES), pass = new Uint8Array(W * H), hh = new Float32Array(W * H), drop = new Uint8Array(W * H);
     const cols = m.colliders.filter(c => c.r > 0);
     for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
@@ -54,12 +67,15 @@ function installHooks() {
       let ok = walkable(m, x, y, h) && walkable(m, x + rr, y, h) && walkable(m, x - rr, y, h) && walkable(m, x, y + rr, h) && walkable(m, x, y - rr, h);
       if (ok) for (const c of cols) { if (Math.abs(c.z - h) > 1.5) continue; if (Math.hypot(x - c.x, y - c.y) < c.r + 0.28 + margin) { ok = false; break; } }
       if (ok) for (const a of Q.avoid) if (a.map === m.id && Math.hypot(x - a.x, y - a.y) < 0.9) { ok = false; break; }
+      if (ok && ptl) for (const pt of m.portals) if (pt.open && G.world.maps[pt.to] && Math.hypot(x - pt.x, y - pt.y) < 1.8) { ok = false; break; }
       pass[j * W + i] = ok ? 1 : 0;
       if (m.dropIn && m.dropIn[Math.floor(y) * m.W + Math.floor(x)]) drop[j * W + i] = 1;   // §29 G3 drop-down landing: any step DOWN into it
     }
-    return { W, H, pass, hh, drop, key: m.id + '|' + m.colliders.length + '|' + margin + '|' + Q.avoid.length, margin };
+    return { W, H, pass, hh, drop, key: gridKey(margin, ptl), margin };
   }
-  function getGrid(margin) { const k = G.map.id + '|' + G.map.colliders.length + '|' + margin + '|' + Q.avoid.length; if (!grid || grid.key !== k) grid = buildGrid(margin); return grid; }
+  const gridKey = (margin, ptl) => G.map.id + '|' + G.map.colliders.length + '|' + margin + '|' + Q.avoid.length + '|' + (ptl ? ptlSig() : '-');
+  const grids = {};
+  function getGrid(margin, ptl) { const k = gridKey(margin, ptl), slot = margin + '|' + !!ptl; if (!grids[slot] || grids[slot].key !== k) grids[slot] = buildGrid(margin, ptl); return grids[slot]; }
   function stepOK(g, i, j, ni, nj) {
     if (ni < 0 || nj < 0 || ni >= g.W || nj >= g.H || !g.pass[nj * g.W + ni]) return false;
     const dh = g.hh[nj * g.W + ni] - g.hh[j * g.W + i]; if (Math.abs(dh) > 1.0 && !(dh < 0 && g.drop[nj * g.W + ni])) return false;
@@ -70,12 +86,25 @@ function installHooks() {
     const d = Math.hypot(bx - ax, by - ay), n = Math.ceil(d / 0.25);
     let pi = Math.floor(ax / RES), pj = Math.floor(ay / RES);
     for (let k = 1; k <= n; k++) { const x = ax + (bx - ax) * k / n, y = ay + (by - ay) * k / n, i = Math.floor(x / RES), j = Math.floor(y / RES); if (i === pi && j === pj) continue; const dh = g.hh[j * g.W + i] - g.hh[pj * g.W + pi]; if (!g.pass[j * g.W + i] || (Math.abs(dh) > 1.0 && !(dh < 0 && g.drop[j * g.W + i]))) return false; pi = i; pj = j; }
+    return probeLos(ax, ay, bx, by);
+  }
+  // the engine's own move rule along a straight line (game.js moveOk): the 4 edge probes (0.8 r) of each new position are tested
+  // against the height of the tile the centre is LEAVING. A string-pulled segment that grazes a 2+ level edge (the Hawk's Rest
+  // switchback corner, 15 -> 14 beside a 16 / 13 wall) is unwalkable even though every 0.5 cell on it passes on its own.
+  function probeLos(ax, ay, bx, by) {
+    const m = G.map, r = G.player.r * 0.8 + 0.01, d = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(d / 0.15));
+    let h = tileH(m, ax, ay);
+    for (let k = 1; k <= n; k++) {
+      const x = ax + (bx - ax) * k / n, y = ay + (by - ay) * k / n;
+      if (!walkable(m, x, y, h) || !walkable(m, x + r, y, h) || !walkable(m, x - r, y, h) || !walkable(m, x, y + r, h) || !walkable(m, x, y - r, h)) return false;
+      h = tileH(m, x, y);
+    }
     return true;
   }
   Q.path = (tx, ty, margin = 0.12) => {
-    const p = G.player;
+    const p = G.player, ptl = !G.map.portals.some(pt => pt.open && Math.hypot(pt.x - tx, pt.y - ty) < 1.6);
     for (const mg of [margin, 0.0]) {
-      const g = getGrid(mg), W = g.W;
+      const g = getGrid(mg, ptl), W = g.W;
       let si = Math.floor(p.x / RES), sj = Math.floor(p.y / RES);
       const near = (ci, cj) => { if (g.pass[cj * W + ci]) return [ci, cj]; for (let r = 1; r < 8; r++) for (let dj = -r; dj <= r; dj++) for (let di = -r; di <= r; di++) { const a = ci + di, b = cj + dj; if (a >= 0 && b >= 0 && a < g.W && b < g.H && g.pass[b * W + a]) return [a, b]; } return null; };
       const S = near(si, sj), T = near(Math.floor(tx / RES), Math.floor(ty / RES)); if (!S || !T) continue;
@@ -97,10 +126,15 @@ function installHooks() {
       const cells = []; let k = key(T[0], T[1]); while (k !== undefined) { cells.push([(k % W + 0.5) * RES, (Math.floor(k / W) + 0.5) * RES]); k = from.get(k); } cells.reverse();
       // string-pull smoothing
       const out = [[p.x, p.y]]; let a = 0;
-      while (a < cells.length - 1) { let b = cells.length - 1; while (b > a + 1 && !los(g, out[out.length - 1][0], out[out.length - 1][1], cells[b][0], cells[b][1])) b--; out.push(cells[b]); a = b; }
+      while (a < cells.length - 1) {
+        let b = cells.length - 1; while (b > a + 1 && !los(g, out[out.length - 1][0], out[out.length - 1][1], cells[b][0], cells[b][1])) b--;
+        if (out.length === 1 && !los(g, p.x, p.y, cells[b][0], cells[b][1])) out.push(cells[a]);   // the hero cannot even see the next cell: go to its own cell centre first
+        out.push(cells[b]); a = b;
+      }
       out.shift(); const last = out[out.length - 1];
       if (last && Math.hypot(last[0] - tx, last[1] - ty) > 0.5 && Math.hypot(tx - last[0], ty - last[1]) < 1.6) out.push([tx, ty]);
-      return { pts: out, margin: mg, reachedExact: Math.hypot(cells[cells.length - 1][0] - tx, cells[cells.length - 1][1] - ty) < 1.2 };
+      const tight = out.length > 1 && Math.hypot(out[0][0] - p.x, out[0][1] - p.y) <= 0.9 && !probeLos(p.x, p.y, out[1][0], out[1][1]);
+      return { pts: out, near: tight, margin: mg, reachedExact: Math.hypot(cells[cells.length - 1][0] - tx, cells[cells.length - 1][1] - ty) < 1.2 };
     }
     return null;
   };
@@ -169,29 +203,32 @@ function installHooks() {
 // ---------------------------------------------------------------- the bot
 class Bot {
   constructor(page, drv, name) {
-    this.page = page; this.drv = drv; this.name = name; this.t0 = Date.now();
+    this.page = page; this.drv = drv; this.name = name; this.t0 = now(); this.real0 = Date.now();
     this.out = { name, maps: {}, deaths: [], bosses: [], events: [], findings: [], errors: [], potions: {}, shots: [], dead: [], stuck: [], fps: {}, talks: [], warns: [], damage: [] };
-    this.lastNovel = Date.now(); this.novelKey = ''; this.mapStart = null; this.curMap = null; this.shotN = 0;
+    this.lastNovel = now(); this.novelKey = ''; this.mapStart = null; this.curMap = null; this.shotN = 0;
     this.pathCache = null; this.posHist = []; this.lastWarnT = -1; this.seenTalk = {}; this.deathShot = false;
     this.lastPot = 0; this.lastSkill = 0; this.lastDodge = 0; this.stuckN = 0; this.prevPot = null; this.canvas = null;
     this.state = null; this.dir = null;
   }
-  el() { return ((Date.now() - this.t0) / 1000).toFixed(1); }
+  el() { return ((now() - this.t0) / 1000).toFixed(1); }   // game seconds under turbo
+  realEl() { return ((Date.now() - this.real0) / 1000).toFixed(1); }
   log(msg, o) { const line = `[${this.name} ${this.el()}s] ${msg}` + (o ? ' ' + JSON.stringify(o) : ''); console.log(line); this.out.events.push({ at: +this.el(), msg, ...(o || {}) }); }
   find(sev, title, detail, shot) { this.out.findings.push({ at: +this.el(), sev, title, detail, shot: shot || null, map: this.state && this.state.map }); this.log(`FINDING[${sev}] ${title}`, { detail }); }
   async shot(tag) {
     const f = `${this.name}-${String(++this.shotN).padStart(3, '0')}-${tag}.png`.replace(/[^\w.\-]/g, '_');
-    try { await this.page.screenshot({ path: path.join(SHOTS, f) }); } catch (e) { return null; }
+    try { if (CLK.turbo) await this.page.evaluate(() => window.__render()); await this.page.screenshot({ path: path.join(SHOTS, f) }); } catch (e) { return null; }
     this.out.shots.push({ at: +this.el(), tag, file: 'tools/qa/shots/' + f, map: this.state && this.state.map });
     return 'tools/qa/shots/' + f;
   }
   save() { try { fs.writeFileSync(path.join(QA, `run-${this.name}.json`), JSON.stringify(this.out, null, 1)); } catch (e) { /* */ } }
-  async snap() { const s = await this.page.evaluate(() => window.__qa.snap()); this.state = s; return s; }
+  // turbo: a loop that polls without waiting would spin on a frozen sim; a snap with no advance since the last one costs one step
+  // (about what the evaluate round trip costs in a realtime run)
+  async snap() { if (CLK.turbo && CLK.adv === this.snapAdv) await sleep(CLK.stepMs); this.snapAdv = CLK.adv; const s = await this.page.evaluate(() => window.__qa.snap()); this.state = s; return s; }
   ev(fn, a) { return this.page.evaluate(fn, a); }
 
   // ---- bookkeeping each tick: map timers, FPS, novelty, detectors
   async observe(s) {
-    const now = Date.now();
+    const now = clk();
     if (!this.lastEvDrain || now - this.lastEvDrain > 1200) {
       this.lastEvDrain = now; const evs = await this.page.evaluate(() => window.__qa.evDrain());
       for (const e of evs) { (this.out.pev = this.out.pev || []).push(Object.assign({ at: +this.el() }, e)); if (e.k === 'kill' && e.boss) this.bossKilled = e.type; if (e.k === 'talk') { const key = e.map + ':' + (e.id || e.first); (this.seenTalk[key] = this.seenTalk[key] || []).push(+this.el()); } }
@@ -210,24 +247,24 @@ class Bot {
       this.prevPot = s.p.pot;
       if (now - this.lastNovel > 60000) { const f = await this.shot('deadtime'); this.find('minor', 'Dead time: >60 s with no new trigger/objective/XP/kill/loot event', { map: s.map, pos: [s.p.x, s.p.y], obj: s.obj, sinceMs: now - this.lastNovel }, f); this.lastNovel = now; }
       // new warnings
-      if (s.warn && s.warn.t !== this.lastWarnT) { this.lastWarnT = s.warn.t; this.out.warns.push({ gt: s.warn.t, at: +this.el(), boss: s.warn.boss, move: s.warn.move, type: s.warn.type, wind: s.warn.wind, open: s.warn.open }); this.warnJustNow = { t: Date.now(), w: s.warn }; }
+      if (s.warn && s.warn.t !== this.lastWarnT) { this.lastWarnT = s.warn.t; this.out.warns.push({ gt: s.warn.t, at: +this.el(), boss: s.warn.boss, move: s.warn.move, type: s.warn.type, wind: s.warn.wind, open: s.warn.open }); this.warnJustNow = { t: clk(), w: s.warn }; }
       // drops overlapping
       const D = s.drops; let ov = 0; for (let i = 0; i < D.length; i++) for (let j = i + 1; j < D.length; j++) if (Math.hypot(D[i].x - D[j].x, D[i].y - D[j].y) < 0.3) ov++;
       if (ov && !this.reportedOverlap) { this.reportedOverlap = true; const f = await this.shot('loot-overlap'); this.find('polish', 'Loot drops stack on top of each other (<0.3 tiles apart)', { pairs: ov, n: D.length, names: D.map(d => d.name) }, f); }
       // unreachable/old drops
       for (const d of D) if (d.t > 25 && !this.reportedOld) { this.reportedOld = true; const f = await this.shot('old-drop'); this.find('minor', 'A drop sat on the ground >25 s without being picked up', { drop: d, ppos: [s.p.x, s.p.y] }, f); }
       // boss timer
-      if (s.boss && !this.bossRun) { this.bossRun = { type: s.boss.type, lvl: s.p.lvl, bossLvl: s.boss.lvl, at: +this.el(), t0: Date.now(), deaths0: s.deaths, hp: s.boss.max, pot0: s.p.pot, map: s.map, maxHp: s.p.maxHp, wk: s.p.wid }; this.log('BOSS START ' + s.boss.type, this.bossRun); }
+      if (s.boss && !this.bossRun) { this.bossRun = { type: s.boss.type, lvl: s.p.lvl, bossLvl: s.boss.lvl, at: +this.el(), t0: clk(), deaths0: s.deaths, hp: s.boss.max, pot0: s.p.pot, map: s.map, maxHp: s.p.maxHp, wk: s.p.wid }; this.log('BOSS START ' + s.boss.type, this.bossRun); }
       if (this.bossRun && s.boss) this.bossRun.minHpPct = Math.min(this.bossRun.minHpPct == null ? 100 : this.bossRun.minHpPct, Math.round(s.p.hp / s.p.maxHp * 100));
-      if (this.bossRun && !s.boss && s.st === 'play') { const b = this.bossRun; this.bossRun = null; b.dur = +((Date.now() - b.t0) / 1000).toFixed(1); b.deaths = s.deaths - b.deaths0; b.killed = !!this.bossKilled || s.deaths === b.deaths0;   /* the boss bar went away without a death = a kill (the kill event's boss flag is not always set) */ this.bossKilled = null; b.potions = Math.max(0, b.pot0 - s.p.pot); this.out.bosses.push(b); this.log('BOSS END ' + b.type, b); this.save(); }
+      if (this.bossRun && !s.boss && s.st === 'play') { const b = this.bossRun; this.bossRun = null; b.dur = +((clk() - b.t0) / 1000).toFixed(1); b.deaths = s.deaths - b.deaths0; b.killed = !!this.bossKilled || s.deaths === b.deaths0;   /* the boss bar went away without a death = a kill (the kill event's boss flag is not always set) */ this.bossKilled = null; b.potions = Math.max(0, b.pot0 - s.p.pot); this.out.bosses.push(b); this.log('BOSS END ' + b.type, b); this.save(); }
       // enemy stuck in wall check
       this.enemyStuck(s);
     }
   }
-  novel() { this.lastNovel = Date.now(); }
+  novel() { this.lastNovel = now(); }
   enemyStuck(s) {
     this.eh = this.eh || {};
-    const now = Date.now();
+    const now = clk();
     for (const e of s.en) {
       if (e.dummy || e.asleep || e.spawnT > 0 || e.boss || e.still) continue;   // turrets (move: stationary) never move by design
       const k = e.type + '@' + Math.round(e.x * 2) + ',' + Math.round(e.y * 2), d = Math.hypot(e.x - s.p.x, e.y - s.p.y);
@@ -265,15 +302,15 @@ class Bot {
     if (s.ui.open || s.ui.help || s.ui.pause || s.ui.settings) { await this.setMove(0, 0); await this.drv.attack(false); await this.drv.closeMenu(s); await sleep(250); return true; }
     if (s.fadeDir) { await this.setMove(0, 0); await sleep(80); return true; }
     // potion
-    if (p.hp / p.maxHp < 0.35 && p.pot > 0 && Date.now() - this.lastPot > 1100) { this.lastPot = Date.now(); await this.drv.potion(); this.log('drink potion', { hp: p.hp, max: p.maxHp, pot: p.pot, map: s.map }); }
+    if (p.hp / p.maxHp < 0.35 && p.pot > 0 && now() - this.lastPot > 1100) { this.lastPot = now(); await this.drv.potion(); this.log('drink potion', { hp: p.hp, max: p.maxHp, pot: p.pot, map: s.map }); }
     // QA run 5: dodge ON the boss warning (G.lastWarn): the hit lands ~wind s after warn.t, so Shift ~0.2 s before that, sidestepping lines/cones and leaving circles
-    if (s.boss && s.warn && s.warn.boss === s.boss.type && s.warn.wind > 0 && ['line', 'circle', 'cone'].includes(s.warn.type) && !p.dash && p.st >= 20 && Date.now() - this.lastDodge > 650) {
+    if (s.boss && s.warn && s.warn.boss === s.boss.type && s.warn.wind > 0 && ['line', 'circle', 'cone'].includes(s.warn.type) && !p.dash && p.st >= 20 && now() - this.lastDodge > 650) {
       const age = s.t - s.warn.t, bd = Math.hypot(p.x - s.boss.x, p.y - s.boss.y);
       if (age >= s.warn.wind - 0.42 && age <= s.warn.wind + 0.05 && bd < 9 && this.dowT !== s.warn.t) { this.dowT = s.warn.t;   // once per warning, widened window (run 5: only 5 dodges fired, poll tick ~100 ms)
         let dx = p.x - s.boss.x, dy = p.y - s.boss.y; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
         if (s.warn.type !== 'circle') { const tl = s.tele.find(f => f.kind === 'line' || f.kind === 'cone'); const ang = tl ? tl.ang : Math.atan2(-dy, -dx); const cr = (p.x - (tl ? tl.x : s.boss.x)) * Math.sin(ang) - (p.y - (tl ? tl.y : s.boss.y)) * Math.cos(ang), sg = cr >= 0 ? 1 : -1; dx = -Math.sin(ang) * sg; dy = Math.cos(ang) * sg; }
         const [sx, sy] = Bot.scr(dx, dy); await this.drv.attack(false); await this.setMove(sx, sy); await sleep(35);
-        this.lastDodge = Date.now(); await this.drv.dodge(sx, sy); this.out.dodgeOnWarn = (this.out.dodgeOnWarn || 0) + 1; this.log('dodge on warn', { move: s.warn.move, type: s.warn.type, age: +age.toFixed(2) }); return true;
+        this.lastDodge = now(); await this.drv.dodge(sx, sy); this.out.dodgeOnWarn = (this.out.dodgeOnWarn || 0) + 1; this.log('dodge on warn', { move: s.warn.move, type: s.warn.type, age: +age.toFixed(2) }); return true;
       }
     }
     // telegraph avoidance
@@ -304,7 +341,7 @@ class Bot {
     await this.drv.attack(false);
     await this.setMove(sx, sy);
     const remain = (f.life || 1) - (f.t || 0);
-    if (s.covered && remain < 0.38 && Date.now() - this.lastDodge > 700 && !p.dash) { this.lastDodge = Date.now(); await this.drv.dodge(sx, sy); this.log('dodge telegraph', { kind: f.kind, remain: +remain.toFixed(2) }); }
+    if (s.covered && remain < 0.38 && now() - this.lastDodge > 700 && !p.dash) { this.lastDodge = now(); await this.drv.dodge(sx, sy); this.log('dodge telegraph', { kind: f.kind, remain: +remain.toFixed(2) }); }
     await sleep(40);
     return true;
   }
@@ -327,13 +364,13 @@ class Bot {
     else await this.setMove(0, 0);
     if (d < (ranged ? 8 : 2.2)) await this.drv.attack(true); else await this.drv.attack(false);
     // skills
-    if (Date.now() - this.lastSkill > 260 && d < 7.5 && !p.casting) {
+    if (now() - this.lastSkill > 260 && d < 7.5 && !p.casting) {
       for (const sl of ['r', 'q', 'e', 'f', 'c', '1', '2', '3']) {
         const k = s.sk[sl]; if (!k || k.cd > 0) continue;
         if (sl === 'r' && p.ult < 100) continue;
         if (k.mp > p.mp) continue;
         if ((sl === '1' || sl === '2' || sl === '3') && !(p.hp / p.maxHp < 0.7 || tg.boss || engage.length >= 3)) continue;
-        this.lastSkill = Date.now(); await this.drv.skill(sl, tg, s); break;
+        this.lastSkill = now(); await this.drv.skill(sl, tg, s); break;
       }
     }
     await sleep(45);
@@ -356,7 +393,7 @@ class Bot {
     const p = s.p, tx = g.x, ty = g.y;
     const d = Math.hypot(tx - p.x, ty - p.y);
     // stuck detection
-    const now = Date.now(); this.posHist.push([now, p.x, p.y]); while (this.posHist.length && now - this.posHist[0][0] > 2500) this.posHist.shift();
+    const now = clk(); this.posHist.push([now, p.x, p.y]); while (this.posHist.length && now - this.posHist[0][0] > 2500) this.posHist.shift();
     let stuck = false;
     if (this.posHist.length > 20 && now - this.posHist[0][0] > 2200) { const [, ox, oy] = this.posHist[0]; if (Math.hypot(p.x - ox, p.y - oy) < 0.25 && !(p.rootT > 0) && !p.casting) stuck = true; }
     if (!this.trail) this.trail = [];
@@ -389,8 +426,10 @@ class Bot {
     }
     const r = this.pathCache.r; let wx = tx - p.x, wy = ty - p.y;
     if (r && r.pts.length) {
-      // aim for the first waypoint at least 0.9 tiles away
-      let w = r.pts.find(q => Math.hypot(q[0] - p.x, q[1] - p.y) > 0.9) || r.pts[r.pts.length - 1];
+      // aim for the first waypoint at least 0.9 tiles away -- unless the planner says the hero cannot walk straight past the nearer one
+      // (r.near: pts[0] is the farthest point the hero can reach in a straight line, by the engine's probe rule; skipping it walks into the edge)
+      let w = (r.near ? r.pts.find(q => Math.hypot(q[0] - p.x, q[1] - p.y) > 0.25) : r.pts.find(q => Math.hypot(q[0] - p.x, q[1] - p.y) > 0.9)) || r.pts[r.pts.length - 1];
+      if (r.near && Math.hypot(r.pts[0][0] - p.x, r.pts[0][1] - p.y) < 0.4) this.pathCache.t = 0;   // reached the tight point: re-plan next tick
       wx = w[0] - p.x; wy = w[1] - p.y;
     }
     const [sx, sy] = Bot.scr(wx, wy);
@@ -401,17 +440,26 @@ class Bot {
 
   // ---- a goal: walk to (x,y) / until predicate; fights whatever engages. returns 'ok' | 'timeout'
   async goal(g) {
-    const t0 = Date.now(); g.timeout = g.timeout || 150000; g.r = g.r || 1.2; this.pathCache = null; this.log(`goal: ${g.name}`);
+    const t0 = now(); g.timeout = g.timeout || 150000; g.r = g.r || 1.2; this.pathCache = null; this.log(`goal: ${g.name}`);
     let ok = 'timeout';
     for (;;) {
       const s = await this.snap(); await this.observe(s);
       if (!s.p) { await sleep(100); continue; }
       if (g.until && g.until(s)) { ok = 'ok'; break; }
       if (!g.until && s.p && !g.fightOnly && Math.hypot(g.x - s.p.x, g.y - s.p.y) < g.r && s.st === 'play') { ok = 'ok'; break; }
-      if (Date.now() - t0 > g.timeout) break;
+      if (now() - t0 > g.timeout) break;
       if (this.pendingEnemyStuck) { const q = this.pendingEnemyStuck; this.pendingEnemyStuck = null; const f = await this.shot('enemy-stuck'); this.find('major', `Enemy "${q.e.type}" not moving for 7 s while hero is ${q.d.toFixed(1)} tiles away`, { enemy: q.e, map: q.map }, f); }
-      if (await this.react(s, g)) continue;
-      if (g.fightOnly) { await this.setMove(0, 0); await sleep(120); continue; }
+      if (await this.react(s, g)) { g.idleSince = 0; continue; }
+      if (g.fightOnly) {
+        // clear(): a pack left behind (out of engage range) never comes to the hero; after 6 s of nothing in range, walk to it (logged)
+        const far = s.en.filter(e => !e.dummy && !e.still && (g.wake || !e.asleep) && e.spawnT < 0.5).sort((a, b) => Math.hypot(a.x - s.p.x, a.y - s.p.y) - Math.hypot(b.x - s.p.x, b.y - s.p.y))[0];
+        if (far && g.chase !== false) {
+          g.idleSince = g.idleSince || now();
+          if (now() - g.idleSince > 6000 && !g.chaseNoPath) {
+            if (!g.chased && !(await this.page.evaluate(([x, y]) => !!window.__qa.path(x, y), [far.x, far.y]))) { g.chaseNoPath = true; this.log('clear: out-of-range enemy has no walkable path; waiting', { type: far.type, at: [far.x, far.y] }); continue; } if (!g.chased) { g.chased = true; this.log('clear: walking to an out-of-range enemy', { type: far.type, at: [far.x, far.y], from: [s.p.x, s.p.y] }); } const gx = g.x, gy = g.y; g.x = far.x; g.y = far.y; await this.nav(s, g); g.x = gx; g.y = gy; continue; }
+        } else g.idleSince = 0;
+        await this.setMove(0, 0); await sleep(120); continue;
+      }
       if (g.x == null) { await this.setMove(0, 0); await sleep(120); continue; }
       // interact if the prompt is for what we want
       if (g.interact && s.prompt && Math.hypot(s.prompt.x - g.x, s.prompt.y - g.y) < (g.ir || 2.2) && (g.interact === true || g.interact === s.prompt.kind)) {
@@ -422,16 +470,16 @@ class Bot {
       await this.nav(s, g);
     }
     await this.setMove(0, 0); await this.drv.attack(false);
-    this.log(`goal ${g.name}: ${ok}`, { sec: ((Date.now() - t0) / 1000).toFixed(1) });
+    this.log(`goal ${g.name}: ${ok}`, { sec: ((now() - t0) / 1000).toFixed(1) });
     if (ok === 'timeout' && !g.noFinding) { const f = await this.shot('goal-timeout-' + g.name); const s = this.state; this.find(g.softlock ? 'blocker' : 'major', `Goal timed out: ${g.name}`, { after_s: (g.timeout / 1000), pos: s.p && [s.p.x, s.p.y], obj: s.obj, noPath: g.noPath || 0, stuckN: g.stuckN || 0 }, f); }
     return ok;
   }
   // clear the area: fight until no hostile and no pending spawns for a couple of seconds
   async clear(name, timeout = 120000, extra = {}) {
-    let calm = 0, t0 = Date.now();
+    let calm = 0, t0 = now();
     return this.goal(Object.assign({ name, fightOnly: true, timeout, engageR: 14, until: s => { const h = s.en.filter(e => !e.dummy).length; if (!h && !s.pend && s.st === 'play') { calm++; } else calm = 0; return calm > 14; } }, extra));
   }
-  async idle(ms) { const t0 = Date.now(); while (Date.now() - t0 < ms) { const s = await this.snap(); await this.observe(s); if (await this.react(s, { engageR: 12 })) continue; await this.setMove(0, 0); await sleep(120); } }
+  async idle(ms) { const t0 = now(); while (now() - t0 < ms) { const s = await this.snap(); await this.observe(s); if (await this.react(s, { engageR: 12 })) continue; await this.setMove(0, 0); await sleep(120); } }
 }
 
 // ---------------------------------------------------------------- drivers
@@ -439,7 +487,7 @@ class KbmDriver {
   constructor(page) { this.page = page; this.keys = new Set(); this.mouseDown = false; this.cv = null; }
   async cvr() { return (this.cv = await this.page.evaluate(() => window.__qa.canvas())); }
   async key(k, on) { if (on && !this.keys.has(k)) { this.keys.add(k); await this.page.keyboard.down(k); } else if (!on && this.keys.has(k)) { this.keys.delete(k); await this.page.keyboard.up(k); } }
-  async tap(k, ms = 70) { await this.page.keyboard.down(k); await new Promise(r => setTimeout(r, ms)); await this.page.keyboard.up(k); }
+  async tap(k, ms = 70) { await this.page.keyboard.down(k); await sleep(ms); await this.page.keyboard.up(k); }
   async move(sx, sy) {
     const m = Math.hypot(sx, sy);
     const th = 0.38;
@@ -533,17 +581,21 @@ async function launch(opts = {}) {
   const ctx = await br.newContext(Object.assign({ viewport: { width: 960, height: 540 } }, opts.context || {}));
   if (opts.pad) await ctx.addInitScript(PAD_STUB);
   if (opts.init) await ctx.addInitScript(opts.init);
+  // opts.seed: the page's Math.random becomes a seeded PRNG before any game script runs (loot rolls, spawns, AI) = reproducible runs
+  if (opts.seed != null) await ctx.addInitScript(seed => { let a = seed >>> 0; Math.random = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; window.__seed = seed; }, opts.seed | 0);
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push({ at: Date.now(), kind: 'pageerror', msg: e.message, stack: (e.stack || '').split('\n').slice(0, 4).join(' | ') }));
   page.on('console', m => { if (m.type() === 'error') errors.push({ at: Date.now(), kind: 'console', msg: m.text() }); });
   page.on('requestfailed', r => errors.push({ at: Date.now(), kind: 'requestfailed', msg: r.url() }));
-  const url = 'file://' + path.join(ROOT, 'index.html') + (opts.query || '');
+  let q = opts.query || ''; for (const f of ['turbo', 'god']) if (opts[f]) q += (q ? '&' : '?') + f;
+  const url = 'file://' + path.join(ROOT, 'index.html') + q;
   await page.goto(url, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 90000 });
+  if (opts.turbo) { CLK.turbo = await page.evaluate(() => typeof window.__advance === 'function'); CLK.page = page; CLK.vt = Date.now(); if (!CLK.turbo) throw new Error('?turbo: the page has no __advance'); }
   await sleep(500);
   await page.evaluate(installHooks);
-  return { br, ctx, page, errors, url };
+  return { br, ctx, page, errors, url, turbo: CLK.turbo };
 }
 
-module.exports = { launch, Bot, KbmDriver, PadDriver, TouchDriver, sleep, SHOTS, QA, ROOT, PAD_STUB };
+module.exports = { launch, Bot, KbmDriver, PadDriver, TouchDriver, sleep, realSleep, now, CLK, SHOTS, QA, ROOT, PAD_STUB };

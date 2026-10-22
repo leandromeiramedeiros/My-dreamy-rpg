@@ -1,7 +1,7 @@
 'use strict';
 // ---------------------------------------------------------------------------
 // settings.js — settings + accessibility DATA (HUD.md "Pause / settings", CONTROLS.md "Accessibility",
-// DESIGN §16.1.5 difficulty). The settings screen (Sonnet) draws from SETTINGS_SCHEMA and calls setSetting().
+// one difficulty: Normal; NG+ is its own mode). The settings screen (Sonnet) draws from SETTINGS_SCHEMA and calls setSetting().
 // Loaded right after util.js in index.html and editor.html; no dependencies.
 //
 // API
@@ -14,7 +14,7 @@
 //   onSettingsChange(fn)          fn(key, value) after every change
 //   Getters used by the game:  sfxVol() musicVol() shakeMul() hitstopOn() hitstopMode() flashCap() flashReduceOn() damageNumbersOn()
 //     hitstopMode(): 'off' | 'light' | 'full' (DESIGN §27; a pre-M3 boolean migrates true -> full, false -> off)
-//     damageTakenMul() (Story 0.6, Normal 1) bossHitCap() (max share of max HP per telegraphed boss hit: Story 0.30, Normal 0.45) aimAssistCone() (radians half-angle; off 0 / low 6° / high 10° = the
+//     aimAssistCone() (radians half-angle; off 0 / low 6° / high 10° = the
 //     20° cone) attackToggle() textPx() (body px 14/18/22) moveDeadzone() aimDeadzone()
 // ---------------------------------------------------------------------------
 const SETTINGS_SCHEMA = [
@@ -27,7 +27,6 @@ const SETTINGS_SCHEMA = [
   { key: 'ambient', label: 'Ambience', group: 'audio', type: 'slider', min: 0, max: 1, step: 0.25, def: 0.75 },
   { key: 'mono', label: 'Mono audio', group: 'audio', type: 'toggle', def: false },
   { key: 'reduceBass', label: 'Reduce bass', group: 'audio', type: 'toggle', def: false },
-  { key: 'difficulty', label: 'Difficulty', group: 'game', type: 'choice', def: 'normal', options: [{ v: 'story', label: 'Story' }, { v: 'normal', label: 'Normal' }] },
   { key: 'shake', label: 'Screen shake', group: 'display', type: 'slider', min: 0, max: 100, step: 25, def: 100 },
   { key: 'hitstop', label: 'Hitstop', group: 'display', type: 'choice', def: 'full', options: [{ v: 'off', label: 'Off' }, { v: 'light', label: 'Light' }, { v: 'full', label: 'Full' }] },
   { key: 'flashReduce', label: 'Reduce flashes', group: 'display', type: 'toggle', def: false },
@@ -86,9 +85,8 @@ const hitstopOn = () => SETTINGS.hitstop !== 'off';
 const flashCap = () => SETTINGS.flashReduce ? 0.5 : 1;                     // render.js: bloom + light flash multiplier
 const flashReduceOn = () => !!SETTINGS.flashReduce;                        // game.js: the enemy hit flash stays 0.1 s (R2)
 const damageNumbersOn = () => SETTINGS.damageNumbers;
-const damageTakenMul = () => SETTINGS.difficulty === 'story' ? 0.6 : 1;
-// DESIGN §20.3 "one mistake never kills": no single telegraphed boss hit takes more than this share of the hero's ACTUAL max HP
-const bossHitCap = () => SETTINGS.difficulty === 'story' ? 0.30 : 0.45;
+// (M3 hot-fix, client rulings: Story difficulty and damageTakenMul() are gone, an old 'difficulty' setting is ignored on load; the
+// boss hit cap bossHitCap() is gone too: a boss hit can kill)
 const aimAssistCone = () => ({ off: 0, low: 6, high: 10 }[SETTINGS.aimAssist] || 0) * Math.PI / 180;
 const attackToggle = () => SETTINGS.attackMode === 'toggle';
 const textPx = () => ({ S: 14, M: 18, L: 22 }[SETTINGS.textSize] || 18);

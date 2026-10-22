@@ -139,10 +139,10 @@ const PAD_STUB = () => {
   await ev(() => UI.focus.set('set:music', true)); await wait(60);
   const m0 = await ev(() => SETTINGS.music); await tap(14); await wait(80);
   const m1 = await ev(() => SETTINGS.music);
-  await ev(() => UI.focus.set('set:difficulty', true)); await wait(60); await tap(15); await wait(80);
-  const dd = await ev(() => SETTINGS.difficulty);
+  await ev(() => UI.focus.set('set:hitstop', true)); await wait(60); await tap(15); await wait(80);
+  const dd = await ev(() => SETTINGS.hitstop);
   await tap(14); await wait(80);
-  check('pause: d-pad left / right change sliders and choices (Story / Normal)', m1 === m0 - 0.25 && dd === 'story' && await ev(() => SETTINGS.difficulty === 'normal'), { m0, m1, dd });
+  check('pause: d-pad left / right change sliders and choices (Hitstop Full -> Off -> Full)', m1 === m0 - 0.25 && dd === 'off' && await ev(() => SETTINGS.hitstop === 'full'), { m0, m1, dd });
   await ev(() => setSetting('music', 0.75));
   await tap(9); await wait(200);
   check('pad: Start closes pause', await ev(() => G.ui.pause === false));
@@ -206,8 +206,8 @@ const PAD_STUB = () => {
     return { v: s.version, level: q.level, xp: q.xp, dust: q.dust, q: q.wsk.sword.q, csk: q.csk.join(), chest: !!G.prog.chests['vale:4.5,17.2'], boss: !!G.prog.firsts['ruins:boss'], trig: G.prog.trig.vale.join(), slime: G.seen.slime.kills, res: G.seen.slime.res.slash, cp: G.checkpoint.x, bag: q.bag.filter(Boolean).length === p.bag.filter(Boolean).length };
   });
   check('save: v2 -> v4 migration keeps everything (pre-v4 wsk key dawnblade -> sword)', mig.v === 4 && mig.level === 7 && mig.xp === 120 && mig.dust === 33 && mig.q === 'heroic' && mig.csk === 'orbit,chain' && mig.chest && mig.boss && mig.trig === 't1' && mig.slime === 4 && mig.res === -0.5 && mig.cp === 2 && mig.bag, mig);
-  const st = await ev(() => { const a = setSetting('difficulty', 'story'), b = setSetting('shake', 999), c = damageTakenMul(); setSetting('difficulty', 'normal'); setSetting('shake', 100); return { a, b, c }; });
-  check('settings: validated setters + Story difficulty x0.6', st.a === 'story' && st.b === 100 && st.c === 0.6, st);
+  const st = await ev(() => { const a = setSetting('difficulty', 'story'), b = setSetting('shake', 999); setSetting('shake', 100); return { a, b, has: 'difficulty' in SETTINGS, row: SETTINGS_SCHEMA.some(d => d.key === 'difficulty'), fn: typeof damageTakenMul }; });
+  check('settings: validated setters; no Difficulty setting (Story removed, Normal only)', st.a === undefined && st.b === 100 && !st.has && !st.row && st.fn === 'undefined', st);
   // ---------- 3b. §20.5 MP builder: once per swing, 40 MP/s cap; ultimate gain cap ----------
   const cleave = await ev(() => {
     const p = G.player; G.enemies.length = 0; p.mpHits = []; G.t += 2;
@@ -755,16 +755,16 @@ const PAD_STUB = () => {
     return out;
   });
   check('retries: objective recomputed after a death (Mossjaw, Bramblehorn) and after the Warrens vault; boss intro + zone banner once per save', /Mossjaw/.test(rt.boss) && rt.afterDeath === rt.boss && !rt.zoneBanner && rt.talk1 === 1 && rt.talk2 === 1 && !rt.bossBanner2 && /Bramblehorn/.test(rt.bramble) && /[Ss]neak/.test(rt.sneak) && !/[Ss]neak/.test(rt.afterVault) && rt.saved, rt);
-  // boss damage fairness (§20.3 / QA M1): a telegraphed boss hit never takes more than 45 % of max HP (Story 30 %); roar warns first
+  // boss damage fairness (§20.3 / QA M1): no boss hit cap (client ruling, M3 hot-fix: a boss hit can kill); roar warns first
   const cap = await ev(() => {
     const p = G.player, r = {}; p.invulnT = 0; p.dash = null;
-    for (const diff of ['normal', 'story']) { setSetting('difficulty', diff); p.hp = p.maxHp; p.invulnT = 0; hurtPlayer(1e5, p.x, p.y, 'nature', { boss: true }); r[diff] = +(1 - p.hp / p.maxHp).toFixed(3); }
-    setSetting('difficulty', 'normal'); p.hp = p.maxHp; p.invulnT = 0; hurtPlayer(1e5, p.x, p.y, 'nature'); r.plain = p.dead; p.dead = false; G.state = 'play'; p.hp = p.maxHp; p.invulnT = 999;
+    p.hp = p.maxHp; p.invulnT = 0; hurtPlayer(1e5, p.x, p.y, 'nature', { boss: true }); r.boss = p.dead; p.dead = false; G.state = 'play';
+    p.hp = p.maxHp; p.invulnT = 0; hurtPlayer(1e5, p.x, p.y, 'nature'); r.plain = p.dead; p.dead = false; G.state = 'play'; p.hp = p.maxHp; p.invulnT = 999;
     const b = spawnEnemy('bramblehorn', p.x + 3, p.y, 0); startMove(b, { type: 'roar', banner: 'x', dur: 0.4 }); r.roarWind = G.lastWarn.wind; r.roarTele = G.effects.some(e => e.type === 'tele' && e.src === b);
     r.fair = bossFairness('bramblehorn').length + bossFairness('mossjaw').length; G.enemies.length = 0; G.boss = null; G.effects.length = 0;
     return r;
   });
-  check('boss hit cap: 45 % of max HP (Story 30 %), uncapped for other damage; roar has a wind-up + telegraph; Mossjaw / Bramblehorn pass bossFairness', cap.normal <= 0.451 && cap.normal >= 0.44 && cap.story <= 0.301 && cap.plain === true && cap.roarWind >= 0.6 && cap.roarTele && cap.fair === 0, cap);
+  check('boss hits: no cap (a huge boss hit kills, like any other damage); roar has a wind-up + telegraph; Mossjaw / Bramblehorn pass bossFairness', cap.boss === true && cap.plain === true && cap.roarWind >= 0.6 && cap.roarTele && cap.fair === 0, cap);
   await ev(() => { G.enemies.length = 0; G.boss = null; enterMap('vale'); G.state = 'play'; G.player.invulnT = 0; });
   // save slots: slot 1 = the legacy key, slots 2-3 beside it, an index for the title
   const slots = await ev(() => {
