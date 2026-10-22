@@ -732,6 +732,10 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Core sheet | A unit's sheet with every anim except attacks | `<unit>.core` | — | M4a |
 | Atk sheet | A unit's attack anims for one weapon class | `<unit>.atk.<class>` | attack sheet | M4a |
 | Line bank | One gear line's tier file in the forge bank | `js/forge-bank/<line>.t<N>.js` | — | M4a |
+| Forge enemy | Enemy drawn from forge banks (8 true directions); others still use the old sprite | `js/forge-bank/<rig>.js` | — | M4a |
+| Quadruped rig | Shared four-legged forge rig and anims for beasts | `tools/forge/models/quadruped-anims.js` | beast rig | M4a |
+| Die sheet | A unit's hit and death anims in their own sheet | `<unit>.die` | — | M4a |
+| Flat depth | Forge option: one depth value per body part, for smaller banks | `flatDepth` | — | M4a |
 | FORGE_FX | Forge table of tier and rarity effects per item line (geometry per tier, palette, rim light and emitters per rarity) | `FORGE_FX` | — | M4a |
 | Lane | One parallel work stream | — | — | live |
 | Milestone | Delivery step: M1 to M8 | — | — | live |
