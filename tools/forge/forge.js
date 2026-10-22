@@ -30,6 +30,9 @@
 //   sockets: { name: { bone, at } }        exported per frame (hands, cast point, head top ...)
 //   anims: { name: { frames, pose(f) -> { bone: { rot, off, scl, aim, point, roll } } } }
 //            'attack:sword' style names: anim 'attack' picks the variant of the equipped weapon's class
+//   anims[].ms: [ms per frame] (read by board.js / the game);  anims[].smear: { frame: band width 0..1 } (weapon smears)
+//   innerColor: '#hex'                     seams (depth-jump lines) in this colour instead of the part's shadow tone
+//   pixel: { normalSteps }                 opt-in hand-pixel pass: posterised normals, spur removal, clusters >= 2 px
 //   sheetAnims: ['idle', 'walk', ...]      the columns of a loadout sheet (default: every anim)
 //   layers: [ LAYER ]                      the bare body; a v1 model (mats / prims / stamps at the top level) = one layer
 // }
@@ -45,12 +48,14 @@
 //         disc: c, r  a flat band: an r[0] x r[2] ellipse in local x-z, r[1] thick each way along y (belts, straps, trims)
 //         rot: [rx, ry, rz] turns an ell, disc or box about its centre (a tilted feather, a diagonal strap)
 //         weight: its rays count this many times in the pixel's vote, so a thin strap or trim wins its pixels over the plate
-//         line: a, b (b on bone bB if given), tone: 1 px wide in screen space (strings, arrows), kept by every cleanup
+//         line: a, b (b on bone bB if given), tone: 1 px wide in screen space (strings, arrows), kept by every cleanup;
+//               conn4: a 4-connected staircase (a blade: no pixel joined to its run by a corner only)
 //         clip: [nx, ny, nz, k] (or a list) keeps the side where dot(p, n) <= k: a flat cut (a sole, a hair line)
 //         when: the prim exists only on the frames where it returns true (a drawn bowstring, a nocked arrow)
 //   stamps: { bone, at, n, facing, on?, px:[[dx, dy, '#hex' | mat], ...] }  pixels pinned to a surface point (eyes):
 //         drawn when the point faces the camera and is not hidden inside the layer; other layers can still cover them
-// PIECE = { id, slot, family?, tier?, class?, hides:[tags], layers:[LAYER], pose?(anim, f), tiers?:[ { mat: ramp } ], sockets? }
+// PIECE = { id, slot, family?, tier?, class?, hides:[tags], layers:[LAYER], pose?(anim, f), tiers?:[ { mat: ramp } ], sockets?, smear? }
+//   smear: '#hex' a weapon with a 'tip' socket draws the anim's smear frames in this flat colour (hand -> tip path)
 //   family + tier: one baked piece per shape tier (knighthelm.t3); tiers: palette-only variants of one baked piece
 //   pose: partial poses for bones ONLY this piece uses (a weapon's hold); class: 'sword' | 'staff' | 'bow' ...
 // Pose: rot = Euler [rx, ry, rz] relative to the parent. aim / point = a direction in model space (before the facing yaw):
@@ -214,7 +219,8 @@ const FORGE = (function () {
     const e = (model.cam && model.cam.elev != null ? model.cam.elev : 25) * Math.PI / 180;
     return { w: model.frame[0], h: model.frame[1], ox: model.origin[0], oy: model.origin[1],
       D: [0, -Math.sin(e), -Math.cos(e)], RT: [1, 0, 0], UP: [0, Math.cos(e), -Math.sin(e)],
-      L: norm(model.light || [-0.55, 0.65, 0.52]), T: model.tones || [0.78, 0.3, -0.25], cover: model.coverage || 4 };
+      L: norm(model.light || [-0.55, 0.65, 0.52]), T: model.tones || [0.78, 0.3, -0.25], cover: model.coverage || 4,
+      nsteps: (model.pixel && model.pixel.normalSteps) || 0 };
   }
   function volumes(layer, W, anim, frame, mt, pl) {           // a layer's live volumes, posed: bounds in world space
     const vol = [];
@@ -246,6 +252,9 @@ const FORGE = (function () {
     }
     return best;
   }
+  // posterised normals: snap a normal to a lattice of `steps` per axis, so a curved mass breaks into a few flat facets
+  // (hand-pixelled bands) instead of a smooth gradient that quantises into ragged contours
+  const posterise = (n, steps) => steps ? norm(n.map(v => Math.round(v * steps) / steps)) : n;
   function raster(layer, W, cam, anim, frame, rootT) {
     const { w, h, ox, oy, D, RT, UP, L, T } = cam, N = w * h, mt = matTable(layer), pl = partList(layer), H = norm(sub(L, D));
     const G = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), keep: new Uint8Array(N), dq: new Uint8Array(N) };
@@ -276,7 +285,7 @@ const FORGE = (function () {
       }
       let pick = null, pk = 0;
       for (const k in cnt) if (!pick || cnt[k].n > pick.n || (cnt[k].n === pick.n && cnt[k].t < pick.t)) { pick = cnt[k]; pk = +k; }
-      const i = py * w + px, nn = norm(pick.nn), s = dot(nn, L), M = mt.list[pick.m], TT = M.tones || T;
+      const i = py * w + px, nn = posterise(norm(pick.nn), cam.nsteps), s = dot(nn, L), M = mt.list[pick.m], TT = M.tones || T;
       G.cov[i] = 1; G.mat[i] = pick.m; G.part[i] = pk; dep[i] = pick.tt / pick.w;
       G.flat[i] = M.flat != null ? 1 : 0; G.keep[i] = M.keep ? 1 : 0;
       let tn = 0; for (let k = 0; k < TT.length; k++) if (s > TT[k]) { tn = TT.length - k; break; }
@@ -287,13 +296,19 @@ const FORGE = (function () {
       const a = proj(worldPoint(W, pr.bone, pr.a)), b = proj(worldPoint(W, pr.bB || pr.bone, pr.b));
       const n = Math.max(1, Math.ceil(Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]))));
       const m = mt.index[pr.mat], M = mt.list[m];
-      for (let k = 0; k <= n; k++) {
-        const f = k / n, x = Math.floor(a[0] + (b[0] - a[0]) * f), y = Math.floor(a[1] + (b[1] - a[1]) * f), t = a[2] + (b[2] - a[2]) * f;
-        if (x < 0 || y < 0 || x >= w || y >= h) continue;
+      const plot = (x, y, t) => {
+        if (x < 0 || y < 0 || x >= w || y >= h) return;
         const i = y * w + x;
-        if (G.cov[i] && t >= dep[i]) continue;
+        if (G.cov[i] && t >= dep[i]) return;
         G.cov[i] = 1; G.mat[i] = m; G.part[i] = pl.index[pr.part || pr.bone]; G.flat[i] = 1; dep[i] = t;
         G.tone[i] = pr.tone != null ? pr.tone : M.flat != null ? M.flat : 2;
+      };
+      let px0 = null, py0 = null;
+      for (let k = 0; k <= n; k++) {
+        const f = k / n, x = Math.floor(a[0] + (b[0] - a[0]) * f), y = Math.floor(a[1] + (b[1] - a[1]) * f), t = a[2] + (b[2] - a[2]) * f;
+        // conn4: a diagonal step gets a corner pixel (a hand-drawn staircase, no pixel touching its run only by a corner)
+        if (pr.conn4 && px0 != null && x !== px0 && y !== py0) plot(Math.abs(b[1] - a[1]) > Math.abs(b[0] - a[0]) ? px0 : x, Math.abs(b[1] - a[1]) > Math.abs(b[0] - a[0]) ? y : py0, t);
+        plot(x, y, t); px0 = x; py0 = y;
       }
     }
     // stamps: surface-pinned pixels, hidden when the point faces away or sits behind another volume of this layer
@@ -327,12 +342,25 @@ const FORGE = (function () {
       const g = list[b].g; M[i] = b * 256 + g.mat[i]; K[i] = list[b].keys[g.part[i]]; T[i] = g.tone[i]; F[i] = g.flat[i]; KP[i] = g.keep[i]; Z[i] = bz;
     }
     const at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? -1 : y * w + x;
-    // dark line on the far side of a depth jump between two parts (an arm in front of the torso reads as separate)
+    const px = opt.pixel;
+    // pixel pass 1 (opt-in, model.pixel): 1 px spurs off the silhouette go (a pixel with at most one covered 4-neighbour)
+    if (px) for (let pass = 0; pass < 2; pass++) {
+      const kill = [];
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const i = y * w + x; if (M[i] < 0 || F[i] || KP[i]) continue;
+        let n = 0; for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) n++; }
+        if (n <= 1) kill.push(i);
+      }
+      for (const i of kill) M[i] = -1;
+    }
+    // dark line on the far side of a depth jump between two parts (an arm in front of the torso reads as separate);
+    // with innerColor it is drawn in that colour (the reference's navy seams), else in the part's own shadow tone
+    const SEAM = new Uint8Array(N);
     if (opt.jumpQ) {
       const t0 = T.slice();
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
         const i = y * w + x; if (M[i] < 0 || F[i]) continue;
-        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0 && K[j] !== K[i] && Z[j] > Z[i] + opt.jumpQ) { t0[i] = 0; break; } }
+        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0 && K[j] !== K[i] && Z[j] > Z[i] + opt.jumpQ) { if (opt.innerColor) SEAM[i] = 1; else t0[i] = 0; break; } }
       }
       T.set(t0);
     }
@@ -342,7 +370,7 @@ const FORGE = (function () {
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
         const i = y * w + x; if (M[i] < 0 || F[i] || KP[i]) continue;
         const nb = []; for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) nb.push(j); }
-        if (nb.length < 3 || nb.some(j => M[j] === M[i])) continue;
+        if (nb.length < (px ? 2 : 3) || nb.some(j => M[j] === M[i])) continue;
         const cand = nb.filter(j => !F[j]); if (!cand.length) continue;
         const c = {}; cand.forEach(j => { c[M[j]] = (c[M[j]] || 0) + 1; });
         const best = cand.reduce((a, j) => c[M[j]] > c[M[a]] ? j : a, cand[0]);
@@ -351,28 +379,94 @@ const FORGE = (function () {
       M.set(m0); K.set(k0); T.set(t0);
     }
     // orphan cleanup: a lone tone with no same-tone neighbour inside its material takes the commonest neighbour tone
-    for (let pass = 0; pass < 2; pass++) {
-      const t0 = T.slice();
+    // (2 passes; the pixel pass iterates to a fixed point and also takes edge pixels with a single same-material neighbour)
+    for (let pass = 0; pass < (px ? 8 : 2); pass++) {
+      const t0 = T.slice(); let changed = 0;
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (M[i] < 0 || F[i]) continue;
+        const i = y * w + x; if (M[i] < 0 || F[i] || SEAM[i]) continue;
         const nb = []; let same = 0;
-        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] === M[i] && !F[j]) { nb.push(T[j]); if (T[j] === T[i]) same++; } }
-        if (nb.length >= 2 && !same) { const c = [0, 0, 0, 0, 0, 0, 0, 0]; nb.forEach(v => c[v]++); t0[i] = c.indexOf(Math.max(...c)); }
+        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] === M[i] && !F[j] && !SEAM[j]) { nb.push(T[j]); if (T[j] === T[i]) same++; } }
+        if (nb.length >= (px ? 1 : 2) && !same) { const c = [0, 0, 0, 0, 0, 0, 0, 0]; nb.forEach(v => c[v]++); t0[i] = c.indexOf(Math.max(...c)); changed++; }
       }
-      T.set(t0);
+      T.set(t0); if (!changed) break;
     }
-    const rgba = new Uint8ClampedArray(N * 4);
-    for (let i = 0; i < N; i++) if (M[i] >= 0) { const c = list[M[i] >> 8].pal[M[i] & 255][T[i]]; rgba[i * 4] = c[0]; rgba[i * 4 + 1] = c[1]; rgba[i * 4 + 2] = c[2]; rgba[i * 4 + 3] = 255; }
+    const rgba = new Uint8ClampedArray(N * 4), seamC = opt.innerColor;
+    for (let i = 0; i < N; i++) if (M[i] >= 0) { const c = SEAM[i] ? seamC : list[M[i] >> 8].pal[M[i] & 255][T[i]]; rgba[i * 4] = c[0]; rgba[i * 4 + 1] = c[1]; rgba[i * 4 + 2] = c[2]; rgba[i * 4 + 3] = 255; }
+    const SM = new Uint8Array(N);
+    // weapon smears: flat polygons, no outline; behind the body unless the tip is in front of it (before the cluster pass,
+    // so a body pixel the smear cuts off is cleaned up too)
+    for (const sm of opt.smears || []) {
+      const got = new Uint8Array(N);
+      fillPoly(sm.poly, w, h, i => { if (!rgba[i * 4 + 3] || (sm.over && !F[i])) got[i] = 1; });
+      // a smear pixel with no smear 4-neighbour (a sliver at the thin end) is dropped, to a fixed point
+      for (let changed = 1; changed;) {
+        changed = 0;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+          const i = y * w + x; if (!got[i]) continue;
+          let n = 0; for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && got[j]) n++; }
+          if (!n) { got[i] = 0; changed = 1; }
+        }
+      }
+      for (let i = 0; i < N; i++) if (got[i]) { SM[i] = 1; rgba[i * 4] = sm.rgb[0]; rgba[i * 4 + 1] = sm.rgb[1]; rgba[i * 4 + 2] = sm.rgb[2]; rgba[i * 4 + 3] = 255; }
+    }
+    // pixel pass 2: clusters >= 2 px by final colour (what the eye and the lint see): a pixel with no 4-neighbour of its own
+    // colour takes the commonest neighbouring colour; flat pixels too (a blade pixel cut off by the arm, half an eye)
+    if (px) for (let pass = 0; pass < 6; pass++) {             // in place, scan order: a lone pair cannot swap forever
+      const out = rgba; let changed = 0;
+      const key = i => (rgba[i * 4] << 16) | (rgba[i * 4 + 1] << 8) | rgba[i * 4 + 2];
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const i = y * w + x; if ((M[i] < 0 && !SM[i]) || KP[i]) continue;
+        const k = key(i), cnt = new Map(); let same = false;
+        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j < 0 || (M[j] < 0 && !SM[j])) continue; const kj = key(j); if (kj === k) { same = true; break; } cnt.set(kj, (cnt.get(kj) || 0) + 1); }
+        if (same || !cnt.size) continue;
+        let bk = -1, bn = 0; for (const [kk, n] of cnt) if (n > bn || (n === bn && kk < bk)) { bk = kk; bn = n; }
+        out[i * 4] = bk >> 16; out[i * 4 + 1] = (bk >> 8) & 255; out[i * 4 + 2] = bk & 255; changed++;
+      }
+      if (!changed) break;
+    }
     if (opt.outline) {
       const c = opt.outline;
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (M[i] >= 0) continue;
+        const i = y * w + x; if (M[i] >= 0 || SM[i]) continue;
         for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) { rgba[i * 4] = c[0]; rgba[i * 4 + 1] = c[1]; rgba[i * 4 + 2] = c[2]; rgba[i * 4 + 3] = 255; break; } }
       }
     }
     return rgba;
   }
-  const resolveOpts = m => ({ outline: m.outline ? hexRgb(m.outline) : null, jumpQ: Math.round((m.innerLine != null ? m.innerLine : 2.5) * QS) });
+  function fillPoly(P, w, h, set) {                             // even-odd scanline fill, sampled at pixel centres
+    for (let y = 0; y < h; y++) {
+      const yc = y + 0.5, xs = [];
+      for (let k = 0; k < P.length; k++) {
+        const a = P[k], b = P[(k + 1) % P.length];
+        if ((a[1] <= yc) !== (b[1] <= yc)) xs.push(a[0] + (yc - a[1]) / (b[1] - a[1]) * (b[0] - a[0]));
+      }
+      xs.sort((p, q) => p - q);
+      for (let k = 0; k + 1 < xs.length; k += 2) for (let x = Math.max(0, Math.ceil(xs[k] - 0.5)); x <= Math.min(w - 1, Math.floor(xs[k + 1] - 0.5)); x++) set(y * w + x);
+    }
+  }
+  // the smear of one frame: the band the blade sweeps from frame f-1 to f. The hand -> tip vector is slerped in camera
+  // space (x, y on screen, d = depth) from one frame to the next, so the arc follows the 3D swing (over the shoulder, past
+  // the face) instead of a guess on screen; straight segments every 30 deg keep it angular; the band widens from the
+  // trailing end to the leading edge. s0 / s1 = the two frames' sockets, width = 0..1 of the blade
+  function smearPoly(s0, s1, hand, tip, width) {
+    const P = s => [s.x, s.y, s.d || 0], h0 = P(s0[hand]), h1 = P(s1[hand]), v0 = sub(P(s0[tip]), h0), v1 = sub(P(s1[tip]), h1);
+    const r0 = len(v0), r1 = len(v1), n0 = norm(v0), n1 = norm(v1), th = Math.acos(clamp(dot(n0, n1), -1, 1));
+    const n = Math.max(2, Math.ceil(th / (Math.PI / 6))), outer = [], inner = [];
+    for (let k = 0; k <= n; k++) {
+      const f = k / n, piv = add(mul(h0, 1 - f), mul(h1, f));
+      const dir = th > 1e-3 && th < Math.PI - 1e-3 ? norm(add(mul(n0, Math.sin((1 - f) * th)), mul(n1, Math.sin(f * th)))) : norm(add(mul(n0, 1 - f), mul(n1, f)));
+      const r = r0 + (r1 - r0) * f + 0.6, ri = r * (1 - width * (0.3 + 0.7 * f));
+      outer.push([piv[0] + dir[0] * r, piv[1] + dir[1] * r]); inner.push([piv[0] + dir[0] * ri, piv[1] + dir[1] * ri]);
+    }
+    return outer.concat(inner.reverse());
+  }
+  // smears of one frame from the sockets of frames f-1 and f (the same numbers in render() and compose(), so both match)
+  function smearsOf(table, f, prev, cur, hex) {
+    if (!table || !table[f] || !prev || !cur || !hex || !prev.tip || !cur.tip || !cur.handR) return null;
+    return [{ poly: smearPoly(prev, cur, 'handR', 'tip', table[f]), rgb: hexRgb(hex), over: cur.tip.front }];
+  }
+  const resolveOpts = m => ({ outline: m.outline ? hexRgb(m.outline) : null, jumpQ: Math.round((m.innerLine != null ? m.innerLine : 2.5) * QS),
+    innerColor: m.innerColor ? hexRgb(m.innerColor) : null, pixel: m.pixel || null });
   function interner() { const m = new Map(); return s => { if (!m.has(s)) m.set(s, m.size); return m.get(s); }; }
 
   // ---- render one frame of a loadout ----------------------------------------------------------------------------
@@ -383,7 +477,7 @@ const FORGE = (function () {
     for (const k in all) {
       const s = all[k]; if (!W[s.bone]) continue;
       const [x, y, t] = proj(worldPoint(W, s.bone, s.at));
-      out[k] = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, front: t < rootT };
+      out[k] = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, d: Math.round((t - rootT) * 10) / 10, front: t < rootT };
     }
     return out;
   }
@@ -393,8 +487,14 @@ const FORGE = (function () {
     const W = pose(model, opt.yaw != null ? opt.yaw * Math.PI / 180 : yawOf(model, opt.dir), anim, f, ps.filter(p => p.piece.pose).map(p => p.piece.pose));
     const rootT = dot(W[model.bones[0].name].t, cam.D) + FAR, key = interner();
     const list = stack.map(a => ({ g: raster(a.layer, W, cam, anim, f, rootT), pal: palOf(a.layer, a.over), keys: partList(a.layer).names.map(n => key(a.group + ':' + n)) }));
-    const sockets = frameSockets(model, W, cam, Object.assign({}, ...ps.map(p => p.piece.sockets || {})));
-    return { w: cam.w, h: cam.h, rgba: resolve(list, cam.w, cam.h, resolveOpts(model)), sockets, anim };
+    const extraS = Object.assign({}, ...ps.map(p => p.piece.sockets || {})), sockets = frameSockets(model, W, cam, extraS);
+    const ro = resolveOpts(model), A = model.anims[anim], wp = ps.find(p => p.piece.smear);
+    if (A.smear && A.smear[f] && wp && f > 0) {
+      const yaw = opt.yaw != null ? opt.yaw * Math.PI / 180 : yawOf(model, opt.dir);
+      const W0 = pose(model, yaw, anim, f - 1, ps.filter(p => p.piece.pose).map(p => p.piece.pose));
+      ro.smears = smearsOf(A.smear, f, frameSockets(model, W0, cam, extraS), sockets, wp.piece.smear);
+    }
+    return { w: cam.w, h: cam.h, rgba: resolve(list, cam.w, cam.h, ro), sockets, anim };
   }
 
   // ---- raw: the volumes before the pixel pass (one ray per pixel at `scale`, smooth light, no ramps, outline or cleanup)
@@ -470,12 +570,13 @@ const FORGE = (function () {
       id: piece ? piece.id : 'body', slot: piece ? piece.slot : 'body', family: (piece && piece.family) || null, tier: (piece && piece.tier) || null,
       class: (piece && piece.class) || null, hides: (piece && piece.hides) || [],
       layers: layers.map(L => ({ id: L.id, tag: L.tag || null, group: L.group || (piece ? piece.id : 'body'), mats: matTable(L).names, ramps: matTable(L).list.map(m => m.ramp), parts: partList(L).names })),
-      tiers: (piece && piece.tiers) || null, sockets,
+      tiers: (piece && piece.tiers) || null, smear: (piece && piece.smear) || null, sockets,
     };
     return { w: SW, h: SH, rgba, meta };
   }
   const bankInfo = model => ({ frame: model.frame, dirs: model.dirs.map(d => d[0]), layout: bakeLayout(model), anims: Object.keys(model.anims),
-    outline: model.outline || null, innerLine: model.innerLine != null ? model.innerLine : 2.5 });
+    outline: model.outline || null, innerLine: model.innerLine != null ? model.innerLine : 2.5, innerColor: model.innerColor || null, pixel: model.pixel || null,
+    smear: Object.fromEntries(Object.keys(model.anims).filter(a => model.anims[a].smear).map(a => [a, model.anims[a].smear])) });
   // bank = { model: bankInfo(model), sheets: { body: { w, rgba, meta }, <pieceId>: { w, rgba, meta } } }  (rgba decoded from PNG)
   function compose(bank, sel) {
     const info = bank.model, [w, h] = info.frame, r = info.dirs.indexOf(sel.dir), N = w * h;
@@ -502,7 +603,9 @@ const FORGE = (function () {
       const sh = bank.sheets[p.id], over = p.tier != null && sh.meta.tiers ? sh.meta.tiers[p.tier] : p.pal || null;
       sh.meta.layers.forEach((L, li) => take(sh, li, L, over));
     }
-    return { w, h, rgba: resolve(list, w, h, resolveOpts(info)), anim };
+    const ro = resolveOpts(info), f = sel.frame || 0, sm = ps.map(p => bank.sheets[p.id].meta).find(m => m.smear);
+    if (sm && info.smear && info.smear[anim] && f > 0) { const so = sm.sockets[sel.dir][anim]; ro.smears = smearsOf(info.smear[anim], f, so[f - 1], so[f], sm.smear); }
+    return { w, h, rgba: resolve(list, w, h, ro), anim };
   }
 
   return { render, raw, sheet, bake, bankInfo, compose, ramp, hexRgb, rgbHex };

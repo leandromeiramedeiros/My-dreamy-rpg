@@ -6,10 +6,9 @@
 //                                                 (any model with a models/<name>-gear.js works the same way, e.g. hero)
 // Prints the render time, each sheet's sha256 (run it twice: identical) and a lint line (colours, lone pixels). With a
 // bank it decodes the baked PNGs, stacks every built loadout at runtime (FORGE.compose) and checks each frame equals
-// the offline render byte for byte. No dependencies: a tiny PNG encoder / decoder (zlib).
+// the offline render byte for byte. No dependencies: png.js (a tiny PNG encoder / decoder on zlib).
 const fs = require('fs');
 const path = require('path');
-const zlib = require('zlib');
 const crypto = require('crypto');
 const FORGE = require('./forge.js');
 
@@ -19,32 +18,7 @@ const gearFile = path.join(__dirname, 'models', `${name}-gear.js`);
 const gear = fs.existsSync(gearFile) ? require(gearFile) : null;
 const OUT = path.join(__dirname, 'out');
 
-// ------------------------------------------------------------------ PNG
-const crcTable = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
-function crc32(buf) { let c = 0xffffffff; for (let i = 0; i < buf.length; i++) c = crcTable[(c ^ buf[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
-function chunk(type, data) {
-  const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
-  const td = Buffer.concat([Buffer.from(type, 'ascii'), data]);
-  const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td));
-  return Buffer.concat([len, td, crc]);
-}
-function png(w, h, d) {
-  const raw = Buffer.alloc((w * 4 + 1) * h);
-  for (let y = 0; y < h; y++) { raw[y * (w * 4 + 1)] = 0; Buffer.from(d.buffer, d.byteOffset + y * w * 4, w * 4).copy(raw, y * (w * 4 + 1) + 1); }
-  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 6;
-  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
-}
-function unpng(buf) {                                           // decodes this encoder's output (RGBA8, filter 0)
-  let o = 8, w = 0, h = 0; const idat = [];
-  while (o < buf.length) {
-    const n = buf.readUInt32BE(o), type = buf.toString('ascii', o + 4, o + 8), data = buf.subarray(o + 8, o + 8 + n);
-    if (type === 'IHDR') { w = data.readUInt32BE(0); h = data.readUInt32BE(4); } else if (type === 'IDAT') idat.push(data);
-    o += 12 + n;
-  }
-  const raw = zlib.inflateSync(Buffer.concat(idat)), d = new Uint8ClampedArray(w * h * 4);
-  for (let y = 0; y < h; y++) { if (raw[y * (w * 4 + 1)] !== 0) throw new Error('unsupported PNG filter'); d.set(raw.subarray(y * (w * 4 + 1) + 1, (y + 1) * (w * 4 + 1)), y * w * 4); }
-  return { w, h, rgba: d };
-}
+const { png, unpng } = require('./png.js');
 
 // ------------------------------------------------------------------ one sheet + its review board
 function lint(sh) {                                              // distinct colours, lone pixels (outline excluded)
@@ -80,13 +54,20 @@ function board(sh) {                                             // the sheet on
   const y1 = BGS.length * (sh.h * SC + GAP); fill(0, y1, bw, sh.h + GAP, BGS[1]); blit(0, y1, 1, BGS[1]);
   return png(bw, bh, out);
 }
+function tones(pieces) {                                         // the most tones any material can show (ramp + glint)
+  const ramps = [];
+  const add = mats => { for (const k in mats || {}) { const m = mats[k], r = typeof m === 'string' ? FORGE.ramp(m) : Array.isArray(m) ? m : typeof m.ramp === 'string' ? FORGE.ramp(m.ramp) : m.ramp; ramps.push(new Set(m.flat != null ? [r[m.flat]] : r).size); } };
+  for (const L of model.layers || [model]) add(L.mats);
+  for (const p of pieces || []) for (const L of (p.piece || p).layers) add(L.mats);
+  return Math.max(...ramps);
+}
 function buildSheet(tag, pieces) {
   const t0 = process.hrtime.bigint(), sh = FORGE.sheet(model, { pieces }), ms = Number(process.hrtime.bigint() - t0) / 1e6;
   const sheetPng = png(sh.w, sh.h, sh.rgba), sha = crypto.createHash('sha256').update(sheetPng).digest('hex'), L = lint(sh);
   fs.writeFileSync(path.join(OUT, `${tag}.png`), sheetPng);
   fs.writeFileSync(path.join(OUT, `${tag}.board.png`), board(sh));
   fs.writeFileSync(path.join(OUT, `${tag}.json`), JSON.stringify({ name: tag, frame: sh.frame, dirs: model.dirs.map(d => d[0]), layout: sh.layout, pieces: (pieces || []).map(p => p.piece ? Object.assign({ id: p.piece.id }, p.tier != null ? { tier: p.tier } : {}, p.pal ? { pal: p.pal } : {}) : p.id), sockets: sh.sockets, sha256: sha }) + '\n');
-  console.log(`${tag}: ${sh.rows} dirs x ${sh.cols} frames (${sh.frame.join('x')}) in ${ms.toFixed(0)} ms | ${L.colours} colours, ${L.orphans} lone pixels | sha256 ${sha.slice(0, 16)}`);
+  console.log(`${tag}: ${sh.rows} dirs x ${sh.cols} frames (${sh.frame.join('x')}) in ${ms.toFixed(0)} ms | ${L.colours} colours, ${L.orphans} lone pixels, <= ${tones(pieces)} tones per material | sha256 ${sha.slice(0, 16)}`);
   return sh;
 }
 
