@@ -1783,7 +1783,7 @@ Measured on 6 fixed camera shots in each PR:
   shares that pipeline.
 * **Name and placement:** the rule id is `echo`. The story expert names it at placement (no reused character names). It
   drops late (Act III+) as a reward for a built character.
-* **Unique budget:** a **19th unique (client decision)**, on a weapon legendary that works with every weapon class. It is the one deliberate exception to the §19.5 cap of 18; the cap stays at 19 from here on.
+* **Unique budget:** a **19th unique (client decision)**, on a weapon legendary that works with every weapon class. It is the one deliberate exception to the §19.5 cap of 18; the cap is 20 since §34 (client decision 2026-10-22).
 
 ## 31. Lumina study: adoption decisions (client + expert game director, 2026-10-20)
 Source: gitlab.com/stubborn-hug/lumina. Minutes: docs/meetings/2026-10-20-lumina.md. Client decision: the author confirmed
@@ -1992,7 +1992,7 @@ on wet tiles. Ice tiles and walls use the frost ramp with ≤ 1 glint light per 
 * **Placement (Loadout v3):** a Legendary weapon unique, rule `stillhour`. Like Twice-Told (§30), it rolls on the finder's
   own weapon variant. The rule **replaces the item's spell with Hush**: Q in the HAND slot, E in the OFFHAND slot. Action
   and ultimate are unchanged. Drops once, on a boss-class kill at L13+ (Act II on). It never drops on the same kill as
-  Twice-Told. It is the **20th unique** (the §30 cap of 19 rises to 20; client request).
+  Twice-Told. It is the **20th unique** (the unique cap is now 20; client decision 2026-10-22).
 * **Activation:** a toggle. Start cost 30 MP; drain **60 MP per real second** (base pool 260 ≈ 3.8 s real ≈ 15 s of world
   time). It ends on a second press, at 0 MP, on hero death, on a boss-death slow-mo, or on a map change. Cooldown 3 s
   after it ends. While it is active: hits build **no MP**, ult charge builds at ×0.5, MP regen stops.
