@@ -7,44 +7,18 @@
 //   T4 Paladin  winged helm + forehead gem, spiked pauldrons, chest sapphire + filigree, kite shield, Aurora Edge, fur collar
 //   T5 Radiant  pearl plate: closed crown helm with a glowing visor, fanned pauldrons, sun core + runes, sun shield, Dawn Eternal,
 //               deep-blue sun cape
+//   T6 Mythic   (.t6) the T5 shapes in night-forged steel plus ONE unique part per line and one emissive hue: the Warden suit is
+//               Shardheart Plate (frost crystals: shard crown + wings, crystal heart, pauldron and heel shards, crystal mantle),
+//               the sword Morrowbane (holy: a sun halo behind the guard), the Heater wears gold crest wings. The glow is a flat
+//               1 px run of at most 4 px per frame (tools/forge/tiers.js counts it); gems are ordinary shaded ramps.
 // Family ids follow js/data.js (knighthelm / warden / knightgreaves; the weapon is the sword family).
-const SIDES = [['R', -1], ['L', 1]];
-const both = f => SIDES.flatMap(([s, k]) => f(s, k));
-const TIERS = [1, 2, 3, 4, 5];
-
-// ---- palettes: metals carry a 5th glint colour (spec) ----------------------------------------------------------------
-const metal = ramp => ({ ramp, spec: 0.965 });
-const METAL = [
-  ['#25252f', '#44444f', '#676774', '#9494a2', '#c8c8d4'],    // T1 iron
-  ['#1c2140', '#384270', '#626ea0', '#a6b0d4', '#f4f8ff'],    // T2 steel
-  ['#1e2440', '#3a4672', '#6878ae', '#b0bfe8', '#ffffff'],    // T3 polished steel
-  ['#2a2842', '#535478', '#8b8fb8', '#cfd4ec', '#ffffff'],    // T4 silver
-  ['#3a3458', '#6e6a96', '#b4b4d8', '#ecebfa', '#ffffff'],    // T5 pearl
-];
-const GOLD = metal(['#5a3608', '#9a6414', '#d8a030', '#f6d870', '#fffbe0']);
-const MAIL = ['#1c1f30', '#33384f', '#4e5572', '#737b9c'];
-const LEATHER = ['#3a2216', '#5e3a24', '#85573a', '#b07e56'];
-const STRAP = { ramp: ['#4a2c1a', '#7a4a2c', '#a8703e', '#d09a5e'], flat: 2 };   // tan leather in one tone: a clean 2 px stroke
-const WOOD = ['#3a2414', '#5e3c22', '#8a5c34', '#b88654'];
-const QUILT = ['#4e3a2c', '#7a5e44', '#a8885e', '#d4b88a'], STITCH = ['#3a2a20', '#4e3b2c', '#5e4936', '#70583f'];
-const CLOTH = [['#3a2418', '#5e3c26', '#85583a', '#b08058'], ['#141f4e', '#22367a', '#3656b0', '#7896e8'],
-  ['#4a0e1e', '#7e1a30', '#b8324a', '#e86a80'], ['#10305a', '#1c4c8a', '#2e74c8', '#78b4f0'], ['#0e1440', '#1c2a78', '#2e46b8', '#6a8af0']];
-const FEATHER = ['#6a6a8a', '#a8b0d0', '#e4e8f8', '#ffffff'], FUR = ['#8a8aa6', '#c0c0d8', '#ececf8', '#ffffff'];
-const SAPPHIRE = { ramp: ['#0c2470', '#1e4ccc', '#4a8cff', '#b8dcff', '#ffffff'], lift: 1, spec: 0.9 };
-const RUBY = { ramp: ['#4a0614', '#9a1428', '#e0384c', '#ff98a8', '#ffffff'], lift: 1, spec: 0.9 };
-const CORE = { ramp: ['#bff4ff', '#bff4ff', '#bff4ff', '#bff4ff'], flat: 2 };           // radiant glow (cyan-white)
-const VISOR = { ramp: ['#bff4ff', '#bff4ff', '#bff4ff', '#bff4ff'], flat: 2 };          // glowing eye slit
-const RUST = ['#3a2a26', '#5e4a40', '#8a7262', '#b09a88'];
-const CROSS = [[0, 0, '#e8b830'], [-1, 0, '#e8b830'], [1, 0, '#e8b830'], [0, -1, '#fff0a0'], [0, 1, '#c08a20'], [0, 2, '#c08a20']];
-const SUN = [[0, 0, '#fff4c0'], [-1, 0, '#e8b830'], [1, 0, '#e8b830'], [0, -1, '#e8b830'], [0, 1, '#e8b830'], [-2, 0, '#c08a20'], [2, 0, '#c08a20'], [0, -2, '#c08a20'], [0, 2, '#c08a20']];
-// rotate v by Euler [rx, ry, rz] the way forge turns a prim (Ry * Rx * Rz): used to fan feathers out of one root
-const rotv = (v, [rx, ry, rz]) => { let [x, y, z] = v; [x, y] = [x * Math.cos(rz) - y * Math.sin(rz), x * Math.sin(rz) + y * Math.cos(rz)];
-  [y, z] = [y * Math.cos(rx) - z * Math.sin(rx), y * Math.sin(rx) + z * Math.cos(rx)]; [x, z] = [x * Math.cos(ry) + z * Math.sin(ry), -x * Math.sin(ry) + z * Math.cos(ry)]; return [x, y, z]; };
-const piece = (family, slot, t, layer, extra) => Object.assign({ id: `${family}.t${t}`, family, tier: t, slot, layers: [Object.assign({ id: `${family}.t${t}` }, layer)] }, extra || {});
+const { SIDES, both, TIERS, metal, METAL, GOLD, MAIL, LEATHER, STRAP, WOOD, QUILT, STITCH, CLOTH, FEATHER, FUR, SAPPHIRE, RUBY, CORE, VISOR, RUST, CROSS, SUN,
+  GLOW, flatOf, FROSTG, HOLYG, rotv, piece, notAttack, r3, ring } = require('./chibi-palette.js');
 
 // ---- head ------------------------------------------------------------------------------------------------------------
 function knighthelm(t) {
-  const P = [], mats = { metal: metal(METAL[t - 1]), gold: GOLD, plume: ['#8a2238', '#b8324a', '#e0475e', '#ff8a9a'], feather: FEATHER, gem: SAPPHIRE, visor: VISOR, slot: ['#0c0a18', '#141022', '#1c1830', '#241f3c'] };
+  const DS = 0.95;                                              // T5/T6 dome scale (size cap)
+  const M = t === 6, P = [], mats = { metal: metal(METAL[t - 1]), gold: GOLD, plume: ['#8a2238', '#b8324a', '#e0475e', '#ff8a9a'], feather: M ? FROSTG : FEATHER, gem: SAPPHIRE, visor: M ? flatOf(GLOW.frost) : VISOR, slot: flatOf('#141022'), shard: FROSTG };
   if (t === 1) {                                                // kettle hat: a crown and a wide brim, the fringe and side locks show
     P.push({ bone: 'head', mat: 'metal', part: 'helm', shape: 'ell', c: [0, 9.0, -0.1], r: [6.6, 4.2, 6.1], clip: [0, -1, 0, -7.6] },
       { bone: 'head', mat: 'metal', part: 'brim', shape: 'disc', c: [0, 8.0, 0.1], r: [8.4, 0.55, 7.8] });
@@ -63,19 +37,20 @@ function knighthelm(t) {
     else P.push({ bone: 'head', mat: 'gem', part: 'gem', shape: 'ell', c: [0, 8.7, 6.1], r: [1.0, 1.0, 0.55] },
       { bone: 'head', mat: 'gold', part: 'trim', shape: 'ell', c: [0, 8.7, 5.9], r: [1.45, 1.4, 0.45] });
   } else {                                                      // radiant: closed helm, visor plate with a glowing T slit, crown
-    P.push({ bone: 'head', mat: 'metal', part: 'helm', shape: 'ell', c: [0, 6.7, -0.2], r: [7.05, 6.7, 6.6], clip: [0, -1, 0, -0.2] },
+    P.push({ bone: 'head', mat: 'metal', part: 'helm', shape: 'ell', c: [0, 6.7, -0.2], r: [7.05 * DS, 6.7 * DS, 6.6 * DS], clip: [0, -1, 0, -0.2] },
       { bone: 'head', mat: 'metal', part: 'visor', shape: 'ell', c: [0, 4.6, 4.2], r: [5.6, 3.6, 2.8], clip: [0, -1, 0, -1.0] },
       { bone: 'head', mat: 'slot', part: 'visor', shape: 'ell', c: [0, 5.7, 4.3], r: [3.9, 0.85, 2.75] },
-      ...[1, -1].map(k => ({ bone: 'head', mat: 'visor', part: 'visor', shape: 'ell', c: [1.7 * k, 5.7, 6.75], r: [0.8, 0.55, 0.55] })),
-      { bone: 'head', mat: 'gold', part: 'crown', shape: 'disc', c: [0, 10.6, -0.2], r: [6.3, 0.7, 5.9] },
-      ...[-50, -25, 0, 25, 50].map(d => { const a = d * Math.PI / 180, sn = Math.sin(a), cs = Math.cos(a);
-        return { bone: 'head', mat: 'gold', part: 'crown', shape: 'cap', a: [5.6 * sn, 10.8, 5.3 * cs - 0.2], b: [7.0 * sn, 14.0, 6.6 * cs - 0.6], ra: 0.9, rb: 0.25 }; }));
+      ...[1, -1].map(k => ({ bone: 'head', mat: 'visor', part: 'visor', shape: 'ell', c: [1.7 * k, 5.7, M ? 6.6 : 6.75], r: M ? [0.34, 0.3, 0.45] : [0.8, 0.55, 0.55] })),
+      // Mythic: the crown is three tall frost shards, tallest at the brow; before that, three gold points
+      ...(t === 6 ? [[-42, 3.6], [0, 6.4], [42, 3.6]] : [[-42, 3.0], [0, 3.6], [42, 3.0]]).map(([d, h]) => { const a = d * Math.PI / 180, sn = Math.sin(a), cs = Math.cos(a);
+        return { bone: 'head', mat: t === 6 ? 'shard' : 'gold', part: 'crown', shape: 'cap', a: [5.6 * sn, 10.8, 5.3 * cs - 0.2], b: [(5.6 + h * 0.2) * sn, 10.8 + h, (5.3 + h * 0.2) * cs - 0.2 - h * 0.1], ra: t === 6 ? 0.85 : 0.9, rb: 0.2 }; }));
   }
-  if (t >= 4) {                                                 // wings: four feathers fanned out of a root at each temple
-    const g = t === 5 ? 1.35 : 1.1;
-    P.push(...both((s, k) => [[3.6, 0.35], [3.2, 0.75], [2.7, 1.1], [2.2, 1.45]].map(([L, a], i) => {
+  if (t >= 4) {                                                 // wings: feathers (frost shards at Mythic) fanned out of a root at each temple, one part per side
+    const g = t === 6 ? 1.1 : t === 5 ? 1.25 : t === 4 ? 1.1 : 1.1, WZ = 0.8;
+    const FAN = t === 4 ? [[3.6, 0.3], [2.75, 1.05]] : t === 5 ? [[3.6, 0.3], [2.8, 1.05]] : [[3.7, 0.2], [2.9, 0.95]];
+    P.push(...both((s, k) => FAN.map(([L, a]) => {
       const rt = [-0.6, 0, -a * k], half = rotv([0, L * g * 0.95, 0], rt);
-      return { bone: 'head', mat: 'feather', part: `wing${s}${i}`, shape: 'ell', c: [6.1 * k + half[0], 8.0 + half[1], -1.4 + half[2]], r: [0.5, L * g, 1.15], rot: rt };
+      return { bone: 'head', mat: 'feather', part: `wing${s}`, shape: 'ell', c: [6.1 * k + half[0], 8.0 + half[1], -1.4 + half[2]], r: [0.5, L * g, WZ], rot: rt };
     })));
   }
   return piece('knighthelm', 'head', t, { bias: 0.3, mats, prims: P }, { hides: t === 1 ? ['hair'] : ['hair', 'bangs', 'hairSide'] });
@@ -83,7 +58,8 @@ function knighthelm(t) {
 
 // ---- chest -----------------------------------------------------------------------------------------------------------
 function warden(t) {
-  const mats = { metal: metal(METAL[t - 1]), mail: MAIL, leather: LEATHER, strap: STRAP, gold: GOLD, cloth: CLOTH[t - 1], quilt: QUILT, stitch: STITCH, gem: SAPPHIRE, core: CORE };
+  const M = t === 6;                                            // Mythic Shardheart Plate: frost crystal replaces the gold and the sapphire
+  const mats = { metal: metal(METAL[t - 1]), mail: MAIL, leather: LEATHER, strap: STRAP, gold: M ? FROSTG : GOLD, cloth: CLOTH[t - 1], quilt: QUILT, stitch: STITCH, gem: M ? FROSTG : t === 4 ? { ramp: [SAPPHIRE.ramp[0], SAPPHIRE.ramp[1], SAPPHIRE.ramp[2], CLOTH[3][3]], lift: 1 } : SAPPHIRE, core: CORE, glow: flatOf(GLOW.frost) };
   const P = [], stamps = [];
   if (t === 1) {                                                // quilted gambeson with padded shoulder rolls
     P.push({ bone: 'chest', mat: 'quilt', part: 'coat', shape: 'ell', c: [0, 0.8, 0.1], r: [4.55, 4.95, 3.5], clip: [0, -1, 0, 3.9] },
@@ -135,30 +111,35 @@ function warden(t) {
     if (t === 3) stamps.push({ bone: 'spine', at: [0, 0.6, 4.25], n: [0, 0, 1], facing: 0.3, on: 'cloth', px: CROSS });
   }
   if (t >= 4) {                                                 // spikes, chest gem in a gold setting, filigree, tabard trim
-    P.push({ bone: 'chest', mat: t === 5 ? 'core' : 'gem', part: 'plate', shape: 'ell', c: [0, 1.5, 3.85], r: [1.0, 1.05, 0.6] },
+    P.push({ bone: 'chest', mat: t === 5 ? 'core' : 'gem', part: 'plate', shape: 'ell', c: [0, 1.5, 3.85], r: M ? [1.25, 1.5, 0.8] : [1.0, 1.05, 0.6] },
       { bone: 'chest', mat: 'gold', part: 'trim', shape: 'ell', c: [0, 1.5, 3.62], r: [1.5, 1.55, 0.5] },
       ...both((s, k) => [
         { bone: 'chest', mat: 'gold', part: 'trim', shape: 'ell', c: [2.1 * k, 2.3, 3.15], r: [0.34, 1.7, 0.45], rot: [0, 0, 0.75 * k] },
         { bone: 'spine', mat: 'gold', part: 'tabard', shape: 'box', c: [1.95 * k, 0.1, 3.97], h: [0.32, 2.4, 0.36], round: 0.2 },
         { bone: 'upper' + s, mat: 'gold', part: 'pauldron' + s, shape: 'cap', a: [0, 1.6, 0], b: [1.3 * k, 4.0, -0.5], ra: 0.75, rb: 0.15 },
-        { bone: 'upper' + s, mat: 'gold', part: 'pauldron' + s, shape: 'cap', a: [0, 1.3, -1.0], b: [0.9 * k, 3.2, -2.0], ra: 0.6, rb: 0.12 },
+        ...(t >= 5 ? [{ bone: 'upper' + s, mat: 'gold', part: 'pauldron' + s, shape: 'cap', a: [0, 1.3, -1.0], b: [0.9 * k, 3.2, -2.0], ra: 0.6, rb: 0.12 }] : []),
       ]));
   }
-  if (t === 5) {                                                // fanned pauldron spikes, sun rays, glowing runes
+  if (t >= 5) {                                                // fanned pauldron spikes, sun rays, glowing runes (Mythic: frost shards, crystal heart)
     P.push(...both((s, k) => [
       { bone: 'upper' + s, mat: 'gold', part: 'pauldron' + s, shape: 'cap', a: [0.8 * k, 1.2, -0.4], b: [2.6 * k, 3.4, -0.9], ra: 0.7, rb: 0.15 },
       { bone: 'upper' + s, mat: 'gold', part: 'pauldron' + s, shape: 'cap', a: [1.4 * k, 0.6, -0.6], b: [3.2 * k, 1.8, -1.2], ra: 0.6, rb: 0.12 },
-      { bone: 'spine', mat: 'core', part: 'fauld', shape: 'ell', c: [2.4 * k, 1.0, 3.75], r: [0.3, 0.9, 0.4] },
+      { bone: 'spine', mat: M ? 'gem' : 'core', part: 'fauld', shape: 'ell', c: [2.4 * k, 1.0, 3.75], r: [0.3, 0.9, 0.4] },
     ]),
     );
-    stamps.push({ bone: 'chest', at: [0, 1.5, 4.3], n: [0, 0, 1], facing: 0.3, on: 'core', px: SUN.concat([[-3, 0, '#c08a20'], [3, 0, '#c08a20'], [-2, -2, '#e8b830'], [2, -2, '#e8b830'], [-2, 2, '#e8b830'], [2, 2, '#e8b830']]) });
+    if (M) {                                                    // crystal heart: shards radiate from the chest gem
+      for (const [dx, dy, L] of [[0, 1, 3.4], [-0.8, 0.6, 3.0], [0.8, 0.6, 3.0], [-1, -0.2, 2.6], [1, -0.2, 2.6]]) { const n = Math.hypot(dx, dy);
+        P.push({ bone: 'chest', mat: 'gem', part: 'plate', shape: 'cap', a: [dx / n * 1.0, 1.5 + dy / n * 1.0, 3.9], b: [dx / n * L, 1.5 + dy / n * L, 4.5], ra: 0.7, rb: 0.12 }); }
+      stamps.push({ bone: 'chest', at: [0, 1.5, 4.5], n: [0, 0, 1], facing: 0.3, on: 'gem', px: [[-1, 0, 'glow'], [0, 0, 'glow'], [1, 0, 'glow']] });
+    } else stamps.push({ bone: 'chest', at: [0, 1.5, 4.3], n: [0, 0, 1], facing: 0.3, on: 'core', px: SUN.concat([[-3, 0, '#c08a20'], [3, 0, '#c08a20'], [-2, -2, '#e8b830'], [2, -2, '#e8b830'], [-2, 2, '#e8b830'], [2, 2, '#e8b830']]) });
   }
   return piece('warden', 'chest', t, { bias: 0.7, mats, prims: P, stamps });
 }
 
 // ---- boots -----------------------------------------------------------------------------------------------------------
 function knightgreaves(t) {
-  const mats = { metal: metal(METAL[t - 1]), leather: LEATHER, gold: GOLD, gem: SAPPHIRE, core: CORE, feather: GOLD };
+  const M = t === 6;                                            // Mythic: frost shard spurs and fins
+  const mats = { metal: metal(METAL[t - 1]), leather: LEATHER, gold: M ? FROSTG : GOLD, gem: M ? FROSTG : SAPPHIRE, core: M ? flatOf(GLOW.frost) : CORE, feather: M ? FROSTG : GOLD };
   const P = both((s, k) => {
     const L = t === 1 ? [
       { bone: 'foot' + s, mat: 'leather', part: 'boot' + s, shape: 'ell', c: [0, -1.0, 0.8], r: [2.15, 1.95, 2.85], clip: [0, -1, 0, 2.6] },
@@ -171,10 +152,12 @@ function knightgreaves(t) {
     ];
     if (t >= 3) L.push({ bone: 'shin' + s, mat: 'gold', part: 'knee' + s, shape: 'disc', c: [0, 0.0, 0.6], r: [1.45, 0.35, 1.35] },
       { bone: 'foot' + s, mat: 'gold', part: 'boot' + s, shape: 'ell', c: [0, -1.6, 3.0], r: [1.2, 0.9, 0.8] });
-    if (t >= 4) L.push({ bone: 'shin' + s, mat: 'gold', part: 'knee' + s, shape: 'cap', a: [0, 0.5, 1.2], b: [0, 2.2, 2.6], ra: 0.6, rb: 0.12 },
+    if (t >= 4) L.push({ bone: 'shin' + s, mat: 'gold', part: 'knee' + s, shape: 'cap', a: [0, 0.5, 1.2], b: [0, 2.8, 3.0], ra: 0.75, rb: 0.12 },
+      { bone: 'shin' + s, mat: 'gold', part: 'knee' + s, shape: 'disc', c: [0, -2.0, 0.1], r: [1.95, 0.4, 1.9] },
       { bone: 'foot' + s, mat: 'gem', part: 'boot' + s, shape: 'ell', c: [0, -0.4, 2.6], r: [0.55, 0.55, 0.45] });
-    if (t === 5) L.push({ bone: 'foot' + s, mat: 'feather', part: 'fin' + s, shape: 'ell', c: [1.9 * k, -0.2, -1.0], r: [0.4, 1.8, 1.0], rot: [-0.9, 0, 0.5 * k] },
-      { bone: 'shin' + s, mat: 'core', part: 'boot' + s, shape: 'ell', c: [0, -1.2, 1.8], r: [0.3, 1.0, 0.3] });
+    if (t >= 5) L.push({ bone: 'foot' + s, mat: 'feather', part: 'fin' + s, shape: 'ell', c: [1.9 * k, -0.2, -1.0], r: M ? [0.4, 2.3, 1.2] : [0.4, 1.8, 1.0], rot: [-0.9, 0, 0.5 * k] },
+      { bone: 'shin' + s, mat: 'core', part: 'boot' + s, shape: 'ell', c: [0, -1.2, 1.8], r: M ? [0.3, 0.7, 0.3] : [0.3, 1.0, 0.3] });
+    if (M) L.push({ bone: 'foot' + s, mat: 'feather', part: 'fin' + s, shape: 'cap', a: [0, -0.6, -2.4], b: [0, 1.6, -5.0], ra: 0.9, rb: 0.12 });   // heel shard spur
     return L;
   });
   return piece('knightgreaves', 'boots', t, { bias: 0.3, mats, prims: P });
@@ -183,7 +166,7 @@ function knightgreaves(t) {
 // ---- off hand: the shield's face looks out to the left-front, raised square-on to block when hit -----------------------
 const heater = (top, cut) => [[0, 1, 0, top], [0.75, -0.66, 0, cut], [-0.75, -0.66, 0, cut]];
 function shield(t) {
-  const mats = { face: [WOOD, metal(METAL[1]), CLOTH[2], CLOTH[3], metal(METAL[4])][t - 1], rim: t === 1 ? METAL[0] : t === 2 ? metal(MAIL) : GOLD, gem: SAPPHIRE, core: CORE, gold: GOLD };
+  const mats = { face: [WOOD, metal(METAL[1]), CLOTH[2], CLOTH[3], metal(METAL[4]), metal(METAL[5])][t - 1], rim: t === 1 ? METAL[0] : t === 2 ? metal(MAIL) : GOLD, gem: t === 6 ? HOLYG : SAPPHIRE, core: CORE, gold: GOLD, glow: flatOf(GLOW.holy) };
   const P = [], stamps = [];
   if (t === 1) P.push({ bone: 'offhand', mat: 'face', part: 'shield', shape: 'ell', c: [0, 0.3, 0.9], r: [2.8, 2.8, 0.5] },
     { bone: 'offhand', mat: 'rim', part: 'rim', shape: 'ell', c: [0, 0.3, 0.72], r: [3.15, 3.15, 0.42] },
@@ -195,7 +178,15 @@ function shield(t) {
     { bone: 'offhand', mat: 'gem', part: 'shield', shape: 'ell', c: [0, 1.0, 1.55], r: [1.0, 1.0, 0.55] },
     { bone: 'offhand', mat: 'gold', part: 'shield', shape: 'ell', c: [0, 1.0, 1.35], r: [1.45, 1.45, 0.45] },
     ...[1, -1].map(k => ({ bone: 'offhand', mat: 'gold', part: 'rim', shape: 'cap', a: [3.0 * k, 3.6, 0.9], b: [3.9 * k, 4.8, 0.9], ra: 0.55, rb: 0.12 })));
-  else P.push({ bone: 'offhand', mat: 'face', part: 'shield', shape: 'ell', c: [0, 0.4, 0.95], r: [3.5, 3.5, 0.6] },
+  else if (t === 6) {                                           // Mythic: the Heater again (broad, pointed), a gold crest with two raised wings and a holy gem
+    P.push({ bone: 'offhand', mat: 'face', part: 'shield', shape: 'ell', c: [0, 0.2, 0.95], r: [3.5, 5.4, 0.6], clip: [[0, 1, 0, 3.9], [0.8, -0.6, 0, 2.7], [-0.8, -0.6, 0, 2.7]] },
+      { bone: 'offhand', mat: 'rim', part: 'rim', shape: 'ell', c: [0, 0.2, 0.75], r: [3.9, 5.9, 0.5], clip: [[0, 1, 0, 4.25], [0.8, -0.6, 0, 3.1], [-0.8, -0.6, 0, 3.1]] },
+      { bone: 'offhand', mat: 'gem', part: 'shield', shape: 'ell', c: [0, 0.8, 1.55], r: [1.05, 1.3, 0.6] },
+      { bone: 'offhand', mat: 'gold', part: 'shield', shape: 'ell', c: [0, 0.8, 1.35], r: [1.5, 1.75, 0.45] },
+      ...[1, -1].flatMap(k => [{ bone: 'offhand', mat: 'gold', part: 'rim', shape: 'cap', a: [3.4 * k, 3.4, 0.9], b: [5.2 * k, 6.2, 0.9], ra: 0.75, rb: 0.12 },
+        { bone: 'offhand', mat: 'gold', part: 'rim', shape: 'cap', a: [3.7 * k, 2.4, 0.9], b: [5.9 * k, 4.2, 0.9], ra: 0.65, rb: 0.12 }]));
+    stamps.push({ bone: 'offhand', at: [0, 0.8, 2.1], n: [0, 0, 1], facing: 0.2, on: 'gem', px: [[-1, 0, 'glow'], [0, 0, 'glow'], [1, 0, 'glow']] });
+  } else P.push({ bone: 'offhand', mat: 'face', part: 'shield', shape: 'ell', c: [0, 0.4, 0.95], r: [3.5, 3.5, 0.6] },
     { bone: 'offhand', mat: 'core', part: 'shield', shape: 'ell', c: [0, 0.4, 1.5], r: [1.3, 1.3, 0.55] },
     ...[0, 45, 90, 135, 180, 225, 270, 315].map(d => { const a = d * Math.PI / 180;
       return { bone: 'offhand', mat: 'gold', part: 'rim', shape: 'cap', a: [3.2 * Math.cos(a), 0.4 + 3.2 * Math.sin(a), 0.9], b: [4.6 * Math.cos(a), 0.4 + 4.6 * Math.sin(a), 0.85], ra: 0.7, rb: 0.15 }; }));
@@ -206,14 +197,13 @@ function shield(t) {
 }
 
 // ---- weapon: Rusty Blade, Dawnblade, Sunforged Blade, Aurora Edge, Dawn Eternal ------------------------------------------
-const notAttack = fn => (a, f) => a.startsWith('attack') ? {} : fn(a, f);
 function sword(t) {
-  const len = [9.0, 11.5, 12.5, 13.0, 14.5][t - 1];
+  const len = [9.0, 11.5, 12.5, 13.0, 14.5, 15.0][t - 1], M = t === 6;
   const mats = { blade: t === 1 ? RUST : metal(METAL[t - 1]), guard: t === 1 ? METAL[0] : t === 2 ? metal(METAL[1]) : GOLD,
-    grip: LEATHER, gem: t === 3 ? RUBY : SAPPHIRE, edge: { ramp: ['#7fe8ff', '#7fe8ff', '#bff6ff', '#ffffff'], lift: 2 }, fuller: MAIL, core: CORE, feather: FEATHER };
+    grip: LEATHER, gem: t === 3 ? RUBY : M ? HOLYG : SAPPHIRE, edge: { ramp: ['#4ab8e0', '#7fe8ff', '#bff6ff', '#ffffff'], lift: 2 }, fuller: MAIL, core: CORE, feather: FEATHER, glow: flatOf(GLOW.holy) };
   const P = [
     { bone: 'weapon', mat: 'grip', part: 'hilt', shape: 'cap', a: [0, -1.3, 0], b: [0, 1.3, 0], ra: 0.62, rb: 0.62 },
-    { bone: 'weapon', mat: 'blade', part: 'blade', shape: 'cap', a: [0, 2.1, 0], b: [0, len, 0], ra: [0.85, 0.95, 1.05, 1.3, 1.6][t - 1], rb: [0.45, 0.4, 0.45, 0.5, 0.55][t - 1] },
+    { bone: 'weapon', mat: 'blade', part: 'blade', shape: 'cap', a: [0, 2.1, 0], b: [0, len, 0], ra: [0.85, 0.95, 1.05, 1.3, 1.6, 1.5][t - 1], rb: [0.45, 0.4, 0.45, 0.5, 0.55, 0.5][t - 1] },
   ];
   if (t <= 2) P.push({ bone: 'weapon', mat: 'guard', part: 'hilt', shape: 'cap', a: [-2.1 - 0.3 * t, 1.7, 0], b: [2.1 + 0.3 * t, 1.7, 0], ra: 0.55, rb: 0.55 },
     { bone: 'weapon', mat: 'guard', part: 'hilt', shape: 'ell', c: [0, -1.8, 0], r: [0.8, 0.8, 0.8] });
@@ -230,6 +220,8 @@ function sword(t) {
     { bone: 'weapon', mat: 'core', part: 'hilt', shape: 'ell', c: [0, 1.95, 0], r: [0.9, 0.9, 0.9] },
     ...[-30, 0, 30, 150, 180, 210].map(d => { const a = d * Math.PI / 180;
       return { bone: 'weapon', mat: 'guard', part: 'hilt', shape: 'cap', a: [0, 1.9, 0], b: [3.0 * Math.cos(a), 1.9 + 1.8 * Math.sin(a), 0], ra: 0.55, rb: 0.15 }; }));
+  if (M) P.push(...ring('weapon', 'guard', 'halo', [0, 2.0, -0.7], 3.7, 10, 0.55),             // Morrowbane: a gold sun halo behind the guard
+    { bone: 'weapon', mat: 'glow', part: 'blade', shape: 'ell', c: [0, 7.5, 0], r: [0.3, 1.5, 1.25] });
   return piece('sword', 'weapon', t, { mats, prims: P }, {
     class: 'sword', sockets: { tip: { bone: 'weapon', at: [0, len, 0] } },
     pose: notAttack(a => ({ weapon: { aim: a === 'cast' ? [-0.3, -0.6, 0.75] : a === 'hit' ? [-0.5, -0.4, 0.75] : a === 'dash' ? [-0.3, -0.2, -0.93] : [-0.7, -0.4, 0.6] } })),
@@ -240,11 +232,10 @@ function sword(t) {
 // one tapered capsule per segment it reaches, so its length is fixed and only its swing and billow change. Collar, clasps,
 // fur, hem trim and emblem by tier
 const SEG = require('./chibi.js').CAPE_SEG, CHAIN = ['cape', 'cape1', 'cape2', 'cape3'];
-const r3 = v => Math.round(v * 1000) / 1000;
 const onChain = s => { const k = Math.min(CHAIN.length - 1, Math.floor(s / SEG)); return [CHAIN[k], r3(s - SEG * k)]; };   // arc length -> [bone, local -y]
 function cape(t) {
-  const len = [5.6, 10.2, 10.2, 10.4, 11.4][t - 1], ra = 3.0, rb = [3.8, 4.6, 4.6, 4.7, 5.0][t - 1], wAt = s => ra + (rb - ra) * s / len;
-  const mats = { cloth: CLOTH[[0, 1, 2, 3, 4][t - 1]], gold: GOLD, fur: t === 5 ? GOLD : FUR, gem: t === 3 ? RUBY : SAPPHIRE };
+  const M = t === 6, len = [5.6, 10.2, 10.2, 10.4, 11.4, 10.8][t - 1], ra = 3.0, rb = [3.8, 4.6, 4.6, 4.7, 5.0, 5.0][t - 1], wAt = s => ra + (rb - ra) * s / len;
+  const mats = { cloth: CLOTH[t - 1], gold: M ? FROSTG : GOLD, fur: t === 5 ? GOLD : FUR, gem: t === 3 ? RUBY : M ? FROSTG : SAPPHIRE, glow: flatOf(GLOW.frost) };
   const P = [{ bone: 'chest', mat: 'cloth', part: 'collar', shape: 'ell', c: [0, 4.1, -0.4], r: [4.0, 1.35, 3.4] }];
   for (let k = 0; k * SEG < len; k++) {
     const s0 = k * SEG, s1 = Math.min(len, s0 + SEG), clip = [];
@@ -256,8 +247,15 @@ function cape(t) {
   if (t >= 3) P.push(...[1, -1].map(k => ({ bone: 'chest', mat: 'gem', part: 'collar', shape: 'ell', c: [2.4 * k, 4.4, 2.9], r: [0.75, 0.75, 0.5] })));
   if (t >= 4) {
     const [hb, hy] = onChain(len - 0.001);
-    P.push({ bone: 'chest', mat: 'fur', part: 'fur', shape: 'ell', c: [0, 4.2, -0.5], r: [4.3, 1.6, 3.7] },
-      { bone: hb, mat: 'gold', part: 'cape', shape: 'cap', a: [0, -hy + 1.0, -0.6], b: [0, -hy, -0.6], ra: r3(wAt(len) - 0.2), rb: r3(wAt(len) + 0.1), clip: [[0, -1, 0, hy], [0, 1, 0, r3(1.0 - hy)]] });
+    P.push({ bone: 'chest', mat: 'fur', part: 'fur', shape: 'ell', c: [0, 4.2, -0.5], r: [4.3, 1.6, 3.7] });
+    if (!M) P.push({ bone: hb, mat: 'gold', part: 'cape', shape: 'cap', a: [0, -hy + 1.0, -0.6], b: [0, -hy, -0.6], ra: r3(wAt(len) - 0.2), rb: r3(wAt(len) + 0.1), clip: [[0, -1, 0, hy], [0, 1, 0, r3(1.0 - hy)]] });
+  }
+  if (M) {                                                      // Shardheart: a crystal mantle on the shoulders, shard teeth along the hem, a glow run on the back
+    const [hb2, hy2] = onChain(len - 0.001);
+    P.push(...[1, -1].flatMap(k => [{ bone: 'chest', mat: 'gem', part: 'collar', shape: 'cap', a: [3.9 * k, 4.6, -0.6], b: [5.0 * k, 8.0, -0.9], ra: 0.8, rb: 0.12 }]),
+      ...[-2.4, 2.4].map(x => ({ bone: hb2, mat: 'gem', part: 'cape', shape: 'cap', a: [x, -hy2 + 0.2, -0.7], b: [x, -hy2 - 2.4, -0.7], ra: 0.8, rb: 0.1 })));
+    const [gb, gy] = onChain(5.2);
+    stamps.push({ bone: gb, at: [0, -gy, -1.9], n: [0, 0, -1], facing: 0.2, on: 'cloth', px: [[0, 0, 'glow'], [0, 1, 'glow']] });
   }
   if (t === 5) { const [eb, ey] = onChain(5.2); stamps.push({ bone: eb, at: [0, -ey, -1.9], n: [0, 0, -1], facing: 0.2, on: 'cloth', px: SUN }); }
   const [hb, hy] = onChain(len - 0.001);
@@ -266,6 +264,8 @@ function cape(t) {
 
 const pieces = {};
 for (const t of TIERS) for (const fn of [knighthelm, warden, knightgreaves, sword, shield, cape]) { const p = fn(t); pieces[p.id] = p; }
+// the other lines of this rig: models/chibi-<line>.js each export { pieces }
+for (const f of ['chibi-buckler.js', 'chibi-staff.js', 'chibi-grimoire.js']) if (require('fs').existsSync(require('path').join(__dirname, f))) Object.assign(pieces, require('./' + f).pieces);
 const set = t => ['knighthelm', 'warden', 'knightgreaves', 'sword', 'shield', 'cape'].map(f => `${f}.t${t}`);
 const loadouts = { bare: [], squire: set(1), footman: set(2), knight: set(3), paladin: set(4), radiant: set(5) };
 module.exports = { pieces, loadouts };

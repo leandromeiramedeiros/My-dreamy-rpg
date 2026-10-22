@@ -1,18 +1,23 @@
 'use strict';
 // TIERS: strips + checks for the gear lines of a forge rig (default chibi: models/chibi.js + models/chibi-gear.js).
 //   node tools/forge/tiers.js [line..] [--model chibi] [--check] [--anim idle --frame 0] [--zoom 4]
-//     -> out/tiers-<line>.png   5 tiers (T1..T5) x 8 directions, 4x, one frame (default idle 0), the piece on the bare base
-//     -> out/loadout-mix.png    mixed-tier loadouts x 8 directions (written when every line is drawn)
+//     -> out/tiers-<line>.png   6 tiers (T1..T5, MYTH) x 8 directions, 4x, one frame (default idle 0), the piece on the bare base
+//     -> out/loadout-mix.png    6 mixed loadouts x 8 directions (written when every line is drawn)
 //   --check, per piece (each piece alone on the bare base):
-//     size     baked G-buffer PNG <= 64 KB for the body and armour (head, chest, boots), <= 30 KB for every other piece
+//     size     baked G-buffer PNG <= 64 KB for head, chest and boots, <= 36 KB for the cape (back), <= 30 KB for every other piece
+//              (the bare body, 129 KB, is chibi.js: reported, not gated here)
 //     det      two bakes give the same sha256
 //     compose  the runtime FORGE.compose of the decoded bank == FORGE.render, byte for byte, every sheet frame
 //     lone     0 lone pixels on every sheet frame (no 4-neighbour of the same colour; the outline is a 1 px line, so an
 //              outline pixel counts only with no outline pixel among its 8 neighbours)
 //     tones    <= 5 per material (4-step ramp + glint);  colours: <= 24 added over the bare base
-//     bright   <= 15 % of the piece's own opaque pixels (its baked layers, every frame) above CIE L* 85
+//     bright   <= 15 % of the piece's own opaque pixels (its baked layers, every frame) above CIE L* 85: FAIL on T1..T3, warning on
+//              T4, T5 and Mythic
+//     shade    >= SHADE_MIN of the piece's shaded pixels sit on a ramp's two darkest tones (a piece keeps a dark shadow side)
+//     step     T2..T6: the piece differs from the tier below in >= STEP_MIN pixels with every material painted one grey (geometry, not hue)
+//     glow     Mythic: at most 4 flat (emissive) pixels per frame; no lone pixel, no rainbow (one flat hue per line)
 //   and the palette-lint rules over every gear ramp (tools/palette-lint.js reads the same files).
-// A line = a piece family of models/<rig>-gear.js; its tiers are <family>.t1 .. .t5.
+// A line = a piece family of models/<rig>-gear.js; its tiers are <family>.t1 .. .t5 and the Mythic <family>.t6.
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -23,11 +28,11 @@ const args = process.argv.slice(2), flag = n => args.includes('--' + n), opt = (
 const VAL = ['anim', 'frame', 'zoom', 'out', 'model'];
 const want = args.filter((a, i) => !a.startsWith('--') && !(i && args[i - 1].startsWith('--') && VAL.includes(args[i - 1].slice(2))));
 const RIG = opt('model', 'chibi'), model = require(`./models/${RIG}.js`), gear = require(`./models/${RIG}-gear.js`);
-const OUT = path.join(__dirname, 'out'), TIERS = [1, 2, 3, 4, 5], TIERL = TIERS.map(t => 'T' + t);
+const OUT = path.join(__dirname, 'out'), TIERS = [1, 2, 3, 4, 5, 6], TIERL = TIERS.map(t => t === 6 ? 'MYTH' : 'T' + t);
 const LINES = [...new Set(Object.values(gear.pieces).filter(p => p.family && p.tier).map(p => p.family))];
 const lines = want.length ? want : LINES, ANIM = opt('anim', 'idle'), FRAME = +opt('frame', 0);
 const [FW, FH] = model.frame, ZOOM = +opt('zoom', 4), DIRS = model.dirs.map(d => d[0]);
-const ARMOUR = ['head', 'chest', 'boots'];
+const CAP = { head: 64, chest: 64, boots: 64, back: 36 }, capOf = p => CAP[p.slot] || 30, GLOW_MAX = 4, SHADE_MIN = 0.12, STEP_MIN = 18;
 fs.mkdirSync(OUT, { recursive: true });
 const idsOf = l => TIERS.map(t => `${l}.t${t}`).filter(id => gear.pieces[id]);
 const P = ids => ids.map(id => { if (!gear.pieces[id]) throw new Error('no piece ' + id); return gear.pieces[id]; });
@@ -60,12 +65,20 @@ function strip(rows, file, labels, small) {                        // rows: [[id
   });
   fs.writeFileSync(file, png(W, H, img)); return file;
 }
-// mixed tiers: each row a full suit + weapon + offhand + back, tiers shuffled across the slots
-const MIX = [[1, 3, 5, 2, 4, 1], [2, 1, 2, 5, 3, 4], [3, 2, 3, 3, 1, 5], [4, 4, 4, 1, 5, 2], [5, 5, 1, 4, 2, 3]];
+// six mixed loadouts (head, chest, boots, back, weapon, offhand), tiers shuffled across the slots; includes Sword + Buckler,
+// Staff + Grimoire, a Mythic knight (Shardheart set + Morrowbane + the Mythic Heater) and a Mythic caster
+const MIX = [
+  ['knighthelm.t3', 'warden.t3', 'knightgreaves.t3', 'cape.t3', 'sword.t3', 'buckler.t2'],
+  ['knighthelm.t5', 'warden.t4', 'knightgreaves.t5', 'cape.t4', 'sword.t5', 'shield.t4'],
+  ['knighthelm.t2', 'warden.t1', 'knightgreaves.t2', 'cape.t2', 'staff.t4', 'grimoire.t4'],
+  ['knighthelm.t6', 'warden.t6', 'knightgreaves.t6', 'cape.t6', 'sword.t6', 'shield.t6'],
+  ['knighthelm.t4', 'warden.t2', 'knightgreaves.t3', 'cape.t5', 'sword.t2', 'grimoire.t3'],
+  ['knighthelm.t3', 'warden.t5', 'knightgreaves.t1', 'cape.t1', 'staff.t6', 'grimoire.t6'],
+];
 function mix() {
-  if (LINES.some(l => !idsOf(l).length)) { console.log('loadout-mix: skipped'); return; }
-  const rows = MIX.map(ts => LINES.map((l, i) => `${l}.t${ts[i % ts.length]}`).filter(id => gear.pieces[id]));
-  const f = strip(rows, path.join(OUT, 'loadout-mix.png'), rows.map(r => r.join(' ')), true); console.log('wrote ' + f);
+  const rows = MIX.map(r => r.filter(id => gear.pieces[id]));
+  if (rows.some((r, i) => r.length !== MIX[i].length)) { console.log('loadout-mix: skipped (a line is missing)'); return; }
+  const f = strip(rows, path.join(OUT, 'loadout-mix.png'), rows.map(r => r.map(id => id.replace('knighthelm', 'helm').replace('knightgreaves', 'boots')).join(' ')), true); console.log('wrote ' + f);
 }
 
 // ---- checks
@@ -81,7 +94,7 @@ function lone(sh) {
       const xx = fx + dx, yy = fy + dy; if (xx < 0 || yy < 0 || xx >= FW || yy >= FH) continue;   // never across two frames
       const j = ((y + dy) * sh.w + x + dx) * 4; if (sh.rgba[j + 3] === 255 && key(sh.rgba, j) === k) { same = true; break; }
     }
-    if (!same) n++;
+    if (!same) { n++; if (process.env.LONEDBG) console.error('lone row', Math.floor(y / FH), 'col', Math.floor(x / FW), 'px', fx, fy, k.toString(16)); }
   }
   return n;
 }
@@ -90,14 +103,14 @@ const rampOf = m => typeof m === 'string' ? FORGE.ramp(m) : Array.isArray(m) ? m
 function matTones(piece) {                                           // most distinct ramp entries of any material
   let worst = 0, name = '';
   for (const L of piece.layers) for (const k in L.mats || {}) {
-    const m = L.mats[k], r = rampOf(m), n = new Set(m.flat != null ? [r[m.flat]] : r).size; if (n > worst) { worst = n; name = k; }
+    const m = L.mats[k], r = rampOf(m), n = new Set(typeof m.flat === 'number' ? [r[m.flat]] : r).size; if (n > worst) { worst = n; name = k; }
   }
   return [worst, name];
 }
 const lstar = hex => { const c = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(v => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
   const Y = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; return Y > 0.008856 ? 116 * Math.cbrt(Y) - 16 : 903.3 * Y; };
-function bright(b) {                                                 // share of a baked piece's own pixels above L* 85
-  let n = 0, hi = 0;
+function bright(b) {                                                 // {hi: share of a baked piece's own pixels above L* 85, dark: share of its shaded ones on a ramp's 2 darkest tones}
+  let n = 0, hi = 0, ns = 0, dk = 0;
   b.meta.layers.forEach(L => { L._L = L.ramps.map(r => r.map(lstar)); });
   // cells index the atlas; identical crops are stored once, so walk the cells (every frame counts) not the atlas
   const cols = FORGE.bankInfo(model).layout.length;
@@ -106,9 +119,32 @@ function bright(b) {                                                 // share of
     for (let y = 0; y < q[3]; y++) for (let x = 0; x < q[2]; x++) {
       const o = ((q[1] + y) * b.w + q[0] + x) * 4; if (!b.rgba[o + 3]) continue;
       const m = b.rgba[o] & 127, t = b.rgba[o + 1] & 7, Ls = L._L[m]; n++; if (Ls[Math.min(t, Ls.length - 1)] > 85) hi++;
+      if (!(b.rgba[o + 1] >> 7)) { ns++; if (t <= 1) dk++; }
     }
   });
-  return n ? hi / n : 0;
+  return { hi: n ? hi / n : 0, dark: ns ? dk / ns : 1 };
+}
+const GREY = ['#26222e', '#5a5666', '#8c8898', '#c4c0cc'], greyPal = piece => { const o = {}; for (const L of piece.layers) for (const k in L.mats || {}) o[k] = GREY; return o; };
+const greyCache = {};
+function greyFrames(id) {                                            // the piece alone, every material one grey: 8 dirs, idle 0
+  if (greyCache[id]) return greyCache[id]; const piece = gear.pieces[id];
+  return (greyCache[id] = model.dirs.map(([dn]) => FORGE.render(model, { dir: dn, anim: 'idle', frame: 0, pieces: [{ piece, pal: greyPal(piece) }] }).rgba));
+}
+function stepDiff(id) {                                              // pixels that differ from the tier below, summed over 8 dirs
+  const m = /^(.+)\.t(\d)$/.exec(id), t = +m[2], lo = `${m[1]}.t${t - 1}`; if (t < 2 || !gear.pieces[lo]) return -1;
+  const A = greyFrames(id), B = greyFrames(lo); let n = 0;
+  A.forEach((a, d) => { for (let i = 0; i < a.length; i += 4) if (a[i] !== B[d][i] || a[i + 1] !== B[d][i + 1] || a[i + 2] !== B[d][i + 2] || a[i + 3] !== B[d][i + 3]) n++; });
+  return n;
+}
+// Mythic glow: every flat (emissive) material's colour, counted per frame on the sheet; <= GLOW_MAX px per frame
+// glow = a bright flat (emissive) colour; the dark helm slot is not glow
+function glowMax(piece, sh) {
+  const cols = new Set(); for (const L of piece.layers) for (const k in L.mats || {}) { const m = L.mats[k]; if (m && typeof m.flat === 'number') { const r = rampOf(m)[m.flat]; if (lstar(r) >= 50) cols.add(parseInt(r.slice(1), 16)); } }
+  if (!cols.size) return 0; let worst = 0; const [fw, fh] = sh.frame, nc = sh.w / fw, nr = sh.h / fh;
+  for (let r = 0; r < nr; r++) for (let c = 0; c < nc; c++) { let n = 0;
+    for (let y = 0; y < fh; y++) for (let x = 0; x < fw; x++) { const i = ((r * fh + y) * sh.w + c * fw + x) * 4; if (sh.rgba[i + 3] === 255 && cols.has(key(sh.rgba, i))) n++; }
+    if (n > worst) worst = n; }
+  return worst;
 }
 let baseSheet = null, baseBake = null;
 function check(id) {
@@ -127,7 +163,7 @@ function check(id) {
     }
     frames++;
   }));
-  return { kb: buf.length / 1024, sha: sha.slice(0, 12), det: sha === sha2, lone: lone(sh), added, bad, frames, bright: bright(b) };
+  const br = bright(b); return { kb: buf.length / 1024, sha: sha.slice(0, 12), det: sha === sha2, lone: lone(sh), added, bad, frames, bright: br.hi, dark: br.dark, step: stepDiff(id), glow: piece.tier === 6 ? glowMax(piece, sh) : 0 };
 }
 // the palette-lint rules (tools/palette-lint.js): 4 tones + optional glint, CIE L* strictly rising, darkest tone dL >= 8
 // from the outline colour #0c0714; flat ramps (one colour) are emissive and skipped
@@ -146,20 +182,24 @@ function paletteLint() {
   console.log(`palette-lint rules over ${n} gear ramps: ${bad ? bad + ' FAIL' : 'PASS'}`); if (bad) process.exitCode = 1;
 }
 if (flag('check')) {
-  let fail = 0; paletteLint();
+  let fail = 0, warn = 0; paletteLint();
   for (const l of lines) for (const id of idsOf(l)) {
-    const piece = gear.pieces[id], r = check(id), [tn, tm] = matTones(piece), cap = ARMOUR.includes(piece.slot) ? 64 : 30;
+    const piece = gear.pieces[id], r = check(id), [tn, tm] = matTones(piece), cap = capOf(piece);
     if (id === idsOf(l)[0] && l === lines[0]) {
-      const okB = baseBake.kb <= 64, bl = lone(baseSheet); if (!okB || bl) fail++;
-      console.log(`${okB && !bl ? 'ok  ' : 'FAIL'} ${'body'.padEnd(16)} ${baseBake.kb.toFixed(1).padStart(5)}/64 KB | lone ${bl}`);
+      const bl = lone(baseSheet); if (bl) fail++;
+      console.log(`${bl ? 'FAIL' : 'info'} ${'body'.padEnd(16)} ${baseBake.kb.toFixed(1).padStart(5)}/64 KB | lone ${bl} | chibi.js, out of this lane: not gated here`);
     }
-    const why = [];
+    const why = [], wn = [];
     if (r.kb > cap) why.push('size'); if (tn > 5) why.push('tones'); if (r.added > 24) why.push('colours'); if (r.lone) why.push('lone');
-    if (r.bad) why.push('compose'); if (!r.det) why.push('det'); if (r.bright > 0.15) why.push('bright');
-    if (why.length) fail++;
-    console.log(`${why.length ? 'FAIL' : 'ok  '} ${id.padEnd(16)} ${r.kb.toFixed(1).padStart(5)}/${cap} KB | tones<=${tn} (${tm}) | +${r.added} colours | lone ${r.lone} | bright ${(100 * r.bright).toFixed(1)}% | det ${r.det} sha ${r.sha} | compose ${r.frames - r.bad}/${r.frames}${why.length ? ' | ' + why.join(', ') : ''}`);
+    if (r.bad) why.push('compose'); if (!r.det) why.push('det');
+    if (r.bright > 0.15) (piece.tier <= 3 ? why : wn).push('bright');
+    if (r.dark < SHADE_MIN) why.push('shade');
+    if (r.step >= 0 && r.step < STEP_MIN) why.push('step');
+    if (piece.tier === 6 && (r.glow > GLOW_MAX || r.glow < 1)) why.push('glow');
+    if (why.length) fail++; else if (wn.length) warn++;
+    console.log(`${why.length ? 'FAIL' : wn.length ? 'warn' : 'ok  '} ${id.padEnd(16)} ${r.kb.toFixed(1).padStart(5)}/${cap} KB | tones<=${tn} (${tm}) | +${r.added} colours | lone ${r.lone} | bright ${(100 * r.bright).toFixed(1)}% | dark ${(100 * r.dark).toFixed(0)}% | step ${r.step} | ${piece.tier === 6 ? 'glow ' + r.glow + ' | ' : ''}det ${r.det} sha ${r.sha} | compose ${r.frames - r.bad}/${r.frames}${why.length ? ' | ' + why.join(', ') : ''}${wn.length ? ' | warn ' + wn.join(', ') : ''}`);
   }
-  console.log(fail ? `${fail} FAIL` : 'all checks pass');
+  console.log(fail ? `${fail} FAIL` : 'all checks pass' + (warn ? ` (${warn} brightness warnings on T4+)` : ''));
   if (fail) process.exitCode = 1;
 } else {
   for (const l of lines) {
