@@ -283,7 +283,7 @@ function drawScene() {
   const inViewE = e => { const vx = isoX(e.x, e.y) - camX + RW / 2, vy = isoY(e.x, e.y, e.z || 0) - camY + RH / 2; return vx > -90 && vx < RW + 90 && vy > -40 && vy < RH + 150; };
   const viewEnemies = G.enemies.filter(inViewE);
   { const t0 = PERF.on ? performance.now() : 0;
-    for (const e of viewEnemies) { const [vx, vy] = worldToView(e.x, e.y, 0); lightShadow(ctx, vx, vy, e.boss ? 18 : (e.type === 'wisp' ? 4 : 7), e, null); }
+    for (const e of viewEnemies) { const [vx, vy] = worldToView(e.x, e.y, 0); lightShadow(ctx, vx, vy, enemyShadowR(e), e, null); }
     if (PERF.on) PERF.ph['sub.shadow'] = (PERF.ph['sub.shadow'] || 0) + performance.now() - t0; }
   for (const c of G.corpses) if (c.mode === 'fling' && c.t < c.life) shadow(c.x, c.y, c.gz, 5);   // the fling arc reads off its shadow
   for (const z of G.zones) if (inViewE(z) || z.r > 4) drawZone(ctx, z);
@@ -905,7 +905,8 @@ function heroGhostFrame(e) {
 }
 
 // ===== corpses (docs/design/combat-feel.md, R1; records: game.js spawnCorpse / updateCorpses) =====================================
-// corpseLook(e) -> { img, sc, art, hover } once at the kill: ENEMY_ART enemies play their 3 death frames (art = key);
+// corpseLook(e) -> { img, sc, art, hover } once at the kill: ENEMY_ART enemies play their 3 death frames (art = key); a forge
+// enemy (forgeEnemyRig(c.e), sheet ready) plays its forge death frames first, whatever corpseLook said;
 // legacy / custom sprites keep their hit frame, drawn as a blood-coloured silhouette (sc = their legacy scale).
 const CORPSE_PROBE = { face: 1, flash: 1, hitFreeze: 0, state: 'chase', anim: 0, asleep: false };
 function corpseLook(e) {
@@ -925,7 +926,13 @@ function drawCorpse(ctx, c) {
   const end = c.t >= c.life, k = end ? Math.min(1, (c.t - c.life) / c.fade) : 0;
   const sqk = c.sqT > 0 ? c.sq : 0, sx = 1 + sqk, sy = 1 - sqk * 4 / 3;   // squash 0.3 -> w x1.3, h x0.6
   const [vx, vy] = worldToView(c.x, c.y, c.gz + c.z);
-  if (c.art) {
+  const fr = c.e && forgeEnemyRig(c.e), fs = fr && FEN.last[fr];
+  if (fs && fs.at.death != null) {   // a forge enemy: its 3 death frames over the flight, in the direction it last faced
+    const n = fs.n.death || 1, f = c.mode === 'boss' ? 0 : Math.min(n - 1, Math.floor(n * c.t / c.life)), dir = DIR8[c.e.fDirI != null ? c.e.fDirI : 1];
+    ctx.globalAlpha = (c.mode === 'boss' && !end ? 1 : 0.7) * (1 - k);
+    c.fFrame = f;   // tools/play.js
+    ctx.drawImage(fs.canvas, (fs.at.death + f) * fs.w, (fs.dirIdx[dir] || 0) * fs.h, fs.w, fs.h, Math.round(vx - fs.ax * sx), Math.round(vy - fs.ay * sy), Math.round(fs.w * sx), Math.round(fs.h * sy));
+  } else if (c.art) {
     const info = ENEMY_ART.info[c.art], fr = c.mode === 'boss' ? 0 : Math.min(2, Math.floor(3 * c.t / c.life));
     let img = ENEMY_ART.get(c.art, 'death', fr); if (c.face < 0) img = flipOf(img);
     const ax = c.face < 0 ? img.width - info.ax : info.ax, w = Math.round(img.width * sx), h = Math.round(img.height * sy);
@@ -1529,6 +1536,8 @@ function drawEnemy(ctx, e, lights) {
   let vy = vy0;
   const spawnA = e.spawnT > 0 ? 1 - e.spawnT / (e.boss ? 1.6 : 0.9) : 1;
   if (spawnA <= 0.05) return;
+  const fRig = forgeEnemyRig(e), fs = fRig && forgeEnemySheet(fRig);   // M4a: the forge path (see drawEnemyForge)
+  if (fs) { drawEnemyForge(ctx, e, fRig, fs, vx, vy, spawnA, lights); return; }
   const artKey = enemyArtKey(e);
   if (artKey) { drawEnemyArt(ctx, e, artKey, vx, vy, spawnA, lights); return; }
   if (e.under) { drawBurrowed(ctx, e, vx, vy); return; }
@@ -1602,6 +1611,161 @@ function drawEnemy(ctx, e, lights) {
   ctx.globalAlpha = 1;
   if (e.stunT > 0 && !e.frozen) for (let k = 0; k < 3; k++) { const a = G.t * 6 + k * 2.1; ctx.fillStyle = '#ffe36a'; ctx.fillRect(Math.round(vx + Math.cos(a) * 6), Math.round(vy - e.hgt * ZS - 4 + Math.sin(a) * 2), 1, 1); }
   // nameplates (bar, icons, statuses) are drawn by hud.js drawNameplates on the 2x grid
+}
+
+// ===== M4a forge enemies (tools/forge/models/<rig>.js; banks js/forge-bank/<rig>.js, built by tools/forge/build.js enemies) ===
+// The Bramble Shaman, Ogre, Mountain Troll and Shade Hound draw from their forge sheet: FORGE.sheet(rig, []) (gearless, composed
+// once over 3 frames, then held here: FEN.last keeps the canvas even after forge-rt's 6-sheet cache drops it). rig = the row's
+// art || its type, so the Gnarlroot Brute wears the troll. No legacy scale: the forge frames are drawn 1:1.
+// Facing: 8 true directions, in screen space like the hero's: the attack's aim (e.aimA) while a brute / charge winds, strikes
+// and recovers; the hero for an aimless cast and a stagger; the move direction while it chases or flees; the hero when it
+// stands in reach; held while hit or asleep (a 0.05 rad hysteresis keeps a walk along an octant edge from flickering; a
+// world axis lands 4 deg past one, so it must stay below that).
+// Anims from the part state: hit (flash / hitlag) · sleep · heal (healer wind-up) · attack: wind = f0-1, the action state
+// (brute strike, charge lunge) = f2-3, rec = f4-5 (a cast with no action state recovers over f2-5), each spread over its REAL
+// duration (e.windMax, P.strike / P.dur, P.rec) · walk (moved within 0.15 s, fleeing) · idle. Death: drawCorpse plays the 3
+// death frames over the corpse's flight. Until a sheet is ready (first sight: the bank loads, the sheet composes) the old
+// sprite draws; ?oldenemy keeps the old path everywhere.
+const OLD_ENEMY = (() => { try { return new URLSearchParams(location.search).has('oldenemy'); } catch (e) { return false; } })();
+const FORGE_ENEMIES = new Set(['brambleshaman', 'ogre', 'mountaintroll', 'shadehound']);
+const FEN = { last: {}, sock: new Map(), box: new Map(), cells: new Map(), rims: new Map(), warned: new Set(), shadowR: { brambleshaman: 7, ogre: 10, mountaintroll: 11, shadehound: 8 }, eye: { shadehound: '#ff6b9a' } };
+const OCT = Math.PI / 4;
+function forgeEnemyRig(e) {
+  if (OLD_ENEMY || typeof FORGE === 'undefined' || !e) return null;
+  const def = ENEMY[e.type] || {}, k = def.art || e.type;
+  return FORGE_ENEMIES.has(k) ? k : null;
+}
+function forgeEnemySheet(rig) {   // the ready sheet entry, or null (still loading / composing, or failed: the caller draws the old sprite)
+  if (FEN.last[rig]) return FEN.last[rig];
+  try {
+    const s = FORGE.sheet(rig, []);
+    if (s.state === 'ready') FEN.last[rig] = s;
+    else if (s.state === 'error' && !FEN.warned.has(rig)) { FEN.warned.add(rig); try { console.warn('forge enemy: ' + rig + ' failed (' + (s.error && s.error.message) + '); old sprite'); } catch (err) { /* no console */ } }
+  } catch (err) { /* no runtime */ }
+  return FEN.last[rig] || null;
+}
+function forgeEnemySockets(rig, anim, dir, f) {
+  const k = rig + '|' + anim + '|' + dir + '|' + f;
+  let S = FEN.sock.get(k);
+  if (!S) { S = FORGE.sockets(rig, [], anim, dir, f); if (!S) return {}; FEN.sock.set(k, S); }
+  return S;
+}
+function forgeEnemyRim(rig, anim, dir, f, oct) {
+  const k = rig + '|' + anim + '|' + dir + '|' + f + '|' + oct, M = FEN.rims;
+  let c = M.get(k); if (c) return c;
+  const r = FORGE.rim(rig, [], anim, dir, f); if (!r) return null;
+  c = rimSprite(r, oct);
+  if (M.size >= 256) M.delete(M.keys().next().value);
+  M.set(k, c);
+  return c;
+}
+// the frame's drawn box [x, y, w, h] in the cell (the rim mask's bounds + the 1 px outline): the body, its flash / tints and the
+// status tint blit only that (a brute's 80 x 88 cell is about half empty; the status tint cache holds frame-sized canvases)
+function forgeEnemyBox(rig, anim, dir, f, w, h) {
+  const k = rig + '|' + anim + '|' + dir + '|' + f;
+  let b = FEN.box.get(k); if (b) return b;
+  const r = FORGE.rim(rig, [], anim, dir, f); if (!r) return [0, 0, w, h];
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let i = 0; i < r.mask.length; i++) if (r.mask[i]) { const x = i % r.w, y = (i - x) / r.w; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 < 0) b = [0, 0, w, h];
+  else { x0 = Math.max(0, x0 - 1); y0 = Math.max(0, y0 - 1); x1 = Math.min(w - 1, x1 + 1); y1 = Math.min(h - 1, y1 + 1); b = [x0, y0, x1 - x0 + 1, y1 - y0 + 1]; }
+  FEN.box.set(k, b);
+  return b;
+}
+// the drawn box of one frame as its own canvas, for a body with statuses: status.js caches its tinted frames per source canvas
+// (at most 96 rects of one canvas, first in first out), and 2 ogres with 2 statuses walking and swinging in 3 directions
+// already cycle more rects than that through one sheet; per frame canvas, each keeps its own few
+function forgeEnemyCell(k, img, sx, sy, w, h) {
+  let c = FEN.cells.get(k); if (c) return c;
+  const C = makeCanvas(w, h); C.x.drawImage(img, sx, sy, w, h, 0, 0, w, h); c = C.c;
+  if (FEN.cells.size >= 480) FEN.cells.delete(FEN.cells.keys().next().value);
+  FEN.cells.set(k, c);
+  return c;
+}
+// face the world angle a (radians): its screen-space octant, with hysteresis
+function forgeEnemyFace(e, a) {
+  const c = Math.cos(a), s = Math.sin(a), th = Math.atan2((c + s) * 8, (c - s) * 16);
+  if (e.fDirI != null) { let d = Math.abs(th - e.fDirI * OCT) % (Math.PI * 2); if (d > Math.PI) d = Math.PI * 2 - d; if (d < OCT / 2 + 0.05) return; }
+  e.fDirI = ((Math.round(th / OCT) % 8) + 8) % 8;
+}
+function forgeEnemyAnim(e, s, moving) {
+  const N = a => s.n[a] || 1, has = a => s.at[a] != null;
+  const prog = (f0, f1, k) => ['attack', Math.min(f1, f0 + Math.floor(clamp(k, 0, 0.999) * (f1 - f0 + 1)))];
+  if (hitF(e)) return ['hit', 0];
+  if (e.asleep) return has('sleep') ? ['sleep', Math.floor(e.anim * 1.5) % N('sleep')] : ['idle', 0];
+  const st = e.state, P = (e.act && e.pp && e.pp[e.act]) || {};
+  if (st === 'wind') return e.act === 'healer' && has('heal') ? ['heal', 0] : prog(0, 1, 1 - e.st / Math.max(0.05, e.windMax || 0.6));
+  if (st === 'rec') {
+    const k = 1 - e.st / Math.max(0.05, P.rec != null ? P.rec : 0.4);
+    if (e.stunT > 0 || e.fRec === 'stun') return ['hit', 0];   // a stagger / poise break (rec + stunT, from any state)
+    return e.fRec === 'cast' ? prog(2, 5, k) : prog(4, 5, k);   // a cast with no action state recovers over f2-5, else f4-5
+  }
+  if (st !== 'chase' && st !== 'flee') return prog(2, 3, 1 - e.st / Math.max(0.05, st === 'strike' ? P.strike || 0.15 : st === 'lunge' ? P.dur || 0.3 : 0.3));
+  if (moving || st === 'flee') return ['walk', Math.floor(e.anim * 10) % N('walk')];
+  return ['idle', Math.floor(e.anim * 5) % N('idle')];
+}
+function drawEnemyForge(ctx, e, rig, s, vx, vy, spawnA, lights) {
+  const t0 = PERF.on ? performance.now() : 0;
+  // motion, facing, the state the rec came from
+  const mx = e.fmx == null ? 0 : e.x - e.fmx, my = e.fmy == null ? 0 : e.y - e.fmy, roam = e.state === 'chase' || e.state === 'flee';
+  const moved = roam && Math.hypot(mx, my) > 0.003;
+  e.fmx = e.x; e.fmy = e.y;
+  if (moved) e.fMoveT = G.t;
+  const moving = e.fMoveT != null && G.t - e.fMoveT < 0.15 && G.t >= e.fMoveT;
+  if (e.state === 'rec' && e.fPrev !== 'rec') e.fRec = e.fPrev === 'wind' ? 'cast' : e.fPrev === 'chase' || e.fPrev === 'flee' ? 'stun' : 'act';
+  e.fPrev = e.state;
+  const p = G.player;
+  if (!hitF(e) && !e.asleep) {
+    if (!roam && e.aimA != null && (e.act === 'brute' || e.act === 'charge') && !(e.state === 'rec' && e.fRec === 'stun')) forgeEnemyFace(e, e.aimA);
+    else if (!roam && p) forgeEnemyFace(e, Math.atan2(p.y - e.y, p.x - e.x));
+    else if (moved) forgeEnemyFace(e, Math.atan2(my, mx));
+    else if (!moving && p) forgeEnemyFace(e, Math.atan2(p.y - e.y, p.x - e.x));
+  }
+  if (e.fDirI == null) e.fDirI = e.face < 0 ? 3 : 1;   // SW / SE until it first moves
+  const dir = DIR8[e.fDirI], [a0, f0] = forgeEnemyAnim(e, s, moving), anim = s.at[a0] != null ? a0 : 'idle', f = anim === a0 ? f0 % (s.n[anim] || 1) : 0;
+  const cx = Math.round(vx) - s.ax, cy = Math.round(vy) - s.ay, S = forgeEnemySockets(rig, anim, dir, f), B = forgeEnemyBox(rig, anim, dir, f, s.w, s.h);
+  const w = B[2], h = B[3], sx = (s.at[anim] + f) * s.w + B[0], sy = (s.dirIdx[dir] || 0) * s.h + B[1], dx = cx + B[0], dy = cy + B[1], img = s.canvas;   // the drawn box
+  if (!e.fHgt && S.head) { e.fHgt = true; e.hgt = Math.max(e.hgt || 0, (s.ay - S.head.y) / ZS * 0.95); }   // nameplate / text height
+  const A = spawnA * (e.fadeT > 0 ? 0.35 : 1);
+  ctx.globalAlpha = A;
+  const ecol = e.elite ? ((e.mods || [])[0] && ELITE_MODS[e.mods[0]] ? ELITE_MODS[e.mods[0]].col : '#ffd35a') : null;
+  if (ecol) {   // elite: a pulsing glow ring of the silhouette (as ENEMY_ART's aura), the floor ring, then the body tinted
+    const g = silOf(img, ecol); ctx.globalAlpha = A * (0.35 + 0.2 * Math.sin(G.t * 4));
+    for (let k = 0; k < 8; k++) ctx.drawImage(g, sx, sy, w, h, dx + Math.round(Math.cos(k * OCT) * 2), dy + Math.round(Math.sin(k * OCT) * 2), w, h);
+    ctx.globalAlpha = A; drawEliteAura(ctx, e);
+  }
+  ctx.drawImage(hitF(e) ? silOf(img, '#ffffff') : img, sx, sy, w, h, dx, dy, w, h);
+  if (ecol) { ctx.globalAlpha = A * 0.3; ctx.drawImage(silOf(img, ecol), sx, sy, w, h, dx, dy, w, h); ctx.globalAlpha = A; }
+  if (e.state === 'wind' && !e.boss && e.act === 'brute') { ctx.globalAlpha = A * (0.2 + 0.2 * Math.sin(e.anim * 30)); ctx.drawImage(silOf(img, '#ff5040'), sx, sy, w, h, dx, dy, w, h); ctx.globalAlpha = A; }
+  // rim light (phone: bosses and elites only; counts against the tier cap)
+  if (RIM.n < RIM.max && (QUALITY.tier === 'high' || e.boss || e.elite)) {
+    const r0 = PERF.on ? performance.now() : 0; RIM.n++;
+    const L = domLight(vx, vy - 10, e), spr = forgeEnemyRim(rig, anim, dir, f, L.oct);
+    if (spr) rimDraw(ctx, spr, cx, cy, L);
+    if (PERF.on) PERF.ph['sub.rim'] = (PERF.ph['sub.rim'] || 0) + performance.now() - r0;
+  }
+  // status layers (status.js): tint + overlay, socket emitters, glyphs, the merged status light
+  const head = S.head ? [cx + S.head.x, cy + S.head.y] : [vx, dy + 6], chest = S.chest ? [cx + S.chest.x, cy + S.chest.y] : [vx, vy - 12];
+  if (typeof STATUS !== 'undefined') {
+    ctx.globalAlpha = A;
+    let on = false; if (e.status) for (const id in e.status) if (e.status[id]) { on = true; break; }
+    if (on) STATUS.body(ctx, e, forgeEnemyCell(rig + '|' + anim + '|' + dir + '|' + f, img, sx, sy, w, h), 0, 0, w, h, dx, dy, w, h, head, chest, lights);
+    else STATUS.body(ctx, e, img, sx, sy, w, h, dx, dy, w, h, head, chest, lights);
+  }
+  if (FEN.eye[rig]) lights.push({ sx: head[0] + camX - RW / 2, sy: head[1] + 3 + camY - RH / 2, r: 14, col: FEN.eye[rig], a: 0.7, own: e });   // the hound's glowing eyes
+  ctx.globalAlpha = 1;
+  if (e.asleep && Math.random() < 0.03) text(e.x, e.y, e.z + e.hgt + 0.3, 'z', '#c8c0e0', false, 1.2);
+  if (e.eShield > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = rgba('#cfe6ff', 0.4 + 0.4 * e.eShield / e.eShieldMax); projRing(ctx, e.x, e.y, 0.2, e.r + 0.45); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
+  if (e.stunT > 0 && !e.frozen) for (let k = 0; k < 3; k++) { const a = G.t * 6 + k * 2.1; ctx.fillStyle = '#ffe36a'; ctx.fillRect(Math.round(head[0] + Math.cos(a) * 6), Math.round(head[1] - 4 + Math.sin(a) * 2), 1, 1); }
+  e.fDrawn = G.t; e.fCur = anim + f + dir;   // tools/play.js: when this enemy last took the forge path, and what it drew
+  if (PERF.on) PERF.ph['sub.fenemy'] = (PERF.ph['sub.fenemy'] || 0) + performance.now() - t0;
+}
+// the ground shadow's radius (the decal pass): bosses, wisps, the forge bodies by size, else the old 7 px
+function enemyShadowR(e) {
+  if (e.boss) return 18;
+  if (e.type === 'wisp') return 4;
+  const r = forgeEnemyRig(e);
+  return r && FEN.last[r] ? FEN.shadowR[r] : 7;
 }
 
 // ===== ENEMY_ART (js/enemyart.js, procedural 12+ frame sets): the primary enemy sprite source =====================

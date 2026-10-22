@@ -13,6 +13,7 @@
 //      HUD minimap window + full-map screen; a ?phone=1 page checks the phone caps (256 px chunks, 12 resident, 16 awake)
 //  5. frame-time sample (avg / p95)
 //  M4a lighting + status: the forge hero, rim light, status layers, the bloom whitelist (shots: tools/shots/m4a)
+//  M4a forge enemies: shaman, ogre, troll, hound from their forge sheets, 8 facings, anims, death, ?oldenemy (shots: tools/shots/m4a)
 // Usage: node tools/play.js     (exit 1 on any failed check or page error)
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
@@ -2100,6 +2101,84 @@ const PAD_STUB = () => {
     check('M4a bloom: white-out <= 3 % (64 px windows, hero + enemy) at steady state and settled after every slot cast', wo.after.steady.hero <= 3 && wo.after.steady.enemy <= 3 && wo.after.settled <= 3,
       { after: { steady: wo.after.steady, settled: wo.after.settled, peak: wo.after.peak, peakSlot: wo.after.peakSlot }, before: { steady: wo.before.steady, settled: wo.before.settled, peak: wo.before.peak } });
     console.log('      white-out per slot [peak, settled] %: after ' + JSON.stringify(wo.after.slots) + ' before ' + JSON.stringify(wo.before.slots));
+    // 5. the forge enemies (render.js drawEnemyForge; tools/forge/models/{brambleshaman,ogre,mountaintroll,shadehound}.js):
+    // each draws from its forge sheet in Pinewood, 8 true facings, the anims from the part state over the real timing, the
+    // death frames on the corpse, ?oldenemy keeps the old sprites. shots: tools/shots/m4a/enemies-pinewood.png
+    const FE4 = ['brambleshaman', 'ogre', 'mountaintroll', 'shadehound'];
+    const ep = await lp('map=pinewood', 'forge enemies');
+    await ep.mouse.move(480, 200);
+    await ep.evaluate(FE => {
+      // the meadow 3 W / 5 S of the start (open grass, the rift up-right); placed by screen offset from the hero (game px; iso:
+      // screen dx = (wx - wy) 16, dy = (wx + wy) 8)
+      const p = G.player; if (walkable(G.map, p.x - 3, p.y + 5, tileH(G.map, p.x - 3, p.y + 5))) { p.x -= 3; p.y += 5; }
+      const W = (sx, sy) => [(sx / 16 + sy / 8) / 2, (sy / 8 - sx / 16) / 2], at = [[18, -36], [40, 8], [96, -12], [70, 40]].map(([x, y]) => W(x, y));
+      window.__FEP = { x: p.x, y: p.y, at };
+      window.__FE = FE.map((t, i) => { const e = spawnEnemy(t, p.x + at[i][0], p.y + at[i][1], 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.spawnT = 0; e.asleep = false; e.fm0 = e.move; e.move = 'stationary'; for (const k in e.pcd) e.pcd[k] = 99; return e; });
+    }, FE4);
+    await ep.waitForFunction(FE => FE.every(r => FEN.last[r]), FE4, { timeout: 20000 }).catch(() => {});
+    await wait(500);
+    const fe = await ep.evaluate(() => __FE.map(e => { const s = FEN.last[forgeEnemyRig(e)]; return { t: e.type, forge: !!(s && G.t - e.fDrawn < 0.25), cur: e.fCur, frame: s && `${s.w}x${s.h}`, composeMs: s && +s.ms.toFixed(1) }; }));
+    const feClip = async (pg, w, h) => { const [x, y] = await pg.evaluate(() => worldToView(G.player.x, G.player.y, G.player.z)); return { x: Math.min(960 - w, Math.max(0, Math.round(x * 2 + 80 - w / 2))), y: Math.min(540 - h, Math.max(0, Math.round(y * 2 - h / 2 - 16))), width: w, height: h }; };
+    await ep.screenshot({ path: tmp('fe-stand'), clip: await feClip(ep, 440, 360) });
+    check('M4a forge enemies: the Bramble Shaman, Ogre, Mountain Troll and Shade Hound draw from their forge sheets in Pinewood', fe.every(v => v.forge), fe);
+    check('M4a forge enemies: the Gnarlroot Brute wears the troll (row art), the old hound and slimes keep the old path',
+      await ep.evaluate(() => forgeEnemyRig({ type: 'gnarlbrute' }) === 'mountaintroll' && !forgeEnemyRig({ type: 'hound' }) && !forgeEnemyRig({ type: 'slime' })));
+    // 8 facings: the hero stands around a standing ogre at the 8 world angles that land on the screen octants' centres; it turns to each
+    const fdirs = [];
+    for (let i = 0; i < 8; i++) {
+      fdirs.push(await ep.evaluate(async i => {
+        const th = i * Math.PI / 4, X = Math.cos(th) / 16, Y = Math.sin(th) / 8;   // screen (dx, dy) = ((c - s) 16, (c + s) 8)
+        const e = __FE[1], p = G.player, a = Math.atan2(Y - X, Y + X); e.pcd.brute = 99;
+        p.x = e.x + Math.cos(a) * 1.8; p.y = e.y + Math.sin(a) * 1.8;
+        await new Promise(r => setTimeout(r, 350));
+        return DIR8[e.fDirI];
+      }, i));
+    }
+    check('M4a forge enemies: 8 true facings (an ogre in reach turns to the hero at 8 directions)', new Set(fdirs).size === 8, fdirs);
+    // anims: a real fight (every attack frame, wind -> action -> rec), the troll asleep, a hit
+    await ep.evaluate(() => { const p = G.player, e = __FE[1]; for (const q of __FE) { q.move = q.fm0; for (const k in q.pcd) q.pcd[k] = 0; } p.x = __FEP.x; p.y = __FEP.y; });   // (the rift is up-right: stay clear of it)
+    const fseen = await ep.evaluate(async () => {
+      const seen = {}; __FE.forEach(e => { seen[e.type] = new Set(); });
+      const t1 = performance.now() + 4000;
+      await new Promise(res => { const step = () => { __FE.forEach(e => { if (e.fCur) seen[e.type].add(e.fCur.replace(/[A-Z]+$/, '')); }); if (performance.now() < t1) requestAnimationFrame(step); else res(); }; step(); });
+      const t = __FE[2]; t.x = G.player.x + 5; t.y = G.player.y + 1; t.asleep = true; t.state = 'chase';   /* beyond its wake radius */ await new Promise(r => setTimeout(r, 200)); seen.sleep = t.fCur;
+      t.asleep = false; t.flash = 0.2; await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); seen.hit = t.fCur;
+      const out = {}; for (const k in seen) out[k] = seen[k] instanceof Set ? [...seen[k]].sort() : seen[k]; return out;
+    });
+    const all6 = k => [0, 1, 2, 3, 4, 5].every(f => fseen[k].includes('attack' + f));
+    check('M4a forge enemies: attack frames follow the real timing (ogre and hound: wind f0-1, strike / lunge f2-3, rec f4-5; shaman cast)',
+      all6('ogre') && all6('shadehound') && ['attack0', 'attack2'].every(a => fseen.brambleshaman.includes(a)), fseen);
+    check('M4a forge enemies: idle / walk while it stands / chases, the troll sleeps, a hit flashes the hit frame',
+      FE4.every(k => fseen[k].some(a => /^(idle|walk)/.test(a))) && /^sleep/.test(fseen.sleep) && /^hit0/.test(fseen.hit), { sleep: fseen.sleep, hit: fseen.hit });
+    // statuses on the fight (the shot), then a kill: the corpse plays the forge death frames
+    // the fight shot: back in place, each mid-attack (the wind's peak frame, held), with statuses on
+    await ep.evaluate(() => {
+      const p = G.player, P = __FEP; p.x = P.x; p.y = P.y;
+      __FE.forEach((e, i) => { e.x = p.x + P.at[i][0]; e.y = p.y + P.at[i][1]; e.move = 'stationary'; e.asleep = false; for (const k in e.pcd) e.pcd[k] = 99; e.state = 'chase'; e.fDirI = null; });
+      const wind = (e, act) => { e.state = 'wind'; e.act = act; e.st = 50; e.windMax = 100; e.aimA = Math.atan2(p.y - e.y, p.x - e.x); };
+      wind(__FE[1], 'brute'); wind(__FE[2], 'brute'); wind(__FE[3], 'charge'); wind(__FE[0], 'zone-caster');
+      STATUS.apply(__FE[1], 'burning', 60, 2); STATUS.apply(__FE[1], 'chilled', 60); STATUS.apply(__FE[3], 'poisoned', 60); STATUS.apply(__FE[0], 'shocked', 60); STATUS.apply(__FE[2], 'wet', 60);
+    });
+    await wait(700);
+    await ep.screenshot({ path: tmp('fe-fight'), clip: await feClip(ep, 440, 360) });
+    const fdeath = await ep.evaluate(async () => {
+      const e = __FE[3]; e.hp = 1; killEnemy(e, 50, {});
+      const c = G.corpses.find(q => q.e === e), fr = new Set();
+      const t1 = performance.now() + 900; await new Promise(res => { const step = () => { if (c && c.fFrame != null) fr.add(c.fFrame); if (performance.now() < t1) requestAnimationFrame(step); else res(); }; step(); });
+      return { corpse: !!c, frames: [...fr].sort() };
+    });
+    check('M4a forge enemies: a killed Shade Hound\'s corpse plays its forge death frames', fdeath.corpse && fdeath.frames.length >= 2, fdeath);
+    await ep.close();
+    stitch([tmp('fe-stand'), tmp('fe-fight')], path.join(M4A, 'enemies-pinewood.png'), ['forge enemies: shaman, ogre, troll, hound', 'mid-attack: burning + chilled ogre, wet troll, shocked shaman, poisoned hound']);
+    const oe = await lp('map=pinewood&oldenemy', 'oldenemy');
+    const old2 = await oe.evaluate(async () => {
+      const p = G.player, es = ['ogre', 'shadehound', 'brambleshaman'].map((t, i) => { const e = spawnEnemy(t, p.x + 2 - i * 2, p.y + 1.5, 0); e.spawnT = 0; e.cd = 99; for (const k in e.pcd) e.pcd[k] = 99; return e; });
+      await new Promise(r => setTimeout(r, 800));
+      return { forge: es.some(e => e.fDrawn != null), sheets: Object.keys(FEN.last).length };
+    });
+    check('M4a forge enemies: ?oldenemy keeps the old enemy path', !old2.forge && old2.sheets === 0, old2);
+    await oe.close();
+    check('M4a forge enemies shot: tools/shots/m4a/enemies-pinewood.png', fs.existsSync(path.join(M4A, 'enemies-pinewood.png')));
     for (const f of fs.readdirSync(M4A)) if (f.startsWith('_')) fs.unlinkSync(path.join(M4A, f));
     check('M4a lighting shots written to tools/shots/m4a', ['hero-forge-vale', 'rim-lights', 'status-entities', 'status-world', 'status-hud', 'bloom-before-after', 'vale-status-lights', 'portrait-echo'].every(n => fs.existsSync(path.join(M4A, n + '.png'))));
   }

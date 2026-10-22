@@ -43,6 +43,11 @@
 //                                          own outline over other units (see the piece's ownOutline); none = depth jumps only
 //   pixel: { normalSteps }                 opt-in hand-pixel pass: posterised normals, spur removal, clusters >= 2 px
 //   sheetAnims: ['idle', 'walk', ...]      the columns of a loadout sheet (default: every anim)
+//   bankSheets: { die: ['death'] }      bake: more sheets carved out of core (see bankSplit)
+//   flatDepth: true                        bake only (a one-layer rig with no pieces: the enemies): each part bakes one depth,
+//                                          a pixel keeps its own only where that would flip a seam test (see flatDq). Stage B
+//                                          reads depth only to stack layers (one layer: nothing to stack) and in the seam test
+//                                          between two parts, so compose() still equals render(); depth was most of the bytes
 //   springs: [ SPRING ]                    deterministic secondary motion (cape, hair locks), see chainDirs
 //   layers: [ LAYER ]                      the bare body; a v1 model (mats / prims / stamps at the top level) = one layer
 // }
@@ -886,7 +891,8 @@ const FORGE = (function () {
     const cam = camera(model), piece = opt.piece || null, [w, h] = model.frame, layout = bakeLayout(model, opt.anims), dirs = model.dirs;
     const unit = piece ? null : opt.group ? baseUnits(model).find(u => u.id === opt.group) : null;
     if (opt.group && !unit) throw new Error(`model: no base group ${opt.group}`);
-    const layers = piece ? piece.layers : unit ? unit.layers : layersOf(model);
+    const layers = piece ? piece.layers : unit ? unit.layers : layersOf(model), flat = !!model.flatDepth, jq = resolveOpts(model).jumpQ;
+    if (flat && (piece || layersOf(model).length > 1)) throw new Error('model: flatDepth needs a one-layer rig and no pieces');
     const SW = w * layout.length, SH = h * dirs.length * layers.length, rgba = new Uint8ClampedArray(SW * SH * 4);
     const skip = a => piece && piece.class && a.includes(':') && a.split(':')[1] !== piece.class;
     // sockets: the rig's on the body (or an unsplit bake), a piece's own (+ the rig's for a smear), none on hair & co
@@ -901,10 +907,11 @@ const FORGE = (function () {
         if (sockets) (sockets[dn][a] = sockets[dn][a] || [])[f] = frameSockets(model, W, cam, piece ? piece.sockets : null, sk);
         layers.forEach((L, li) => {
           const G = raster(L, W, cam, a, f, rootT), y0 = (li * dirs.length + r) * h;   // the full grid first, packed below
+          const DQ = flat ? flatDq(G, w, h, jq) : G.dq;
           for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
             const i = y * w + x; if (!G.cov[i]) continue;
             const o = ((y0 + y) * SW + c * w + x) * 4;
-            rgba[o] = (G.keep[i] << 7) | G.mat[i]; rgba[o + 1] = (G.flat[i] << 7) | (G.part[i] << 3) | G.tone[i]; rgba[o + 2] = G.dq[i]; rgba[o + 3] = 255;
+            rgba[o] = (G.keep[i] << 7) | G.mat[i]; rgba[o + 1] = (G.flat[i] << 7) | (G.part[i] << 3) | G.tone[i]; rgba[o + 2] = DQ[i]; rgba[o + 3] = 255;
           }
         });
       });
@@ -921,6 +928,29 @@ const FORGE = (function () {
     const P = pack(rgba, SW, w, h, layout.length, dirs.length * layers.length); meta.cells = P.cells;
     return { w: P.w, h: P.h, rgba: P.rgba, meta, empty: !P.cells.some(c => c) };
   }
+  // flatDepth: the seam test (each 4-neighbour pair of two parts: is one deeper than the other by more than jumpQ?) is all
+  // stage B reads of a one-layer frame's depth, so each part bakes ONE depth (the median of its border pixels) and only the
+  // pixels of a pair that this would flip keep their own (grown until no pair flips): the channel becomes a part map
+  function flatDq(G, w, h, jq) {
+    const N = w * h, pairs = [], pd = [], own = new Uint8Array(N), out = new Uint8Array(N), by = {};
+    for (let i = 0; i < N; i++) if (G.cov[i]) {
+      const x = i % w;
+      for (const j of [x + 1 < w ? i + 1 : -1, i + w < N ? i + w : -1]) if (j >= 0 && G.cov[j] && G.part[j] !== G.part[i]) {
+        pairs.push(i, j); (by[G.part[i]] = by[G.part[i]] || []).push(G.dq[i]); (by[G.part[j]] = by[G.part[j]] || []).push(G.dq[j]);
+      }
+    }
+    for (const p in by) { const v = by[p].sort((a, b) => a - b); pd[p] = v[v.length >> 1]; }
+    const val = i => own[i] ? G.dq[i] : pd[G.part[i]] != null ? pd[G.part[i]] : 128;
+    for (let changed = true; changed;) {
+      changed = false;
+      for (let k = 0; k < pairs.length; k += 2) {
+        const i = pairs[k], j = pairs[k + 1], a = G.dq[i], b = G.dq[j], A = val(i), B = val(j);
+        if ((b > a + jq) !== (B > A + jq) || (a > b + jq) !== (A > B + jq)) { if (!own[i] || !own[j]) changed = true; own[i] = own[j] = 1; }
+      }
+    }
+    for (let i = 0; i < N; i++) if (G.cov[i]) out[i] = val(i);
+    return out;
+  }
   // sockets in a bank: { names, v: { dir: { anim: [x * 10, y * 10, d * 10, front 0 | 1] per name per frame, flat } } }
   function packSockets(S) {
     const names = []; for (const d in S) for (const a in S[d]) for (const fr of S[d][a]) for (const k in fr || {}) if (!names.includes(k)) names.push(k);
@@ -929,9 +959,13 @@ const FORGE = (function () {
     return { names, v };
   }
   // how build.js splits a unit: [suffix, anims] per sheet: 'core' = every anim but the attacks, 'atk.<class>' = one attack
+  // model.bankSheets: { <suffix>: [anims] } carves more sheets out of core (a big enemy's 'die': death + hit, so no sheet
+  // passes the 64 KB cap); none = the classic split
   function bankSplit(model) {
-    const all = Object.keys(model.anims), atk = all.filter(a => a.split(':')[0] === 'attack');
-    return [['core', all.filter(a => !atk.includes(a))], ...atk.map(a => ['atk.' + (a.split(':')[1] || 'any'), [a]])];
+    const all = Object.keys(model.anims), atk = all.filter(a => a.split(':')[0] === 'attack'), more = model.bankSheets || {};
+    const carved = new Set([].concat(...Object.values(more)));
+    return [['core', all.filter(a => !atk.includes(a) && !carved.has(a))], ...Object.keys(more).map(k => [k, more[k].filter(a => all.includes(a) && !atk.includes(a))]),
+      ...atk.map(a => ['atk.' + (a.split(':')[1] || 'any'), [a]])];
   }
   const PACK = 256;
   function pack(rgba, SW, w, h, cols, rows) {

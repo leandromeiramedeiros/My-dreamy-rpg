@@ -6,6 +6,9 @@
 //     -> out/cape-hair.png      (4x) the knight (T3) with its cape, then the bare base with that cape and sword (hair
 //                                shown): walk | attack | idle f0-5 x 8 directions, a window from above the head down past
 //                                the cape's hem (cape and hair-lock secondary motion)
+//   node tools/forge/board.js enemies
+//     -> out/board-enemies.png (2x) the forge enemies (build.js ENEMY_RIGS), one block each: 8 direction rows x idle f0-5 |
+//                                walk f0-5 | attack f0-5; every sheet anim (hit, death, sleep ...) is checked too
 // Every frame is stacked by the RUNTIME path (FORGE.compose over a freshly baked bank, PNG round trip included) and checked
 // byte-equal to the offline FORGE.render. Prints: the cape length per frame and direction for every cape tier (the hem's
 // distance from the collar along the cape, on screen, in px, from the rig sockets: the cape's segments never stretch, so
@@ -16,8 +19,8 @@ const crypto = require('crypto');
 const FORGE = require('./forge.js');
 const { png, pngSmall, unpng } = require('./png.js');
 
-const name = process.argv[2] || 'chibi';
-const model = require(`./models/${name}.js`), gear = require(`./models/${name}-gear.js`);
+const name = process.argv[2] || 'chibi', ENEMIES = name === 'enemies';
+const model = require(`./models/${ENEMIES ? 'ogre' : name}.js`), gear = ENEMIES ? { loadouts: {}, pieces: {} } : require(`./models/${name}-gear.js`);
 const OUT = path.join(__dirname, 'out');
 const LOADOUTS = ['bare', 'squire', 'footman', 'knight', 'paladin', 'radiant'].filter(l => gear.loadouts[l]);
 const LABEL = { bare: 'bare base', squire: 'T1 squire', footman: 'T2 footman', knight: 'T3 knight', paladin: 'T4 paladin', radiant: 'T5 radiant' };
@@ -27,7 +30,7 @@ const BG = [0x4b, 0x7c, 0x3f], INK = [0xe5, 0xe0, 0xac], DIM = [0x2a, 0x45, 0x22
 // ---- the runtime bank: the rig's base units + every piece used, split and decoded exactly as build.js banks them -------
 const t0 = process.hrtime.bigint(), bank = { model: FORGE.bankInfo(model), sheets: {} };
 const used = [...new Set(LOADOUTS.flatMap(l => gear.loadouts[l]))];
-for (const u of [...bank.model.base.map(id => ({ id, opt: { group: id } })), ...used.map(id => ({ id, opt: { piece: gear.pieces[id] } }))]) {
+for (const u of ENEMIES ? [] : [...bank.model.base.map(id => ({ id, opt: { group: id } })), ...used.map(id => ({ id, opt: { piece: gear.pieces[id] } }))]) {
   for (const [suf, anims] of FORGE.bankSplit(model)) {
     const b = FORGE.bake(model, Object.assign({ anims }, u.opt)); if (b.empty) continue;
     const back = unpng(pngSmall(b.w, b.h, b.rgba));
@@ -47,12 +50,12 @@ function stacked(dir, anim, frame, ids) {                         // runtime com
 // intended detail and skipped
 const OUTK = model.outline ? parseInt(model.outline.slice(1), 16) : -1;
 const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]], N8 = N4.concat([[1, 1], [1, -1], [-1, 1], [-1, -1]]);
-function lone(rgba, w, h, fine) {
+function lone(rgba, w, h, fine, outk = OUTK) {
   let n = 0; const k = i => (rgba[i] << 16) | (rgba[i + 1] << 8) | rgba[i + 2];
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     const i = (y * w + x) * 4; if (!rgba[i + 3] || (fine && fine[y * w + x])) continue;
     let same = false;
-    for (const [dx, dy] of k(i) === OUTK ? N8 : N4) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue; const j = (yy * w + xx) * 4; if (rgba[j + 3] && k(j) === k(i)) { same = true; break; } }
+    for (const [dx, dy] of k(i) === outk ? N8 : N4) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue; const j = (yy * w + xx) * 4; if (rgba[j + 3] && k(j) === k(i)) { same = true; break; } }
     if (!same) n++;
   }
   return n;
@@ -81,6 +84,66 @@ function blit(img, W, x0, y0, fr, sx = 0, sy = 0, w = FW, h = FH) {   // a windo
 const upN = (img, W, H, n) => { const o = new Uint8ClampedArray(W * H * n * n * 4); for (let y = 0; y < n * H; y++) for (let x = 0; x < n * W; x++) { const s = (((y / n) | 0) * W + ((x / n) | 0)) * 4, t = (y * n * W + x) * 4; o[t] = img[s]; o[t + 1] = img[s + 1]; o[t + 2] = img[s + 2]; o[t + 3] = 255; } return o; };
 const realOf = (anim, ids) => { const wp = ids.map(id => gear.pieces[id]).find(p => p.class), v = anim === 'attack' ? 'attack:' + (wp ? wp.class : 'none') : anim; return model.anims[v] || model.anims[anim]; };
 const msOf = (anim, ids) => realOf(anim, ids).ms || [];
+
+if (ENEMIES) return enemiesBoard();
+
+// ---- the enemies board: per enemy a block of 8 direction rows x (idle | walk | attack) x 6 frames, each enemy at its own
+// frame size. Bank exactly as build.js banks a gearless rig (base groups x bankSplit, PNG round trip); every frame of every
+// sheet anim is composed by the runtime path and checked byte-equal to FORGE.render
+function enemiesBoard() {
+  const t0 = process.hrtime.bigint(), RIGS = require('./build.js').ENEMY_RIGS, sha = b => crypto.createHash('sha256').update(b).digest('hex').slice(0, 16);
+  const blocks = [];
+  let composed = 0, equal = 0, lonePx = 0;
+  for (const rig of RIGS) {
+    const m = require(`./models/${rig}.js`), bk = { model: FORGE.bankInfo(m), sheets: {} }, [w, h] = m.frame;
+    for (const id of bk.model.base) for (const [suf, anims] of FORGE.bankSplit(m)) {
+      const b = FORGE.bake(m, { anims, group: id }); if (b.empty) continue;
+      const back = unpng(pngSmall(b.w, b.h, b.rgba)); bk.sheets[`${id}.${suf}`] = { w: back.w, rgba: back.rgba, meta: b.meta };
+    }
+    const outk = parseInt(m.outline.slice(1), 16), F = {}, hash = crypto.createHash('sha256');
+    let lp = 0, eq = 0, n = 0;
+    for (const a of m.sheetAnims) {
+      F[a] = {};
+      for (const [d] of m.dirs) F[a][d] = Array.from({ length: m.anims[a].frames }, (_, f) => {
+        const out = FORGE.compose(bk, { dir: d, anim: a, frame: f, pieces: [] }).rgba, R = FORGE.render(m, { dir: d, anim: a, frame: f, pieces: [] });
+        n++; if (Buffer.compare(Buffer.from(out.buffer, out.byteOffset, out.length), Buffer.from(R.rgba.buffer, R.rgba.byteOffset, R.rgba.length)) === 0) eq++;
+        lp += lone(out, w, h, R.fine, outk); hash.update(Buffer.from(out.buffer, out.byteOffset, out.length));
+        return out;
+      });
+    }
+    composed += n; equal += eq; lonePx += lp;
+    blocks.push({ rig, m, w, h, F, n, eq, lp, sha: hash.digest('hex').slice(0, 16) });
+  }
+  const ms = Number(process.hrtime.bigint() - t0) / 1e6;
+  const LW = 16, CG = 2, AG = 8, TH = 9, bh = B => TH + 8 + B.m.dirs.length * (B.h + CG) + 6, aw = B => 6 * (B.w + CG);
+  const W = Math.max(...blocks.map(B => LW + ANIMS.length * (aw(B) + AG))), H = 12 + blocks.reduce((s, B) => s + bh(B), 0);
+  const img = new Uint8ClampedArray(W * H * 4); fill(img, W, 0, 0, W, H, DIM);
+  text(img, W, 2, 3, 'enemies: runtime compose of baked sheets, 1 frame per cell. rows = directions', INK);
+  let y0 = 12;
+  for (const B of blocks) {
+    text(img, W, 2, y0 + 1, `${B.rig}: ${B.w}x${B.h} frames`, INK);
+    ANIMS.forEach((a, ai) => {
+      const x0 = LW + ai * (aw(B) + AG), A = B.m.anims[a], ms = A.ms || [];
+      for (let f = 0; f < A.frames && f < 6; f++) text(img, W, x0 + f * (B.w + CG) + 2, y0 + TH, `${a.slice(0, 3)} ${f} ${ms[f] || ''}`, INK);
+      B.m.dirs.forEach(([d], di) => {
+        const y = y0 + TH + 8 + di * (B.h + CG);
+        if (!ai) text(img, W, 2, y + (B.h >> 1), d, INK);
+        for (let f = 0; f < A.frames && f < 6; f++) {
+          const x = x0 + f * (B.w + CG), fr = B.F[a][d][f]; fill(img, W, x, y, B.w, B.h, BG);
+          for (let yy = 0; yy < B.h; yy++) for (let xx = 0; xx < B.w; xx++) { const i = (yy * B.w + xx) * 4; if (fr[i + 3]) set(img, W, x + xx, y + yy, [fr[i], fr[i + 1], fr[i + 2]]); }
+        }
+      });
+    });
+    y0 += bh(B);
+  }
+  fs.mkdirSync(OUT, { recursive: true });
+  const boardPng = png(2 * W, 2 * H, upN(img, W, H, 2));
+  fs.writeFileSync(path.join(OUT, 'board-enemies.png'), boardPng);
+  console.log(`board: ${blocks.length} enemies, every sheet anim x 8 dirs (bake + compose + render) in ${ms.toFixed(0)} ms`);
+  for (const B of blocks) console.log(`${B.rig.padEnd(14)} ${B.w}x${B.h} ${B.m.sheetAnims.join(' ')}: ${B.eq}/${B.n} frames byte-equal to FORGE.render | lone px ${B.lp} | frames sha256 ${B.sha}`);
+  console.log(`runtime compose: ${equal}/${composed} frames byte-equal | lone pixels: ${lonePx} | out/board-enemies.png ${2 * W}x${2 * H} sha256 ${sha(boardPng)}`);
+  if (equal !== composed || lonePx) process.exitCode = 1;
+}
 
 // ---- the board: per loadout a block of 8 direction rows x (idle | walk | attack) x 6 frames ---------------------------
 const frames = {};

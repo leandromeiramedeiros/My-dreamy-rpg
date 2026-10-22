@@ -14,11 +14,16 @@
 //   doll       the bag paper doll, one direction (FORGE.doll), <= 12 ms (x4)
 //   sha256     every loadout sheet hashes the same in two fresh page loads
 //   rim/sock   a rim mask and the sockets come back for a frame
+//   enemies    the forge enemies (build.js ENEMY_RIGS: js/forge-bank/<rig>.js, gearless): each file <= 160 KB; runtime sheet ==
+//              offline FORGE.render byte for byte on every frame of every sheet anim x 8 dirs; head + chest sockets; the sheet's
+//              compose cost at CPU throttle x4 (<= 120 ms busy, like the hero's); sha256 stable over two fresh loads
 const http = require('http'), fs = require('fs'), path = require('path'), crypto = require('crypto');
 const { chromium } = require('playwright');
 const ROOT = path.resolve(__dirname, '..'), FD = path.join(ROOT, 'tools', 'forge');
 const FORGE = require(path.join(FD, 'forge.js')), RIG = 'chibi', model = require(path.join(FD, 'models', `${RIG}.js`));
 const BANK = require(path.join(ROOT, 'js', 'forge-bank', `${RIG}.js`))[RIG];
+const ENEMY_RIGS = require(path.join(FD, 'build.js')).ENEMY_RIGS, EMODEL = {};
+for (const rig of ENEMY_RIGS) EMODEL[rig] = require(path.join(FD, 'models', `${rig}.js`));
 const MIME = { '.html': 'text/html', '.js': 'text/javascript' };
 const PAGE = '<!doctype html><html><head><meta charset="utf-8"></head><body><script src="js/forge-rt.js"></script></body></html>';
 const results = [];
@@ -59,6 +64,20 @@ const sheetsOf = (page, want) => page.evaluate(async ([rig, los, want]) => {
   }
   return out;
 }, [RIG, LOADOUTS, want]);
+// every forge enemy's gearless sheet, the same way
+const enemySheetsOf = (page, want) => page.evaluate(async ([rigs, want]) => {
+  const out = {};
+  for (const rig of rigs) {
+    const e = FORGE.sheet(rig, []); await e.promise;
+    const d = e.canvas.getContext('2d').getImageData(0, 0, e.canvas.width, e.canvas.height).data;
+    const sha = [...new Uint8Array(await crypto.subtle.digest('SHA-256', d))].map(b => b.toString(16).padStart(2, '0')).join('');
+    let b64 = null;
+    if (want) { let s = ''; for (let i = 0; i < d.length; i += 0x8000) s += String.fromCharCode.apply(null, d.subarray(i, i + 0x8000)); b64 = btoa(s); }
+    const S = FORGE.sockets(rig, [], 'idle', 'S', 0) || {};
+    out[rig] = { sha, b64, w: e.canvas.width, h: e.canvas.height, at: e.at, n: e.n, dirs: Object.keys(e.dirIdx), fw: e.w, fh: e.h, sockets: Object.keys(S) };
+  }
+  return out;
+}, [ENEMY_RIGS, want]);
 
 (async () => {
   // engine sync
@@ -72,14 +91,14 @@ const sheetsOf = (page, want) => page.evaluate(async ([rig, los, want]) => {
   for (const f of files) {
     const B = require(path.join(ROOT, 'js', 'forge-bank', f)), L = B[f.slice(0, -3)];
     for (const k in L.sheets) { n++; const kb = Buffer.from(L.sheets[k].png, 'base64').length / 1024; if (kb > worst.kb) worst = { key: k, kb }; }
-    const fkb = fs.statSync(path.join(ROOT, 'js', 'forge-bank', f)).size / 1024; if (f !== `${RIG}.js` && fkb > top.kb) top = { f, kb: fkb };
+    const fkb = fs.statSync(path.join(ROOT, 'js', 'forge-bank', f)).size / 1024; if (f !== `${RIG}.js` && !ENEMY_RIGS.includes(f.slice(0, -3)) && fkb > top.kb) top = { f, kb: fkb };
   }
   const starter = (fs.statSync(path.join(ROOT, 'js', 'forge-rt.js')).size + fs.statSync(path.join(ROOT, 'js', 'forge-bank', `${RIG}.js`)).size) / 1024;
-  const named = new Set([RIG, ...Object.values(BANK.lines)].map(l => l + '.js')), stale = files.filter(f => !named.has(f)), missing = [...named].filter(f => !files.includes(f));
+  const named = new Set([RIG, ...ENEMY_RIGS, ...Object.values(BANK.lines)].map(l => l + '.js')), stale = files.filter(f => !named.has(f)), missing = [...named].filter(f => !files.includes(f));
   check('banks', worst.kb <= 64 && starter <= 400 && !stale.length && !missing.length,
     `${files.length} files, ${n} sheets, largest sheet ${worst.key} ${worst.kb.toFixed(1)} KB (<= 64) | starter bundle ${starter.toFixed(0)} KB (<= 400)` +
     (stale.length ? ` | stale: ${stale.join(' ')}` : ' | no stale file') + (missing.length ? ` | missing: ${missing.join(' ')}` : ''));
-  const over = files.filter(f => f !== `${RIG}.js` && fs.statSync(path.join(ROOT, 'js', 'forge-bank', f)).size > 160 * 1024);
+  const over = files.filter(f => f !== `${RIG}.js` && !ENEMY_RIGS.includes(f.slice(0, -3)) && fs.statSync(path.join(ROOT, 'js', 'forge-bank', f)).size > 160 * 1024);
   check('tier', top.kb <= 160, `largest piece file ${top.f} ${top.kb.toFixed(1)} KB (<= 160)${over.length ? ` | over: ${over.join(' ')}` : ''}`);
   const tags = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/<script src="js\/forge-rt\.js"><\/script>/g) || []).length;
   check('tag', tags === 1, `index.html loads js/forge-rt.js ${tags}x`);
@@ -109,7 +128,12 @@ const sheetsOf = (page, want) => page.evaluate(async ([rig, los, want]) => {
     check('sheet', t.ms <= 120, `${full}: ${t.frames} frames in ${t.ms.toFixed(1)} ms busy over ${t.slices.length} slices (${t.slices.map(v => v.toFixed(0)).join(" + ")}; ${t.wall.toFixed(0)} ms wall) at x4 (<= 120)`);
     check('fetch', t.fetch <= 0.05 && t.hit === t.N, `${(t.fetch * 1000).toFixed(2)} us per FORGE.frame at x4 (<= 50 us), ${t.hit}/${t.N} hits`);
     check('doll', t.doll <= 12, `${doll}: one direction, ${t.dollCols} frames in ${t.doll.toFixed(2)} ms at x4 (<= 12)`);
-    const s1 = await sheetsOf(page, true);
+    // the forge enemies: decode (x1), then each sheet's compose at x4
+    await page.evaluate(async rigs => { for (const r of rigs) await FORGE.ready(r, []); }, ENEMY_RIGS);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+    const et = await page.evaluate(async rigs => { const o = {}; for (const r of rigs) { const e = FORGE.sheet(r, []); await e.promise; o[r] = { ms: e.ms, slices: e.slices, frames: e.cols * e.rows }; } return o; }, ENEMY_RIGS);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    const s1 = await sheetsOf(page, true), e1 = await enemySheetsOf(page, true);
     // rim + sockets of one frame
     const rs = await page.evaluate(([rig, lf]) => {
       const r = FORGE.rim(rig, lf, 'idle', 'S', 0), s = FORGE.sockets(rig, lf, 'attack', 'E', 2), m = r.mask.reduce((p, q) => p + q, 0);
@@ -131,8 +155,27 @@ const sheetsOf = (page, want) => page.evaluate(async ([rig, los, want]) => {
       }));
     }
     check('equal', !bad, `${frames - bad}/${frames} board frames identical (${Object.keys(LOADOUTS).join(', ')} x idle/walk/attack x 8 dirs)${bad ? ' | first: ' + badAt.join(', ') : ''}`);
+    // ---- equality: every frame of every forge enemy vs the offline render
+    let ef = 0, eb = 0; const ebAt = [], efile = {};
+    for (const rig of ENEMY_RIGS) {
+      const M = EMODEL[rig], S = e1[rig], px = Buffer.from(S.b64, 'base64'), off = FORGE.sheet(M, { pieces: [], anims: M.sheetAnims }), [fw, fh] = off.frame;
+      off.layout.forEach(([an, f], c) => M.dirs.forEach(([dn], r) => {
+        const rr = S.dirs.indexOf(dn), cc = S.at[an] + f; ef++;
+        for (let y = 0; y < fh; y++) {
+          const A = px.subarray(((rr * fh + y) * S.w + cc * fw) * 4, ((rr * fh + y) * S.w + cc * fw + fw) * 4);
+          const B = Buffer.from(off.rgba.buffer, ((r * fh + y) * off.w + c * fw) * 4, fw * 4);
+          if (Buffer.compare(A, B)) { eb++; if (ebAt.length < 5) ebAt.push(`${rig} ${dn} ${an}${f}`); break; }
+        }
+      }));
+      efile[rig] = fs.existsSync(path.join(ROOT, 'js', 'forge-bank', rig + '.js')) ? fs.statSync(path.join(ROOT, 'js', 'forge-bank', rig + '.js')).size / 1024 : Infinity;
+    }
+    const eSock = ENEMY_RIGS.every(r => ['head', 'chest'].every(k => e1[r].sockets.includes(k))), eSlow = ENEMY_RIGS.filter(r => et[r].ms > 120), eBig = ENEMY_RIGS.filter(r => efile[r] > 160);
+    for (const r of ENEMY_RIGS) console.log(`      ${r.padEnd(14)} ${e1[r].fw}x${e1[r].fh} | file ${efile[r].toFixed(1)} KB | compose at x4: ${et[r].frames} frames in ${et[r].ms.toFixed(1)} ms busy (${et[r].slices.map(v => v.toFixed(0)).join(' + ')}) | sockets ${e1[r].sockets.join(' ')}`);
+    check('enemies', !eb && eSock && !eSlow.length && !eBig.length, `${ENEMY_RIGS.length} rigs: ${ef - eb}/${ef} frames identical (every sheet anim x 8 dirs)${eb ? ' | first: ' + ebAt.join(', ') : ''} | head + chest sockets ${eSock ? 'all' : 'MISSING'}` +
+      ` | compose x4 max ${Math.max(...ENEMY_RIGS.map(r => et[r].ms)).toFixed(1)} ms (<= 120)${eSlow.length ? ' slow: ' + eSlow.join(' ') : ''} | files <= 160 KB${eBig.length ? ' over: ' + eBig.join(' ') : ''}`);
     // ---- page 2: a fresh load builds every sheet again
-    const p2 = await fresh(br), s2 = await sheetsOf(p2.page, false);
+    const p2 = await fresh(br), s2 = await sheetsOf(p2.page, false), e2 = await enemySheetsOf(p2.page, false);
+    for (const r of ENEMY_RIGS) { s1['enemy:' + r] = e1[r]; s2['enemy:' + r] = e2[r]; }
     const diff = Object.keys(s1).filter(lo => s1[lo].sha !== s2[lo].sha);
     check('sha256', !diff.length, `${Object.keys(s1).length} sheets, two fresh builds: ${diff.length ? 'differ: ' + diff.join(', ') : 'identical'} (${full} ${s1[full].sha.slice(0, 16)})`);
     const allErr = errs.concat(p2.errs);
