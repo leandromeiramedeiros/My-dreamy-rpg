@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 // Palette lint (M4a). Checks every colour ramp it can find:
-//   - forge material ramps in tools/forge/models/*.js: explicit arrays of hex colours (the form
+//   - forge material ramps in tools/forge/models/**/*.js: explicit arrays of hex colours (the form
 //     [shadow, low, mid, high, (glint)] that forge.js reads from `ramp:` / material fields);
 //   - ELFX colour rows in js/elfx.js: the `ramp` of each registry row (loaded in a vm sandbox, read as data).
 // Rules per ramp:
@@ -38,7 +38,9 @@ let flat = 0, derived = 0;
 // ---- forge models: arrays of hex literals (2 or more entries) are ramps
 const HEX_ARRAY = /\[\s*((?:['"]#[0-9a-fA-F]{6}['"]\s*,?\s*)+)\]/g;
 const HEX = /#[0-9a-fA-F]{6}/g;
-const modelFiles = fs.existsSync(MODELS) ? fs.readdirSync(MODELS).filter(f => f.endsWith('.js')).sort() : [];
+const modelFiles = fs.existsSync(MODELS)
+  ? fs.readdirSync(MODELS, { recursive: true }).map(f => f.split(path.sep).join('/')).filter(f => f.endsWith('.js')).sort()
+  : [];
 for (const f of modelFiles) {
   const file = path.join(MODELS, f);
   const text = fs.readFileSync(file, 'utf8');
