@@ -17,11 +17,11 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
       shaman ~39 px tall, Shade Hound reads too pale in-game, perf scene `--scene=pine-forge-fight`, full check.js.
     - status.js tint-cache perf (Opus, lighting lane, status.js only): status ≤ 0.5 ms at ×4 with 6 forge enemies
       (now 0.66–1.1).
-  - Loadout v3: COMMITTED (c9d6cf8). Running follow-ups: glossary sweep (Haiku, docs/GLOSSARY.md only); UI polish (Sonnet:
-    hud, menus, touch, screens, ui, play.js; full item names, keycap labels, touch wheel, de-flake play.js "§28 garden boots").
-    Gale wind preset exists in js/wind.js; hook it when the Gale cast lands (M4b skills).
+  - Loadout v3 DONE (c9d6cf8) + UI polish + glossary sweep committed. Gale wind preset exists in js/wind.js; hook it
+    when the Gale cast lands (M4b skills).
 - Forge rulings: chibi rig, fully deterministic volumes (no hand-drawn parts, no tracing); dark outline;
-  base hero bare (casual clothes only, all gear layered at runtime); approval is by the client's eye (scores are info).
+  base hero bare (casual clothes only, all gear layered at runtime); held items keep their own outline (client pick B);
+  approval is by the client's eye (scores are info).
 
 ## Next
 1. Both follow-ups green → commit → full check.js → client plays the M4a slice. OPEN QUESTION to the client: play locally now
