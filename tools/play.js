@@ -12,6 +12,7 @@
 //      a keyed + a sealed warpdoor, shrine warp blocked while an enemy is awake, inline arena reset, fog + sections in the save,
 //      HUD minimap window + full-map screen; a ?phone=1 page checks the phone caps (256 px chunks, 12 resident, 16 awake)
 //  5. frame-time sample (avg / p95)
+//  M4a lighting + status: the forge hero, rim light, status layers, the bloom whitelist (shots: tools/shots/m4a)
 // Usage: node tools/play.js     (exit 1 on any failed check or page error)
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
@@ -1908,6 +1909,145 @@ const PAD_STUB = () => {
     check('M4a Hush: boss-death slow-mo ends it; saves never store it', H.boss.on && !H.boss.after && H.boss.why === 'bossdeath' && !H.saved, { boss: H.boss, saved: H.saved });
     check('M4a: window.worldScale exported for the Wind lane', await iev(() => typeof window.worldScale === 'function' && typeof G.timeScale === 'number'));
     await ip.close();
+  }
+  // ---------- M4a lighting + status (docs/design/lighting-status-fx.md; render.js, status.js) ----------
+  // 1. the forge hero: 3 loadouts in the Vale (forge sheet drawn, missing art falls back), 8 facings; ?oldhero keeps the old path
+  // 2. rim light lit by spell lights
+  // 3. statuses on entities, world tiles and the HUD
+  // 4. bloom whitelist: white-out <= 3 % in a 64 px window around the hero and every enemy, before / after
+  // shots: tools/shots/m4a/{hero-forge-vale, rim-lights, status-entities, status-world, status-hud, bloom-before-after}.png
+  {
+    const M4A = path.join(__dirname, 'shots', 'm4a'); fs.mkdirSync(M4A, { recursive: true });
+    const PY = process.platform === 'win32' ? 'python' : 'python3';
+    const STITCH = [
+      'import sys, json', 'from PIL import Image, ImageDraw',
+      'out = sys.argv[1]; lb = json.loads(sys.argv[2]); fs = sys.argv[3:]',
+      "im = [Image.open(f).convert('RGB') for f in fs]",
+      'w = sum(m.size[0] for m in im) + 4 * (len(im) - 1); h = max(m.size[1] for m in im)',
+      "s = Image.new('RGB', (w, h), (12, 7, 20)); x = 0",
+      'for i, m in enumerate(im):',
+      '  s.paste(m, (x, 0)); d = ImageDraw.Draw(s)',
+      '  if i < len(lb): d.rectangle((x, 0, x + 8 + 6 * len(lb[i]), 14), fill=(12, 7, 20)); d.text((x + 4, 2), lb[i], fill=(255, 255, 255))',
+      '  x += m.size[0] + 4',
+      's.save(out)'].join('\n');
+    const stitch = (files, out, labels) => require('child_process').spawnSync(PY, ['-c', STITCH, out, JSON.stringify(labels || []), ...files]);
+    const tmp = n => path.join(M4A, '_' + n + '.png');
+    const lp = async (q, tag) => {
+      const pg = await br.newPage({ viewport: { width: 960, height: 540 } });
+      pg.on('pageerror', e => errs.push(`pageerror(m4a light ${tag}): ` + e.message));
+      pg.on('console', m => { if (m.type() === 'error') errs.push(`console(m4a light ${tag}): ` + m.text()); });
+      await pg.goto(`${base}/index.html?${q}`, { waitUntil: 'load' });
+      await pg.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+      await wait(300);
+      await pg.evaluate(() => { setSetting('groundIndicators', 'off'); G.banner = null; G.msg = null; G.enemies.length = 0; const p = G.player; p.invulnT = 1e9; p.hp = p.maxHp; });
+      return pg;
+    };
+    const heroClip = async (pg, w, h, dy) => { const [x, y] = await pg.evaluate(() => worldToView(G.player.x, G.player.y, G.player.z)); return { x: Math.min(960 - w, Math.max(0, Math.round(x * 2 - w / 2))), y: Math.min(540 - h, Math.max(0, Math.round(y * 2 - h / 2 + (dy || 0)))), width: w, height: h }; };
+
+    // 1. the forge hero
+    const hp = await lp('scene=play', 'hero');
+    await hp.mouse.move(560, 330);
+    const SETS = { starter: { weapon: 'rustyblade', head: 'ironcap', chest: 'ironmail', boots: 'ironboots' },
+      knight: { weapon: 'auroraedge', offhand: 'aurorabuckler', head: 'auroravisor', chest: 'auroraplate', boots: 'auroragreaves' },
+      mage: { weapon: 'cometrod', offhand: 'stargrimoire', head: 'starweave', chest: 'starwoven', boots: 'mistwalkers' } };
+    const lo = {}, heroShots = [];
+    for (const k in SETS) {
+      await hp.evaluate(S => { const p = G.player; for (const s of ['weapon', 'offhand', 'head', 'chest', 'boots']) p.equip[s] = S[s] ? makeItem(S[s], 'rare', 30) : null; recalcStats(p, true); }, SETS[k]);
+      await hp.waitForFunction(() => FH.last && FH.lo && FH.last.lo === FH.lo, null, { timeout: 15000 }).catch(() => {});
+      await wait(400);
+      lo[k] = await hp.evaluate(() => { const d = G.player._drawn; return { forge: !!(d && d.img && d.sx != null && FH.last && d.img === FH.last.e.canvas), lo: FH.lo.slice(), anim: FH.cur && FH.cur[0] }; });
+      await hp.screenshot({ path: tmp('hero-' + k), clip: await heroClip(hp, 240, 240, -30) }); heroShots.push(tmp('hero-' + k));
+    }
+    stitch(heroShots, path.join(M4A, 'hero-forge-vale.png'), Object.keys(SETS));
+    check('M4a hero: drawPlayer draws the forge chibi sheet in 3 loadouts (starter, knight, mage)', Object.values(lo).every(v => v.forge), lo);
+    check('M4a hero: the loadout maps from the equipped items (knight: weapon, offhand, helm, chest, boots lines)', lo.knight.lo.length >= 4 && lo.starter.lo.length >= 1, { knight: lo.knight.lo, starter: lo.starter.lo });
+    const warned = await hp.evaluate(() => [...FH.warned]);
+    check('M4a hero: missing forge art falls back (no crash), each logged once', lo.mage.forge && new Set(warned).size === warned.length, warned);
+    const dirs = [];
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4, [hx, hy] = await hp.evaluate(() => worldToView(G.player.x, G.player.y, G.player.z));
+      await hp.mouse.move(hx * 2 + Math.cos(a) * 160, hy * 2 + Math.sin(a) * 160); await wait(150);
+      dirs.push(await hp.evaluate(() => heroDir(G.player)));
+    }
+    check('M4a hero: 8 true facings from the aim', new Set(dirs).size === 8, dirs);
+    const anims = await hp.evaluate(async () => {
+      const p = G.player, seen = new Set(), pull = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => { seen.add(FH.cur && FH.cur[0]); r(); })));
+      await pull(); basicAttack(p); await pull(); await new Promise(r => setTimeout(r, 500)); p.hurtT = 0.3; await pull(); p.hurtT = 0;
+      return [...seen];
+    });
+    check('M4a hero: idle, attack and hit anims come from the forge sheet', ['idle', 'attack', 'hit'].every(a => anims.includes(a)), anims);
+    await hp.close();
+    const op = await lp('scene=play&oldhero', 'oldhero'); await wait(500);
+    const old = await op.evaluate(() => { const d = G.player._drawn; return { old: !!(d && d.frame !== undefined && d.sx === undefined) }; });
+    check('M4a hero: ?oldhero keeps the old hero path', old.old, old);
+    await op.close();
+
+    // 2. rim light (Pinewood, 4 spell lights, a slime: rims on every body up to 12 on high)
+    const rp = await lp('map=pinewood', 'rim');
+    await rp.mouse.move(780, 140);
+    await rp.evaluate(() => {
+      const p = G.player, e = spawnEnemy('slime', p.x + 3, p.y - 1.5, 0); e.speed = 0; e.hp = e.maxHp = 1e9; e.cd = 99; e.spawnT = 0; e.asleep = false;
+      for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + 0.4; spawnProj({ x: p.x + Math.cos(a) * 1.4, y: p.y + Math.sin(a) * 1.4, z: 1.2, ang: 0, speed: 0, r: 0.01, dmg: 0, life: 1e6, kind: ['fire', 'frost', 'lightning', 'holy'][k], col: ['#ff9a4a', '#9fe8ff', '#fff27a', '#ffe9a8'][k], pierce: 1e9 }); }
+    });
+    await wait(1200);
+    const rim = await rp.evaluate(() => ({ n: RIM.n, max: RIM.max, sprites: RIM.sprites.size }));
+    await rp.screenshot({ path: tmp('rim-wide'), clip: await heroClip(rp, 400, 300, -20) });
+    await rp.screenshot({ path: tmp('rim-zoom'), clip: await heroClip(rp, 100, 100, -12) });
+    require('child_process').spawnSync(PY, ['-c', ['import sys', 'from PIL import Image', 'Image.open(sys.argv[1]).resize((300, 300), Image.NEAREST).save(sys.argv[1])'].join('\n'), tmp('rim-zoom')]);
+    stitch([tmp('rim-wide'), tmp('rim-zoom')], path.join(M4A, 'rim-lights.png'), ['Pinewood: 4 spell lights, a slime', 'hero x3']);
+    check('M4a rim: the hero and a slime take a rim from nearby lights', rim.n >= 2 && rim.sprites > 0, rim);
+    await rp.close();
+
+    // 3. statuses on entities, world tiles and the HUD
+    const sp = await lp('scene=play', 'status');
+    await sp.mouse.move(600, 300);
+    await sp.evaluate(() => {   // lightPool is wrapped to count the status lights offered (over the cap they lose their slots first)
+      const lp0 = lightPool; window.__stl = 0; lightPool = function (vis, cap) { window.__stl = vis.filter(v => v[2].stat).length; return lp0(vis, cap); };
+      const p = G.player, ids = ['burning', 'frozen', 'shocked', 'wet', 'rooted', 'smitten'];
+      ids.forEach((id, i) => { const a = i / ids.length * Math.PI * 2, e = spawnEnemy('slime', p.x + Math.cos(a) * 2.6, p.y + Math.sin(a) * 2.6, 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.spawnT = 0; e.asleep = false; STATUS.apply(e, id, 60, i === 0 ? 3 : 0); if (id === 'frozen') { e.frozen = 1; e.stunT = 60; } });
+      STATUS.apply(p, 'burning', 30, 2); STATUS.apply(p, 'wet', 20);
+      STATUS.ring(p.x, p.y, 4.2, 'burning', 60);
+    });
+    await wait(1400);
+    const st = await sp.evaluate(() => Object.assign(STATUS.stats(), { lights: window.__stl, drawn: LIGHT_VIS.filter(v => v[2].stat).length }));
+    await sp.screenshot({ path: path.join(M4A, 'status-entities.png'), clip: await heroClip(sp, 480, 300, -10) });
+    await sp.screenshot({ path: path.join(M4A, 'status-world.png') });
+    await sp.screenshot({ path: path.join(M4A, 'status-hud.png'), clip: { x: 0, y: 380, width: 960, height: 160 } });
+    check('M4a status: tint, overlay, emitters and a merged light on 6 bodies (status lights offered to the light pool)', st.bodies >= 6 && st.parts > 0 && st.lights >= 6, st);
+    check('M4a status: a burning ring on the world tiles (emitting tiles capped per tier)', st.tiles > 20 && st.emittingTiles >= 1 && st.emittingTiles <= 4, { tiles: st.tiles, emitting: st.emittingTiles });
+    check('M4a status: the HUD shows the hero\'s statuses (icons with timers)', st.hudIcons >= 2, st.hudIcons);
+    await sp.close();
+
+    // 4. bloom whitelist (lighting doc "Bloom": <= 3 % near-white in a 64 px window around any enemy; the hero's window too).
+    // Every slot cast at a slime next to the hero; each cast is sampled every 50 ms for 1.2 s: the gate is the settled value
+    // (the last 4 samples) and the steady state after all casts (aegis, bulwark, bless up: the hud-full.png condition). The
+    // peak (impact flashes, Radiant Judgement's pillar: the spell's own paint, not bloom) is reported only.
+    // before = ?bloom=all (the pre-M4a look: every light blooms, full halos)
+    const wo = {};
+    for (const [tag, q] of [['before', 'scene=play&bloom=all'], ['after', 'scene=play']]) {
+      const bp = await lp(q, 'bloom ' + tag);
+      await bp.evaluate(() => { const p = G.player, e = spawnEnemy('slime', p.x + 2.5, p.y + 1, 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.spawnT = 0; e.asleep = false; e.speed = 0; });
+      await wait(500);
+      const [ex, ey] = await bp.evaluate(() => worldToView(G.enemies[0].x, G.enemies[0].y, 0)); await bp.mouse.move(ex * 2, ey * 2);
+      const R = { settled: 0, peak: 0, peakSlot: null, slots: {} };
+      for (const s of ['lmb', 'q', 'qu', 'rmb', 'e', 'eu', 'r', 'f', 'v']) {
+        await bp.evaluate(s => { const p = G.player; p.cds = {}; p.mp = p.maxMp; p.st = p.maxSt; p.ult = 100; p.atkT = 0; if (s === 'lmb') basicAttack(p); else useSkill(p, s); }, s);
+        const sm = [];
+        for (let i = 0; i < 24; i++) { await wait(50); const w = await bp.evaluate(() => whiteOut()); sm.push(Math.max(w.hero, w.enemy)); }
+        const settled = Math.max(...sm.slice(-4)), peak = Math.max(...sm);
+        R.slots[s] = [peak, settled]; R.settled = Math.max(R.settled, settled); if (peak > R.peak) { R.peak = peak; R.peakSlot = s; }
+      }
+      await wait(400);
+      R.steady = await bp.evaluate(() => Object.assign(whiteOut(), { buffs: Object.keys(G.player.buffs).join() }));
+      await bp.screenshot({ path: tmp('bloom-' + tag), clip: await heroClip(bp, 360, 280, -10) });
+      wo[tag] = R; await bp.close();
+    }
+    stitch([tmp('bloom-before'), tmp('bloom-after')], path.join(M4A, 'bloom-before-after.png'), [`before (?bloom=all): hero ${wo.before.steady.hero}%  enemy ${wo.before.steady.enemy}%`, `after: hero ${wo.after.steady.hero}%  enemy ${wo.after.steady.enemy}%`]);
+    check('M4a bloom: white-out <= 3 % (64 px windows, hero + enemy) at steady state and settled after every slot cast', wo.after.steady.hero <= 3 && wo.after.steady.enemy <= 3 && wo.after.settled <= 3,
+      { after: { steady: wo.after.steady, settled: wo.after.settled, peak: wo.after.peak, peakSlot: wo.after.peakSlot }, before: { steady: wo.before.steady, settled: wo.before.settled, peak: wo.before.peak } });
+    console.log('      white-out per slot [peak, settled] %: after ' + JSON.stringify(wo.after.slots) + ' before ' + JSON.stringify(wo.before.slots));
+    for (const f of fs.readdirSync(M4A)) if (f.startsWith('_')) fs.unlinkSync(path.join(M4A, f));
+    check('M4a lighting shots written to tools/shots/m4a', ['hero-forge-vale', 'rim-lights', 'status-entities', 'status-world', 'status-hud', 'bloom-before-after'].every(n => fs.existsSync(path.join(M4A, n + '.png'))));
   }
   check('no page errors', errs.length === 0, errs.slice(0, 5));
   await br.close(); srv.close();

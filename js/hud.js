@@ -661,6 +661,7 @@ function drawPlayHud(ctx, p, inert) {
   if (mirror) ctx.restore();
   hudFaded(ctx, hudA('bars'), c => drawStatusRow(c, p, touch ? DW - 24 : 100, touch ? 148 : 428, touch));
   if (!touch) drawSkillBar(ctx, p, inert);
+  if (typeof STATUS !== 'undefined') hudFaded(ctx, hudA('bars'), c => STATUS.drawHud(c, p, touch));   // M4a status icons, portrait pulse, react dots (status.js)
   if (!(hudA('map') > 0)) { const m = G.map; if (!m.mini || m.mini.prog !== G.prog) miniBuild(m); miniReveal(m, p); }   // hidden (§28): the fog still records the walk
   hudFaded(ctx, hudA('map'), c => drawMinimap(c, p, touch ? DW - 24 - 112 : 832, touch ? 24 : 16));
   hudFaded(ctx, hudA('tracker'), c => drawTracker(c, touch ? 24 : 16, touch ? 24 : 16));
