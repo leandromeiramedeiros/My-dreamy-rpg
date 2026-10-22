@@ -37,7 +37,7 @@
 //   sheetAnims: ['idle', 'walk', ...]      the columns of a loadout sheet (default: every anim)
 //   layers: [ LAYER ]                      the bare body; a v1 model (mats / prims / stamps at the top level) = one layer
 // }
-// LAYER = { id, tag?, group?, bias?, mats, prims, stamps }
+// LAYER = { id, tag?, group?, bias?, mats, prims, stamps, sprites }
 //   tag: what equipment can hide (a helm hides 'hair');  group: parts of one group never get a dark line between them;
 //   bias: px towards the camera when stacking (cloth over a body that pokes through it by less than that)
 //   mats: { name: '#hex' | [hex...] | { ramp, flat, lift, tones, spec } }   ramp: '#hex' (auto) or [shadow, low, mid, high, (spec)];
@@ -55,6 +55,11 @@
 //         when: the prim exists only on the frames where it returns true (a drawn bowstring, a nocked arrow)
 //   stamps: { bone, at, n, facing, on?, px:[[dx, dy, '#hex' | mat], ...] }  pixels pinned to a surface point (eyes):
 //         drawn when the point faces the camera and is not hidden inside the layer; other layers can still cover them
+//   sprites: { bone, at?, part?, bias?, when?, key: { ch: [mat, tone] | '#hex' }, dirs: { S|SE|...|SW: { at:[cx, cy], rows:[..] } } }
+//         hand-authored pixel parts (a face, hair, a shield face): the grid of the bone's facing (nearest 45 deg) is pinned
+//         with cell `at` on the bone point, at that point's depth (minus bias px); '.' (any char not in key) is empty.
+//         Authored pixels are flat (no shading, no cleanup) but depth-tested and stacked like any volume, so bake / compose
+//         carry them unchanged
 // PIECE = { id, slot, family?, tier?, class?, hides:[tags], layers:[LAYER], pose?(anim, f), tiers?:[ { mat: ramp } ], sockets?, smear? }
 //   smear: '#hex' a weapon with a 'tip' socket draws the anim's smear frames in this flat colour (hand -> tip path)
 //   family + tier: one baked piece per shape tier (knighthelm.t3); tiers: palette-only variants of one baked piece
@@ -166,6 +171,7 @@ const FORGE = (function () {
     });
     const addHex = h => { if (typeof h === 'string' && h[0] === '#' && !names.includes(h)) { names.push(h); list.push({ ramp: [h, h, h, h], flat: 0 }); } };
     for (const st of layer.stamps || []) for (const p of st.px) addHex(p[2]);
+    for (const sp of layer.sprites || []) for (const k in sp.key) addHex(sp.key[k]);
     for (const pr of layer.prims || []) addHex(pr.mat);
     if (names.length > 128) throw new Error(`layer ${layer.id}: ${names.length} materials (128 at most)`);
     const index = {}; names.forEach((n, i) => { index[n] = i; });
@@ -174,7 +180,7 @@ const FORGE = (function () {
   function partList(layer) {                                    // part names in prim order (stable: the baked index)
     if (layer._pl) return layer._pl;
     const names = [], index = {};
-    for (const pr of layer.prims || []) { const n = pr.part || pr.bone; if (index[n] == null) { index[n] = names.length; names.push(n); } }
+    for (const pr of [...(layer.prims || []), ...(layer.sprites || [])]) { const n = pr.part || pr.bone; if (index[n] == null) { index[n] = names.length; names.push(n); } }
     if (names.length > 16) throw new Error(`layer ${layer.id}: ${names.length} parts (16 at most)`);
     return (layer._pl = { names, index });
   }
@@ -256,6 +262,15 @@ const FORGE = (function () {
   // posterised normals: snap a normal to a lattice of `steps` per axis, so a curved mass breaks into a few flat facets
   // (hand-pixelled bands) instead of a smooth gradient that quantises into ragged contours
   const posterise = (n, steps) => steps ? norm(n.map(v => Math.round(v * steps) / steps)) : n;
+  // a sprite's grid for the way its bone faces: the bone's +z on the ground plane, snapped to the nearest 45 deg (S = 0,
+  // E = 90), so a twisted chest or a turned head picks the turned grid; a missing facing falls back to the nearest one drawn
+  const FACINGS = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'];
+  function spriteGrid(sp, R) {
+    const f = mv(R, [0, 0, 1]), k = ((Math.round(Math.atan2(f[0], f[2]) / (Math.PI / 4)) % 8) + 8) % 8;
+    if (sp.dirs[FACINGS[k]] === null) return null;               // null = drawn by nothing for this facing (a shield's back)
+    for (const d of [0, 1, -1, 2, -2, 3, -3, 4]) { const g = sp.dirs[FACINGS[(k + d + 8) % 8]]; if (g) return g; }
+    return null;
+  }
   function raster(layer, W, cam, anim, frame, rootT) {
     const { w, h, ox, oy, D, RT, UP, L, T } = cam, N = w * h, mt = matTable(layer), pl = partList(layer), H = norm(sub(L, D));
     const G = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), keep: new Uint8Array(N), dq: new Uint8Array(N) };
@@ -311,6 +326,21 @@ const FORGE = (function () {
         if (pr.conn4 && px0 != null && x !== px0 && y !== py0) plot(Math.abs(b[1] - a[1]) > Math.abs(b[0] - a[0]) ? px0 : x, Math.abs(b[1] - a[1]) > Math.abs(b[0] - a[0]) ? y : py0, t);
         plot(x, y, t); px0 = x; py0 = y;
       }
+    }
+    // sprites: hand-authored pixel parts, one grid per facing, pinned to a bone point at that point's depth
+    for (const sp of layer.sprites || []) {
+      if (sp.when && !sp.when(anim, frame)) continue;
+      const g = spriteGrid(sp, W[sp.bone].R); if (!g) continue;
+      const [sx, sy, t0] = proj(worldPoint(W, sp.bone, sp.at || [0, 0, 0])), t = t0 - (sp.bias || 0), part = pl.index[sp.part || sp.bone];
+      const X = Math.floor(sx) - g.at[0], Y = Math.floor(sy) - g.at[1];
+      g.rows.forEach((row, r) => { for (let c = 0; c < row.length; c++) {
+        const k = sp.key[row[c]]; if (k == null) continue;
+        const x = X + c, y = Y + r; if (x < 0 || y < 0 || x >= w || y >= h) continue;
+        const i = y * w + x; if (G.cov[i] && dep[i] < t && !G.flat[i]) continue;   // a volume of this layer in front (a raised arm)
+        const m = typeof k === 'string' ? mt.index[k] : mt.index[k[0]];
+        G.cov[i] = 1; G.mat[i] = m; G.part[i] = part; G.flat[i] = 1; G.keep[i] = 0; dep[i] = t;
+        G.tone[i] = typeof k === 'string' ? (mt.list[m].flat != null ? mt.list[m].flat : 2) : k[1];
+      } });
     }
     // stamps: surface-pinned pixels, hidden when the point faces away or sits behind another volume of this layer
     for (const st of layer.stamps || []) {

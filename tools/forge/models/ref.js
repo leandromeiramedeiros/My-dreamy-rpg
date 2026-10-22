@@ -11,6 +11,7 @@
 // in ref-gear.js is the measured one x 1.19; board.js scales the reference frames by the same factor (nearest neighbour).
 const SCALE = 1.19;
 const SIDES = [['R', -1], ['L', 1]];
+const PARTS = require('./ref-parts.js'), FACE_BIAS = 2;
 const H = require('./humanoid-anims.js'), { sheetAnims } = H;
 // the sword smear: a screen-space crescent around the sword shoulder at the full reach (forge.js smearPoly)
 // and the ref's own sword aims / chest twist per frame on top of the shared chop (fitted to the reference frames)
@@ -66,40 +67,29 @@ const layers = [
   {
     id: 'body', group: 'body', mats: MATS,
     prims: [
-      P('head', 'skin', 'head', 'ell', { c: s([0, 3.9, 0.9]), r: s([3.0, 3.0, 2.9]) }),
       P('chest', 'shirt', 'torso', 'ell', { c: s([0, 2.2, 0.2]), r: s([3.4, 3.1, 2.6]) }),
       P('hips', 'pants', 'torso', 'ell', { c: s([0, -0.3, 0]), r: s([3.1, 1.9, 2.3]) }),
       ...SIDES.flatMap(([sd, k]) => [
         P('upper' + sd, 'shirt', 'arm' + sd, 'cap', { a: [0, 0, 0], b: s([0, -3.1, 0]), ra: s(1.2), rb: s(1.1) }),
         P('fore' + sd, 'skin', 'arm' + sd, 'cap', { a: [0, 0, 0], b: s([0, -2.0, 0]), ra: s(0.95), rb: s(0.9) }),
-        P('hand' + sd, 'skin', 'arm' + sd, 'ell', { c: s([0, -0.7, 0]), r: s([1.15, 1.25, 1.15]) }),
         P('thigh' + sd, 'pants', 'leg' + sd, 'cap', { a: [0, 0, 0], b: s([0.5 * k, -4.0, 0]), ra: s(1.45), rb: s(1.3) }),
         P('shin' + sd, 'pants', 'leg' + sd, 'cap', { a: [0, 0, 0], b: s([0.5 * k, -3.6, 0]), ra: s(1.25), rb: s(1.15) }),
         P('shin' + sd, 'shoes', 'leg' + sd, 'cap', { a: s([0.5 * k, -3.6, 0]), b: s([0.6 * k, -4.6, 0]), ra: s(1.15), rb: s(1.15) }),
         P('foot' + sd, 'shoes', 'foot' + sd, 'ell', { c: s([0, -0.3, 0.4]), r: s([1.3, 1.3, 1.7]), clip: [0, -1, 0, s(1.2)] }),
       ]),
     ],
-    stamps: [   // the visible eye (the hair covers the other in S), 1 x 2 navy
-      { bone: 'head', at: s([1.2, 4.4, 3.2]), n: [0.3, 0, 0.95], facing: 0.1, on: 'skin', px: [[0, 0, NAVY], [0, 1, NAVY]] },
-      { bone: 'head', at: s([-1.2, 4.4, 3.2]), n: [-0.3, 0, 0.95], facing: 0.1, on: 'skin', px: [[0, 0, NAVY], [0, 1, NAVY]] },
+    // the face: a hand-authored pixel part per facing (models/ref-parts.js), pinned at the chin, a little in front of the
+    // neck so the collar of a breastplate does not cut it
+    // hands and the shirt's front are pixel parts too (the legs stay volumes: they swing through every walk frame)
+    sprites: [
+      { bone: 'chest', at: s([0, 2.2, 2.9]), part: 'torso', key: { d: ['shirt', 0], a: ['shirt', 0], A: ['shirt', 2], L: ['shirt', 3], N: ['pants', 0] }, dirs: PARTS.SHIRT },
+      { bone: 'head', at: s([0, 1.0, 2.5]), part: 'head', bias: FACE_BIAS, key: { o: ['skin', 2], s: ['skin', 0], e: NAVY }, dirs: PARTS.HEAD },
+      ...SIDES.map(([sd]) => ({ bone: 'hand' + sd, at: s([0, -0.7, 0]), part: 'arm' + sd, key: { o: ['skin', 2], s: ['skin', 0] }, dirs: PARTS.HAND })),
     ],
   },
-  { id: 'hair', tag: 'hair', group: 'hair', mats: { hair: HAIR }, prims: [
-    // crown (cut level at the eyes, so the face shows on the front and the sides) + the back of the head down to the nape
-    P('head', 'hair', 'hair', 'ell', { c: s([0, 4.9, -0.2]), r: s([4.6, 2.7, 3.2]), clip: [0, -1, 0, s(-4.5)] }),
-    P('head', 'hair', 'hair', 'ell', { c: s([0, 3.7, -1.2]), r: s([5.5, 4.5, 3.05]), clip: [0, 0, 1, s(0.2)] }),
-    // spikes: tapered capsules (ra -> ~0) fanning out of the crown; the big one leans to the character's left (screen-right in S)
-    P('head', 'hair', 'hair', 'cap', { a: s([0.7, 6.4, 0]), b: s([2.0, 9.3, -0.6]), ra: s(1.8), rb: s(0.2) }),
-    P('head', 'hair', 'hair', 'cap', { a: s([-1.4, 6.3, 0.3]), b: s([-3.1, 8.8, 0.4]), ra: s(1.5), rb: s(0.2) }),
-    P('head', 'hair', 'hair', 'cap', { a: s([-2.6, 5.2, -0.8]), b: s([-7.0, 5.4, -3.5]), ra: s(1.3), rb: s(0.2) }),
-    P('head', 'hair', 'hair', 'cap', { a: s([2.6, 5.2, -0.8]), b: s([6.6, 5.6, -3.5]), ra: s(1.3), rb: s(0.2) }),
-    P('head', 'hair', 'hair', 'cap', { a: s([0, 5.2, -2.2]), b: s([0.4, 5.0, -6.4]), ra: s(1.6), rb: s(0.2) }),
-    P('head', 'hair', 'hair', 'cap', { a: s([-2.0, 4.4, -1.8]), b: s([-4.6, 2.8, -4.8]), ra: s(1.3), rb: s(0.2) }),
-    P('head', 'hair', 'hair', 'cap', { a: s([2.0, 4.4, -1.8]), b: s([4.6, 2.8, -4.8]), ra: s(1.3), rb: s(0.2) }),
-    // bangs: a swoop from the character's right across the forehead, one lock down over the right eye
-    P('head', 'hair', 'hair', 'ell', { c: s([-0.9, 5.7, 2.6]), r: s([2.5, 1.0, 1.1]), rot: [0, 0, -0.3] }),
-    P('head', 'hair', 'hair', 'cap', { a: s([-2.0, 5.2, 2.7]), b: s([-0.8, 4.0, 3.6]), ra: s(1.1), rb: s(0.4) }),
-  ] },
+  // hair: the same drawing's navy / blue / cyan characters, drawn over the face (a helm hides the whole layer)
+  { id: 'hair', tag: 'hair', group: 'hair', mats: { hair: HAIR }, prims: [],
+    sprites: [{ bone: 'head', at: s([0, 1.0, 2.5]), part: 'hair', bias: FACE_BIAS, key: { N: ['hair', 0], b: ['hair', 2], c: ['hair', 3] }, dirs: PARTS.HEAD }] },
 ];
 
 module.exports = {

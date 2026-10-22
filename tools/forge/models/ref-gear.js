@@ -15,22 +15,29 @@ const RED = { ramp: ['#670948', '#a62144', '#a62144', '#a62144'], tones: [0.9, 0
 const notAttack = fn => (a, f) => a.startsWith('attack') ? {} : fn(a, f);
 
 const SIDES = [['R', -1], ['L', 1]];
+const PARTS = require('./ref-parts.js');
+const PLATE_KEY = { d: ['plate', 0], a: ['plate', 1], A: ['plate', 2], L: ['plate', 3], N: ['strap', 0] };
 const armour = {
   id: 'armour', slot: 'chest',
-  layers: [layer({ id: 'armour', bias: 0.7, mats: {
+  layers: [Object.assign(layer({ id: 'armour', bias: 0.7, mats: {
     plate: { ramp: ['#433a60', '#644f77', '#907ca1', '#b5a0ba'], tones: [0.9, 0.2, -0.3] },
     strap: { ramp: [NAVY, NAVY, NAVY, NAVY] },
     sleeve: { ramp: [NAVY, '#104097', '#104097', '#104097'], tones: [0.95, 0.5, -0.2] },   // padded sleeve under the pauldron
-  }, prims: [
-    { bone: 'chest', mat: 'plate', part: 'torso', shape: 'ell', c: [0, 2.4, 0.2], r: [4.65, 3.95, 4.4] },   // fitted: a pixel side view is nearly as deep as wide
+  }, prims: [   // the volumes give the silhouette and the depth; the sprites below draw the plate's face over them
+    { bone: 'chest', mat: 'plate', part: 'torso', shape: 'ell', c: [0, 2.4, 0.2], r: [4.3, 3.3, 3.8] },
     { bone: 'spine', mat: 'strap', part: 'torso', shape: 'box', c: [0, 0.9, 0], h: [3.4, 0.75, 2.4], round: 0.5 },
     ...SIDES.flatMap(([sd, k]) => [
       { bone: 'upper' + sd, mat: 'plate', part: 'pauldron' + sd, shape: 'ell', c: [0.3 * k, -0.2, 0], r: [1.9, 2.0, 2.15] },
       { bone: 'upper' + sd, mat: 'sleeve', part: 'arm' + sd, shape: 'cap', a: [0, -0.5, 0], b: [0, -3.1, 0], ra: 1.25, rb: 1.2 },
       { bone: 'fore' + sd, mat: 'plate', part: 'arm' + sd, shape: 'cap', a: [0, 0, 0], b: [0, -2.0, 0], ra: 1.25, rb: 1.15 },
-      { bone: 'shin' + sd, mat: 'strap', part: 'knee' + sd, shape: 'cap', a: [0, 0.2, 0], b: [0.3 * k, -1.6, 0], ra: 1.45, rb: 1.38 },
+      { bone: 'shin' + sd, mat: 'strap', part: 'knee' + sd, shape: 'cap', a: [0, -0.3, 0], b: [0.3 * k, -1.4, 0], ra: 1.4, rb: 1.35 },
     ]),
-  ] })],
+  ] }), {
+    // the breastplate + belt and the pauldrons: hand-authored pixel parts per facing (models/ref-parts.js)
+    sprites: [
+      { bone: 'chest', at: sc([0, 2.4, 4.2]), part: 'torso', key: PLATE_KEY, dirs: PARTS.PLATE },
+      ...SIDES.map(([sd, k]) => ({ bone: 'upper' + sd, at: sc([0.3 * k, -0.2, 2.4]), part: 'pauldron' + sd, key: PLATE_KEY, dirs: PARTS.PAULDRON })),
+    ] })],
 };
 const boots = {
   id: 'boots', slot: 'boots',
@@ -56,7 +63,7 @@ const cape = {
 const SHIELD = { rest: { aim: [-0.19, 1, 0], roll: [0.55, 0, 0.83] }, walk: { aim: [-0.07, 1, 0.05], roll: [0.6, 0, 0.8] } };
 const shield = {
   id: 'shield', slot: 'offhand',
-  layers: [layer({ id: 'shield', mats: {
+  layers: [Object.assign(layer({ id: 'shield', mats: {
     face: RED, back: { ramp: ['#592104', '#592104', '#a64e21', '#a64e21'], tones: [0.95, 0.3, -2] },
     rim: { ramp: ['#a64e21', '#a64e21', '#cc7c52', '#e5e0ac'], tones: [0.55, 0.0, -0.6] },
     boss: { ramp: ['#cc7c52', '#cc7c52', '#e5e0ac', '#e5e0ac'], tones: [0.9, 0.2, -2] },
@@ -65,7 +72,12 @@ const shield = {
     { bone: 'offhand', mat: 'rim', part: 'shield', shape: 'ell', c: [0, 0.2, 0.75], r: [3.7, 3.7, 0.4] },
     { bone: 'offhand', mat: 'face', part: 'shield', shape: 'ell', c: [0, 0.1, 1.05], r: [3.0, 3.0, 0.5] },
     { bone: 'offhand', mat: 'boss', part: 'shield', shape: 'ell', c: [0, 0.1, 1.55], r: [0.8, 0.8, 0.45] },
-  ] })],
+  ] }), {
+    // the face (rim, boss) or the wooden back as pixel parts over the volumes, by the way the face points
+    sprites: [
+      { bone: 'offhand', at: sc([0, 0.1, 2.1]), part: 'shield', key: { y: ['rim', 3], t: ['rim', 2], r: ['face', 1], R: ['face', 0], Y: ['boss', 2] }, dirs: PARTS.SHIELD_FACE },
+      { bone: 'offhand', at: sc([0, 0.2, -0.3]), part: 'shield', key: { B: ['back', 0], s: ['back', 2] }, dirs: PARTS.SHIELD_BACK },
+    ] })],
   pose: a => ({ offhand: a === 'walk' ? SHIELD.walk : SHIELD.rest }),
 };
 
