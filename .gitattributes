@@ -1,0 +1,4 @@
+js/forge-bank/*.js eol=lf
+js/forge-rt.js eol=lf
+tools/forge/*.js eol=lf
+tools/forge/models/*.js eol=lf

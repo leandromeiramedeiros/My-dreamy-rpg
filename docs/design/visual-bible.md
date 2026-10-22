@@ -39,7 +39,7 @@ then render.js `drawPlayer` / `drawEnemy` / `drawNpc`: one `drawImage` per frame
   only the equipped HAND class's atk sheet is decoded.
 * Layering at runtime is a depth resolve of baked pieces (nearest layer wins, inner line between parts).
 * Budgets (CPU ×4 phone proxy): first full-loadout sheet ≤ 120 ms; cached frame ≤ 0.05 ms; bag paper doll one direction ≤ 10 ms.
-* Size caps per shipped sheet: helm, chest, boots ≤ 64 KB; cape ≤ 36 KB; other pieces ≤ 30 KB. Starter bundle ≤ 400 KB.
+* Size caps per shipped sheet: helm, chest, boots ≤ 64 KB; cape ≤ 36 KB; other pieces ≤ 30 KB. One line bank file per tier ≤ 160 KB. Starter bundle ≤ 400 KB.
 * Sockets exported: handR, handL, head, chest, cast, tip, capeTop, capeHem. Also a 1-bit rim mask with a facing hint (`FORGE.rim`) and a bbox.
 * Approval gate: the client's eye on the chibi board and tier strips (quality bar: the first chibi knight's 5 tiers). Checks: sha256 stable, 0 lone pixels, runtime equals offline byte for byte.
 * Tools: `build.js`, `forge.js`, `tiers.js` (gear-line checks), `tools/forge-rt-check.js`, `icons.js` (24x24 item icons from the same models at a fixed 3/4 pose),

@@ -4,7 +4,9 @@
 //   node tools/forge-rt-check.js            exit 1 on any FAIL
 // Checks:
 //   engine     js/forge-rt.js's engine block == the <rt> blocks of tools/forge/forge.js (rebuild: node tools/forge/build.js chibi)
-//   banks      every bank sheet <= 64 KB of PNG; starter bundle (forge-rt.js + chibi.js) <= 400 KB
+//   banks      every bank sheet <= 64 KB of PNG; starter bundle (forge-rt.js + chibi.js) <= 400 KB; the files are exactly
+//              chibi.js + one per piece file the rig bank names (no stale file)
+//   tier       every piece file (<line>.t<N>.js, one tier: what a drop loads) <= 160 KB
 //   equal      runtime sheet == offline FORGE.render byte for byte on every board frame (idle, walk, attack x 8 dirs) of
 //              every bank loadout, bare and geared
 //   sheet      the first full-loadout sheet (radiant, 8 dirs x every column) at CPU throttle x4: <= 120 ms busy (3 slices)
@@ -60,19 +62,25 @@ const sheetsOf = (page, want) => page.evaluate(async ([rig, los, want]) => {
 
 (async () => {
   // engine sync
-  const rt = fs.readFileSync(path.join(ROOT, 'js', 'forge-rt.js'), 'utf8');
-  const want = [...fs.readFileSync(path.join(FD, 'forge.js'), 'utf8').matchAll(/^ {2}\/\/ <rt>[^\n]*\n([\s\S]*?)^ {2}\/\/ <\/rt>\n/gm)].map(m => m[1]).join('');
+  const rt = fs.readFileSync(path.join(ROOT, 'js', 'forge-rt.js'), 'utf8').replace(/\r\n/g, '\n');
+  const want = [...fs.readFileSync(path.join(FD, 'forge.js'), 'utf8').replace(/\r\n/g, '\n').matchAll(/^ {2}\/\/ <rt>[^\n]*\n([\s\S]*?)^ {2}\/\/ <\/rt>\n/gm)].map(m => m[1]).join('');
   const a = rt.indexOf('  // <engine>'), b = rt.indexOf('  // </engine>'), have = a >= 0 && b > a ? rt.slice(rt.indexOf('\n', a) + 1, b) : '';
-  check('engine', have === want, have === want ? `${want.split('\n').length - 1} lines in sync with tools/forge/forge.js` : 'out of sync: node tools/forge/build.js chibi');
+  check('engine', have === want && want.length > 0, have === want ? `${want.split('\n').length - 1} lines in sync with tools/forge/forge.js` : 'out of sync: node tools/forge/build.js chibi');
   // bank sizes
   const files = fs.readdirSync(path.join(ROOT, 'js', 'forge-bank')).filter(f => f.endsWith('.js'));
-  let worst = { key: '', kb: 0 }, n = 0;
+  let worst = { key: '', kb: 0 }, top = { f: '', kb: 0 }, n = 0;
   for (const f of files) {
     const B = require(path.join(ROOT, 'js', 'forge-bank', f)), L = B[f.slice(0, -3)];
     for (const k in L.sheets) { n++; const kb = Buffer.from(L.sheets[k].png, 'base64').length / 1024; if (kb > worst.kb) worst = { key: k, kb }; }
+    const fkb = fs.statSync(path.join(ROOT, 'js', 'forge-bank', f)).size / 1024; if (f !== `${RIG}.js` && fkb > top.kb) top = { f, kb: fkb };
   }
   const starter = (fs.statSync(path.join(ROOT, 'js', 'forge-rt.js')).size + fs.statSync(path.join(ROOT, 'js', 'forge-bank', `${RIG}.js`)).size) / 1024;
-  check('banks', worst.kb <= 64 && starter <= 400, `${files.length} lines, ${n} sheets, largest ${worst.key} ${worst.kb.toFixed(1)} KB (<= 64) | starter bundle ${starter.toFixed(0)} KB (<= 400)`);
+  const named = new Set([RIG, ...Object.values(BANK.lines)].map(l => l + '.js')), stale = files.filter(f => !named.has(f)), missing = [...named].filter(f => !files.includes(f));
+  check('banks', worst.kb <= 64 && starter <= 400 && !stale.length && !missing.length,
+    `${files.length} files, ${n} sheets, largest sheet ${worst.key} ${worst.kb.toFixed(1)} KB (<= 64) | starter bundle ${starter.toFixed(0)} KB (<= 400)` +
+    (stale.length ? ` | stale: ${stale.join(' ')}` : ' | no stale file') + (missing.length ? ` | missing: ${missing.join(' ')}` : ''));
+  const over = files.filter(f => f !== `${RIG}.js` && fs.statSync(path.join(ROOT, 'js', 'forge-bank', f)).size > 160 * 1024);
+  check('tier', top.kb <= 160, `largest piece file ${top.f} ${top.kb.toFixed(1)} KB (<= 160)${over.length ? ` | over: ${over.join(' ')}` : ''}`);
   const tags = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/<script src="js\/forge-rt\.js"><\/script>/g) || []).length;
   check('tag', tags === 1, `index.html loads js/forge-rt.js ${tags}x`);
 
@@ -108,7 +116,7 @@ const sheetsOf = (page, want) => page.evaluate(async ([rig, los, want]) => {
       const faces = new Set(); r.face.forEach((f, i) => { if (r.mask[i]) faces.add(f); });
       return { edge: m, faces: faces.size, w: r.w, sockets: Object.keys(s) };
     }, [RIG, LOADOUTS[full]]);
-    check('rim/sock', rs.edge > 0 && rs.faces >= 6 && rs.sockets.includes('handR'), `${full} idle S: ${rs.edge} edge px, ${rs.faces} facings | sockets: ${rs.sockets.join(' ')}`);
+    check('rim/sock', rs.edge > 0 && rs.faces >= 6 && ['handR', 'handL', 'head', 'cast', 'chest'].every(k => rs.sockets.includes(k)), `${full} idle S: ${rs.edge} edge px, ${rs.faces} facings | sockets: ${rs.sockets.join(' ')}`);
     // ---- equality: the board frames of every loadout vs the offline render
     let frames = 0, bad = 0; const badAt = [];
     for (const lo in LOADOUTS) {

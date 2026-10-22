@@ -22,8 +22,9 @@
 //                                              face[i] = the octant of its outward normal (0 E, 1 NE, 2 N, 3 NW, 4 W, 5 SW,
 //                                              6 S, 7 SE; 8 none)
 // FORGE.rgba(rig, loadout, anim, dir, f)    -> the frame's RGBA (Uint8ClampedArray, w x h; tests)
-// Banks: js/forge-bank/<line>.js (FORGE_BANK.<line>), inserted as <script> on first use: <rig>.js (body, hair, which line
-// holds each piece), then one file per gear line (sword.js holds sword.t1 .. t5). A sheet is decoded on first need.
+// Banks: js/forge-bank/<line>.js (FORGE_BANK.<line>), inserted as <script> on first use: <rig>.js (body, hair, which file
+// holds each piece), then one file per piece tier (sword.t1.js holds sword.t1; Mythic = t6), so a drop loads only its
+// tier. A sheet is decoded on first need.
 const FORGE = (function () {
   // <engine> generated: the <rt> blocks of tools/forge/forge.js (build.js copies them; do not edit here)
   // ---- vectors / rotations -------------------------------------------------------------------------------------

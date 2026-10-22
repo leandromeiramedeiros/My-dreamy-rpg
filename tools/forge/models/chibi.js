@@ -97,6 +97,7 @@ module.exports = {
   sockets: {
     handR: { bone: 'handR', at: [0, -0.6, 0] }, handL: { bone: 'handL', at: [0, -0.6, 0] },
     head: { bone: 'head', at: [0, 12.5, 0] }, cast: { bone: 'chest', at: [0, 1.5, 7.5] },
+    chest: { bone: 'chest', at: [0, 0.6, 0] },                  // the torso's centre: status icon / aura anchor (Lighting)
   },
   dirs: [['S', 0], ['SE', 45], ['E', 90], ['NE', 135], ['N', 180], ['NW', 225], ['W', 270], ['SW', 315]],
 };
