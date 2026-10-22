@@ -487,3 +487,12 @@ through the forge, the deck pools, Act II Ruins, elements in the world, balance 
 | Balance + QA | Opus (balsim) + Haiku (bot runs, shots) | tools/balsim.js, tools/qa | all red flags green; `run-big.js` all devices to the end of Act II |
 Gate: 100 % of sprites forge-made (no legacy sheet drawn in play), phone p95 ≤ 20 ms on every zone shot, the lean docs
 current, M4b ships to Pages.
+
+## Client rulings (2026-10-22)
+1. Hotkeys: **R = head, F = chest, V = boots (dodge)**. Movement stays WASD. (Replaces 4.7's R chest / D head / F boots.)
+2. Hero scale: 32 px body in a 48 px frame (A).
+3. Mage arsenal: Grimoire pages, generalised to Quiver and Warhorn (A).
+4. Two-hander offhand: worn companions (A).
+5. **Directions: 8 for every creature with a facing** (hero, gear, NPCs, humanoids, beasts, bosses); 1 only for amorphous / swarm. (Replaces 1.5's 4-dir beasts; model-line cost unchanged, render time and bank size for beasts ×2.)
+6. Repo history: purge tools/qa/old with git filter-repo + force-push (A), done by the director after all open branches merge.
+7. Director takes the recommendations on the rest: forge retuned (Choice 3 A), base64 lazy banks (4 A), belt and satchel on one slot (7 A).
