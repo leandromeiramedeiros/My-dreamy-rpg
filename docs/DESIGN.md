@@ -1985,3 +1985,44 @@ on wet tiles. Ice tiles and walls use the frost ramp with ≤ 1 glint light per 
   shortcut puzzle. Never cut: Pip's charge, the torch room, brambles, the creek freeze, Gale, Drift.
 * **Client approval (2026-10-20):** the FX board in tools/shots/m3-fxboard (3 atlas effects, 11 particle sets, statuses,
   HUD mock) is **APPROVED** as the look. The full rollout (P2–P6, S1–S5) is scheduled in M4a/M5, gated on no net phone cost.
+
+## 34. Legendary: "The Stopped Hour" and its skill, Hush (client request 2026-10-22; director-designed)
+* **Fantasy:** the world slows to a quarter of its speed while the hero moves at full speed. Enemies, projectiles,
+  wind, knockback and particles all crawl. It burns MP fast.
+* **Placement (Loadout v3):** a Legendary weapon unique, rule `stillhour`. Like Twice-Told (§30), it rolls on the finder's
+  own weapon variant. The rule **replaces the item's spell with Hush**: Q in the HAND slot, E in the OFFHAND slot. Action
+  and ultimate are unchanged. Drops once, on a boss-class kill at L13+ (Act II on). It never drops on the same kill as
+  Twice-Told. It is the **20th unique** (the §30 cap of 19 rises to 20; client request).
+* **Activation:** a toggle. Start cost 30 MP; drain **60 MP per real second** (base pool 260 ≈ 3.8 s real ≈ 15 s of world
+  time). It ends on a second press, at 0 MP, on hero death, on a boss-death slow-mo, or on a map change. Cooldown 3 s
+  after it ends. While it is active: hits build **no MP**, ult charge builds at ×0.5, MP regen stops.
+* **Time model:** one world scale, `G.timeScale` (1 normally, **0.25** in Hush), applied in the fixed step as
+  `sdt = dt × worldScale(entity)`. It replaces `enemyTimeScale()`.
+
+  | World time (×0.25) | Real time (×1) |
+  |---|---|
+  | enemies (movement, attacks, AI timers, boss telegraphs, spawns) | hero movement, attacks, dodges, cooldowns |
+  | all projectiles, including the hero's once they leave the hand | input, HUD, menus, camera |
+  | knockback and displacement on enemies | knockback on the hero |
+  | the wind field (`WIND.sample` time), particles and ELFX, world animations | hitlag (§27; it is real-time already) |
+  | status durations and DoT ticks, reactions | the Hush drain itself |
+* **Resistance:** elites at ×0.375, bosses at **×0.5**. Boss phase transitions and invulnerable windows ignore Hush.
+* **Merges:** with Dreamveil (enemies at 0.35), the slower one wins (min, never multiplied). A boss-death slow-mo ends
+  Hush first.
+* **Balance:** hero damage ×0.6 while Hush is active (the hero acts 4× faster than the world). The Echo spirit (§30) runs
+  on world time, so its replays crawl too. Balsim gate: a Hush rotation gains at most +20 % boss-fight DPS on reference
+  gear; Bramblehorn-class fights stay inside their length band.
+* **Feel:** 0.15 s ease in and out of the scale. The world desaturates (−40 %) with a cool tint; the hero keeps full
+  colour plus a short after-image. World SFX play at half rate, music gets an 800 Hz low-pass, and a soft heartbeat
+  plays at 1 Hz. The MP bar shimmers while it drains. On phone: tint only, no desaturate pass (≈ 0 ms cost).
+* **Engineering:** one `worldScale(e)` replaces `enemyTimeScale()`. Audit every timer that reads real time
+  (`performance.now`, setTimeout, `G.t` users) for world-vs-real. Saves never store Hush as active. Pause freezes both
+  clocks.
+* **Tests (play.js):**
+  * over 1 s real: an enemy moves 0.25×, an elite 0.375×, a boss 0.5×; the hero's speed is unchanged;
+  * MP: −30 at start, then −60/s; Hush ends at 0 MP; the cooldown is 3 s;
+  * a hero projectile slows to 0.25× once it leaves the hand;
+  * Dreamveil + Hush = 0.25, not 0.0875;
+  * the wind phase and a DoT tick both advance at 0.25×;
+  * a boss-death slow-mo ends Hush.
+* **Build:** M4a, in the Loadout lane (after the hot-fix frees game.js). Glossary rows added with this section.

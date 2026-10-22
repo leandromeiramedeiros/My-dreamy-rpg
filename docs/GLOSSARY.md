@@ -45,6 +45,7 @@ A dash in "Code id" means no code id yet. Retired terms live only in the last se
 | Focus | Shots' hold-M1: aim, then the next shot crits | — | — | M4a |
 | Heavy Strike | Greatarms two-hander hold-M1: 1 s charge, x1.8, poise | — | Heavy (that is the armour class); charged swing | M4a |
 | Hitlag | Brief freeze of attacker and target on a hit; scales with `weight` | `hitstop` | Hitstop (setting label is wrong, UI fix later) | live |
+| Hush | Spell from The Stopped Hour: toggle, world time ×0.25, hero full speed, drains MP | `hush` | time slow; bullet time; slow-mo (that is the boss-death effect) | M4a |
 | I-frames | Invulnerable frames during Boots-key dodge | — | — | live |
 | Level | Hero or enemy level number | `level` | — | live |
 | Mastery | Per-variant skill rank 1 to 5 earned by use | — | — | live |
@@ -68,6 +69,7 @@ A dash in "Code id" means no code id yet. Retired terms live only in the last se
 | Wake at shrine | Respawn at the last Checkpoint shrine after death | — | — | live |
 | Ward | Foci's off-action: hold a mana shield, pops to a nova on release | — | — | M4a |
 | Weight | Hitlag field: basic 1, heavy 1.5, ultimate 2 | `weight` | — | live |
+| World scale | Time multiplier for everything but the hero: 1 normally, 0.25 in Hush | `G.timeScale` | global time scale; enemy time scale | M4a |
 
 ## 3. Elements, statuses and reactions
 | Term | Meaning | Code id | Not | Status |
@@ -322,6 +324,7 @@ Mythic armour (one per suit family): Shardheart Plate, Gloomspire Vestment, Forg
 | Morrowbane | Mythic Sword; the Sword line's Mythic name | `UNIQUES` | — | live |
 | Root-Crown | Unique helm | `UNIQUES` | — | live |
 | Tide-Edge | Unique weapon | `UNIQUES` | — | live |
+| The Stopped Hour | Legendary unique (20th) whose rule replaces its spell with Hush | `stillhour` | time rune; Hush (that is the spell) | M4a |
 | Twice-Told | Legendary unique that grants Echo (see Echo) | `echo` | — | live |
 | Warden's Lantern Plate | Unique chest | `UNIQUES` | Warden's Lantern | live |
 | World unique | Named drop tied to a place or boss | `WORLD_UNIQUES` | — | live |
