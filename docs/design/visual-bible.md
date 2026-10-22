@@ -30,20 +30,19 @@ Runtime lights and status layers: [lighting-status-fx.md](lighting-status-fx.md)
 * Lint (`tools/palette-lint.js`): no lone 1 px cluster, clusters at least 2 px, at most 5 tones per material, at most 24 colours per piece.
 
 ## Forge pipeline
-`tools/forge/models/<rig>.js` and `<line>-gear.js` (tier rows T1 to T5 plus Mythic)
-then `node tools/forge/build.js <rig> [lines]` (same input gives the same sha256)
-then `tools/forge/out/<piece>.bank.png` (G-buffer: coverage, material, depth, tone) and `.meta.json` (sockets, rims, bbox)
-then `tools/forge/pack.js` (base64 into classic scripts)
-then `js/forge-bank/<line>.js` (`FORGE_BANK.<line>`, lazily inserted `<script>`)
-then `js/forge-rt.js` `FORGE.compose(bank, {dir, anim, frame, pieces})` once per loadout change, into a cached sheet
+`tools/forge/models/chibi.js` (rig, bare base) and `chibi-gear.js` / `chibi-<line>.js` (tiers T1 to T5 plus Mythic)
+then `node tools/forge/build.js chibi` (same input gives byte-identical output; only changed files are rewritten)
+then `js/forge-bank/chibi.js` (body + hair) and `js/forge-bank/<line>.t<N>.js` (one file per tier, `FORGE_BANK`, lazily inserted `<script>`)
+then `js/forge-rt.js` (engine copied from forge.js by build.js): `FORGE.sheet(rig, loadout)` once per loadout change, time-sliced over 3 frames, last 6 loadouts cached; `FORGE.frame` per draw
 then render.js `drawPlayer` / `drawEnemy` / `drawNpc`: one `drawImage` per frame.
+* Each unit (body, hair, gear piece) ships as a core sheet (every anim except attacks) plus one atk sheet per weapon class;
+  only the equipped HAND class's atk sheet is decoded.
 * Layering at runtime is a depth resolve of baked pieces (nearest layer wins, inner line between parts).
-* Composite on loadout change only: the full 8 x 43 sheet in 120 ms or less on phone, time-sliced over 3 frames.
-  The bag paper doll composes one direction in 10 ms or less.
-* Per piece about 18 to 30 KB PNG (30 KB cap). Lines load on first drop. Starter bundle at most 400 KB.
-* Sockets exported: handR, handL, head, chest, cast, weaponTip, offhandTip. Also an 8-way outward-normal rim mask and a bbox.
+* Budgets (CPU ×4 phone proxy): first full-loadout sheet ≤ 120 ms; cached frame ≤ 0.05 ms; bag paper doll one direction ≤ 10 ms.
+* Size caps per shipped sheet: helm, chest, boots ≤ 64 KB; cape ≤ 36 KB; other pieces ≤ 30 KB. Starter bundle ≤ 400 KB.
+* Sockets exported: handR, handL, head, chest, cast, tip, capeTop, capeHem. Also a 1-bit rim mask with a facing hint (`FORGE.rim`) and a bbox.
 * Approval gate: the client's eye on the chibi board and tier strips (quality bar: the first chibi knight's 5 tiers). Checks: sha256 stable, 0 lone pixels, runtime equals offline byte for byte.
-* Tools: `build.js`, `forge.js`, `pack.js`, `icons.js` (24x24 item icons from the same models at a fixed 3/4 pose),
+* Tools: `build.js`, `forge.js`, `tiers.js` (gear-line checks), `tools/forge-rt-check.js`, `icons.js` (24x24 item icons from the same models at a fixed 3/4 pose),
   `board.js`, `preview.html` (dressing room). The `hero` rig is a regression fixture for one milestone; `ref` is retired.
 
 ## Gear scope

@@ -727,6 +727,11 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | ELFX | Effects registry and renderer (rim light, shadows, rays, fog) | `elfx.js` | — | live |
 | Forge | Deterministic sprite generator | `tools/forge/` | — | M4a |
 | Forge bank | Packed sprite data | `js/forge-bank/` | — | M4a |
+| Forge runtime | In-game compositor of forge banks into a cached sheet per loadout | `js/forge-rt.js` (`FORGE`) | — | M4a |
+| Unit | One forge layer baked on its own: body, hair or a gear piece | — | — | M4a |
+| Core sheet | A unit's sheet with every anim except attacks | `<unit>.core` | — | M4a |
+| Atk sheet | A unit's attack anims for one weapon class | `<unit>.atk.<class>` | attack sheet | M4a |
+| Line bank | One gear line's tier file in the forge bank | `js/forge-bank/<line>.t<N>.js` | — | M4a |
 | FORGE_FX | Forge table of tier and rarity effects per item line (geometry per tier, palette, rim light and emitters per rarity) | `FORGE_FX` | — | M4a |
 | Lane | One parallel work stream | — | — | live |
 | Milestone | Delivery step: M1 to M8 | — | — | live |
