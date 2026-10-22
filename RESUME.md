@@ -13,13 +13,14 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
     lines retired). Cape/hair as deterministic springs, delete ref files, port tiers.js checks, board-chibi.png +
     cape-hair.png → STOP for the client's eye. Then: gear lines on chibi (Sword, Buckler, Staff, Grimoire, Warden × 6),
     then Forge runtime (js/forge-rt.js, banks, rim masks). Half-done ref/gear edits parked in the session scratchpad.
-  - Loadout v3 (Opus): DONE, full check.js 7/7 reported; director re-verifying with check --fast, then commit its paths.
-    Follow-ups: glossary sweep (page/arrow/call names, grips), UI polish (HUD says LMB/RMB, panel names truncated).
+  - Loadout v3: COMMITTED (c9d6cf8). Running follow-ups: glossary sweep (Haiku, docs/GLOSSARY.md only); UI polish (Sonnet:
+    hud, menus, touch, screens, ui, play.js; full item names, keycap labels, touch wheel, de-flake play.js "§28 garden boots").
+    Gale wind preset exists in js/wind.js; hook it when the Gale cast lands (M4b skills).
 - Forge rulings: chibi rig, fully deterministic volumes (no hand-drawn parts, no tracing); dark outline;
   base hero bare (casual clothes only, all gear layered at runtime); approval is by the client's eye (scores are info).
 
 ## Next
-1. Loadout v3 verified → commit; glossary sweep (Haiku); UI polish (Sonnet).
+1. Review glossary sweep + UI polish, commit.
 2. Client approves chibi board → gear lines on chibi → Forge runtime.
 3. Lighting + status lane (Opus, owns js/render.js, js/elfx.js, js/status.js) after Forge exports rim masks.
 4. Loadout UI polish (Sonnet) after the engine lane.
