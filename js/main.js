@@ -222,8 +222,49 @@ function render() {
 // 0.25 s of real time even inside the boss slow-mo (it used to stretch to ~0.7 s).
 const STEP = 1 / 60;
 let last = performance.now(), acc = 0, running = true, frameEma = 16.7;
+// one fixed game step (hitstop + slow-mo applied); the rAF loop and ?turbo's __advance both run exactly this
+function simStep() {
+  let rdt = STEP;
+  const frozen = hitlagStep();
+  if (G.slowmo > 0) { G.slowmo -= rdt; rdt *= 0.35; }
+  update(frozen ? 0 : rdt, rdt);
+}
+// ?turbo (tools/qa lockstep fast-forward): the rAF loop stops advancing the sim and drawing. A tool calls __advance(n) = n fixed
+// steps run synchronously with no render (the map-load / respawn prebuild work a frame would do runs after each step), and
+// __render() before a screenshot. Input handlers, update order and the fixed dt are unchanged. tools/perf.js never sets it.
+const TURBO = PARAMS.has('turbo');
+if (TURBO) {
+  // determinism (run-big --seed seeds Math.random): work whose amount depends on wall-clock budgets or on how often a tool draws
+  // (map preload, respawn chunk prebuild, render, audio) runs on a side random stream, so the sim's stream and step count are
+  // the same on every run; the map preload finishes within the step it starts (its time budget would vary the fade length)
+  let sideA = 0x9e3779b9;
+  const sideRand = () => { sideA = (sideA + 0x6D2B79F5) | 0; let t = Math.imul(sideA ^ (sideA >>> 15), 1 | sideA); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const side = fn => { const mr = Math.random; Math.random = sideRand; try { return fn(); } finally { Math.random = mr; } };
+  // audio draws its pitch / noise-offset randomness only when a voice is free by the AudioContext's (wall) clock: side stream too
+  if (typeof AUDIO !== 'undefined') for (const k of Object.keys(AUDIO)) if (typeof AUDIO[k] === 'function') { const f = AUDIO[k]; AUDIO[k] = function () { return side(() => f.apply(this, arguments)); }; }
+  window.__advance = n => {
+    n = Math.max(0, n | 0);
+    for (let i = 0; i < n; i++) {
+      simStep();
+      camX = Math.round(G.cam.x); camY = Math.round(G.cam.y);   // the view camera drawScene() sets (no shake): worldToView() in update / tools stays live
+      if (PRELOAD) side(() => preloadStep(Infinity));
+      else if (G.state === 'dead') side(() => prebuildRespawn(PRELOAD_MS));
+    }
+    if (n && typeof AUDIO !== 'undefined') AUDIO.frame(Math.min(0.25, n * STEP));
+    if (n && uiSig() !== drawnSig) render();   // a screen opened / closed: one draw so the UI hit regions (mouse clicks) match it
+    return n;
+  };
+  // a few draws so the chunks in view finish rastering (each draw builds the visible-missing ones on a budget)
+  window.__render = (k = 4) => { for (let i = 0; i < k; i++) { last = performance.now(); render(); } return true; };
+  const uiSig = () => [G.state, G.ui.open, G.ui.help, G.ui.pause, G.ui.map, G.ui.settings, !!G.tablet].join();
+  let drawnSig = '';
+  const render0 = render; render = function () { drawnSig = uiSig(); return side(render0); };
+}
+// ?god: the hero takes no damage (tools/qa blocker hunts only, never acceptance)
+if (PARAMS.has('god')) { const hurt = hurtPlayer; window.hurtPlayer = function () { return false; }; window.__godHurt = hurt; }
 function loop(now) {
   if (!running) return;
+  if (TURBO) { last = now; requestAnimationFrame(loop); return; }
   if (PERF.on) perfBegin(now - last);
   const fdt = Math.min(0.25, (now - last) / 1000); last = now;
   frameEma += (fdt * 1000 - frameEma) * 0.05;
@@ -233,10 +274,7 @@ function loop(now) {
   const frameT0 = performance.now();
   let n = 0;
   while (acc >= STEP && n < 5) {
-    let rdt = STEP;
-    const frozen = hitlagStep();
-    if (G.slowmo > 0) { G.slowmo -= rdt; rdt *= 0.35; }
-    update(frozen ? 0 : rdt, rdt);
+    simStep();
     acc -= STEP; n++;
   }
   if (n === 5) acc = 0;   // spiral-of-death guard after a long stall

@@ -10,7 +10,7 @@
 //           moves the focused row into view).
 // Loaded after menus.js (uses mnRegion / mnScroll / mnReveal / mnScrollbar / hudFrame).
 // ---------------------------------------------------------------------------
-const SET_GROUPS = [['audio', 'AUDIO'], ['game', 'GAME'], ['display', 'DISPLAY'], ['controls', 'CONTROLS']];
+const SET_GROUPS = [['audio', 'AUDIO'], ['display', 'DISPLAY'], ['controls', 'CONTROLS']];   // 'game' (Difficulty) removed: Normal is the only difficulty
 const settingDef = key => SETTINGS_SCHEMA.find(d => d.key === key);
 function settingSteps(d) { return Math.round((d.max - d.min) / d.step); }
 // dir = -1 / +1 (pad, arrows, ◄ ►); toggles flip; choices cycle; sliders move one step

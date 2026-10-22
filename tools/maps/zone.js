@@ -165,7 +165,17 @@ function populate(S, g, T) {
     const b = g.bridges[0], isl = R.islet, lv = R.lever;
     const e0 = b.axis === 'x' ? [[b.x + 0.4, b.y + b.w / 2], [b.x + b.len - 0.4, b.y + b.w / 2]] : [[b.x + b.w / 2, b.y + 0.4], [b.x + b.w / 2, b.y + b.len - 0.4]];
     e0.sort((p, q) => Math.hypot(q[0] - isl.x, q[1] - isl.y) - Math.hypot(p[0] - isl.x, p[1] - isl.y));
-    const ge = e0[0];
+    // M3 hot-fix: the gate goes on the first bridge row (from the land end) with no land on either side. At the very end the bank
+    // ran beside the bridge, so the hero could walk round the raised bridge onto the islet (and the way back was a pixel squeeze).
+    let ge = e0[0];
+    {
+      const ax = b.axis === 'x', hiFar = ax ? Math.abs(b.x + b.len - isl.x) > Math.abs(b.x - isl.x) : Math.abs(b.y + b.len - isl.y) > Math.abs(b.y - isl.y);
+      const land = (x, y) => !!(g.land[y] && g.land[y][x]);
+      for (let s = 0; s < b.len; s++) {
+        const k = hiFar ? b.len - 1 - s : s, A = ax ? [b.x + k, b.y - 1] : [b.x - 1, b.y + k], B = ax ? [b.x + k, b.y + b.w] : [b.x + b.w, b.y + k];
+        if (!land(A[0], A[1]) && !land(B[0], B[1])) { ge = ax ? [b.x + k + 0.5, b.y + b.w / 2] : [b.x + b.w / 2, b.y + k + 0.5]; break; }
+      }
+    }
     g.addObj('gate', ge[0], ge[1], { id: 'bridge_gate', ang: b.axis === 'x' ? 0 : 1.57, len: b.w, force: true, sp: 0.1 });
     g.marker('lever', lv.x + 0.6, lv.y + 1.2, { label: 'bridge-lever', id: 'lever_bridge', gate: 'bridge_gate' }); g.poi('secret', lv.x, lv.y);
     g.marker('chest_gold', isl.x + 0.9, isl.y + 0.6, { label: 'secret-gold-chest' });

@@ -4,18 +4,25 @@
 //   stopAfter: vale | pinewood | mossjaw (after the Mossjaw retry loop) | court. Before Mossjaw the hero's gear + stats are written
 //   to tools/qa/gear-mossjaw.json (balsim --qa replays that hero in its live fight).
 //   --lite = main path only (skip secrets / side vaults). Writes tools/qa/run-<pass>.json incrementally.
-const { launch, Bot, KbmDriver, PadDriver, TouchDriver, sleep } = require('./lib');
+const { launch, Bot, KbmDriver, PadDriver, TouchDriver, sleep, now } = require('./lib');
 const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3].startsWith('--') ? process.argv[3] : 'all', LITE = process.argv.includes('--lite');
+// --turbo (default) = lockstep fast-forward (?turbo: the sim only advances on the bot's waits, timed in game time); --realtime = the
+// old wall-clock run. --god (?god) = the hero takes no damage: blocker hunts only, never acceptance.
+const TURBO = !process.argv.includes('--realtime'), GOD = process.argv.includes('--god');
+// --seed N: the page's Math.random (loot rolls, spawns, AI picks) and this script's own wiggles run on a seeded PRNG; default 1
+const SEED = (() => { const i = process.argv.indexOf('--seed'); return i > 0 && process.argv[i + 1] != null ? (+process.argv[i + 1] | 0) : 1; })();
+{ let a = (SEED ^ 0x5bd1e995) >>> 0; Math.random = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const BOSS_TRIES = 40;   // boss retry cap: the route never moves past an unmet boss objective (gate run: Mossjaw fell on try 37)
 
 (async () => {
-  const L = PASS === 'touch' ? await launch({ context: { viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 } }) : await launch({ pad: PASS === 'pad' });
+  const L = PASS === 'touch' ? await launch({ turbo: TURBO, god: GOD, seed: SEED, context: { viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 } }) : await launch({ turbo: TURBO, god: GOD, seed: SEED, pad: PASS === 'pad' });
   const { br, page, errors } = L;
   const drv = PASS === 'touch' ? new TouchDriver(page) : PASS === 'pad' ? new PadDriver(page) : new KbmDriver(page);
   if (PASS === 'touch') await drv.init();
   const bot = new Bot(page, drv, PASS);
-  bot.out.started = new Date().toISOString(); bot.out.lite = LITE;
+  bot.out.started = new Date().toISOString(); bot.out.lite = LITE; bot.out.seed = SEED; bot.log('run', { pass: PASS, seed: SEED, turbo: TURBO, god: GOD, lite: LITE });
   const has = (s, id) => s.fired.includes(id);
-  const mark = async name => { const s = await bot.snap(); (bot.out.marks = bot.out.marks || []).push({ at: +bot.el(), name, map: s.map, sec: s.sec, lvl: s.p && s.p.lvl, hp: s.p && s.p.maxHp, deaths: s.deaths }); bot.log('MARK ' + name, { lvl: s.p && s.p.lvl, deaths: s.deaths }); };
+  const mark = async name => { const s = await bot.snap(); (bot.out.marks = bot.out.marks || []).push({ at: +bot.el(), real: +bot.realEl(), name, map: s.map, sec: s.sec, lvl: s.p && s.p.lvl, hp: s.p && s.p.maxHp, deaths: s.deaths }); bot.log('MARK ' + name, { lvl: s.p && s.p.lvl, deaths: s.deaths, real: +bot.realEl() }); };
   const objs = () => page.evaluate(() => window.__qa.objects());
   const near = (list, f) => list.find(f);
   async function loot(ms = 3000) {
@@ -62,17 +69,23 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
   async function door(gid, toSec, label) {
     const o = (await objs()).find(q => q.warp && q.gid === gid);
     if (!o) { bot.find('blocker', `Warp door ${gid} not found`, {}); return false; }
-    const t0 = Date.now();
+    const t0 = now();
     await bot.goal({ name: 'door ' + gid, x: o.x, y: o.y + 0.5, r: 1.0, until: q => q.sec === toSec && !q.warp, interact: 'warpdoor', ir: 2.2, timeout: 150000, softlock: true, noPress: false });
     await sleep(900); await bot.shot('door-' + gid + '-arrived');
     return true;
   }
-  const lever = async (id, name) => { const o = (await objs()).find(q => q.lever && q.id === id) || (await objs()).find(q => q.lever); if (o) { await bot.goal({ name, x: o.x, y: o.y, r: 1.2, interact: 'lever', ir: 2.2, once: true, timeout: 200000 }); await sleep(1400); await bot.shot('lever-' + id); } else bot.find('major', 'lever ' + id + ' missing', {}); };
+  // a single Space tap can be eaten (a dialogue line still up, a pickup): check the lever really flipped and pull again if not
+  const lever = async (id, name) => {
+    const find = async () => { const L = await objs(); return L.find(q => q.lever && q.id === id) || L.find(q => q.lever); };
+    let o = await find(); if (!o) { bot.find('major', 'lever ' + id + ' missing', {}); return; }
+    for (let t = 0; t < 4 && !o.pulled; t++) { await bot.goal({ name: t ? name + ' (again)' : name, x: o.x, y: o.y, r: 1.2, interact: 'lever', ir: 2.2, once: true, timeout: 200000 }); await sleep(1400); o = (await find()) || o; if (!o.pulled) bot.log('lever not pulled', await page.evaluate(() => ({ prompt: G.prompt && { kind: G.prompt.kind, x: G.prompt.x, y: G.prompt.y }, p: [G.player.x, G.player.y, G.player.z], st: G.state, ui: G.ui.open, fade: G.fadeDir, tablet: !!G.tablet, dead: G.player.dead, inter: window.__qa.inter.slice(-4), gt: +G.t.toFixed(2), ign: typeof IN !== 'undefined' && IN.held ? IN.held('interact') : null }))); }
+    await bot.shot('lever-' + id); if (!o.pulled) bot.find('major', 'lever ' + id + ' never flipped', {});
+  };
   async function shrine(x, y, name) { await bot.goal({ name, x, y, r: 1.2, interact: 'shrine', ir: 2.4, once: true, timeout: 220000 }); }
   async function chest(label, name) { const o = (await objs()).find(q => q.chest && q.label === label); if (!o) { bot.find('minor', 'chest ' + label + ' not found/already open', {}); return; } await bot.goal({ name, x: o.x, y: o.y, r: 1.1, interact: 'chest', once: true, timeout: 200000 }); await loot(2500); }
   async function warpTest(fromName, toId) {
     await sleep(400); await drv.openMap(); await sleep(700); await bot.shot('fullmap-' + fromName);
-    const s0 = await bot.snap(); const t0 = Date.now();
+    const s0 = await bot.snap(); const t0 = now();
     const info = await page.evaluate(() => ({ mode: G.ui.map && G.ui.map.mode, targets: shrineTargets().map(o => o.shrineId) }));
     bot.log('full map', info);
     if (info.mode === 'shrine' && info.targets.length) {
@@ -81,13 +94,32 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
       else if (PASS === 'pad') { for (let i = 0; i < idx; i++) { await drv.tap(13); await sleep(120); } await drv.tap(0); }
       await sleep(1500); const s1 = await bot.snap();
       const moved = Math.hypot(s1.p.x - s0.p.x, s1.p.y - s0.p.y);
-      bot.out.warps = (bot.out.warps || []); bot.out.warps.push({ from: fromName, to: toId, moved: +moved.toFixed(1), sec: s1.sec, ms: Date.now() - t0 });
+      bot.out.warps = (bot.out.warps || []); bot.out.warps.push({ from: fromName, to: toId, moved: +moved.toFixed(1), sec: s1.sec, ms: now() - t0 });
       bot.log('shrine warp', { moved: +moved.toFixed(1), at: [s1.p.x, s1.p.y] });
     } else { bot.find('minor', 'Full map opened at ' + fromName + ' offered no shrine warp', info, await bot.shot('warp-none')); await drv.closeMap(); }
   }
   async function bossFight(name, timeout) {
     await bot.clear(name, timeout, { engageR: 18 });
     await sleep(2500); await bot.shot(name + '-end');
+  }
+  // fight, then retry from the respawn until dead(snap) holds (the live objective / the arena portal), up to BOSS_TRIES. The route
+  // never runs a later goal while the boss objective is unmet: on a give-up it records a blocker and stops the run (gate run: a
+  // fixed 10-try loop ran out on a weak-gear hero and the route went on to the exit door / Bramblehorn with Mossjaw alive)
+  async function bossLoop(name, at, dead, timeout) {
+    const d0 = (await bot.snap()).deaths; let tries = 1;
+    await bossFight(name, timeout);
+    for (;;) {
+      let s = await bot.snap();
+      for (let k = 0; k < 20 && s.st !== 'play'; k++) { await bot.react(s, {}); await sleep(300); s = await bot.snap(); }   // death screen / fade: settle first
+      if (dead(s)) break;
+      if (tries >= BOSS_TRIES) { bot.find('blocker', `${name} not beaten after ${tries} attempts`, { lvl: s.p && s.p.lvl, deaths: s.deaths - d0, obj: s.obj }, await bot.shot(name + '-giveup')); throw new Error('STOP'); }
+      tries++; bot.log(name + ' retry #' + (tries - 1), { lvl: s.p.lvl, maxHp: s.p.maxHp, deaths: s.deaths, obj: s.obj });
+      await bot.goal({ name: name + ' retry', x: at.x, y: at.y, r: at.r, until: q => !!q.boss || dead(q), timeout: 200000, noFinding: true });
+      if (dead(await bot.snap())) break;
+      await bossFight(name, timeout);
+    }
+    const s = await bot.snap(); (bot.out.bossTries = bot.out.bossTries || {})[name] = { tries, deaths: s.deaths - d0, lvl: s.p.lvl, maxHp: s.p.maxHp };
+    bot.log('BOSS DONE ' + name, bot.out.bossTries[name]);
   }
 
   try {
@@ -100,15 +132,15 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
     await bot.observe(s); await mark('vale-start'); await bot.idle(2500); await bot.shot('vale-wake');
 
     // ============================ 1. VALE (80x80)
-    const tD = Date.now();
-    await bot.goal({ name: 'dummies', dummies: true, timeout: 22000, until: () => Date.now() - tD > 11000, engageR: 0 });
+    const tD = now();
+    await bot.goal({ name: 'dummies', dummies: true, timeout: 22000, until: () => now() - tD > 11000, engageR: 0 });
     await drv.attack(false); await drv.dodge(); await sleep(500); await bot.shot('vale-dummies');
     await shrine(32, 54.2, 'start shrine');
     await bot.goal({ name: 'yard_teach', x: 39, y: 64, r: 2.5, until: q => has(q, 'yard_teach'), timeout: 90000 });
     await bot.goal({ name: 'elder plaza', x: 39, y: 47.5, r: 2.5, until: q => has(q, 'elder'), timeout: 150000 });
     await bot.goal({ name: 'read elder stone', x: 39, y: 47.5, r: 1.2, interact: 'tablet', once: true, timeout: 25000 }); await sleep(1200); await bot.shot('vale-elder');
     await chest('tutorial-chest', 'tutorial chest (west of glade)'); await equipBest('vale'); await menuTour();
-    const g0 = Date.now();
+    const g0 = now();
     await bot.goal({ name: 'lantern (far NW)', x: 7.3, y: 21.9, r: 1.8, until: q => has(q, 'lantern_found'), timeout: 300000 }); await bot.shot('vale-lantern'); await loot(2000);
     if (!LITE) { await bot.goal({ name: 'gem cache', x: 6, y: 21, r: 1.8, until: q => has(q, 'gems'), timeout: 60000, noFinding: true }); await loot(2000); }
     await bot.goal({ name: 'return lantern', x: 39, y: 47.5, r: 2.5, until: q => has(q, 'lantern_return'), timeout: 300000 }); await loot(2500);
@@ -144,14 +176,17 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
     await bot.clear('ford clear', 180000); await loot(2000);
     await shrine(66, 60, 'shrine2');
     if (PASS !== 'touch') { await warpTest('shrine2', 'shrine1'); await bot.shot('after-warp-pine'); }
-    for (let t = 0; t < 3 && !has(await bot.snap(), 'r2'); t++) await bot.goal({ name: 'r2 plaza', x: 26, y: 58, r: 5, until: q => has(q, 'r2') && q.sec === 'forest', timeout: 300000 }); await bot.shot('pinewood-r2');   // retry: after a shrine warp the first call returned instantly (run 2)
+    // walk INTO the plaza even if r2 already fired (M3 hot-fix run: the bot had crossed r2 on the way to shrine 2, warped away and then
+    // stood at shrine 1 'clearing' a pack 40 tiles off)
+    const inR2 = q => has(q, 'r2') && q.sec === 'forest' && q.p && Math.hypot(q.p.x - 26, q.p.y - 58) < 8;
+    for (let t = 0; t < 3 && !inR2(await bot.snap()); t++) await bot.goal({ name: 'r2 plaza', x: 26, y: 58, r: 5, until: inR2, timeout: 300000 }); await bot.shot('pinewood-r2');
     await bot.clear('r2 clear', 240000); await loot(2500); await equipBest('pine3'); await mark('pinewood-r2-done');
     if (!LITE) {
       await bot.goal({ name: 'cache hint', x: 14.99, y: 55.35, r: 3, until: q => has(q, 'cache_hint'), timeout: 120000 }); await bot.shot('pinewood-cache-door');
       const dc = (await objs()).find(q => q.gid === 'door_cache');
       if (dc) { await bot.goal({ name: 'cache door', x: dc.x, y: dc.y, r: 1.4, interact: true, ir: 2.2, once: true, timeout: 90000 }); await sleep(1500); }
       await bot.goal({ name: 'cache loot', x: 12, y: 54, r: 2.2, until: q => has(q, 'cache_loot'), timeout: 90000 }); await loot(2000);
-      await lever('lever_bridge', 'bridge lever'); await bot.goal({ name: 'bridge pip', x: 10, y: 36.6, r: 3, until: q => has(q, 'bridge_pip'), timeout: 250000 }); await bot.shot('pinewood-bridge');
+      await lever('lever_bridge', 'bridge lever'); const bg = (await objs()).find(q => q.gid === 'bridge_gate') || { x: 10, y: 33.5 }; await bot.goal({ name: 'bridge pip', x: bg.x, y: bg.y, r: 3, until: q => has(q, 'bridge_pip'), timeout: 250000 }); await bot.shot('pinewood-bridge');
       await bot.goal({ name: 'islet loot', x: 10, y: 29, r: 2.2, until: q => has(q, 'islet_loot'), timeout: 120000 }); await chest('secret-gold-chest', 'gold chest'); await equipBest('pine-secret');
     }
     await bot.goal({ name: 'r3 grove', x: 70, y: 52, r: 4.5, until: q => has(q, 'r3'), timeout: 300000 }); await bot.shot('pinewood-r3');
@@ -201,13 +236,7 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
       require('fs').writeFileSync(require('path').join(__dirname, 'gear-mossjaw.json'), JSON.stringify(gear, null, 1)); bot.log('arrival gear', bot.out.gearMossjaw);
     } catch (e) { bot.log('gear dump failed ' + e.message); }
     await bot.goal({ name: 'mossjaw den', x: 45, y: 10.5, r: 3.3, until: q => has(q, 'h_boss'), timeout: 250000, softlock: true }); await bot.shot('hollow-mossjaw-start');
-    await bossFight('mossjaw', 480000);
-    for (let t = 0; t < 10; t++) {   // QA retry loop (run 3: 7 straight deaths on a weak-gear hero); done when the objective leaves 'Defeat Mossjaw'
-      s = await bot.snap(); if (s.obj && !/Mossjaw/.test(s.obj) && !s.boss) break;
-      bot.log('Mossjaw retry #' + (t + 1), { lvl: s.p.lvl, deaths: s.deaths, obj: s.obj });
-      await bot.goal({ name: 'mossjaw retry', x: 45, y: 10.5, r: 3.3, until: q => !!q.boss, timeout: 200000, noFinding: true });
-      await bossFight('mossjaw', 480000);
-    }
+    await bossLoop('mossjaw', { x: 45, y: 10.5, r: 3.3 }, q => q.st === 'play' && !q.boss && !!q.obj && !/Mossjaw/.test(q.obj), 480000);
     if (STOP === 'mossjaw') { s = await bot.snap(); bot.log('STOP after Mossjaw', { killed: !(s.obj && /Mossjaw/.test(s.obj)) && !s.boss, deaths: s.deaths, lvl: s.p && s.p.lvl }); throw new Error('STOP'); }
     await loot(3500); await equipBest('mossjaw'); await mark('mossjaw-done');
     s = await bot.snap(); bot.log('after Mossjaw', { obj: s.obj, sec: s.sec });
@@ -218,15 +247,11 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
     // ============================ 4. BRAMBLEHORN'S CLEARING
     await mark('clearing-arrive'); await bot.shot('clearing-arrival');
     { const o = (await objs()).find(q => q.shrineId === 'shrine3'); await shrine(o ? o.x : 84, o ? o.y : 36, 'clearing shrine3'); }   // §29 G3: shrine 3 is on Hawk's Rest
+    s = await bot.snap(); bot.log('summit', { obj: s.obj, z: s.p.z });
+    await bot.goal({ name: 'summit drop', x: 76.5, y: 39.5, r: 1.2, until: q => q.p.x > 74.5 && q.p.z <= 5 && q.st === 'play', timeout: 90000 }); await sleep(600); await bot.shot('summit-drop-landed');
     if (!LITE) { await bot.goal({ name: 'arena hint', x: 95.06, y: 37.51, r: 3.4, until: q => has(q, 'arena_hint'), timeout: 60000, noFinding: true }); }
     await bot.goal({ name: 'bramblehorn', x: 100, y: 31, r: 6.5, until: q => has(q, 'boss'), timeout: 300000, softlock: true }); await bot.shot('clearing-boss-start');
-    await bossFight('bramblehorn', 600000);
-    for (let t = 0; t < 8; t++) {   // QA retry loop: a real player would retry after dying; stop once the arena portal opens (= boss dead)
-      s = await bot.snap(); if (s.portals.find(q => q.id === 'home_arena' && q.open)) break;
-      bot.log('Bramblehorn retry #' + (t + 1), { lvl: s.p.lvl, deaths: s.deaths });
-      await bot.goal({ name: 'bramblehorn retry', x: 100, y: 31, r: 6.5, until: q => !!q.boss, timeout: 200000, noFinding: true });
-      await bossFight('bramblehorn', 600000);
-    }
+    await bossLoop('bramblehorn', { x: 100, y: 31, r: 6.5 }, q => q.st === 'play' && !q.boss && q.portals.some(o => o.id === 'home_arena' && o.open), 600000);
     await loot(4000); await equipBest('clearing');
     s = await bot.snap(); bot.log('after Bramblehorn', { obj: s.obj, portals: s.portals.map(q => [q.id, q.open]) }); await mark('bramblehorn-done');
     await chest('boss-chest', 'boss chest');
@@ -241,9 +266,9 @@ const PASS = process.argv[2] || 'kbm', STOP = process.argv[3] && !process.argv[3
   } catch (e) {
     if (e.message !== 'STOP') { bot.log('RUN ERROR ' + e.stack); bot.find('info', 'Bot run error', { err: e.stack }); try { await bot.shot('run-error'); } catch (x) { /* */ } }
   }
-  try { await bot.closeMap(Date.now()); } catch (e) { /* */ }
-  bot.out.errors = errors; bot.out.finished = new Date().toISOString(); bot.out.totalSec = +bot.el(); bot.out.seenTalk = bot.seenTalk;
+  try { await bot.closeMap(now()); } catch (e) { /* */ }
+  bot.out.errors = errors; bot.out.finished = new Date().toISOString(); bot.out.totalSec = +bot.el(); bot.out.realSec = +bot.realEl(); bot.out.mode = { turbo: TURBO, god: GOD }; bot.out.seenTalk = bot.seenTalk;
   try { bot.out.finalSnap = await bot.snap(); } catch (e) { /* */ }
   bot.save(); await drv.reset(); await br.close();
-  console.log('DONE', bot.el(), 's; errors:', errors.length);
+  console.log('DONE', bot.el(), 's game;', bot.realEl(), 's real; turbo:', TURBO, 'god:', GOD, '; errors:', errors.length);
 })().catch(e => { console.error('FATAL', e); process.exit(1); });

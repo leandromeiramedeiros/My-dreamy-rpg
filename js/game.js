@@ -870,13 +870,12 @@ function playerActions(p, dt) {
   if (IN.pressed('interact')) interact(p);
 }
 // el = damage type of the hit (§5b); the hero's resist applies on top of defence (arcane ignores half of it)
-// o.boss: a telegraphed boss hit (bosses.js bossHit): hard-capped at bossHitCap() of the hero's max HP (§20.3)
+// o.boss: a telegraphed boss hit (bosses.js bossHit), a tag only (balsim counts them): no cap, a boss hit can kill (client ruling, M3 hot-fix)
 function hurtPlayer(dmg, srcX, srcY, el = 'slash', o) {
   const p = G.player;
   if (p.dead || p.invulnT > 0 || (p.dash && p.dash.opt.invuln) || G.state !== 'play') return false;
   const r = (p.res && p.res[el]) || 0;
-  let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1) * (typeof damageTakenMul === 'function' ? damageTakenMul() : 1);
-  if (o && o.boss) d = Math.min(d, p.maxHp * (typeof bossHitCap === 'function' ? bossHitCap() : 0.45));
+  let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1);
   p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2; combatPing(p);
   text(p.x, p.y, p.z + 3, Math.round(d), '#ff5a7a');
   shake(4); sfx('hurt');

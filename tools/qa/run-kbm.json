@@ -2,86 +2,143 @@
  "name": "kbm",
  "maps": {
   "vale": {
-   "enters": 1,
-   "ms": 125273,
+   "enters": 2,
+   "ms": 130766.6767578125,
    "deaths": 0,
    "potions": 0,
    "kills": 0,
-   "lvlIn": 1,
+   "lvlIn": 13,
+   "dmgTaken": 0,
+   "stuck": 0
+  },
+  "pinewood": {
+   "enters": 1,
+   "ms": 597299.9528808594,
+   "deaths": 0,
+   "potions": 0,
+   "kills": 0,
+   "lvlIn": 2,
    "dmgTaken": 0,
    "stuck": 0
   }
  },
  "deaths": [],
- "bosses": [],
+ "bosses": [
+  {
+   "type": "mossjaw",
+   "lvl": 9,
+   "bossLvl": 5,
+   "at": 507.7,
+   "t0": 1792673623276.0527,
+   "deaths0": 0,
+   "hp": 14116,
+   "pot0": 4,
+   "map": "pinewood",
+   "maxHp": 903,
+   "wk": "sword",
+   "minHpPct": 100,
+   "dur": 53.8,
+   "deaths": 0,
+   "killed": true,
+   "potions": 0
+  },
+  {
+   "type": "bramblehorn",
+   "lvl": 11,
+   "bossLvl": 8,
+   "at": 596.8,
+   "t0": 1792673712459.3674,
+   "deaths0": 0,
+   "hp": 40217,
+   "pot0": 4,
+   "map": "pinewood",
+   "maxHp": 955,
+   "wk": "sword",
+   "minHpPct": 100,
+   "dur": 104.3,
+   "deaths": 0,
+   "killed": true,
+   "potions": 0
+  }
+ ],
  "events": [
   {
-   "at": 0.1,
+   "at": 0,
+   "msg": "run",
+   "pass": "kbm",
+   "seed": 1,
+   "turbo": true,
+   "god": true,
+   "lite": false
+  },
+  {
+   "at": 0,
    "msg": "enter map vale",
    "lvl": 1,
    "hp": 650
   },
   {
-   "at": 0.3,
+   "at": 0,
    "msg": "title: New Dream via kbm"
   },
   {
-   "at": 1.4,
+   "at": 1,
    "msg": "MARK vale-start",
    "lvl": 1,
-   "deaths": 0
+   "deaths": 0,
+   "real": 0.2
   },
   {
-   "at": 4.3,
+   "at": 3.6,
    "msg": "goal: dummies"
   },
   {
-   "at": 15.3,
+   "at": 14.6,
    "msg": "goal dummies: ok",
    "sec": "11.1"
   },
   {
-   "at": 16,
+   "at": 15.2,
    "msg": "goal: start shrine"
   },
   {
-   "at": 19.1,
+   "at": 18,
    "msg": "goal start shrine: ok",
-   "sec": "3.0"
+   "sec": "2.9"
   },
   {
-   "at": 19.1,
+   "at": 18,
    "msg": "goal: yard_teach"
   },
   {
-   "at": 19.1,
+   "at": 18,
    "msg": "goal yard_teach: ok",
    "sec": "0.0"
   },
   {
-   "at": 19.1,
+   "at": 18,
    "msg": "goal: elder plaza"
   },
   {
-   "at": 21.3,
+   "at": 20.2,
    "msg": "goal elder plaza: ok",
-   "sec": "2.2"
+   "sec": "2.1"
   },
   {
-   "at": 21.3,
+   "at": 20.2,
    "msg": "goal: read elder stone"
   },
   {
-   "at": 22.3,
+   "at": 21.1,
    "msg": "goal read elder stone: ok",
-   "sec": "1.1"
+   "sec": "1.0"
   },
   {
-   "at": 23.7,
+   "at": 22.3,
    "msg": "goal: tutorial chest (west of glade)"
   },
   {
-   "at": 25.5,
+   "at": 24.7,
    "msg": "FINDING[minor] A drop sat on the ground >25 s without being picked up",
    "detail": {
     "drop": {
@@ -93,150 +150,145 @@
      "t": 25.1
     },
     "ppos": [
-     36.19,
-     53.51
+     32.97,
+     54.75
     ]
    }
   },
   {
-   "at": 29.6,
+   "at": 28.2,
    "msg": "goal tutorial chest (west of glade): ok",
-   "sec": "5.9"
+   "sec": "5.8"
   },
   {
-   "at": 37.6,
+   "at": 35.1,
    "msg": "goal: lantern (far NW)"
   },
   {
-   "at": 57,
+   "at": 51.5,
    "msg": "goal lantern (far NW): ok",
-   "sec": "19.5"
+   "sec": "16.4"
   },
   {
-   "at": 58.8,
+   "at": 53,
    "msg": "goal: pick up Iron Cap"
   },
   {
-   "at": 61.7,
+   "at": 55.8,
    "msg": "goal pick up Iron Cap: ok",
-   "sec": "2.9"
+   "sec": "2.8"
   },
   {
-   "at": 61.7,
+   "at": 55.8,
    "msg": "goal: gem cache"
   },
   {
-   "at": 65.1,
+   "at": 59.2,
    "msg": "goal gem cache: ok",
-   "sec": "3.3"
+   "sec": "3.4"
   },
   {
-   "at": 66.7,
-   "msg": "goal: pick up Chipped Sapphire"
+   "at": 60.7,
+   "msg": "goal: pick up Chipped Ruby"
   },
   {
-   "at": 66.9,
-   "msg": "goal pick up Chipped Sapphire: ok",
+   "at": 61.1,
+   "msg": "goal pick up Chipped Ruby: ok",
+   "sec": "0.4"
+  },
+  {
+   "at": 61.1,
+   "msg": "goal: pick up Hallowed Iron Boots of the Oak"
+  },
+  {
+   "at": 61.3,
+   "msg": "goal pick up Hallowed Iron Boots of the Oak: ok",
    "sec": "0.2"
   },
   {
-   "at": 66.9,
+   "at": 61.3,
    "msg": "goal: return lantern"
   },
   {
-   "at": 77.8,
+   "at": 72.7,
    "msg": "goal return lantern: ok",
-   "sec": "10.9"
+   "sec": "11.3"
   },
   {
-   "at": 79.4,
-   "msg": "goal: pick up Sharpened Hunter's Bow of the Badger"
+   "at": 74.2,
+   "msg": "goal: pick up Chipped Amethyst"
   },
   {
-   "at": 79.9,
-   "msg": "goal pick up Sharpened Hunter's Bow of the Badger: ok",
+   "at": 74.7,
+   "msg": "goal pick up Chipped Amethyst: ok",
    "sec": "0.5"
   },
   {
-   "at": 80,
-   "msg": "goal: pick up Chipped Diamond"
+   "at": 74.7,
+   "msg": "goal: pick up Heavy Leather Jerkin of the Fox"
   },
   {
-   "at": 80.5,
-   "msg": "goal pick up Chipped Diamond: ok",
-   "sec": "0.5"
+   "at": 75.1,
+   "msg": "goal pick up Heavy Leather Jerkin of the Fox: ok",
+   "sec": "0.4"
   },
   {
-   "at": 80.5,
+   "at": 75.1,
    "msg": "objective after lantern return",
    "obj": "Return the lantern to the Stone",
    "ambush": false
   },
   {
-   "at": 80.5,
+   "at": 75.1,
    "msg": "goal: garden ambush"
   },
   {
-   "at": 86,
+   "at": 79.9,
    "msg": "goal garden ambush: ok",
-   "sec": "5.4"
+   "sec": "4.8"
   },
   {
-   "at": 86.1,
+   "at": 79.9,
    "msg": "goal: garden clear"
   },
   {
-   "at": 90.3,
-   "msg": "dodge telegraph",
-   "kind": "circle",
-   "remain": 0.37
-  },
-  {
-   "at": 95.7,
+   "at": 90.8,
    "msg": "goal garden clear: ok",
-   "sec": "9.5"
+   "sec": "10.9"
   },
   {
-   "at": 100,
+   "at": 94.8,
    "msg": "goal: pick up Iron Boots"
   },
   {
-   "at": 100.6,
+   "at": 95,
    "msg": "goal pick up Iron Boots: ok",
-   "sec": "0.6"
-  },
-  {
-   "at": 100.6,
-   "msg": "goal: pick up Rimed Ranger Cap"
-  },
-  {
-   "at": 100.8,
-   "msg": "goal pick up Rimed Ranger Cap: ok",
    "sec": "0.2"
   },
   {
-   "at": 104.8,
+   "at": 98.5,
    "msg": "after ambush",
    "obj": "Take the rift to the Pinewood",
    "pine": true
   },
   {
-   "at": 104.8,
+   "at": 98.5,
    "msg": "MARK vale-done",
    "lvl": 2,
-   "deaths": 0
+   "deaths": 0,
+   "real": 10.4
   },
   {
-   "at": 104.8,
+   "at": 98.5,
    "msg": "goal: terrace shrine"
   },
   {
-   "at": 116.7,
+   "at": 110,
    "msg": "goal terrace shrine: ok",
-   "sec": "11.9"
+   "sec": "11.5"
   },
   {
-   "at": 118.1,
+   "at": 111.2,
    "msg": "full map",
    "mode": "shrine",
    "targets": [
@@ -249,16 +301,2801 @@
     54.98
    ],
    "msg": "shrine warp",
-   "moved": 34.7
+   "moved": 34.8
   },
   {
-   "at": 119.8,
+   "at": 112.8,
    "msg": "goal: portal pine"
+  },
+  {
+   "at": 117.8,
+   "msg": "enter map pinewood",
+   "lvl": 2,
+   "hp": 716
+  },
+  {
+   "at": 117.8,
+   "msg": "goal portal pine: ok",
+   "sec": "5.0"
+  },
+  {
+   "at": 119,
+   "msg": "MARK pinewood-enter",
+   "lvl": 2,
+   "deaths": 0,
+   "real": 11.5
+  },
+  {
+   "at": 120.8,
+   "msg": "goal: trail"
+  },
+  {
+   "at": 122.9,
+   "msg": "goal trail: ok",
+   "sec": "2.1"
+  },
+  {
+   "at": 122.9,
+   "msg": "goal: crack hum"
+  },
+  {
+   "at": 128.6,
+   "msg": "goal crack hum: ok",
+   "sec": "5.7"
+  },
+  {
+   "at": 129.9,
+   "msg": "goal: crack open"
+  },
+  {
+   "at": 131,
+   "msg": "goal crack open: ok",
+   "sec": "1.1"
+  },
+  {
+   "at": 131,
+   "msg": "goal: crack loot"
+  },
+  {
+   "at": 131.9,
+   "msg": "goal crack loot: ok",
+   "sec": "0.9"
+  },
+  {
+   "at": 133.5,
+   "msg": "goal: pick up Eager Hunter's Bow"
+  },
+  {
+   "at": 133.8,
+   "msg": "goal pick up Eager Hunter's Bow: ok",
+   "sec": "0.4"
+  },
+  {
+   "at": 133.9,
+   "msg": "goal: pick up Chipped Emerald"
+  },
+  {
+   "at": 134.4,
+   "msg": "goal pick up Chipped Emerald: ok",
+   "sec": "0.6"
+  },
+  {
+   "at": 134.4,
+   "msg": "goal: shrine1"
+  },
+  {
+   "at": 149.6,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.37
+  },
+  {
+   "at": 156.6,
+   "msg": "goal shrine1: ok",
+   "sec": "22.2"
+  },
+  {
+   "at": 156.6,
+   "msg": "goal: r1 ogres"
+  },
+  {
+   "at": 156.6,
+   "msg": "goal r1 ogres: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 156.6,
+   "msg": "goal: r1 clear"
+  },
+  {
+   "at": 158.3,
+   "msg": "goal r1 clear: ok",
+   "sec": "1.7"
+  },
+  {
+   "at": 159.8,
+   "msg": "goal: pick up Ranger Cap"
+  },
+  {
+   "at": 161.4,
+   "msg": "goal pick up Ranger Cap: ok",
+   "sec": "1.6"
+  },
+  {
+   "at": 161.5,
+   "msg": "goal: pick up Mossy Leather Jerkin of the Fox"
+  },
+  {
+   "at": 162.4,
+   "msg": "goal pick up Mossy Leather Jerkin of the Fox: ok",
+   "sec": "1.0"
+  },
+  {
+   "at": 165.9,
+   "msg": "MARK pinewood-r1-done",
+   "lvl": 2,
+   "deaths": 0,
+   "real": 16.1
+  },
+  {
+   "at": 165.9,
+   "msg": "objective after r1",
+   "obj": "Take the key to the root door"
+  },
+  {
+   "at": 165.9,
+   "msg": "goal: elite ogre (key)"
+  },
+  {
+   "at": 181.6,
+   "msg": "goal elite ogre (key): ok",
+   "sec": "15.7"
+  },
+  {
+   "at": 181.6,
+   "msg": "goal: elite clear"
+  },
+  {
+   "at": 183.9,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.35
+  },
+  {
+   "at": 188.1,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.35
+  },
+  {
+   "at": 192.7,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.35
+  },
+  {
+   "at": 197.3,
+   "msg": "goal elite clear: ok",
+   "sec": "15.7"
+  },
+  {
+   "at": 198.8,
+   "msg": "goal: pick up Smoldering Linen Robe of the Spring"
+  },
+  {
+   "at": 199.2,
+   "msg": "goal pick up Smoldering Linen Robe of the Spring: ok",
+   "sec": "0.4"
+  },
+  {
+   "at": 199.2,
+   "msg": "goal: pick up Eager Rusty Blade of the Badger"
+  },
+  {
+   "at": 199.4,
+   "msg": "goal pick up Eager Rusty Blade of the Badger: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 199.4,
+   "msg": "goal: pick up Hallowed Novice Hood of the Spring"
+  },
+  {
+   "at": 199.8,
+   "msg": "goal pick up Hallowed Novice Hood of the Spring: ok",
+   "sec": "0.3"
+  },
+  {
+   "at": 199.8,
+   "msg": "after elite",
+   "obj": "Find the root door of the Hollow",
+   "keys": [
+    "opening",
+    "hud:bars",
+    "hud:tracker",
+    "hud:lmb",
+    "hud:shift",
+    "hud:q",
+    "found:rustyblade",
+    "hud:map",
+    "trinket:ring",
+    "hud:f",
+    "hud:c",
+    "found:ironcap",
+    "hud:pot",
+    "hud:e",
+    "hud:skills",
+    "hud:r",
+    "key:key_roothollow"
+   ]
+  },
+  {
+   "at": 199.8,
+   "msg": "goal: elite chest"
+  },
+  {
+   "at": 199.8,
+   "msg": "goal elite chest: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 204.8,
+   "msg": "MARK pinewood-key",
+   "lvl": 3,
+   "deaths": 0,
+   "real": 20.8
+  },
+  {
+   "at": 204.8,
+   "msg": "goal: ford"
+  },
+  {
+   "at": 213.7,
+   "msg": "goal ford: ok",
+   "sec": "8.9"
+  },
+  {
+   "at": 213.7,
+   "msg": "goal: ford clear"
+  },
+  {
+   "at": 216.9,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 219.3,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 222.5,
+   "msg": "goal ford clear: ok",
+   "sec": "8.8"
+  },
+  {
+   "at": 224,
+   "msg": "goal: pick up Chipped Ruby"
+  },
+  {
+   "at": 224.2,
+   "msg": "goal pick up Chipped Ruby: ok",
+   "sec": "0.1"
+  },
+  {
+   "at": 224.2,
+   "msg": "goal: pick up Heavy Leather Jerkin of the Badger"
+  },
+  {
+   "at": 224.7,
+   "msg": "goal pick up Heavy Leather Jerkin of the Badger: ok",
+   "sec": "0.6"
+  },
+  {
+   "at": 224.8,
+   "msg": "goal: shrine2"
+  },
+  {
+   "at": 245.3,
+   "msg": "goal shrine2: ok",
+   "sec": "20.5"
+  },
+  {
+   "at": 246.5,
+   "msg": "full map",
+   "mode": "shrine",
+   "targets": [
+    "shrine1"
+   ]
+  },
+  {
+   "at": [
+    44.78,
+    86.78
+   ],
+   "msg": "shrine warp",
+   "moved": 35.5
+  },
+  {
+   "at": 248,
+   "msg": "goal: r2 plaza"
+  },
+  {
+   "at": 260.1,
+   "msg": "goal r2 plaza: ok",
+   "sec": "12.0"
+  },
+  {
+   "at": 260.1,
+   "msg": "goal: r2 clear"
+  },
+  {
+   "at": 263.8,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.37
+  },
+  {
+   "at": 275.2,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 278,
+   "msg": "goal r2 clear: ok",
+   "sec": "17.9"
+  },
+  {
+   "at": 279.5,
+   "msg": "goal: pick up Sharpened Novice Hood of the Oak"
+  },
+  {
+   "at": 280,
+   "msg": "goal pick up Sharpened Novice Hood of the Oak: ok",
+   "sec": "0.4"
+  },
+  {
+   "at": 280,
+   "msg": "goal: pick up Rope Sandals"
+  },
+  {
+   "at": 280.7,
+   "msg": "goal pick up Rope Sandals: ok",
+   "sec": "0.8"
+  },
+  {
+   "at": 280.8,
+   "msg": "goal: pick up Rope Sandals"
+  },
+  {
+   "at": 281.2,
+   "msg": "goal pick up Rope Sandals: ok",
+   "sec": "0.4"
+  },
+  {
+   "at": 282.9,
+   "msg": "MARK pinewood-r2-done",
+   "lvl": 4,
+   "deaths": 0,
+   "real": 27.7
+  },
+  {
+   "at": 282.9,
+   "msg": "goal: cache hint"
+  },
+  {
+   "at": 285.6,
+   "msg": "goal cache hint: ok",
+   "sec": "2.7"
+  },
+  {
+   "at": 285.6,
+   "msg": "goal: cache door"
+  },
+  {
+   "at": 286,
+   "msg": "goal cache door: ok",
+   "sec": "0.4"
+  },
+  {
+   "at": 287.5,
+   "msg": "goal: cache loot"
+  },
+  {
+   "at": 288.1,
+   "msg": "goal cache loot: ok",
+   "sec": "0.6"
+  },
+  {
+   "at": 289.6,
+   "msg": "goal: pick up Chipped Topaz"
+  },
+  {
+   "at": 290.3,
+   "msg": "goal pick up Chipped Topaz: ok",
+   "sec": "0.7"
+  },
+  {
+   "at": 290.3,
+   "msg": "goal: pick up Patient Rusty Blade of the Owl"
+  },
+  {
+   "at": 290.5,
+   "msg": "goal pick up Patient Rusty Blade of the Owl: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 290.5,
+   "msg": "goal: bridge lever"
+  },
+  {
+   "at": 295,
+   "msg": "goal bridge lever: ok",
+   "sec": "4.5"
+  },
+  {
+   "at": 296.4,
+   "msg": "goal: bridge pip"
+  },
+  {
+   "at": 299.1,
+   "msg": "goal bridge pip: ok",
+   "sec": "2.7"
+  },
+  {
+   "at": 299.1,
+   "msg": "goal: islet loot"
+  },
+  {
+   "at": 309.2,
+   "msg": "goal islet loot: ok",
+   "sec": "10.1"
+  },
+  {
+   "at": 309.2,
+   "msg": "goal: gold chest"
+  },
+  {
+   "at": 310.1,
+   "msg": "goal gold chest: ok",
+   "sec": "0.9"
+  },
+  {
+   "at": 310.1,
+   "msg": "FINDING[polish] Loot drops stack on top of each other (<0.3 tiles apart)",
+   "detail": {
+    "pairs": 1,
+    "n": 6,
+    "names": [
+     "Crackling Novice Hood of the Owl",
+     "Hallowed Ranger Cap of the Moth",
+     "Keen Iron Boots of the Thorn",
+     "Health Potion",
+     "Crackling Rusty Blade of the Spring",
+     "Chipped Sapphire"
+    ]
+   }
+  },
+  {
+   "at": 311.6,
+   "msg": "goal: pick up Crackling Novice Hood of the Owl"
+  },
+  {
+   "at": 311.7,
+   "msg": "goal pick up Crackling Novice Hood of the Owl: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 311.8,
+   "msg": "goal: pick up Keen Iron Boots of the Thorn"
+  },
+  {
+   "at": 311.9,
+   "msg": "goal pick up Keen Iron Boots of the Thorn: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 311.9,
+   "msg": "goal: pick up Hallowed Ranger Cap of the Moth"
+  },
+  {
+   "at": 312.1,
+   "msg": "goal pick up Hallowed Ranger Cap of the Moth: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 312.1,
+   "msg": "goal: pick up Chipped Sapphire"
+  },
+  {
+   "at": 312.4,
+   "msg": "goal pick up Chipped Sapphire: ok",
+   "sec": "0.3"
+  },
+  {
+   "at": 312.4,
+   "msg": "goal: pick up Health Potion"
+  },
+  {
+   "at": 312.6,
+   "msg": "goal pick up Health Potion: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 316,
+   "msg": "goal: r3 grove"
+  },
+  {
+   "at": 336.9,
+   "msg": "goal r3 grove: ok",
+   "sec": "20.9"
+  },
+  {
+   "at": 336.9,
+   "msg": "goal: r3 clear"
+  },
+  {
+   "at": 357.2,
+   "msg": "goal r3 clear: ok",
+   "sec": "20.3"
+  },
+  {
+   "at": 358.8,
+   "msg": "goal: pick up Sharpened Hunter's Bow of the Spring"
+  },
+  {
+   "at": 359.4,
+   "msg": "goal pick up Sharpened Hunter's Bow of the Spring: ok",
+   "sec": "0.7"
+  },
+  {
+   "at": 359.5,
+   "msg": "MARK pinewood-r3-done",
+   "lvl": 6,
+   "deaths": 0,
+   "real": 33.6
+  },
+  {
+   "at": 359.5,
+   "msg": "goal: env hint"
+  },
+  {
+   "at": 366.6,
+   "msg": "goal env hint: ok",
+   "sec": "7.2"
+  },
+  {
+   "at": 366.6,
+   "msg": "goal: env open"
+  },
+  {
+   "at": 367.3,
+   "msg": "goal env open: ok",
+   "sec": "0.7"
+  },
+  {
+   "at": 367.3,
+   "msg": "goal: detour chest"
+  },
+  {
+   "at": 367.9,
+   "msg": "goal detour chest: ok",
+   "sec": "0.6"
+  },
+  {
+   "at": 369.5,
+   "msg": "goal: pick up Heavy Iron Boots of the Swallow"
+  },
+  {
+   "at": 369.6,
+   "msg": "goal pick up Heavy Iron Boots of the Swallow: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 369.6,
+   "msg": "goal: pick up Health Potion"
+  },
+  {
+   "at": 369.8,
+   "msg": "goal pick up Health Potion: ok",
+   "sec": "0.1"
+  },
+  {
+   "at": 369.8,
+   "msg": "goal: pick up Hallowed Leather Jerkin of the Owl"
+  },
+  {
+   "at": 369.9,
+   "msg": "goal pick up Hallowed Leather Jerkin of the Owl: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 370,
+   "msg": "goal: door warrens_door"
+  },
+  {
+   "at": 371.3,
+   "msg": "goal door warrens_door: ok",
+   "sec": "1.4"
+  },
+  {
+   "at": 372.2,
+   "msg": "MARK warrens-enter",
+   "lvl": 6,
+   "deaths": 0,
+   "real": 34.6
+  },
+  {
+   "at": 372.2,
+   "msg": "goal: warrens hall"
+  },
+  {
+   "at": 374.6,
+   "msg": "goal warrens hall: ok",
+   "sec": "2.3"
+  },
+  {
+   "at": 374.6,
+   "msg": "goal: warrens vault"
+  },
+  {
+   "at": 379,
+   "msg": "goal warrens vault: ok",
+   "sec": "4.5"
+  },
+  {
+   "at": 379,
+   "msg": "goal: warrens clear"
+  },
+  {
+   "at": 398.4,
+   "msg": "goal warrens clear: ok",
+   "sec": "19.4"
+  },
+  {
+   "at": 403.4,
+   "msg": "after warrens",
+   "obj": "Take the key to the root door",
+   "fired": true
+  },
+  {
+   "at": 403.4,
+   "msg": "goal: warrens chest"
+  },
+  {
+   "at": 408.4,
+   "msg": "goal warrens chest: ok",
+   "sec": "5.0"
+  },
+  {
+   "at": 409.9,
+   "msg": "goal: pick up Rope Sash of the Owl"
+  },
+  {
+   "at": 410,
+   "msg": "goal pick up Rope Sash of the Owl: ok",
+   "sec": "0.1"
+  },
+  {
+   "at": 410.1,
+   "msg": "goal: pick up Heavy Knight Greaves of the Owl"
+  },
+  {
+   "at": 410.4,
+   "msg": "goal pick up Heavy Knight Greaves of the Owl: ok",
+   "sec": "0.4"
+  },
+  {
+   "at": 410.4,
+   "msg": "goal: pick up Smoldering Stalker Jacket of the Fox"
+  },
+  {
+   "at": 410.6,
+   "msg": "goal pick up Smoldering Stalker Jacket of the Fox: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 410.6,
+   "msg": "goal: pick up Eager Stalker Jacket of the Heron"
+  },
+  {
+   "at": 410.8,
+   "msg": "goal pick up Eager Stalker Jacket of the Heron: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 410.9,
+   "msg": "goal: pick up Eager Stalker Jacket of the Heron"
+  },
+  {
+   "at": 410.9,
+   "msg": "goal pick up Eager Stalker Jacket of the Heron: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 410.9,
+   "msg": "goal: pick up Eager Stalker Jacket of the Heron"
+  },
+  {
+   "at": 410.9,
+   "msg": "goal pick up Eager Stalker Jacket of the Heron: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 410.9,
+   "msg": "goal: pick up Eager Stalker Jacket of the Heron"
+  },
+  {
+   "at": 410.9,
+   "msg": "goal pick up Eager Stalker Jacket of the Heron: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 411,
+   "msg": "goal: pick up Eager Stalker Jacket of the Heron"
+  },
+  {
+   "at": 411,
+   "msg": "goal pick up Eager Stalker Jacket of the Heron: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 411,
+   "msg": "goal: pick up Eager Stalker Jacket of the Heron"
+  },
+  {
+   "at": 411,
+   "msg": "goal pick up Eager Stalker Jacket of the Heron: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 411,
+   "msg": "goal: pick up Eager Stalker Jacket of the Heron"
+  },
+  {
+   "at": 411,
+   "msg": "goal pick up Eager Stalker Jacket of the Heron: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 411.1,
+   "msg": "goal: pick up Eager Stalker Jacket of the Heron"
+  },
+  {
+   "at": 411.1,
+   "msg": "goal pick up Eager Stalker Jacket of the Heron: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 411.1,
+   "msg": "goal: pick up Eager Stalker Jacket of the Heron"
+  },
+  {
+   "at": 411.1,
+   "msg": "goal pick up Eager Stalker Jacket of the Heron: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 411.1,
+   "msg": "goal: pick up Eager Stalker Jacket of the Heron"
+  },
+  {
+   "at": 411.1,
+   "msg": "goal pick up Eager Stalker Jacket of the Heron: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 411.2,
+   "msg": "goal: pick up Eager Stalker Jacket of the Heron"
+  },
+  {
+   "at": 411.2,
+   "msg": "goal pick up Eager Stalker Jacket of the Heron: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 411.2,
+   "msg": "goal: door warrens_exit"
+  },
+  {
+   "at": 420,
+   "msg": "goal door warrens_exit: ok",
+   "sec": "8.8"
+  },
+  {
+   "at": 420.9,
+   "msg": "MARK warrens-exit",
+   "lvl": 7,
+   "deaths": 0,
+   "real": 41.1
+  },
+  {
+   "at": 420.9,
+   "msg": "goal: hollow door hint"
+  },
+  {
+   "at": 435.5,
+   "msg": "goal hollow door hint: ok",
+   "sec": "14.6"
+  },
+  {
+   "at": 435.5,
+   "msg": "before hollow door",
+   "obj": "Take the key to the root door",
+   "keys": [
+    "opening",
+    "hud:bars",
+    "hud:tracker",
+    "hud:lmb",
+    "hud:shift",
+    "hud:q",
+    "found:rustyblade",
+    "hud:map",
+    "trinket:ring",
+    "hud:f",
+    "hud:c",
+    "found:ironcap",
+    "hud:pot",
+    "hud:e",
+    "hud:skills",
+    "hud:r",
+    "key:key_roothollow",
+    "trinket:belt"
+   ]
+  },
+  {
+   "at": 435.5,
+   "msg": "MARK pre-hollow",
+   "lvl": 7,
+   "deaths": 0,
+   "real": 41.8
+  },
+  {
+   "at": 435.5,
+   "msg": "goal: door hollow_door"
+  },
+  {
+   "at": 437.5,
+   "msg": "goal door hollow_door: ok",
+   "sec": "2.0"
+  },
+  {
+   "at": 438.4,
+   "msg": "MARK hollow-enter",
+   "lvl": 7,
+   "deaths": 0,
+   "real": 42
+  },
+  {
+   "at": 438.4,
+   "msg": "goal: hollow crack hum"
+  },
+  {
+   "at": 443.8,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 446.4,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 448.8,
+   "msg": "goal hollow crack hum: ok",
+   "sec": "10.4"
+  },
+  {
+   "at": 450.1,
+   "msg": "goal: hollow crack open"
+  },
+  {
+   "at": 451.1,
+   "msg": "goal hollow crack open: ok",
+   "sec": "1.0"
+  },
+  {
+   "at": 451.1,
+   "msg": "goal: hollow crack loot"
+  },
+  {
+   "at": 451.8,
+   "msg": "goal hollow crack loot: ok",
+   "sec": "0.7"
+  },
+  {
+   "at": 453.3,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 453.6,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.3"
+  },
+  {
+   "at": 453.6,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 453.6,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 453.7,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 453.7,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 453.7,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 453.7,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 453.7,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 453.7,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 453.8,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 453.8,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 453.8,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 453.8,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 453.8,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 453.8,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 453.9,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 453.9,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 453.9,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 453.9,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 453.9,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 453.9,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 454,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 454,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 454,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 454,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 454,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 454,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 454,
+   "msg": "goal: hollow r1"
+  },
+  {
+   "at": 454.1,
+   "msg": "goal hollow r1: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 454.1,
+   "msg": "goal: hollow r1 clear"
+  },
+  {
+   "at": 455.7,
+   "msg": "goal hollow r1 clear: ok",
+   "sec": "1.7"
+  },
+  {
+   "at": 457.2,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.3,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.3,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.3,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.3,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.3,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.3,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.4,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.4,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.4,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.4,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.4,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.4,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.5,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.5,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.5,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.5,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.5,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.5,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.6,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.6,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.6,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.6,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.6,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.6,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.7,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 457.7,
+   "msg": "goal: pick up Keen Novice Hood of the Rime"
+  },
+  {
+   "at": 457.7,
+   "msg": "goal pick up Keen Novice Hood of the Rime: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 461.2,
+   "msg": "objective after hollow r1",
+   "obj": "Rest at the shrine, then press on"
+  },
+  {
+   "at": 461.2,
+   "msg": "goal: gallery approach (no rest)"
+  },
+  {
+   "at": 468.9,
+   "msg": "goal gallery approach (no rest): ok",
+   "sec": "7.7"
+  },
+  {
+   "at": 468.9,
+   "msg": "goal: hollow shrine"
+  },
+  {
+   "at": 483,
+   "msg": "goal hollow shrine: ok",
+   "sec": "14.1"
+  },
+  {
+   "at": 483,
+   "msg": "goal: hollow gallery"
+  },
+  {
+   "at": 483,
+   "msg": "goal hollow gallery: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 483,
+   "msg": "goal: hollow gallery clear"
+  },
+  {
+   "at": 486.3,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.35
+  },
+  {
+   "at": 488.7,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 489.4,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.17
+  },
+  {
+   "at": 494.9,
+   "msg": "goal hollow gallery clear: ok",
+   "sec": "11.8"
+  },
+  {
+   "at": 496.4,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.4,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "1.0"
+  },
+  {
+   "at": 497.4,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.4,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.4,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.4,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.4,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.5,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.5,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.5,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.5,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.5,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.5,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.6,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.6,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.6,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.6,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.6,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.6,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.7,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.7,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.7,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.7,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.7,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.7,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.8,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.8,
+   "msg": "goal: pick up Arcane Cowl of the Owl"
+  },
+  {
+   "at": 497.8,
+   "msg": "goal pick up Arcane Cowl of the Owl: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 497.8,
+   "msg": "MARK gallery-done",
+   "lvl": 9,
+   "deaths": 0,
+   "real": 50.3
+  },
+  {
+   "at": 497.8,
+   "msg": "objective after gallery",
+   "obj": "Pull the lever to raise the gate"
+  },
+  {
+   "at": 497.8,
+   "msg": "goal: gate hint"
+  },
+  {
+   "at": 499.4,
+   "msg": "goal gate hint: ok",
+   "sec": "1.5"
+  },
+  {
+   "at": 499.4,
+   "msg": "goal: gate lever"
+  },
+  {
+   "at": 501.1,
+   "msg": "goal gate lever: ok",
+   "sec": "1.8"
+  },
+  {
+   "at": 502.5,
+   "msg": "MARK hollow-lever",
+   "lvl": 9,
+   "deaths": 0,
+   "real": 50.6
+  },
+  {
+   "at": 502.5,
+   "msg": "goal: ceiling tell"
+  },
+  {
+   "at": 502.6,
+   "msg": "goal ceiling tell: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 504.1,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.4,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "1.3"
+  },
+  {
+   "at": 505.4,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.4,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.4,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.4,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.4,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.5,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.5,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.5,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.5,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.5,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.5,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.6,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.6,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.6,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.6,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.6,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.6,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.7,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.7,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.7,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.7,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.7,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.7,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.8,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.8,
+   "msg": "goal: pick up Leather Jerkin"
+  },
+  {
+   "at": 505.8,
+   "msg": "goal pick up Leather Jerkin: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 505.8,
+   "msg": "arrival gear",
+   "level": 9,
+   "maxHp": 903,
+   "def": 0.13164293157346302,
+   "items": [
+    "weapon:rustyblade/rare/i5",
+    "head:novicehood/epic/i4",
+    "chest:stalkerjacket/rare/i7",
+    "boots:ironboots/epic/i6",
+    "ring1:origin_knight/uncommon/i1",
+    "belt:rope_sash/rare/i7"
+   ]
+  },
+  {
+   "at": 505.8,
+   "msg": "goal: mossjaw den"
+  },
+  {
+   "at": 506.5,
+   "msg": "goal mossjaw den: ok",
+   "sec": "0.7"
+  },
+  {
+   "at": 506.5,
+   "msg": "goal: mossjaw"
+  },
+  {
+   "at": 507.7,
+   "msg": "BOSS START mossjaw",
+   "type": "mossjaw",
+   "lvl": 9,
+   "bossLvl": 5,
+   "t0": 1792673623276.0527,
+   "deaths0": 0,
+   "hp": 14116,
+   "pot0": 4,
+   "map": "pinewood",
+   "maxHp": 903,
+   "wk": "sword"
+  },
+  {
+   "at": 511.2,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.35
+  },
+  {
+   "at": 518.3,
+   "msg": "dodge on warn",
+   "move": "circle",
+   "type": "circle",
+   "age": 0.75
+  },
+  {
+   "at": 520.8,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.34
+  },
+  {
+   "at": 525.9,
+   "msg": "dodge on warn",
+   "move": "circle",
+   "type": "circle",
+   "age": 0.75
+  },
+  {
+   "at": 528.5,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.35
+  },
+  {
+   "at": 531.4,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.35
+  },
+  {
+   "at": 536,
+   "msg": "dodge on warn",
+   "move": "circle",
+   "type": "circle",
+   "age": 0.73
+  },
+  {
+   "at": 536.7,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.23
+  },
+  {
+   "at": 540.9,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.23
+  },
+  {
+   "at": 541.6,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.52
+  },
+  {
+   "at": 544.5,
+   "msg": "dodge telegraph",
+   "kind": "cone",
+   "remain": 0.35
+  },
+  {
+   "at": 545.5,
+   "msg": "dodge on warn",
+   "move": "circle",
+   "type": "circle",
+   "age": 0.59
+  },
+  {
+   "at": 550.2,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.24
+  },
+  {
+   "at": 550.9,
+   "msg": "dodge on warn",
+   "move": "lunge",
+   "type": "line",
+   "age": 0.52
+  },
+  {
+   "at": 553.8,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 556.8,
+   "msg": "dodge on warn",
+   "move": "circle",
+   "type": "circle",
+   "age": 0.56
+  },
+  {
+   "at": 560.8,
+   "msg": "dodge on warn",
+   "move": "circle",
+   "type": "circle",
+   "age": 0.57
+  },
+  {
+   "at": 507.7,
+   "msg": "BOSS END mossjaw",
+   "type": "mossjaw",
+   "lvl": 9,
+   "bossLvl": 5,
+   "t0": 1792673623276.0527,
+   "deaths0": 0,
+   "hp": 14116,
+   "pot0": 4,
+   "map": "pinewood",
+   "maxHp": 903,
+   "wk": "sword",
+   "minHpPct": 100,
+   "dur": 53.8,
+   "deaths": 0,
+   "killed": true,
+   "potions": 0
+  },
+  {
+   "at": 563.1,
+   "msg": "goal mossjaw: ok",
+   "sec": "56.6"
+  },
+  {
+   "at": 565.6,
+   "msg": "BOSS DONE mossjaw",
+   "tries": 1,
+   "deaths": 0,
+   "lvl": 10,
+   "maxHp": 929
+  },
+  {
+   "at": 567.1,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.4,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.2"
+  },
+  {
+   "at": 567.4,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.4,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.4,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.4,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.4,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.5,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.5,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.5,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.5,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.5,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.5,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.6,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.6,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.6,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.6,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.6,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.6,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.7,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.7,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.7,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.7,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.7,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.7,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.8,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.8,
+   "msg": "goal: pick up Hallowed Cloud Sandals of the Spring"
+  },
+  {
+   "at": 567.8,
+   "msg": "goal pick up Hallowed Cloud Sandals of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 567.8,
+   "msg": "MARK mossjaw-done",
+   "lvl": 10,
+   "deaths": 0,
+   "real": 64
+  },
+  {
+   "at": 567.8,
+   "msg": "after Mossjaw",
+   "obj": "Climb the root-stair to the Clearing",
+   "sec": "hollow"
+  },
+  {
+   "at": 567.8,
+   "msg": "goal: mini-boss chest"
+  },
+  {
+   "at": 568.6,
+   "msg": "goal mini-boss chest: ok",
+   "sec": "0.7"
+  },
+  {
+   "at": 570.1,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.2,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.1"
+  },
+  {
+   "at": 570.2,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.2,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.2,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.2,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.2,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.3,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.3,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.3,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.3,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.3,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.3,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.4,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.4,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.4,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.4,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.4,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.4,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.5,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.5,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.5,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.5,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.5,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.5,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.6,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.6,
+   "msg": "goal: pick up Mossy Dawnblade of the Spring"
+  },
+  {
+   "at": 570.6,
+   "msg": "goal pick up Mossy Dawnblade of the Spring: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 570.6,
+   "msg": "goal: door hollow_exit"
+  },
+  {
+   "at": 572.3,
+   "msg": "goal door hollow_exit: ok",
+   "sec": "1.7"
+  },
+  {
+   "at": 573.2,
+   "msg": "MARK clearing-arrive",
+   "lvl": 11,
+   "deaths": 0,
+   "real": 64.4
+  },
+  {
+   "at": 573.2,
+   "msg": "goal: clearing shrine3"
+  },
+  {
+   "at": 574,
+   "msg": "goal clearing shrine3: ok",
+   "sec": "0.8"
+  },
+  {
+   "at": 574,
+   "msg": "summit",
+   "obj": "Drop from Hawk's Rest onto the Clearing road",
+   "z": 16
+  },
+  {
+   "at": 574,
+   "msg": "goal: summit drop"
+  },
+  {
+   "at": 588.5,
+   "msg": "goal summit drop: ok",
+   "sec": "14.5"
+  },
+  {
+   "at": 589.1,
+   "msg": "goal: arena hint"
+  },
+  {
+   "at": 593.7,
+   "msg": "goal arena hint: ok",
+   "sec": "4.6"
+  },
+  {
+   "at": 593.7,
+   "msg": "goal: bramblehorn"
+  },
+  {
+   "at": 594.2,
+   "msg": "goal bramblehorn: ok",
+   "sec": "0.5"
+  },
+  {
+   "at": 594.3,
+   "msg": "goal: bramblehorn"
+  },
+  {
+   "at": 596.8,
+   "msg": "BOSS START bramblehorn",
+   "type": "bramblehorn",
+   "lvl": 11,
+   "bossLvl": 8,
+   "t0": 1792673712459.3674,
+   "deaths0": 0,
+   "hp": 40217,
+   "pot0": 4,
+   "map": "pinewood",
+   "maxHp": 955,
+   "wk": "sword"
+  },
+  {
+   "at": 600.4,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.43
+  },
+  {
+   "at": 605.1,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.48
+  },
+  {
+   "at": 609.8,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.55
+  },
+  {
+   "at": 614.2,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.43
+  },
+  {
+   "at": 614.9,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.22
+  },
+  {
+   "at": 618.2,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.43
+  },
+  {
+   "at": 619.5,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 621.9,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.54
+  },
+  {
+   "at": 623.4,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 624.2,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.03
+  },
+  {
+   "at": 626.8,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.5
+  },
+  {
+   "at": 628.9,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 629.7,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 631.1,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.45
+  },
+  {
+   "at": 632.9,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 633.8,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.37
+  },
+  {
+   "at": 635.4,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 636.9,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 637.7,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.23
+  },
+  {
+   "at": 638.9,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 640,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.42
+  },
+  {
+   "at": 641.1,
+   "msg": "dodge on warn",
+   "move": "backhand",
+   "type": "cone",
+   "age": 0.4
+  },
+  {
+   "at": 642.3,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 643,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.33
+  },
+  {
+   "at": 643.8,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.32
+  },
+  {
+   "at": 645.9,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 647.3,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 648,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.28
+  },
+  {
+   "at": 650.8,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 651.8,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 652.5,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.08
+  },
+  {
+   "at": 655.3,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 656.3,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.41
+  },
+  {
+   "at": 657.2,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 659.6,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 660.3,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.15
+  },
+  {
+   "at": 662.3,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 663.2,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 664,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.18
+  },
+  {
+   "at": 664.7,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.85
+  },
+  {
+   "at": 669.2,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.42
+  },
+  {
+   "at": 669.9,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.13
+  },
+  {
+   "at": 670.6,
+   "msg": "dodge on warn",
+   "move": "backhand",
+   "type": "cone",
+   "age": 0.73
+  },
+  {
+   "at": 673.6,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.36
+  },
+  {
+   "at": 675.1,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 678.5,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.37
+  },
+  {
+   "at": 679.2,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.23
+  },
+  {
+   "at": 683,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.37
+  },
+  {
+   "at": 683.7,
+   "msg": "dodge on warn",
+   "move": "stomp",
+   "type": "circle",
+   "age": 0.6
+  },
+  {
+   "at": 687.3,
+   "msg": "dodge on warn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "age": 0.27
+  },
+  {
+   "at": 688.2,
+   "msg": "dodge on warn",
+   "move": "backhand",
+   "type": "cone",
+   "age": 0.26
+  },
+  {
+   "at": 688.9,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.25
+  },
+  {
+   "at": 691.4,
+   "msg": "dodge on warn",
+   "move": "rootGrab",
+   "type": "line",
+   "age": 0.19
+  },
+  {
+   "at": 693.1,
+   "msg": "dodge telegraph",
+   "kind": "line",
+   "remain": 0.35
+  },
+  {
+   "at": 693.9,
+   "msg": "dodge telegraph",
+   "kind": "circle",
+   "remain": 0.34
+  },
+  {
+   "at": 596.8,
+   "msg": "BOSS END bramblehorn",
+   "type": "bramblehorn",
+   "lvl": 11,
+   "bossLvl": 8,
+   "t0": 1792673712459.3674,
+   "deaths0": 0,
+   "hp": 40217,
+   "pot0": 4,
+   "map": "pinewood",
+   "maxHp": 955,
+   "wk": "sword",
+   "minHpPct": 100,
+   "dur": 104.3,
+   "deaths": 0,
+   "killed": true,
+   "potions": 0
+  },
+  {
+   "at": 704.8,
+   "msg": "goal bramblehorn: ok",
+   "sec": "110.6"
+  },
+  {
+   "at": 707.4,
+   "msg": "BOSS DONE bramblehorn",
+   "tries": 1,
+   "deaths": 0,
+   "lvl": 13,
+   "maxHp": 1007
+  },
+  {
+   "at": 708.9,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.4,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.5"
+  },
+  {
+   "at": 709.4,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.4,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.4,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.4,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.4,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.5,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.5,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.5,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.5,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.5,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.5,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.6,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.6,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.6,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.6,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.6,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.6,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.7,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.7,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.7,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.7,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.7,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.7,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.8,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.8,
+   "msg": "goal: pick up Mossy Dreamweave Robe of the Thorn"
+  },
+  {
+   "at": 709.8,
+   "msg": "goal pick up Mossy Dreamweave Robe of the Thorn: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 709.8,
+   "msg": "after Bramblehorn",
+   "obj": "Take a rift: home or the Ruins",
+   "portals": [
+    [
+     "home",
+     true
+    ],
+    [
+     "home_arena",
+     true
+    ],
+    [
+     "next",
+     true
+    ]
+   ]
+  },
+  {
+   "at": 709.8,
+   "msg": "MARK bramblehorn-done",
+   "lvl": 13,
+   "deaths": 0,
+   "real": 90.7
+  },
+  {
+   "at": 709.8,
+   "msg": "goal: boss chest"
+  },
+  {
+   "at": 711.9,
+   "msg": "goal boss chest: ok",
+   "sec": "2.1"
+  },
+  {
+   "at": 713.4,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.5,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.5,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.5,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.5,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.5,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.5,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.6,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.6,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.6,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.6,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.6,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.6,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.7,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.7,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.7,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.7,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.7,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.7,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.8,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.8,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.8,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.8,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.8,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.8,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.9,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.9,
+   "msg": "goal: pick up Smoldering Arcane Cowl of the Moss"
+  },
+  {
+   "at": 713.9,
+   "msg": "goal pick up Smoldering Arcane Cowl of the Moss: ok",
+   "sec": "0.0"
+  },
+  {
+   "at": 713.9,
+   "msg": "goal: portal home_arena"
+  },
+  {
+   "at": 715.1,
+   "msg": "enter map vale",
+   "lvl": 13,
+   "hp": 1007
+  },
+  {
+   "at": 715.1,
+   "msg": "goal portal home_arena: ok",
+   "sec": "1.2"
+  },
+  {
+   "at": 716.3,
+   "msg": "MARK vale-return",
+   "lvl": 13,
+   "deaths": 0,
+   "real": 91.3
+  },
+  {
+   "at": 718.8,
+   "msg": "vale return",
+   "obj": "Take the rift to the Pinewood",
+   "pos": [
+    50.41,
+    70.71
+   ],
+   "quests": {
+    "vale_lantern": "done",
+    "shard_root": "done"
+   }
+  },
+  {
+   "at": 718.8,
+   "msg": "goal: elder after boss"
+  },
+  {
+   "at": 725.6,
+   "msg": "goal elder after boss: ok",
+   "sec": "6.8"
+  },
+  {
+   "at": 728.1,
+   "msg": "vale final",
+   "obj": "Take the rift to the Pinewood",
+   "lvl": 13
   }
  ],
  "findings": [
   {
-   "at": 25.5,
+   "at": 24.7,
    "sev": "minor",
    "title": "A drop sat on the ground >25 s without being picked up",
    "detail": {
@@ -271,117 +3108,394 @@
      "t": 25.1
     },
     "ppos": [
-     36.19,
-     53.51
+     32.97,
+     54.75
     ]
    },
    "shot": "tools/qa/shots/kbm-005-old-drop.png",
    "map": "vale"
+  },
+  {
+   "at": 310.1,
+   "sev": "polish",
+   "title": "Loot drops stack on top of each other (<0.3 tiles apart)",
+   "detail": {
+    "pairs": 1,
+    "n": 6,
+    "names": [
+     "Crackling Novice Hood of the Owl",
+     "Hallowed Ranger Cap of the Moth",
+     "Keen Iron Boots of the Thorn",
+     "Health Potion",
+     "Crackling Rusty Blade of the Spring",
+     "Chipped Sapphire"
+    ]
+   },
+   "shot": "tools/qa/shots/kbm-034-loot-overlap.png",
+   "map": "pinewood"
   }
  ],
  "errors": [],
  "potions": {},
  "shots": [
   {
-   "at": 0.3,
+   "at": 0,
    "tag": "title",
    "file": "tools/qa/shots/kbm-001-title.png",
    "map": "vale"
   },
   {
-   "at": 4.3,
+   "at": 3.6,
    "tag": "vale-wake",
    "file": "tools/qa/shots/kbm-002-vale-wake.png",
    "map": "vale"
   },
   {
-   "at": 16,
+   "at": 15.2,
    "tag": "vale-dummies",
    "file": "tools/qa/shots/kbm-003-vale-dummies.png",
    "map": "vale"
   },
   {
-   "at": 23.7,
+   "at": 22.3,
    "tag": "vale-elder",
    "file": "tools/qa/shots/kbm-004-vale-elder.png",
    "map": "vale"
   },
   {
-   "at": 25.5,
+   "at": 24.7,
    "tag": "old-drop",
    "file": "tools/qa/shots/kbm-005-old-drop.png",
    "map": "vale"
   },
   {
-   "at": 32.1,
+   "at": 30.4,
    "tag": "bag-vale",
    "file": "tools/qa/shots/kbm-006-bag-vale.png",
    "map": "vale"
   },
   {
-   "at": 33.9,
+   "at": 32.1,
    "tag": "menu-character",
    "file": "tools/qa/shots/kbm-007-menu-character.png",
    "map": "vale"
   },
   {
-   "at": 34.6,
+   "at": 32.6,
    "tag": "menu-quests",
    "file": "tools/qa/shots/kbm-008-menu-quests.png",
    "map": "vale"
   },
   {
-   "at": 35.3,
+   "at": 33.2,
    "tag": "menu-bestiary",
    "file": "tools/qa/shots/kbm-009-menu-bestiary.png",
    "map": "vale"
   },
   {
-   "at": 36,
+   "at": 33.8,
    "tag": "menu-bag",
    "file": "tools/qa/shots/kbm-010-menu-bag.png",
    "map": "vale"
   },
   {
-   "at": 37.2,
+   "at": 34.7,
    "tag": "menu-help",
    "file": "tools/qa/shots/kbm-011-menu-help.png",
    "map": "vale"
   },
   {
-   "at": 57.1,
+   "at": 51.5,
    "tag": "vale-lantern",
    "file": "tools/qa/shots/kbm-012-vale-lantern.png",
    "map": "vale"
   },
   {
-   "at": 86.1,
+   "at": 79.9,
    "tag": "vale-ambush",
    "file": "tools/qa/shots/kbm-013-vale-ambush.png",
    "map": "vale"
   },
   {
-   "at": 98.4,
+   "at": 93.3,
    "tag": "vale-rift-open",
    "file": "tools/qa/shots/kbm-014-vale-rift-open.png",
    "map": "vale"
   },
   {
-   "at": 101.7,
+   "at": 95.7,
    "tag": "bag-vale2",
    "file": "tools/qa/shots/kbm-015-bag-vale2.png",
    "map": "vale"
   },
   {
-   "at": 118.1,
+   "at": 111.2,
    "tag": "fullmap-terrace",
    "file": "tools/qa/shots/kbm-016-fullmap-terrace.png",
    "map": "vale"
   },
   {
-   "at": 119.8,
+   "at": 112.8,
    "tag": "after-warp-vale",
    "file": "tools/qa/shots/kbm-017-after-warp-vale.png",
+   "map": "vale"
+  },
+  {
+   "at": 120.8,
+   "tag": "pinewood-arrival",
+   "file": "tools/qa/shots/kbm-018-pinewood-arrival.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 122.9,
+   "tag": "pinewood-trail",
+   "file": "tools/qa/shots/kbm-019-pinewood-trail.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 128.6,
+   "tag": "pinewood-crack-tell",
+   "file": "tools/qa/shots/kbm-020-pinewood-crack-tell.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 131,
+   "tag": "pinewood-crack-open",
+   "file": "tools/qa/shots/kbm-021-pinewood-crack-open.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 156.6,
+   "tag": "pinewood-r1",
+   "file": "tools/qa/shots/kbm-022-pinewood-r1.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 163.1,
+   "tag": "bag-pine1",
+   "file": "tools/qa/shots/kbm-023-bag-pine1.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 181.6,
+   "tag": "pinewood-elite",
+   "file": "tools/qa/shots/kbm-024-pinewood-elite.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 202,
+   "tag": "bag-pine2",
+   "file": "tools/qa/shots/kbm-025-bag-pine2.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 213.7,
+   "tag": "pinewood-ford",
+   "file": "tools/qa/shots/kbm-026-pinewood-ford.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 246.5,
+   "tag": "fullmap-shrine2",
+   "file": "tools/qa/shots/kbm-027-fullmap-shrine2.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 248,
+   "tag": "after-warp-pine",
+   "file": "tools/qa/shots/kbm-028-after-warp-pine.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 260.1,
+   "tag": "pinewood-r2",
+   "file": "tools/qa/shots/kbm-029-pinewood-r2.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 281.9,
+   "tag": "bag-pine3",
+   "file": "tools/qa/shots/kbm-030-bag-pine3.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 285.6,
+   "tag": "pinewood-cache-door",
+   "file": "tools/qa/shots/kbm-031-pinewood-cache-door.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 296.4,
+   "tag": "lever-lever_bridge",
+   "file": "tools/qa/shots/kbm-032-lever-lever_bridge.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 299.1,
+   "tag": "pinewood-bridge",
+   "file": "tools/qa/shots/kbm-033-pinewood-bridge.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 310.1,
+   "tag": "loot-overlap",
+   "file": "tools/qa/shots/kbm-034-loot-overlap.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 313.3,
+   "tag": "bag-pine-secret",
+   "file": "tools/qa/shots/kbm-035-bag-pine-secret.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 336.9,
+   "tag": "pinewood-r3",
+   "file": "tools/qa/shots/kbm-036-pinewood-r3.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 367.3,
+   "tag": "pinewood-env",
+   "file": "tools/qa/shots/kbm-037-pinewood-env.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 372.2,
+   "tag": "door-warrens_door-arrived",
+   "file": "tools/qa/shots/kbm-038-door-warrens_door-arrived.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 374.6,
+   "tag": "warrens-hall",
+   "file": "tools/qa/shots/kbm-039-warrens-hall.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 379,
+   "tag": "warrens-vault",
+   "file": "tools/qa/shots/kbm-040-warrens-vault.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 400.6,
+   "tag": "bag-warrens",
+   "file": "tools/qa/shots/kbm-041-bag-warrens.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 420.9,
+   "tag": "door-warrens_exit-arrived",
+   "file": "tools/qa/shots/kbm-042-door-warrens_exit-arrived.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 435.5,
+   "tag": "pinewood-hollow-door",
+   "file": "tools/qa/shots/kbm-043-pinewood-hollow-door.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 438.4,
+   "tag": "door-hollow_door-arrived",
+   "file": "tools/qa/shots/kbm-044-door-hollow_door-arrived.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 438.4,
+   "tag": "hollow-arrival",
+   "file": "tools/qa/shots/kbm-045-hollow-arrival.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 448.8,
+   "tag": "hollow-crack-tell",
+   "file": "tools/qa/shots/kbm-046-hollow-crack-tell.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 454.1,
+   "tag": "hollow-r1",
+   "file": "tools/qa/shots/kbm-047-hollow-r1.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 458.4,
+   "tag": "bag-hollow1",
+   "file": "tools/qa/shots/kbm-048-bag-hollow1.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 483,
+   "tag": "hollow-gallery",
+   "file": "tools/qa/shots/kbm-049-hollow-gallery.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 499.4,
+   "tag": "hollow-gate",
+   "file": "tools/qa/shots/kbm-050-hollow-gate.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 502.5,
+   "tag": "lever-lever_h_r2",
+   "file": "tools/qa/shots/kbm-051-lever-lever_h_r2.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 506.5,
+   "tag": "hollow-mossjaw-start",
+   "file": "tools/qa/shots/kbm-052-hollow-mossjaw-start.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 565.6,
+   "tag": "mossjaw-end",
+   "file": "tools/qa/shots/kbm-053-mossjaw-end.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 573.2,
+   "tag": "door-hollow_exit-arrived",
+   "file": "tools/qa/shots/kbm-054-door-hollow_exit-arrived.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 573.2,
+   "tag": "clearing-arrival",
+   "file": "tools/qa/shots/kbm-055-clearing-arrival.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 589.1,
+   "tag": "summit-drop-landed",
+   "file": "tools/qa/shots/kbm-056-summit-drop-landed.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 594.2,
+   "tag": "clearing-boss-start",
+   "file": "tools/qa/shots/kbm-057-clearing-boss-start.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 707.3,
+   "tag": "bramblehorn-end",
+   "file": "tools/qa/shots/kbm-058-bramblehorn-end.png",
+   "map": "pinewood"
+  },
+  {
+   "at": 718.8,
+   "tag": "vale-return",
+   "file": "tools/qa/shots/kbm-059-vale-return.png",
+   "map": "vale"
+  },
+  {
+   "at": 728.1,
+   "tag": "vale-elder-after",
+   "file": "tools/qa/shots/kbm-060-vale-elder-after.png",
    "map": "vale"
   }
  ],
@@ -389,262 +3503,954 @@
  "stuck": [],
  "fps": {
   "vale": {
-   "frames": 7305,
-   "sumMs": 125302.79999999535,
+   "frames": 700,
+   "sumMs": 12061.59999999963,
    "p95s": [
     {
-     "p95": 16.80000000000291,
-     "max": 233.30000000000018
+     "p95": 16.799999999999272,
+     "max": 66.79999999999995
+    },
+    {
+     "p95": 33.40000000000873,
+     "max": 49.90000000000873
+    }
+   ]
+  },
+  "pinewood": {
+   "frames": 4562,
+   "sumMs": 79780.09999999942,
+   "p95s": [
+    {
+     "p95": 16.799999999995634,
+     "max": 316.6000000000058
     }
    ]
   }
  },
  "talks": [],
- "warns": [],
+ "warns": [
+  {
+   "gt": 511.26666666653034,
+   "at": 510.8,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.75,
+   "open": 1.2
+  },
+  {
+   "gt": 513.866666666528,
+   "at": 513.4,
+   "boss": "mossjaw",
+   "move": "rootSpit",
+   "type": "rain",
+   "wind": 0.9,
+   "open": 1
+  },
+  {
+   "gt": 516.3833333331924,
+   "at": 515.9,
+   "boss": "mossjaw",
+   "move": "burrow",
+   "type": "vanish",
+   "wind": 1.15,
+   "open": 1.2
+  },
+  {
+   "gt": 517.8999999998576,
+   "at": 517.5,
+   "boss": "mossjaw",
+   "move": "circle",
+   "type": "circle",
+   "wind": 1.15,
+   "open": 1.2
+  },
+  {
+   "gt": 520.8833333331883,
+   "at": 520.4,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.75,
+   "open": 1.2
+  },
+  {
+   "gt": 523.9833333331854,
+   "at": 523.5,
+   "boss": "mossjaw",
+   "move": "burrow",
+   "type": "vanish",
+   "wind": 1.15,
+   "open": 1.2
+  },
+  {
+   "gt": 525.4999999998507,
+   "at": 525,
+   "boss": "mossjaw",
+   "move": "circle",
+   "type": "circle",
+   "wind": 1.15,
+   "open": 1.2
+  },
+  {
+   "gt": 528.5833333331813,
+   "at": 528.1,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.75,
+   "open": 1.2
+  },
+  {
+   "gt": 531.2499999998455,
+   "at": 530.8,
+   "boss": "mossjaw",
+   "move": "rootSpit",
+   "type": "rain",
+   "wind": 0.9,
+   "open": 1
+  },
+  {
+   "gt": 533.949999999843,
+   "at": 533.5,
+   "boss": "mossjaw",
+   "move": "burrow",
+   "type": "vanish",
+   "wind": 1.15,
+   "open": 1.2
+  },
+  {
+   "gt": 535.6666666665081,
+   "at": 535.2,
+   "boss": "mossjaw",
+   "move": "circle",
+   "type": "circle",
+   "wind": 1.15,
+   "open": 1.2
+  },
+  {
+   "gt": 536.5166666665074,
+   "at": 536.1,
+   "boss": "mossjaw",
+   "move": "roar",
+   "type": "roar",
+   "wind": 0.8,
+   "open": 0.51
+  },
+  {
+   "gt": 539.0499999998384,
+   "at": 538.6,
+   "boss": "mossjaw",
+   "move": "rootSpit",
+   "type": "rain",
+   "wind": 0.765,
+   "open": 0.85
+  },
+  {
+   "gt": 541.0666666665032,
+   "at": 540.6,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.6375,
+   "open": 1.2
+  },
+  {
+   "gt": 541.4833333331695,
+   "at": 541,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.6375,
+   "open": 1.2
+  },
+  {
+   "gt": 543.7666666665008,
+   "at": 543.3,
+   "boss": "mossjaw",
+   "move": "burrow",
+   "type": "vanish",
+   "wind": 0.9774999999999999,
+   "open": 1.2
+  },
+  {
+   "gt": 545.2833333331661,
+   "at": 544.8,
+   "boss": "mossjaw",
+   "move": "circle",
+   "type": "circle",
+   "wind": 0.9774999999999999,
+   "open": 1.02
+  },
+  {
+   "gt": 548.24999999983,
+   "at": 547.8,
+   "boss": "mossjaw",
+   "move": "howl",
+   "type": "summon",
+   "wind": 0.68,
+   "open": 0.85
+  },
+  {
+   "gt": 550.3833333331614,
+   "at": 549.9,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.6375,
+   "open": 1.2
+  },
+  {
+   "gt": 550.7999999998277,
+   "at": 550.3,
+   "boss": "mossjaw",
+   "move": "lunge",
+   "type": "line",
+   "wind": 0.6375,
+   "open": 1.2
+  },
+  {
+   "gt": 553.1333333331589,
+   "at": 552.7,
+   "boss": "mossjaw",
+   "move": "rootSpit",
+   "type": "rain",
+   "wind": 0.765,
+   "open": 0.85
+  },
+  {
+   "gt": 555.0499999998239,
+   "at": 554.6,
+   "boss": "mossjaw",
+   "move": "burrow",
+   "type": "vanish",
+   "wind": 0.9774999999999999,
+   "open": 1.2
+  },
+  {
+   "gt": 556.666666666489,
+   "at": 556.2,
+   "boss": "mossjaw",
+   "move": "circle",
+   "type": "circle",
+   "wind": 0.9774999999999999,
+   "open": 1.02
+  },
+  {
+   "gt": 559.0833333331535,
+   "at": 558.6,
+   "boss": "mossjaw",
+   "move": "burrow",
+   "type": "vanish",
+   "wind": 0.9774999999999999,
+   "open": 1.2
+  },
+  {
+   "gt": 560.5999999998188,
+   "at": 560.1,
+   "boss": "mossjaw",
+   "move": "circle",
+   "type": "circle",
+   "wind": 0.9774999999999999,
+   "open": 1.02
+  },
+  {
+   "gt": 599.406666666455,
+   "at": 599.9,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.85,
+   "open": 1.2
+  },
+  {
+   "gt": 604.1066666664507,
+   "at": 604.5,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 608.7399999997798,
+   "at": 609.2,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.95,
+   "open": 1.2
+  },
+  {
+   "gt": 613.2066666664424,
+   "at": 613.6,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.85,
+   "open": 1.2
+  },
+  {
+   "gt": 617.2566666664387,
+   "at": 617.7,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.85,
+   "open": 1.2
+  },
+  {
+   "gt": 620.8233333331021,
+   "at": 621.3,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.95,
+   "open": 1.2
+  },
+  {
+   "gt": 625.7399999997643,
+   "at": 626.2,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 630.156666666427,
+   "at": 630.6,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.85,
+   "open": 1.2
+  },
+  {
+   "gt": 632.8066666664246,
+   "at": 633.3,
+   "boss": "bramblehorn",
+   "move": "arenaShrink",
+   "type": "arenaShrink",
+   "wind": 0,
+   "open": 0.51
+  },
+  {
+   "gt": 636.2566666664214,
+   "at": 636.7,
+   "boss": "bramblehorn",
+   "move": "roar",
+   "type": "roar",
+   "wind": 0.8,
+   "open": 0.51
+  },
+  {
+   "gt": 639.0733333330855,
+   "at": 639.5,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.8075,
+   "open": 0.2975
+  },
+  {
+   "gt": 640.1899999997512,
+   "at": 640.6,
+   "boss": "bramblehorn",
+   "move": "backhand",
+   "type": "cone",
+   "wind": 0.8075,
+   "open": 1.02
+  },
+  {
+   "gt": 643.023333333082,
+   "at": 643.4,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.7224999999999999,
+   "open": 1.02
+  },
+  {
+   "gt": 646.6899999997453,
+   "at": 647.1,
+   "boss": "bramblehorn",
+   "move": "rootWall",
+   "type": "arenaShrink",
+   "wind": 0.68,
+   "open": 1.02
+  },
+  {
+   "gt": 651.056666666408,
+   "at": 651.5,
+   "boss": "bramblehorn",
+   "move": "rootWall",
+   "type": "arenaShrink",
+   "wind": 0.68,
+   "open": 1.02
+  },
+  {
+   "gt": 655.3566666664041,
+   "at": 655.8,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.8075,
+   "open": 0.2975
+  },
+  {
+   "gt": 656.4733333330697,
+   "at": 656.9,
+   "boss": "bramblehorn",
+   "move": "backhand",
+   "type": "cone",
+   "wind": 0.8075,
+   "open": 1.02
+  },
+  {
+   "gt": 659.7066666664001,
+   "at": 660.1,
+   "boss": "bramblehorn",
+   "move": "saplings",
+   "type": "summon",
+   "wind": 0.85,
+   "open": 1.275
+  },
+  {
+   "gt": 663.3066666663968,
+   "at": 663.7,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 666.5233333330606,
+   "at": 667,
+   "boss": "bramblehorn",
+   "move": "rootRing",
+   "type": "arenaShrink",
+   "wind": 0.6,
+   "open": 0
+  },
+  {
+   "gt": 668.2399999997257,
+   "at": 668.7,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.8075,
+   "open": 0.2975
+  },
+  {
+   "gt": 669.3566666663913,
+   "at": 669.8,
+   "boss": "bramblehorn",
+   "move": "backhand",
+   "type": "cone",
+   "wind": 0.8075,
+   "open": 1.02
+  },
+  {
+   "gt": 672.8566666663882,
+   "at": 673.3,
+   "boss": "bramblehorn",
+   "move": "rootWall",
+   "type": "arenaShrink",
+   "wind": 0.68,
+   "open": 1.02
+  },
+  {
+   "gt": 677.5233333330506,
+   "at": 678,
+   "boss": "bramblehorn",
+   "move": "roar",
+   "type": "roar",
+   "wind": 0.8,
+   "open": 0.42
+  },
+  {
+   "gt": 680.0066666663816,
+   "at": 680.5,
+   "boss": "bramblehorn",
+   "move": "saplings",
+   "type": "summon",
+   "wind": 0.7,
+   "open": 1.0499999999999998
+  },
+  {
+   "gt": 682.5899999997126,
+   "at": 683,
+   "boss": "bramblehorn",
+   "move": "stomp",
+   "type": "circle",
+   "wind": 0.9,
+   "open": 1.5
+  },
+  {
+   "gt": 686.4899999997091,
+   "at": 686.9,
+   "boss": "bramblehorn",
+   "move": "trunkSwipe",
+   "type": "cone",
+   "wind": 0.6649999999999999,
+   "open": 0.24499999999999997
+  },
+  {
+   "gt": 687.4066666663749,
+   "at": 687.9,
+   "boss": "bramblehorn",
+   "move": "backhand",
+   "type": "cone",
+   "wind": 0.6649999999999999,
+   "open": 0.84
+  },
+  {
+   "gt": 690.6733333330386,
+   "at": 691.1,
+   "boss": "bramblehorn",
+   "move": "rootGrab",
+   "type": "line",
+   "wind": 0.595,
+   "open": 0.84
+  },
+  {
+   "gt": 693.189999999703,
+   "at": 693.6,
+   "boss": "bramblehorn",
+   "move": "rootWall",
+   "type": "arenaShrink",
+   "wind": 0.5599999999999999,
+   "open": 0.84
+  },
+  {
+   "gt": 697.3399999996992,
+   "at": 697.8,
+   "boss": "bramblehorn",
+   "move": "saplings",
+   "type": "summon",
+   "wind": 0.7,
+   "open": 1.0499999999999998
+  }
+ ],
  "damage": [],
- "started": "2026-10-20T19:44:20.943Z",
+ "started": "2026-10-22T12:45:15.170Z",
  "lite": false,
+ "seed": 1,
+ "marks": [
+  {
+   "at": 1,
+   "real": 0.2,
+   "name": "vale-start",
+   "map": "vale",
+   "sec": "hub",
+   "lvl": 1,
+   "hp": 650,
+   "deaths": 0
+  },
+  {
+   "at": 98.5,
+   "real": 10.4,
+   "name": "vale-done",
+   "map": "vale",
+   "sec": "hub",
+   "lvl": 2,
+   "hp": 716,
+   "deaths": 0
+  },
+  {
+   "at": 119,
+   "real": 11.5,
+   "name": "pinewood-enter",
+   "map": "pinewood",
+   "sec": "forest",
+   "lvl": 2,
+   "hp": 716,
+   "deaths": 0
+  },
+  {
+   "at": 165.9,
+   "real": 16.1,
+   "name": "pinewood-r1-done",
+   "map": "pinewood",
+   "sec": "forest",
+   "lvl": 2,
+   "hp": 716,
+   "deaths": 0
+  },
+  {
+   "at": 204.8,
+   "real": 20.8,
+   "name": "pinewood-key",
+   "map": "pinewood",
+   "sec": "forest",
+   "lvl": 3,
+   "hp": 742,
+   "deaths": 0
+  },
+  {
+   "at": 282.9,
+   "real": 27.7,
+   "name": "pinewood-r2-done",
+   "map": "pinewood",
+   "sec": "forest",
+   "lvl": 4,
+   "hp": 803,
+   "deaths": 0
+  },
+  {
+   "at": 359.5,
+   "real": 33.6,
+   "name": "pinewood-r3-done",
+   "map": "pinewood",
+   "sec": "forest",
+   "lvl": 6,
+   "hp": 825,
+   "deaths": 0
+  },
+  {
+   "at": 372.2,
+   "real": 34.6,
+   "name": "warrens-enter",
+   "map": "pinewood",
+   "sec": "warrens",
+   "lvl": 6,
+   "hp": 825,
+   "deaths": 0
+  },
+  {
+   "at": 420.9,
+   "real": 41.1,
+   "name": "warrens-exit",
+   "map": "pinewood",
+   "sec": "forest",
+   "lvl": 7,
+   "hp": 851,
+   "deaths": 0
+  },
+  {
+   "at": 435.5,
+   "real": 41.8,
+   "name": "pre-hollow",
+   "map": "pinewood",
+   "sec": "forest",
+   "lvl": 7,
+   "hp": 851,
+   "deaths": 0
+  },
+  {
+   "at": 438.4,
+   "real": 42,
+   "name": "hollow-enter",
+   "map": "pinewood",
+   "sec": "hollow",
+   "lvl": 7,
+   "hp": 851,
+   "deaths": 0
+  },
+  {
+   "at": 497.8,
+   "real": 50.3,
+   "name": "gallery-done",
+   "map": "pinewood",
+   "sec": "hollow",
+   "lvl": 9,
+   "hp": 903,
+   "deaths": 0
+  },
+  {
+   "at": 502.5,
+   "real": 50.6,
+   "name": "hollow-lever",
+   "map": "pinewood",
+   "sec": "hollow",
+   "lvl": 9,
+   "hp": 903,
+   "deaths": 0
+  },
+  {
+   "at": 567.8,
+   "real": 64,
+   "name": "mossjaw-done",
+   "map": "pinewood",
+   "sec": "hollow",
+   "lvl": 10,
+   "hp": 929,
+   "deaths": 0
+  },
+  {
+   "at": 573.2,
+   "real": 64.4,
+   "name": "clearing-arrive",
+   "map": "pinewood",
+   "sec": "forest",
+   "lvl": 11,
+   "hp": 955,
+   "deaths": 0
+  },
+  {
+   "at": 709.8,
+   "real": 90.7,
+   "name": "bramblehorn-done",
+   "map": "pinewood",
+   "sec": "clearing",
+   "lvl": 13,
+   "hp": 1007,
+   "deaths": 0
+  },
+  {
+   "at": 716.3,
+   "real": 91.3,
+   "name": "vale-return",
+   "map": "vale",
+   "sec": "hub",
+   "lvl": 13,
+   "hp": 1007,
+   "deaths": 0
+  }
+ ],
  "pev": [
   {
-   "at": 1.4,
+   "at": 1.2,
    "k": "action",
-   "gt": 1.08,
+   "gt": 0.67,
    "map": "vale",
    "type": "dialogue",
    "id": "vale_banner"
   },
   {
-   "at": 1.4,
+   "at": 1.2,
    "k": "talk",
-   "gt": 1.08,
+   "gt": 0.67,
    "map": "vale",
    "id": "vale_banner",
    "first": "Whispering Vale"
   },
   {
-   "at": 1.4,
+   "at": 1.2,
    "k": "action",
-   "gt": 1.08,
+   "gt": 0.67,
    "map": "vale",
    "type": "spawn",
    "id": "dummy"
   },
   {
-   "at": 1.4,
+   "at": 1.2,
    "k": "action",
-   "gt": 1.08,
+   "gt": 0.67,
    "map": "vale",
    "type": "spawn",
    "id": "dummy"
   },
   {
-   "at": 1.4,
+   "at": 1.2,
    "k": "action",
-   "gt": 1.08,
+   "gt": 0.67,
    "map": "vale",
    "type": "gear"
   },
   {
-   "at": 1.4,
+   "at": 1.2,
    "k": "action",
-   "gt": 1.08,
+   "gt": 0.67,
    "map": "vale",
    "type": "gear"
   },
   {
-   "at": 4,
+   "at": 3.7,
    "k": "action",
-   "gt": 4.08,
+   "gt": 3.67,
    "map": "vale",
    "type": "noun"
   },
   {
-   "at": 4,
+   "at": 3.7,
    "k": "action",
-   "gt": 4.08,
+   "gt": 3.67,
    "map": "vale",
    "type": "dialogue",
    "id": "vale_wake"
   },
   {
-   "at": 4,
+   "at": 3.7,
    "k": "talk",
-   "gt": 4.08,
+   "gt": 3.67,
    "map": "vale",
    "id": "vale_wake",
    "first": "Up. You were sleeping like you meant it."
   },
   {
-   "at": 4,
+   "at": 3.7,
    "k": "action",
-   "gt": 4.08,
+   "gt": 3.67,
    "map": "vale",
    "type": "dialogue"
   },
   {
-   "at": 4,
+   "at": 3.7,
    "k": "talk",
-   "gt": 4.08,
+   "gt": 3.67,
    "map": "vale",
    "id": null,
    "first": "Training dummies are south-east. Hit one."
   },
   {
-   "at": 4,
+   "at": 3.7,
    "k": "action",
-   "gt": 4.08,
+   "gt": 3.67,
    "map": "vale",
    "type": "objective",
    "text": "Hit the training dummies"
   },
   {
-   "at": 6.5,
+   "at": 6.2,
    "k": "action",
-   "gt": 6.8,
+   "gt": 5.98,
    "map": "vale",
    "type": "noun"
   },
   {
-   "at": 6.5,
+   "at": 6.2,
    "k": "action",
-   "gt": 6.8,
+   "gt": 5.98,
    "map": "vale",
    "type": "dialogue"
   },
   {
-   "at": 6.5,
+   "at": 6.2,
    "k": "talk",
-   "gt": 6.8,
+   "gt": 5.98,
    "map": "vale",
    "id": null,
    "first": "Swing. Then dodge. Then try your Q skill."
   },
   {
-   "at": 6.5,
+   "at": 6.2,
    "k": "action",
-   "gt": 6.8,
+   "gt": 5.98,
    "map": "vale",
    "type": "objective",
    "text": "Open the chest west of the bed"
   },
   {
-   "at": 19.1,
+   "at": 18,
    "k": "action",
-   "gt": 18.7,
+   "gt": 17.85,
    "map": "vale",
    "type": "checkpoint",
    "text": "Checkpoint: Whispering Vale"
   },
   {
-   "at": 19.1,
+   "at": 18,
    "k": "action",
-   "gt": 18.7,
+   "gt": 17.85,
    "map": "vale",
    "type": "heal"
   },
   {
-   "at": 21.6,
+   "at": 20.5,
    "k": "action",
-   "gt": 21.08,
-   "map": "vale",
-   "type": "dialogue"
-  },
-  {
-   "at": 21.6,
-   "k": "talk",
-   "gt": 21.08,
-   "map": "vale",
-   "id": null,
-   "first": "Three days. You've been asleep three days."
-  },
-  {
-   "at": 21.6,
-   "k": "action",
-   "gt": 21.08,
-   "map": "vale",
-   "type": "noun"
-  },
-  {
-   "at": 21.6,
-   "k": "action",
-   "gt": 21.63,
+   "gt": 20.63,
    "map": "vale",
    "type": "dialogue",
    "id": "vale_elder"
   },
   {
-   "at": 21.6,
+   "at": 20.5,
    "k": "talk",
-   "gt": 21.63,
+   "gt": 20.63,
    "map": "vale",
    "id": "vale_elder",
    "first": "The Stone knows her. The Stone does not say."
   },
   {
-   "at": 21.6,
+   "at": 20.5,
    "k": "action",
-   "gt": 21.63,
+   "gt": 20.63,
    "map": "vale",
    "type": "dialogue"
   },
   {
-   "at": 21.6,
+   "at": 20.5,
    "k": "talk",
-   "gt": 21.63,
+   "gt": 20.63,
    "map": "vale",
    "id": null,
    "first": "The Stone lost a light. Past the cottage, a path ends."
   },
   {
-   "at": 21.6,
+   "at": 20.5,
    "k": "action",
-   "gt": 21.63,
+   "gt": 20.63,
    "map": "vale",
    "type": "quest",
    "id": "vale_lantern"
   },
   {
-   "at": 21.6,
+   "at": 20.5,
    "k": "action",
-   "gt": 21.63,
+   "gt": 20.63,
    "map": "vale",
    "type": "objective",
    "text": "Find the lost lantern past the cottage"
   },
   {
-   "at": 26.2,
+   "at": 20.5,
    "k": "action",
-   "gt": 26.28,
+   "gt": 20.67,
+   "map": "vale",
+   "type": "dialogue"
+  },
+  {
+   "at": 20.5,
+   "k": "talk",
+   "gt": 20.67,
+   "map": "vale",
+   "id": null,
+   "first": "Three days. You've been asleep three days."
+  },
+  {
+   "at": 20.5,
+   "k": "action",
+   "gt": 20.67,
+   "map": "vale",
+   "type": "noun"
+  },
+  {
+   "at": 24.8,
+   "k": "action",
+   "gt": 24.9,
    "map": "vale",
    "type": "checkpoint",
    "text": "Checkpoint: Whispering Vale"
   },
   {
-   "at": 26.2,
+   "at": 24.8,
    "k": "action",
-   "gt": 26.28,
+   "gt": 24.9,
    "map": "vale",
    "type": "heal"
   },
   {
-   "at": 29.9,
+   "at": 27.3,
    "k": "action",
-   "gt": 29.12,
+   "gt": 27.8,
    "map": "vale",
    "type": "dialogue"
   },
   {
-   "at": 29.9,
+   "at": 27.3,
    "k": "talk",
-   "gt": 29.12,
+   "gt": 27.8,
    "map": "vale",
    "id": null,
    "first": "A chest! Interact to open it."
   },
   {
-   "at": 29.9,
+   "at": 28.6,
    "k": "loot",
-   "gt": 29.48,
+   "gt": 28.15,
    "map": "vale",
    "n": 3,
    "kinds": [
@@ -654,329 +4460,327 @@
    ]
   },
   {
-   "at": 37.6,
+   "at": 36.4,
    "k": "action",
-   "gt": 37.93,
+   "gt": 35.82,
    "map": "vale",
    "type": "dialogue",
    "id": "vale_chest"
   },
   {
-   "at": 37.6,
+   "at": 36.4,
    "k": "talk",
-   "gt": 37.93,
+   "gt": 35.82,
    "map": "vale",
    "id": "vale_chest",
    "first": "That glow? Keep it. Gear remembers you."
   },
   {
-   "at": 37.6,
+   "at": 36.4,
    "k": "action",
-   "gt": 37.93,
+   "gt": 35.82,
    "map": "vale",
    "type": "dialogue"
   },
   {
-   "at": 37.6,
+   "at": 36.4,
    "k": "action",
-   "gt": 37.93,
+   "gt": 35.82,
    "map": "vale",
    "type": "objective",
    "text": "Follow the path to the Elder Stone"
   },
   {
-   "at": 40.1,
+   "at": 37.6,
    "k": "action",
-   "gt": 39.97,
+   "gt": 37.55,
    "map": "vale",
    "type": "checkpoint",
    "text": "Checkpoint: Whispering Vale"
   },
   {
-   "at": 40.1,
+   "at": 37.6,
    "k": "action",
-   "gt": 39.97,
+   "gt": 37.55,
    "map": "vale",
    "type": "heal"
   },
   {
-   "at": 52.5,
+   "at": 47.6,
    "k": "action",
-   "gt": 52.55,
+   "gt": 47.27,
    "map": "vale",
    "type": "dialogue",
    "id": "vale_tablet"
   },
   {
-   "at": 52.5,
+   "at": 47.6,
    "k": "talk",
-   "gt": 52.55,
+   "gt": 47.27,
    "map": "vale",
    "id": "vale_tablet",
    "first": "Four Wardens. One would not wake."
   },
   {
-   "at": 57.4,
+   "at": 52.6,
    "k": "action",
-   "gt": 57.38,
+   "gt": 51.95,
    "map": "vale",
    "type": "message",
    "text": "The Stone's lantern, still warm."
   },
   {
-   "at": 57.4,
+   "at": 52.6,
    "k": "action",
-   "gt": 57.38,
+   "gt": 51.95,
    "map": "vale",
    "type": "quest",
    "id": "vale_lantern"
   },
   {
-   "at": 57.4,
+   "at": 52.6,
    "k": "action",
-   "gt": 57.38,
+   "gt": 51.95,
    "map": "vale",
    "type": "objective",
    "text": "Return the lantern to the Stone"
   },
   {
-   "at": 66.2,
+   "at": 60.1,
    "k": "action",
-   "gt": 65.4,
+   "gt": 59.68,
    "map": "vale",
    "type": "message",
    "text": "A hidden gem cache!"
   },
   {
-   "at": 66.2,
+   "at": 60.1,
    "k": "action",
-   "gt": 65.4,
+   "gt": 59.68,
    "map": "vale",
    "type": "loot"
   },
   {
-   "at": 66.2,
+   "at": 60.1,
    "k": "loot",
-   "gt": 65.4,
+   "gt": 59.68,
    "map": "vale",
    "n": 2,
    "kinds": [
-    "item:weapon/rare",
+    "item:boots/rare",
     "gem"
    ]
   },
   {
-   "at": 78.6,
+   "at": 73.8,
    "k": "action",
-   "gt": 78.1,
+   "gt": 73.13,
    "map": "vale",
    "type": "dialogue"
   },
   {
-   "at": 78.6,
+   "at": 73.8,
    "k": "talk",
-   "gt": 78.1,
+   "gt": 73.13,
    "map": "vale",
    "id": null,
    "first": "The Stone is lit. The Stone remembers kindness."
   },
   {
-   "at": 78.6,
+   "at": 73.8,
    "k": "action",
-   "gt": 78.1,
+   "gt": 73.13,
    "map": "vale",
    "type": "quest",
    "id": "vale_lantern"
   },
   {
-   "at": 78.6,
+   "at": 73.8,
    "k": "action",
-   "gt": 78.1,
+   "gt": 73.13,
    "map": "vale",
    "type": "loot"
   },
   {
-   "at": 78.6,
+   "at": 73.8,
    "k": "loot",
-   "gt": 78.1,
+   "gt": 73.13,
    "map": "vale",
    "n": 2,
    "kinds": [
-    "item:weapon/rare",
+    "item:chest/rare",
     "gem"
    ]
   },
   {
-   "at": 78.6,
+   "at": 73.8,
    "k": "action",
-   "gt": 78.1,
+   "gt": 73.13,
    "map": "vale",
    "type": "message",
    "text": "Reward: a gem and a Socket Rune."
   },
   {
-   "at": 86.2,
+   "at": 80,
    "k": "action",
-   "gt": 86.25,
+   "gt": 80.35,
    "map": "vale",
    "type": "noun"
   },
   {
-   "at": 86.2,
+   "at": 80,
    "k": "action",
-   "gt": 86.25,
+   "gt": 80.35,
    "map": "vale",
    "type": "banner",
    "text": "Gloom in the garden"
   },
   {
-   "at": 86.2,
+   "at": 80,
    "k": "action",
-   "gt": 86.25,
+   "gt": 80.35,
    "map": "vale",
    "type": "spawn",
    "id": "gloomslime"
   },
   {
-   "at": 86.2,
+   "at": 80,
    "k": "action",
-   "gt": 86.25,
+   "gt": 80.35,
    "map": "vale",
    "type": "spawn",
    "id": "gloomslime"
   },
   {
-   "at": 86.2,
+   "at": 80,
    "k": "action",
-   "gt": 86.25,
+   "gt": 80.35,
    "map": "vale",
    "type": "spawn",
    "id": "gloomslime"
   },
   {
-   "at": 90,
+   "at": 83.7,
    "k": "kill",
-   "gt": 89.67,
+   "gt": 83.08,
    "map": "vale",
    "type": "gloomslime",
    "boss": false
   },
   {
-   "at": 90,
+   "at": 83.7,
    "k": "loot",
-   "gt": 89.67,
+   "gt": 83.08,
    "map": "vale",
    "n": 0,
    "kinds": []
   },
   {
-   "at": 90,
+   "at": 84.9,
    "k": "kill",
-   "gt": 90.13,
+   "gt": 84.35,
    "map": "vale",
    "type": "gloomslime_small",
    "boss": false
   },
   {
-   "at": 90,
+   "at": 84.9,
    "k": "kill",
-   "gt": 90.13,
+   "gt": 84.35,
    "map": "vale",
    "type": "gloomslime_small",
    "boss": false
   },
   {
-   "at": 92.5,
+   "at": 87.4,
    "k": "kill",
-   "gt": 92.42,
+   "gt": 87.5,
    "map": "vale",
    "type": "gloomslime",
    "boss": false
   },
   {
-   "at": 92.5,
+   "at": 87.4,
    "k": "loot",
-   "gt": 92.42,
-   "map": "vale",
-   "n": 1,
-   "kinds": [
-    "item:head/uncommon"
-   ]
-  },
-  {
-   "at": 93.8,
-   "k": "kill",
-   "gt": 93.4,
-   "map": "vale",
-   "type": "gloomslime",
-   "boss": false
-  },
-  {
-   "at": 93.8,
-   "k": "loot",
-   "gt": 93.4,
+   "gt": 87.5,
    "map": "vale",
    "n": 0,
    "kinds": []
   },
   {
-   "at": 93.8,
+   "at": 87.4,
    "k": "kill",
-   "gt": 93.5,
+   "gt": 87.5,
+   "map": "vale",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 87.4,
+   "k": "loot",
+   "gt": 87.5,
+   "map": "vale",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 88.6,
+   "k": "kill",
+   "gt": 87.88,
    "map": "vale",
    "type": "gloomslime_small",
    "boss": false
   },
   {
-   "at": 93.8,
+   "at": 88.6,
    "k": "kill",
-   "gt": 93.5,
+   "gt": 87.88,
    "map": "vale",
    "type": "gloomslime_small",
    "boss": false
   },
   {
-   "at": 93.8,
+   "at": 88.6,
    "k": "kill",
-   "gt": 93.93,
+   "gt": 88.07,
    "map": "vale",
    "type": "gloomslime_small",
    "boss": false
   },
   {
-   "at": 93.8,
+   "at": 89.8,
    "k": "kill",
-   "gt": 94.05,
+   "gt": 89.6,
    "map": "vale",
    "type": "gloomslime_small",
    "boss": false
   },
   {
-   "at": 93.8,
+   "at": 89.8,
    "k": "action",
-   "gt": 94.05,
+   "gt": 89.6,
    "map": "vale",
    "type": "message",
    "text": "The garden is quiet. Something hums in the south."
   },
   {
-   "at": 93.8,
+   "at": 89.8,
    "k": "action",
-   "gt": 94.05,
+   "gt": 89.6,
    "map": "vale",
    "type": "heal"
   },
   {
-   "at": 93.8,
+   "at": 89.8,
    "k": "action",
-   "gt": 94.05,
+   "gt": 89.6,
    "map": "vale",
    "type": "loot"
   },
   {
-   "at": 93.8,
+   "at": 89.8,
    "k": "loot",
-   "gt": 94.05,
+   "gt": 89.6,
    "map": "vale",
    "n": 1,
    "kinds": [
@@ -984,117 +4788,3235 @@
    ]
   },
   {
-   "at": 93.8,
+   "at": 89.8,
    "k": "action",
-   "gt": 94.05,
+   "gt": 89.6,
    "map": "vale",
    "type": "open_portal"
   },
   {
-   "at": 93.8,
+   "at": 89.8,
    "k": "action",
-   "gt": 94.05,
+   "gt": 89.6,
    "map": "vale",
    "type": "sound"
   },
   {
-   "at": 93.8,
+   "at": 89.8,
    "k": "action",
-   "gt": 94.05,
+   "gt": 89.6,
    "map": "vale",
    "type": "banner",
    "text": "The Pinewood rift opens"
   },
   {
-   "at": 93.8,
+   "at": 89.8,
    "k": "action",
-   "gt": 94.05,
+   "gt": 89.6,
    "map": "vale",
    "type": "dialogue",
    "id": "vale_rift"
   },
   {
-   "at": 93.8,
+   "at": 89.8,
    "k": "talk",
-   "gt": 94.05,
+   "gt": 89.6,
    "map": "vale",
    "id": "vale_rift",
    "first": "The Pinewood screams. Let's be rude back."
   },
   {
-   "at": 93.8,
+   "at": 89.8,
    "k": "action",
-   "gt": 94.05,
+   "gt": 89.6,
    "map": "vale",
    "type": "quest",
    "id": "shard_root"
   },
   {
-   "at": 93.8,
+   "at": 89.8,
    "k": "action",
-   "gt": 94.05,
+   "gt": 89.6,
    "map": "vale",
    "type": "objective",
    "text": "Take the rift to the Pinewood"
   },
   {
-   "at": 116.1,
+   "at": 112.8,
    "k": "action",
-   "gt": 116.23,
+   "gt": 109.73,
    "map": "vale",
    "type": "checkpoint",
    "text": "Checkpoint: Rift terrace"
   },
   {
-   "at": 116.1,
+   "at": 112.8,
    "k": "action",
-   "gt": 116.23,
+   "gt": 109.73,
    "map": "vale",
    "type": "heal"
   },
   {
-   "at": 119.9,
+   "at": 112.8,
    "k": "action",
-   "gt": 118.72,
+   "gt": 111.9,
    "map": "vale",
    "type": "checkpoint",
    "text": "Checkpoint: Whispering Vale"
   },
   {
-   "at": 119.9,
+   "at": 112.8,
    "k": "action",
-   "gt": 118.72,
+   "gt": 111.9,
    "map": "vale",
    "type": "heal"
-  }
- ],
- "marks": [
-  {
-   "at": 1.4,
-   "name": "vale-start",
-   "map": "vale",
-   "sec": "hub",
-   "lvl": 1,
-   "hp": 650,
-   "deaths": 0
   },
   {
-   "at": 104.8,
-   "name": "vale-done",
+   "at": 117.8,
+   "k": "action",
+   "gt": 118.23,
+   "map": "pinewood",
+   "type": "dialogue",
+   "id": "pinewood_banner"
+  },
+  {
+   "at": 117.8,
+   "k": "talk",
+   "gt": 118.23,
+   "map": "pinewood",
+   "id": "pinewood_banner",
+   "first": "Misty Pinewood"
+  },
+  {
+   "at": 117.8,
+   "k": "action",
+   "gt": 118.23,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 117.8,
+   "k": "talk",
+   "gt": 118.23,
+   "map": "pinewood",
+   "id": null,
+   "first": "The animals are running."
+  },
+  {
+   "at": 123.3,
+   "k": "action",
+   "gt": 123.37,
+   "map": "pinewood",
+   "type": "dialogue",
+   "id": "pinewood_fox"
+  },
+  {
+   "at": 123.3,
+   "k": "talk",
+   "gt": 123.37,
+   "map": "pinewood",
+   "id": "pinewood_fox",
+   "first": "Everything with legs is leaving."
+  },
+  {
+   "at": 123.3,
+   "k": "action",
+   "gt": 123.37,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Follow the animals up the road"
+  },
+  {
+   "at": 129.5,
+   "k": "action",
+   "gt": 129.03,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 129.5,
+   "k": "talk",
+   "gt": 129.03,
+   "map": "pinewood",
+   "id": null,
+   "first": "The wall hums, Aerin. Something is hidden behind it."
+  },
+  {
+   "at": 131.9,
+   "k": "action",
+   "gt": 131.52,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "wall_crack"
+  },
+  {
+   "at": 131.9,
+   "k": "action",
+   "gt": 131.52,
+   "map": "pinewood",
+   "type": "shake"
+  },
+  {
+   "at": 131.9,
+   "k": "action",
+   "gt": 131.52,
+   "map": "pinewood",
+   "type": "sound"
+  },
+  {
+   "at": 131.9,
+   "k": "action",
+   "gt": 132.42,
+   "map": "pinewood",
+   "type": "message",
+   "text": "A hidden gem cache!"
+  },
+  {
+   "at": 131.9,
+   "k": "action",
+   "gt": 132.42,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 131.9,
+   "k": "loot",
+   "gt": 132.42,
+   "map": "pinewood",
+   "n": 2,
+   "kinds": [
+    "item:weapon/uncommon",
+    "gem"
+   ]
+  },
+  {
+   "at": 146.9,
+   "k": "action",
+   "gt": 146.22,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Ogre!"
+  },
+  {
+   "at": 146.9,
+   "k": "action",
+   "gt": 146.22,
+   "map": "pinewood",
+   "type": "spawnPack",
+   "id": "pw_ogre_run"
+  },
+  {
+   "at": 149.4,
+   "k": "kill",
+   "gt": 149.17,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 149.4,
+   "k": "loot",
+   "gt": 149.17,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "potion"
+   ]
+  },
+  {
+   "at": 153.2,
+   "k": "kill",
+   "gt": 153.3,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 153.2,
+   "k": "loot",
+   "gt": 153.3,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 153.2,
+   "k": "kill",
+   "gt": 153.57,
+   "map": "pinewood",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 153.2,
+   "k": "loot",
+   "gt": 153.57,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:head/common"
+   ]
+  },
+  {
+   "at": 154.4,
+   "k": "kill",
+   "gt": 154.42,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 154.4,
+   "k": "kill",
+   "gt": 154.87,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 154.4,
+   "k": "action",
+   "gt": 154.87,
+   "map": "pinewood",
+   "type": "message",
+   "text": "Heavy footsteps echo to the north..."
+  },
+  {
+   "at": 154.4,
+   "k": "action",
+   "gt": 154.87,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 154.4,
+   "k": "action",
+   "gt": 154.87,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 154.4,
+   "k": "loot",
+   "gt": 154.87,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:chest/rare"
+   ]
+  },
+  {
+   "at": 154.4,
+   "k": "action",
+   "gt": 154.87,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Take the key to the root door"
+  },
+  {
+   "at": 156.9,
+   "k": "action",
+   "gt": 156.35,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: The road to the plaza"
+  },
+  {
+   "at": 156.9,
+   "k": "action",
+   "gt": 156.35,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 182.2,
+   "k": "action",
+   "gt": 182.08,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Gnarlroot Ogre"
+  },
+  {
+   "at": 182.2,
+   "k": "action",
+   "gt": 182.08,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "ogre"
+  },
+  {
+   "at": 195.8,
+   "k": "kill",
+   "gt": 196.07,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 195.8,
+   "k": "loot",
+   "gt": 196.07,
+   "map": "pinewood",
+   "n": 2,
+   "kinds": [
+    "item:chest/rare",
+    "item:head/rare"
+   ]
+  },
+  {
+   "at": 195.8,
+   "k": "action",
+   "gt": 196.07,
+   "map": "pinewood",
+   "type": "message",
+   "text": "The ogre drops a gnarled root key."
+  },
+  {
+   "at": 195.8,
+   "k": "action",
+   "gt": 196.07,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 195.8,
+   "k": "loot",
+   "gt": 196.07,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:weapon/rare"
+   ]
+  },
+  {
+   "at": 195.8,
+   "k": "action",
+   "gt": 196.07,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 195.8,
+   "k": "talk",
+   "gt": 196.07,
+   "map": "pinewood",
+   "id": null,
+   "first": "That key smells of roots and earth. It opens the Root Hollow."
+  },
+  {
+   "at": 195.8,
+   "k": "action",
+   "gt": 196.07,
+   "map": "pinewood",
+   "type": "quest",
+   "id": "shard_root"
+  },
+  {
+   "at": 195.8,
+   "k": "action",
+   "gt": 196.07,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Find the root door of the Hollow"
+  },
+  {
+   "at": 214.9,
+   "k": "action",
+   "gt": 214.15,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Thornback Boars"
+  },
+  {
+   "at": 214.9,
+   "k": "action",
+   "gt": 214.15,
+   "map": "pinewood",
+   "type": "spawnPack",
+   "id": "pw_boar_pierce"
+  },
+  {
+   "at": 216.1,
+   "k": "kill",
+   "gt": 215.52,
+   "map": "pinewood",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 216.1,
+   "k": "loot",
+   "gt": 215.52,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 216.1,
+   "k": "kill",
+   "gt": 216.05,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 216.1,
+   "k": "kill",
+   "gt": 216.25,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 218.5,
+   "k": "kill",
+   "gt": 218.12,
+   "map": "pinewood",
+   "type": "thornbackboar",
+   "boss": false
+  },
+  {
+   "at": 218.5,
+   "k": "loot",
+   "gt": 218.12,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "gem"
+   ]
+  },
+  {
+   "at": 221,
+   "k": "kill",
+   "gt": 221.27,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 221,
+   "k": "loot",
+   "gt": 221.27,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 221,
+   "k": "action",
+   "gt": 221.27,
+   "map": "pinewood",
+   "type": "message",
+   "text": "The ford is quiet again."
+  },
+  {
+   "at": 221,
+   "k": "action",
+   "gt": 221.27,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 221,
+   "k": "action",
+   "gt": 221.27,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 221,
+   "k": "loot",
+   "gt": 221.27,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:chest/rare"
+   ]
+  },
+  {
+   "at": 244.8,
+   "k": "action",
+   "gt": 245.05,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: The creek ford"
+  },
+  {
+   "at": 244.8,
+   "k": "action",
+   "gt": 245.05,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 248.1,
+   "k": "action",
+   "gt": 247.17,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: The road to the plaza"
+  },
+  {
+   "at": 248.1,
+   "k": "action",
+   "gt": 247.17,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 253.1,
+   "k": "action",
+   "gt": 253.2,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Fishing"
+  },
+  {
+   "at": 253.1,
+   "k": "action",
+   "gt": 253.2,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 253.1,
+   "k": "talk",
+   "gt": 253.2,
+   "map": "pinewood",
+   "id": null,
+   "first": "Ripples, Aerin. Fish are still here."
+  },
+  {
+   "at": 260.6,
+   "k": "action",
+   "gt": 260.55,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "The Stone Plaza"
+  },
+  {
+   "at": 260.6,
+   "k": "action",
+   "gt": 260.55,
+   "map": "pinewood",
+   "type": "spawnPack",
+   "id": "pw_boar_shaman"
+  },
+  {
+   "at": 263,
+   "k": "kill",
+   "gt": 262.8,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 263,
+   "k": "loot",
+   "gt": 262.8,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 263,
+   "k": "kill",
+   "gt": 263.23,
+   "map": "pinewood",
+   "type": "thornbackboar",
+   "boss": false
+  },
+  {
+   "at": 263,
+   "k": "loot",
+   "gt": 263.23,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:boots/common"
+   ]
+  },
+  {
+   "at": 263,
+   "k": "kill",
+   "gt": 263.23,
+   "map": "pinewood",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 263,
+   "k": "loot",
+   "gt": 263.23,
+   "map": "pinewood",
+   "n": 2,
+   "kinds": [
+    "item:boots/common",
+    "gem"
+   ]
+  },
+  {
+   "at": 264.3,
+   "k": "kill",
+   "gt": 263.73,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 265.5,
+   "k": "kill",
+   "gt": 265.77,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 269.2,
+   "k": "kill",
+   "gt": 269.02,
+   "map": "pinewood",
+   "type": "brambleshaman",
+   "boss": false
+  },
+  {
+   "at": 269.2,
+   "k": "loot",
+   "gt": 269.02,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 273.1,
+   "k": "action",
+   "gt": 273.5,
+   "map": "pinewood",
+   "type": "spawnPack",
+   "id": "pw_ogre_slimes"
+  },
+  {
+   "at": 275.5,
+   "k": "kill",
+   "gt": 275.02,
+   "map": "pinewood",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 275.5,
+   "k": "loot",
+   "gt": 275.02,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 275.5,
+   "k": "kill",
+   "gt": 275.67,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 275.5,
+   "k": "loot",
+   "gt": 275.67,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 275.5,
+   "k": "kill",
+   "gt": 275.67,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 275.5,
+   "k": "kill",
+   "gt": 275.67,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 276.7,
+   "k": "kill",
+   "gt": 276.87,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 276.7,
+   "k": "loot",
+   "gt": 276.87,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 276.7,
+   "k": "action",
+   "gt": 276.87,
+   "map": "pinewood",
+   "type": "message",
+   "text": "The way to the grove is clear."
+  },
+  {
+   "at": 276.7,
+   "k": "action",
+   "gt": 276.87,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 276.7,
+   "k": "action",
+   "gt": 276.87,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 276.7,
+   "k": "loot",
+   "gt": 276.87,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:head/epic"
+   ]
+  },
+  {
+   "at": 276.7,
+   "k": "action",
+   "gt": 276.87,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Enter the Warden's Grove"
+  },
+  {
+   "at": 287.5,
+   "k": "action",
+   "gt": 286.07,
+   "map": "pinewood",
+   "type": "message",
+   "text": "Sealed by a knot of roots. It needs a key."
+  },
+  {
+   "at": 288.8,
+   "k": "action",
+   "gt": 288.57,
+   "map": "pinewood",
+   "type": "message",
+   "text": "The roots let go. A cache of the Wardens!"
+  },
+  {
+   "at": 288.8,
+   "k": "action",
+   "gt": 288.57,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 288.8,
+   "k": "loot",
+   "gt": 288.57,
+   "map": "pinewood",
+   "n": 2,
+   "kinds": [
+    "item:weapon/rare",
+    "gem"
+   ]
+  },
+  {
+   "at": 300.1,
+   "k": "action",
+   "gt": 299.6,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 300.1,
+   "k": "talk",
+   "gt": 299.6,
+   "map": "pinewood",
+   "id": null,
+   "first": "The bridge is raised. There must be a lever somewhere."
+  },
+  {
+   "at": 310.2,
+   "k": "action",
+   "gt": 309.67,
+   "map": "pinewood",
+   "type": "message",
+   "text": "A Skill Rune rests on the islet stone."
+  },
+  {
+   "at": 310.2,
+   "k": "action",
+   "gt": 309.67,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 310.2,
+   "k": "loot",
+   "gt": 309.67,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:head/rare"
+   ]
+  },
+  {
+   "at": 310.2,
+   "k": "loot",
+   "gt": 310.05,
+   "map": "pinewood",
+   "n": 5,
+   "kinds": [
+    "item:head/rare",
+    "item:boots/rare",
+    "potion",
+    "item:weapon/rare",
+    "gem"
+   ]
+  },
+  {
+   "at": 337.3,
+   "k": "action",
+   "gt": 337.37,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "The Warden's Grove"
+  },
+  {
+   "at": 337.3,
+   "k": "action",
+   "gt": 337.37,
+   "map": "pinewood",
+   "type": "spawnPack",
+   "id": "pw_ogre_grove"
+  },
+  {
+   "at": 339.7,
+   "k": "kill",
+   "gt": 339.57,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 339.7,
+   "k": "loot",
+   "gt": 339.57,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 339.7,
+   "k": "kill",
+   "gt": 339.57,
+   "map": "pinewood",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 339.7,
+   "k": "loot",
+   "gt": 339.57,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 339.7,
+   "k": "kill",
+   "gt": 339.57,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 339.7,
+   "k": "loot",
+   "gt": 339.57,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 341,
+   "k": "kill",
+   "gt": 340.47,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 341,
+   "k": "kill",
+   "gt": 340.85,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 342.2,
+   "k": "kill",
+   "gt": 341.52,
+   "map": "pinewood",
+   "type": "brambleshaman",
+   "boss": false
+  },
+  {
+   "at": 342.2,
+   "k": "loot",
+   "gt": 341.52,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 349.9,
+   "k": "action",
+   "gt": 349.93,
+   "map": "pinewood",
+   "type": "spawnPack",
+   "id": "pw_boar_last"
+  },
+  {
+   "at": 352.3,
+   "k": "kill",
+   "gt": 351.63,
+   "map": "pinewood",
+   "type": "thornbackboar",
+   "boss": false
+  },
+  {
+   "at": 352.3,
+   "k": "loot",
+   "gt": 351.63,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 352.3,
+   "k": "kill",
+   "gt": 351.65,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 352.3,
+   "k": "loot",
+   "gt": 351.65,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 352.3,
+   "k": "kill",
+   "gt": 352.12,
+   "map": "pinewood",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 352.3,
+   "k": "loot",
+   "gt": 352.12,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 352.3,
+   "k": "kill",
+   "gt": 352.55,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 353.6,
+   "k": "kill",
+   "gt": 353.03,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 356.1,
+   "k": "kill",
+   "gt": 356.07,
+   "map": "pinewood",
+   "type": "brambleshaman",
+   "boss": false
+  },
+  {
+   "at": 356.1,
+   "k": "loot",
+   "gt": 356.07,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "potion"
+   ]
+  },
+  {
+   "at": 356.1,
+   "k": "action",
+   "gt": 356.07,
+   "map": "pinewood",
+   "type": "message",
+   "text": "The shaman falls silent."
+  },
+  {
+   "at": 356.1,
+   "k": "action",
+   "gt": 356.07,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 356.1,
+   "k": "action",
+   "gt": 356.07,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 356.1,
+   "k": "loot",
+   "gt": 356.07,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:weapon/rare"
+   ]
+  },
+  {
+   "at": 356.1,
+   "k": "action",
+   "gt": 356.07,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Take the key to the root door"
+  },
+  {
+   "at": 367.3,
+   "k": "action",
+   "gt": 367.12,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 367.3,
+   "k": "talk",
+   "gt": 367.12,
+   "map": "pinewood",
+   "id": null,
+   "first": "A light off the road, Aerin. Worth the detour."
+  },
+  {
+   "at": 367.3,
+   "k": "action",
+   "gt": 367.77,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 367.3,
+   "k": "talk",
+   "gt": 367.77,
+   "map": "pinewood",
+   "id": null,
+   "first": "The reflection has a door in it. Look behind you."
+  },
+  {
+   "at": 367.3,
+   "k": "action",
+   "gt": 367.77,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "wall_env"
+  },
+  {
+   "at": 367.3,
+   "k": "action",
+   "gt": 367.77,
+   "map": "pinewood",
+   "type": "shake"
+  },
+  {
+   "at": 367.3,
+   "k": "action",
+   "gt": 367.77,
+   "map": "pinewood",
+   "type": "sound"
+  },
+  {
+   "at": 368.5,
+   "k": "loot",
+   "gt": 367.93,
+   "map": "pinewood",
+   "n": 4,
+   "kinds": [
+    "item:boots/epic",
+    "item:chest/rare",
+    "gem",
+    "potion"
+   ]
+  },
+  {
+   "at": 371.3,
+   "k": "action",
+   "gt": 371.53,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "The Fox Warrens"
+  },
+  {
+   "at": 371.3,
+   "k": "action",
+   "gt": 371.53,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 371.3,
+   "k": "talk",
+   "gt": 371.53,
+   "map": "pinewood",
+   "id": null,
+   "first": "Quiet, Aerin. Big things sleep in the tunnels."
+  },
+  {
+   "at": 371.3,
+   "k": "action",
+   "gt": 371.53,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Sneak past the sleepers to the vault"
+  },
+  {
+   "at": 375,
+   "k": "action",
+   "gt": 375.02,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "mountaintroll"
+  },
+  {
+   "at": 375,
+   "k": "action",
+   "gt": 375.02,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "mountaintroll"
+  },
+  {
+   "at": 380.1,
+   "k": "action",
+   "gt": 379.52,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "mountaintroll"
+  },
+  {
+   "at": 381.3,
+   "k": "kill",
+   "gt": 380.98,
+   "map": "pinewood",
+   "type": "mountaintroll",
+   "boss": false
+  },
+  {
+   "at": 381.3,
+   "k": "loot",
+   "gt": 380.98,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 392.4,
+   "k": "kill",
+   "gt": 392.23,
+   "map": "pinewood",
+   "type": "mountaintroll",
+   "boss": false
+  },
+  {
+   "at": 392.4,
+   "k": "loot",
+   "gt": 392.23,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 397.4,
+   "k": "kill",
+   "gt": 397.18,
+   "map": "pinewood",
+   "type": "mountaintroll",
+   "boss": false
+  },
+  {
+   "at": 397.4,
+   "k": "loot",
+   "gt": 397.18,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 397.4,
+   "k": "action",
+   "gt": 397.18,
+   "map": "pinewood",
+   "type": "message",
+   "text": "The tunnels fall silent. The fox-gold is yours."
+  },
+  {
+   "at": 397.4,
+   "k": "action",
+   "gt": 397.18,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 397.4,
+   "k": "action",
+   "gt": 397.18,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 397.4,
+   "k": "loot",
+   "gt": 397.18,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:chest/rare"
+   ]
+  },
+  {
+   "at": 408.4,
+   "k": "loot",
+   "gt": 408.4,
+   "map": "pinewood",
+   "n": 6,
+   "kinds": [
+    "item:chest/rare",
+    "item:weapon/epic",
+    "potion",
+    "item:boots/rare",
+    "gem",
+    "item:belt/rare"
+   ]
+  },
+  {
+   "at": 436.1,
+   "k": "action",
+   "gt": 435.93,
+   "map": "pinewood",
+   "type": "message",
+   "text": "A door of knotted roots. It needs the Root Hollow key."
+  },
+  {
+   "at": 437.5,
+   "k": "action",
+   "gt": 436.72,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: The root door"
+  },
+  {
+   "at": 437.5,
+   "k": "action",
+   "gt": 436.72,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 437.5,
+   "k": "action",
+   "gt": 437.73,
+   "map": "pinewood",
+   "type": "dialogue",
+   "id": "pinewood_hollow"
+  },
+  {
+   "at": 437.5,
+   "k": "talk",
+   "gt": 437.73,
+   "map": "pinewood",
+   "id": "pinewood_hollow",
+   "first": "Under the wood, it's quieter. I hate it."
+  },
+  {
+   "at": 437.5,
+   "k": "action",
+   "gt": 437.73,
+   "map": "pinewood",
+   "type": "quest",
+   "id": "shard_root"
+  },
+  {
+   "at": 437.5,
+   "k": "action",
+   "gt": 437.73,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Defeat Mossjaw in the Root Hollow"
+  },
+  {
+   "at": 441.2,
+   "k": "action",
+   "gt": 440.98,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Root Cavern"
+  },
+  {
+   "at": 441.2,
+   "k": "action",
+   "gt": 440.98,
+   "map": "pinewood",
+   "type": "spawnPack",
+   "id": "rh_ogre_pack"
+  },
+  {
+   "at": 443.7,
+   "k": "kill",
+   "gt": 443.52,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 443.7,
+   "k": "loot",
+   "gt": 443.52,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:head/common"
+   ]
+  },
+  {
+   "at": 444.9,
+   "k": "kill",
+   "gt": 444.7,
+   "map": "pinewood",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 444.9,
+   "k": "loot",
+   "gt": 444.7,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 444.9,
+   "k": "kill",
+   "gt": 445.1,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 446.2,
+   "k": "kill",
+   "gt": 445.58,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 448.6,
+   "k": "kill",
+   "gt": 448.08,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 448.6,
+   "k": "loot",
+   "gt": 448.08,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "gem"
+   ]
+  },
+  {
+   "at": 448.6,
+   "k": "action",
+   "gt": 448.08,
+   "map": "pinewood",
+   "type": "message",
+   "text": "The roots go still."
+  },
+  {
+   "at": 448.6,
+   "k": "action",
+   "gt": 448.08,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 448.6,
+   "k": "action",
+   "gt": 448.08,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 448.6,
+   "k": "loot",
+   "gt": 448.08,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:head/rare"
+   ]
+  },
+  {
+   "at": 448.6,
+   "k": "action",
+   "gt": 448.08,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Rest at the shrine, then press on"
+  },
+  {
+   "at": 449.8,
+   "k": "action",
+   "gt": 449.3,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 449.8,
+   "k": "talk",
+   "gt": 449.3,
+   "map": "pinewood",
+   "id": null,
+   "first": "The wall hums, Aerin. Something is hidden behind it."
+  },
+  {
+   "at": 452.3,
+   "k": "action",
+   "gt": 451.62,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "wall_h_crack"
+  },
+  {
+   "at": 452.3,
+   "k": "action",
+   "gt": 451.62,
+   "map": "pinewood",
+   "type": "shake"
+  },
+  {
+   "at": 452.3,
+   "k": "action",
+   "gt": 451.62,
+   "map": "pinewood",
+   "type": "sound"
+  },
+  {
+   "at": 452.3,
+   "k": "action",
+   "gt": 452.3,
+   "map": "pinewood",
+   "type": "message",
+   "text": "A Socket Rune!"
+  },
+  {
+   "at": 452.3,
+   "k": "action",
+   "gt": 452.3,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 452.3,
+   "k": "loot",
+   "gt": 452.3,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:head/rare"
+   ]
+  },
+  {
+   "at": 467.6,
+   "k": "action",
+   "gt": 467,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: Root Hollow midpoint"
+  },
+  {
+   "at": 467.6,
+   "k": "action",
+   "gt": 467,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 470.1,
+   "k": "action",
+   "gt": 469.37,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "The Gallery"
+  },
+  {
+   "at": 470.1,
+   "k": "action",
+   "gt": 469.37,
+   "map": "pinewood",
+   "type": "spawnPack",
+   "id": "rh_boar_wrong"
+  },
+  {
+   "at": 472.5,
+   "k": "kill",
+   "gt": 472,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 472.5,
+   "k": "loot",
+   "gt": 472,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 473.8,
+   "k": "kill",
+   "gt": 473.53,
+   "map": "pinewood",
+   "type": "thornbackboar",
+   "boss": false
+  },
+  {
+   "at": 473.8,
+   "k": "loot",
+   "gt": 473.53,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 473.8,
+   "k": "kill",
+   "gt": 473.53,
+   "map": "pinewood",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 473.8,
+   "k": "loot",
+   "gt": 473.53,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 475,
+   "k": "kill",
+   "gt": 474.45,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 475,
+   "k": "kill",
+   "gt": 475.35,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 477.5,
+   "k": "kill",
+   "gt": 477.43,
+   "map": "pinewood",
+   "type": "brambleshaman",
+   "boss": false
+  },
+  {
+   "at": 477.5,
+   "k": "loot",
+   "gt": 477.43,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 483,
+   "k": "action",
+   "gt": 482.78,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: Root Hollow midpoint"
+  },
+  {
+   "at": 483,
+   "k": "action",
+   "gt": 482.78,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 484.3,
+   "k": "action",
+   "gt": 484.28,
+   "map": "pinewood",
+   "type": "spawnPack",
+   "id": "rh_troll_sleeper"
+  },
+  {
+   "at": 486.7,
+   "k": "action",
+   "gt": 486.87,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: Mossjaw's gate"
+  },
+  {
+   "at": 486.7,
+   "k": "action",
+   "gt": 486.87,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 490.4,
+   "k": "kill",
+   "gt": 490.55,
+   "map": "pinewood",
+   "type": "mountaintroll",
+   "boss": false
+  },
+  {
+   "at": 490.4,
+   "k": "loot",
+   "gt": 490.55,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:chest/common"
+   ]
+  },
+  {
+   "at": 490.4,
+   "k": "kill",
+   "gt": 490.55,
+   "map": "pinewood",
+   "type": "gloomslime",
+   "boss": false
+  },
+  {
+   "at": 490.4,
+   "k": "loot",
+   "gt": 490.55,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 490.4,
+   "k": "kill",
+   "gt": 490.55,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 490.4,
+   "k": "loot",
+   "gt": 490.55,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 491.6,
+   "k": "action",
+   "gt": 491.13,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: Mossjaw's gate"
+  },
+  {
+   "at": 491.6,
+   "k": "action",
+   "gt": 491.13,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 491.6,
+   "k": "kill",
+   "gt": 491.37,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 492.8,
+   "k": "kill",
+   "gt": 492.23,
+   "map": "pinewood",
+   "type": "gloomslime_small",
+   "boss": false
+  },
+  {
+   "at": 494,
+   "k": "kill",
+   "gt": 493.72,
+   "map": "pinewood",
+   "type": "brambleshaman",
+   "boss": false
+  },
+  {
+   "at": 494,
+   "k": "loot",
+   "gt": 493.72,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 494,
+   "k": "action",
+   "gt": 493.72,
+   "map": "pinewood",
+   "type": "message",
+   "text": "Silence. A lever waits nearby."
+  },
+  {
+   "at": 494,
+   "k": "action",
+   "gt": 493.72,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 494,
+   "k": "action",
+   "gt": 493.72,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 494,
+   "k": "loot",
+   "gt": 493.72,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:head/uncommon"
+   ]
+  },
+  {
+   "at": 494,
+   "k": "action",
+   "gt": 493.72,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Pull the lever to raise the gate"
+  },
+  {
+   "at": 497.8,
+   "k": "action",
+   "gt": 497.25,
+   "map": "pinewood",
+   "type": "shake"
+  },
+  {
+   "at": 497.8,
+   "k": "action",
+   "gt": 497.25,
+   "map": "pinewood",
+   "type": "sound"
+  },
+  {
+   "at": 497.8,
+   "k": "action",
+   "gt": 497.25,
+   "map": "pinewood",
+   "type": "message",
+   "text": "The ceiling cracks. Something falls: a root key."
+  },
+  {
+   "at": 497.8,
+   "k": "action",
+   "gt": 497.25,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 497.8,
+   "k": "talk",
+   "gt": 497.25,
+   "map": "pinewood",
+   "id": null,
+   "first": "That is the plaza above us. A key for a cache up there?"
+  },
+  {
+   "at": 497.8,
+   "k": "action",
+   "gt": 497.25,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 497.8,
+   "k": "loot",
+   "gt": 497.25,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:boots/uncommon"
+   ]
+  },
+  {
+   "at": 499,
+   "k": "action",
+   "gt": 499.15,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: Mossjaw's gate"
+  },
+  {
+   "at": 499,
+   "k": "action",
+   "gt": 499.15,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 500.2,
+   "k": "action",
+   "gt": 499.85,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 500.2,
+   "k": "talk",
+   "gt": 499.85,
+   "map": "pinewood",
+   "id": null,
+   "first": "The gate is knotted shut. Find a lever."
+  },
+  {
+   "at": 505.1,
+   "k": "action",
+   "gt": 505.35,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: Mossjaw's gate"
+  },
+  {
+   "at": 505.1,
+   "k": "action",
+   "gt": 505.35,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 507.5,
+   "k": "action",
+   "gt": 506.92,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Mossjaw"
+  },
+  {
+   "at": 507.5,
+   "k": "action",
+   "gt": 506.92,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Defeat Mossjaw"
+  },
+  {
+   "at": 507.5,
+   "k": "action",
+   "gt": 506.92,
+   "map": "pinewood",
+   "type": "shake"
+  },
+  {
+   "at": 508.8,
+   "k": "action",
+   "gt": 508.1,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "mossjaw"
+  },
+  {
+   "at": 523.6,
+   "k": "action",
+   "gt": 523.6,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "ogre"
+  },
+  {
+   "at": 533.5,
+   "k": "kill",
+   "gt": 533.02,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 533.5,
+   "k": "loot",
+   "gt": 533.02,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:boots/common"
+   ]
+  },
+  {
+   "at": 534.8,
+   "k": "kill",
+   "gt": 535.15,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 534.8,
+   "k": "loot",
+   "gt": 535.15,
+   "map": "pinewood",
+   "n": 2,
+   "kinds": [
+    "item:weapon/uncommon",
+    "gem"
+   ]
+  },
+  {
+   "at": 539.7,
+   "k": "action",
+   "gt": 539.53,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "ogre"
+  },
+  {
+   "at": 548.3,
+   "k": "kill",
+   "gt": 548.38,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 548.3,
+   "k": "loot",
+   "gt": 548.38,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:chest/rare"
+   ]
+  },
+  {
+   "at": 548.3,
+   "k": "kill",
+   "gt": 548.38,
+   "map": "pinewood",
+   "type": "ogre",
+   "boss": false
+  },
+  {
+   "at": 548.3,
+   "k": "loot",
+   "gt": 548.38,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:boots/rare"
+   ]
+  },
+  {
+   "at": 553.2,
+   "k": "kill",
+   "gt": 552.97,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 553.2,
+   "k": "loot",
+   "gt": 552.97,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 555.7,
+   "k": "kill",
+   "gt": 556.05,
+   "map": "pinewood",
+   "type": "shadehound",
+   "boss": false
+  },
+  {
+   "at": 555.7,
+   "k": "loot",
+   "gt": 556.05,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:boots/common"
+   ]
+  },
+  {
+   "at": 561.8,
+   "k": "kill",
+   "gt": 561.95,
+   "map": "pinewood",
+   "type": "mossjaw",
+   "boss": true
+  },
+  {
+   "at": 561.8,
+   "k": "loot",
+   "gt": 561.95,
+   "map": "pinewood",
+   "n": 6,
+   "kinds": [
+    "item:amulet/epic",
+    "item:weapon/rare",
+    "item:head/uncommon",
+    "gem",
+    "gem",
+    "potion"
+   ]
+  },
+  {
+   "at": 561.8,
+   "k": "action",
+   "gt": 561.96,
+   "map": "pinewood",
+   "type": "clear_enemies"
+  },
+  {
+   "at": 561.8,
+   "k": "action",
+   "gt": 561.96,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Mossjaw falls"
+  },
+  {
+   "at": 561.8,
+   "k": "action",
+   "gt": 561.96,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 561.8,
+   "k": "talk",
+   "gt": 561.96,
+   "map": "pinewood",
+   "id": null,
+   "first": "The roots remember the first Warden... he did not wake, and neither shall I."
+  },
+  {
+   "at": 561.8,
+   "k": "action",
+   "gt": 561.96,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 561.8,
+   "k": "action",
+   "gt": 561.96,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 561.8,
+   "k": "loot",
+   "gt": 561.96,
+   "map": "pinewood",
+   "n": 3,
+   "kinds": [
+    "item:weapon/epic",
+    "item:amulet/epic",
+    "gem"
+   ]
+  },
+  {
+   "at": 561.8,
+   "k": "action",
+   "gt": 561.96,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "gate_h_short"
+  },
+  {
+   "at": 561.8,
+   "k": "action",
+   "gt": 561.96,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "hollow_exit"
+  },
+  {
+   "at": 561.8,
+   "k": "action",
+   "gt": 561.96,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "arena_gate"
+  },
+  {
+   "at": 561.8,
+   "k": "action",
+   "gt": 561.96,
+   "map": "pinewood",
+   "type": "quest",
+   "id": "shard_root"
+  },
+  {
+   "at": 561.8,
+   "k": "action",
+   "gt": 561.96,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Climb the root-stair to the Clearing"
+  },
+  {
+   "at": 561.8,
+   "k": "action",
+   "gt": 561.96,
+   "map": "pinewood",
+   "type": "sound"
+  },
+  {
+   "at": 568.6,
+   "k": "loot",
+   "gt": 567.66,
+   "map": "pinewood",
+   "n": 5,
+   "kinds": [
+    "item:head/epic",
+    "item:boots/rare",
+    "potion",
+    "item:boots/rare",
+    "gem"
+   ]
+  },
+  {
+   "at": 572.3,
+   "k": "action",
+   "gt": 571.61,
+   "map": "pinewood",
+   "type": "checkpoint",
+   "text": "Checkpoint: Hawk's Rest"
+  },
+  {
+   "at": 572.3,
+   "k": "action",
+   "gt": 571.61,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 572.3,
+   "k": "action",
+   "gt": 571.61,
+   "map": "pinewood",
+   "type": "vantage",
+   "id": "hawks_rest",
+   "text": "Hawk's Rest"
+  },
+  {
+   "at": 572.3,
+   "k": "action",
+   "gt": 571.61,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Drop from Hawk's Rest onto the Clearing road"
+  },
+  {
+   "at": 576.5,
+   "k": "action",
+   "gt": 575.31,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 576.5,
+   "k": "talk",
+   "gt": 575.31,
+   "map": "pinewood",
+   "id": null,
+   "first": "From up here it's small. It isn't."
+  },
+  {
+   "at": 588.3,
+   "k": "action",
+   "gt": 587.27,
+   "map": "pinewood",
+   "type": "dialogue"
+  },
+  {
+   "at": 588.3,
+   "k": "talk",
+   "gt": 587.27,
+   "map": "pinewood",
+   "id": null,
+   "first": "The road to the Clearing is right below. Jump, Aerin."
+  },
+  {
+   "at": 594.5,
+   "k": "action",
+   "gt": 593.29,
+   "map": "pinewood",
+   "type": "message",
+   "text": "The Clearing gate is knotted shut. Something in the Hollow holds it."
+  },
+  {
+   "at": 594.5,
+   "k": "action",
+   "gt": 593.82,
+   "map": "pinewood",
+   "type": "arena",
+   "id": "bramble_arena"
+  },
+  {
+   "at": 594.5,
+   "k": "action",
+   "gt": 593.82,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Old Bramblehorn"
+  },
+  {
+   "at": 594.5,
+   "k": "action",
+   "gt": 593.82,
+   "map": "pinewood",
+   "type": "dialogue",
+   "id": "boss_bramblehorn_intro"
+  },
+  {
+   "at": 594.5,
+   "k": "talk",
+   "gt": 593.82,
+   "map": "pinewood",
+   "id": "boss_bramblehorn_intro",
+   "first": "Little dream. You smell like him."
+  },
+  {
+   "at": 594.5,
+   "k": "action",
+   "gt": 593.82,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Defeat Old Bramblehorn"
+  },
+  {
+   "at": 594.5,
+   "k": "action",
+   "gt": 593.82,
+   "map": "pinewood",
+   "type": "shake"
+  },
+  {
+   "at": 597.1,
+   "k": "action",
+   "gt": 596.32,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "bramblehorn"
+  },
+  {
+   "at": 611.8,
+   "k": "action",
+   "gt": 611.16,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "The saplings wake!"
+  },
+  {
+   "at": 611.8,
+   "k": "action",
+   "gt": 611.16,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "sapling"
+  },
+  {
+   "at": 622.9,
+   "k": "kill",
+   "gt": 622.17,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 622.9,
+   "k": "loot",
+   "gt": 622.17,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 625.3,
+   "k": "kill",
+   "gt": 624.22,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 625.3,
+   "k": "loot",
+   "gt": 624.22,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 626.6,
+   "k": "kill",
+   "gt": 624.97,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 626.6,
+   "k": "loot",
+   "gt": 624.97,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 627.8,
+   "k": "action",
+   "gt": 626.19,
+   "map": "pinewood",
+   "type": "spawn",
+   "id": "sapling"
+  },
+  {
+   "at": 665.9,
+   "k": "kill",
+   "gt": 664.67,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 665.9,
+   "k": "loot",
+   "gt": 664.67,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 667.2,
+   "k": "kill",
+   "gt": 665.91,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 667.2,
+   "k": "loot",
+   "gt": 665.91,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:chest/rare"
+   ]
+  },
+  {
+   "at": 668.4,
+   "k": "kill",
+   "gt": 666.89,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 668.4,
+   "k": "loot",
+   "gt": 666.89,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 668.4,
+   "k": "kill",
+   "gt": 667.46,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 668.4,
+   "k": "loot",
+   "gt": 667.46,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 686.8,
+   "k": "kill",
+   "gt": 685.96,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 686.8,
+   "k": "loot",
+   "gt": 685.96,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:weapon/uncommon"
+   ]
+  },
+  {
+   "at": 689.2,
+   "k": "kill",
+   "gt": 688.72,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 689.2,
+   "k": "loot",
+   "gt": 688.72,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 694.3,
+   "k": "kill",
+   "gt": 693.77,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 694.3,
+   "k": "loot",
+   "gt": 693.77,
+   "map": "pinewood",
+   "n": 0,
+   "kinds": []
+  },
+  {
+   "at": 700.4,
+   "k": "kill",
+   "gt": 699.14,
+   "map": "pinewood",
+   "type": "sapling",
+   "boss": false
+  },
+  {
+   "at": 700.4,
+   "k": "loot",
+   "gt": 699.14,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:chest/common"
+   ]
+  },
+  {
+   "at": 701.7,
+   "k": "kill",
+   "gt": 700.61,
+   "map": "pinewood",
+   "type": "bramblehorn",
+   "boss": true
+  },
+  {
+   "at": 701.7,
+   "k": "loot",
+   "gt": 700.61,
+   "map": "pinewood",
+   "n": 7,
+   "kinds": [
+    "item:head/legendary",
+    "item:boots/rare",
+    "item:boots/epic",
+    "item:head/rare",
+    "gem",
+    "gem",
+    "potion"
+   ]
+  },
+  {
+   "at": 704.1,
+   "k": "action",
+   "gt": 701.88,
+   "map": "pinewood",
+   "type": "clear_enemies"
+  },
+  {
+   "at": 704.1,
+   "k": "action",
+   "gt": 701.88,
+   "map": "pinewood",
+   "type": "banner",
+   "text": "Victory"
+  },
+  {
+   "at": 704.1,
+   "k": "action",
+   "gt": 701.88,
+   "map": "pinewood",
+   "type": "dialogue",
+   "id": "boss_bramblehorn_death"
+  },
+  {
+   "at": 704.1,
+   "k": "talk",
+   "gt": 701.88,
+   "map": "pinewood",
+   "id": "boss_bramblehorn_death",
+   "first": "Tell him… the roots held. Tell him I stayed."
+  },
+  {
+   "at": 704.1,
+   "k": "action",
+   "gt": 701.88,
+   "map": "pinewood",
+   "type": "heal"
+  },
+  {
+   "at": 704.1,
+   "k": "action",
+   "gt": 701.88,
+   "map": "pinewood",
+   "type": "openGate",
+   "id": "arena_gate"
+  },
+  {
+   "at": 704.1,
+   "k": "action",
+   "gt": 701.88,
+   "map": "pinewood",
+   "type": "quest",
+   "id": "shard_root",
+   "text": "The Shard of Root is relit."
+  },
+  {
+   "at": 704.1,
+   "k": "action",
+   "gt": 701.88,
+   "map": "pinewood",
+   "type": "loot"
+  },
+  {
+   "at": 704.1,
+   "k": "loot",
+   "gt": 701.88,
+   "map": "pinewood",
+   "n": 1,
+   "kinds": [
+    "item:ring/epic"
+   ]
+  },
+  {
+   "at": 704.1,
+   "k": "action",
+   "gt": 701.88,
+   "map": "pinewood",
+   "type": "message",
+   "text": "A key of dream-glass: the Dream Arena bridge in the Vale will open."
+  },
+  {
+   "at": 704.1,
+   "k": "action",
+   "gt": 701.88,
+   "map": "pinewood",
+   "type": "open_portal",
+   "id": "next"
+  },
+  {
+   "at": 704.1,
+   "k": "action",
+   "gt": 701.88,
+   "map": "pinewood",
+   "type": "open_portal",
+   "id": "home_arena"
+  },
+  {
+   "at": 704.1,
+   "k": "action",
+   "gt": 701.88,
+   "map": "pinewood",
+   "type": "objective",
+   "text": "Take a rift: home or the Ruins"
+  },
+  {
+   "at": 704.1,
+   "k": "action",
+   "gt": 701.88,
+   "map": "pinewood",
+   "type": "sound"
+  },
+  {
+   "at": 712.4,
+   "k": "loot",
+   "gt": 710.11,
+   "map": "pinewood",
+   "n": 6,
+   "kinds": [
+    "item:head/rare",
+    "item:boots/rare",
+    "potion",
+    "item:weapon/rare",
+    "gem",
+    "item:amulet/rare"
+   ]
+  },
+  {
+   "at": 718.8,
+   "k": "action",
+   "gt": 713.75,
    "map": "vale",
-   "sec": "hub",
-   "lvl": 2,
-   "hp": 811,
-   "deaths": 0
+   "type": "objective",
+   "text": "Hit the training dummies"
+  },
+  {
+   "at": 718.8,
+   "k": "action",
+   "gt": 713.75,
+   "map": "vale",
+   "type": "objective",
+   "text": "Open the chest west of the bed"
+  },
+  {
+   "at": 718.8,
+   "k": "action",
+   "gt": 713.75,
+   "map": "vale",
+   "type": "objective",
+   "text": "Find the lost lantern past the cottage"
+  },
+  {
+   "at": 718.8,
+   "k": "action",
+   "gt": 713.75,
+   "map": "vale",
+   "type": "objective",
+   "text": "Follow the path to the Elder Stone"
+  },
+  {
+   "at": 718.8,
+   "k": "action",
+   "gt": 713.75,
+   "map": "vale",
+   "type": "open_portal"
+  },
+  {
+   "at": 718.8,
+   "k": "action",
+   "gt": 713.75,
+   "map": "vale",
+   "type": "objective",
+   "text": "Take the rift to the Pinewood"
+  },
+  {
+   "at": 718.8,
+   "k": "action",
+   "gt": 713.75,
+   "map": "vale",
+   "type": "objective",
+   "text": "Return the lantern to the Stone"
+  },
+  {
+   "at": 718.8,
+   "k": "action",
+   "gt": 713.75,
+   "map": "vale",
+   "type": "dialogue",
+   "id": "vale_banner"
+  },
+  {
+   "at": 718.8,
+   "k": "action",
+   "gt": 713.75,
+   "map": "vale",
+   "type": "spawn",
+   "id": "dummy"
+  },
+  {
+   "at": 718.8,
+   "k": "action",
+   "gt": 713.75,
+   "map": "vale",
+   "type": "spawn",
+   "id": "dummy"
+  },
+  {
+   "at": 718.8,
+   "k": "action",
+   "gt": 713.75,
+   "map": "vale",
+   "type": "gear"
+  },
+  {
+   "at": 718.8,
+   "k": "action",
+   "gt": 713.75,
+   "map": "vale",
+   "type": "gear"
   }
  ],
  "warps": [
   {
    "from": "terrace",
    "to": "shrine_start",
-   "moved": 34.7,
+   "moved": 34.8,
    "sec": "hub",
-   "ms": 1598
+   "ms": 1566.666748046875
+  },
+  {
+   "from": "shrine2",
+   "to": "shrine1",
+   "moved": 35.5,
+   "sec": "forest",
+   "ms": 1566.666748046875
   }
- ]
+ ],
+ "gearMossjaw": {
+  "level": 9,
+  "maxHp": 903,
+  "def": 0.13164293157346302,
+  "items": [
+   "weapon:rustyblade/rare/i5",
+   "head:novicehood/epic/i4",
+   "chest:stalkerjacket/rare/i7",
+   "boots:ironboots/epic/i6",
+   "ring1:origin_knight/uncommon/i1",
+   "belt:rope_sash/rare/i7"
+  ]
+ },
+ "dodgeOnWarn": 32,
+ "bossTries": {
+  "mossjaw": {
+   "tries": 1,
+   "deaths": 0,
+   "lvl": 10,
+   "maxHp": 929
+  },
+  "bramblehorn": {
+   "tries": 1,
+   "deaths": 0,
+   "lvl": 13,
+   "maxHp": 1007
+  }
+ },
+ "finished": "2026-10-22T12:46:47.024Z",
+ "totalSec": 728.1,
+ "realSec": 91.9,
+ "mode": {
+  "turbo": true,
+  "god": true
+ },
+ "seenTalk": {
+  "vale:vale_banner": [
+   1.2
+  ],
+  "vale:vale_wake": [
+   3.7
+  ],
+  "vale:Training dummies are south-east. Hit one.": [
+   3.7
+  ],
+  "vale:Swing. Then dodge. Then try your Q skill.": [
+   6.2
+  ],
+  "vale:vale_elder": [
+   20.5
+  ],
+  "vale:The Stone lost a light. Past the cottage, a path ends.": [
+   20.5
+  ],
+  "vale:Three days. You've been asleep three days.": [
+   20.5
+  ],
+  "vale:A chest! Interact to open it.": [
+   27.3
+  ],
+  "vale:vale_chest": [
+   36.4
+  ],
+  "vale:vale_tablet": [
+   47.6
+  ],
+  "vale:The Stone is lit. The Stone remembers kindness.": [
+   73.8
+  ],
+  "vale:vale_rift": [
+   89.8
+  ],
+  "pinewood:pinewood_banner": [
+   117.8
+  ],
+  "pinewood:The animals are running.": [
+   117.8
+  ],
+  "pinewood:pinewood_fox": [
+   123.3
+  ],
+  "pinewood:The wall hums, Aerin. Something is hidden behind it.": [
+   129.5,
+   449.8
+  ],
+  "pinewood:That key smells of roots and earth. It opens the Root Hollow.": [
+   195.8
+  ],
+  "pinewood:Ripples, Aerin. Fish are still here.": [
+   253.1
+  ],
+  "pinewood:The bridge is raised. There must be a lever somewhere.": [
+   300.1
+  ],
+  "pinewood:A light off the road, Aerin. Worth the detour.": [
+   367.3
+  ],
+  "pinewood:The reflection has a door in it. Look behind you.": [
+   367.3
+  ],
+  "pinewood:Quiet, Aerin. Big things sleep in the tunnels.": [
+   371.3
+  ],
+  "pinewood:pinewood_hollow": [
+   437.5
+  ],
+  "pinewood:That is the plaza above us. A key for a cache up there?": [
+   497.8
+  ],
+  "pinewood:The gate is knotted shut. Find a lever.": [
+   500.2
+  ],
+  "pinewood:The roots remember the first Warden... he did not wake, and neither shall I.": [
+   561.8
+  ],
+  "pinewood:From up here it's small. It isn't.": [
+   576.5
+  ],
+  "pinewood:The road to the Clearing is right below. Jump, Aerin.": [
+   588.3
+  ],
+  "pinewood:boss_bramblehorn_intro": [
+   594.5
+  ],
+  "pinewood:boss_bramblehorn_death": [
+   704.1
+  ]
+ },
+ "finalSnap": {
+  "t": 726.76,
+  "st": "play",
+  "ui": {
+   "map": false,
+   "open": false,
+   "help": false,
+   "pause": false,
+   "settings": false
+  },
+  "fadeDir": 0,
+  "fade": 0,
+  "dev": "kbm",
+  "map": "vale",
+  "W": 80,
+  "warp": false,
+  "sec": "hub",
+  "p": {
+   "x": 41.27,
+   "y": 48.19,
+   "z": 0,
+   "hp": 1007,
+   "maxHp": 1007,
+   "mp": 260,
+   "maxMp": 260,
+   "pot": 4,
+   "lvl": 13,
+   "xp": 2528,
+   "dead": false,
+   "ult": 13,
+   "dash": false,
+   "rootT": -131.9324999999968,
+   "slowT": -687.421666666378,
+   "invul": false,
+   "aim": 0.4133304493632998,
+   "wk": "sword",
+   "wid": "sword",
+   "st": 100,
+   "castT": -26.1024999999998,
+   "casting": false,
+   "bag": 30,
+   "dust": 0
+  },
+  "sk": {
+   "1": {
+    "id": "secondwind",
+    "cd": 0,
+    "mp": 30,
+    "st": 0
+   },
+   "2": {
+    "id": "chain",
+    "cd": 0,
+    "mp": 30,
+    "st": 0
+   },
+   "3": {
+    "id": "shootingstar",
+    "cd": 0,
+    "mp": 22,
+    "st": 0
+   },
+   "q": {
+    "id": "sunslash",
+    "cd": 0,
+    "mp": 18,
+    "st": 0
+   },
+   "e": {
+    "id": "dashstrike",
+    "cd": 0,
+    "mp": 25,
+    "st": 0
+   },
+   "r": {
+    "id": "judgement",
+    "cd": -0.02,
+    "mp": 60,
+    "st": 0
+   },
+   "f": {
+    "id": "shadowveil",
+    "cd": 0,
+    "mp": 20,
+    "st": 0
+   },
+   "c": {
+    "id": "frostnova",
+    "cd": 0,
+    "mp": 25,
+    "st": 0
+   },
+   "shift": {
+    "id": "charge",
+    "cd": -0.02,
+    "mp": 0,
+    "st": 35
+   }
+  },
+  "en": [
+   {
+    "type": "dummy",
+    "x": 38.2,
+    "y": 63.4,
+    "hp": 9999,
+    "max": 9999,
+    "boss": false,
+    "dummy": true,
+    "asleep": false,
+    "spawnT": 0,
+    "r": 0.35,
+    "elite": false,
+    "state": "chase",
+    "lvl": 1,
+    "stun": false,
+    "still": false
+   },
+   {
+    "type": "dummy",
+    "x": 39.8,
+    "y": 64.8,
+    "hp": 9999,
+    "max": 9999,
+    "boss": false,
+    "dummy": true,
+    "asleep": false,
+    "spawnT": 0,
+    "r": 0.35,
+    "elite": false,
+    "state": "chase",
+    "lvl": 1,
+    "stun": false,
+    "still": false
+   }
+  ],
+  "boss": null,
+  "warn": {
+   "boss": "bramblehorn",
+   "move": "saplings",
+   "type": "summon",
+   "wind": 0.7,
+   "open": 1.0499999999999998,
+   "t": 697.3399999996992
+  },
+  "tele": [],
+  "covered": false,
+  "zones": 0,
+  "prompt": null,
+  "obj": "Take the rift to the Pinewood",
+  "msg": null,
+  "pend": 0,
+  "banner": null,
+  "fired": [
+   "wake",
+   "days",
+   "yard_teach",
+   "elder",
+   "chest",
+   "gems",
+   "tablet",
+   "garden_ambush",
+   "garden_done",
+   "lantern_found",
+   "lantern_return",
+   "banner",
+   "dummies",
+   "sword",
+   "cottage_cap"
+  ],
+  "drops": [],
+  "portals": [
+   {
+    "id": "ruins",
+    "to": "ruins",
+    "x": 56.5,
+    "y": 20,
+    "open": true,
+    "ok": true
+   },
+   {
+    "id": "grotto",
+    "to": "grotto",
+    "x": 63.8,
+    "y": 19.4,
+    "open": false,
+    "ok": false
+   },
+   {
+    "id": "caldera",
+    "to": "caldera",
+    "x": 57.4,
+    "y": 25.8,
+    "open": false,
+    "ok": false
+   },
+   {
+    "id": "spire",
+    "to": "spire",
+    "x": 63.8,
+    "y": 25.4,
+    "open": false,
+    "ok": false
+   },
+   {
+    "id": "pine",
+    "to": "pinewood",
+    "x": 49,
+    "y": 69.3,
+    "open": true,
+    "ok": true
+   }
+  ],
+  "quests": {
+   "vale_lantern": "done",
+   "shard_root": "done"
+  },
+  "keys": [
+   "opening",
+   "hud:bars",
+   "hud:tracker",
+   "hud:lmb",
+   "hud:shift",
+   "hud:q",
+   "found:rustyblade",
+   "hud:map",
+   "trinket:ring",
+   "hud:f",
+   "hud:c",
+   "found:ironcap",
+   "hud:pot",
+   "hud:e",
+   "hud:skills",
+   "hud:r",
+   "key:key_roothollow",
+   "trinket:belt",
+   "key:key_rootcache",
+   "key:key_dream",
+   "trinket:amulet"
+  ],
+  "deaths": 0,
+  "col": 616,
+  "checkpoint": {
+   "map": "pinewood",
+   "x": 68.53191233422983,
+   "y": 34.9
+  },
+  "talkQ": 0,
+  "tablet": false,
+  "touch": false,
+  "tpage": 0,
+  "hudh": 1
+ }
 }
