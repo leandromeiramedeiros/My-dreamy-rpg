@@ -299,7 +299,7 @@ function drawScene() {
     list.push(c);
   }
   const heroKey = depthKey(m, p.x, p.y, p.z) + 0.01;   // §29 G3: never over a taller wall in front of the hero (maps.js depthKey)
-  TREE_FRAME.n = 0; TREE_FRAME.hero = p.dead ? null : worldToView(p.x, p.y, p.z); TREE_FRAME.hkey = heroKey;
+  TREE_FRAME.t = WIND.now(); TREE_FRAME.live = WIND.active(); TREE_FRAME.n = 0; TREE_FRAME.hero = p.dead ? null : worldToView(p.x, p.y, p.z); TREE_FRAME.hkey = heroKey;
   for (const o of viewObjs) if (inView(isoX(o.x, o.y), isoY(o.x, o.y, o.z))) { list.push(o); if (o.tree && o.img.swayF && !o.gone && treeTick(o)) list.push(o._cv || (o._cv = { kind: 'canopy', o, key: o.key + 0.5 })); }
   for (const f of m.falls) if (!f.edge && inView(f.x0 + 8, f.y0 + f.len / 2, 40 + f.len)) list.push({ kind: 'fall', f, key: f.key });
   if (!p.dead || G.state === 'dead') list.push({ kind: 'player', key: heroKey });
@@ -407,11 +407,11 @@ function drawRays(ctx, m, th, mx, my) {
 // sorts before key + 0.5 (it fades 1 -> 0.35 over 0.2 s), and while it fades back. Sway: 1 tree in 4 (hashed), only in the near
 // band around the hero (<= TREE_SWAY_MAX a frame); its frame (-1 / 0 / +1 px on the top 60 %) comes from a gust that travels
 // across the map plus a two-frequency sway (Lumina src/engine/world/props/Wind.js; docs/CREDITS.md), retuned to tiles.
-const TREE_FRAME = { n: 0, hero: null, hkey: 0 }, TREE_SWAY_MAX = 60, TREE_FADE = 0.35, TREE_FADE_S = 0.2;
-const WIND = { dx: 0.94, dy: 0.34, k: 0.25 };   // direction in tiles; k: phase per tile (a gust front ~25 tiles apart, ~1.7 tiles/s)
+const TREE_FRAME = { n: 0, hero: null, hkey: 0, t: 0, live: false }, TREE_SWAY_MAX = 60, TREE_FADE = 0.35, TREE_FADE_S = 0.2;
+const GUST = { dx: 0.94, dy: 0.34, k: 0.25 };   // the far band's closed-form gust (js/wind.js has the field the near band samples): direction in tiles; k: phase per tile (~25 tiles apart, ~1.7 tiles/s)
 function gustFrame(o, t) {
   const ph = (o.sway || 0) + o.x * 0.23 + o.y * 0.17;
-  const gust = 0.55 + 0.45 * Math.sin(t * 0.43 - (o.x * WIND.dx + o.y * WIND.dy) * WIND.k);
+  const gust = 0.55 + 0.45 * Math.sin(t * 0.43 - (o.x * GUST.dx + o.y * GUST.dy) * GUST.k);
   const sw = Math.sin(t * 1.21 + ph) * 0.62 + Math.sin(t * 2.37 + ph * 1.73) * 0.38;
   const d = sw * (0.35 + 0.65 * gust) + (gust - 0.55) * 0.9;
   return d > 0.62 ? 1 : d < -0.62 ? -1 : 0;
@@ -421,7 +421,9 @@ function treeTick(o) {
   const img = o.img, F = TREE_FRAME, h = F.hero, [vx, vy] = worldToView(o.x, o.y, o.z), t = G.t;
   let fr = 0;
   if (o._sw === undefined) o._sw = hash2(Math.floor(o.x * 7), Math.floor(o.y * 7), 77) < 0.25;
-  if (o._sw && h && Math.abs(vx - h[0]) < 190 && Math.abs(vy - h[1]) < 130 && F.n < TREE_SWAY_MAX) { F.n++; fr = gustFrame(o, t); }
+  // wind: the near band (<= TREE_SWAY_MAX) samples the field (5 frames -2..+2; while an emitter is live every tree answers), the far band keeps the closed form
+  if (h && (o._sw || F.live) && Math.abs(vx - h[0]) < 190 && Math.abs(vy - h[1]) < 130 && F.n < TREE_SWAY_MAX) { F.n++; fr = WIND.frame(o.x, o.y, o.sway || 0, F.t); }
+  else if (o._sw) fr = gustFrame(o, F.t);
   const flip = o.flip !== !!o.pulled; o._fr = flip ? -fr : fr;
   let cover = false;
   if (h && F.hkey < o.key + 0.5) {
@@ -434,6 +436,18 @@ function treeTick(o) {
   if (o._fade == null || dt > 0.5 || dt < 0) o._fade = want;
   else { const k = (1 - TREE_FADE) / TREE_FADE_S * dt; o._fade = o._fade < want ? Math.min(want, o._fade + k) : Math.max(want, o._fade - k); }
   return (o._split = o._fade < 0.999);
+}
+// wind props (js/wind.js prop(): one field sample per 3-tile cell a frame): grass 1 (2 frames + a 1 px lean when strong), bush 2 (the
+// 3 sway frames by wind sign), lantern 3 (its head, the top 6 rows, swings 1 px). Sets WP_DX / WP_HEAD for drawItem; returns the frame image.
+let WP_DX = 0, WP_HEAD = 0;
+function windProp(it, img) {
+  WP_DX = 0; WP_HEAD = 0;
+  const wk = it._wk !== undefined ? it._wk : (it._wk = it.grass ? 1 : img.swayF ? 2 : img === ART.lantern || img === ART.lanternBlue ? 3 : 0);
+  if (!wk) return img;
+  const f = WIND.prop(wk, it.x, it.y, it.sway || 0, TREE_FRAME.t);   // screen sign: + leans right
+  if (wk === 1) { WP_DX = f === 2 ? 1 : f === -2 ? -1 : 0; return ART.grass[f >= 0 ? 1 : 0]; }
+  if (wk === 2) return img.swayF[(f > 0 ? 1 : f < 0 ? -1 : 0) * (it.flip !== !!it.pulled ? -1 : 1) + 1];   // a mirrored sheet leans the other way in its own pixels
+  WP_DX = f > 0 ? 1 : f < 0 ? -1 : 0; WP_HEAD = 6; return img;
 }
 // directional tree shadows (desktop): the tree's silhouette squashed to 0.4 in y, laid toward the viewer and skewed -30 deg
 // (down-left, the side the baked SW cliff wedges fall to), alpha 0.32; cached per sheet and baked into the static shadow tiles
@@ -813,13 +827,14 @@ function drawItem(ctx, it, lights) {
     if (it.gone) return;   // an opened gate / keydoor / hidden wall (maps.js openGate)
     const [vx, vy] = worldToView(it.x, it.y, it.z);
     if (it.fish) { drawFishSpot(ctx, it, vx, vy, lights); return; }
-    let img = it.img;
-    if (it.grass) img = ART.grass[Math.sin(G.t * 1.8 + it.sway) > 0 ? 1 : 0];
-    else if (it.tree && img.swayF) img = it._split ? img.trunk : img.swayF[(it._fr | 0) + 1];   // §29 G2: trunk only while the canopy is split off
+    let img = it.img; WP_DX = 0; WP_HEAD = 0;
+    if (!it.tree) img = windProp(it, img);   // grass / bush / lantern: wind frames + draw offsets (WP_DX / WP_HEAD)
+    else if (it.tree && img.swayF) img = it._split ? img.trunk : img.swayW[(it._fr | 0) + 2] || treeFrame(img, it._fr | 0, 1);   // §29 G2: trunk only while the canopy is split off
     if (it.beam) { drawSunbeam(ctx, vx, vy, it); return; }
     // mirrored: the cached flipped canvas at the mirrored spot (the same pixels as the old save / scale(-1, 1) / restore, ~3x cheaper a call)
-    if (it.flip !== !!it.pulled) ctx.drawImage(flipOf(img), Math.round(vx) + Math.round(it.ax) - img.width, Math.round(vy - it.ay));
-    else ctx.drawImage(img, Math.round(vx - it.ax), Math.round(vy - it.ay));
+    if (it.flip !== !!it.pulled) ctx.drawImage(flipOf(img), Math.round(vx) + Math.round(it.ax) - img.width + (WP_HEAD ? 0 : WP_DX), Math.round(vy - it.ay));
+    else if (WP_HEAD && WP_DX) { const px = Math.round(vx - it.ax), py = Math.round(vy - it.ay); ctx.drawImage(img, 0, 0, img.width, WP_HEAD, px + WP_DX, py, img.width, WP_HEAD); ctx.drawImage(img, 0, WP_HEAD, img.width, img.height - WP_HEAD, px, py + WP_HEAD, img.width, img.height - WP_HEAD); }   // a lantern's head swings, its post stays
+    else ctx.drawImage(img, Math.round(vx - it.ax) + WP_DX, Math.round(vy - it.ay));
     if (it.brazier) drawFlame(ctx, vx, vy - 9, '#c77bff', '#ffd6ff');
     if (it.checkpoint && G.checkpoint && G.checkpoint.map === G.map.id && dist(G.checkpoint.x, G.checkpoint.y, it.x, it.y) < 2.5) {
       glowDot(ctx, vx, vy - 22 + Math.sin(G.t * 3) * 1.5, '#9ef0ff', '#ffffff', 2);
@@ -828,7 +843,7 @@ function drawItem(ctx, it, lights) {
     return;
   }
   if (it.kind === 'canopy') {   // §29 G2: the canopy over the hero (key = trunk + 0.5), at its fade alpha
-    const o = it.o, img = o.img.canopyF[(o._fr | 0) + 1], [vx, vy] = worldToView(o.x, o.y, o.z);
+    const o = it.o, img = o.img.canopyW[(o._fr | 0) + 2] || treeFrame(o.img, o._fr | 0, 0), [vx, vy] = worldToView(o.x, o.y, o.z);
     ctx.globalAlpha = o._fade;
     if (o.flip !== !!o.pulled) ctx.drawImage(flipOf(img), Math.round(vx) + Math.round(o.ax) - img.width, Math.round(vy - o.ay));
     else ctx.drawImage(img, Math.round(vx - o.ax), Math.round(vy - o.ay));
