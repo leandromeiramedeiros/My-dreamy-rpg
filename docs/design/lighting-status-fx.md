@@ -11,7 +11,7 @@ Caps are high / phone / low.
 | Layer | Rule |
 |---|---|
 | Light buffer | `lightPool` 40 / 24 / 16 |
-| Dynamic lights | `{sx, sy, r, col, a, flicker, bloom}`. Status lights alpha 0.35 or less: Burning r24 a0.3 flicker, Shocked r16 a0.35 strobe, Smitten r20 a0.2, Frozen r16 a0.2 cool. Status lights lose slots first; lights from one body merge |
+| Dynamic lights | `{sx, sy, r, col, a, flicker, bloom}`. Status lights alpha 0.35 or less: Burning r24 a0.3 flicker, Shocked r16 a0.35 strobe, Smitten r20 a0.2, Frozen r16 a0.2 cool. 15 % of the light cap is held for status lights (6 of 40); over the cap, fireflies cull first, then map lights, then spells and bodies, farthest from the hero first; lights from one body merge |
 | Rim light | forge rim mask tinted by the dominant light, light vector quantised to 8. All entities up to 12 / hero, bosses, elites / off |
 | Shadows | ellipse offset away from the strongest light (clamp 6 px). Desktop adds a skewed silhouette for hero and bosses |
 | Bloom | emitter-only with a `bloom` weight per light (statuses 0.4, gear 0.6, spells 1.0, lanterns 1.0). At most 3% near-white pixels in a 64 px window around any enemy. Full / half / off |
