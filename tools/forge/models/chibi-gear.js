@@ -24,7 +24,7 @@ const METAL = [
 const GOLD = metal(['#5a3608', '#9a6414', '#d8a030', '#f6d870', '#fffbe0']);
 const MAIL = ['#1c1f30', '#33384f', '#4e5572', '#737b9c'];
 const LEATHER = ['#3a2216', '#5e3a24', '#85573a', '#b07e56'];
-const STRAP = { ramp: ['#4a2c1a', '#7a4a2c', '#a8703e', '#d09a5e'], keep: true };   // thin tan leather that survives cleanup
+const STRAP = { ramp: ['#4a2c1a', '#7a4a2c', '#a8703e', '#d09a5e'], flat: 2 };   // tan leather in one tone: a clean 2 px stroke
 const WOOD = ['#3a2414', '#5e3c22', '#8a5c34', '#b88654'];
 const QUILT = ['#4e3a2c', '#7a5e44', '#a8885e', '#d4b88a'], STITCH = ['#3a2a20', '#4e3b2c', '#5e4936', '#70583f'];
 const CLOTH = [['#3a2418', '#5e3c26', '#85583a', '#b08058'], ['#141f4e', '#22367a', '#3656b0', '#7896e8'],
@@ -112,9 +112,13 @@ function warden(t) {
       ]));
   }
   if (t === 2) {                                                // leather strap from the right shoulder to the left hip, iron buckle
-    // a flat band tilted along the strap, its outline the breastplate's cross-section made ~7% larger, so it stands proud
-    P.push({ bone: 'chest', mat: 'strap', part: 'strap', shape: 'disc', c: [0, 0.9, 0.35], r: [5.06, 0.75, 3.85], rot: [0, 0, -0.873], clip: [[0, 1, 0, 4.4], [0, -1, 0, 3.6]], weight: 3 },
-      { bone: 'chest', mat: 'metal', part: 'strap', shape: 'ell', c: [-1.26, 2.4, 3.65], r: [0.75, 0.75, 0.45], weight: 3 });
+    // 1 px conn4 strokes laid just over the breastplate, front and back (a 4-connected staircase in one tone: no stray pixels)
+    const STR = [[-3.3, 3.9], [-1.6, 2.4], [0, 0.7], [1.5, -0.9], [2.6, -2.4]], zOn = (x, y, k) => k * (0.35 + 3.55 * Math.sqrt(Math.max(0, 1 - (x / 4.6) ** 2 - ((y - 0.9) / 4.9) ** 2)) + (k > 0 ? 0.9 : 0.2));   // the back one sits low, under a cape
+    for (const k of [1, -1]) for (let i = 0; i + 1 < STR.length; i++) {
+      const [x0, y0] = STR[i], [x1, y1] = STR[i + 1];
+      P.push({ bone: 'chest', mat: 'strap', part: 'strap', shape: 'line', conn4: true, a: [x0, y0, Math.round(zOn(x0, y0, k) * 100) / 100], b: [x1, y1, Math.round(zOn(x1, y1, k) * 100) / 100] });
+    }
+    P.push({ bone: 'chest', mat: 'metal', part: 'strap', shape: 'ell', c: [-1.26, 2.4, 3.65], r: [0.75, 0.75, 0.45], weight: 3 });
   }
   if (t >= 3) {                                                 // ridge, gold trim, a second pauldron lame, tabard + emblem
     P.push({ bone: 'chest', mat: 'metal', part: 'plate', shape: 'ell', c: [0, 0.8, 3.45], r: [0.55, 3.9, 0.55] },
@@ -232,20 +236,32 @@ function sword(t) {
   });
 }
 
-// ---- back: a tapered capsule squashed flat by the cape bone; collar, clasps, trim and emblem by tier -----------------
+// ---- back: the cape hangs on the rig's spring chain (models/chibi.js: bones cape, cape1..3, SEG px each, squashed flat):
+// one tapered capsule per segment it reaches, so its length is fixed and only its swing and billow change. Collar, clasps,
+// fur, hem trim and emblem by tier
+const SEG = require('./chibi.js').CAPE_SEG, CHAIN = ['cape', 'cape1', 'cape2', 'cape3'];
+const r3 = v => Math.round(v * 1000) / 1000;
+const onChain = s => { const k = Math.min(CHAIN.length - 1, Math.floor(s / SEG)); return [CHAIN[k], r3(s - SEG * k)]; };   // arc length -> [bone, local -y]
 function cape(t) {
-  const len = [5.6, 10.2, 10.2, 10.4, 11.4][t - 1], rb = [3.8, 4.6, 4.6, 4.7, 5.0][t - 1];
+  const len = [5.6, 10.2, 10.2, 10.4, 11.4][t - 1], ra = 3.0, rb = [3.8, 4.6, 4.6, 4.7, 5.0][t - 1], wAt = s => ra + (rb - ra) * s / len;
   const mats = { cloth: CLOTH[[0, 1, 2, 3, 4][t - 1]], gold: GOLD, fur: t === 5 ? GOLD : FUR, gem: t === 3 ? RUBY : SAPPHIRE };
-  const P = [
-    { bone: 'chest', mat: 'cloth', part: 'collar', shape: 'ell', c: [0, 4.1, -0.4], r: [4.0, 1.35, 3.4] },
-    { bone: 'cape', mat: 'cloth', part: 'cape', shape: 'cap', a: [0, -0.3, -0.5], b: [0, -len, -1.4], ra: 3.0, rb, clip: [[0, 1, 0, 0], [0, -1, 0, len + 0.3]] },
-  ];
+  const P = [{ bone: 'chest', mat: 'cloth', part: 'collar', shape: 'ell', c: [0, 4.1, -0.4], r: [4.0, 1.35, 3.4] }];
+  for (let k = 0; k * SEG < len; k++) {
+    const s0 = k * SEG, s1 = Math.min(len, s0 + SEG), clip = [];
+    if (!k) clip.push([0, 1, 0, 0]);                              // no rounding above the collar
+    if (s1 >= len) clip.push([0, -1, 0, r3(s1 - s0)]);                // a straight hem
+    P.push(Object.assign({ bone: CHAIN[k], mat: 'cloth', part: 'cape', shape: 'cap', a: [0, 0, -0.5], b: [0, -r3(s1 - s0), -0.5], ra: r3(wAt(s0)), rb: r3(wAt(s1)) }, clip.length ? { clip } : {}));
+  }
   const stamps = [];
   if (t >= 3) P.push(...[1, -1].map(k => ({ bone: 'chest', mat: 'gem', part: 'collar', shape: 'ell', c: [2.4 * k, 4.4, 2.9], r: [0.75, 0.75, 0.5] })));
-  if (t >= 4) P.push({ bone: 'chest', mat: 'fur', part: 'fur', shape: 'ell', c: [0, 4.2, -0.5], r: [4.3, 1.6, 3.7] },
-    { bone: 'cape', mat: 'gold', part: 'cape', shape: 'cap', a: [0, -len + 1.0, -1.3], b: [0, -len, -1.45], ra: rb - 0.2, rb: rb + 0.1, clip: [[0, -1, 0, len + 0.3], [0, 1, 0, 1.6 - len]] });
-  if (t === 5) stamps.push({ bone: 'cape', at: [0, -5.2, -1.9], n: [0, 0, -1], facing: 0.2, on: 'cloth', px: SUN });
-  return piece('cape', 'back', t, { mats, prims: P, stamps }, { pose: () => ({ cape: { scl: [1, 1, 0.26] } }) });
+  if (t >= 4) {
+    const [hb, hy] = onChain(len - 0.001);
+    P.push({ bone: 'chest', mat: 'fur', part: 'fur', shape: 'ell', c: [0, 4.2, -0.5], r: [4.3, 1.6, 3.7] },
+      { bone: hb, mat: 'gold', part: 'cape', shape: 'cap', a: [0, -hy + 1.0, -0.6], b: [0, -hy, -0.6], ra: r3(wAt(len) - 0.2), rb: r3(wAt(len) + 0.1), clip: [[0, -1, 0, hy], [0, 1, 0, r3(1.0 - hy)]] });
+  }
+  if (t === 5) { const [eb, ey] = onChain(5.2); stamps.push({ bone: eb, at: [0, -ey, -1.9], n: [0, 0, -1], facing: 0.2, on: 'cloth', px: SUN }); }
+  const [hb, hy] = onChain(len - 0.001);
+  return piece('cape', 'back', t, { mats, prims: P, stamps }, { sockets: { capeTop: { bone: 'cape', at: [0, 0, 0] }, capeHem: { bone: hb, at: [0, -hy, 0] } } });
 }
 
 const pieces = {};

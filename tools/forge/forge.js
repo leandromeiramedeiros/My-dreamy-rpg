@@ -16,6 +16,7 @@
 //   FORGE.sheet(model, { pieces, anims })              -> one loadout, rows = dirs, cols = every frame of every anim
 //   FORGE.bake(model, { piece? })                      -> { w, h, rgba (encoded G-buffer sheet), meta } for the body or a piece
 //   FORGE.compose(bank, { dir, anim, frame, pieces })  -> RGBA of one frame from baked sheets (the game's runtime path)
+//   FORGE.sockets(model, { dir, anim, frame, pieces })  -> the frame's sockets only (no raster)
 //   FORGE.raw(model, { dir, anim, frame, pieces, scale }) -> the volumes before the pixel pass (smooth light; a modelling aid)
 //   FORGE.ramp('#rrggbb')                              -> [shadow, low, mid, high] hue-shifted ramp (hex)
 //
@@ -35,9 +36,10 @@
 //   innerColor: '#hex'                     seams (depth-jump lines) in this colour instead of the part's shadow tone
 //   pixel: { normalSteps }                 opt-in hand-pixel pass: posterised normals, spur removal, clusters >= 2 px
 //   sheetAnims: ['idle', 'walk', ...]      the columns of a loadout sheet (default: every anim)
+//   springs: [ SPRING ]                    deterministic secondary motion (cape, hair locks), see chainDirs
 //   layers: [ LAYER ]                      the bare body; a v1 model (mats / prims / stamps at the top level) = one layer
 // }
-// LAYER = { id, tag?, group?, bias?, mats, prims, stamps, sprites }
+// LAYER = { id, tag?, group?, bias?, mats, prims, stamps }
 //   tag: what equipment can hide (a helm hides 'hair');  group: parts of one group never get a dark line between them;
 //   bias: px towards the camera when stacking (cloth over a body that pokes through it by less than that)
 //   mats: { name: '#hex' | [hex...] | { ramp, flat, lift, tones, spec } }   ramp: '#hex' (auto) or [shadow, low, mid, high, (spec)];
@@ -55,18 +57,6 @@
 //         when: the prim exists only on the frames where it returns true (a drawn bowstring, a nocked arrow)
 //   stamps: { bone, at, n, facing, on?, px:[[dx, dy, '#hex' | mat], ...] }  pixels pinned to a surface point (eyes):
 //         drawn when the point faces the camera and is not hidden inside the layer; other layers can still cover them
-//   sprites: { bone, at?, part?, bias?, when?, flow?, key: { ch: [mat, tone] | '#hex' }, dirs: { S|SE|...|SW: GRID | VARIANTS | null } }
-//         GRID = { at:[cx, cy], rows:[..], bias? (this facing's own bias: hair pinned at the chin but seen from behind) }
-//         hand-authored pixel parts (a face, hair, a shield face): the grid of the bone's facing (nearest 45 deg) is pinned
-//         with cell `at` on the bone point, at that point's depth (minus bias px); '.' (any char not in key) is empty.
-//         Authored pixels are flat (no shading, no cleanup) but depth-tested and stacked like any volume, so bake / compose
-//         carry them unchanged.
-//         VARIANTS = { rest: GRID, trailL?, trailR?, lift? }: secondary motion (hair). With `flow` the frame's variant is picked
-//         from the bone's motion over the last two frames (flowOf); without it, rest. flow = { at?, follow, min (px, or
-//         per anim { idle, other }), travel?: { anim: [px per frame along the facing] } }
-//         spring = { segs, stiff, damp, min, drive?: { anim: { fwd?, side?, up?: [px per frame] } }, counter?: { anims,
-//         bone, at, gain } }: cloth (a cape) on a lagged spring chain, variants rest / trailL / trailR / lift / billow (springOf).
-//         face: the bone whose facing picks the grid (default the sprite's bone; a cape follows the chest, not its swing)
 // PIECE = { id, slot, family?, tier?, class?, hides:[tags], layers:[LAYER], pose?(anim, f), tiers?:[ { mat: ramp } ], sockets?, smear? }
 //   smear: '#hex' a weapon with a 'tip' socket draws the anim's smear frames in this flat colour (hand -> tip path)
 //   family + tier: one baked piece per shape tier (knighthelm.t3); tiers: palette-only variants of one baked piece
@@ -74,6 +64,11 @@
 // Pose: rot = Euler [rx, ry, rz] relative to the parent. aim / point = a direction in model space (before the facing yaw):
 //   aim lays the bone's +y along it (weapons), point lays its -y along it (limbs); roll hints where +z goes.
 //   off moves the joint, scl squashes / stretches the bone's own volumes and scales its children's offsets.
+// SPRING = { bones: [b0, b1, ...], segs: [px, ...], rest: [x, y, z], space: 'model' | 'parent', k, damp, bend, gain: [x, y, z],
+//            counter?: { anims, bone, at, gain }, max: { side, back, fwd }, scl?, warm? }
+//   a chain of bones (b0 a child of some rig bone, each next one a child of the one before at [0, -seg, 0]) hung from
+//   b0's joint; each bone's -y runs down its segment. The chain is simulated in model space (yaw 0), so it is the same
+//   in every direction and depends on (anim, frame) only: see chainDirs. Segment lengths never change.
 // ---------------------------------------------------------------------------
 const FORGE = (function () {
   // ---- vectors / rotations -------------------------------------------------------------------------------------
@@ -178,7 +173,6 @@ const FORGE = (function () {
     });
     const addHex = h => { if (typeof h === 'string' && h[0] === '#' && !names.includes(h)) { names.push(h); list.push({ ramp: [h, h, h, h], flat: 0 }); } };
     for (const st of layer.stamps || []) for (const p of st.px) addHex(p[2]);
-    for (const sp of layer.sprites || []) for (const k in sp.key) addHex(sp.key[k]);
     for (const pr of layer.prims || []) addHex(pr.mat);
     if (names.length > 128) throw new Error(`layer ${layer.id}: ${names.length} materials (128 at most)`);
     const index = {}; names.forEach((n, i) => { index[n] = i; });
@@ -187,7 +181,7 @@ const FORGE = (function () {
   function partList(layer) {                                    // part names in prim order (stable: the baked index)
     if (layer._pl) return layer._pl;
     const names = [], index = {};
-    for (const pr of [...(layer.prims || []), ...(layer.sprites || [])]) { const n = pr.part || pr.bone; if (index[n] == null) { index[n] = names.length; names.push(n); } }
+    for (const pr of layer.prims || []) { const n = pr.part || pr.bone; if (index[n] == null) { index[n] = names.length; names.push(n); } }
     if (names.length > 16) throw new Error(`layer ${layer.id}: ${names.length} parts (16 at most)`);
     return (layer._pl = { names, index });
   }
@@ -213,28 +207,88 @@ const FORGE = (function () {
   }
 
   // ---- rig ------------------------------------------------------------------------------------------------------
-  function pose(model, yaw, anim, frame, extra) {
+  // bare: the anim's own pose only, no spring chains (what the chain simulation itself is driven by)
+  function pose(model, yaw, anim, frame, extra, bare) {
     const P = Object.assign({}, (model.anims[anim] || model.anims.idle).pose(frame) || {});
     for (const fn of extra || []) { const q = fn(anim, frame) || {}; for (const k in q) P[k] = Object.assign({}, P[k] || {}, q[k]); }
+    const C = !bare && model.springs ? chainDirs(model, anim, frame) : null;
     const Y = ry(yaw), W = {};
     model.bones.forEach((b, i) => {
-      const p = P[b.name] || {}, at = add(b.at, p.off || [0, 0, 0]), s = p.scl || [1, 1, 1], par = i ? W[b.parent] : null;
-      const R = (p.aim || p.point) ? mm(Y, mm(look(p.aim || mul(p.point, -1), p.roll), rot(p.rot))) : mm(par ? par.R : Y, rot(p.rot));
+      const p = P[b.name] || {}, c = C && C[b.name], at = add(b.at, p.off || [0, 0, 0]), s = (c && c.scl) || p.scl || [1, 1, 1], par = i ? W[b.parent] : null;
+      let R;
+      if (c) {                                                  // a spring bone: its -y laid along the simulated direction as
+        const l = mtv(par.R, mv(Y, c.d));                        // a turn about the parent's x, then z (no roll: a flat sheet
+        R = mm(par.R, mm(rx(Math.atan2(-l[2], -l[1])), rz(Math.asin(clamp(l[0], -1, 1)))));   // never flips over)
+      } else R = (p.aim || p.point) ? mm(Y, mm(look(p.aim || mul(p.point, -1), p.roll), rot(p.rot))) : mm(par ? par.R : Y, rot(p.rot));
       const t = par ? add(par.t, mv(par.R, [at[0] * par.s[0], at[1] * par.s[1], at[2] * par.s[2]])) : mv(Y, at);
       W[b.name] = { R, t, s };
     });
     return W;
   }
-  // the poses of the frames before f (for a sprite's hair flow): past(k) = { W, f } of frame f - k, wrapping in a looping
-  // anim (model.loops, default idle and walk), null before frame 0 of any other (an attack starts from rest)
-  function history(model, yaw, anim, f, extra) {
-    const A = model.anims[anim] || model.anims.idle, loop = (model.loops || ['idle', 'walk']).includes(anim.split(':')[0]), memo = {};
-    const at = g => memo[g] || (memo[g] = { W: pose(model, yaw, anim, g, extra), f: g });
-    return { f, loop, frames: A.frames, fwd: mv(ry(yaw), [0, 0, 1]), right: mv(ry(yaw), [-1, 0, 0]), at, past: k => {
-      let g = f - k; if (g < 0) { if (!loop) return null; g = ((g % A.frames) + A.frames) % A.frames; }
-      return at(g); } };
-  }
   const worldPoint = (W, bone, at) => { const B = W[bone]; return add(B.t, mv(B.R, [at[0] * B.s[0], at[1] * B.s[1], at[2] * B.s[2]])); };
+
+  // ---- spring chains: deterministic secondary motion (a cape, hair locks) ---------------------------------------
+  // Per spring and anim, a chain of points (the joints) hangs from the first bone's joint and is integrated in model space
+  // (yaw 0, so all 8 directions share it) in 5 ms steps: each point is pulled towards its rest place (the segment before
+  // it continued, blended with `rest` by `bend`) with stiffness k, its velocity damped by `damp`, then put back at its
+  // segment's fixed length (follow the leader: the chain never stretches) inside the angle limits `max` (side, back,
+  // fwd: radians off rest). It is driven by the anim's own pose: the joint's path x `gain` per model axis (the chest's
+  // twist and bob swing the cape), plus in `counter.anims` a rig point's path x counter.gain (the sword arm: the cape
+  // swings against the blade). Between two frames the drive moves linearly over the first one's ms. A looping anim
+  // (model.loops, default idle and walk) runs `warm` whole loops first; any other anim holds its frame 0 that long, then
+  // plays. The segment directions at each frame's start are the result: a pure function of (anim, frame), memoised.
+  // rest: model space ('model': a cape hangs by gravity) or the parent bone's space at that frame ('parent': hair).
+// k, damp and gain can be given per anim: { walk: .., other: .. }; counter.until: the counter point holds after that frame
+// (the recover frames do not throw the cape again, so it settles).
+  const STEP = 5;
+  const angOf = d => [Math.asin(clamp(d[0], -1, 1)), Math.atan2(-d[2], -d[1])];          // [side (+x), pitch (+ = back, -z)]
+  const dirOf = (sd, pt) => [Math.sin(sd), -Math.cos(sd) * Math.cos(pt), -Math.cos(sd) * Math.sin(pt)];
+  function chainDirs(model, anim, frame) {
+    const out = {};
+    for (const sp of model.springs) {
+      const memo = sp._memo || (sp._memo = {}), dirs = memo[anim] || (memo[anim] = simulate(model, sp, anim));
+      const fr = dirs[clamp(frame, 0, dirs.length - 1)]; sp.bones.forEach((b, k) => { out[b] = { d: fr[k], scl: sp.scl || null }; });
+    }
+    return out;
+  }
+  function simulate(model, sp, anim) {
+    const A = model.anims[anim] || model.anims.idle, n = A.frames, ms = A.ms || new Array(n).fill(100), base = anim.split(':')[0];
+    const loop = (model.loops || ['idle', 'walk']).includes(base), b0 = model.bones.find(b => b.name === sp.bones[0]), m = sp.segs.length;
+    const per = v => v == null || typeof v === 'number' || Array.isArray(v) ? v : v[base] != null ? v[base] : v.other;
+    const g = per(sp.gain) || [1, 1, 1], ct = sp.counter && sp.counter.anims.includes(base) ? sp.counter : null, keys = [];
+    for (let f = 0; f < n; f++) {
+      const W = pose(model, 0, anim, f, null, true), a = worldPoint(W, b0.parent, b0.at);
+      let drive = [a[0] * g[0], a[1] * g[1], a[2] * g[2]];
+      if (ct) drive = add(drive, mul(worldPoint(f > (ct.until != null ? ct.until : n) ? pose(model, 0, anim, ct.until, null, true) : W, ct.bone, ct.at), ct.gain));
+      keys.push({ drive, rest: norm(sp.space === 'parent' ? mv(W[b0.parent].R, sp.rest) : sp.rest) });
+    }
+    const lerp = (p, q, t) => add(mul(p, 1 - t), mul(q, t));
+    const at = (f, t) => {                                       // drive and rest t of the way through frame f
+      const k0 = keys[f], k1 = loop ? keys[(f + 1) % n] : keys[Math.min(f + 1, n - 1)];
+      return { drive: lerp(k0.drive, k1.drive, t), rest: norm(lerp(k0.rest, k1.rest, t)) };
+    };
+    const mx = sp.max || {}, side = mx.side != null ? mx.side : 0.5, back = mx.back != null ? mx.back : 0.5, fwd = mx.fwd != null ? mx.fwd : 0.5;
+    const K = per(sp.k), D = per(sp.damp), bend = sp.bend || 0, dt = STEP / 1000;
+    let x = null, px = null;
+    const step = (drive, rest) => {
+      if (!x) { x = [drive]; for (let k = 0; k < m; k++) x.push(add(x[k], mul(rest, sp.segs[k]))); px = x.map(v => v.slice()); }
+      x[0] = drive; px[0] = drive;
+      const r0 = angOf(rest);
+      for (let k = 1; k <= m; k++) {
+        const prev = k > 1 ? norm(sub(x[k - 1], x[k - 2])) : rest, want = norm(add(mul(rest, 1 - bend), mul(prev, bend)));
+        const tgt = add(x[k - 1], mul(want, sp.segs[k - 1])), v = mul(sub(x[k], px[k]), Math.max(0, 1 - D * dt));
+        px[k] = x[k]; x[k] = add(add(x[k], v), mul(sub(tgt, x[k]), K * dt * dt));
+        const a = angOf(norm(sub(x[k], x[k - 1])));             // the segment's angles, kept inside the limits around rest
+        x[k] = add(x[k - 1], mul(dirOf(clamp(a[0], r0[0] - side, r0[0] + side), clamp(a[1], r0[1] - fwd, r0[1] + back)), sp.segs[k - 1]));
+      }
+    };
+    const run = (f, hold) => { const S = Math.max(1, Math.round(ms[f] / STEP)); for (let i = 0; i < S; i++) { const q = hold ? keys[f] : at(f, i / S); step(q.drive, q.rest); } };
+    const warm = sp.warm || 4, res = [];
+    if (loop) { for (let w = 0; w < warm; w++) for (let f = 0; f < n; f++) run(f); }
+    else { const S = Math.round(warm * ms.reduce((p, q) => p + q, 0) / ms[0]); for (let w = 0; w < S; w++) run(0, true); }
+    for (let f = 0; f < n; f++) { res.push(sp.segs.map((_, k) => norm(sub(x[k + 1], x[k])))); run(f); }
+    return res;
+  }
 
   // ---- stage A: rasterise one layer -----------------------------------------------------------------------------
   const SS = 3, FAR = 200, QS = 6;                              // 3x3 rays per pixel; depth stored in 1/6 px steps around the root
@@ -243,7 +297,7 @@ const FORGE = (function () {
     return { w: model.frame[0], h: model.frame[1], ox: model.origin[0], oy: model.origin[1],
       D: [0, -Math.sin(e), -Math.cos(e)], RT: [1, 0, 0], UP: [0, Math.cos(e), -Math.sin(e)],
       L: norm(model.light || [-0.55, 0.65, 0.52]), T: model.tones || [0.78, 0.3, -0.25], cover: model.coverage || 4,
-      nsteps: (model.pixel && model.pixel.normalSteps) || 0, dstep: model.depthStep || 1 };
+      nsteps: (model.pixel && model.pixel.normalSteps) || 0 };
   }
   function volumes(layer, W, anim, frame, mt, pl) {           // a layer's live volumes, posed: bounds in world space
     const vol = [];
@@ -278,63 +332,7 @@ const FORGE = (function () {
   // posterised normals: snap a normal to a lattice of `steps` per axis, so a curved mass breaks into a few flat facets
   // (hand-pixelled bands) instead of a smooth gradient that quantises into ragged contours
   const posterise = (n, steps) => steps ? norm(n.map(v => Math.round(v * steps) / steps)) : n;
-  // a sprite's grid for the way its bone faces: the bone's +z on the ground plane, snapped to the nearest 45 deg (S = 0,
-  // E = 90), so a twisted chest or a turned head picks the turned grid; a missing facing falls back to the nearest one drawn
-  const FACINGS = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'];
-  function spriteGrid(sp, R) {
-    const f = mv(R, [0, 0, 1]), k = ((Math.round(Math.atan2(f[0], f[2]) / (Math.PI / 4)) % 8) + 8) % 8;
-    if (sp.dirs[FACINGS[k]] === null) return null;               // null = drawn by nothing for this facing (a shield's back)
-    for (const d of [0, 1, -1, 2, -2, 3, -3, 4]) { const g = sp.dirs[FACINGS[(k + d + 8) % 8]]; if (g) return g; }
-    return null;
-  }
-  // hair follow-through: which variant of a sprite's grid (rest / trailL / trailR / lift) this frame shows. A point of the
-  // sprite's bone (flow.at, default the sprite's own) is followed over the last two frames (hist.past) plus the anim's travel impulses along the facing (px per
-  // frame: a stride's push-off, an attack's lunge the rig does not translate); the hair lags, so its offset is minus that
-  // motion (this step + follow x the step before). Under `min` px (a number or per anim): rest; mostly sideways: trail to that side; else hair
-  // pushed up (the head dropped): lift; pushed down: rest.
-  function flowOf(sp, W, hist, proj, cam, anim) {
-    const fl = sp.flow, at = fl.at || sp.at || [0, 0, 0], tr = (fl.travel || {})[anim.split(':')[0]] || [];
-    const fx = dot(hist.fwd, cam.RT), fy = -dot(hist.fwd, cam.UP), pt = Wk => proj(worldPoint(Wk, sp.bone, at));
-    const step = k => { const A = k ? hist.past(k) : { W, f: hist.f }, B = hist.past(k + 1); if (!A || !B) return [0, 0];
-      const a = pt(A.W), b = pt(B.W), t = tr[A.f] || 0; return [a[0] - b[0] + t * fx, a[1] - b[1] + t * fy]; };
-    const s0 = step(0), s1 = step(1), ox = -(s0[0] + fl.follow * s1[0]), oy = -(s0[1] + fl.follow * s1[1]);
-    const min = typeof fl.min === 'number' ? fl.min : fl.min[anim.split(':')[0]] || fl.min.other;
-    if (Math.hypot(ox, oy) < min) return 'rest';
-    if (Math.abs(ox) >= min && Math.abs(ox) >= Math.abs(oy)) return ox < 0 ? 'trailL' : 'trailR';
-    return oy < 0 ? 'lift' : 'rest';
-  }
-  // cloth secondary motion (a cape): a chain of `segs` damped springs hung from the sprite's bone point, driven by that
-  // point's screen motion plus the anim's drive impulses (px per frame along the hero's fwd / side (his right) / up) and,
-  // in the `counter` anims, minus `gain` x the screen motion of a counter point (the sword tip: the cloth swings against
-  // the blade). Run from frame 0 over `warm` whole loops (default 1; an anim that does not loop holds its frame 0 instead),
-  // then on to this frame: the result depends on (anim, frame) only. The hem's lag (last segment - anchor; screen x, y and
-  // depth) picks the variant: under `min` px rest; sideways >= min and >= half the rest: trailL / trailR; else mostly in
-  // depth: billow (falls back to lift, then rest, where a facing has none); else hem pushed up: lift; down: rest.
-  function springOf(sp, hist, proj, cam, anim) {
-    const sg = sp.spring, A = anim.split(':')[0], dr = (sg.drive || {})[A] || {}, at = sp.at || [0, 0, 0];
-    const vec = v => [dot(v, cam.RT), -dot(v, cam.UP), dot(v, cam.D)], F = vec(hist.fwd), S = vec(hist.right), U = vec([0, 1, 0]);
-    const ct = sg.counter && sg.counter.anims.includes(A) ? sg.counter : null, seq = [];
-    for (let i = 0; i < hist.frames * (sg.warm || 1); i++) seq.push(hist.loop ? i % hist.frames : 0);
-    for (let i = 0; i <= hist.f; i++) seq.push(i);
-    const n = sg.segs || 3, x = [], v = []; let drift = [0, 0, 0], tip0 = null;
-    seq.forEach((g, s) => {
-      const Wg = hist.at(g).W;
-      if (s) for (const [ax, key] of [[F, 'fwd'], [S, 'side'], [U, 'up']]) drift = add(drift, mul(ax, (dr[key] || [])[g] || 0));
-      if (ct) { const tp = proj(worldPoint(Wg, ct.bone, ct.at)); if (tip0) drift = sub(drift, mul(sub(tp, tip0), ct.gain)); tip0 = tp; }
-      const a = add(proj(worldPoint(Wg, sp.bone, at)), drift);
-      if (!x.length) for (let k = 0; k <= n; k++) { x.push(a.slice()); v.push([0, 0, 0]); }
-      x[0] = a;
-      for (let k = 1; k <= n; k++) { v[k] = add(mul(v[k], sg.damp), mul(sub(x[k - 1], x[k]), sg.stiff)); x[k] = add(x[k], v[k]); }
-    });
-    const o = sub(x[n], x[0]), min = typeof sg.min === 'number' ? sg.min : sg.min[A] || sg.min.other, [ax, ay, ad] = o.map(Math.abs);
-    if (Math.hypot(ax, ay, ad) < min) return 'rest';
-    if (ax >= min && ax >= 0.5 * Math.max(ay, ad)) return o[0] < 0 ? 'trailL' : 'trailR';
-    if (ad >= ay) return 'billow';
-    return o[1] < 0 ? 'lift' : 'rest';
-  }
-  const FALLBACK = { billow: 'lift', lift: 'rest' };
-  function variant(set, name) { while (name && !set[name]) name = FALLBACK[name]; return set[name] || set.rest; }
-  function raster(layer, W, cam, anim, frame, rootT, hist) {
+  function raster(layer, W, cam, anim, frame, rootT) {
     const { w, h, ox, oy, D, RT, UP, L, T } = cam, N = w * h, mt = matTable(layer), pl = partList(layer), H = norm(sub(L, D));
     const G = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), keep: new Uint8Array(N), dq: new Uint8Array(N) };
     const dep = new Float32Array(N).fill(1e9);
@@ -390,22 +388,6 @@ const FORGE = (function () {
         plot(x, y, t); px0 = x; py0 = y;
       }
     }
-    // sprites: hand-authored pixel parts, one grid per facing, pinned to a bone point at that point's depth
-    for (const sp of layer.sprites || []) {
-      if (sp.when && !sp.when(anim, frame)) continue;
-      let g = spriteGrid(sp, W[sp.face || sp.bone].R); if (!g) continue;
-      if (!g.rows) g = variant(g, !hist ? 'rest' : sp.flow ? flowOf(sp, W, hist, proj, cam, anim) : sp.spring ? springOf(sp, hist, proj, cam, anim) : 'rest');
-      const [sx, sy, t0] = proj(worldPoint(W, sp.bone, sp.at || [0, 0, 0])), t = t0 - (g.bias != null ? g.bias : sp.bias || 0), part = pl.index[sp.part || sp.bone];
-      const X = Math.floor(sx) - g.at[0], Y = Math.floor(sy) - g.at[1];
-      g.rows.forEach((row, r) => { for (let c = 0; c < row.length; c++) {
-        const k = sp.key[row[c]]; if (k == null) continue;
-        const x = X + c, y = Y + r; if (x < 0 || y < 0 || x >= w || y >= h) continue;
-        const i = y * w + x; if (G.cov[i] && dep[i] < t && !G.flat[i]) continue;   // a volume of this layer in front (a raised arm)
-        const m = typeof k === 'string' ? mt.index[k] : mt.index[k[0]];
-        G.cov[i] = 1; G.mat[i] = m; G.part[i] = part; G.flat[i] = 1; G.keep[i] = 0; dep[i] = t;
-        G.tone[i] = typeof k === 'string' ? (mt.list[m].flat != null ? mt.list[m].flat : 2) : k[1];
-      } });
-    }
     // stamps: surface-pinned pixels, hidden when the point faces away or sits behind another volume of this layer
     for (const st of layer.stamps || []) {
       const P = worldPoint(W, st.bone, st.at), nn = mv(W[st.bone].R, norm(st.n || [0, 0, 1]));
@@ -421,8 +403,7 @@ const FORGE = (function () {
       }
     }
     const bias = layer.bias || 0;                               // clothing wins over a body part poking through it by < bias px
-    const st = cam.dstep;                                       // model.depthStep: depth kept in multiples of st 1/6 px steps
-    for (let i = 0; i < N; i++) if (G.cov[i]) G.dq[i] = clamp(128 + Math.round((rootT - dep[i] + bias) * QS / st) * st, 1, 255);
+    for (let i = 0; i < N; i++) if (G.cov[i]) G.dq[i] = clamp(128 + Math.round((rootT - dep[i] + bias) * QS), 1, 255);
     return G;
   }
 
@@ -521,10 +502,20 @@ const FORGE = (function () {
       if (!changed) break;
     }
     if (opt.outline) {
-      const c = opt.outline;
+      const c = opt.outline, OL = new Uint8Array(N);
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
         const i = y * w + x; if (M[i] >= 0 || SM[i]) continue;
-        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) { rgba[i * 4] = c[0]; rgba[i * 4 + 1] = c[1]; rgba[i * 4 + 2] = c[2]; rgba[i * 4 + 3] = 255; break; } }
+        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) { rgba[i * 4] = c[0]; rgba[i * 4 + 1] = c[1]; rgba[i * 4 + 2] = c[2]; rgba[i * 4 + 3] = 255; OL[i] = 1; break; } }
+      }
+      // a pinhole (an outline pixel with no other outline pixel around it, e.g. one empty pixel between an arm and the
+      // blade) is filled with its commonest covered neighbour's colour instead of a lone dark dot
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const i = y * w + x; if (!OL[i]) continue;
+        let alone = true; for (let dy = -1; dy <= 1 && alone; dy++) for (let dx = -1; dx <= 1; dx++) { const j = at(x + dx, y + dy); if ((dx || dy) && j >= 0 && OL[j]) { alone = false; break; } }
+        if (!alone) continue;
+        const cnt = new Map(); for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) { const k = (rgba[j * 4] << 16) | (rgba[j * 4 + 1] << 8) | rgba[j * 4 + 2]; cnt.set(k, (cnt.get(k) || 0) + 1); } }
+        let bk = -1, bn = 0; for (const [k, n] of cnt) if (n > bn || (n === bn && k < bk)) { bk = k; bn = n; }
+        if (bk >= 0) { rgba[i * 4] = bk >> 16; rgba[i * 4 + 1] = (bk >> 8) & 255; rgba[i * 4 + 2] = bk & 255; }
       }
     }
     return rgba;
@@ -592,9 +583,9 @@ const FORGE = (function () {
     const cam = camera(model), stack = assemble(model, opt.pieces), ps = pieceList(opt.pieces);
     const anim = animName(model, opt.anim || 'idle', opt.pieces), f = opt.frame || 0;
     const yaw0 = opt.yaw != null ? opt.yaw * Math.PI / 180 : yawOf(model, opt.dir), extra = ps.filter(p => p.piece.pose).map(p => p.piece.pose);
-    const W = pose(model, yaw0, anim, f, extra), hist = history(model, yaw0, anim, f, extra);
+    const W = pose(model, yaw0, anim, f, extra);
     const rootT = dot(W[model.bones[0].name].t, cam.D) + FAR, key = interner();
-    const list = stack.map(a => ({ g: raster(a.layer, W, cam, anim, f, rootT, hist), pal: palOf(a.layer, a.over), keys: partList(a.layer).names.map(n => key(a.group + ':' + n)) }));
+    const list = stack.map(a => ({ g: raster(a.layer, W, cam, anim, f, rootT), pal: palOf(a.layer, a.over), keys: partList(a.layer).names.map(n => key(a.group + ':' + n)) }));
     const extraS = Object.assign({}, ...ps.map(p => p.piece.sockets || {})), sockets = frameSockets(model, W, cam, extraS);
     const ro = resolveOpts(model), A = model.anims[anim], wp = ps.find(p => p.piece.smear);
     if (A.smear && A.smear[f] && wp && f > 0) {
@@ -603,6 +594,13 @@ const FORGE = (function () {
       ro.smears = smearsOf(A.smear, f, frameSockets(model, W0, cam, extraS), sockets, wp.piece.smear);
     }
     return { w: cam.w, h: cam.h, rgba: resolve(list, cam.w, cam.h, ro), sockets, anim };
+  }
+
+  // ---- sockets only (no raster): the rig's and the pieces' sockets of one frame, for measuring (board.js cape lengths)
+  function sockets(model, opt) {
+    const ps = pieceList(opt.pieces), anim = animName(model, opt.anim || 'idle', opt.pieces), f = opt.frame || 0;
+    const W = pose(model, opt.yaw != null ? opt.yaw * Math.PI / 180 : yawOf(model, opt.dir), anim, f, ps.filter(p => p.piece.pose).map(p => p.piece.pose));
+    return frameSockets(model, W, camera(model), Object.assign({}, ...ps.map(p => p.piece.sockets || {})));
   }
 
   // ---- raw: the volumes before the pixel pass (one ray per pixel at `scale`, smooth light, no ramps, outline or cleanup)
@@ -663,11 +661,11 @@ const FORGE = (function () {
       sockets[dn] = {};
       layout.forEach(([a, f], c) => {
         if (skip(a)) return;
-        const extra = piece && piece.pose ? [piece.pose] : [], W = pose(model, yawOf(model, dn), a, f, extra), hist = history(model, yawOf(model, dn), a, f, extra);
+        const extra = piece && piece.pose ? [piece.pose] : [], W = pose(model, yawOf(model, dn), a, f, extra);
         const rootT = dot(W[model.bones[0].name].t, cam.D) + FAR;
         (sockets[dn][a] = sockets[dn][a] || [])[f] = frameSockets(model, W, cam, piece ? piece.sockets : null);
         layers.forEach((L, li) => {
-          const G = raster(L, W, cam, a, f, rootT, hist), y0 = (li * dirs.length + r) * h;   // the full grid first, packed below
+          const G = raster(L, W, cam, a, f, rootT), y0 = (li * dirs.length + r) * h;   // the full grid first, packed below
           for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
             const i = y * w + x; if (!G.cov[i]) continue;
             const o = ((y0 + y) * SW + c * w + x) * 4;
@@ -739,6 +737,6 @@ const FORGE = (function () {
     return { w, h, rgba: resolve(list, w, h, ro), anim };
   }
 
-  return { render, raw, sheet, bake, bankInfo, compose, ramp, hexRgb, rgbHex };
+  return { render, raw, sheet, bake, bankInfo, compose, sockets, ramp, hexRgb, rgbHex };
 })();
 if (typeof module !== 'undefined') module.exports = FORGE;
