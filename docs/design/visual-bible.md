@@ -5,7 +5,7 @@ Runtime lights and status layers: [lighting-status-fx.md](lighting-status-fx.md)
 
 ## Sprite spec
 * 3/4 top-down view. Eight true directions, never mirrored. Forge camera elevation 28 degrees.
-* **Hero rig: `chibi`** (client ruling 2026-10-22, replaces the SlyNyrd `ref` rig): big head, short body, about 31 px tall inside a 48x48 frame. The forge is the only 8-direction sprite source.
+* **Hero rig: `chibi`** (client ruling 2026-10-22, replaces the SlyNyrd `ref` rig): big head, short body, about 31 px tall inside a 52x56 frame (room for weapon reach). The forge is the only 8-direction sprite source.
 * **The base hero wears nothing equippable** (client ruling): casual clothes, hair and skin only. Cape, weapons, shields, armour, belts and every other equippable are separate forge pieces composited at runtime over the base.
 * **Forge method: fully deterministic** (client ruling 2026-10-22): every pixel comes from 3D volumes on the rig, through the G-buffer and palette resolve. No hand-drawn pixel parts, no tracing. Hair and cape motion are deterministic springs in the rig.
 * Directions: 8 for every creature with a facing (humanoids, beasts, bosses); 1 for amorphous and swarm. Bosses scale 2 to 3 in a 96 or 128 px frame.
