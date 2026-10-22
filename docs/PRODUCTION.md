@@ -15,7 +15,7 @@ warp-fade, perf under load.
 | Milestone | State |
 |---|---|
 | M1 foundation, inventory, loot · M2a HUD/input/feel · M2b Act I slice · M3 items v2, hit feel, boss phases, Echo, opening, world art G1–G3, phone perf | **LIVE** |
-| M3 hot-fix: QA bot clean to the end of Act I | in progress |
+| M3 hot-fix: Act I progression bugs, Turbo bot, seeded runs, Story difficulty removed (balance waits for M4a) | in progress |
 | **M4a** foundations on a vertical slice (Vale + Pinewood) | next |
 | **M4b** full content rollout + Act II Ruins + elements in the world | planned |
 | M5 Act III Grotto · M6 Act IV Caldera · M7 Finale Spire + endings + NG+ · M8 polish, timed runs | planned (re-scoped after M4b) |
