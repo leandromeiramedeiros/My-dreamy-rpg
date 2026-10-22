@@ -4,7 +4,8 @@
 //     -> out/tiers-<line>.png   6 tiers (T1..T5, MYTH) x 8 directions, 4x, one frame (default idle 0), the piece on the bare base
 //     -> out/loadout-mix.png    6 mixed loadouts x 8 directions (written when every line is drawn)
 //   --check, per piece (each piece alone on the bare base):
-//     size     baked G-buffer PNG <= 64 KB for head, chest and boots, <= 36 KB for the cape (back), <= 30 KB for every other piece
+//     size     the largest shipped split sheet (<piece>.core / <piece>.atk.<class>, as build.js bakes them; the unsplit sheet is shown as 'whole')
+//              <= 64 KB for head, chest and boots, <= 36 KB for the cape (back), <= 30 KB for every other piece
 //              (the bare body, 129 KB, is chibi.js: reported, not gated here)
 //     det      two bakes give the same sha256
 //     compose  the runtime FORGE.compose of the decoded bank == FORGE.render, byte for byte, every sheet frame
@@ -22,7 +23,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const FORGE = require('./forge.js');
-const { png, unpng } = require('./png.js');
+const { png, pngSmall, unpng } = require('./png.js');
 
 const args = process.argv.slice(2), flag = n => args.includes('--' + n), opt = (n, d) => { const i = args.indexOf('--' + n); return i < 0 ? d : args[i + 1]; };
 const VAL = ['anim', 'frame', 'zoom', 'out', 'model'];
@@ -147,6 +148,11 @@ function glowMax(piece, sh) {
   return worst;
 }
 let baseSheet = null, baseBake = null;
+// shipped size: the largest of the piece's split sheets (<piece>.core, <piece>.atk.<class>), as build.js bakes them
+let splitCache = null;
+function splitKb(piece) { splitCache = splitCache || FORGE.bankSplit(model); let w = 0, nm = '';
+  for (const [suf, anims] of splitCache) { const b = FORGE.bake(model, { anims, piece }); if (b.empty) continue; const k = pngSmall(b.w, b.h, b.rgba).length / 1024; if (k > w) { w = k; nm = suf; } }
+  return [w, nm]; }
 function check(id) {
   const base = baseSheet || (baseSheet = FORGE.sheet(model, { pieces: [] })), baseCols = colourSet(base);
   const bk = baseBake || (baseBake = (() => { const b = FORGE.bake(model, {}), buf = png(b.w, b.h, b.rgba), back = unpng(buf); return { kb: buf.length / 1024, sheet: { w: back.w, rgba: back.rgba, meta: b.meta } }; })());
@@ -163,7 +169,7 @@ function check(id) {
     }
     frames++;
   }));
-  const br = bright(b); return { kb: buf.length / 1024, sha: sha.slice(0, 12), det: sha === sha2, lone: lone(sh), added, bad, frames, bright: br.hi, dark: br.dark, step: stepDiff(id), glow: piece.tier === 6 ? glowMax(piece, sh) : 0 };
+  const br = bright(b), [skb, snm] = splitKb(piece); return { kb: skb, snm, whole: buf.length / 1024, sha: sha.slice(0, 12), det: sha === sha2, lone: lone(sh), added, bad, frames, bright: br.hi, dark: br.dark, step: stepDiff(id), glow: piece.tier === 6 ? glowMax(piece, sh) : 0 };
 }
 // the palette-lint rules (tools/palette-lint.js): 4 tones + optional glint, CIE L* strictly rising, darkest tone dL >= 8
 // from the outline colour #0c0714; flat ramps (one colour) are emissive and skipped
@@ -197,7 +203,7 @@ if (flag('check')) {
     if (r.step >= 0 && r.step < STEP_MIN) why.push('step');
     if (piece.tier === 6 && (r.glow > GLOW_MAX || r.glow < 1)) why.push('glow');
     if (why.length) fail++; else if (wn.length) warn++;
-    console.log(`${why.length ? 'FAIL' : wn.length ? 'warn' : 'ok  '} ${id.padEnd(16)} ${r.kb.toFixed(1).padStart(5)}/${cap} KB | tones<=${tn} (${tm}) | +${r.added} colours | lone ${r.lone} | bright ${(100 * r.bright).toFixed(1)}% | dark ${(100 * r.dark).toFixed(0)}% | step ${r.step} | ${piece.tier === 6 ? 'glow ' + r.glow + ' | ' : ''}det ${r.det} sha ${r.sha} | compose ${r.frames - r.bad}/${r.frames}${why.length ? ' | ' + why.join(', ') : ''}${wn.length ? ' | warn ' + wn.join(', ') : ''}`);
+    console.log(`${why.length ? 'FAIL' : wn.length ? 'warn' : 'ok  '} ${id.padEnd(16)} ${r.kb.toFixed(1).padStart(5)}/${cap} KB (${r.snm}; whole ${r.whole.toFixed(1)}) | tones<=${tn} (${tm}) | +${r.added} colours | lone ${r.lone} | bright ${(100 * r.bright).toFixed(1)}% | dark ${(100 * r.dark).toFixed(0)}% | step ${r.step} | ${piece.tier === 6 ? 'glow ' + r.glow + ' | ' : ''}det ${r.det} sha ${r.sha} | compose ${r.frames - r.bad}/${r.frames}${why.length ? ' | ' + why.join(', ') : ''}${wn.length ? ' | warn ' + wn.join(', ') : ''}`);
   }
   console.log(fail ? `${fail} FAIL` : 'all checks pass' + (warn ? ` (${warn} brightness warnings on T4+)` : ''));
   if (fail) process.exitCode = 1;
