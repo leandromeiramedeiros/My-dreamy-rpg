@@ -5,25 +5,25 @@ Runtime lights and status layers: [lighting-status-fx.md](lighting-status-fx.md)
 
 ## Sprite spec
 * 3/4 top-down view. Eight true directions, never mirrored. Forge camera elevation 28 degrees.
-* Body 32 px inside a 48x48 frame, about 2.9 heads (head 11, torso 10, legs 11). The forge is the only 8-direction sprite source.
+* Body 32 px inside a 48x48 frame: the measured reference proportions (27 px; head 10, torso 8, legs 9; 2.7 heads; 16 px shoulders) scaled ×1.19 (client ruling). The forge is the only 8-direction sprite source.
 * Directions: 8 for every creature with a facing (humanoids, beasts, bosses); 1 for amorphous and swarm. Bosses scale 2 to 3 in a 96 or 128 px frame.
 * Frames: 8 directions x 43 = 344 per humanoid piece.
 
 | Animation | Frames and timing |
 |---|---|
-| Idle | 4 frames, 420 / 140 / 420 / 140 ms |
+| Idle | 6 frames, 200 / 200 / 400 / 200 / 200 / 400 ms; upper body sinks 0 / 1 / 2 / 2 / 1 / 0 px |
 | Walk | 6 frames at 100 ms; head bob -1 / -1 / +2 with a pass frame; no separate run |
 | Attack | 6 frames: anticipation, smear, follow-through (+1 px reach, no smear), recover |
 | Others | hurt 1, death 3 (+ dissolve), dodge 4, cast 4, block 1, channel 2 (loop), carry 1 |
 
 * Attack timings by class: Blades 400 ms, Shadows 300, Shots 360, Foci 480, Greatarms 620 (250 / 50 / 50 / 50 / 150 / 70).
-  The hit lands on the first smear frame. Smears are angular, from the weapon-tip socket path, 2 tones, no outline.
+  The hit lands on the first smear frame. Smears are angular, from the weapon-tip socket path, one flat light tone (reference #fafaf6) on frames 1–3, wide crescents as the reference draws them.
 * Hair offsets on frames 2 and 4. The cape bone rotates 2 steps behind the chest.
 * Facing: the hero faces the aim direction while attacking, casting, blocking or holding (sticky 0.4 s), otherwise the move direction.
   Legs always play the walk cycle. The hitbox is data, never the sprite.
 
 ## Colour and lint
-* Outline 1 px near-black `#0c0714`, plus a dark inner line only at depth jumps. Light from top-left-front.
+* No outer outline (as the reference): the darkest navy ramp tone carries the edges and seams. Light from top-left-front.
 * Hue-shifted 4-step ramps (shadow toward violet, light toward warm) plus 1 glint tone on metal and gems.
 * Lint (`tools/palette-lint.js`): no lone 1 px cluster, clusters at least 2 px, at most 5 tones per material, at most 24 colours per piece.
 
@@ -39,9 +39,9 @@ then render.js `drawPlayer` / `drawEnemy` / `drawNpc`: one `drawImage` per frame
 * Composite on loadout change only: the full 8 x 43 sheet in 120 ms or less on phone, time-sliced over 3 frames.
   The bag paper doll composes one direction in 10 ms or less.
 * Per piece about 18 to 30 KB PNG (30 KB cap). Lines load on first drop. Starter bundle at most 400 KB.
-* The rig `ref` (32 px, 2.9 heads) follows the SlyNyrd reference as closely as possible. Reference images are git-ignored and never committed.
+* The rig `ref` (32 px, 2.7 heads) follows the SlyNyrd reference as closely as possible. Reference images are git-ignored and never committed.
 * Sockets exported: handR, handL, head, chest, cast, weaponTip, offhandTip. Also an 8-way outward-normal rim mask and a bbox.
-* Approval gate: the side-by-side board (forge frame against a hand-painted reference, same pose and direction).
+* Approval gate: the side-by-side board (forge frame against the reference frame scaled to 32 px, same pose and direction). Targets: silhouette overlap ≥ 80 %, colour match ≥ 70 %. The forge is tuned, never hand-traced (client ruling).
 * Tools: `build.js`, `forge.js`, `pack.js`, `icons.js` (24x24 item icons from the same models at a fixed 3/4 pose),
   `board.js`, `preview.html` (dressing room). The `chibi` and `hero` rigs are regression fixtures for one milestone.
 
