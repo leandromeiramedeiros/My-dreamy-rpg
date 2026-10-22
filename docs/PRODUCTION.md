@@ -47,7 +47,7 @@ Gate: 100 % forge sprites in play; phone p95 ≤ 20 ms on every zone; docs curre
 ## Client rulings (latest first)
 * 2026-10-22 — Loadout v3 "Lead/Support" (no hero skills; everything from equipment); shields offhand-only; 2H + worn
   companion; Grimoire/Quiver/Warhorn decks; R head · F chest · V boots; 32 px hero; 8 dirs for every facing creature;
-  forge is the only 8-dir sprite source; runtime status/lighting layers; wind field; purge tools/qa/old from history; unique cap 20 (The Stopped Hour); Story difficulty removed (Normal only, plus NG+); boss hit cap 40 % of max HP.
+  forge is the only 8-dir sprite source; runtime status/lighting layers; wind field; purge tools/qa/old from history; unique cap 20 (The Stopped Hour); Story difficulty removed (Normal only, plus NG+); bosses keep hit-kill potential (no hit cap, telegraphed only).
 * 2026-10-20 — elements (§33): 9 hero elements, Opal, 8 reactions incl. Drift; pixel-FX prototype approved.
 * Dropped, never re-offer: Godot port-ready rules; jade tint for the nature Echo; real-phone `?perf=1` readings.
 * Reports to the client: substance only, no commit/PR chatter.

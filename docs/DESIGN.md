@@ -1573,7 +1573,7 @@ Morrow keeps his own map.
 * Eight full rasters must never be resident at once. The chunk cache is mandatory on phones.
 
 ## 26. Multi-bar boss phases, the gear loop, skill-variant legendaries (client request; expert-designed; director-approved)
-* **Hit cap (director ruling 2026-10-22):** no single boss hit exceeds 40 % of the hero's max HP (Normal is the only difficulty), so a fight always survives two mistakes, even on a weak gear roll (the QA bot died 37 times to Mossjaw at 858 max HP).
+* **Hit-kill potential (client ruling 2026-10-22):** bosses may kill in one hit; there is no hit cap. Every such move must be telegraphed and pass `bossFairness` (no unwarned lethal hits).
 
 ### 26.1 Boss phases: one HP bar per phase
 * **Bar count:** mini-boss 2, guardian 3, act boss 4, Morrow 5. Each bar is its own pool.
