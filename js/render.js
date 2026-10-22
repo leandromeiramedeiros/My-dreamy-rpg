@@ -3,7 +3,7 @@
 // Scene rendering + post-processing: fake lights (lightmap multiply + additive
 // halos), bloom (emitter-only: lights, glints, moon, VFX cores at 1/4 & 1/8 res), drifting fog & mist (a clear zone round the hero),
 // god rays, vignette.
-// Big maps (DESIGN §25.2): drawScene reads the ground from the chunk cache (maps.js CHUNK; drawGround + groundTick
+// Big maps (docs/design/world-maps.md): drawScene reads the ground from the chunk cache (maps.js CHUNK; drawGround + groundTick
 // here schedule the builds: the chunk under the camera synchronously, visible-missing chunks next with a large
 // budget, then a prefetch ring on idle frames), and queries the spatial grid for objects, columns, water glints and
 // static lights inside the view instead of walking whole-map lists. Lights: at most LIGHT_MAX visible (the hero's
@@ -279,10 +279,12 @@ function drawScene() {
   ctx.fillStyle = 'rgba(20,8,40,0.32)';
   const shadow = (x, y, z, r) => { const [vx, vy] = worldToView(x, y, z); ctx.beginPath(); ctx.ellipse(Math.round(vx), Math.round(vy), r, r * 0.45, 0, 0, Math.PI * 2); ctx.fill(); };
   drawPropShadows(ctx, m);   // the props' static shadows, pre-rendered in 256 px tiles (was one ellipse fill per prop per frame)
-  if (!p.dead) shadow(p.x, p.y, tileH(m, p.x, p.y), 6);
+  if (!p.dead) drawHeroShadow(ctx, p);   // light-aware (M4a): away from the strongest light, + the skewed silhouette on 'high'
   const inViewE = e => { const vx = isoX(e.x, e.y) - camX + RW / 2, vy = isoY(e.x, e.y, e.z || 0) - camY + RH / 2; return vx > -90 && vx < RW + 90 && vy > -40 && vy < RH + 150; };
   const viewEnemies = G.enemies.filter(inViewE);
-  for (const e of viewEnemies) shadow(e.x, e.y, 0, e.boss ? 18 : (e.type === 'wisp' ? 4 : 7));
+  { const t0 = PERF.on ? performance.now() : 0;
+    for (const e of viewEnemies) { const [vx, vy] = worldToView(e.x, e.y, 0); lightShadow(ctx, vx, vy, enemyShadowR(e), e, enemyShadowSil(e)); }
+    if (PERF.on) PERF.ph['sub.shadow'] = (PERF.ph['sub.shadow'] || 0) + performance.now() - t0; }
   for (const c of G.corpses) if (c.mode === 'fling' && c.t < c.life) shadow(c.x, c.y, c.gz, 5);   // the fling arc reads off its shadow
   for (const z of G.zones) if (inViewE(z) || z.r > 4) drawZone(ctx, z);
   for (const e of G.effects) if (e.type === 'tele' || e.type === 'marker' || e.type === 'line' || e.type === 'summon') drawDecal(ctx, e);
@@ -291,6 +293,9 @@ function drawScene() {
   for (const e of G.effects) if (e.type === 'aimflash') drawAimIndicator(e.aim, e.from, e.to, { col: e.col, flash: true });
 
   perfMark('decals');
+  // ---- world status tiles (status.js: burning grass, ice, wet ground) ----
+  if (typeof STATUS !== 'undefined') { STATUS.begin(); STATUS.drawTiles(ctx, lights); }
+  perfMark('status.tiles');
   // ---- depth-sorted world ----
   const list = [];
   const inView = (sx, sy, w = 80) => { const vx = sx - camX + RW / 2, vy = sy - camY + RH / 2; return vx > -w && vx < RW + w && vy > -w * 1.5 && vy < RH + w * 1.5; };
@@ -299,7 +304,7 @@ function drawScene() {
     list.push(c);
   }
   const heroKey = depthKey(m, p.x, p.y, p.z) + 0.01;   // §29 G3: never over a taller wall in front of the hero (maps.js depthKey)
-  TREE_FRAME.n = 0; TREE_FRAME.hero = p.dead ? null : worldToView(p.x, p.y, p.z); TREE_FRAME.hkey = heroKey;
+  TREE_FRAME.t = WIND.now(); TREE_FRAME.live = WIND.active(); TREE_FRAME.n = 0; TREE_FRAME.hero = p.dead ? null : worldToView(p.x, p.y, p.z); TREE_FRAME.hkey = heroKey;
   for (const o of viewObjs) if (inView(isoX(o.x, o.y), isoY(o.x, o.y, o.z))) { list.push(o); if (o.tree && o.img.swayF && !o.gone && treeTick(o)) list.push(o._cv || (o._cv = { kind: 'canopy', o, key: o.key + 0.5 })); }
   for (const f of m.falls) if (!f.edge && inView(f.x0 + 8, f.y0 + f.len / 2, 40 + f.len)) list.push({ kind: 'fall', f, key: f.key });
   if (!p.dead || G.state === 'dead') list.push({ kind: 'player', key: heroKey });
@@ -312,6 +317,7 @@ function drawScene() {
   for (const c of G.corpses) if (inView(isoX(c.x, c.y), isoY(c.x, c.y, c.gz))) { c.key = c.x + c.y + 0.005; list.push(c); }
   if (p.buffs.orbit) for (let k = 0; k < 3; k++) { const a = G.t * 4 + k * Math.PI * 2 / 3; list.push({ kind: 'orb', x: p.x + Math.cos(a) * 1.4, y: p.y + Math.sin(a) * 1.4, z: p.z + 1.2, key: p.x + Math.cos(a) * 1.4 + p.y + Math.sin(a) * 1.4 + p.z * 0.35 }); }
   list.sort((a, b) => a.key - b.key);
+  rimBegin();
   const occluded = !p.dead && heroOccluders(m, p, list, heroKey);   // §29 G3 cutaway marks + the silhouette below
   for (const it of list) drawItem(ctx, it, lights);
   if (occluded) drawHeroGhost(ctx, p);
@@ -320,7 +326,9 @@ function drawScene() {
   perfMark('entities');
   // ---- top effects + particles ----
   ctx.globalCompositeOperation = 'lighter';
-  for (const e of G.effects) if (e.type !== 'tele' && e.type !== 'marker' && e.type !== 'line' && e.type !== 'ghost' && e.type !== 'summon' && e.type !== 'aimflash') drawEffect(ctx, e, lights);
+  { const n0 = lights.length;
+    for (const e of G.effects) if (e.type !== 'tele' && e.type !== 'marker' && e.type !== 'line' && e.type !== 'ghost' && e.type !== 'summon' && e.type !== 'aimflash') drawEffect(ctx, e, lights);
+    bloomTag(lights, n0, 1); }   // spells bloom at 1.0
   ctx.globalCompositeOperation = 'source-over';
   drawParticles(ctx, lights);
 
@@ -340,12 +348,12 @@ function drawScene() {
   // ---- lighting ----
   const nStatic = lights.length;
   lightsIn(m, camX - RW / 2, camY - RH / 2, camX + RW / 2, camY + RH / 2, lights);
-  for (let i = nStatic; i < lights.length; i++) lights[i].__st = 1;   // map lights: stable objects (the light pool keys them)
-  for (const o of viewObjs) if (o.brazier) { lights.push({ sx: isoX(o.x, o.y), sy: isoY(o.x, o.y, o.z) - 14, r: 70 + Math.sin(G.t * 13 + o.x) * 6, col: '#c77bff', a: 0.9 }); }
-  // the hero's light (a lantern in dark sections) is always kept by the light budget
-  const heroL = p.dead ? null : { sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 10, r: 54 + 46 * look.dark, col: '#ffe6d0', a: 0.28 + 0.55 * look.dark, keep: true };
+  for (let i = nStatic; i < lights.length; i++) { const L = lights[i]; L.__st = 1; if (L.bloom == null) L.bloom = 1; }   // map lights: stable objects (the light pool keys them); lanterns / torches bloom
+  for (const o of viewObjs) if (o.brazier) { lights.push({ sx: isoX(o.x, o.y), sy: isoY(o.x, o.y, o.z) - 14, r: 70 + Math.sin(G.t * 13 + o.x) * 6, col: '#c77bff', a: 0.9, bloom: 1 }); }
+  // the hero's light (a lantern in dark sections) is always kept by the light budget; it blooms only as a lantern (dark sections)
+  const heroL = p.dead ? null : { sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 10, r: 54 + 46 * look.dark, col: '#ffe6d0', a: 0.28 + 0.55 * look.dark, keep: true, own: p, bloom: look.dark };
   if (heroL) lights.push(heroL);
-  const pl = typeof pipLight === 'function' && pipLight(); if (pl) lights.push(pl);   // §28 Pip's floating amber light (game.js)
+  const pl = typeof pipLight === 'function' && pipLight(); if (pl) { pl.bloom = 0; lights.push(pl); }   // §28 Pip's floating amber light (game.js)
   applyLighting(ctx, lights, th, look.css);
 
   perfMark('lights');
@@ -354,6 +362,7 @@ function drawScene() {
   perfMark('bloom');
   if (QUALITY.cfg.grade) { ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.22; ctx.drawImage(GRADE[m.themeId], 0, 0); }
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  if (typeof STATUS !== 'undefined') STATUS.drawIcons(ctx);   // M4a: the status icon rows over the bodies, after the light (readable at night)
   perfMark('grade.soft');
   if (p.buffs.dreamveil) { ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = 'rgba(255,140,220,0.25)'; ctx.fillRect(0, 0, RW, RH); ctx.globalCompositeOperation = 'source-over'; }
   ctx.drawImage(VIGNETTE, 0, 0);
@@ -400,18 +409,18 @@ function drawRays(ctx, m, th, mx, my) {
   ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(RAYS.L.c, bx, by, bw, bh, bx, by, bw, bh); ctx.globalCompositeOperation = 'source-over';
 }
 
-// ===== trees v2: canopy over the hero, travelling-gust sway (DESIGN §29 G2; world-art minutes §2.1 / §2.2) ==================
+// ===== trees v2: canopy over the hero, travelling-gust sway (docs/design/world-maps.md G2; world-art minutes §2.1 / §2.2) ==================
 // A tree (o.tree, img = art.js canopyTree / pineTree2 composite) is ONE drawImage of its composite (img.swayF[frame]) unless its
 // canopy is split off: then drawItem draws img.trunk at the tree's key and a { kind: 'canopy' } list entry at key + 0.5 draws
 // img.canopyF[frame] at alpha o._fade, OVER the hero. The canopy is split while the hero's rect meets the canopy box and the hero
 // sorts before key + 0.5 (it fades 1 -> 0.35 over 0.2 s), and while it fades back. Sway: 1 tree in 4 (hashed), only in the near
 // band around the hero (<= TREE_SWAY_MAX a frame); its frame (-1 / 0 / +1 px on the top 60 %) comes from a gust that travels
 // across the map plus a two-frequency sway (Lumina src/engine/world/props/Wind.js; docs/CREDITS.md), retuned to tiles.
-const TREE_FRAME = { n: 0, hero: null, hkey: 0 }, TREE_SWAY_MAX = 60, TREE_FADE = 0.35, TREE_FADE_S = 0.2;
-const WIND = { dx: 0.94, dy: 0.34, k: 0.25 };   // direction in tiles; k: phase per tile (a gust front ~25 tiles apart, ~1.7 tiles/s)
+const TREE_FRAME = { n: 0, hero: null, hkey: 0, t: 0, live: false }, TREE_SWAY_MAX = 60, TREE_FADE = 0.35, TREE_FADE_S = 0.2;
+const GUST = { dx: 0.94, dy: 0.34, k: 0.25 };   // the far band's closed-form gust (js/wind.js has the field the near band samples): direction in tiles; k: phase per tile (~25 tiles apart, ~1.7 tiles/s)
 function gustFrame(o, t) {
   const ph = (o.sway || 0) + o.x * 0.23 + o.y * 0.17;
-  const gust = 0.55 + 0.45 * Math.sin(t * 0.43 - (o.x * WIND.dx + o.y * WIND.dy) * WIND.k);
+  const gust = 0.55 + 0.45 * Math.sin(t * 0.43 - (o.x * GUST.dx + o.y * GUST.dy) * GUST.k);
   const sw = Math.sin(t * 1.21 + ph) * 0.62 + Math.sin(t * 2.37 + ph * 1.73) * 0.38;
   const d = sw * (0.35 + 0.65 * gust) + (gust - 0.55) * 0.9;
   return d > 0.62 ? 1 : d < -0.62 ? -1 : 0;
@@ -421,7 +430,9 @@ function treeTick(o) {
   const img = o.img, F = TREE_FRAME, h = F.hero, [vx, vy] = worldToView(o.x, o.y, o.z), t = G.t;
   let fr = 0;
   if (o._sw === undefined) o._sw = hash2(Math.floor(o.x * 7), Math.floor(o.y * 7), 77) < 0.25;
-  if (o._sw && h && Math.abs(vx - h[0]) < 190 && Math.abs(vy - h[1]) < 130 && F.n < TREE_SWAY_MAX) { F.n++; fr = gustFrame(o, t); }
+  // wind: the near band (<= TREE_SWAY_MAX) samples the field (5 frames -2..+2; while an emitter is live every tree answers), the far band keeps the closed form
+  if (h && (o._sw || F.live) && Math.abs(vx - h[0]) < 190 && Math.abs(vy - h[1]) < 130 && F.n < TREE_SWAY_MAX) { F.n++; fr = WIND.frame(o.x, o.y, o.sway || 0, F.t); }
+  else if (o._sw) fr = gustFrame(o, F.t);
   const flip = o.flip !== !!o.pulled; o._fr = flip ? -fr : fr;
   let cover = false;
   if (h && F.hkey < o.key + 0.5) {
@@ -434,6 +445,18 @@ function treeTick(o) {
   if (o._fade == null || dt > 0.5 || dt < 0) o._fade = want;
   else { const k = (1 - TREE_FADE) / TREE_FADE_S * dt; o._fade = o._fade < want ? Math.min(want, o._fade + k) : Math.max(want, o._fade - k); }
   return (o._split = o._fade < 0.999);
+}
+// wind props (js/wind.js prop(): one field sample per 3-tile cell a frame): grass 1 (2 frames + a 1 px lean when strong), bush 2 (the
+// 3 sway frames by wind sign), lantern 3 (its head, the top 6 rows, swings 1 px). Sets WP_DX / WP_HEAD for drawItem; returns the frame image.
+let WP_DX = 0, WP_HEAD = 0;
+function windProp(it, img) {
+  WP_DX = 0; WP_HEAD = 0;
+  const wk = it._wk !== undefined ? it._wk : (it._wk = it.grass ? 1 : img.swayF ? 2 : img === ART.lantern || img === ART.lanternBlue ? 3 : 0);
+  if (!wk) return img;
+  const f = WIND.prop(wk, it.x, it.y, it.sway || 0, TREE_FRAME.t);   // screen sign: + leans right
+  if (wk === 1) { WP_DX = f === 2 ? 1 : f === -2 ? -1 : 0; return ART.grass[f >= 0 ? 1 : 0]; }
+  if (wk === 2) return img.swayF[(f > 0 ? 1 : f < 0 ? -1 : 0) * (it.flip !== !!it.pulled ? -1 : 1) + 1];   // a mirrored sheet leans the other way in its own pixels
+  WP_DX = f > 0 ? 1 : f < 0 ? -1 : 0; WP_HEAD = 6; return img;
 }
 // directional tree shadows (desktop): the tree's silhouette squashed to 0.4 in y, laid toward the viewer and skewed -30 deg
 // (down-left, the side the baked SW cliff wedges fall to), alpha 0.32; cached per sheet and baked into the static shadow tiles
@@ -624,7 +647,7 @@ function drawSigil(ctx, m, lights) {
     ctx.fillStyle = `rgba(220,190,255,${pulse + 0.3})`; ctx.fillRect(Math.round(ax) - 1, Math.round(ay) - 1, 3, 3);
   }
   ctx.globalCompositeOperation = 'source-over';
-  lights.push({ sx: isoX(m.cx, m.cy), sy: isoY(m.cx, m.cy), r: 90, col: '#9b6ee8', a: pulse });
+  lights.push({ sx: isoX(m.cx, m.cy), sy: isoY(m.cx, m.cy), r: 90, col: '#9b6ee8', a: pulse, bloom: 1 });
 }
 
 function projRing(ctx, x, y, z, r, a0 = 0, a1 = Math.PI * 2, steps = 40) {
@@ -646,7 +669,7 @@ function drawZone(ctx, z) {
   ctx.globalCompositeOperation = 'source-over';
 }
 
-// ===== ground aim indicators (docs/HUD.md "Touch v2" > Aiming) ==============================================
+// ===== ground aim indicators (docs/design/hud-ui.md "Touch v2" > Aiming) ==============================================
 // Anti-confusion rule: the PLAYER's indicators (AIM_STYLE) are thin, dashed, low-alpha and cool-toned and never animate
 // their fill (only the range dashes move, 1 px / 100 ms); ENEMY telegraphs (TELE_STYLE) are thick, solid, hot and
 // high-alpha with a filling countdown. If an enemy telegraph covers the reticle, the player's fill drops to 10 %.
@@ -805,7 +828,18 @@ function drawDecal(ctx, e) {
   }
 }
 
+// the bloom whitelist (docs/design/lighting-status-fx.md "Bloom"): only lights with a `bloom` weight feed the glow buffer. Spells,
+// projectiles, lanterns / torches / braziers / sigils / portals 1.0, the hero's gear (weapon flash, staff tip, rarity light) and
+// loot beams 0.6, statuses and buff auras 0.4. Untagged lights (the hero's ambient lamp, fireflies, Pip, the Echo, enemy eyes
+// and glows) light the scene but never bloom. bloomTag(lights, n0, w) tags the lights pushed since n0 that have no weight yet.
+function bloomTag(lights, n0, w) { for (let i = n0; i < lights.length; i++) if (lights[i].bloom == null) lights[i].bloom = w; }
+const ITEM_BLOOM = { proj: 1, orb: 1, portal: 1, drop: 0.6 };
 function drawItem(ctx, it, lights) {
+  const b = ITEM_BLOOM[it.kind];
+  if (b) { const n0 = lights.length; drawItemK(ctx, it, lights); bloomTag(lights, n0, b); return; }
+  drawItemK(ctx, it, lights);
+}
+function drawItemK(ctx, it, lights) {
   const p = G.player;
   if (it.kind === 'echo') { drawEcho(ctx, G.echo, lights); return; }
   if (it.kind === 'column') { if (it._cut === CHUNK.frame) drawCutaway(ctx, it); else ctx.drawImage(it.img, Math.round(it.sx - camX + RW / 2), Math.round(it.sy - camY + RH / 2)); return; }
@@ -813,13 +847,14 @@ function drawItem(ctx, it, lights) {
     if (it.gone) return;   // an opened gate / keydoor / hidden wall (maps.js openGate)
     const [vx, vy] = worldToView(it.x, it.y, it.z);
     if (it.fish) { drawFishSpot(ctx, it, vx, vy, lights); return; }
-    let img = it.img;
-    if (it.grass) img = ART.grass[Math.sin(G.t * 1.8 + it.sway) > 0 ? 1 : 0];
-    else if (it.tree && img.swayF) img = it._split ? img.trunk : img.swayF[(it._fr | 0) + 1];   // §29 G2: trunk only while the canopy is split off
+    let img = it.img; WP_DX = 0; WP_HEAD = 0;
+    if (!it.tree) img = windProp(it, img);   // grass / bush / lantern: wind frames + draw offsets (WP_DX / WP_HEAD)
+    else if (it.tree && img.swayF) img = it._split ? img.trunk : img.swayW[(it._fr | 0) + 2] || treeFrame(img, it._fr | 0, 1);   // §29 G2: trunk only while the canopy is split off
     if (it.beam) { drawSunbeam(ctx, vx, vy, it); return; }
     // mirrored: the cached flipped canvas at the mirrored spot (the same pixels as the old save / scale(-1, 1) / restore, ~3x cheaper a call)
-    if (it.flip !== !!it.pulled) ctx.drawImage(flipOf(img), Math.round(vx) + Math.round(it.ax) - img.width, Math.round(vy - it.ay));
-    else ctx.drawImage(img, Math.round(vx - it.ax), Math.round(vy - it.ay));
+    if (it.flip !== !!it.pulled) ctx.drawImage(flipOf(img), Math.round(vx) + Math.round(it.ax) - img.width + (WP_HEAD ? 0 : WP_DX), Math.round(vy - it.ay));
+    else if (WP_HEAD && WP_DX) { const px = Math.round(vx - it.ax), py = Math.round(vy - it.ay); ctx.drawImage(img, 0, 0, img.width, WP_HEAD, px + WP_DX, py, img.width, WP_HEAD); ctx.drawImage(img, 0, WP_HEAD, img.width, img.height - WP_HEAD, px, py + WP_HEAD, img.width, img.height - WP_HEAD); }   // a lantern's head swings, its post stays
+    else ctx.drawImage(img, Math.round(vx - it.ax) + WP_DX, Math.round(vy - it.ay));
     if (it.brazier) drawFlame(ctx, vx, vy - 9, '#c77bff', '#ffd6ff');
     if (it.checkpoint && G.checkpoint && G.checkpoint.map === G.map.id && dist(G.checkpoint.x, G.checkpoint.y, it.x, it.y) < 2.5) {
       glowDot(ctx, vx, vy - 22 + Math.sin(G.t * 3) * 1.5, '#9ef0ff', '#ffffff', 2);
@@ -828,7 +863,7 @@ function drawItem(ctx, it, lights) {
     return;
   }
   if (it.kind === 'canopy') {   // §29 G2: the canopy over the hero (key = trunk + 0.5), at its fade alpha
-    const o = it.o, img = o.img.canopyF[(o._fr | 0) + 1], [vx, vy] = worldToView(o.x, o.y, o.z);
+    const o = it.o, img = o.img.canopyW[(o._fr | 0) + 2] || treeFrame(o.img, o._fr | 0, 0), [vx, vy] = worldToView(o.x, o.y, o.z);
     ctx.globalAlpha = o._fade;
     if (o.flip !== !!o.pulled) ctx.drawImage(flipOf(img), Math.round(vx) + Math.round(o.ax) - img.width, Math.round(vy - o.ay));
     else ctx.drawImage(img, Math.round(vx - o.ax), Math.round(vy - o.ay));
@@ -854,13 +889,24 @@ function drawItem(ctx, it, lights) {
     if (e.sq) {   // a swarm member's squash-pop (game.js spawnCorpse): flattens and widens as it fades
       const sc = e.sc || 1, w = Math.round(e.spr.width * sc * (1 + 0.5 * k)), h = Math.max(1, Math.round(e.spr.height * sc * (1 - 0.6 * k)));
       ctx.globalAlpha = (1 - k) * 0.8; ctx.drawImage(silOf(e.spr, e.col || '#ffffff'), Math.round(vx - w / 2), Math.round(vy - h + 1), w, h);
+    } else if (heroGhostFrame(e)) {   // M4a: a hero dodge ghost is the forge frame of that moment, cool-toned (no white-out at the hero)
+      const D = e._f; ctx.globalAlpha = (1 - k) * 0.45; ctx.drawImage(silOf(D.img, e.col || '#8ec4ff'), D.sx, D.sy, D.w, D.h, Math.round(vx) - D.ax, Math.round(vy) - D.ay, D.w, D.h);
     } else ctx.drawImage(silOf(e.spr, e.col || '#ffffff'), Math.round(vx - e.spr.width / 2), Math.round(vy - e.spr.height + 1));
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
 }
 
-// ===== corpses (DESIGN §27, R1; records: game.js spawnCorpse / updateCorpses) =====================================
-// corpseLook(e) -> { img, sc, art, hover } once at the kill: ENEMY_ART enemies play their 3 death frames (art = key);
+// a ghost made from the old hero sprite (game.js currentPlayerSprite) takes the forge frame drawn when it first shows
+function heroGhostFrame(e) {
+  if (e._f !== undefined) return e._f;
+  const p = G.player, S = p && p.spr, D = p && p._drawn;
+  const mine = !!(S && D && D.img && D.ax != null && ['front', 'back', 'frontF', 'backF'].some(k => S[k] && S[k].includes(e.spr)));
+  return (e._f = mine ? { img: D.img, sx: D.sx, sy: D.sy, w: D.w, h: D.h, ax: D.ax, ay: D.ay } : null);
+}
+
+// ===== corpses (docs/design/combat-feel.md, R1; records: game.js spawnCorpse / updateCorpses) =====================================
+// corpseLook(e) -> { img, sc, art, hover } once at the kill: ENEMY_ART enemies play their 3 death frames (art = key); a forge
+// enemy (forgeEnemyRig(c.e), sheet ready) plays its forge death frames first, whatever corpseLook said;
 // legacy / custom sprites keep their hit frame, drawn as a blood-coloured silhouette (sc = their legacy scale).
 const CORPSE_PROBE = { face: 1, flash: 1, hitFreeze: 0, state: 'chase', anim: 0, asleep: false };
 function corpseLook(e) {
@@ -880,7 +926,13 @@ function drawCorpse(ctx, c) {
   const end = c.t >= c.life, k = end ? Math.min(1, (c.t - c.life) / c.fade) : 0;
   const sqk = c.sqT > 0 ? c.sq : 0, sx = 1 + sqk, sy = 1 - sqk * 4 / 3;   // squash 0.3 -> w x1.3, h x0.6
   const [vx, vy] = worldToView(c.x, c.y, c.gz + c.z);
-  if (c.art) {
+  const fr = c.e && forgeEnemyRig(c.e), fs = fr && FEN.last[fr];
+  if (fs && fs.at.death != null) {   // a forge enemy: its 3 death frames over the flight, in the direction it last faced
+    const n = fs.n.death || 1, f = c.mode === 'boss' ? 0 : Math.min(n - 1, Math.floor(n * c.t / c.life)), dir = DIR8[c.e.fDirI != null ? c.e.fDirI : 1];
+    ctx.globalAlpha = (c.mode === 'boss' && !end ? 1 : 0.7) * (1 - k);
+    c.fFrame = f;   // tools/play.js
+    ctx.drawImage(fs.canvas, (fs.at.death + f) * fs.w, (fs.dirIdx[dir] || 0) * fs.h, fs.w, fs.h, Math.round(vx - fs.ax * sx), Math.round(vy - fs.ay * sy), Math.round(fs.w * sx), Math.round(fs.h * sy));
+  } else if (c.art) {
     const info = ENEMY_ART.info[c.art], fr = c.mode === 'boss' ? 0 : Math.min(2, Math.floor(3 * c.t / c.life));
     let img = ENEMY_ART.get(c.art, 'death', fr); if (c.face < 0) img = flipOf(img);
     const ax = c.face < 0 ? img.width - info.ax : info.ax, w = Math.round(img.width * sx), h = Math.round(img.height * sy);
@@ -1036,21 +1088,58 @@ function echoGlow(col) {
   }
   return c;
 }
+// M4a: the Echo draws the forge hero's current loadout sheet (the frame of the clone's own anim and facing, cropped to a small
+// canvas so the tint cache keys on it; ECHO_CROP keeps the last 96); ?oldhero or before the first sheet is ready: the old frames.
+const ECHO_CROP = new Map();
+function forgeCrop(img, sx, sy, w, h) {
+  const k = sx + '|' + sy + '|' + w; let m = ECHO_CROP.get(img); if (!m) { if (ECHO_CROP.size > 4) ECHO_CROP.clear(); ECHO_CROP.set(img, m = new Map()); }
+  let c = m.get(k);
+  if (!c) { if (m.size >= 96) m.delete(m.keys().next().value); c = makeCanvas(w, h); c.x.drawImage(img, sx, sy, w, h, 0, 0, w, h); c = c.c; m.set(k, c); }
+  return c;
+}
+function echoForgeFrame(g, e, t) {
+  const N = a => (e.n && e.n[a]) || 1;
+  let a = 'idle', f = Math.floor(t * 5);
+  if (g.spin > 0) { a = 'attack'; f = Math.floor(t * 24); }
+  else if (g.swing) { a = 'attack'; f = Math.min(N('attack') - 1, Math.floor(g.swing.t / Math.max(0.01, g.swing.dur) * N('attack'))); }
+  else if (g.castT > 0) { a = e.at.cast != null ? 'cast' : 'attack'; f = Math.floor(t * 10); }
+  else if (g.dashing || g.dash) { a = 'dash'; f = Math.floor(t * 14); }
+  else if (g.moving) { a = 'walk'; f = Math.floor((g.walkT || 0) * 10); }
+  if (e.at[a] == null) { a = 'idle'; f = Math.floor(t * 5); }
+  return forgeCrop(e.canvas, (e.at[a] + (f % N(a))) * e.w, (e.dirIdx[heroDir(g)] || 0) * e.h, e.w, e.h);
+}
+// the HUD portrait (hud.js drawPortrait): the forge hero's idle S frame, head and shoulders (30 x 30 frame px), current loadout
+function heroPortrait() {
+  if (OLD_HERO || !FH.last || !FH.last.e || !FH.last.e.canvas) return null;
+  const e = FH.last.e, P = heroPortrait.o || (heroPortrait.o = {});
+  let top = PORTRAIT_TOP.get(e.canvas);
+  const fx = e.at.idle * e.w, fy = (e.dirIdx.S || 0) * e.h;
+  if (top == null) {   // the first opaque row of the idle S frame (the top of the hat / hair), once per sheet
+    const d = e.canvas.getContext('2d').getImageData(fx, fy, e.w, e.h).data; top = 0;
+    find: for (let y = 0; y < e.h; y++) for (let x = 0; x < e.w; x++) if (d[(y * e.w + x) * 4 + 3] > 40) { top = y; break find; }
+    PORTRAIT_TOP.set(e.canvas, top);
+  }
+  P.img = e.canvas; P.w = 30; P.h = 30; P.sx = fx + Math.round(e.ax - 15); P.sy = fy + clamp(top - 2, 0, e.h - 30); P.forge = true;
+  return P;
+}
+const PORTRAIT_TOP = new WeakMap();
 function drawEcho(ctx, E, lights) {
   const p = G.player, g = E.g; if (!p.spr || !p.spr.hero) return;
-  const H = p.spr.hero, t = G.t, flip = g.face < 0, view = g.back ? 'back' : 'front', [vx, vy] = worldToView(g.x, g.y, g.z);
+  const FE = !OLD_HERO && FH.last && FH.last.e && FH.last.e.canvas ? FH.last.e : null;
+  const H = p.spr.hero, t = G.t, flip = !FE && g.face < 0, view = g.back ? 'back' : 'front', [vx, vy] = worldToView(g.x, g.y, g.z);
   const w = item('weapon', p.gear.weapon), pose = WEAPON_POSE[w.kind] || 'swing';
   const atk = !!(g.swing || g.castT > 0 || g.spin > 0);
   const fi = atk ? HERO.ATTACK : g.dashing ? 2 + (Math.floor(t * 18) & 3) : g.moving ? 2 + (Math.floor(g.walkT * 8) & 3) : (Math.sin(t * 2.5 + 1) > 0.3 ? 1 : 0);
-  const col = echoPalette(E.el)[Math.floor(t * 4) % ECHO_STEPS], frame = H[view][fi], hand = H.hand[view][fi];
-  const body = echoTint(frame, col), wpn = H.weapon ? echoTint(H.weapon, col) : null;
+  const col = echoPalette(E.el)[Math.floor(t * 4) % ECHO_STEPS], frame = FE ? echoForgeFrame(g, FE, t) : H[view][fi], hand = H.hand[view][fi];
+  const body = echoTint(frame, col), wpn = !FE && H.weapon ? echoTint(H.weapon, col) : null;   // the forge frame holds its weapon
+  const foot = FE ? FE.h - 1 - FE.ay : 0, bodyH = FE ? FE.ay - 6 : H.h;   // forge frames stand on row ay, not the bottom row
   const spawn = clamp(E.age / 0.3, 0, 1), fade = clamp((E.idleT - (ECHO.idle - ECHO.fadeOut)) / ECHO.fadeOut, 0, 1);   // 0..1 materialise / dissolve
   const sa = ctx.globalAlpha, so = ctx.globalCompositeOperation, bob = 2 * Math.sin(t * 3);
   // the afterimage trail: the spirit's last 8 drawn positions (world), copies at 3 and 6 frames back
   const T = E.trail || (E.trail = { b: new Float32Array(24), i: 0, n: 0 });
   T.b[T.i * 3] = g.x; T.b[T.i * 3 + 1] = g.y; T.b[T.i * 3 + 2] = g.z; T.i = (T.i + 1) & 7; T.n = Math.min(8, T.n + 1);
   const blit = (img, x, y, a, wk, rise) => {   // the body canvas centred on feet x,y (view px), width scaled by wk, raised by rise
-    const bw = Math.max(1, Math.round(img.width * wk)), bx = Math.round(x - bw / 2), by = Math.round(y - img.height + 2 - rise);
+    const bw = Math.max(1, Math.round(img.width * wk)), bx = Math.round(x - bw / 2), by = Math.round(y - img.height + 2 - rise + foot);
     ctx.globalAlpha = a;
     if (flip) { ctx.save(); ctx.translate(bx + bw, by); ctx.scale(-1, 1); ctx.drawImage(img, 0, 0, bw, img.height); ctx.restore(); } else ctx.drawImage(img, bx, by, bw, img.height);
   };
@@ -1082,7 +1171,7 @@ function drawEcho(ctx, E, lights) {
   // materialise shimmer: a light column that thins out; dissolve / spawn motes through the budgeted particle pool
   if (spawn < 1) {
     ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - spawn) * 0.8; ctx.fillStyle = mixHex(col, '#ffffff', 0.6);
-    const cw = Math.max(1, Math.round(6 * (1 - spawn))); ctx.fillRect(Math.round(vx - cw / 2), Math.round(vy - H.h - 4), cw, H.h + 4);
+    const cw = Math.max(1, Math.round(6 * (1 - spawn))); ctx.fillRect(Math.round(vx - cw / 2), Math.round(vy - bodyH - 4), cw, bodyH + 4);
   }
   if ((spawn < 1 || fade > 0) && E.moteT !== t) { E.moteT = t; if (Math.random() < 0.5) addPart({ x: g.x + frand(-0.3, 0.3), y: g.y + frand(-0.3, 0.3), z: g.z + frand(0.3, 2.6), vx: 0, vy: 0, vz: frand(0.6, 1.6), life: frand(0.4, 0.8), t: 0, col, grav: 0, size: 1, glow: true }); }
   ctx.globalAlpha = sa; ctx.globalCompositeOperation = so;
@@ -1123,7 +1212,13 @@ function drawCutaway(ctx, it) {
   ctx.drawImage(S.c, 0, 0, w, h, dx, dy, w, h);
 }
 function drawHeroGhost(ctx, p) {
-  const D = p._drawn; if (!D || !D.frame) return;
+  const D = p._drawn; if (!D || !(D.frame || D.img)) return;
+  if (D.img) {   // the forge hero: a sub-rect of the loadout sheet (its silhouettes are cached per sheet canvas)
+    const lite = silOf(D.img, '#9ef0ff'), dark = silOf(D.img, '#1d4a66'), b = (im, x, y) => ctx.drawImage(im, D.sx, D.sy, D.w, D.h, x, y, D.w, D.h);
+    ctx.globalAlpha = 0.4; for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) b(lite, D.dx + ox, D.dy + oy);
+    ctx.globalAlpha = 0.35; b(dark, D.dx, D.dy); ctx.globalAlpha = 0.25; b(lite, D.dx, D.dy); ctx.globalAlpha = 1;
+    return;
+  }
   const img = D.flip ? flipOf(D.frame) : D.frame, lite = silOf(img, '#9ef0ff'), dark = silOf(img, '#1d4a66');
   ctx.globalAlpha = 0.4;
   for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) ctx.drawImage(lite, D.dx + ox, D.dy + oy);
@@ -1131,7 +1226,256 @@ function drawHeroGhost(ctx, p) {
   ctx.globalAlpha = 0.25; ctx.drawImage(lite, D.dx, D.dy);
   ctx.globalAlpha = 1;
 }
+// ===== M4a forge hero (docs/design/visual-bible.md "Forge pipeline"; js/forge-rt.js) ============================================
+// The hero is the forge `chibi`: a bare base in casual clothes with the equipped gear layered at runtime. forgeLoadout maps the
+// equipped items to forge piece ids (<item variant>.t<tier + 1>, Mythic = .t6); a missing tier falls back to the nearest lower
+// tier of its line, a line without forge art (bow, daggers, cowls, robes...) to nothing (the bare base shows), logged once.
+// drawPlayer draws one sub-rect of the ready loadout sheet (FORGE.sheet, composed over 3 frames, cached); while a new loadout
+// composes the last ready sheet stays on screen, and before any is ready (boot) the old layered hero draws. ?oldhero keeps the
+// old path for one milestone. Facing: the 8 true directions of the aim, in screen space. Anims: idle, walk, attack (the HAND
+// weapon class picks the atk sheet inside forge-rt), cast, dash, hit; death = the hit frame tipped over (no death anim in the
+// rig); anything else idles. The hitbox stays data (p.r); hitlag freezes G.t and with it the frame index.
+const OLD_HERO = (() => { try { return new URLSearchParams(location.search).has('oldhero'); } catch (e) { return false; } })();
+const FH = { rig: 'chibi', sig: null, lo: null, last: null, warned: new Set(), castPrev: 0, castMax: 0.25, castAtk: false, cur: null, curT: -1, cache: new Map() };
+const FH_SLOTS = ['chest', 'boots', 'head', 'offhand', 'weapon'];   // forge depth resolve decides the layering; this is only the tie order
+// the forge dir of each screen octant (from +x, clockwise, y down); forge dirs are screen dirs (its 'E' frames carry handR in
+// front of the body: facing screen-right)
+const DIR8 = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
+function forgeWarn(msg) { if (FH.warned.has(msg)) return; FH.warned.add(msg); try { console.warn('forge hero: ' + msg); } catch (e) { /* no console */ } }
+function forgeLoadout(equip) {
+  const B = typeof FORGE_BANK !== 'undefined' && FORGE_BANK[FH.rig]; if (!B) return null;   // the rig bank is not in yet
+  const lines = B.lines || {}, out = [];
+  for (const slot of FH_SLOTS) {
+    const v = equip && equip[slot]; if (!v) continue;
+    let fam, tier;
+    if (typeof v === 'string') { fam = v; tier = 1; }
+    else {
+      const b = typeof baseOf === 'function' ? baseOf(v.base) : null;
+      if (!b) { forgeWarn(`no item base ${v.base} (${slot}); drawn bare`); continue; }
+      fam = b.variant || b.family; tier = v.rarity === 'mythic' ? 6 : (b.tier | 0) + 1;
+    }
+    let id = fam + '.t' + tier;
+    if (!lines[id]) { let t = Math.min(tier, 6); while (t > 1 && !lines[fam + '.t' + t]) t--; if (lines[fam + '.t' + t]) { forgeWarn(`${id} has no forge art yet; ${fam}.t${t} drawn`); id = fam + '.t' + t; } }
+    if (!lines[id]) { forgeWarn(`no forge art for ${fam} (${slot}); the base piece shows`); continue; }
+    out.push(id);
+  }
+  return out;
+}
+// the ready sheet entry to draw ({ e, lo }), or null (no forge runtime, or nothing composed yet: the caller draws the old hero)
+function forgeHero(p) {
+  if (typeof FORGE === 'undefined') return null;
+  try {
+    const sig = heroSig(p.equip);
+    if (sig !== FH.sig || !FH.lo) {
+      const lo = forgeLoadout(p.equip);
+      if (!lo) { const e0 = FORGE.sheet(FH.rig, []); if (e0.state === 'ready' && !FH.last) FH.last = { e: e0, lo: [] }; return FH.last; }   // loads the rig
+      FH.sig = sig; FH.lo = lo;
+    }
+    const e = FORGE.sheet(FH.rig, FH.lo);
+    if (e.state === 'ready') { if (!FH.last || FH.last.e !== e) FH.last = { e, lo: FH.lo }; }
+    else if (e.state === 'error') { forgeWarn(`loadout ${FH.lo.join(',')} failed (${e.error && e.error.message}); bare base`); FH.lo = []; }
+  } catch (err) { forgeWarn(err.message); FH.lo = []; }
+  return FH.last;
+}
+function heroDir(p) {   // the aim in screen space (iso), quantised to 8
+  const a = p.aim || 0, c = Math.cos(a), s = Math.sin(a);
+  return DIR8[((Math.round(Math.atan2((c + s) * 8, (c - s) * 16) / (Math.PI / 4)) % 8) + 8) % 8];
+}
+// [anim, frame] of this draw (computed once per frame: the shadow pass and drawPlayer share it)
+function heroAnim(p, e) {
+  if (FH.curT === G.t && FH.cur) return FH.cur;
+  const t = G.t, N = a => (e && e.n && e.n[a]) || 1, fi = (a, k) => Math.min(N(a) - 1, Math.max(0, Math.floor(k * N(a))));
+  if (p.castT > FH.castPrev + 1e-4) { FH.castMax = p.castT; FH.castAtk = !(G.lastCast && G.lastCast.t > 0.15 && G.lastCast.slot !== 'lmb'); }   // a new cast: a skill (cast) or the staff's hand attack
+  FH.castPrev = Math.max(0, p.castT || 0);
+  let r;
+  if (p.dead) r = ['hit', 0];
+  else if (p.dash) r = ['dash', Math.floor(t * 14) % N('dash')];
+  else if (p.spin > 0) r = ['attack', Math.floor(t * 24) % N('attack')];
+  else if (p.swing) r = ['attack', fi('attack', p.swing.t / p.swing.dur)];
+  else if (p.castT > 0) { const a = FH.castAtk ? 'attack' : 'cast'; r = [a, fi(a, 1 - p.castT / Math.max(0.01, FH.castMax))]; }
+  else if (p.hurtT > 0.12) r = ['hit', 0];
+  else if (p.moving) r = ['walk', Math.floor((p.walkT || 0) * 10) % N('walk')];
+  else r = ['idle', Math.floor(t * 5) % N('idle')];
+  if (e && e.at && e.at[r[0]] == null) r = ['idle', Math.floor(t * 5) % N('idle')];
+  FH.cur = r; FH.curT = G.t;
+  return r;
+}
+// ===== light-aware rims and shadows (docs/design/lighting-status-fx.md "Layers") ==============================================
+// Both draw before applyLighting ranks this frame's lights, so they read LAST frame's drawn set (LIGHT_VIS, one frame of lag,
+// invisible at 60 fps), placed with this frame's camera from each light's world-screen spot. A body's own lights (L.own) are
+// skipped. Without a local light the sun / moon key light (from the upper right, the side the tree and cliff shadows assume)
+// wins. domLight(vx, vy, self) -> DOM { dx, dy (unit vector body -> light, screen), k 0..1, col, oct (0 E, 1 NE, 2 N ... the
+// FORGE.rim face convention) }.
+const DOM = { dx: 0, dy: 0, k: 0, col: '#ffffff', oct: 1, local: false };
+function domLight(vx, vy, self) {
+  let best = 0, bl = null, bx = 0, by = 0;
+  for (let i = 0; i < LIGHT_VIS.length; i++) {
+    const v = LIGHT_VIS[i], L = v[2]; if (self && L.own === self) continue;
+    const dx = L.sx - camX + RW / 2 - vx, dy = L.sy - camY + RH / 2 - vy, d = Math.hypot(dx, dy);
+    if (d >= L.r * 0.5 || d < 4) continue;
+    const k = clamp(L.a, 0, 1) * (v[3] || 1) * (1 - d / (L.r * 0.5));
+    if (k > best) { best = k; bl = L; bx = dx / d; by = dy / d; }
+  }
+  const mo = G.map && G.map.theme && G.map.theme.moon, sunK = mo && mo.sun ? 0.35 : 0.22;
+  if (best > sunK) { DOM.dx = bx; DOM.dy = by; DOM.k = clamp(best, 0, 1); DOM.col = bl.col; DOM.local = true; }
+  else { DOM.dx = 0.94; DOM.dy = -0.34; DOM.k = sunK; DOM.col = mo && mo.sun ? '#ffe6c0' : '#c8d8ff'; DOM.local = false; }
+  DOM.oct = ((Math.round(Math.atan2(-DOM.dy, DOM.dx) / (Math.PI / 4)) % 8) + 8) % 8;
+  return DOM;
+}
+// the ground shadow: an ellipse pushed away from the dominant light (at most 6 px) and stretched along it; on 'high' the hero (and
+// art bosses) also cast a skewed, squashed silhouette of the drawn frame away from the light.
+const SHADOW_DOM = { dx: 0, dy: 0, k: 0 };
+function lightShadow(ctx, vx, vy, r, self, sil) {
+  const L = domLight(vx, vy - 10, self), off = Math.min(6, 2 + 6 * L.k), ax = -L.dx, ay = -L.dy;
+  SHADOW_DOM.dx = ax; SHADOW_DOM.dy = ay; SHADOW_DOM.k = L.k;
+  const cx = Math.round(vx + ax * off * 0.8), cy = Math.round(vy + ay * off * 0.5);
+  ctx.beginPath(); ctx.ellipse(cx, cy, r * (1 + 0.35 * L.k), r * 0.45, Math.atan2(ay * 0.5, ax) * 0.5, 0, Math.PI * 2); ctx.fill();
+  if (sil && QUALITY.tier === 'high') {   // skewed silhouette: frame px (u, v above the feet) -> feet + v * len * (away vector), squashed
+    const len = 0.35 + 0.35 * L.k, c = -ax * len, d = clamp(-ay * len * 0.5, -0.45, 0.45), dd = Math.abs(d) < 0.12 ? (d < 0 ? -0.12 : 0.12) : d;
+    ctx.save(); ctx.globalAlpha = 0.22 + 0.18 * L.k;
+    ctx.setTransform(1, 0, c, dd, Math.round(vx), Math.round(vy));
+    ctx.drawImage(sil.img, sil.sx, sil.sy, sil.w, sil.h, -sil.ax, -sil.ay, sil.w, sil.h);
+    ctx.restore();
+  }
+}
+// rim light: the 1-bit outer edge of the drawn frame lit on the side facing the dominant light (light vector quantised to 8),
+// tinted with the light's colour, added on top. Forge frames use FORGE.rim (mask + outward-normal octant per pixel); other
+// sprites get the same mask from their alpha once (rimOfImg, cached per canvas). One white rim sprite is cached per (frame, octant)
+// and tinted through a scratch canvas: 3 small blits a rimmed body.
+const RIM = { scratch: null, n: 0, max: 0, ms: 0, sprites: new Map(), imgs: new WeakMap() };
+const RIM_CAP = { high: 12, phone: 4, low: 0 };   // rimmed bodies a frame (phone: the hero, bosses and elites only)
+function rimSprite(r, oct) {   // r = { w, h, mask, face }: a white canvas, full alpha on the facing octant, half on its neighbours
+  const c = makeCanvas(r.w, r.h), id = c.x.createImageData(r.w, r.h), d = id.data;
+  for (let i = 0; i < r.mask.length; i++) {
+    if (!r.mask[i] || r.face[i] > 7) continue;
+    const df = Math.abs(r.face[i] - oct), q = Math.min(df, 8 - df), a = q === 0 ? 255 : q === 1 ? 150 : 0;
+    if (a) { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = 255; d[i * 4 + 3] = a; }
+  }
+  c.x.putImageData(id, 0, 0);
+  return c.c;
+}
+function rimOfImg(img) {   // the FORGE.rim shape for any sprite canvas: edge = drawn px with an empty 8-neighbour
+  let r = RIM.imgs.get(img); if (r) return r;
+  const w = img.width, h = img.height, src = makeCanvas(w, h); src.x.drawImage(img, 0, 0);
+  const a = src.x.getImageData(0, 0, w, h).data, mask = new Uint8Array(w * h), face = new Uint8Array(w * h).fill(8);
+  const on = (x, y) => x >= 0 && y >= 0 && x < w && y < h && a[(y * w + x) * 4 + 3] > 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (!on(x, y)) continue;
+    let nx = 0, ny = 0, edge = false;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && !on(x + dx, y + dy)) { edge = true; nx += dx; ny += dy; }
+    if (!edge) continue;
+    const i = y * w + x; mask[i] = 1; if (nx || ny) face[i] = ((Math.round(Math.atan2(-ny, nx) / (Math.PI / 4)) % 8) + 8) % 8;
+  }
+  r = { w, h, mask, face, spr: [] }; RIM.imgs.set(img, r);
+  return r;
+}
+function rimBegin() { RIM.n = 0; RIM.max = RIM_CAP[QUALITY.tier] != null ? RIM_CAP[QUALITY.tier] : 4; RIM.ms = 0; }
+// draw a rim: spr = white rim canvas (frame-sized), at scene (x, y), tinted with the DOM light. scale = the body's draw scale
+function rimDraw(ctx, spr, x, y, L, w, h) {
+  const S = RIM.scratch || (RIM.scratch = makeCanvas(96, 128)), sw = spr.width, sh = spr.height;
+  if (sw > S.c.width || sh > S.c.height) return;
+  const x2 = S.x; x2.globalCompositeOperation = 'source-over'; x2.globalAlpha = 1; x2.clearRect(0, 0, sw, sh); x2.drawImage(spr, 0, 0);
+  x2.globalCompositeOperation = 'source-in'; x2.fillStyle = mixHex(L.col, '#ffffff', 0.35); x2.fillRect(0, 0, sw, sh); x2.globalCompositeOperation = 'source-over';
+  const so = ctx.globalCompositeOperation, sa = ctx.globalAlpha;
+  ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = sa * clamp(0.25 + L.k * 0.9, 0, 0.85);
+  ctx.drawImage(S.c, 0, 0, sw, sh, x, y, w || sw, h || sh);
+  ctx.globalCompositeOperation = so; ctx.globalAlpha = sa;
+}
+// rim a generic sprite canvas drawn at (x, y) (w, h = its drawn size when scaled); a body counts against the tier cap
+function rimBody(ctx, img, x, y, vx, vy, self, w, h, must) {
+  if (!img || RIM.n >= RIM.max || (!must && QUALITY.tier !== 'high')) return;
+  const t0 = PERF.on ? performance.now() : 0;
+  RIM.n++;
+  const L = domLight(vx, vy, self), r = rimOfImg(img), spr = r.spr[L.oct] || (r.spr[L.oct] = rimSprite(r, L.oct));
+  rimDraw(ctx, spr, x, y, L, w, h);
+  if (PERF.on) { const d = performance.now() - t0; PERF.ph['sub.rim'] = (PERF.ph['sub.rim'] || 0) + d; }
+}
+function forgeRimSprite(H, anim, dir, f, oct) {
+  const k = H.e.key + '|' + anim + '|' + dir + '|' + f + '|' + oct, S = RIM.sprites;
+  let c = S.get(k); if (c) return c;
+  const r = FORGE.rim(FH.rig, H.lo, anim, dir, f); if (!r) return null;
+  c = rimSprite(r, oct);
+  if (S.size >= 320) S.delete(S.keys().next().value);   // LRU-ish: the oldest entry goes
+  S.set(k, c);
+  return c;
+}
+// the forge hero's frame rect this draw: { img, sx, sy, w, h, ax, ay, anim, f, dir }
+function heroFrame(p, H) {
+  const e = H.e, [anim, f] = heroAnim(p, e), dir = heroDir(p), c = e.at[anim] != null ? anim : 'idle', ff = f % (e.n[c] || 1);
+  const F = FH.frame || (FH.frame = {});
+  F.img = e.canvas; F.sx = (e.at[c] + ff) * e.w; F.sy = (e.dirIdx[dir] || 0) * e.h; F.w = e.w; F.h = e.h; F.ax = e.ax; F.ay = e.ay; F.anim = c; F.f = ff; F.dir = dir;
+  return F;
+}
+// the hero's ground shadow (decal pass): light-aware, with the forge frame as the desktop silhouette
+function drawHeroShadow(ctx, p) {
+  const [vx, vy] = worldToView(p.x, p.y, tileH(G.map, p.x, p.y)), H = !OLD_HERO && forgeHero(p);
+  let sil = null;
+  if (H && QUALITY.tier === 'high') { const F = heroFrame(p, H); sil = { img: silOf(F.img, '#140828'), sx: F.sx, sy: F.sy, w: F.w, h: F.h, ax: F.ax, ay: F.ay }; }
+  const t0 = PERF.on ? performance.now() : 0;
+  lightShadow(ctx, vx, vy, 6, p, sil);
+  if (PERF.on) PERF.ph['sub.shadow'] = (PERF.ph['sub.shadow'] || 0) + performance.now() - t0;
+}
 function drawPlayer(ctx, p, lights) {
+  if (!p.spr || !p.spr.hero || p.spr.sig !== heroSig(p.equip)) p.spr = buildPlayerSprites(p.equip);   // portrait, Echo, occluder box
+  const H = !OLD_HERO && forgeHero(p);
+  if (!H) { drawPlayerOld(ctx, p, lights); return; }
+  const [vx, vy] = worldToView(p.x, p.y, p.z), F = heroFrame(p, H), t = G.t;
+  const dx = Math.round(vx) - F.ax, dy = Math.round(vy) - F.ay;
+  if (p.dead) {
+    ctx.globalAlpha = Math.max(0, 1 - G.deadT);
+    ctx.save(); ctx.translate(Math.round(vx), Math.round(vy)); ctx.rotate(Math.PI / 2 * Math.min(1, G.deadT * 2)); ctx.drawImage(F.img, F.sx, F.sy, F.w, F.h, -F.ax, -F.ay, F.w, F.h); ctx.restore(); ctx.globalAlpha = 1; return;
+  }
+  const veil = p.buffs.veil ? 0.4 : 1;
+  ctx.globalAlpha = veil;
+  if (p.spr.top && HERO.rarityFx[p.spr.top].aura) HERO.drawAura(ctx, dx + 12, dy + 17, 26, 34, p.spr.top, t);   // the chibi's body box
+  ctx.drawImage(F.img, F.sx, F.sy, F.w, F.h, dx, dy, F.w, F.h);
+  p._drawn = { img: F.img, sx: F.sx, sy: F.sy, w: F.w, h: F.h, dx, dy, ax: F.ax, ay: F.ay };   // §29 G3 the silhouette redraws this frame; dodge ghosts copy it
+  // rim light (the hero always counts, phone included; off on 'low')
+  if (RIM.max > 0) {
+    const t0 = PERF.on ? performance.now() : 0; RIM.n++;
+    const L = domLight(vx, vy - 14, p), spr = forgeRimSprite(H, F.anim, F.dir, F.f, L.oct);
+    if (spr) rimDraw(ctx, spr, dx, dy, L);
+    if (PERF.on) PERF.ph['sub.rim'] = (PERF.ph['sub.rim'] || 0) + performance.now() - t0;
+  }
+  if (p.hurtT > 0 && Math.floor(p.hurtT * 30) % 2) ctx.drawImage(silOf(F.img, '#ffffff'), F.sx, F.sy, F.w, F.h, dx, dy, F.w, F.h);
+  ctx.globalAlpha = 1;
+  // status layers (status.js): tint + overlay, socket emitters, glyphs, the merged status light
+  const S = FORGE.sockets(FH.rig, H.lo, F.anim, F.dir, F.f) || {};
+  if (typeof STATUS !== 'undefined') STATUS.body(ctx, p, F.img, F.sx, F.sy, F.w, F.h, dx, dy, F.w, F.h, S.head ? [dx + S.head.x, dy + S.head.y] : [vx, vy - 26], S.chest ? [dx + S.chest.x, dy + S.chest.y] : [vx, vy - 12], lights);
+  // lights: the weapon (swing flash, staff tip) and the best piece's rarity light, from the frame's sockets (gear: bloom 0.6)
+  const w = item('weapon', p.gear.weapon), pose = WEAPON_POSE[w.kind] || 'swing', W = (x, y) => [x + camX - RW / 2, y + camY - RH / 2];
+  const hand = S.handR ? [dx + S.handR.x, dy + S.handR.y] : [vx, vy - 12], tip = S.tip ? [dx + S.tip.x, dy + S.tip.y] : hand;
+  if (pose === 'swing' && (p.swing || p.spin > 0)) { const [sx, sy] = W(tip[0], tip[1]); lights.push({ sx, sy, r: 30, col: '#ffe9a0', a: 0.6, own: p, bloom: 0.6 }); }
+  else if (pose === 'cast') { const [sx, sy] = W(tip[0], tip[1]); lights.push({ sx, sy, r: 34 + (p.castT > 0 ? 20 : 0), col: (p.spr.hero && p.spr.hero.weaponLight) || '#7fe6ff', a: 0.85, own: p, bloom: 0.6 }); }
+  else if (p.spr.hero && p.spr.hero.weaponLight) { const [sx, sy] = W((hand[0] + tip[0]) / 2, (hand[1] + tip[1]) / 2); lights.push({ sx, sy, r: 18, col: p.spr.hero.weaponLight, a: 0.55, own: p, bloom: 0.6 }); }
+  drawPlayerFx(ctx, p, vx, vy, lights);
+}
+// the buff / rarity extras both hero paths share (lights, the bulwark ring, motes)
+function drawPlayerFx(ctx, p, vx, vy, lights) {
+  const t = G.t;
+  if (p.spr.top) {
+    const fx = HERO.rarityFx[p.spr.top];
+    if (fx.light >= 40) lights.push({ sx: vx + camX - RW / 2, sy: vy - 16 + camY - RH / 2, r: fx.light * 0.6, col: HERO.rarityColor(p.spr.top, t), a: 0.45, own: p, bloom: 0.6 });
+    if (fx.rate && (p.spr.fxT || 0) !== t) {                                       // ember / mote / star particles through the game's own budgeted system
+      const dt = Math.min(0.05, t - (p.spr.fxT || t)); p.spr.fxT = t; p.spr.fxAcc = (p.spr.fxAcc || 0) + fx.rate * dt * 0.5;
+      while (p.spr.fxAcc >= 1) {
+        p.spr.fxAcc -= 1; const up = fx.kind === 'ember' || fx.kind === 'star', col = fx.kind === 'ember' ? pick2(['#ffd070', '#ffa020', '#ff6a18']) : HERO.rarityColor(p.spr.top, frand(0, 9));
+        addPart({ x: p.x + frand(-0.35, 0.35), y: p.y + frand(-0.35, 0.35), z: p.z + frand(0.4, 4.6), vx: 0, vy: 0, vz: up ? frand(0.8, 2.2) : fx.kind === 'mote' ? -frand(0.2, 0.8) : 0, life: frand(0.6, 1.2), t: 0, col, grav: 0, size: 1, glow: true });
+      }
+    }
+  }
+  if (p.buffs.bulwark) {
+    ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(190,215,255,${0.5 + Math.sin(G.t * 10) * 0.2})`;
+    ctx.beginPath(); ctx.ellipse(vx, vy - 16, 15, 19, 0, 0, Math.PI * 2); ctx.stroke(); ctx.globalCompositeOperation = 'source-over';
+    lights.push({ sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 16, r: 40, col: '#bfd6ff', a: 0.6, own: p, bloom: 0.4 });
+  }
+  if (p.buffs.bless || p.buffs.surge) {
+    if (Math.random() < 0.5) addPart({ x: p.x + frand(-0.3, 0.3), y: p.y + frand(-0.3, 0.3), z: p.z, vx: 0, vy: 0, vz: frand(2, 3), life: 0.6, t: 0, col: p.buffs.bless ? '#ffe9a0' : '#c7a8ff', grav: 0, size: 1, glow: true });
+  }
+  if (p.buffs.mend && Math.random() < 0.3) addPart({ x: p.x + frand(-0.3, 0.3), y: p.y + frand(-0.3, 0.3), z: p.z + 1, vx: 0, vy: 0, vz: 1.5, life: 0.7, t: 0, col: '#8fffa8', grav: 0, size: 1, glow: true });
+}
+// ?oldhero (and boot, before the first forge sheet is ready): the M3 layered hero (hero.js)
+function drawPlayerOld(ctx, p, lights) {
   const [vx, vy] = worldToView(p.x, p.y, p.z);
   if (!p.spr || !p.spr.hero || p.spr.sig !== heroSig(p.equip)) p.spr = buildPlayerSprites(p.equip);
   if (p.dead) {
@@ -1178,29 +1522,10 @@ function drawPlayer(ctx, p, lights) {
   ctx.globalAlpha = 1;
   // lights: the weapon (swing flash, staff tip, a steady glow for T4+ weapons) and the best piece's rarity light
   const wlen = H.weapon ? H.weaponGrip.y - H.weaponTip.y : 0, tipx = hx + Math.cos(ang) * wlen, tipy = hy + Math.sin(ang) * wlen;
-  if (pose === 'swing' && (p.swing || p.spin > 0)) lights.push({ sx: hx + Math.cos(ang) * 10 + camX - RW / 2, sy: hy + Math.sin(ang) * 10 + camY - RH / 2, r: 30, col: '#ffe9a0', a: 0.6 });
-  else if (pose === 'cast') lights.push({ sx: tipx + camX - RW / 2, sy: tipy + camY - RH / 2, r: 34 + (p.castT > 0 ? 20 : 0), col: H.weaponLight || '#7fe6ff', a: 0.85 });
-  else if (H.weaponLight) lights.push({ sx: (hx + tipx) / 2 + camX - RW / 2, sy: (hy + tipy) / 2 + camY - RH / 2, r: 18, col: H.weaponLight, a: 0.55 });
-  if (p.spr.top) {
-    const fx = HERO.rarityFx[p.spr.top];
-    if (fx.light >= 40) lights.push({ sx: vx + camX - RW / 2, sy: vy - 16 + camY - RH / 2, r: fx.light * 0.6, col: HERO.rarityColor(p.spr.top, t), a: 0.45 });
-    if (fx.rate && (p.spr.fxT || 0) !== t) {                                       // ember / mote / star particles through the game's own budgeted system
-      const dt = Math.min(0.05, t - (p.spr.fxT || t)); p.spr.fxT = t; p.spr.fxAcc = (p.spr.fxAcc || 0) + fx.rate * dt * 0.5;
-      while (p.spr.fxAcc >= 1) {
-        p.spr.fxAcc -= 1; const up = fx.kind === 'ember' || fx.kind === 'star', col = fx.kind === 'ember' ? pick2(['#ffd070', '#ffa020', '#ff6a18']) : HERO.rarityColor(p.spr.top, frand(0, 9));
-        addPart({ x: p.x + frand(-0.35, 0.35), y: p.y + frand(-0.35, 0.35), z: p.z + frand(0.4, 4.6), vx: 0, vy: 0, vz: up ? frand(0.8, 2.2) : fx.kind === 'mote' ? -frand(0.2, 0.8) : 0, life: frand(0.6, 1.2), t: 0, col, grav: 0, size: 1, glow: true });
-      }
-    }
-  }
-  if (p.buffs.bulwark) {
-    ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(190,215,255,${0.5 + Math.sin(G.t * 10) * 0.2})`;
-    ctx.beginPath(); ctx.ellipse(vx, vy - 16, 15, 19, 0, 0, Math.PI * 2); ctx.stroke(); ctx.globalCompositeOperation = 'source-over';
-    lights.push({ sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 16, r: 40, col: '#bfd6ff', a: 0.6 });
-  }
-  if (p.buffs.bless || p.buffs.surge) {
-    if (Math.random() < 0.5) addPart({ x: p.x + frand(-0.3, 0.3), y: p.y + frand(-0.3, 0.3), z: p.z, vx: 0, vy: 0, vz: frand(2, 3), life: 0.6, t: 0, col: p.buffs.bless ? '#ffe9a0' : '#c7a8ff', grav: 0, size: 1, glow: true });
-  }
-  if (p.buffs.mend && Math.random() < 0.3) addPart({ x: p.x + frand(-0.3, 0.3), y: p.y + frand(-0.3, 0.3), z: p.z + 1, vx: 0, vy: 0, vz: 1.5, life: 0.7, t: 0, col: '#8fffa8', grav: 0, size: 1, glow: true });
+  if (pose === 'swing' && (p.swing || p.spin > 0)) lights.push({ sx: hx + Math.cos(ang) * 10 + camX - RW / 2, sy: hy + Math.sin(ang) * 10 + camY - RH / 2, r: 30, col: '#ffe9a0', a: 0.6, own: p, bloom: 0.6 });
+  else if (pose === 'cast') lights.push({ sx: tipx + camX - RW / 2, sy: tipy + camY - RH / 2, r: 34 + (p.castT > 0 ? 20 : 0), col: H.weaponLight || '#7fe6ff', a: 0.85, own: p, bloom: 0.6 });
+  else if (H.weaponLight) lights.push({ sx: (hx + tipx) / 2 + camX - RW / 2, sy: (hy + tipy) / 2 + camY - RH / 2, r: 18, col: H.weaponLight, a: 0.55, own: p, bloom: 0.6 });
+  drawPlayerFx(ctx, p, vx, vy, lights);
 }
 
 const LEGACY_ENEMY_K = 1.5;
@@ -1211,8 +1536,11 @@ function drawEnemy(ctx, e, lights) {
   let vy = vy0;
   const spawnA = e.spawnT > 0 ? 1 - e.spawnT / (e.boss ? 1.6 : 0.9) : 1;
   if (spawnA <= 0.05) return;
+  const fRig = forgeEnemyRig(e), fs = fRig && forgeEnemySheet(fRig);   // M4a: the forge path (see drawEnemyForge)
+  if (fs) { drawEnemyForge(ctx, e, fRig, fs, vx, vy, spawnA, lights); return; }
+  if (fRig && !OLD_ENEMY && FEN.old++ === 0) FEN.oldFirst = { type: e.type, map: G.map && G.map.id, t: +G.t.toFixed(2) };   // a forge enemy on its old sprite (sheet not ready): the pre-warm probe
   const artKey = enemyArtKey(e);
-  if (artKey) { drawEnemyArt(ctx, e, artKey, vx, vy, spawnA); return; }
+  if (artKey) { drawEnemyArt(ctx, e, artKey, vx, vy, spawnA, lights); return; }
   if (e.under) { drawBurrowed(ctx, e, vx, vy); return; }
   if (e.mimic) { const ci = ART.chest; ctx.drawImage(hitF(e) ? silOf(ci, '#ffffff') : ci, Math.round(vx - ci.width / 2), Math.round(vy - ci.height + 1)); return; }
   ctx.globalAlpha = spawnA * (e.fadeT > 0 ? 0.35 : 1);
@@ -1245,42 +1573,240 @@ function drawEnemy(ctx, e, lights) {
     const wind = e.state === 'wind' ? Math.sin(e.anim * 40) * 0.08 + 0.15 : 0;
     const sq = (e.squash > 0 ? e.squash : 0) + wind - hop * 0.12;
     img = hitF(e) ? ART.slime.w : ART.slime.n;
-    ctx.drawImage(img, Math.round(vx - img.width * (1 + sq) / 2), Math.round(vy - img.height * (1 - sq) - hop * 5), Math.round(img.width * (1 + sq)), Math.round(img.height * (1 - sq)));
+    dr = [Math.round(vx - img.width * (1 + sq) / 2), Math.round(vy - img.height * (1 - sq) - hop * 5), Math.round(img.width * (1 + sq)), Math.round(img.height * (1 - sq))];
+    ctx.drawImage(img, dr[0], dr[1], dr[2], dr[3]);
   } else if (lk === 'hound') {
     const f = Math.floor(e.anim * (e.state === 'lunge' ? 16 : 8)) % 2;
     img = hitF(e) ? (e.face < 0 ? ART.hound.wf : ART.hound.w) : (e.face < 0 ? ART.hound.f[f] : ART.hound.n[f]);
     ctx.drawImage(img, Math.round(vx - img.width / 2), Math.round(vy - img.height));
-    lights.push({ sx: vx + camX - RW / 2 + e.face * 5, sy: vy + camY - RH / 2 - 8, r: 14, col: '#ff6b9a', a: 0.7 });
+    lights.push({ sx: vx + camX - RW / 2 + e.face * 5, sy: vy + camY - RH / 2 - 8, r: 14, col: '#ff6b9a', a: 0.7, own: e });
   } else if (lk === 'wisp') {
     vy -= 14 + Math.sin(e.anim * 3) * 3;
     const charge = e.state === 'wind' ? 1 + Math.sin(e.anim * 30) * 0.3 : 0;
     for (let k = 0; k < 4; k++) { ctx.fillStyle = rgba('#7fd6ff', 0.5 - k * 0.1); ctx.fillRect(Math.round(vx - 1 + Math.sin(e.anim * 5 + k) * 1.5), Math.round(vy + 3 + k * 2), 2, 2); }
     glowDot(ctx, vx, vy, hitF(e) ? '#ffffff' : '#7fd6ff', '#f0feff', 2 + Math.round(charge));
     ctx.fillStyle = '#1a1326'; ctx.fillRect(Math.round(vx - 2), Math.round(vy - 1), 1, 2); ctx.fillRect(Math.round(vx + 1), Math.round(vy - 1), 1, 2);
-    lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: 36 + charge * 20, col: '#7fd6ff', a: 0.9 });
+    lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: 36 + charge * 20, col: '#7fd6ff', a: 0.9, own: e });
   } else if (lk === 'boss') {
     const B = ART.boss;
     img = hitF(e) ? (e.face < 0 ? B.wf : B.w) : (e.face < 0 ? B.f : B.n);
     ctx.drawImage(img, Math.round(vx - img.width / 2), Math.round(vy - img.height + 2));
     const glow = e.state !== 'chase' ? 1 : 0.6;
-    lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2 - 40, r: 60, col: '#ff7ae0', a: glow });
-    lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2 - 26, r: 40, col: '#c78bff', a: 0.8 });
+    lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2 - 40, r: 60, col: '#ff7ae0', a: glow, own: e });
+    lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2 - 26, r: 40, col: '#c78bff', a: 0.8, own: e });
     if (Math.random() < 0.5) addPart({ x: e.x + frand(-0.7, 0.7), y: e.y + frand(-0.7, 0.7), z: 0.3, vx: 0, vy: 0, vz: frand(0.5, 1.5), life: 1, t: 0, col: pick2(['#2a1c38', '#5f4690', '#ff7ae0']), grav: 0, size: 2, glow: false });
   } else if (lk === 'dummy') {
     img = ART.dummy;
     const wob = hitF(e) ? Math.round(Math.sin(G.t * 60) * 1) : 0;
     ctx.drawImage(hitF(e) ? silOf(img, '#ffffff') : img, Math.round(vx - img.width / 2 + wob), Math.round(vy - img.height + 1));
   }
-  if (e.frozen && img) {
-    ctx.globalAlpha = 0.5 * spawnA;
-    if (dr) ctx.drawImage(silOf(img, '#bff4ff'), dr[0], dr[1], dr[2], dr[3]); else ctx.drawImage(silOf(img, '#bff4ff'), Math.round(vx - img.width / 2), Math.round(vy - img.height));
-  }
+  // M4a: rim light + status layers (status.js: the frozen tint moved there, with the other statuses)
+  if (img) {
+    const r = dr || [Math.round(vx - img.width / 2), Math.round(vy - img.height), img.width, img.height];
+    rimBody(ctx, img, r[0], r[1], vx, vy - 10, e, r[2], r[3], e.boss || e.elite);
+    if (typeof STATUS !== 'undefined') { ctx.globalAlpha = spawnA; STATUS.body(ctx, e, img, 0, 0, img.width, img.height, r[0], r[1], r[2], r[3], null, null, lights); }
+  } else if (typeof STATUS !== 'undefined') STATUS.body(ctx, e, null, 0, 0, 0, 0, Math.round(vx - 8), Math.round(vy - 16), 16, 16, null, null, lights);
   if (scaled) ctx.restore();
   if (e.asleep && Math.random() < 0.03) text(e.x, e.y, e.z + e.hgt + 0.3, 'z', '#c8c0e0', false, 1.2);
   if (e.eShield > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = rgba('#cfe6ff', 0.4 + 0.4 * e.eShield / e.eShieldMax); projRing(ctx, e.x, e.y, 0.2, e.r + 0.45); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
   ctx.globalAlpha = 1;
   if (e.stunT > 0 && !e.frozen) for (let k = 0; k < 3; k++) { const a = G.t * 6 + k * 2.1; ctx.fillStyle = '#ffe36a'; ctx.fillRect(Math.round(vx + Math.cos(a) * 6), Math.round(vy - e.hgt * ZS - 4 + Math.sin(a) * 2), 1, 1); }
   // nameplates (bar, icons, statuses) are drawn by hud.js drawNameplates on the 2x grid
+}
+
+// ===== M4a forge enemies (tools/forge/models/<rig>.js; banks js/forge-bank/<rig>.js, built by tools/forge/build.js enemies) ===
+// The Bramble Shaman, Ogre, Mountain Troll and Shade Hound draw from their forge sheet: FORGE.sheet(rig, []) (gearless, composed
+// once over 3 frames, then held here: FEN.last keeps the canvas even after forge-rt's 6-sheet cache drops it). rig = the row's
+// art || its type, so the Gnarlroot Brute wears the troll. No legacy scale: the forge frames are drawn 1:1.
+// Facing: 8 true directions, in screen space like the hero's: the attack's aim (e.aimA) while a brute / charge winds, strikes
+// and recovers; the hero for an aimless cast and a stagger; the move direction while it chases or flees; the hero when it
+// stands in reach; held while hit or asleep (a 0.05 rad hysteresis keeps a walk along an octant edge from flickering; a
+// world axis lands 4 deg past one, so it must stay below that).
+// Anims from the part state: hit (flash / hitlag) · sleep · heal (healer wind-up) · attack: wind = f0-1, the action state
+// (brute strike, charge lunge) = f2-3, rec = f4-5 (a cast with no action state recovers over f2-5), each spread over its REAL
+// duration (e.windMax, P.strike / P.dur, P.rec) · walk (moved within 0.15 s, fleeing) · idle. Death: drawCorpse plays the 3
+// death frames over the corpse's flight. Until a sheet is ready (first sight: the bank loads, the sheet composes) the old
+// sprite draws; ?oldenemy keeps the old path everywhere.
+const OLD_ENEMY = (() => { try { return new URLSearchParams(location.search).has('oldenemy'); } catch (e) { return false; } })();
+const FORGE_ENEMIES = new Set(['brambleshaman', 'ogre', 'mountaintroll', 'shadehound']);
+const FEN = { old: 0, oldFirst: null, last: {}, maps: {}, sock: new Map(), cells: new Map(), warned: new Set(), shadowR: { brambleshaman: 7, ogre: 10, mountaintroll: 11, shadehound: 8 }, eye: { shadehound: '#ff6b9a' } };
+const OCT = Math.PI / 4;
+function forgeEnemyRig(e) {
+  if (OLD_ENEMY || typeof FORGE === 'undefined' || !e) return null;
+  const def = ENEMY[e.type] || {}, k = def.art || e.type;
+  return FORGE_ENEMIES.has(k) ? k : null;
+}
+function forgeEnemySheet(rig) {   // the ready sheet entry, or null (still loading / composing, or failed: the caller draws the old sprite)
+  if (FEN.last[rig]) return FEN.last[rig];
+  try {
+    const s = FORGE.sheet(rig, []);
+    if (s.state === 'ready') { forgeEnemyBoxes(s); FEN.last[rig] = s; }
+    else if (s.promise && !s.fenHook) { s.fenHook = true; s.promise.then(() => { if (!FEN.last[rig]) { forgeEnemyBoxes(s); FEN.last[rig] = s; } }, () => {}); }   // held even if forge-rt's cache drops it first
+    else if (s.state === 'error' && !FEN.warned.has(rig)) { FEN.warned.add(rig); try { console.warn('forge enemy: ' + rig + ' failed (' + (s.error && s.error.message) + '); old sprite'); } catch (err) { /* no console */ } }
+  } catch (err) { /* no runtime */ }
+  return FEN.last[rig] || null;
+}
+// pre-warm (main.js transition / enterMap): load the banks and compose the sheets of the forge rigs a zone spawns, behind the
+// rift fade, so the first fight neither shows the old sprite nor pays the compose. The zone's rigs: every enemy type named in its
+// map record (spawn objects, triggers) or its encounter packs (enemydata.js ENCOUNTERS), through the row's art. A rig that is
+// not ready by first sight still draws the old sprite. -> the rigs started
+function forgeEnemyPrewarm(mapId) {
+  if (OLD_ENEMY || typeof FORGE === 'undefined' || typeof G === 'undefined' || !G.world || !G.world.maps[mapId]) return [];
+  let txt = FEN.maps[mapId];
+  if (txt == null) {
+    try { txt = JSON.stringify(G.world.maps[mapId]) + (typeof ENCOUNTERS !== 'undefined' && ENCOUNTERS[mapId] ? JSON.stringify(ENCOUNTERS[mapId]) : ''); } catch (err) { txt = ''; }
+    FEN.maps[mapId] = txt;
+  }
+  const rigs = new Set();
+  for (const t in ENEMY) { const r = forgeEnemyRig({ type: t }); if (r && !rigs.has(r) && txt.indexOf('"' + t + '"') >= 0) rigs.add(r); }
+  for (const r of rigs) forgeEnemySheet(r);
+  return [...rigs];
+}
+function forgeEnemySockets(rig, anim, dir, f) {
+  const k = rig + '|' + anim + '|' + dir + '|' + f;
+  let S = FEN.sock.get(k);
+  if (!S) { S = FORGE.sockets(rig, [], anim, dir, f); if (!S) return {}; FEN.sock.set(k, S); }
+  return S;
+}
+function forgeEnemyRim(rig, anim, dir, f, oct) {   // the rim sprite per light octant lives on forge-rt's cached rim shape (freed with its sheet): no LRU churn
+  const r = FORGE.rim(rig, [], anim, dir, f); if (!r) return null;
+  const S = r.spr || (r.spr = []);
+  return S[oct] || (S[oct] = rimSprite(r, oct));
+}
+// draw one rim sprite: as rimDraw, but the light-tinted copy is cached on the sprite (a few light colours each) instead of redrawn
+// through RIM.scratch; reusing that one scratch per body made every forge enemy flush the queued scene draws (6 bodies: ~5 ms at x4)
+function forgeEnemyRimDraw(ctx, spr, x, y, L) {
+  const col = mixHex(L.col, '#ffffff', 0.35), T = spr.tints || (spr.tints = new Map());
+  let c = T.get(col);
+  if (!c) {
+    const m = makeCanvas(spr.width, spr.height); m.x.drawImage(spr, 0, 0);
+    m.x.globalCompositeOperation = 'source-in'; m.x.fillStyle = col; m.x.fillRect(0, 0, spr.width, spr.height);
+    if (T.size >= 4) T.delete(T.keys().next().value);
+    T.set(col, c = m.c);
+  }
+  const so = ctx.globalCompositeOperation, sa = ctx.globalAlpha;
+  ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = sa * clamp(0.25 + L.k * 0.9, 0, 0.85);
+  ctx.drawImage(c, x, y);
+  ctx.globalCompositeOperation = so; ctx.globalAlpha = sa;
+}
+// the opaque box [x, y, w, h] (cell px) of every frame of a sheet, scanned once from its pixels when the sheet is first held (the
+// pre-warm: behind the rift fade; one readback and ~1 M alpha tests a rig). A forge cell is 20-32 % body (80 x 88 for a ~25 x 45
+// px brute): status.js tints, caches and blits only the box. -> Int16Array, 4 per (row, column); a frame with no pixel: the cell
+function forgeEnemyBoxes(s) {
+  if (s.fenBox) return s.fenBox;
+  const c = s.canvas, W = c.width, w = s.w, h = s.h, cols = s.cols, rows = s.rows, B = s.fenBox = new Int16Array(cols * rows * 4);
+  let d = null; try { d = c.getContext('2d').getImageData(0, 0, W, c.height).data; } catch (err) { /* tainted or no 2d context: whole cells */ }
+  for (let r = 0; r < rows; r++) for (let q = 0; q < cols; q++) {
+    let x0 = w, y0 = h, x1 = -1, y1 = -1;
+    if (d) for (let y = 0; y < h; y++) for (let x = 0, i = ((r * h + y) * W + q * w) * 4 + 3; x < w; x++, i += 4) if (d[i]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; y1 = y; }
+    const o = (r * cols + q) * 4;
+    if (x1 < 0) { B[o] = 0; B[o + 1] = 0; B[o + 2] = w; B[o + 3] = h; } else { B[o] = x0; B[o + 1] = y0; B[o + 2] = x1 - x0 + 1; B[o + 3] = y1 - y0 + 1; }
+  }
+  return B;
+}
+// one frame of a sheet as its own canvas: every forge enemy draw (body, flash, silhouettes, shadow, status tint) reads the cell, not
+// the sheet. 4 rigs of ~5 MB sheets, plus their whole-sheet silhouettes (hit flash, wind, shadow), were too many big textures a
+// frame: the per-frame texture thrash cost ~1.3 ms at CPU x4 on phone (charged to the hero's rim, the next flush). Cells also
+// give status.js's tint cache stable per-frame sources.
+function forgeEnemyCell(k, img, sx, sy, w, h) {
+  let c = FEN.cells.get(k); if (c) return c;
+  const C = makeCanvas(w, h); C.x.drawImage(img, sx, sy, w, h, 0, 0, w, h); c = C.c;
+  if (FEN.cells.size >= 768) FEN.cells.delete(FEN.cells.keys().next().value);   // 4 rigs x 22-24 columns x 8 dirs: ~730
+  FEN.cells.set(k, c);
+  return c;
+}
+// face the world angle a (radians): its screen-space octant, with hysteresis
+function forgeEnemyFace(e, a) {
+  const c = Math.cos(a), s = Math.sin(a), th = Math.atan2((c + s) * 8, (c - s) * 16);
+  if (e.fDirI != null) { let d = Math.abs(th - e.fDirI * OCT) % (Math.PI * 2); if (d > Math.PI) d = Math.PI * 2 - d; if (d < OCT / 2 + 0.05) return; }
+  e.fDirI = ((Math.round(th / OCT) % 8) + 8) % 8;
+}
+function forgeEnemyAnim(e, s, moving) {
+  const N = a => s.n[a] || 1, has = a => s.at[a] != null;
+  const prog = (f0, f1, k) => ['attack', Math.min(f1, f0 + Math.floor(clamp(k, 0, 0.999) * (f1 - f0 + 1)))];
+  if (hitF(e)) return ['hit', 0];
+  if (e.asleep) return has('sleep') ? ['sleep', Math.floor(e.anim * 1.5) % N('sleep')] : ['idle', 0];
+  const st = e.state, P = (e.act && e.pp && e.pp[e.act]) || {};
+  if (st === 'wind') return e.act === 'healer' && has('heal') ? ['heal', 0] : prog(0, 1, 1 - e.st / Math.max(0.05, e.windMax || 0.6));
+  if (st === 'rec') {
+    const k = 1 - e.st / Math.max(0.05, P.rec != null ? P.rec : 0.4);
+    if (e.stunT > 0 || e.fRec === 'stun') return ['hit', 0];   // a stagger / poise break (rec + stunT, from any state)
+    return e.fRec === 'cast' ? prog(2, 5, k) : prog(4, 5, k);   // a cast with no action state recovers over f2-5, else f4-5
+  }
+  if (st !== 'chase' && st !== 'flee') return prog(2, 3, 1 - e.st / Math.max(0.05, st === 'strike' ? P.strike || 0.15 : st === 'lunge' ? P.dur || 0.3 : 0.3));
+  if (moving || st === 'flee') return ['walk', Math.floor(e.anim * 10) % N('walk')];
+  return ['idle', Math.floor(e.anim * 5) % N('idle')];
+}
+function drawEnemyForge(ctx, e, rig, s, vx, vy, spawnA, lights) {
+  const t0 = PERF.on ? performance.now() : 0;
+  // motion, facing, the state the rec came from
+  const mx = e.fmx == null ? 0 : e.x - e.fmx, my = e.fmy == null ? 0 : e.y - e.fmy, roam = e.state === 'chase' || e.state === 'flee';
+  const moved = roam && Math.hypot(mx, my) > 0.003;
+  e.fmx = e.x; e.fmy = e.y;
+  if (moved) e.fMoveT = G.t;
+  const moving = e.fMoveT != null && G.t - e.fMoveT < 0.15 && G.t >= e.fMoveT;
+  if (e.state === 'rec' && e.fPrev !== 'rec') e.fRec = e.fPrev === 'wind' ? 'cast' : e.fPrev === 'chase' || e.fPrev === 'flee' ? 'stun' : 'act';
+  e.fPrev = e.state;
+  const p = G.player;
+  if (!hitF(e) && !e.asleep) {
+    if (!roam && e.aimA != null && (e.act === 'brute' || e.act === 'charge') && !(e.state === 'rec' && e.fRec === 'stun')) forgeEnemyFace(e, e.aimA);
+    else if (!roam && p) forgeEnemyFace(e, Math.atan2(p.y - e.y, p.x - e.x));
+    else if (moved) forgeEnemyFace(e, Math.atan2(my, mx));
+    else if (!moving && p) forgeEnemyFace(e, Math.atan2(p.y - e.y, p.x - e.x));
+  }
+  if (e.fDirI == null) e.fDirI = e.face < 0 ? 3 : 1;   // SW / SE until it first moves
+  const dir = DIR8[e.fDirI], [a0, f0] = forgeEnemyAnim(e, s, moving), anim = s.at[a0] != null ? a0 : 'idle', f = anim === a0 ? f0 % (s.n[anim] || 1) : 0;
+  const cx = Math.round(vx) - s.ax, cy = Math.round(vy) - s.ay, S = forgeEnemySockets(rig, anim, dir, f);
+  const w = s.w, h = s.h, sx = 0, sy = 0, dx = cx, dy = cy;
+  const col = s.at[anim] + f, row = s.dirIdx[dir] || 0, img = forgeEnemyCell(rig + '|' + anim + '|' + dir + '|' + f, s.canvas, col * w, row * h, w, h);
+  if (!e.fHgt && S.head) { e.fHgt = true; e.hgt = Math.max(e.hgt || 0, (s.ay - S.head.y) / ZS * 0.95); }   // nameplate / text height
+  const A = spawnA * (e.fadeT > 0 ? 0.35 : 1);
+  ctx.globalAlpha = A;
+  const ecol = e.elite ? ((e.mods || [])[0] && ELITE_MODS[e.mods[0]] ? ELITE_MODS[e.mods[0]].col : '#ffd35a') : null;
+  if (ecol) {   // elite: a pulsing glow ring of the silhouette (as ENEMY_ART's aura), the floor ring, then the body tinted
+    const g = silOf(img, ecol); ctx.globalAlpha = A * (0.35 + 0.2 * Math.sin(G.t * 4));
+    for (let k = 0; k < 8; k++) ctx.drawImage(g, sx, sy, w, h, dx + Math.round(Math.cos(k * OCT) * 2), dy + Math.round(Math.sin(k * OCT) * 2), w, h);
+    ctx.globalAlpha = A; drawEliteAura(ctx, e);
+  }
+  ctx.drawImage(hitF(e) ? silOf(img, '#ffffff') : img, sx, sy, w, h, dx, dy, w, h);
+  if (ecol) { ctx.globalAlpha = A * 0.3; ctx.drawImage(silOf(img, ecol), sx, sy, w, h, dx, dy, w, h); ctx.globalAlpha = A; }
+  if (e.state === 'wind' && !e.boss && e.act === 'brute') { ctx.globalAlpha = A * (0.2 + 0.2 * Math.sin(e.anim * 30)); ctx.drawImage(silOf(img, '#ff5040'), sx, sy, w, h, dx, dy, w, h); ctx.globalAlpha = A; }
+  // rim light (phone: bosses and elites only; counts against the tier cap)
+  if (RIM.n < RIM.max && (QUALITY.tier === 'high' || e.boss || e.elite)) {
+    const r0 = PERF.on ? performance.now() : 0; RIM.n++;
+    const L = domLight(vx, vy - 10, e), spr = forgeEnemyRim(rig, anim, dir, f, L.oct);
+    if (spr) forgeEnemyRimDraw(ctx, spr, cx, cy, L);
+    if (PERF.on) PERF.ph['sub.rim'] = (PERF.ph['sub.rim'] || 0) + performance.now() - r0;
+  }
+  // status layers (status.js): tint + overlay, socket emitters, glyphs, the merged status light
+  const head = S.head ? [cx + S.head.x, cy + S.head.y] : [vx, dy + 6], chest = S.chest ? [cx + S.chest.x, cy + S.chest.y] : [vx, vy - 12];
+  if (typeof STATUS !== 'undefined') {
+    ctx.globalAlpha = A;
+    const BX = forgeEnemyBoxes(s), o = (row * s.cols + col) * 4, bx = BX[o], by = BX[o + 1], bw = BX[o + 2], bh = BX[o + 3];   // the tint covers the body's box only
+    STATUS.body(ctx, e, img, bx, by, bw, bh, dx + bx, dy + by, bw, bh, head, chest, lights);
+  }
+  if (FEN.eye[rig]) lights.push({ sx: head[0] + camX - RW / 2, sy: head[1] + 3 + camY - RH / 2, r: 14, col: FEN.eye[rig], a: 0.7, own: e });   // the hound's glowing eyes
+  ctx.globalAlpha = 1;
+  if (e.asleep && Math.random() < 0.03) text(e.x, e.y, e.z + e.hgt + 0.3, 'z', '#c8c0e0', false, 1.2);
+  if (e.eShield > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = rgba('#cfe6ff', 0.4 + 0.4 * e.eShield / e.eShieldMax); projRing(ctx, e.x, e.y, 0.2, e.r + 0.45); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
+  if (e.stunT > 0 && !e.frozen) for (let k = 0; k < 3; k++) { const a = G.t * 6 + k * 2.1; ctx.fillStyle = '#ffe36a'; ctx.fillRect(Math.round(head[0] + Math.cos(a) * 6), Math.round(head[1] - 4 + Math.sin(a) * 2), 1, 1); }
+  const R = e.fRect || (e.fRect = {}); R.img = img; R.sx = sx; R.sy = sy; R.w = w; R.h = h; R.ax = s.ax; R.ay = s.ay;   // the shadow pass (next frame)
+  e.fDrawn = G.t; e.fCur = anim + f + dir;   // tools/play.js: when this enemy last took the forge path, and what it drew
+  if (PERF.on) PERF.ph['sub.fenemy'] = (PERF.ph['sub.fenemy'] || 0) + performance.now() - t0;
+}
+// the skewed silhouette shadow of a forge enemy on 'high' (as the hero's, lightShadow): last frame's drawn box (the decal pass
+// runs before the bodies draw: one frame of lag, like the light ranking), or null (the ellipse alone)
+function enemyShadowSil(e) {
+  const R = e.fRect; if (!R || QUALITY.tier !== 'high' || OLD_ENEMY || G.t - e.fDrawn > 0.1) return null;
+  const S = e.fSil || (e.fSil = {}); S.img = silOf(R.img, '#140828'); S.sx = R.sx; S.sy = R.sy; S.w = R.w; S.h = R.h; S.ax = R.ax; S.ay = R.ay;
+  return S;
+}
+// the ground shadow's radius (the decal pass): bosses, wisps, the forge bodies by size, else the old 7 px
+function enemyShadowR(e) {
+  if (e.boss) return 18;
+  if (e.type === 'wisp') return 4;
+  const r = forgeEnemyRig(e);
+  return r && FEN.last[r] ? FEN.shadowR[r] : 7;
 }
 
 // ===== ENEMY_ART (js/enemyart.js, procedural 12+ frame sets): the primary enemy sprite source =====================
@@ -1315,7 +1841,7 @@ function enemyArtAnim(e, key) {
   const moving = e.lmx != null && Math.hypot(e.x - e.lmx, e.y - e.lmy) > 0.002;
   return moving ? ['walk', f8] : ['idle', f3];
 }
-function drawEnemyArt(ctx, e, key, vx, vy, spawnA) {
+function drawEnemyArt(ctx, e, key, vx, vy, spawnA, lights) {
   const info = ENEMY_ART.info[key];
   if (!e.artHgt) { e.artHgt = true; e.hgt = Math.max(e.hgt || 0, info.ay / ZS * 0.95); }
   const [anim, frame] = enemyArtAnim(e, key);
@@ -1334,7 +1860,9 @@ function drawEnemyArt(ctx, e, key, vx, vy, spawnA) {
   }
   ctx.drawImage(hitF(e) ? silOf(img, '#ffffff') : img, x, y);
   if (e.state === 'wind' && !e.boss && e.act === 'brute') { ctx.globalAlpha = spawnA * (0.2 + 0.2 * Math.sin(e.anim * 30)); ctx.drawImage(silOf(img, '#ff5040'), x, y); }
-  if (e.frozen) { ctx.globalAlpha = 0.5 * spawnA; ctx.drawImage(silOf(img, '#bff4ff'), x, y); }
+  ctx.globalAlpha = spawnA * (e.fadeT > 0 ? 0.35 : 1);
+  rimBody(ctx, img, x, y, vx, vy - 10, e, 0, 0, e.boss || e.elite);   // M4a rim light (phone: bosses and elites only)
+  if (typeof STATUS !== 'undefined') STATUS.body(ctx, e, img, 0, 0, img.width, img.height, x, y, img.width, img.height, null, null, lights);   // the frozen tint lives here now
   ctx.globalAlpha = 1;
   if (e.eShield > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = rgba('#cfe6ff', 0.4 + 0.4 * e.eShield / e.eShieldMax); projRing(ctx, e.x, e.y, 0.2, e.r + 0.45); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
   if (e.stunT > 0 && !e.frozen) for (let k = 0; k < 3; k++) { const a = G.t * 6 + k * 2.1; ctx.fillStyle = '#ffe36a'; ctx.fillRect(Math.round(vx + Math.cos(a) * 6), Math.round(y - 4 + Math.sin(a) * 2), 1, 1); }
@@ -1499,7 +2027,7 @@ function drawParticles(ctx, lights) {
       const a = (0.5 + 0.5 * Math.sin(G.t * 3 + f.ph)) * fade;
       ctx.fillStyle = rgbaQ('#dcffa0', a); ctx.fillRect(x, y, 1, 1);
       ctx.fillStyle = rgbaQ('#c8ff8c', a * 0.35); ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3);
-      if (a > 0.5) lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: 14, col: '#d8ff9a', a: a * 0.6 });
+      if (a > 0.5) lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: 14, col: '#d8ff9a', a: a * 0.6, amb: 1 });   // decorative: culls first
     } else if (f.k === 'mote') {
       ctx.fillStyle = rgbaQ('#ffe2b4', fade * (0.35 + 0.3 * Math.sin(G.t * 2 + f.ph))); ctx.fillRect(x, y, 1, 1);
     } else {
@@ -1565,7 +2093,7 @@ function drawFog(ctx, tex, size, par, spx, spy, alpha) {
 // §16.6.1: one cached 64x64 radial sprite per light colour (alpha 1 -> 0), drawn scaled with globalAlpha = L.a.
 // A linear alpha ramp scaled by globalAlpha equals the old per-light rgba(col, a) -> rgba(col, 0) gradient.
 const COARSE_POINTER = PHONE || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
-// ===== quality tiers (DESIGN §26.4 steps 3-4) ==============================================================================
+// ===== quality tiers (docs/design/pillars-and-rules.md steps 3-4) ==============================================================================
 //   high  : desktop, the reference look (every pass below at full quality; the fog clear zone around the hero)
 //   phone : PHONE / coarse pointer. Lightmap and bloom upscaled without smoothing (the smoothed full-res upscales are the
 //           costliest single blits in a software rasteriser); the bloom glow is smoothed to half res first, so it stays soft
@@ -1616,7 +2144,7 @@ function lightSized(col, d) {
   }
   return c;
 }
-// ===== light cap with hysteresis (Lumina LightPool rules, DESIGN §26.4; see docs/CREDITS.md) ==================================
+// ===== light cap with hysteresis (Lumina LightPool rules, docs/design/pillars-and-rules.md; see docs/CREDITS.md) ==================================
 // The cap used to hard-sort every frame, so at 40 lights a light near the rank boundary popped on and off. Now: a light keeps a
 // record across frames (map lights by object; per-frame lights - VFX, fireflies, braziers - by the nearest same-colour light of
 // the last frame within 10 px), the lit set is re-ranked every LP_RERANK s with LP_HYST off the cost of lights already lit,
@@ -1624,9 +2152,14 @@ function lightSized(col, d) {
 // distance from the view centre (22 px a unit) minus 3 x log2(1 + strength / 40); the hero's light (keep) always wins.
 // Under the cap a new light shows at once; in a capped view it starts dark, an immediate re-rank decides, and it fades into a
 // freed slot. Under the cap every record simply fades to full.
-const LP_RERANK = 0.2, LP_FADE = 0.35, LP_HYST = 2, LPOOL = { recs: new WeakMap(), prev: [], cur: [], t: 0, timer: 0 };
+const LP_RERANK = 0.2, LP_FADE = 0.35, LP_HYST = 2, LPOOL = { recs: new WeakMap(), prev: [], cur: [], t: 0, timer: 0 }, LP_ST = [], LP_OT = [];
 let LIGHT_VIS = [];
-const lightCost = (vx, vy, L, lit) => L.keep ? -1e9 : Math.hypot(vx - RW / 2, vy - RH / 2) / 22 - 3 * Math.log2(1 + clamp(L.a, 0, 1) * L.r / 40) - (lit ? LP_HYST : 0);
+// M4a (director ruling): over the cap, STAT_SLOTS of the cap (6 of 40, 4 of 24, 2 of 16) are held for status lights (L.stat),
+// ranked among themselves; the other lights cull by class, decorative first (L.amb: fireflies), then ambient (map lights,
+// L.__st), then the dynamic ones (spells, bodies, VFX); in a class the farthest from the hero goes first (LP_HERO = the hero's
+// view spot at the re-rank). Status lights also take any slot the rest leave free.
+const LP_HERO = [RW / 2, RH / 2], STAT_SLOTS = cap => Math.round(cap * 0.15);
+const lightCost = (vx, vy, L, lit) => L.keep ? -1e9 : (L.amb ? 2000 : L.__st && !L.stat ? 1000 : 0) + Math.hypot(vx - LP_HERO[0], vy - LP_HERO[1]) / 22 - 3 * Math.log2(1 + clamp(L.a, 0, 1) * L.r / 40) - (lit ? LP_HYST : 0);
 function lightPool(vis, cap) {
   const P = LPOOL, now = G.t, dt = clamp(now - P.t, 0, 0.1), capped = vis.length > cap; P.t = now;
   const cur = P.cur; cur.length = 0; let fresh = false;
@@ -1645,7 +2178,14 @@ function lightPool(vis, cap) {
   P.timer -= dt;
   if (P.timer <= 0 || fresh) {
     P.timer = LP_RERANK;
-    if (capped) { cur.sort((a, b) => lightCost(a.vx, a.vy, a.v[2], a.lit) - lightCost(b.vx, b.vy, b.v[2], b.lit)); cur.forEach((r, i) => { r.lit = i < cap; }); }
+    if (capped) {
+      const hp = G.player; if (hp) { const h = worldToView(hp.x, hp.y, hp.z); LP_HERO[0] = h[0]; LP_HERO[1] = h[1]; }
+      const by = (a, b) => lightCost(a.vx, a.vy, a.v[2], a.lit) - lightCost(b.vx, b.vy, b.v[2], b.lit), st = LP_ST, ot = LP_OT; st.length = 0; ot.length = 0;
+      for (const r of cur) (r.v[2].stat ? st : ot).push(r);
+      st.sort(by); ot.sort(by);
+      const nOt = Math.min(ot.length, cap - Math.min(STAT_SLOTS(cap), st.length)), nSt = cap - nOt;
+      ot.forEach((r, i) => { r.lit = i < nOt; }); st.forEach((r, i) => { r.lit = i < nSt; });
+    }
     else for (const r of cur) r.lit = true;
   }
   // slots: at most `cap` lights draw. Lights losing their slot fade out first; a light given a slot fades in once one is free
@@ -1663,6 +2203,10 @@ function lightPool(vis, cap) {
   P.cur = P.prev; P.prev = cur;
   return out;
 }
+// M4a white-out fix: the additive halos stacked with the bloom wherever lights crowd (the hero's lamp, Pip, a buff aura and a
+// checkpoint crystal at the hero: 8-15 % of the 64 px window near-white). Halos now take the bloom weight too (emitters at their
+// weight, at least HALO_DIM; untagged lights HALO_DIM), so at most the emitters' halo + bloom stack (two additive passes).
+const HALO_DIM = 0.3, HALO_EM = 0.5, OWN_TOP = new Map();
 function applyLighting(ctx, lights, th, ambient) {
   const x = LM.x, fc = typeof flashCap === 'function' ? flashCap() : 1;
   x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; x.fillStyle = ambient || th.ambient; x.fillRect(0, 0, RW / 2, RH / 2);
@@ -1676,6 +2220,11 @@ function applyLighting(ctx, lights, th, ambient) {
   LIGHT_STATS.inView = vis.length;
   vis = lightPool(vis, QUALITY.cfg.lights);   // the cap, with hysteresis + crossfades: each entry gains its weight w (0..1]
   LIGHT_STATS.drawn = vis.length; LIGHT_VIS = vis;
+  // lights from one body merge (lighting doc): of the lights one body owns (L.own: its lamp, weapon, rarity, aura, status
+  // lights) only the strongest keeps its halo and its bloom; the rest still light the lightmap
+  const top = OWN_TOP; top.clear();
+  for (const v of vis) { const L = v[2]; if (!L.own) continue; const q = top.get(L.own), k = L.a * L.r * (L.bloom > 0 ? 2 : 1); if (!q || k > q.k) top.set(L.own, { L, k }); }
+  for (const v of vis) { const L = v[2]; L._sub = !!(L.own && top.get(L.own).L !== L); }
   const mark = LM_TILES.mark; mark.fill(0);
   for (const [vx, vy, L, w] of vis) {
     const d = Math.max(1, Math.round(L.r)), a = clamp(L.a, 0, 1) * w, lx = Math.round(vx / 2 - d / 2), ly = Math.round(vy / 2 - d / 2);
@@ -1720,22 +2269,41 @@ function applyLighting(ctx, lights, th, ambient) {
   // additive halos — the "fake light" glow
   ctx.globalCompositeOperation = 'lighter';
   if (QUALITY.cfg.halos) for (const [vx, vy, L, w] of vis) {
+    if (L._sub && !BLOOM_ALL) continue;   // merged into its body's strongest light
     const d = Math.max(1, Math.round(L.r * 1.1));
-    ctx.globalAlpha = clamp(L.a * 0.32 * fc * w, 0, 1); ctx.drawImage(lightSized(L.col, d), Math.round(vx - d / 2), Math.round(vy - d / 2));
+    const hw = BLOOM_ALL ? 1 : L.bloom > 0 ? HALO_EM : HALO_DIM;   // the halo follows the bloom whitelist: emitters HALO_EM (their bloom is the second pass), the rest HALO_DIM
+    ctx.globalAlpha = clamp(L.a * 0.32 * fc * w * hw, 0, 1); ctx.drawImage(lightSized(L.col, d), Math.round(vx - d / 2), Math.round(vy - d / 2));
   }
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
 }
 
-// ===== emitter-only bloom (DESIGN §26.4 step 4; Lumina item 5, docs/meetings/2026-10-20-lumina.md; see docs/CREDITS.md) =========
+// ===== emitter-only bloom (docs/design/pillars-and-rules.md step 4; Lumina item 5, docs/meetings/2026-10-20-lumina.md; see docs/CREDITS.md) =========
 // The bloom used to bright-pass the whole scene (v^4 of a 1/4-res copy), so a white slash, a hit flash or the Echo's bright body
 // whited out the very target the fight is about. Now only EMITTERS go into the 1/4-res glow buffer (EM = BT): the drawn lights
 // (cores 0.15 x their radius, weighted by the light pool: braziers / flames, projectiles and spells push lights too), the moon /
 // sun halo, the water glints, and the VFX cores (the additive effects redrawn at 1/4 scale into VB - drawEffect only draws and
 // pushes lights, no particles or randomness - then laid in at BLOOM_VFX alpha: VFX sit AT the threshold, not over it). The 1/8 mip gets a warm tint, the two are summed at 1/4 (BC) and added to the scene once, as before. No scene
 // read-back, no bright-pass chain.
-const BLOOM_LOW = 0.8, BLOOM_LIGHT = 0.75, BLOOM_CORE = 0.22, BLOOM_VFX = 0.45, BLOOM_MOON = 0.45, BLOOM_WARM = 'rgba(255,176,96,0.35)';
+const BLOOM_LOW = 0.8, BLOOM_LIGHT = 0.55, BLOOM_CORE = 0.22, BLOOM_VFX = 0.45, BLOOM_MOON = 0.45, BLOOM_WARM = 'rgba(255,176,96,0.35)';
 const VB = makeCanvas(RW / 4, RH / 4), BLOOM_SINK = [];   // VB: the VFX pass at 1/4; BLOOM_SINK swallows the lights it pushes
 let BLOOM_MOONAT = null;   // [x, y, moon] of this frame's moon (drawScene), null when no sky was drawn
+// ?bloom=all: every drawn light blooms at its full weight (the pre-M4a look, for A/B and the before / after shot)
+const BLOOM_ALL = (() => { try { return new URLSearchParams(location.search).get('bloom') === 'all'; } catch (e) { return false; } })();
+// tools (play.js, perf.js): near-white scene pixels (every channel >= 235) as a share of the whole scene, of the 64 px window
+// around the hero and the worst such window around an enemy in view (docs/design/lighting-status-fx.md: at most 3 %)
+function whiteOut() {
+  const d = sctx.getImageData(0, 0, RW, RH).data;
+  const win = (x0, y0, w, h) => {
+    x0 = clamp(Math.round(x0), 0, RW); y0 = clamp(Math.round(y0), 0, RH); const x1 = clamp(x0 + w, 0, RW), y1 = clamp(y0 + h, 0, RH);
+    let n = 0, t = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { const i = (y * RW + x) * 4; t++; if (d[i] >= 235 && d[i + 1] >= 235 && d[i + 2] >= 235) n++; }
+    return t ? +(100 * n / t).toFixed(2) : 0;
+  };
+  const p = G.player, [hx, hy] = worldToView(p.x, p.y, p.z), out = { scene: win(0, 0, RW, RH), hero: win(hx - 32, hy - 46, 64, 64), enemy: 0 };
+  for (const e of G.enemies) { if (e.dead) continue; const [vx, vy] = worldToView(e.x, e.y, e.z || 0); if (vx < 0 || vy < 0 || vx > RW || vy > RH) continue; out.enemy = Math.max(out.enemy, win(vx - 32, vy - 44, 64, 64)); }
+  return out;
+}
+if (typeof window !== 'undefined') window.whiteOut = whiteOut;
 function moonGlowQ(mo) {   // the moon halo at 1/4 scale, cached with the full one
   const k = 'glowq|' + mo.r + '|' + mo.glow; let c = MOON_CACHE.get(k);
   if (!c) { const g = moonGlow(mo), d = Math.max(1, Math.round(g.width / 4)), v = makeCanvas(d, d); v.x.imageSmoothingEnabled = true; v.x.drawImage(g, 0, 0, d, d); MOON_CACHE.set(k, c = v.c); }
@@ -1747,7 +2315,8 @@ function bloomEmitters() {
   x.globalCompositeOperation = 'lighter'; x.imageSmoothingEnabled = true;
   if (BLOOM_MOONAT && BLOOM_MOONAT[2]) { const [mx, my, mo] = BLOOM_MOONAT, g = moonGlowQ(mo); x.globalAlpha = BLOOM_MOON; x.drawImage(g, Math.round(mx / 4 - g.width / 2), Math.round(my / 4 - g.height / 2)); }
   for (const [vx, vy, L, wt] of LIGHT_VIS) {
-    const d = Math.max(1, Math.round(L.r * BLOOM_CORE)); x.globalAlpha = clamp(L.a * BLOOM_LIGHT * wt, 0, 1);
+    const bw = BLOOM_ALL ? 1 : L._sub ? 0 : L.bloom || 0; if (bw <= 0) continue;   // the whitelist: untagged lights never bloom; one per body
+    const d = Math.max(1, Math.round(L.r * BLOOM_CORE)); x.globalAlpha = clamp(L.a * BLOOM_LIGHT * wt * bw, 0, 1);
     x.drawImage(lightSized(L.col, d), Math.round(vx / 4 - d / 2), Math.round(vy / 4 - d / 2));
   }
   // water glints (this frame's, from drawWater's buffers): one quarter-res dot each

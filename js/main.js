@@ -10,7 +10,7 @@ const dctx = DISP.getContext('2d');
 // upscales the store with smoothing off (index.html image-rendering), and the per-frame scene blit + HUD fill fewer pixels.
 let HUD_K = 1;
 const HUD_K_MAX = 2;
-// ===== resolution governor (phones; Lumina ResolutionGovernor rules, docs/CREDITS.md; DESIGN §26.4 step 3) ====================
+// ===== resolution governor (phones; Lumina ResolutionGovernor rules, docs/CREDITS.md; docs/design/pillars-and-rules.md step 3) ====================
 // The phone backing store runs at a DPR rung (GOV.rungs: 0.5 .. 1.0 of the device ratio, 0.125 steps; k = rung x DPR, whole
 // eighths, 1..2). Timing source: the CPU frame time of loop() (update + render; no GPU timer in Canvas 2D), averaged per 0.5 s
 // sample; decisions on the median of the last 5 samples (one slow burst is no trend). Down one rung after 4 slow medians
@@ -61,6 +61,8 @@ function getMap(id) {
 }
 // `at` = { x, y } to arrive somewhere other than the map start (a checkpoint)
 function enterMap(id, at) {
+  if (G.player && typeof hushEnd === 'function') hushEnd(G.player, 'map');   // a map change ends Hush
+  G.timeScale = 1;
   const m = getMap(id), p = G.player;
   G.map = m; prepTheme(m);
   for (const pt of m.portals) pt.open = (G.world.maps[id].portals.find(q => q.x === pt.x && q.y === pt.y) || pt).open !== false;
@@ -72,6 +74,7 @@ function enterMap(id, at) {
   syncChests(m);
   G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
   if (!(typeof onceSeen === 'function' && onceSeen('zone:' + id))) G.banner = { s: m.name, sub: m.sub, t: 3.2, max: 3.2 };   // once per save: a respawn never replays it
+  if (typeof forgeEnemyPrewarm === 'function') forgeEnemyPrewarm(id);   // M4a: boot / respawn / editor entries (the rift starts it in transition)
   startTriggers();
   spawnCritters(m);
   if (G.state === 'play') saveGame();   // autosave on zone entry
@@ -113,6 +116,7 @@ function transition(to, at) {
   if (G.fadeDir) return;
   G.fadeDir = 1; G.fadeTo = to; G.fadeAt = at || null; sfx('portal');
   startPreload(to, at); G.fadeHold = 0; G.preloadLog = null;
+  if (typeof forgeEnemyPrewarm === 'function') forgeEnemyPrewarm(to);   // M4a: the zone's forge enemy sheets build behind the fade (render.js)
   if (typeof AUDIO !== 'undefined') AUDIO.onTransition(to);   // the zone song fades over 1 bar during the rift fade
 }
 // death: lose 10% of this level's bar (never a level), wake at the last checkpoint (or this map's start) with
@@ -159,9 +163,10 @@ function update(dt, rdt) {
     if (G.state === 'dead') { G.deadT += rdt; if (G.deadT > 4.5) respawn(); }
   }
   updateAmbient(rdt);
-  for (const e of G.effects) { e.t += dt; if (e.t >= e.life) { e.done = true; if (e.onDone) e.onDone(e); } }
+  const wdt = dt * (typeof worldScale === 'function' ? worldScale(null) : 1);   // world time (Hush): effects and particles
+  for (const e of G.effects) { e.t += wdt; if (e.t >= e.life) { e.done = true; if (e.onDone) e.onDone(e); } }
   G.effects = G.effects.filter(e => !e.done);
-  updateParts(rdt, m);   // pooled, hard cap PART.cap (game.js)
+  updateParts(rdt * (typeof worldScale === 'function' ? worldScale(null) : 1), m);   // pooled, hard cap PART.cap (game.js)
   for (const t of G.texts) t.t += rdt;
   G.texts = G.texts.filter(t => t.t < (t.life || 0.9));
   G.shakeA = Math.max(0, G.shakeA - rdt * 30);
@@ -218,7 +223,7 @@ function render() {
 
 // Fixed-step update at 1/60 s with an accumulator (§16.6.3): deterministic reactions, hitstop and scripted
 // tests; render once per display frame. Slow-mo and hitstop scale/zero the game step, never its size.
-// Hitstop is counted in unscaled steps BEFORE slow-mo (game.js hitlagStep, DESIGN §27): a 15-step boss-death freeze is
+// Hitstop is counted in unscaled steps BEFORE slow-mo (game.js hitlagStep, docs/design/combat-feel.md): a 15-step boss-death freeze is
 // 0.25 s of real time even inside the boss slow-mo (it used to stretch to ~0.7 s).
 const STEP = 1 / 60;
 let last = performance.now(), acc = 0, running = true, frameEma = 16.7;
@@ -289,7 +294,7 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
-// ===== ?perf=1: the on-screen frame readout (DESIGN §26.4 step 1: measure on the real device) =============================
+// ===== ?perf=1: the on-screen frame readout (docs/design/pillars-and-rules.md step 1: measure on the real device) =============================
 // Top-centre box, refreshed 4x a second from a 240-frame ring (~4 s): fps, frame avg / p95 (the rAF delta), work avg / p95 (CPU inside
 // loop(): update + render + preload), draw calls (2D context calls this frame, counted by wrappers installed only when ?perf
 // is set), particles (pooled + ambient), and the per-phase split (render.js perfMark). Off: `PERF.on` is false, nothing is

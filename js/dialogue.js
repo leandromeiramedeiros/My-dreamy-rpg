@@ -1,5 +1,5 @@
 'use strict';
-// Narrative data: story dialogue, bestiary lore and side quests. Source of truth: docs/STORY.md.
+// Narrative data: story dialogue, bestiary lore and side quests. Source of truth: docs/design/story.md.
 // Classic script (no modules). Every line is <= 12 words; boss lines keyed boss_<name>_<beat>.
 
 // ---------------------------------------------------------------- DIALOGUE

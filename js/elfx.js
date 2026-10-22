@@ -1,7 +1,7 @@
 'use strict';
 // ---------------------------------------------------------------------------------------------------------------------------
 // ELFX: the element particle registry, the grey-level sheet bakers, the shared tint cache, the closed-form motion models
-// and the §31 pixel-FX atlas (DESIGN §31 / §32 / §33.6; build spec docs/meetings/2026-10-20-element-vfx.md Part A).
+// and the §31 pixel-FX atlas (docs/design/visual-bible.md, docs/design/elements-statuses.md; build spec docs/meetings/2026-10-20-element-vfx.md Part A).
 // Classic script, loaded right after util.js. Uses only util.js globals (makeCanvas, bayer, hexToRgb, clamp) and touches
 // nothing at load: no canvas is created until ELFX.bake() (or the first sheet() / fxSheet() call) runs. Defines `ELFX`.
 //

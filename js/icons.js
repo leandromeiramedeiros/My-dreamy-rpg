@@ -536,7 +536,7 @@ const ICONS = (() => {
     return 'sword';
   }
 
-  // ---- trinkets (DESIGN 19.4/19.5): ring / amulet / belt x tiers 1-3, element tint, uniques ----------------
+  // ---- trinkets (docs/design/items.md): ring / amulet / belt x tiers 1-3, element tint, uniques ----------------
   const RCUT = (x0, y0, x1, y1) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (x >= 0 && y >= 0 && x < N && y < N) L[y * N + x] = null; };
   const TMET = { ring: [['#2a2824', '#5a5648', '#8c866e', '#b8b296'], ['#3a4a68', '#7a90b8', '#bcd0f0', '#f0f8ff'], ['#3a2a78', '#7a68d0', '#b8a8ff', '#f4ecff']],
     amulet: [R.gd, ['#5a6a88', '#9ab0d0', '#d4e4fa', '#ffffff'], ['#6a4a98', '#b890e8', '#e8d0ff', '#ffffff']],

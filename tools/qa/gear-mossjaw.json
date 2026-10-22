@@ -1,18 +1,18 @@
 {
- "at": "2026-10-22T12:46:06.223Z",
+ "at": "2026-10-22T23:40:37.653Z",
  "level": 9,
- "maxHp": 903,
- "def": 0.13164293157346302,
- "power": 1.4251568,
- "dmgBase": 1.24,
- "bonus": 0.14932,
- "crit": 0.35100000000000003,
- "critDmg": 0.881,
- "potions": 4,
+ "maxHp": 969,
+ "def": 0.1629809929723884,
+ "power": 1.43739932,
+ "dmgBase": 1.2152,
+ "bonus": 0.18284999999999998,
+ "crit": 0.132,
+ "critDmg": 0.8,
+ "potions": 3,
  "weapon": "sword",
  "equip": {
   "weapon": {
-   "id": "i_26",
+   "id": "i_27",
    "base": "rustyblade",
    "variant": "sword",
    "class": "blades",
@@ -20,8 +20,8 @@
    "slot": "weapon",
    "tier": 0,
    "rarity": "rare",
-   "ilvl": 5,
-   "req": 3,
+   "ilvl": 4,
+   "req": 2,
    "implicit": {
     "id": "slashDmg",
     "v": 0.04,
@@ -29,15 +29,15 @@
    },
    "affixes": [
     {
-     "id": "lightningDmg",
+     "id": "crit",
      "tier": 1,
-     "v": 0.043,
+     "v": 0.027,
      "kind": "P"
     },
     {
-     "id": "regen",
+     "id": "speed",
      "tier": 1,
-     "v": 1.3,
+     "v": 0.131,
      "kind": "S"
     }
    ],
@@ -54,48 +54,88 @@
    },
    "tempered": null,
    "name": {
-    "prefix": "Crackling",
-    "suffix": "of the Spring"
+    "prefix": "Sharpened",
+    "suffix": "of the Fox"
    }
   },
-  "head": {
-   "id": "i_19",
-   "base": "novicehood",
-   "variant": "arcanecowl",
-   "class": "caster",
-   "suit": "frostweave",
-   "slot": "head",
+  "offhand": {
+   "id": "i_34",
+   "base": "woodbuckler",
+   "variant": "buckler",
+   "class": "shields",
+   "suit": null,
+   "slot": "offhand",
    "tier": 0,
-   "rarity": "epic",
+   "rarity": "rare",
    "ilvl": 4,
    "req": 2,
    "implicit": {
-    "id": "arcaneDmg",
-    "v": 0.03,
-    "text": "+3% arcane damage"
+    "id": "hp",
+    "v": 40,
+    "text": "+40 HP"
    },
    "affixes": [
     {
-     "id": "crit",
+     "id": "chargeSpeed",
      "tier": 1,
-     "v": 0.028,
-     "kind": "P"
-    },
-    {
-     "id": "power",
-     "tier": 1,
-     "v": 0.049,
+     "v": 0.065,
      "kind": "P"
     },
     {
      "id": "hp",
      "tier": 1,
-     "v": 35,
+     "v": 29,
      "kind": "S"
     }
    ],
    "sockets": [
-    null,
+    null
+   ],
+   "boon": null,
+   "rule": null,
+   "unique": null,
+   "hist": {
+    "found": "pinewood",
+    "kills": 0,
+    "bossKills": 0
+   },
+   "tempered": null,
+   "name": {
+    "prefix": "Eager",
+    "suffix": "of the Oak"
+   }
+  },
+  "head": {
+   "id": "i_42",
+   "base": "rangercap",
+   "variant": "wardenhood",
+   "class": "medium",
+   "suit": "thornwarden",
+   "slot": "head",
+   "tier": 0,
+   "rarity": "rare",
+   "ilvl": 7,
+   "req": 5,
+   "implicit": {
+    "id": "natureDmg",
+    "v": 0.03,
+    "text": "+3% nature damage"
+   },
+   "affixes": [
+    {
+     "id": "crit",
+     "tier": 1,
+     "v": 0.025,
+     "kind": "P"
+    },
+    {
+     "id": "resLightning",
+     "tier": 1,
+     "v": 0.074,
+     "kind": "S"
+    }
+   ],
+   "sockets": [
     null
    ],
    "boon": null,
@@ -109,36 +149,30 @@
    "tempered": null,
    "name": {
     "prefix": "Sharpened",
-    "suffix": "of the Oak"
+    "suffix": "of the Storm"
    }
   },
   "chest": {
-   "id": "i_34",
-   "base": "stalkerjacket",
-   "variant": "stalker",
-   "class": "medium",
-   "suit": "stalker",
+   "id": "i_36",
+   "base": "linenrobe",
+   "variant": "dreamweave",
+   "class": "caster",
+   "suit": "dreamweave",
    "slot": "chest",
-   "tier": 1,
-   "rarity": "rare",
-   "ilvl": 7,
-   "req": 8,
+   "tier": 0,
+   "rarity": "uncommon",
+   "ilvl": 5,
+   "req": 3,
    "implicit": {
-    "id": "haste",
-    "v": 0.04,
-    "text": "+4% attack speed"
+    "id": "mpOnHit",
+    "v": 0.1,
+    "text": "+10% MP on hit"
    },
    "affixes": [
     {
-     "id": "fireDmg",
+     "id": "def",
      "tier": 1,
-     "v": 0.048,
-     "kind": "P"
-    },
-    {
-     "id": "speed",
-     "tier": 1,
-     "v": 0.102,
+     "v": 0.027,
      "kind": "S"
     }
    ],
@@ -155,43 +189,43 @@
    },
    "tempered": null,
    "name": {
-    "prefix": "Smoldering",
-    "suffix": "of the Fox"
+    "prefix": null,
+    "suffix": "of the Badger"
    }
   },
   "boots": {
-   "id": "i_28",
-   "base": "ironboots",
-   "variant": "knightgreaves",
-   "class": "heavy",
-   "suit": "warden",
+   "id": "i_40",
+   "base": "ropesandals",
+   "variant": "clothsandals",
+   "class": "caster",
+   "suit": "dreamweave",
    "slot": "boots",
    "tier": 0,
    "rarity": "epic",
    "ilvl": 6,
    "req": 4,
    "implicit": {
-    "id": "hp",
-    "v": 10,
-    "text": "+10 HP"
+    "id": "mpRegen",
+    "v": 0.3,
+    "text": "+0.3 MP/s"
    },
    "affixes": [
     {
-     "id": "critDmg",
+     "id": "cdr",
      "tier": 1,
-     "v": 0.081,
+     "v": 0.022,
+     "kind": "P"
+    },
+    {
+     "id": "lightningDmg",
+     "tier": 1,
+     "v": 0.055,
      "kind": "P"
     },
     {
      "id": "onDodge",
      "tier": 1,
-     "v": 0.015,
-     "kind": "S"
-    },
-    {
-     "id": "mpRegen",
-     "tier": 1,
-     "v": 1,
+     "v": 0.014,
      "kind": "S"
     }
    ],
@@ -209,7 +243,7 @@
    },
    "tempered": null,
    "name": {
-    "prefix": "Heavy",
+    "prefix": "Patient",
     "suffix": "of the Swallow"
    }
   },
@@ -247,56 +281,6 @@
   },
   "ring2": null,
   "amulet": null,
-  "belt": {
-   "id": "i_36",
-   "base": "rope_sash",
-   "variant": "belt",
-   "class": "trinket",
-   "suit": null,
-   "slot": "belt",
-   "tier": 0,
-   "rarity": "rare",
-   "ilvl": 7,
-   "req": 5,
-   "implicit": {
-    "id": "potionCharge",
-    "v": 1,
-    "text": "+1 potion charge"
-   },
-   "affixes": [
-    {
-     "id": "mpRegen",
-     "tier": 1,
-     "v": 0.9,
-     "kind": "S"
-    },
-    {
-     "id": "resPierce",
-     "tier": 1,
-     "v": 0.075,
-     "kind": "S"
-    }
-   ],
-   "sockets": [
-    null
-   ],
-   "boon": {
-    "id": "flaskRegen",
-    "grade": "major",
-    "text": "Potions heal 3% of max HP per second for 4 s"
-   },
-   "rule": null,
-   "unique": null,
-   "hist": {
-    "found": "pinewood",
-    "kills": 0,
-    "bossKills": 0
-   },
-   "tempered": null,
-   "name": {
-    "prefix": null,
-    "suffix": "of the Owl"
-   }
-  }
+  "belt": null
  }
 }

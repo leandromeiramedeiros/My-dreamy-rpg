@@ -6,7 +6,7 @@
 //   HERO.build(look) -> { front:[idle0,idle1,walk0..3], back:[...], weapon, weaponGrip, weaponTip,
 //                         hand:{front:[{x,y}..],back:[..]}, anchors:{head,chest,boots,weapon}, ... }
 //   look = { head:{family,tier,gems}, chest:{..}, boots:{..}, weapon:{..}, hair?, skin? }  (any slot may be null)
-//   trinkets (DESIGN 19.4): look.belt={family?,tier 1-3,color?,rarity?,tempered?}, look.amulet={tier,element?|color?,rarity?,tempered?},
+//   trinkets (docs/design/items.md): look.belt={family?,tier 1-3,color?,rarity?,tempered?}, look.amulet={tier,element?|color?,rarity?,tempered?},
 //     look.ring={tier,element?,rarity?,tempered?} (object or array; Epic+ rings glint 1px on the attack frame), any gear piece may carry tempered:true
 //     (bright edge). Belt/amulet are slots for HERO.slotSprite(b,'belt'|'amulet'|'ring',view,fi); HERO.drawTrinketGlow(ctx,b,view,fi,x,y,t)
 //     draws their rarityFx rim (call it AFTER drawHero: the rim lies on the torso). HERO.BELT_COLORS / ELEMENT_COLORS list the palettes.
@@ -145,7 +145,7 @@ const HERO = (function () {
   // ---- WEAPONS: separate held sprites painted from the parts kit (js/parts-art.js: template + tier table + stamps) -------------
   // PARTS_ART.weapon(family, tier, demo) -> { w, h, cells:[[x,y,'#hex']], grip, tip, sockets, aim, light }; the grip is the hand anchor.
   const WW = 16;
-  // ---- trinket overlays (DESIGN 19.4) + tempered edge ------------------------------------
+  // ---- trinket overlays (docs/design/items.md) + tempered edge ------------------------------------
   const ELC = { fire: '#ff8a3a', frost: '#5fd4ff', nature: '#5fd65f', lightning: '#ffe14a', arcane: '#b07cff', physical: '#aab4cc', holy: '#ffd75a' };
   const BELTC = { rope_sash: '#b8935a', mistwoven_belt: '#7fa8c8', moonlit_girdle: '#b8b4ee', cindersash: '#d8601c', quietgirdle: '#4a4a88', tidewovenclasp: '#2aa0a8', hollowbell: '#d8b040' };
   const BELT_TIER = ['#8a5a30', '#5c78a8', '#b8b4ee'];
@@ -295,7 +295,7 @@ const HERO = (function () {
     ctx.restore();
   }
 
-  // ---- RARITY FX (DESIGN 4.2) ----------------------------------------------
+  // ---- RARITY FX (docs/design/visual-bible.md) ----------------------------------------------
   const rarityFx = {
     common:    { color: '#d8d8d8', alpha: 0,    pulse: 0,   rate: 0,  kind: 'none',    light: 0,  rim: 0, aura: false },
     uncommon:  { color: '#6ee36e', alpha: 0.38, pulse: 0,   rate: 0,  kind: 'none',    light: 14, rim: 1, aura: false },
@@ -365,7 +365,7 @@ const HERO = (function () {
   // ---- cached rim layers (perf): the in-game path. Per (view, frame) the rim rings of every glowing piece are composited ONCE into
   // one white canvas per rarity; per draw it is only tinted (cached per colour) and blitted with a pulsing alpha. Nothing here
   // runs getImageData / mask building in the frame loop. Gear (head/chest/boots) glows on the OUTER silhouette only; belt, amulet and
-  // the ring glint (attack frame) glow on the torso, as DESIGN 19.4 asks; the weapon has its own ring (b.weaponRim).
+  // the ring glint (attack frame) glow on the torso, as docs/design/items.md asks; the weapon has its own ring (b.weaponRim).
   const PAD = 4;
   function ringCanvas(sp, rim, cut) {
     const { c, x } = makeCanvas(sp.width + PAD * 2, sp.height + PAD * 2);

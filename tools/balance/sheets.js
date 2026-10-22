@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
-// Balance sheets (DESIGN §20.7). Loads the real game data into a vm context, writes five CSVs next to
-// this file and prints a summary of the §20.7 thresholds this data can check.
+// Balance sheets (docs/design/balance.md). Loads the real game data into a vm context, writes five CSVs into
+// tools/balance/out/ (gitignored) and prints a summary of the §20.7 thresholds this data can check.
 //   node tools/balance/sheets.js
 //
 // ASSUMPTIONS
@@ -35,7 +35,8 @@ const path = require('path');
 const vm = require('vm');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const OUT = __dirname;
+const OUT = path.join(__dirname, 'out');   // generated CSVs (gitignored); the folder is created below
+fs.mkdirSync(OUT, { recursive: true });
 const LOAD = ['js/util.js', 'js/data.js', 'js/items.js', 'js/itemdata.js', 'js/world.js', 'js/enemydata.js', 'js/parts.js', 'js/bosses.js', 'js/game.js'];   // M2b: ENEMY lives in parts.js
 
 // ---------- load the game into a vm context with browser stubs ----------

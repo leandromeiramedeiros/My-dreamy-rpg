@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// tools/balsim.js — the balance sim (DESIGN §20.7). Runs the REAL game code headless (js/*.js in index.html order, in a
+// tools/balsim.js — the balance sim (docs/design/balance.md). Runs the REAL game code headless (js/*.js in index.html order, in a
 // vm context, seeded Math.random): recalcStats, useSkill / basicAttack, damageEnemy, the part runtime and BOSS_MOVES.
 //   node tools/balsim.js [--seed=N] [--trials=N] [--quiet] [--json]   (tuning: --miss=N --under-trials=N --only=under,reference --boss=id --patch=file.js)
 // Prints the tables and exits 1 on any red flag (§20.7 "CI red flags"). Explained exceptions are printed, never fail.
@@ -128,6 +128,21 @@ function simGear(fams, L, rarity, kind) {
     if (kind === 'optimal') { p.dust = 1e6; if (it.affixes.length) temperItem(it, it.affixes[0].id, p); imbueItem(it, p); it.sockets = it.sockets.map(() => (slot === 'weapon' ? 'ruby_' : 'amethyst_') + g); }
     p.equip[slot] = it;
   });
+  // the OFFHAND (Loadout v3): each family's natural pair (Sword + Buckler, Staff + Grimoire, Bow + Quiver) at the band tier,
+  // secondary lines only (hp / def). SIM_OFF overrides it per run: a line id, or null for an empty offhand.
+  const off = typeof SIM_OFF !== 'undefined' ? SIM_OFF : ({ sword: 'buckler', staff: 'grimoire', bow: 'quiver' })[fam];
+  if (off) {
+    const rar = under ? 'common' : rarity, ns = Math.max(1, AFFIX_COUNT[rar][1]);
+    const base = FAMILY_TIERS[off][tier].split(':')[0];
+    // a companion holds a fixed reference deck: makeItem's random pre-socketed page would make runs differ
+    const deck = BASES[base].deck, own = deck ? Object.keys(PAGES).filter(id => PAGES[id].deck === deck).sort((x, y) => (y === 'barrage') - (x === 'barrage')) : null;
+    // the reference deck: the companion's OWN entries up to its capacity, Arcane Barrage first (the pre-v3 Staff E, so the Vale TTK
+    // reads like before), then data order (Frost Shard, Gravity Well... / Piercing Shot, Snare). The shared re-homed ultimates
+    // (Dawnwave, Moonbeam) stay out: socketed, they lift a companion ~30 % (a watch item).
+    const pages = deck ? own.slice(0, PAGE_CAP[tier]) : undefined;
+    const it = kind === 'random' ? makeItem(base, rar, L, { sockets: 0, pages }) : makeItem(base, rar, L, { sockets: 0, affixes: ['hp', 'def'].slice(0, ns), q, pages });
+    if (!offhandFits(it, p.equip.weapon)) p.equip.offhand = it;   // offhandFits = '' when it fits
+  }
   p.equip.ring1 = originRing(p.equip.weapon.base);   // the Origin ring (first Vale chest, ~2:00): every build, 'under' too
   simTrinkets(p, L, rarity, kind, fam === 'staff' ? 'staff' : fam === 'bow' ? 'bow' : 'sword');
   recalcStats(p, true); return p;
@@ -136,7 +151,7 @@ ev(`function simHero(fams, L, rarity, kind) { const p = simGear(fams, L, rarity,
 
 // ---------------------------------------------------------------- rotation vs a frozen target
 ev(`function simRotation(target, maxT, standoff) {
-  const p = G.player, seq = ['b', 'b', 'b', 's', 'd']; let i = 0, t = 0, alt = 0, ultAt = [], dash = false;
+  const p = G.player, seq = G.__ultAlt ? ['o', 'b', 'b', 'b', 's', 'd'] : ['b', 'b', 'b', 's', 'd']; let i = 0, t = 0, alt = 0, ultAt = [], dash = false;
   const place = (t = target) => { if (t.dead) return; const a = Math.atan2(p.y - t.y, p.x - t.x) || 0; p.x = t.x + Math.cos(a) * standoff; p.y = t.y + Math.sin(a) * standoff; };
   place();
   const alive = () => (target.swarm ? G.enemies.some(e => e.swarm === target.swarm && !e.dead) : !target.dead);
@@ -148,16 +163,17 @@ ev(`function simRotation(target, maxT, standoff) {
       if (dist(p.x, p.y, tg.x, tg.y) > standoff + 0.3) place(tg);   // walks back into reach (knockback pushes targets away)
       p.aim = Math.atan2(tg.y - p.y, tg.x - p.x); G.mouse.wx = tg.x; G.mouse.wy = tg.y;   // a player aims at the target
       const a = seq[i];
-      if (a === 'b') { basicAttack(p); i++; }
-      else if (a === 's') { if (p.ult >= 100 && useSkill(p, 'r')) ultAt.push(t); else { const s = alt++ % 2 ? 'e' : 'q'; if (!useSkill(p, s)) useSkill(p, s === 'q' ? 'e' : 'q'); } i++; }
-      else { if (useSkill(p, 'shift')) dash = true; i = 0; }
+      if (a === 'o') { useSkill(p, 'rmb'); i++; }   // Loadout v3 loop: the M2 off-action opens each chain (Turn / Nock advance the deck, Step marks)
+      else if (a === 'b') { basicAttack(p); i++; }
+      else if (a === 's') { if (p.ult >= 100 && (G.__ultAlt ? (ultAt.length % 2 ? ['eu', 'qu'] : ['qu', 'eu']) : ['qu']).some(u => useSkill(p, u))) ultAt.push(t); else { const s = alt++ % 2 ? 'e' : 'q'; if (!useSkill(p, s)) useSkill(p, s === 'q' ? 'e' : 'q'); } i++; }
+      else { if (useSkill(p, 'v')) dash = true; i = 0; }
     }
     p.hp = p.maxHp; simStep(1 / 60); t += 1 / 60;
     if (p.ult >= 100 && G.__ultFirst == null) G.__ultFirst = t;
   }
   return { t, ultAt };
 }`);
-const standoffOf = fam => (fam === 'sword' ? 1.1 : 3.5);
+const standoffOf = fam => (fam === 'sword' || fam === 'daggers' ? 1.1 : 3.5);
 
 function ttk(type, L, fam, kind = 'reference', o = {}) {
   const out = [];
@@ -373,8 +389,8 @@ function simBossFight(id, L, maxT, react, mistakes, potions, card, every) {
     if (threat && !p.dash && p.rootT <= 0) {
       const e = threat, d = dist(p.x, p.y, e.x, e.y), need = 0.1 + (e.kind === 'circle' ? e.r + p.r - d : e.kind === 'line' ? e.w + p.r - segDist(p.x, p.y, e.x, e.y, e.x + Math.cos(e.ang) * e.len, e.y + Math.sin(e.ang) * e.len)
         : Math.min(e.r + p.r - d, d * Math.sin(Math.max(0, e.arc / 2 - Math.abs(angDiff(e.ang, Math.atan2(p.y - e.y, p.x - e.x)))))));
-      const sk = slotSkill(p, 'shift');
-      if (need > (e.life - e.t) * p.speed && sk && !(p.cds[sk] > 0) && p.st >= (SKILLS[sk].st || 0)) { const a0 = p.aim; p.aim = ringSafe(away(e), e); G.mouse.wx = p.x + Math.cos(p.aim) * 3; G.mouse.wy = p.y + Math.sin(p.aim) * 3; if (useSkill(p, 'shift')) out.dodges = (out.dodges || 0) + 1; else p.aim = a0; }
+      const sk = slotSkill(p, 'v');
+      if (need > (e.life - e.t) * p.speed && sk && !(p.cds[sk] > 0) && p.st >= (SKILLS[sk].st || 0)) { const a0 = p.aim; p.aim = ringSafe(away(e), e); G.mouse.wx = p.x + Math.cos(p.aim) * 3; G.mouse.wy = p.y + Math.sin(p.aim) * 3; if (useSkill(p, 'v')) out.dodges = (out.dodges || 0) + 1; else p.aim = a0; }
     }
     for (let k = pend.length - 1; k >= 0; k--) if (t >= pend[k].t) { const q = pend[k]; pend.splice(k, 1); for (let j = 0; j < q.n; j++) spawnAt(q.enemy, bx0 + q.dx, by0 + q.dy, q.r, false); }
     if (p.dash) {}
@@ -389,7 +405,7 @@ function simBossFight(id, L, maxT, react, mistakes, potions, card, every) {
       p.aim = Math.atan2(tg.y - p.y, tg.x - p.x); G.mouse.wx = tg.x; G.mouse.wy = tg.y;
       const teleUp = G.effects.some(e => e.type === 'tele' && e.src === b);   // no dash skill (Dash Strike moves 3.8 tiles) into a live telegraph
       if (seq[i] === 'b' || teleUp) basicAttack(p);
-      else if (p.ult >= 100 && useSkill(p, 'r')) {}
+      else if (p.ult >= 100 && useSkill(p, 'qu')) {}
       else { const k = alt++ % 2 ? 'e' : 'q'; if (!useSkill(p, k)) useSkill(p, k === 'q' ? 'e' : 'q'); }
       if (!teleUp || seq[i] === 'b') i = (i + 1) % seq.length;
     }
@@ -562,9 +578,78 @@ for (const [k, path_] of [['2 h', p2], ['5 h', p5]]) { const L = path_[path_.len
 log('\nNOT MEASURABLE YET (listed, never red): reaction share and ring resonance (no reactions before M4) · trinket share in');
 log('  eHP (DPS only above) · NG+ drop scaling (NG+ is modelled as x1.6 damage taken only) · Grotto/Caldera/Spire');
 log('  TTK (no reference enemies for those bands yet) · Morrow fight length.');
+// (runs last: its random rolls never shift the RNG stream of the tables above)
+SMath.random = mulberry32(SEED + 101);   // its own seeded stream: the tables above never shift its numbers (and it never shifts theirs)
+// 7. LOADOUT v3 (docs/design/balance.md "Loadout loop", weapons-and-skills.md "Parity targets"): every legal HAND x OFFHAND x armour
+// suit at T1..T3 (L4 / L12 / L20), reference gear. The rotation adds the M2 off-action at the head of each chain (Turn / Nock advance
+// the deck, Step marks) and alternates the two ultimates on the one shared charge. DPS vs the neutral target; eHP = HP / (1 - armour).
+// Parity: the four reference kits, each a class pair in its own suit (Sword + Buckler / Warden, Staff + Grimoire / Dreamweave,
+// Sword + Daggers / Warden, Bow + Quiver / Stalker), DPS within +-15 % of the four's mean at each tier.
+// Pick rate: power = DPS x sqrt(eHP / the tier's mean eHP) (toughness at half weight); per hand and tier the offhand of its best kit,
+// per hand + offhand and tier the suit of its best kit; any offhand or suit best in more than 60 % of its cells is red.
+const LO_SUITS = { knight: FAMS.sword.slice(1), arcane: FAMS.staff.slice(1), ranger: FAMS.bow.slice(1) };
+const LO_HANDS = ['sword', 'daggers', 'staff', 'bow'], LO_OFFS = [null, 'buckler', 'grimoire', 'quiver', 'daggers', 'sword'];
+const LO_TIERS = [['T1', 4], ['T2', 12], ['T3', 20]], LO_T = +arg('loadout-t', 60), LO_TRIALS = +arg('loadout-trials', 3);
+const LO_KITS = [['sword', 'buckler', 'knight'], ['staff', 'grimoire', 'arcane'], ['sword', 'daggers', 'knight'], ['bow', 'quiver', 'ranger']];
+function loadoutRun(hand, off, suit, L) {
+  ctx.SIM_OFF = off;
+  ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); G.__ultAlt = true;`);
+  const p = ev(`simHero(${JSON.stringify([hand].concat(LO_SUITS[suit]))}, ${L}, '${rarityAt(L)}', 'reference')`);
+  const legal = !off || !!p.equip.offhand;
+  let dps = 0;
+  if (legal) for (let k = 0; k < LO_TRIALS; k++) {   // the mean of LO_TRIALS runs (crits and procs are rolled)
+    if (k) ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); G.__ultAlt = true; simHero(${JSON.stringify([hand].concat(LO_SUITS[suit]))}, ${L}, '${rarityAt(L)}', 'reference')`);
+    ctx.__t = ev(`(() => { const e = spawnEnemy('__neutral', 27, 24, 0); e.hp = e.maxHp = 1e9; e.stunT = 9; return e; })()`);
+    ev(`simRotation(__t, ${LO_T}, ${standoffOf(hand)})`);
+    dps += (1e9 - ctx.__t.hp) / LO_T / LO_TRIALS;
+  }
+  ev(`G.__ultAlt = false;`); delete ctx.SIM_OFF;
+  return legal ? { hand, off: off || '-', suit, L, dps, ehp: p.maxHp / (1 - p.def) } : null;
+}
+const loRows = [], loParity = [], loPick = { offhand: {}, suit: {} }, loCells = { offhand: 0, suit: 0 };
+for (const [tn, L] of LO_TIERS) {
+  const rows = [];
+  for (const hand of LO_HANDS) for (const off of LO_OFFS) for (const suit of Object.keys(LO_SUITS)) { const r = loadoutRun(hand, off, suit, L); if (r) rows.push(Object.assign(r, { tier: tn })); }
+  const meanE = rows.reduce((a, r) => a + r.ehp, 0) / rows.length;
+  for (const r of rows) r.power = r.dps * Math.sqrt(r.ehp / meanE);
+  loRows.push(...rows);
+}
+const loBest = L => L.reduce((a, r) => (!a || r.power > a.power ? r : a), null);
+log(`\nLOADOUT v3 (hand x offhand x suit, reference gear, ${LO_T} s rotation with M2 + both ultimates, vs a neutral target, mean of ${LO_TRIALS})`);
+log('  tier  kit                       DPS    eHP    vs mean');
+for (const [tn] of LO_TIERS) {
+  const rows = loRows.filter(r => r.tier === tn);
+  const kits = LO_KITS.map(([h, o, s]) => rows.find(r => r.hand === h && r.off === o && r.suit === s));
+  if (kits.some(k => !k)) { red(`loadout: a reference kit is not a legal build at ${tn}`); continue; }
+  const mean = kits.reduce((a, r) => a + r.dps, 0) / kits.length;
+  for (const r of kits) {
+    const dev = r.dps / mean - 1, name = `${r.hand} + ${r.off} (${r.suit})`;
+    loParity.push({ tier: tn, kit: name, dps: r.dps, ehp: r.ehp, dev });
+    log(`  ${tn.padEnd(5)} ${name.padEnd(25)} ${String(Math.round(r.dps)).padStart(5)}  ${String(Math.round(r.ehp)).padStart(6)}   ${(dev >= 0 ? '+' : '') + Math.round(dev * 100)} %`);
+    if (Math.abs(dev) <= 0.15) continue;
+    // the Staff below L8 sits on the pre-M4a low-level gap (the HERO table's L1-L6 weapon parity note): explained, not red
+    if (tn === 'T1' && r.hand === 'staff' && dev > -0.25) explained.push(`loadout parity: ${name} at T1 is ${Math.round(dev * 100)} % off the reference kits' mean DPS (the low-level Staff gap, see the HERO parity note)`);
+    else red(`loadout parity: ${name} at ${tn} is ${Math.round(dev * 100)} % off the four reference kits' mean DPS (+-15 %)`);
+  }
+  for (const hand of LO_HANDS) {
+    const hr = rows.filter(r => r.hand === hand); if (!hr.length) continue;
+    const b = loBest(hr); loPick.offhand[b.off] = (loPick.offhand[b.off] || 0) + 1; loCells.offhand++;
+    for (const off of new Set(hr.map(r => r.off))) { const s = loBest(hr.filter(r => r.off === off)); loPick.suit[s.suit] = (loPick.suit[s.suit] || 0) + 1; loCells.suit++; }
+  }
+}
+const loPct = (n, d) => Math.round(n / d * 100);
+log(`  best kit per tier: ${LO_TIERS.map(([tn]) => { const b = loBest(loRows.filter(r => r.tier === tn)); return `${tn} ${b.hand} + ${b.off} (${b.suit})`; }).join(', ')}`);
+log(`  offhand pick rate (best offhand per hand per tier, ${loCells.offhand} cells): ${Object.entries(loPick.offhand).map(([k, n]) => `${k} ${loPct(n, loCells.offhand)} %`).join(', ')}`);
+log(`  suit pick rate (best suit per hand + offhand per tier, ${loCells.suit} cells): ${Object.entries(loPick.suit).map(([k, n]) => `${k} ${loPct(n, loCells.suit)} %`).join(', ')}`);
+for (const [kind, P] of Object.entries(loPick)) for (const [k, n] of Object.entries(P)) {
+  if (n / loCells[kind] <= 0.6) continue;
+  const s = `loadout pick rate: ${kind} ${k} is the best pick in ${loPct(n, loCells[kind])} % of cells (> 60 %)`;
+  // one live chest per armour class and Dreamweave's +25 % power reads for every hand: an armour-lane finding, carried as explained
+  if (kind === 'suit' && k === 'arcane') explained.push(s + ' (Dreamweave +25 % power is universal; one live chest per class: armour lane)'); else red(s);
+}
 if (explained.length && !QUIET) { log('\nEXPLAINED (not red):'); for (const s of explained) log('  - ' + s); }
 if (notes.length) { log('\nNOTES (targets, not CI flags):'); for (const s of notes) log('  - ' + s); }
 say(flags.length ? `\nbalsim RED FLAGS (${flags.length}):` : `\nbalsim: no red flags (${explained.length} explained, ${notes.length} notes).`);
 for (const s of flags) say('  ! ' + s);
-if (JSON_OUT) console.log(JSON.stringify({ heroRows, ttkRows, bossRows, liveRows, surv, econ, xp: { p2, p5 }, flags, explained, notes }, null, 1));
+if (JSON_OUT) console.log(JSON.stringify({ heroRows, loRows, loParity, loPick, ttkRows, bossRows, liveRows, surv, econ, xp: { p2, p5 }, flags, explained, notes }, null, 1));
 process.exit(flags.length ? 1 : 0);

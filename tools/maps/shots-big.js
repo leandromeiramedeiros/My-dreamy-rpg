@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// tools/maps/shots-big.js -- the Act I big-map screenshots (DESIGN 25): the Vale overview + its sections, the Pinewood landmarks, the Hollow,
+// tools/maps/shots-big.js -- the Act I big-map screenshots (docs/design/world-maps.md): the Vale overview + its sections, the Pinewood landmarks, the Hollow,
 // the Warrens, the Clearing, and the engine's full-map screen (fog revealed, shrines discovered) for both maps. Writes tools/shots/act1-big/.
 // Also copies the generator's top-down PNGs (tools/shots/maps/<id>.png, from `node tools/maps/build.js --preview`) as gen_<id>_topdown.png.
 // Usage: node tools/maps/shots-big.js

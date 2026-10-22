@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// settings.js — settings + accessibility DATA (HUD.md "Pause / settings", CONTROLS.md "Accessibility",
+// settings.js — settings + accessibility DATA (docs/design/hud-ui.md "Pause / settings", docs/design/controls.md "Accessibility",
 // one difficulty: Normal; NG+ is its own mode). The settings screen (Sonnet) draws from SETTINGS_SCHEMA and calls setSetting().
 // Loaded right after util.js in index.html and editor.html; no dependencies.
 //
@@ -13,7 +13,7 @@
 //                                 'dreamy.settings.v1' so they hold on the title screen and across New Dream)
 //   onSettingsChange(fn)          fn(key, value) after every change
 //   Getters used by the game:  sfxVol() musicVol() shakeMul() hitstopOn() hitstopMode() flashCap() flashReduceOn() damageNumbersOn()
-//     hitstopMode(): 'off' | 'light' | 'full' (DESIGN §27; a pre-M3 boolean migrates true -> full, false -> off)
+//     hitstopMode(): 'off' | 'light' | 'full' (docs/design/combat-feel.md; a pre-M3 boolean migrates true -> full, false -> off)
 //     aimAssistCone() (radians half-angle; off 0 / low 6° / high 10° = the
 //     20° cone) attackToggle() textPx() (body px 14/18/22) moveDeadzone() aimDeadzone()
 // ---------------------------------------------------------------------------
@@ -28,7 +28,7 @@ const SETTINGS_SCHEMA = [
   { key: 'mono', label: 'Mono audio', group: 'audio', type: 'toggle', def: false },
   { key: 'reduceBass', label: 'Reduce bass', group: 'audio', type: 'toggle', def: false },
   { key: 'shake', label: 'Screen shake', group: 'display', type: 'slider', min: 0, max: 100, step: 25, def: 100 },
-  { key: 'hitstop', label: 'Hitstop', group: 'display', type: 'choice', def: 'full', options: [{ v: 'off', label: 'Off' }, { v: 'light', label: 'Light' }, { v: 'full', label: 'Full' }] },
+  { key: 'hitstop', label: 'Hitlag', group: 'display', type: 'choice', def: 'full', options: [{ v: 'off', label: 'Off' }, { v: 'light', label: 'Light' }, { v: 'full', label: 'Full' }] },
   { key: 'flashReduce', label: 'Reduce flashes', group: 'display', type: 'toggle', def: false },
   { key: 'damageNumbers', label: 'Damage numbers', group: 'display', type: 'toggle', def: true },
   { key: 'damageNumberSize', label: 'Damage number size', group: 'display', type: 'choice', def: 'M', options: [{ v: 'S', label: 'S' }, { v: 'M', label: 'M' }, { v: 'L', label: 'L' }] },

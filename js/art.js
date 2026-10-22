@@ -457,15 +457,16 @@ function deadTree(seed) {
   return pb.toCanvas();
 }
 
-// ===== Trees v2 (DESIGN §29 G2; world-art minutes §2.1) ==============================================================
+// ===== Trees v2 (docs/design/world-maps.md G2; world-art minutes §2.1) ==============================================================
 // canopyTree(seed, S) (broadleaf) and pineTree2(seed, S) return the COMPOSITE canvas (trunk + canopy: what the editor, the
 // shadow tiles, hit tests and audits read; ART.trees.* / ART.pines.* stay canvas arrays) carrying the parts render.js splits:
 //   c.trunk    trunk, root toes, branches, baked 4 px AO ellipse        c.canopy  the leaves (drawn OVER the hero, fades)
 //   c.canopyF  the canopy with its top 60 % shifted -1 / 0 / +1 px      c.swayF   the composite in those 3 sway frames
+//   c.canopyW / c.swayW  the same in 5 wind frames -2..+2 (index = frame + 2; treeFrame(img, fr, part) builds the +-2 on first use)
 //   c.cbox     the canopy's opaque box [x0, y0, x1, y1] (the hero-under-canopy test)
 // Light is on the RIGHT (Vale moon x 470, forest sun x 360): every sheet is right-lit and a left-lit theme mirrors it
 // (maps.js placeObjects sets a tree's flip from the theme, never at random). No full outline: a 1 px darker edge on the shadow
-// side only. Approved output is frozen into js/sprites.js (tools/freeze-trees.js: frames [trunk, canopy]); ?trees=live
+// side only. Approved output is frozen into js/sprites.js (tools/freeze.js: frames [trunk, canopy]); ?trees=live
 // builds them here instead. Lift: the crown = leaf clusters on Fibonacci points of a flattened ellipsoid, darker inside and
 // underneath (Lumina src/engine/world/props/Trees.js buildBroadleaf; docs/CREDITS.md), drawn as three 2D pixel masses.
 const GOLDEN = Math.PI * (3 - Math.sqrt(5));
@@ -497,7 +498,18 @@ function treeFromParts(trunk, canopy) {
   const swayF = canopyF.map(f => { const { c, x } = makeCanvas(W, H); x.drawImage(trunk, 0, 0); x.drawImage(f, 0, 0); return c; });
   const c = swayF[1];
   c.trunk = trunk; c.canopy = canopy; c.canopyF = canopyF; c.swayF = swayF; c.cbox = opaqueBox(canopy);
+  // wind (js/wind.js): 5 canopy frames -2..+2 px (index = frame + 2); the +-1 frames are canopyF / swayF, the +-2 ones are built on first use
+  c.canopyW = [null, canopyF[0], canopy, canopyF[2], null]; c.swayW = [null, swayF[0], swayF[1], swayF[2], null]; c._shift = shift;
   return c;
+}
+// frame fr (-2..+2) of a tree composite: the canopy alone (part = 0) or trunk + canopy (part = 1); built lazily for +-2
+function treeFrame(img, fr, part) {
+  const i = fr + 2, A = part ? img.swayW : img.canopyW;
+  if (A[i]) return A[i];
+  const cf = img.canopyW[i] || (img.canopyW[i] = img._shift(fr));
+  if (!part) return cf;
+  const { c, x } = makeCanvas(img.width, img.height); x.drawImage(img.trunk, 0, 0); x.drawImage(cf, 0, 0);
+  return (img.swayW[i] = c);
 }
 function treeAO(pb, cx, yb, w) {   // the 4 px ground-contact ellipse baked into the base (2 alpha levels, no smooth ramp)
   const rx = w * 0.9 + 2, ry = 2.2;
@@ -735,7 +747,7 @@ function buildTreesV2() {
   ART.bushV2 = frozenTrees('bush2_') || buildBushes();
 }
 
-// ===== ground decals (DESIGN §29 G2; world-art minutes §2.3) ========================================================
+// ===== ground decals (docs/design/world-maps.md G2; world-art minutes §2.3) ========================================================
 // 16 flat kinds per zone, coloured from the theme's own ramps, baked into the ground chunks / column tops by maps.js (never in
 // the y-sort, no collider). Each kind has 2-3 shape variants. Every mark is >= 2 px in some direction and sits 1-2 ramp steps from
 // the ground it lies on, so a decal never reads as a speck. DECAL_KINDS order = the kind index maps.js stores.
@@ -1012,7 +1024,7 @@ function buildCloud(seed, w, h, pal, alpha = 255) {
   return pb.toCanvas();
 }
 
-// cloud sea tile (DESIGN §29 island edge v2): a 256 x 96 band of soft, dense cloud, tileable in x (period-8 noise over 256 px),
+// cloud sea tile (docs/design/world-maps.md island edge v2): a 256 x 96 band of soft, dense cloud, tileable in x (period-8 noise over 256 px),
 // billowy and lit on top, opaque at the bottom (drawCloudSea fills below it with `base`). layer 0 = the far layer, 1 = the near one.
 // Pure hash noise (no seedRng), so building it never disturbs seeded generation.
 function buildSeaTile(th, seed, layer) {

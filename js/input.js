@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// input.js — the action layer (docs/CONTROLS.md). The game reads ACTIONS, never keys.
+// input.js — the action layer (docs/design/controls.md). The game reads ACTIONS, never keys.
 // Keyboard + mouse, the Gamepad API and touch (touch.js) all write into one table that is snapshotted once per
 // fixed update step by IN.update(dt). Loaded after hud.js, before touch.js / main.js; main.js calls IN.init(canvas).
 //
@@ -24,13 +24,16 @@
 //         a conflict = another action in the same context (play / menu; 'global' actions clash with both) bound to
 //         that code. swap:false reports the conflict without applying; swap:true gives the other action our old code.
 //     IN.capture(device, cb) -> the next key / mouse / pad button goes to cb(code) instead of the game; IN.cancelCapture()
-//     kbm codes are KeyboardEvent.code ('KeyQ', 'Space', 'ShiftLeft') plus 'Mouse0'/'Mouse1'/'Mouse2'.
+//     kbm codes are KeyboardEvent.code ('KeyQ', 'Space', 'ShiftLeft') plus 'Mouse0'/'Mouse1'/'Mouse2', or a chord
+//     'Shift+KeyQ' (docs/design/loadout.md "Input"): it fires on the base key's keydown while Shift is held and releases with
+//     the base key. A plain 'KeyQ' binding ignores a Shift-held press when an action of the same context owns that chord.
+//     Shift alone binds nothing in play by default (it no longer dodges; dodge = V).
 //     pad sources are standard-mapping button indices (0 = A/✕ … 15 = d-pad right) or 'LS-up'/'LS-down'/'LS-left'/'LS-right'.
 //   Touch feed (touch.js): IN.touchHold(action, on), IN.touchTap(action), IN.touchMove(vec|null), IN.setDevice('touch')
 //   IN.consume(code)            ignore a held key/button until released (a click the UI already used)
 //   IN.rumble(ms, strength)     navigator.vibrate on touch, the pad's vibrationActuator on pad (after a user gesture)
 //   IN.ACTIONS                  the action list.  IN.LABEL[action] = display name for the rebinding screen.
-//   Hold-to-aim (docs/HUD.md "Touch v2", desktop + pad), setting SETTINGS.groundIndicators:
+//   Hold-to-aim (docs/design/hud-ui.md "Touch v2", desktop + pad), setting SETTINGS.groundIndicators:
 //     IN.aimMode() -> 'off' | 'hold' | 'always'   ('off' on touch: touch.js owns aiming there)
 //       auto   = (default) per device: keyboard + mouse 'off', pad 'hold'
 //       off    = skills cast on press (M2a behaviour), no indicator (kbm: a faint range ring while hovering a skill slot)
@@ -43,12 +46,13 @@
 //     IN.clearAimHold()  drop the hold (menus, death, map fades)
 // ---------------------------------------------------------------------------
 const IN = (() => {
-  const ACTIONS = ['moveUp', 'moveDown', 'moveLeft', 'moveRight', 'attack', 'skillQ', 'skillE', 'skillR', 'skillF', 'skillC', 'dodge',
-    's1', 's2', 's3', 'potion', 'interact', 'inventory', 'character', 'quests', 'bestiary', 'map', 'pause', 'help', 'mute',
+  const ACTIONS = ['moveUp', 'moveDown', 'moveLeft', 'moveRight', 'attack', 'skillQ', 'ultQ', 'offhand', 'skillE', 'ultE', 'skillR', 'skillF', 'dodge',
+    's1', 's2', 's3', 'interact', 'inventory', 'character', 'quests', 'bestiary', 'map', 'pause', 'help', 'mute',
     'menuUp', 'menuDown', 'menuLeft', 'menuRight', 'accept', 'back', 'menuAlt', 'menuInfo', 'tabPrev', 'tabNext'];
-  const LABEL = { moveUp: 'Move up', moveDown: 'Move down', moveLeft: 'Move left', moveRight: 'Move right', attack: 'Attack',
-    skillQ: 'Weapon skill Q', skillE: 'Weapon skill E', skillR: 'Ultimate', skillF: 'Chest skill', skillC: 'Helmet skill', dodge: 'Dodge',
-    s1: 'Character skill 1', s2: 'Character skill 2', s3: 'Character skill 3', potion: 'Potion', interact: 'Interact',
+  const LABEL = { moveUp: 'Move up', moveDown: 'Move down', moveLeft: 'Move left', moveRight: 'Move right', attack: 'Hand action',
+    skillQ: 'Hand spell', ultQ: 'Hand ultimate', offhand: 'Offhand action', skillE: 'Offhand spell', ultE: 'Offhand ultimate',
+    skillR: 'Head skill', skillF: 'Chest skill', dodge: 'Dodge (boots)',
+    s1: 'Pocket 1', s2: 'Pocket 2', s3: 'Pocket 3', interact: 'Interact',
     inventory: 'Inventory', character: 'Character', quests: 'Quests', bestiary: 'Bestiary', map: 'Map', pause: 'Pause', help: 'Help', mute: 'Sound on/off',
     menuUp: 'Menu up', menuDown: 'Menu down', menuLeft: 'Menu left', menuRight: 'Menu right', accept: 'Confirm', back: 'Back',
     menuAlt: 'Secondary (salvage)', menuInfo: 'Compare', tabPrev: 'Previous tab', tabNext: 'Next tab' };
@@ -60,8 +64,8 @@ const IN = (() => {
   const DEFAULTS = {
     kbm: {
       moveUp: ['KeyW', 'ArrowUp'], moveDown: ['KeyS', 'ArrowDown'], moveLeft: ['KeyA', 'ArrowLeft'], moveRight: ['KeyD', 'ArrowRight'],
-      attack: ['Mouse0'], skillQ: ['KeyQ'], skillE: ['KeyE'], skillR: ['KeyR'], skillF: ['KeyF'], skillC: ['KeyC'],
-      dodge: ['ShiftLeft', 'ShiftRight', 'Mouse2'], s1: ['Digit1'], s2: ['Digit2'], s3: ['Digit3'], potion: ['Digit4'],
+      attack: ['Mouse0'], offhand: ['Mouse2'], skillQ: ['KeyQ'], ultQ: ['Shift+KeyQ'], skillE: ['KeyE'], ultE: ['Shift+KeyE'],
+      skillR: ['KeyR'], skillF: ['KeyF'], dodge: ['KeyV'], s1: ['KeyZ'], s2: ['KeyX'], s3: ['KeyC'],
       interact: ['Space'], inventory: ['Tab', 'KeyI'], character: ['KeyK'], quests: ['KeyJ'], bestiary: ['KeyB'], map: ['KeyM'], pause: ['Escape'],
       help: ['KeyH'], mute: ['KeyN'],
       menuUp: ['ArrowUp', 'KeyW'], menuDown: ['ArrowDown', 'KeyS'], menuLeft: ['ArrowLeft', 'KeyA'], menuRight: ['ArrowRight', 'KeyD'],
@@ -69,7 +73,7 @@ const IN = (() => {
     },
     pad: {
       moveUp: [], moveDown: [], moveLeft: [], moveRight: [],   // the left stick (not rebindable)
-      attack: [7], dodge: [6], skillQ: [5], skillE: [4], skillF: [2], skillC: [3], skillR: [11], interact: [0], potion: [1],
+      attack: [7], offhand: [6], skillQ: [5], skillE: [4], ultQ: [11], ultE: [10], skillR: [3], skillF: [2], dodge: [1], interact: [0],
       s1: [14], s2: [12], s3: [15], map: [13], pause: [9], inventory: [8], character: [], quests: [], bestiary: [], help: [], mute: [],
       menuUp: [12, 'LS-up'], menuDown: [13, 'LS-down'], menuLeft: [14, 'LS-left'], menuRight: [15, 'LS-right'],
       accept: [0], back: [1], menuAlt: [2], menuInfo: [3], tabPrev: [4], tabNext: [5],
@@ -77,9 +81,18 @@ const IN = (() => {
   };
   const copy = b => JSON.parse(JSON.stringify(b));
   let B = copy(DEFAULTS);
+  // chords: 'Shift+KeyQ' -> 'KeyQ'; chordsOf[ctx] = base codes some action of that context (or a global one) owns as a chord
+  const chordBase = c => typeof c === 'string' && c.startsWith('Shift+') ? c.slice(6) : null;
+  let chordsOf = null;
+  function buildChords() {
+    const out = { play: new Set(), menu: new Set(), global: new Set() };
+    for (const a of ACTIONS) for (const c of B.kbm[a] || []) { const b = chordBase(c); if (!b) continue; const cx = ctxOf(a); if (cx === 'global') for (const k in out) out[k].add(b); else { out[cx].add(b); out.global.add(b); } }
+    return out;
+  }
 
   // ---- raw device state --------------------------------------------------------------------------------
   const keys = new Set(), downEdge = new Set(), upEdge = new Set(), ignored = new Set(), padIgnored = new Set();
+  const keyMod = {};   // code -> 'Shift' when Shift was held at that key's keydown (a chord press), else ''
   const touchHeld = new Set(), touchTaps = new Set();
   let touchVec = null;
   const pad = { btn: [], prev: [], val: [], axes: [0, 0, 0, 0], connected: false, id: '' };
@@ -93,17 +106,26 @@ const IN = (() => {
 
   // ---- keyboard / mouse --------------------------------------------------------------------------------------
   const PREVENT = new Set(['Tab', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Backspace']);
-  function codeDown(code) {
-    if (capture && capture.device === 'kbm') { const cb = capture.cb; capture = null; cb(code); ignored.add(code); return; }
-    if (!keys.has(code)) downEdge.add(code);
+  const isShift = c => c === 'ShiftLeft' || c === 'ShiftRight';
+  const shiftHeld = () => keys.has('ShiftLeft') || keys.has('ShiftRight');
+  function codeDown(code, shift) {
+    shift = !!shift || shiftHeld();
+    if (capture && capture.device === 'kbm') {
+      if (isShift(code) && capture.chord !== false) { capture.shift = true; return; }   // wait for the base key: Shift+X
+      const cb = capture.cb, chord = capture.shift || (shift && capture.chord !== false); capture = null; cb(chord && !isShift(code) ? 'Shift+' + code : code); ignored.add(code); return;
+    }
+    if (!keys.has(code)) { downEdge.add(code); keyMod[code] = shift && !isShift(code) ? 'Shift' : ''; }
     keys.add(code); setDevice('kbm');
   }
-  function codeUp(code) { if (keys.has(code)) upEdge.add(code); keys.delete(code); ignored.delete(code); }
+  function codeUp(code) {
+    if (capture && capture.device === 'kbm' && isShift(code) && capture.shift) { const cb = capture.cb; capture = null; cb(code); ignored.add(code); }   // Shift alone
+    if (keys.has(code)) upEdge.add(code); keys.delete(code); ignored.delete(code);
+  }
   function onKeyDown(ev) {
     if (ev.target && /^(INPUT|TEXTAREA|SELECT)$/.test(ev.target.tagName)) return;
     if (PREVENT.has(ev.code)) ev.preventDefault();
     if (ev.repeat) return;
-    codeDown(ev.code || ev.key);
+    codeDown(ev.code || ev.key, ev.shiftKey);
   }
   function onKeyUp(ev) { codeUp(ev.code || ev.key); }
   function mousePos(ev) {
@@ -118,7 +140,7 @@ const IN = (() => {
     mousePos(ev);
     if (Math.abs(ev.movementX || 0) + Math.abs(ev.movementY || 0) > 2 || api.device === 'pad') { setDevice('kbm'); if (typeof UI !== 'undefined') UI.focus.nav = false; }
   }
-  function onMouseDown(ev) { mousePos(ev); codeDown('Mouse' + ev.button); }
+  function onMouseDown(ev) { mousePos(ev); codeDown('Mouse' + ev.button, ev.shiftKey); }
   function onMouseUp(ev) { codeUp('Mouse' + ev.button); }
   function clearAll() { for (const k of keys) upEdge.add(k); keys.clear(); ignored.clear(); touchHeld.clear(); touchVec = null; }
 
@@ -172,7 +194,7 @@ const IN = (() => {
 
   // ---- per-step resolution -----------------------------------------------------------------------------------
   // ---- hold-to-aim ----
-  const AIM_SKILL = { skillQ: 'q', skillE: 'e', skillR: 'r', skillF: 'f', skillC: 'c', s1: '1', s2: '2', s3: '3' };
+  const AIM_SKILL = { skillQ: 'q', ultQ: 'qu', skillE: 'e', ultE: 'eu', skillR: 'r', skillF: 'f' };
   let aimHold = null; const aimCasts = [];
   // 'auto' (the default) = per device: keyboard + mouse cast on press ('off': the cursor already aims, release adds
   // latency), pad 'hold'. An explicit off / hold / always from the settings screen overrides on every device.
@@ -205,10 +227,18 @@ const IN = (() => {
     clock += dt;
     pollPad();
     const usingPad = pad.connected;
+    if (!chordsOf) chordsOf = buildChords();
     for (const a of ACTIONS) {
-      const s = st[a], wasHeld = s.held;
+      const s = st[a], wasHeld = s.held, owned = chordsOf[ctxOf(a)];
       let held = false, edge = false, value = 0;
-      for (const c of B.kbm[a] || []) { if (keys.has(c) && !ignored.has(c)) { held = true; value = 1; } if (downEdge.has(c) && !ignored.has(c)) edge = true; }
+      for (const c0 of B.kbm[a] || []) {
+        const ch = chordBase(c0), c = ch || c0;
+        if ((!keys.has(c) && !downEdge.has(c)) || ignored.has(c)) continue;
+        const mod = keyMod[c] === 'Shift';
+        if (ch ? !mod : (mod && owned.has(c))) continue;   // a chord needs Shift at keydown; a plain key yields its chord press
+        if (keys.has(c)) { held = true; value = 1; }
+        if (downEdge.has(c)) edge = true;
+      }
       if (usingPad) for (const c of B.pad[a] || []) { const r = padSrc(c); if (r.on) held = true; if (r.edge) edge = true; value = Math.max(value, r.v); }
       if (touchHeld.has(a)) { held = true; value = 1; }
       if (touchTaps.has(a)) edge = true;
@@ -263,10 +293,10 @@ const IN = (() => {
 
   // ---- glyphs -----------------------------------------------------------------------------------------------
   const KEYNAME = { Space: 'SPACE', ShiftLeft: 'SHIFT', ShiftRight: 'SHIFT', ControlLeft: 'CTRL', ControlRight: 'CTRL', AltLeft: 'ALT', AltRight: 'ALT',
-    Tab: 'TAB', Escape: 'ESC', Enter: 'ENTER', Backspace: 'BKSP', ArrowUp: '▲', ArrowDown: '▼', ArrowLeft: '◄', ArrowRight: '►',
+    Tab: 'TAB', Escape: 'ESC', Enter: 'ENTER', Backspace: 'BKSP', ArrowUp: 'UP', ArrowDown: 'DN', ArrowLeft: 'LF', ArrowRight: 'RT',
     Mouse0: 'LMB', Mouse1: 'MMB', Mouse2: 'RMB', CapsLock: 'CAPS', Backquote: '`', Minus: '-', Equal: '=', BracketLeft: '[', BracketRight: ']',
     Semicolon: ';', Quote: "'", Comma: ',', Period: '.', Slash: '/', Backslash: '\\' };
-  const keyName = c => KEYNAME[c] || (/^Key[A-Z]$/.test(c) ? c.slice(3) : /^Digit\d$/.test(c) ? c.slice(5) : /^Numpad\d$/.test(c) ? 'NUM' + c.slice(6) : /^F\d+$/.test(c) ? c : String(c).toUpperCase());
+  const keyName = c => chordBase(c) ? '▲' + keyName(chordBase(c)) : KEYNAME[c] || (/^Key[A-Z]$/.test(c) ? c.slice(3) : /^Digit\d$/.test(c) ? c.slice(5) : /^Numpad\d$/.test(c) ? 'NUM' + c.slice(6) : /^F\d+$/.test(c) ? c : String(c).toUpperCase());
   const PAD_TEXT = {
     xbox: ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'BACK', 'START', 'LS', 'RS', 'D▲', 'D▼', 'D◄', 'D►', 'HOME'],
     ps: ['✕', '○', '□', '△', 'L1', 'R1', 'L2', 'R2', 'SHARE', 'OPTIONS', 'L3', 'R3', 'D▲', 'D▼', 'D◄', 'D►', 'PS'],
@@ -287,11 +317,13 @@ const IN = (() => {
       if (typeof src !== 'number') return { text: 'LS', device, style, src, sprite: 'padStick' };
       return { text: PAD_TEXT[style][src] || 'B' + src, device, style, src, sprite: PAD_SPRITE[style][src] || null };
     }
-    return { text: keyName(src), device: 'kbm', style, src, sprite: null };
+    return { text: keyName(src), device: 'kbm', style, src, sprite: null, chord: !!chordBase(src) };
   }
   api.glyphInfo = glyphInfo;
   api.glyph = (a, device) => glyphInfo(a, device).text;
   api.keyName = keyName;
+  api.chordBase = chordBase;
+  api.keyLabel = c => chordBase(c) ? 'SHIFT+' + keyName(chordBase(c)) : keyName(c);   // long form for the rebinding screen
 
   // ---- bindings ---------------------------------------------------------------------------------------------
   api.getBindings = () => copy(B);
@@ -307,21 +339,38 @@ const IN = (() => {
         B[dev][a] = ok.slice(0, 4);
       }
     }
+    chordsOf = null;
     return true;
   };
-  api.resetBindings = device => { if (device) B[device] = copy(DEFAULTS[device]); else B = copy(DEFAULTS); };
+  api.resetBindings = device => { if (device) B[device] = copy(DEFAULTS[device]); else B = copy(DEFAULTS); chordsOf = null; };
+  // the pairs a chord may share a base key with (Q / Shift+Q, E / Shift+E): the spell and its ultimate
+  const CHORD_PAIR = { skillQ: 'ultQ', ultQ: 'skillQ', skillE: 'ultE', ultE: 'skillE' };
+  // a chord whose base key is bound plain to another action of the same context (outside the pairs) is ambiguous: refused
+  api.chordConflict = (device, a, code) => {
+    if (device !== 'kbm') return null;
+    const cx = ctxOf(a), same = b => b !== a && (cx === 'global' || ctxOf(b) === 'global' || ctxOf(b) === cx), base = chordBase(code);
+    for (const b of ACTIONS) {
+      if (!same(b) || CHORD_PAIR[a] === b) continue;
+      for (const c of B.kbm[b] || []) { if (base && c === base) return b; if (!base && chordBase(c) === code) return b; }
+    }
+    return null;
+  };
   api.rebind = (device, a, code, o = {}) => {
     if (!B[device] || !ACTIONS.includes(a)) return { ok: false, conflict: null, swapped: false };
     const slot = o.slot || 0, swap = o.swap !== false, cx = ctxOf(a);
+    if (device === 'kbm' && (code === 'ShiftLeft' || code === 'ShiftRight') && cx === 'play') return { ok: false, conflict: null, swapped: false, reason: 'shift' };   // Shift is the chord modifier
     const clash = ACTIONS.find(b => b !== a && (B[device][b] || []).includes(code) && (cx === 'global' || ctxOf(b) === 'global' || ctxOf(b) === cx));
-    if (clash && !swap) return { ok: false, conflict: clash, swapped: false };
+    if (clash && !swap) return { ok: false, conflict: clash, swapped: false };   // the direct clash is reported first
+    const amb = api.chordConflict(device, a, code);
+    if (amb) return { ok: false, conflict: amb, swapped: false, reason: 'chord' };
     const list = B[device][a] = (B[device][a] || []).slice(), old = list[slot];
     if (clash) { const other = B[device][clash] = B[device][clash].slice(), i = other.indexOf(code); if (old != null && !other.includes(old)) other[i] = old; else other.splice(i, 1); }
     const dup = list.indexOf(code); if (dup >= 0 && dup !== slot) list.splice(dup, 1);
     list[Math.min(slot, list.length)] = code;
+    chordsOf = null;
     return { ok: true, conflict: clash || null, swapped: !!clash };
   };
-  api.capture = (device, cb) => { capture = { device, cb }; };
+  api.capture = (device, cb, o = {}) => { capture = { device, cb, chord: o.chord !== false, shift: false }; };
   api.cancelCapture = () => { capture = null; };
   api.capturing = () => !!capture;
 

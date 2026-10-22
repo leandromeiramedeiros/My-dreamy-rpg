@@ -19,7 +19,7 @@
 //   --verbose                                    print validation info per map
 // Merging also drops the ids a recipe `replaces` (pinewood replaces roothollow + pinewood_boss).
 // Reports per map: sections, main-path walk length, legs, point-of-interest / landmark / fight spacing, and minutes per section
-// of the required route (hard cap 24 min per map, DESIGN 25.1).
+// of the required route (hard cap 24 min per map, docs/design/world-maps.md).
 const fs = require('fs');
 const path = require('path');
 const gen = require('./gen.js');
@@ -75,7 +75,7 @@ function mergeInto(worldFile, maps, outFile, drop = []) {
   return { roundtrip, ids: Object.keys(maps), dropped, total: Object.keys(w.maps).length };
 }
 
-// ---------------------------------------------------------------------------- audits (DESIGN 25.1)
+// ---------------------------------------------------------------------------- audits (docs/design/world-maps.md)
 const SPEED = 3.7;
 const fmtMin = s => (s / 60).toFixed(1);
 function spacing(vals) { const out = []; for (let i = 1; i < vals.length; i++) out.push(vals[i] - vals[i - 1]); return out; }

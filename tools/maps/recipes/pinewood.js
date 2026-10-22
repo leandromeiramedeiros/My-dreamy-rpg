@@ -1,5 +1,5 @@
 'use strict';
-// pinewood -- Misty Pinewood, Act I zone map (112x112), built with the `zone` stamp (DESIGN 25.3, docs/PRODUCTION.md "Pinewood 112x112 zone recipe").
+// pinewood -- Misty Pinewood, Act I zone map (112x112), built with the `zone` stamp (docs/design/world-maps.md, docs/PRODUCTION.md "Pinewood 112x112 zone recipe").
 // ONE map that replaces the old pinewood (56x56), roothollow (32x32) and pinewood_boss (24x24) maps. Four sections on one grid:
 //   forest   [0,20 .. 112,112]  outer      the road, creek, 3 shrines, 2 shortcut loops, the landmark rhythm, the elite, the tablet, 2 fishing spots, the animal trail
 //   hollow   [0,0  .. 56,20]    under      Root Hollow: cave palette, dark 0.45. Keyed warp door at (44,36); the root-stair up to shrine 3 leaves it. Mossjaw
@@ -141,7 +141,7 @@ module.exports = zone({
   ambush: [{ id: 'ford', name: 'Thornbacks at the ford', at: { path: 'main', frac: 0.335 }, r: 4.2, pack: 'pw_boar_pierce', requires: ['r1_done'], banner: ['Thornback Boars', 'Arrows glance off their bristles (resist pierce)'], clear: { text: 'The ford is quiet again.', heal: 20 } }],
   signs: [{ room: 'start', dx: 3.2, dy: -3.4, text: 'North: the Root Hollow. Mind the creek.' }, { room: 'r1', dx: -4.5, dy: -5.5, text: 'Danger: ogres in the clearing' }],
   startOff: [-0.5, 0.8],
-  chestLoot: { boss: 'amulet', vault: 'belt' },   // DESIGN 19.4: Bramblehorn's chest -> amulet; the first secret vault (Fox Warrens) -> belt
+  chestLoot: { boss: 'amulet', vault: 'belt' },   // docs/design/items.md: Bramblehorn's chest -> amulet; the first secret vault (Fox Warrens) -> belt
   text: {
     intro: ['The animals are running.', 'Something big has woken in the wood.'],
     tablet: 'Bramblehorn kept the roots. He loved the roots too much.',

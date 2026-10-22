@@ -95,7 +95,7 @@ function makeNoise(ctx) {
 // Build the mixing graph for one song: layer buses -> master -> compressor -> destination, plus delay and reverb returns.
 function buildGraph(ctx, song) {
   const g = { ctx, layers: {} };
-  g.comp = ctx.createDynamicsCompressor();   // AUDIO.md: threshold -12 dB, ratio 3
+  g.comp = ctx.createDynamicsCompressor();   // docs/design/audio.md: threshold -12 dB, ratio 3
   g.comp.threshold.value = -12; g.comp.ratio.value = 3; g.comp.knee.value = 6; g.comp.attack.value = 0.01; g.comp.release.value = 0.25;
   g.master = ctx.createGain(); g.master.gain.value = MASTER_GAIN;
   g.master.connect(g.comp); g.comp.connect(ctx.destination);
@@ -289,7 +289,7 @@ function startPlayer(id) {
 function applyLevels() {
   if (!cur) return;
   const song = cur.song, phase = +$('phase').value, lv = layerLevels(song, phase, mutes);
-  // stem/phase changes land on the next bar line (AUDIO.md); mutes are immediate
+  // stem/phase changes land on the next bar line (docs/design/audio.md); mutes are immediate
   const barDur = cur.stepDur * cur.plan.n, elapsed = AC.currentTime - cur.t0;
   const at = song.stems ? cur.t0 + Math.ceil(Math.max(elapsed, 0) / barDur + 1e-6) * barDur : AC.currentTime;
   for (const name in lv) setLayerLevel(cur.g, name, lv[name], Math.max(at, AC.currentTime), 0.15);

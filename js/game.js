@@ -35,7 +35,7 @@ let CAST = null;
 function withCast(c, fn) { const o = CAST; CAST = c; try { fn(); } finally { CAST = o; } }
 const delay = (t, fn) => G.delays.push({ t, fn, c: CAST });
 const shake = a => { if (CAST && CAST.src === 'echo') return; G.shakeA = Math.max(G.shakeA, a * (typeof shakeMul === 'function' ? shakeMul() : 1)); };
-// ===== hit feel: power-scaled hitlag (DESIGN §27, meeting 2026-10-20 R2) ===================================
+// ===== hit feel: power-scaled hitlag (docs/design/combat-feel.md, meeting 2026-10-20 R2) ===================================
 // Two tiers, both counted in fixed STEPs (1/60 s), never seconds, so slow-mo cannot stretch them:
 //  * target-only freeze e.hitFreeze (damageEnemy, every non-DoT hit): the struck enemy skips AI / move / knockback and
 //    shows its hit frame; costs no input latency.
@@ -84,7 +84,7 @@ function aggEnd(A) {
 }
 const fx = o => { o.t = 0; G.effects.push(o); return o; };
 const zone = o => { o.t = 0; o.tickT = 0; o.cast = CAST; G.zones.push(o); return o; };
-// ===== particles: pooled, hard cap PART.cap (DESIGN §0 / §16.6.5) ===========================================
+// ===== particles: pooled, hard cap PART.cap (docs/design/pillars-and-rules.md) ===========================================
 // Combat bursts go through burst(); ambient motes (petals, mist, sparkles…) through addPart(o) and are the first
 // to go: they are skipped by budget and when the pool is full, while a full pool evicts ambient motes for combat.
 // PART.budget (0.35..1) scales with measured frame time (main.js), so a struggling device sheds particles first.
@@ -127,7 +127,7 @@ const pick2 = arr => arr[(Math.random() * arr.length) | 0];
 function text(x, y, z, s, col, big = false, life = 0.9) { const t = { x, y, z, s, col, big, t: 0, life, vx: frand(-0.6, 0.6) }; G.texts.push(t); return t; }
 // damage numbers respect the settings toggle (reveals like WEAK: FIRE always show)
 // o = { e: enemy, kind: 'crit'|'weak'|'resist'|'normal', v: raw damage }: the HUD styles by kind; hits on the same enemy
-// within 80 ms merge into one number (HUD.md)
+// within 80 ms merge into one number (docs/design/hud-ui.md)
 function dmgText(x, y, z, s, col, big, o) {
   if (typeof damageNumbersOn === 'function' && !damageNumbersOn()) return;
   if (o && o.e) {
@@ -146,15 +146,15 @@ function dmgText(x, y, z, s, col, big, o) {
 function makePlayer() {
   const p = {
     x: 0, y: 0, z: 0, r: 0.28, aim: 0, face: 1, back: false, walkT: 0, moving: false,
-    gear: { weapon: 'sword', head: 'knighthelm', chest: 'warden', boots: 'knightgreaves' },   // variant / family ids (data.js), derived from p.equip
+    gear: { weapon: 'sword', offhand: 'buckler', head: 'knighthelm', chest: 'warden', boots: 'knightgreaves' },   // variant / family ids (data.js), derived from p.equip
     equip: {}, bag: [], dust: 0, potions: 3, xp: 0, cdm: {},
-    wsk: { sword: { q: 'sunslash', e: 'dashstrike', r: 'judgement' }, staff: { q: 'firebolt', e: 'barrage', r: 'meteor' }, bow: { q: 'multishot', e: 'tumble', r: 'arrowrain' } },   // per weapon variant (§23)
-    csk: ['secondwind', 'chain', 'shootingstar'],
+    pockets: POCKET_DEFAULT.slice(), pocketN: {}, pages: {},   // Z / X / C consumables, the Pages store (items.js)
+    deck: 0,         // the companion's active entry index (not saved)
     cds: {}, buffs: {}, atkT: 0, combo: 0, swing: null, dash: null, invulnT: 0, hurtT: 0, rootT: 0, slowT: 0, castT: 0, spin: 0,
     name: 'Aerin', level: 1, dead: false,
-    ult: 0,          // ultimate charge 0..100 (§15.3), not saved
+    ult: 0,          // ultimate charge 0..100 (§15.3), shared by both ultimates, not saved
     ranks: {},       // skill id -> { hits } (casts that hit; rank = 1 + hits / RANK_HITS, max 5), saved
-    mods: {},        // skill id -> { 3: modId, 5: modId } chosen SKILL_MODS, saved
+    holdT: 0, holdCharge: 0,   // hold-M1 (Staff Channel, Bow Focus): seconds held / 0..1 for the touch charge ring
     cast: null,      // the skill cast in progress { c, id, slot, age, dur, mp } (dodge-cancel window)
     dodgeBuf: 0, autoAtk: false, stMax: {},
   };
@@ -197,11 +197,16 @@ function recalcStats(p, full) {
   // §28 null gear slots: an empty slot's p.gear entry is that slot's DEFAULT family id (render.js / menus read item(slot, p.gear[slot])
   // for a pose or a name), never the last item worn; everything that acts (skills, damage, the paper doll) reads p.equip
   for (const slot of SLOTS) p.gear[slot] = p.equip[slot] ? familyOf(p.equip[slot].base) : ITEMS[slot][0].id;
+  p.gear.offhand = p.equip.offhand ? familyOf(p.equip.offhand.base) : null;
+  // a Grip (loadout.md): matched by the two items' variant tags
+  const tags = [p.equip.weapon, p.equip.offhand].filter(Boolean).map(it => familyOf(it.base));
+  p.grip = (GRIPS.find(g => g.tags.every(t => tags.includes(t)) && tags.length === 2) || {}).id || null;
   for (const slot of EQUIP_SLOTS) {
     const it = p.equip[slot]; if (!it) continue;
     const st = statsOf(it), trk = isTrinket(it);
     for (const k in st) {
       let v = st[k];
+      if (k === 'dmg' && slot === 'offhand') continue;   // a 1H weapon in OFFHAND lends its affixes and gems, never its base damage
       if (trk && k === 'resAll') { v = Math.min(v, Math.max(0, C.trinketResAll - trkAll)); trkAll += v; }   // +15 % across all trinkets
       else if (trk && /^res[A-Z]/.test(k)) v = Math.min(v, C.trinketResLine);                             // +10 % per trinket line
       s[k] = (s[k] || 0) + v;
@@ -257,8 +262,8 @@ function recalcStats(p, full) {
 const EFFECT_ICD = 0.5;
 const EFFECT_IMPL = {
   // ring
-  fireBurn: { when: 'hit', stats: { fireDmg: 'fireDmg' }, do(c, v) { if (c.el === 'fire' && Math.random() < (v.burnChance || 0)) { const e = c.e; e.burnT = Math.max(e.burnT || 0, 2); e.burnTick = e.burnTick || 0.5; e.burnCast = c.cast; } } },
-  frostPower: { when: 'hit', stats: { frostDmg: 'frostDmg' }, do(c, v) { if (c.el === 'frost' && Math.random() < (v.freezeChance || 0)) { const e = c.e; e.stunT = Math.max(e.stunT, e.boss ? 0.25 : 1); e.frozen = 1; } } },
+  fireBurn: { when: 'hit', stats: { fireDmg: 'fireDmg' }, do(c, v) { if (c.el === 'fire' && Math.random() < (v.burnChance || 0)) { const e = c.e; applyStatus(e, 'burning', Math.max(e.burnT || 0, 2), 'fire'); e.burnTick = e.burnTick || 0.5; e.burnCast = c.cast; } } },
+  frostPower: { when: 'hit', stats: { frostDmg: 'frostDmg' }, do(c, v) { if (c.el === 'frost' && Math.random() < (v.freezeChance || 0)) { const e = c.e; applyStatus(e, 'frozen', Math.max(e.stunT, e.boss ? 0.25 : 1), 'frost'); } } },
   naturePower: { when: 'passive', stats: { natureDmg: 'natureDmg' }, partial: 'poisonChance (no hero poison yet)' },
   lightningPower: { when: 'passive', stats: { lightningDmg: 'lightningDmg' }, partial: 'shockDur (no Shock status yet)' },
   arcanePower: { when: 'passive', stats: { arcaneDmg: 'arcaneDmg' }, partial: 'markDur (no Marks yet)' },
@@ -297,7 +302,7 @@ const AFFIX_EFFECTS = [
   { id: 'onDodge', src: 'affix', when: 'dodge', do(c, v, p) { healPlayer(p, p.maxHp * v); } },
   { id: 'onKill', src: 'affix', when: 'kill', do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + p.maxMp * v); } },
 ];
-// unique rules on the bus (src 'unique', live while hasRule(p, id)): §30 Echo records every basic / Q / E cast (when 'cast',
+// unique rules on the bus (src 'unique', live while hasRule(p, id)): §30 Echo records every hand action / Q cast (when 'cast',
 // emitted by useSkill and basicAttack; ctx = { p, c, slot, id, a, tx, ty }). Its replays never emit 'cast' (no echo of an echo).
 const UNIQUE_EFFECTS = [
   { id: 'echo', src: 'unique', when: 'cast', icd: 0, name: 'Echo', hint: 'A spirit repeats your attacks', do(c, v, p) { echoRecord(p, c); } },
@@ -334,37 +339,74 @@ function emitEffects(when, ctx) {
 }
 // ultimate cost (rCost boon: 80 or 90 charge instead of 100) and the first-R-in-a-fight discount (rFirstFree: free / half)
 const ultCost = p => (p.sum && p.sum.rCost ? Math.min(100, p.sum.rCost) : 100);
-function ultNeed(p) { const c = ultCost(p); return p.boons && p.boons.rFirstFree && p.freeR ? (p.boons.rFirstFree.vals.rFirstFree ? 0 : c * (p.sum.rFirstCost || 1)) : c; }
+function ultNeed(p, id) {
+  let c = ultCost(p); if (id === 'chapter' && p.grip === 'grip_archmage') c = Math.min(c, 80);   // Archmage grip
+  return p.boons && p.boons.rFirstFree && p.freeR ? (p.boons.rFirstFree.vals.rFirstFree ? 0 : c * (p.sum.rFirstCost || 1)) : c;
+}
 // a fight starts after FIGHT_GAP s with no damage dealt or taken (arms rFirstFree)
 const FIGHT_GAP = 8;
 function combatPing(p) { if (!p) return; if (G.t - (p.combatT != null ? p.combatT : -1e9) > FIGHT_GAP) p.freeR = true; p.combatT = G.t; }
-const SLOT_KEYS = ['q', 'e', 'r', 'f', 'c', 'shift', '1', '2', '3'];
-// an empty slot grants nothing (§28 bare start): no weapon -> no Q E R, no chest / helm -> no F / C; bare feet keep a short
-// Roll on SHIFT (UNARMED.roll) so the dodge verb exists before the first boots (4:50)
+// Loadout v3 slots (docs/design/loadout.md): lmb q qu = the HAND item (M1 action, Q spell, Shift+Q ultimate); rmb e eu = the
+// OFFHAND item (M2 off-action, E spell, Shift+E ultimate); r f v = head, chest, boots (V = the dodge); z x c = pockets.
+const SLOT_KEYS = ['q', 'qu', 'rmb', 'e', 'eu', 'r', 'f', 'v'];
+const POCKET_KEYS = ['z', 'x', 'c'];
+const isUlt = slot => slot === 'qu' || slot === 'eu';
+const WEAPON_SLOTS = ['q', 'qu', 'e', 'eu'];   // item-line spells and ultimates (the Warrior ring's weapon stagger)
+// the active deck entries of the worn companion (socketed pages / arrows, in order)
+const deckEntries = p => { const it = p.equip.offhand; return it && isCompanion(it) && Array.isArray(it.pages) ? it.pages.filter(Boolean) : []; };
+function deckClamp(p) { const n = deckEntries(p).length; p.deck = n ? ((p.deck | 0) % n + n) % n : 0; }
+const deckActive = p => { const L = deckEntries(p); return L.length ? L[clamp(p.deck | 0, 0, L.length - 1)] : null; };
+// the M2 off-action: the OFFHAND line's own action, or the class off-action of a 1H weapon worn there; with an empty OFFHAND a 1H
+// HAND item lends its class off-action (x1.0); a two-hander alone has none (its hold-M1 is the action)
+function offAction(p) {
+  const off = p.equip.offhand, hand = p.equip.weapon;
+  if (off) { const l = lineOf(off); return l ? (l.slot === 'weapon' ? CLASS_OFF[l.class] || null : l.action) : null; }
+  if (hand && handsOf(hand) === 1) return CLASS_OFF[lineOf(hand).class] || null;
+  return null;
+}
+// an empty slot grants nothing (§28 bare start): no HAND item -> no Q / Shift+Q, no OFFHAND item -> no E / Shift+E, no chest / helm ->
+// no F / R; bare feet keep a short Roll on V (UNARMED.roll) so the dodge verb exists before the first boots (4:50)
 function slotSkill(p, slot) {
-  if (slot === 'q' || slot === 'e' || slot === 'r') return p.equip.weapon && p.wsk[p.gear.weapon] ? p.wsk[p.gear.weapon][slot] : null;
+  const hand = p.equip.weapon, off = p.equip.offhand;
+  if (slot === 'q') return hand ? (hand.rule === 'stillhour' ? 'hush' : lineOf(hand).spell) : null;
+  if (slot === 'qu') return hand ? lineOf(hand).ult : null;
+  if (slot === 'rmb') return offAction(p);
+  if (slot === 'e' || slot === 'eu') {
+    if (!off) return null;
+    const l = lineOf(off); if (!l) return null;
+    if (slot === 'eu') return l.role === 'companion' && !deckEntries(p).length ? null : l.ult;
+    if (l.slot === 'weapon' && off.rule === 'stillhour') return 'hush';
+    return l.role === 'companion' ? deckActive(p) : l.spell;
+  }
   if (slot === 'f') return p.equip.chest ? item('chest', p.gear.chest).skill : null;
-  if (slot === 'c') return p.equip.head ? item('head', p.gear.head).skill : null;
-  if (slot === 'shift') return p.equip.boots ? item('boots', p.gear.boots).skill : UNARMED.roll;
-  return p.csk[+slot - 1] || null;
+  if (slot === 'r') return p.equip.head ? item('head', p.gear.head).skill : null;
+  if (slot === 'v') return p.equip.boots ? item('boots', p.gear.boots).skill : UNARMED.roll;
+  return null;
 }
 // the bare-handed hero (§28): LMB is a shove (1 damage, a little knockback, no skills), SHIFT a barefoot roll
 const UNARMED = { name: 'Bare hands', kind: 'unarmed', element: 'slash', basic: { name: 'Shove', dmg: 1, rate: 0.5 }, roll: 'roll' };
 const weaponOf = p => (p.equip.weapon ? item('weapon', p.gear.weapon) : UNARMED);
-// ===== skill casting: ultimate charge, dodge-cancel, ranks and modifiers (DESIGN §15.2–15.3) ===================
-const SLOT_ACTION = { lmb: 'attack', q: 'skillQ', e: 'skillE', r: 'skillR', f: 'skillF', c: 'skillC', shift: 'dodge', 1: 's1', 2: 's2', 3: 's3', pot: 'potion' };
+// the OFFHAND item's tier index (Buckler reflects projectiles from T3 = index 2)
+const offTier = p => (p.equip.offhand ? p.equip.offhand.tier | 0 : -1);
+// ===== skill casting: ultimate charge, dodge-cancel, ranks and modifiers (docs/design/loadout.md) ===================
+const SLOT_ACTION = { lmb: 'attack', q: 'skillQ', qu: 'ultQ', rmb: 'offhand', e: 'skillE', eu: 'ultE', r: 'skillR', f: 'skillF', v: 'dodge', z: 's1', x: 's2', c: 's3' };
 const CANCEL_AFTER = 0.1;            // dodge cancels a cast only after its first 0.1 s (buffered until then)
 const RANK_HITS = 25, RANK_MAX = 5, RANK_BONUS = 0.06;
 // Every cast — skills AND basic attacks — carries ONE mutable ctx, created in useSkill / basicAttack and threaded
 // (via CAST -> delays, projectiles, zones, dashes) into every hit it produces: damageEnemy reads cast.ctx.
 //   ctx = { dmg, r, stun, slow, burn, cd, mp, dur (multipliers), extraProj, count, stagger, element, rank, onHit:[] }
 // onHit[] = fn(enemy, dmg, opts) called per hit (the M4 EFFECTS layer hooks here). Single call sites for M4's bus:
-// cast = useSkill / basicAttack, dodge = useSkill(slot 'shift'), hit = damageEnemy, kill = killEnemy.
-// SKILL_MODS: data only. { id: { id, skill, rank: 3|5, name, desc, apply(ctx) } } — apply() may only change the
-// numbers on ctx (dmg r stun slow burn cd mp dur extraProj are multipliers / counts, element a damage type).
-// Content arrives later (M4); the slots open at ranks 3 and 5.
-const SKILL_MODS = {};
-const MOD_NUM_KEYS = ['dmg', 'r', 'stun', 'slow', 'burn', 'cd', 'mp', 'dur', 'extraProj', 'count', 'stagger'];
+// cast = useSkill / basicAttack, dodge = useSkill(slot 'v'), hit = damageEnemy, kill = killEnemy.
+// (Loadout v3 removed the modifier slots: a skill's numbers change only with mastery ranks, tier and rarity.)
+// applyStatus(e, id, dur, el): every status source lands through STATUS.apply (status.js: it writes the live field the rules
+// run on - burnT, stunT + frozen, slowT, dreadT, rootT - and keeps the status's max / element for the status layers). The
+// caller keeps its own max / overwrite rule (dur is the field's new value). Without status.js (node tools) the field alone.
+function applyStatus(e, id, dur, el) {
+  if (typeof STATUS !== 'undefined') return STATUS.apply(e, id, dur, 0, el);
+  const f = { burning: 'burnT', frozen: 'stunT', chilled: 'slowT', dread: 'dreadT', rooted: 'rootT' }[id];
+  if (f) { e[f] = dur; if (id === 'frozen') e.frozen = 1; }
+  return !!f;
+}
 const newCtx = (element, stagger = 0, rank = 1) => ({ dmg: 1, r: 1, stun: 1, slow: 1, burn: 1, cd: 1, mp: 1, dur: 1, extraProj: 0, count: 1, stagger, element, rank, onHit: [] });
 const skillRank = (p, id) => Math.min(RANK_MAX, 1 + Math.floor(((p.ranks[id] && p.ranks[id].hits) || 0) / RANK_HITS));
 const skillRankBonus = (p, id) => RANK_BONUS * (skillRank(p, id) - 1);
@@ -372,33 +414,8 @@ function skillRankProgress(p, id) {
   const hits = (p.ranks[id] && p.ranks[id].hits) || 0, rank = skillRank(p, id);
   return { rank, hits, max: rank >= RANK_MAX, into: rank >= RANK_MAX ? RANK_HITS : hits - (rank - 1) * RANK_HITS, need: RANK_HITS, frac: rank >= RANK_MAX ? 1 : (hits - (rank - 1) * RANK_HITS) / RANK_HITS, bonus: skillRankBonus(p, id) };
 }
-const skillModOptions = (id, rank) => Object.values(SKILL_MODS).filter(m => m.skill === id && m.rank === rank);
-function skillModSlots(p, id) {
-  const r = skillRank(p, id);
-  return [3, 5].map(rank => ({ rank, open: r >= rank, chosen: (p.mods[id] && p.mods[id][rank]) || null, options: skillModOptions(id, rank) }));
-}
-function chooseSkillMod(p, id, rank, modId) {
-  const m = modId == null ? null : SKILL_MODS[modId];
-  if (modId != null && (!m || m.skill !== id || m.rank !== rank || skillRank(p, id) < rank)) return false;
-  const o = p.mods[id] || (p.mods[id] = {});
-  if (m) o[rank] = modId; else delete o[rank];
-  return true;
-}
-// numbers-only cast context: rank bonus lives in damageEnemy's additive sum; mods multiply these
-function skillCtx(p, id, s) {
-  const ctx = newCtx(s.element, s.stagger || 0, skillRank(p, id));
-  const ch = p.mods[id] || {};
-  for (const rank of [3, 5]) {
-    const m = SKILL_MODS[ch[rank]]; if (!m || m.skill !== id || ctx.rank < rank || typeof m.apply !== 'function') continue;
-    const before = Object.assign({}, ctx);
-    try { m.apply(ctx); } catch (e) { Object.assign(ctx, before); }
-    for (const k of MOD_NUM_KEYS) if (typeof ctx[k] !== 'number' || !isFinite(ctx[k])) ctx[k] = before[k];
-    if (typeof ctx.element !== 'string' || !EL_COL[ctx.element]) ctx.element = before.element;
-    ctx.rank = before.rank;
-    if (!Array.isArray(ctx.onHit)) ctx.onHit = before.onHit;
-  }
-  return ctx;
-}
+// numbers-only cast context: the rank bonus lives in damageEnemy's additive sum
+const skillCtx = (p, id, s) => newCtx(s.element, s.stagger || 0, skillRank(p, id));
 const castR = () => (CAST && CAST.ctx ? CAST.ctx.r : 1);
 function addSkillHit(p, id) {
   const r = p.ranks[id] || (p.ranks[id] = { hits: 0 }), before = skillRank(p, id);
@@ -406,7 +423,7 @@ function addSkillHit(p, id) {
   r.hits++;
   const after = skillRank(p, id);
   if (after > before) {
-    const sk = SKILLS[id], msg = `${sk.name} — Rank ${after}${after === 3 || after === 5 ? ', modifier slot open' : ''}`;
+    const sk = SKILLS[id], msg = `${sk.name} — Rank ${after}`;
     say(msg); sfx('levelup');
     if (typeof UI !== 'undefined') UI.toast({ text: msg, icon: typeof skillIcon === 'function' ? skillIcon(id) : null, col: '#ffd35a' });
   }
@@ -418,9 +435,10 @@ const ultGain = (p, base, reaction) => Math.min(reaction ? 10 : 5, base * G.tune
 // §20.5 MP builder: per weapon family, basic attacks only, ONCE per swing (not per target), hard cap 40 MP/s from
 // hits over a rolling 1 s window. Values ~ swing time so every family builds ~15-23 MP/s on basics
 // (sword 8 / 0.42 s, staff 9 / 0.48 s, bow 7 / 0.36 s, daggers 6 / 0.28 s, two-hander 14 / 0.62 s).
-const MP_ON_HIT = { sword: 8, staff: 9, bow: 7, daggers: 6, dagger: 6, twohander: 14 };
+const MP_ON_HIT = { sword: 8, staff: 9, bow: 7, daggers: 6, dagger: 6, twohander: 14 };   // the hand action builds MP (loadout.md)
 const MP_HIT_CAP = 40;
 function basicMpGain(p, c) {
+  if (p.hush) return;   // Hush: no MP from hits
   if (c && c.basic) { if (c.mpDone) return; c.mpDone = true; }
   const w = weaponOf(p), g0 = MP_ON_HIT[w && w.kind] != null ? MP_ON_HIT[w.kind] : G.tune.player.mpOnHit;
   const gain = Math.round(g0 * (1 + ((p.sum && p.sum.mpOnHit) || 0)));   // +x % MP on hit (Linen Robe implicit, Mystic origin ring)
@@ -444,40 +462,109 @@ function cancelCast(p) {
 }
 function useSkill(p, slot) {
   const id = slotSkill(p, slot); if (!id || p.dead) return false;
-  const s = SKILLS[id], ult = slot === 'r', dodge = slot === 'shift';
-  if ((p.cds[id] || 0) > 0 || p.rootT > 0) return false;
+  const s = SKILLS[id], ult = isUlt(slot), dodge = slot === 'v', off = slot === 'rmb', deck = slot === 'e' && isCompanion(p.equip.offhand);
+  if (id === 'hush' && p.hush) { hushEnd(p, 'toggle'); return true; }   // Hush is a toggle: the second press ends it
+  const ck = s.cdKey || id;   // a shared cooldown key (every parry source shares the 1 s parry ICD)
+  if ((p.cds[ck] || 0) > 0 || p.rootT > 0) return false;
+  if (deck && (p.cds.__page || 0) > 0) return false;   // pages / arrows share one 1.0 s casting rhythm
   if ((s.st || 0) > p.st) { say('Not enough stamina'); return false; }
   if (dodge && castActive(p)) {
     if (p.cast.age < CANCEL_AFTER) { p.dodgeBuf = CANCEL_AFTER - p.cast.age + 0.02; return false; }   // buffered
     cancelCast(p);
   }
   if (p.dash) return false;
-  const need = ult ? ultNeed(p) : 0;   // 100, or the amulet's rCost / first-R-of-a-fight discount
+  const need = ult ? ultNeed(p, id) : 0;   // 100, or the amulet's rCost / first-ultimate-of-a-fight discount, the Archmage Chapter 80
   if (ult && p.ult < need) { if (!G.ultWarnT || G.t > G.ultWarnT) { say('Ultimate is still charging'); G.ultWarnT = G.t + 1.2; } return false; }
-  const ctx = skillCtx(p, id, s), mp = Math.round((s.mp || 0) * ctx.mp);
+  const ctx = skillCtx(p, id, s), mp = off ? 0 : Math.round((s.mp || 0) * ctx.mp);   // an off-action costs stamina, never MP
   if (ult && p.sum && p.sum.ultRadius) ctx.r *= 1 + p.sum.ultRadius * 0.4;   // amulet ultRadius: +1 tile on a ~2.5-tile ultimate
   if (mp > p.mp) { say('Not enough mana'); return false; }
   p.mp -= mp; p.st -= s.st || 0;
   // ultimates use the charge bar instead of a cooldown (a short lockout stops double-casts)
-  if (ult) { p.ult = Math.max(0, p.ult - need); if (p.freeR && p.boons && p.boons.rFirstFree) p.freeR = false; p.cds[id] = p.cdm[id] = 0.5; }
-  else p.cds[id] = p.cdm[id] = s.cd * ctx.cd * (1 - Math.min(capsT().cdr, p.cdr));
+  if (ult) { p.ult = Math.max(0, p.ult - need); if (p.freeR && p.boons && p.boons.rFirstFree) p.freeR = false; p.cds[ck] = p.cdm[ck] = 0.5; }
+  else p.cds[ck] = p.cdm[ck] = s.cd * ctx.cd * (off ? 1 : 1 - Math.min(capsT().cdr, p.cdr));
+  if (deck) p.cds.__page = p.cdm.__page = PAGE_LOCK;
   if (p.swing && p.atkT > 0) p.swing = null;   // attacks cancel into skills
-  const c = { skill: id, el: ctx.element, slot, ctx, hit: false };
+  if (id === 'sunslash' && p.vanguardT > G.t) { ctx.dmg *= 1.4; p.vanguardT = 0; }   // Vanguard grip: a parry primed Sunslash
+  if (deck && p.grip === 'grip_archmage') ctx.dmg *= ARCHMAGE_PAGE;   // Archmage grip: pages hit harder
+  // off-actions never feed the charge; the Bow + Quiver grip: a loosed arrow is a focused shot (always crits)
+  const c = { skill: id, el: ctx.element, slot, ctx, hit: false, noCharge: off, deck, crit: deck && p.grip === 'grip_bow_quiver' };
   const n0 = G.delays.length, a0 = p.aim, tx0 = G.mouse.wx, ty0 = G.mouse.wy, x0 = p.x, y0 = p.y;
   withCast(c, () => s.cast(p, a0, tx0, ty0));
-  emitEffects('cast', { p, c, slot, id, a: a0, tx: tx0, ty: ty0, x: x0, y: y0 });   // §30: the cast hook (Echo records lmb / q / e)
+  emitEffects('cast', { p, c, slot, id, a: a0, tx: tx0, ty: ty0, x: x0, y: y0 });   // §30: the cast hook (Echo records lmb / q only)
   if (id === 'orbit') p.orbitCast = c;
   if (dodge) emitEffects('dodge', { p, c }); else if (ult) emitEffects('ultimate', { p, c });
   let dur = Math.max(0, p.castT, p.swing ? p.swing.dur - p.swing.t : 0);
   for (let i = n0; i < G.delays.length; i++) if (G.delays[i].c === c) dur = Math.max(dur, G.delays[i].t);
   if (p.dash && p.dash.cast === c) dur = Math.max(dur, p.dash.t);
-  p.cast = dodge ? null : { c, id, slot, age: 0, dur: Math.min(1.5, dur), mp };
+  p.cast = dodge || off ? null : { c, id, slot, age: 0, dur: Math.min(1.5, dur), mp };
   G.lastCast = { slot, t: 0.25 };
-  if (slot === 'q') hudNoun('skill');   // §28: the first Q brings the E chip in
+  if (slot === 'q') hudNoun('skill');   // §28: the first Q brings the offhand chips in
   if (!dodge && typeof aimFlash === 'function' && (G.touch || (IN.aimMode && IN.aimMode() !== 'off'))) aimFlash(id, slot);   // quick-cast: 1-frame flash of the shape at the target
   return true;
 }
 function say(s) { G.msg = { s, t: 1.6 }; }
+// ===== off-actions and shields (docs/design/loadout.md slot matrix, "Shields") ======================================================
+// Parry: a window (Blades 0.25 s, +0.1 s with a Blades OFFHAND item = the class off-passive; Buckler Parry+ 0.35 s). A hit inside it
+// is negated and the nearest enemy to the hit's source is riposted (stagger 3, stun). One ICD for every parry source (1 s: the
+// shared `parry` cooldown key). A Buckler parry from T3 reflects projectiles. Aegis: every hit is parried for 3 s and each parry
+// restores 10 % HP. The Vanguard grip: a parry primes Sunslash (+40 %).
+const PARRY = { blades: 0.25, buckler: 0.35, bladesOff: 0.1, riposte: 70, stagger: 3, stun: 0.6, aegisHeal: 0.1 };
+function startParry(p, win, o = {}) {
+  const off = p.equip.offhand, bl = off && lineOf(off) && lineOf(off).class === 'blades' ? PARRY.bladesOff : 0;
+  p.parry = { until: G.t + win + bl, reflect: !!o.reflect, t0: G.t };
+  swingWeapon(p, 0.14, 1.2, 1); fx({ type: 'ring', x: p.x, y: p.y, r: 0.9, col: '#fff2b0', life: 0.18 }); sfx('shield');
+}
+const parrying = p => !!(p.buffs.aegis || (p.parry && p.parry.until > G.t));
+function parried(p, sx, sy) {
+  G.lastParry = { t: G.t, n: (G.lastParry ? G.lastParry.n : 0) + 1 };
+  if (p.parry) p.parry.until = 0;
+  if (p.buffs.aegis) healPlayer(p, p.maxHp * PARRY.aegisHeal);
+  if (p.grip === 'grip_vanguard') p.vanguardT = G.t + 4;
+  p.invulnT = Math.max(p.invulnT, 0.2);
+  const e = nearestEnemy(sx != null ? sx : p.x, sy != null ? sy : p.y, 3, null);
+  const c = { skill: null, el: 'slash', slot: 'rmb', ctx: newCtx('slash', PARRY.stagger), noCharge: true, riposte: true };
+  if (e) withCast(c, () => damageEnemy(e, PARRY.riposte, { stagger: PARRY.stagger, stun: PARRY.stun, knock: 0.6, cast: c }));
+  fx({ type: 'ring', x: p.x, y: p.y, r: 1.3, col: '#ffffff', life: 0.25 }); burst(p.x, p.y, p.z + 1.2, 12, ['#ffffff', '#fff2b0'], 3); sfx('heavy'); shake(3);
+}
+function tryParry(p, sx, sy) { if (!parrying(p)) return false; parried(p, sx, sy); return true; }
+// an enemy projectile touching the hero during a reflecting parry flies back (reflected damage <= 40 % of power, loadout.md caps)
+function parryReflect(p, q) {
+  if (!parrying(p)) return false;
+  const refl = p.buffs.aegis || (p.parry && p.parry.reflect);
+  parried(p, q.x, q.y);
+  if (!refl) { q.dead = true; return true; }
+  q.friendly = true; q.reflected = true; q.vx = -q.vx; q.vy = -q.vy; q.t = 0; q.life = 1.2; q.hit = new Set(); q.pierce = 0;
+  q.dmg = Math.min(q.dmg, p.power * 0.4 / Math.max(0.01, p.dmgBase)); q.cast = { skill: null, el: q.el || 'slash', slot: 'rmb', ctx: newCtx(q.el || 'slash'), noCharge: true, reflected: true };
+  return true;
+}
+// ===== companions = decks (Grimoire pages, Quiver arrows) ===================================================================
+function deckNext(p) { const n = deckEntries(p).length; if (n) p.deck = ((p.deck | 0) + 1) % n; }
+// the ultimate: every entry over 1.5 s (Chapter / Quiver Storm), free of MP, at the cast's aim
+const ARCHMAGE_PAGE = 1.2;   // the Archmage grip (Staff + Grimoire): a page (E, or read by Chapter) deals +20%
+function deckAll(p, a, tx, ty) {
+  const L = deckEntries(p), c = CAST; if (!L.length) return;
+  L.forEach((id, i) => delay(i * 1.5 / L.length, () => { const s = SKILLS[id]; if (!s || p.dead) return; const cc = Object.assign({}, c, { skill: id, el: s.element, ctx: newCtx(s.element, s.stagger || 0) }); if (p.grip === 'grip_archmage') cc.ctx.dmg *= ARCHMAGE_PAGE; withCast(cc, () => s.cast(p, p.aim, G.mouse.wx, G.mouse.wy)); }));
+  fx({ type: 'ring', x: p.x, y: p.y, r: 1.4, col: SKILLS[c && c.skill] ? SKILLS[c.skill].color : '#c79bff', life: 0.4 }); sfx('arcane');
+}
+// ===== Hush (The Stopped Hour, rule `stillhour`; docs/design/combat-feel.md) ======================================================
+// A toggle: 30 MP to start (the skill's mp), then 60 MP per REAL second. Ends on a second press, 0 MP, hero death, boss-death
+// slow-mo or a map change; then a 3 s cooldown. While on: no MP from hits, ultimate charge x0.5, MP regen stops, hero damage x0.6,
+// G.timeScale eases to 0.25 over 0.15 s. Never saved (p.hush is runtime only).
+const HUSH = { scale: 0.25, drain: 60, cd: 3, dmg: 0.6, charge: 0.5, ease: 0.15 };
+function hushStart(p) { p.hush = { t0: G.t }; G.hushLog = { start: G.t, mp: p.mp }; sfx('veil'); fx({ type: 'ring', x: p.x, y: p.y, r: 3, col: '#bcd0ff', life: 0.5 }); }
+function hushEnd(p, why) {
+  if (!p || !p.hush) return;
+  p.hush = null; p.cds.hush = p.cdm.hush = HUSH.cd;
+  if (why === 'death' || why === 'map') G.timeScale = 1;   // no ease across a death or a map change
+  G.hushLog = Object.assign(G.hushLog || {}, { end: G.t, why });
+  sfx('blink');
+}
+function updateHush(p, dt) {
+  if (p.hush) { p.mp -= HUSH.drain * dt; if (p.mp <= 0) { p.mp = 0; hushEnd(p, 'mp'); } }
+  if (G.timeScale == null) G.timeScale = 1;
+  const goal = p.hush ? HUSH.scale : 1, k = (1 - HUSH.scale) / HUSH.ease * dt;
+  G.timeScale = G.timeScale < goal ? Math.min(goal, G.timeScale + k) : Math.max(goal, G.timeScale - k);
+}
 // temporary buffs stay multiplicative but cap at 1.6x (bless x surge x focus was 2.37x)
 const buffMul = p => Math.min(1.6, (p.buffs.bless ? 1.4 : 1) * (p.buffs.surge ? 1.3 : 1) * (p.buffs.focus ? 1.3 : 1));
 function addBuff(p, id, t) { p.buffs[id] = { t, max: t }; }
@@ -486,12 +573,12 @@ function swingWeapon(p, dur, arc, dir) { p.swing = { t: 0, dur, arc, dir: dir ||
 function castAnim(p, t = 0.25) { p.castT = t; }
 
 // ===== §30 Echo: the spirit clone (unique rule 'echo', a weapon legendary) ===================================================
-// An after-image, not a pet: every basic / Q / E cast is recorded ({ skill, slot, aim, target offset, ctx }) by the 'cast' bus
+// An after-image, not a pet: every hand action / Q spell cast is recorded ({ skill, slot, aim, target offset, ctx }) by the 'cast' bus
 // row and replayed ECHO.delay s later through the SAME cast function, from where the hero stood ECHO.frames fixed steps ago
 // (a Float32Array ring, written only on steps that advance time), under a cast with src 'echo' (damageEnemy's guard).
 // The caster handed to the cast function is G.echo.g = Object.create(hero): reads fall through to the hero's stats, every
 // write (swing, castT, combo, dash, buffs, mp) lands on the spirit, so a replayed dash or blink never moves the hero.
-// Never R (the cast row only takes lmb / q / e). No MP, cooldown or charge cost, never targeted, no summon counters.
+// Never an ultimate, a page or the offhand (the cast row only takes lmb / q). No MP, cooldown or charge cost, never targeted, no summon counters.
 // State lives on G.echo (never saved); it resets when the hero, the map or the rule changes.
 const ECHO = { k: 0.3, floor: 0.3, a0: 0.2, full: 0.4, delay: 0.4, queue: 4, idle: 2, frames: 24, fadeIn: 0.12, fadeOut: 0.5, els: ['fire', 'frost', 'nature', 'lightning', 'arcane', 'holy'] };
 const ECHO_RS = 6;   // ring stride: x, y, z, face, flags (1 back, 2 moving, 4 dashing), walkT
@@ -516,7 +603,7 @@ function echoElement(p) {
 const echoAmpOf = (p, el) => ((p.sum && p.sum[el + 'Dmg']) || 0) + elementAmp(p, el);
 const echoFocus = (p, el) => ECHO.floor + (1 - ECHO.floor) * clamp((echoAmpOf(p, el) - ECHO.a0) / (ECHO.full - ECHO.a0), 0, 1);
 function echoRecord(p, cx) {
-  const slot = cx.slot; if (slot !== 'lmb' && slot !== 'q' && slot !== 'e') return;   // never R (nor f / c / shift / 1-3)
+  const slot = cx.slot; if ((slot !== 'lmb' && slot !== 'q') || cx.id === 'hush') return;   // the hand action and the Q spell only (never ultimates, pages, offhand)
   if (!cx.c || cx.c.src === 'echo') return;
   const E = echoState(p), ctx = cx.c.ctx || null;
   E.q.push({ t: ECHO.delay, fresh: true, id: cx.id, slot, basic: slot === 'lmb', a: cx.a, dx: (cx.tx != null ? cx.tx : cx.x) - cx.x, dy: (cx.ty != null ? cx.ty : cx.y) - cx.y, combo: cx.combo || 0, ctx });
@@ -570,6 +657,8 @@ function basicAttack(p) {
   const w = weaponOf(p);
   // basic attacks are casts too (skill: null, basic: true) so their hits carry a ctx; they build MP on hit
   const c = { skill: null, basic: true, el: w.element || 'slash', slot: 'lmb', ctx: newCtx(w.element || 'slash') }, combo = p.combo, a0 = p.aim;
+  if (w.hold === 'focus' && p.focusReady) { c.crit = true; p.focusReady = false; p.holdT = 0; }   // Bow Focus: the shot after 0.6 s still crits
+  if (p.nocked > G.t && (w.kind === 'bow' || w.kind === 'staff')) { c.ctx.dmg *= 1.4; c.nock = true; p.nocked = 0; }   // Quiver Nock primes the next shot
   withCast(c, () => basicSwing(p, w));
   emitEffects('cast', { p, c, slot: 'lmb', id: null, a: a0, tx: G.mouse.wx, ty: G.mouse.wy, x: p.x, y: p.y, combo });
 }
@@ -580,6 +669,13 @@ function basicSwing(p, w) {
     swingWeapon(p, 0.14, 1.2, 1);
     hitCone(p.x, p.y, a, 1.4, 1.1, w.basic.dmg, { knock: 0.35 });
     fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 1.1, r: 0.9, col: '#f2e6ff', life: 0.14, w: 2, dir: 1 });
+    sfx('swing');
+  } else if (w.kind === 'daggers') {   // Shadows: a 4-hit combo, the 4th a crossing double cut
+    p.combo = (p.combo + 1) % 4;
+    const big = p.combo === 3;
+    swingWeapon(p, 0.12, big ? 2.0 : 1.4, p.combo % 2 ? -1 : 1);
+    hitCone(p.x, p.y, a, big ? 1.8 : 1.3, big ? 1.5 : 1.3, w.basic.dmg * (big ? 1.5 : 1), { knock: big ? 0.3 : 0.08 });
+    fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: big ? 2 : 1.4, r: big ? 1.5 : 1.3, col: '#d6c8ff', life: 0.14, w: big ? 3 : 2, dir: p.combo % 2 ? -1 : 1 });
     sfx('swing');
   } else if (w.kind === 'sword') {
     p.combo = (p.combo + 1) % 3;
@@ -594,9 +690,37 @@ function basicSwing(p, w) {
     sfx('arcane');
   } else {
     castAnim(p, 0.15);
-    spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.25, dmg: w.basic.dmg, life: 0.65, kind: 'arrow', col: '#e7eeff' });
+    spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.25, dmg: w.basic.dmg, life: 0.65, kind: 'arrow', col: CAST && CAST.crit ? '#fff2b0' : '#e7eeff', pierce: CAST && CAST.nock ? 1 : 0 });
     sfx('bow');
   }
+}
+// ===== hold-M1 (weapons-and-skills.md class profile): Staff Channel (tap = bolt, held past the swing rate = a beam at bolt DPS
+// x 1.15), Bow Focus (standing still 0.6 s: the next shot crits), Greatarms Heavy Strike (no live variant in M4a). p.holdCharge 0..1
+// feeds the touch charge ring.
+const CHANNEL = { tick: 0.24, mul: 1.15, len: 7.5, w: 0.45 };
+function holdAttack(p, dt, held) {
+  const w = weaponOf(p);
+  if (!held || p.dead || !w.hold) { p.holdT = 0; p.holdCharge = w.hold === 'focus' ? p.holdCharge : 0; if (w.hold === 'focus' && (p.moving || p.dead)) { p.holdCharge = 0; p.focusReady = false; } if (p.channel) p.channel = null; return false; }
+  p.holdT += dt;
+  if (w.hold === 'focus') {
+    p.stillT = p.moving ? 0 : (p.stillT || 0) + dt;
+    p.holdCharge = clamp(p.stillT / 0.6, 0, 1); if (p.stillT >= 0.6) p.focusReady = true;
+    return false;   // the bow keeps firing; Focus only crits the next shot
+  }
+  if (w.hold === 'channel') {
+    const rate = w.basic.rate / (1 + p.haste);
+    p.holdCharge = clamp(p.holdT / rate, 0, 1);
+    if (p.holdT < rate) return false;   // a tap is the bolt
+    const C = p.channel || (p.channel = { t: 0, n: 0 });
+    C.t -= dt; if (C.t > 0 || p.dash || castActive(p) || p.rootT > 0) return true;
+    C.t = CHANNEL.tick; C.n++;
+    const a = p.aim, c = { skill: null, basic: true, el: w.element, slot: 'lmb', ctx: newCtx(w.element), mpDone: C.n % 2 === 0, channel: true };
+    c.ctx.dmg = CHANNEL.mul * CHANNEL.tick / w.basic.rate;   // the beam's DPS = the bolt's x 1.15
+    withCast(c, () => { castAnim(p, CHANNEL.tick); hitLine(p.x, p.y, a, CHANNEL.len, CHANNEL.w, w.basic.dmg, { knock: 0.05 }); fx({ type: 'beam', x: p.x, y: p.y, z: p.z + 1.6, ang: a, len: CHANNEL.len, col: '#9fe8ff', life: CHANNEL.tick }); });
+    if (C.n % 4 === 1) sfx('arcane');
+    return true;
+  }
+  return false;
 }
 
 function dashPlayer(p, dx, dy, distance, dur, opt = {}) {
@@ -721,8 +845,9 @@ function updatePlayer(p, dt) {
   p.atkT -= dt; p.invulnT -= dt; p.hurtT -= dt; p.castT -= dt; p.rootT -= dt; p.slowT -= dt; p.spin -= dt; if (p.dreadT > 0) p.dreadT -= dt;
   if (p.dead) return;
   p.hp = Math.min(p.maxHp, p.hp + p.regen * dt + (p.buffs.mend ? p.maxHp * 0.25 / 4 * dt * healMul(p) : 0));
-  p.mp = Math.min(p.maxMp, p.mp + p.mpRegen * dt);
+  if (!p.hush) p.mp = Math.min(p.maxMp, p.mp + p.mpRegen * dt);   // Hush stops MP regen
   p.st = Math.min(p.maxSt, p.st + 22 * dt);
+  updateHush(p, dt);
   if (p.swing) { p.swing.t += dt; if (p.swing.t > p.swing.dur) p.swing = null; }
   if (p.cast) { p.cast.age += dt; if (p.cast.age >= p.cast.dur) p.cast = null; }
   for (const k of ['slowT', 'rootT']) { if (p[k] > 0) { if (!(p.stMax[k] > 0) || p[k] > p.stMax[k]) p.stMax[k] = p[k]; } else p.stMax[k] = 0; }
@@ -777,29 +902,35 @@ function updatePlayer(p, dt) {
 
 const ORBIT_CAST = { skill: 'orbit', el: 'arcane' };
 
-// ===== HUD getters (read-only views the HUD draws from; docs/HUD.md) =========================================
+// ===== HUD getters (read-only views the HUD draws from; docs/design/hud-ui.md) =========================================
 // ultCharge(p) 0..1 · ultReady(p) · skillSlotState(p, slot) · heroStatuses(p) · interactPrompt() · skillInfo(p, id)
 const ultCharge = (p = G.player) => clamp((p.ult || 0) / 100, 0, 1);
 const ultReady = (p = G.player) => (p.ult || 0) >= 100;
-// slot: 'lmb' q e r f c shift 1 2 3 'pot'
+// slot: 'lmb' q qu rmb e eu r f v (skills) | z x c (pockets)
 function skillSlotState(p, slot) {
   const action = SLOT_ACTION[slot], glyph = typeof IN !== 'undefined' ? IN.glyph(action) : '';
-  if (slot === 'pot') return { slot, action, glyph, potions: p.potions, max: MAX_POTIONS, cd: Math.max(0, (p.potT || 0) - G.t), unavailable: p.dead };
-  if (slot === 'lmb') { const w = weaponOf(p); return { slot, action, glyph, id: null, name: w.basic.name, element: w.element, cd: Math.max(0, p.atkT), cdFrac: 0, unavailable: !!(p.dash || p.rootT > 0 || castActive(p)) }; }
+  if (POCKET_KEYS.includes(slot)) {
+    const id = p.pockets && p.pockets[POCKET_KEYS.indexOf(slot)], P = id && POCKETS[id];
+    if (!P) return { slot, action, glyph, id: null, pocket: true };
+    return { slot, action, glyph, id: null, pocket: id, name: P.name, color: P.color, icon: P.icon, count: pocketCount(p, id), max: pocketMax(p, id),
+      potions: id === 'potion' ? p.potions : undefined, cd: Math.max(0, (p.potT || 0) - G.t), unavailable: p.dead || pocketCount(p, id) <= 0 };
+  }
+  if (slot === 'lmb') { const w = weaponOf(p); return { slot, action, glyph, id: null, name: w.basic.name, element: w.element, cd: Math.max(0, p.atkT), cdFrac: 0, hold: p.holdCharge || 0, unavailable: !!(p.dash || p.rootT > 0 || castActive(p)) }; }
   const id = slotSkill(p, slot), s = id && SKILLS[id];
   if (!s) return { slot, action, glyph, id: null };
-  const ult = slot === 'r', cd = Math.max(0, p.cds[id] || 0), max = p.cdm[id] || s.cd;
+  const ult = isUlt(slot), ck = s.cdKey || id, cd = Math.max(0, p.cds[ck] || 0, slot === 'e' && isCompanion(p.equip.offhand) ? p.cds.__page || 0 : 0), max = p.cdm[ck] || s.cd || 1;
   const rp = skillRankProgress(p, id);
   return {
     slot, action, glyph, id, name: s.name, element: s.element, color: s.color, ult,
     cd: ult ? 0 : cd, cdMax: max, cdFrac: ult ? 0 : (cd > 0 ? cd / max : 0),
-    charge: ult ? ultCharge(p) : null, ready: ult ? ultReady(p) && cd <= 0 : cd <= 0,
-    mp: s.mp || 0, st: s.st || 0, mpShort: (s.mp || 0) > p.mp, stShort: (s.st || 0) > p.st,
-    unavailable: !!(p.dead || p.rootT > 0 || (p.dash && slot !== 'shift')),
+    charge: ult ? clamp((p.ult || 0) / (ultNeed(p, id) || 100), 0, 1) : null, ready: ult ? (p.ult || 0) >= ultNeed(p, id) && cd <= 0 : cd <= 0,
+    mp: slot === 'rmb' ? 0 : s.mp || 0, st: s.st || 0, mpShort: slot !== 'rmb' && (s.mp || 0) > p.mp, stShort: (s.st || 0) > p.st, active: id === 'hush' && !!p.hush,
+    deck: slot === 'e' && isCompanion(p.equip.offhand) ? { i: p.deck | 0, n: deckEntries(p).length } : null,
+    unavailable: !!(p.dead || p.rootT > 0 || (p.dash && slot !== 'v')),
     rank: rp.rank, rankFrac: rp.frac, flash: G.lastCast && G.lastCast.slot === slot ? Math.max(0, G.lastCast.t) : 0,
   };
 }
-function skillInfo(p, id) { return Object.assign({ id, skill: SKILLS[id], slots: skillModSlots(p, id) }, skillRankProgress(p, id)); }
+function skillInfo(p, id) { return Object.assign({ id, skill: SKILLS[id] }, skillRankProgress(p, id)); }
 // hero buff row: debuffs first; frac = remaining time 0..1 (sweep), stacks for digit badges
 function heroStatuses(p = G.player) {
   const out = [];
@@ -811,7 +942,7 @@ function heroStatuses(p = G.player) {
 }
 const interactPrompt = () => G.prompt && G.state === 'play' && !G.ui.open ? Object.assign({ glyph: typeof IN !== 'undefined' ? IN.glyph('interact') : 'SPACE' }, G.prompt) : null;
 
-// ===== aim: mouse cursor, twin-stick (sticky) or auto, with aim assist on stick/touch only (CONTROLS.md) ======
+// ===== aim: mouse cursor, twin-stick (sticky) or auto, with aim assist on stick/touch only (docs/design/controls.md) ======
 // Writes the canonical aim cursor G.mouse.{wx,wy} (world) + {x,y} (view) that skills, render and HUD read.
 function viewDirToWorld(sx, sy) { const [wx, wy] = toWorld(sx, sy), l = Math.hypot(wx, wy) || 1; return [wx / l, wy / l]; }
 // auto target: nearest living enemy in range, preferring elites/bosses and the one you hit last
@@ -855,18 +986,20 @@ function resolveAim(p) {
   p.back = G.mouse.y < ps[1] - 14;
 }
 // gameplay actions, read once per step after the aim is resolved (keyboard/mouse, pad and touch alike)
-const SKILL_ACTIONS = [['skillQ', 'q'], ['skillE', 'e'], ['skillR', 'r'], ['skillF', 'f'], ['skillC', 'c'], ['dodge', 'shift'], ['s1', '1'], ['s2', '2'], ['s3', '3']];
+const SKILL_ACTIONS = [['skillQ', 'q'], ['ultQ', 'qu'], ['offhand', 'rmb'], ['skillE', 'e'], ['ultE', 'eu'], ['skillR', 'r'], ['skillF', 'f'], ['dodge', 'v']];
+const INSTANT_SLOTS = ['v', 'rmb'];   // dodge and the off-action never wait for a hold-to-aim release
 // Hold-to-aim (input.js IN.aimMode): 'off' casts on press (M2a); 'hold' / 'always' cast the skill keys on RELEASE so the
-// ground indicator can show while held (IN.aimCasts lists this step's releases). Dodge and potion stay instant.
+// ground indicator can show while held (IN.aimCasts lists this step's releases). Dodge, the off-action and pockets stay instant.
 function playerActions(p, dt) {
-  if (typeof IN === 'undefined' || G.ui.open || G.state !== 'play' || G.fadeDir > 0) { if (typeof IN !== 'undefined' && IN.clearAimHold) IN.clearAimHold(); return; }
-  if (p.dodgeBuf > 0) { p.dodgeBuf -= dt; if (!castActive(p) || p.cast.age >= CANCEL_AFTER) { p.dodgeBuf = 0; useSkill(p, 'shift'); } }
+  if (typeof IN === 'undefined' || G.ui.open || G.state !== 'play' || G.fadeDir > 0) { if (typeof IN !== 'undefined' && IN.clearAimHold) IN.clearAimHold(); holdAttack(p, dt, false); return; }
+  if (p.dodgeBuf > 0) { p.dodgeBuf -= dt; if (!castActive(p) || p.cast.age >= CANCEL_AFTER) { p.dodgeBuf = 0; useSkill(p, 'v'); } }
   const hold = IN.aimMode && IN.aimMode() !== 'off';
-  for (const [a, slot] of SKILL_ACTIONS) if (IN.pressed(a) && (!hold || slot === 'shift')) useSkill(p, slot);
+  for (const [a, slot] of SKILL_ACTIONS) if (IN.pressed(a) && (!hold || INSTANT_SLOTS.includes(slot))) useSkill(p, slot);
   if (hold) for (const a of IN.aimCasts) { const sa = SKILL_ACTIONS.find(q => q[0] === a); if (sa) useSkill(p, sa[1]); }
   if (typeof attackToggle === 'function' && attackToggle()) { if (IN.pressed('attack')) p.autoAtk = !p.autoAtk; } else p.autoAtk = false;
-  if (IN.held('attack') || p.autoAtk) basicAttack(p);
-  if (IN.pressed('potion')) drinkPotion(p);
+  const atk = IN.held('attack') || p.autoAtk;
+  if (!holdAttack(p, dt, atk) && atk) basicAttack(p);
+  ['s1', 's2', 's3'].forEach((a, i) => { if (IN.pressed(a)) usePocket(p, i); });
   if (IN.pressed('interact')) interact(p);
 }
 // el = damage type of the hit (§5b); the hero's resist applies on top of defence (arcane ignores half of it)
@@ -874,14 +1007,15 @@ function playerActions(p, dt) {
 function hurtPlayer(dmg, srcX, srcY, el = 'slash', o) {
   const p = G.player;
   if (p.dead || p.invulnT > 0 || (p.dash && p.dash.opt.invuln) || G.state !== 'play') return false;
+  if (tryParry(p, srcX, srcY, o)) return false;   // a parry window (or Aegis) negates the hit
   const r = (p.res && p.res[el]) || 0;
-  let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * frand(0.9, 1.1);
+  let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * (p.buffs.ward ? 0.5 : 1) * frand(0.9, 1.1);
   p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2; combatPing(p);
   text(p.x, p.y, p.z + 3, Math.round(d), '#ff5a7a');
   shake(4); sfx('hurt');
   burst(p.x, p.y, p.z + 1.2, 8, ['#ff5a7a', '#ffffff'], 2);
   if (p.hp <= 0) {
-    p.hp = 0; p.dead = true; G.state = 'dead'; G.deadT = 0; sfx('die'); G.stats.deaths++;
+    p.hp = 0; p.dead = true; G.state = 'dead'; G.deadT = 0; sfx('die'); G.stats.deaths++; hushEnd(p, 'death');
     burst(p.x, p.y, p.z + 1, 40, ['#ffb0e0', '#c7a8ff', '#ffffff'], 3);
   }
   return true;
@@ -902,16 +1036,16 @@ function damageEnemy(e, base, o = {}) {
   const cx = c && c.ctx;
   // v2 gear: + the element's damage % (implicits, prefixes, ring boons), the amulet's ultimate damage on R hits and its
   // skill damage while the charge bar is full — all inside the same additive sum
-  const S = p.sum || {}, ultHit = c && c.slot === 'r';
+  const S = p.sum || {}, ultHit = !!(c && isUlt(c.slot));
   let dmg = base * p.dmgBase * (1 + p.bonus + (p.huntBonus[e.type] || 0) + (S[el + 'Dmg'] || 0) + (ultHit ? S.ultDmg || 0 : 0)
-    + (sk ? p.skillDmg + elementAmp(p, el) + skillRankBonus(p, sk) + (p.ult >= 100 ? S.skillDmgFull || 0 : 0) : 0)) * buffMul(p) * (cx ? cx.dmg : 1) * (p.dreadT > 0 ? 0.85 : 1);
+    + (sk ? p.skillDmg + elementAmp(p, el) + skillRankBonus(p, sk) + (p.ult >= 100 ? S.skillDmgFull || 0 : 0) : 0)) * buffMul(p) * (cx ? cx.dmg : 1) * (p.dreadT > 0 ? 0.85 : 1) * (p.hush ? HUSH.dmg : 1);
   if (!e.dummy) combatPing(p);
   const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
   dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
   let st = o.stagger != null ? o.stagger : cx ? cx.stagger || 0 : sk && SKILLS[sk] ? SKILLS[sk].stagger || 0 : 0;
   if (echo) st *= ECHO.k;
   // +stagger from gear: heavy-strike implicits (on hits that already stagger), holy hits (Halo Hoop), weapon skills (Warrior ring)
-  if (!o.dot) st += (st > 0 ? S.stagger || 0 : 0) + (el === 'holy' ? S.holyStagger || 0 : 0) + (sk && c.slot && 'qer'.includes(c.slot) ? S.weaponStagger || 0 : 0);
+  if (!o.dot) st += (st > 0 ? S.stagger || 0 : 0) + (el === 'holy' ? S.holyStagger || 0 : 0) + (sk && c.slot && WEAPON_SLOTS.includes(c.slot) ? S.weaponStagger || 0 : 0);
   let broke = false;   // hitlag: a boss BREAK is the 8-step global freeze
   if (st) {   // the boss stagger bar (hud.js): fills with heavy hits, BREAK flash when full, then empties
     // per-boss staggerMax (bosses.js) rescales the points so the bar's 0..STAGGER_CAP fraction stays right
@@ -920,7 +1054,10 @@ function damageEnemy(e, base, o = {}) {
     else if (!e.boss) partsStagger(e, st);
   }
   if (e.parts && e.parts.length || e.mods) dmg = partsHurt(e, dmg, o);   // shield-front, sleepers waking, elite shields
-  let crit = Math.random() < Math.min(capsT().crit, p.crit + (p.critR && p.critR.until > G.t ? p.critR.v : 0));
+  const mark = !o.dot && !echo && p.stepMark > G.t ? 0.3 : 0;   // Step: the next hit is a backstab (+30% crit)
+  if (mark) p.stepMark = 0;
+  let crit = Math.random() < Math.min(capsT().crit, p.crit + mark + (p.critR && p.critR.until > G.t ? p.critR.v : 0));
+  if (!o.dot && !echo && ((c && c.crit) || o.crit)) crit = true;   // Bow Focus, Snapshot, the Bow + Quiver grip
   if (p.buffs.veil && !o.dot && !echo) { crit = true; delete p.buffs.veil; }
   if (crit) dmg *= 1 + p.critDmg;
   dmg *= frand(0.9, 1.1);
@@ -934,7 +1071,8 @@ function damageEnemy(e, base, o = {}) {
   if (!o.dot) G.lastHit = e;
   // §15.3 resource rhythm: basic attacks (CAST null) build 8 MP per hit; all damage but the ultimate's own feeds the charge
   if ((!c || c.basic) && !o.dot && !echo) basicMpGain(p, c);
-  if (eff < 1 && !(c && c.slot === 'r') && p.ult < 100) p.ult = Math.min(100, p.ult + ultGain(p, base * (1 - eff) * (echo && cx ? cx.dmg : 1), o.reaction) * (echo ? 0.5 : 1));   // an echo hit charges at 50 % of its own (k-scaled) base
+  // the charge: every hit but an ultimate's own and an off-action's (no charge); an echo hit at 50 %, Hush x0.5
+  if (eff < 1 && !(c && (isUlt(c.slot) || c.noCharge)) && p.ult < 100) p.ult = Math.min(100, p.ult + ultGain(p, base * (1 - eff) * (echo && cx ? cx.dmg : 1), o.reaction) * (echo ? 0.5 : 1) * (p.hush ? HUSH.charge : 1));
   // skill ranks: a cast counts once, on its first hit on a real enemy (training dummies don't rank skills)
   if (sk && c.slot && !c.hit && !o.dot && !e.dummy && !echo) { c.hit = true; addSkillHit(p, sk); }
   if (cx && cx.onHit.length) for (const fn of cx.onHit) fn(e, dmg, o);
@@ -955,9 +1093,9 @@ function damageEnemy(e, base, o = {}) {
   }
   if (tumble) { e.stunT = Math.max(e.stunT, 0.3); e.hopV = 2.5; e.hopZ = Math.max(e.hopZ || 0, 0.001); }
   if (o.stun) e.stunT = Math.max(e.stunT, o.stun * (cx ? cx.stun : 1) * (e.boss ? 0.25 : 1));
-  if (o.freeze) e.frozen = o.stun;
-  if (o.slow) e.slowT = Math.max(e.slowT, o.slow * 2 * (cx ? cx.slow : 1));
-  if (o.burn && !(echo && e.burnT > 0 && e.burnCast && e.burnCast.src !== 'echo')) { e.burnT = o.burn * (cx ? cx.burn : 1); e.burnTick = 0.5; e.burnCast = c; }   // an echo Burn never overwrites the hero's own
+  if (o.freeze) { if (o.stun && e.stunT > 0) applyStatus(e, 'frozen', e.stunT, 'frost'); else e.frozen = o.stun; }
+  if (o.slow) applyStatus(e, 'chilled', Math.max(e.slowT, o.slow * 2 * (cx ? cx.slow : 1)), 'frost');
+  if (o.burn && !(echo && e.burnT > 0 && e.burnCast && e.burnCast.src !== 'echo')) { applyStatus(e, 'burning', o.burn * (cx ? cx.burn : 1), 'fire'); e.burnTick = 0.5; e.burnCast = c; }   // an echo Burn never overwrites the hero's own
   const A = HITAGG;
   if (!o.dot) {
     // hit particles 5 + 8r (max 12); inside a cast at most 24 in all, 2 per target beyond the 4th
@@ -973,7 +1111,7 @@ function damageEnemy(e, base, o = {}) {
 }
 // the hitlag of one hit (R2): target-only freeze always, a global freeze request by the table (per cast via HITAGG)
 function hitlag(e, r, c, crit, broke, o, A, echo) {
-  const sk = c && c.skill, ult = !!(c && c.slot === 'r');
+  const sk = c && c.skill, ult = !!(c && isUlt(c.slot));
   const w = (sk && SKILLS[sk] && SKILLS[sk].weight) || (ult ? 2 : 1);   // skill weight: basic 1, heavy 1.5, ultimate 2
   const mode = hitlagMode();
   const ft = mode === 'off' || echo ? 2 : clamp(Math.round((2 + 6 * r) * w), 2, 8);
@@ -1043,11 +1181,11 @@ function spawnProj(o) {
 function updateProjs(dt) {
   const m = G.map;
   for (const p of G.projs) {
-    p.t += dt;
-    const sdt = p.friendly ? dt : dt * enemyTimeScale();
+    const sdt = dt * worldScale(p.friendly ? null : p);   // world time: every projectile once it leaves the hand (Hush, Dreamveil)
+    p.t += sdt;
     if (p.homing) {
       const tgt = nearestEnemy(p.x, p.y, 7, null);
-      if (tgt) { const a = Math.atan2(tgt.y - p.y, tgt.x - p.x), cur = Math.atan2(p.vy, p.vx), na = cur + clamp(angDiff(cur, a), -p.homing * dt, p.homing * dt); p.vx = Math.cos(na) * p.speed; p.vy = Math.sin(na) * p.speed; }
+      if (tgt) { const a = Math.atan2(tgt.y - p.y, tgt.x - p.x), cur = Math.atan2(p.vy, p.vx), na = cur + clamp(angDiff(cur, a), -p.homing * sdt, p.homing * sdt); p.vx = Math.cos(na) * p.speed; p.vy = Math.sin(na) * p.speed; }
     }
     p.x += p.vx * sdt; p.y += p.vy * sdt;
     if (p.t > p.life) { p.dead = true; if (p.explode) explodeProj(p); continue; }
@@ -1058,13 +1196,14 @@ function updateProjs(dt) {
         if (e.dead || e.spawnT > 0 || p.hit.has(e)) continue;
         if (dist(p.x, p.y, e.x, e.y) < p.r + e.r) {
           p.hit.add(e);
-          damageEnemy(e, p.dmg, { knock: p.knock || 0.12, slow: p.slow, burn: p.burn, fx: p.x - p.vx, fy: p.y - p.vy, cast: p.cast, nofg: p.hit.size > 1 });   // pierce: global freeze on the first target only
+          damageEnemy(e, p.dmg, { knock: p.knock || 0.12, slow: p.slow, burn: p.burn, fx: p.x - p.vx, fy: p.y - p.vy, cast: p.cast, nofg: p.hit.size > 1, crit: p.crit, el: p.el && p.reflected ? p.el : undefined });   // pierce: global freeze on the first target only
           if (p.pierce-- <= 0) { p.dead = true; if (p.explode) explodeProj(p); break; }
         }
       }
     } else {
       const pl = G.player;
       if (!pl.dead && dist(p.x, p.y, pl.x, pl.y) < p.r + pl.r) {
+        if (parryReflect(pl, p)) continue;   // a Buckler parry from T3 turns the shot around
         // an enemy's own shot (p.src) runs its elite on-hit mods (vampiric, frozen) like a melee hit
         if (hurtPlayer(p.dmg, p.x, p.y, p.el) && p.src && p.src.mods) for (const m of p.src.mods) if (ELITE_MODS[m] && ELITE_MODS[m].onHit) ELITE_MODS[m].onHit(p.src, p.dmg);
         p.dead = true; burst(p.x, p.y, p.z, 8, [p.col, '#ffffff'], 2);
@@ -1081,11 +1220,12 @@ function explodeProj(p) {
 
 // ===== zones ==========================================================================
 function updateZones(dt) {
+  dt *= worldScale(null);   // zones run on world time (Hush)
   for (const z of G.zones) {
     z.t += dt; z.tickT -= dt;
     if (z.t > z.life) { z.dead = true; continue; }
     if (z.hostile) {   // enemy ground zones (parts.js hostileZone): hurt / slow the hero on each tick
-      if (z.tickT <= 0) { z.tickT = z.tick || 0.5; if (playerIn({ kind: 'circle', x: z.x, y: z.y, r: z.r })) { if (z.slow) G.player.slowT = Math.max(G.player.slowT, 0.8); if (z.dmg) hurtPlayer(z.dmg, z.x, z.y, z.el || 'nature'); } }
+      if (z.tickT <= 0) { z.tickT = z.tick || 0.5; if (playerIn({ kind: 'circle', x: z.x, y: z.y, r: z.r })) { if (z.slow) applyStatus(G.player, 'chilled', Math.max(G.player.slowT, 0.8)); if (z.dmg) hurtPlayer(z.dmg, z.x, z.y, z.el || 'nature'); } }
       continue;
     }
     if (z.pull) for (const e of G.enemies) {
@@ -1148,10 +1288,10 @@ function killEnemy(e, dmg = 0, o = {}) {
   fx({ type: 'ring', x: e.x, y: e.y, r: e.boss ? 4 : 1.2, col: e.blood, life: 0.4 });
   // spirit motes drift up toward the player — a little healing
   if (!e.boss) delay(0.2, () => { const q = G.player; healPlayer(q, 14 * (1 + ((q.sum && q.sum.killHeal) || 0))); q.mp = Math.min(q.maxMp, q.mp + 10); });   // belt killHeal boon
-  if (e.boss) { shake(14); hitstop(15, true); G.slowmo = 1.4; G.shrink = null; }   // 15 steps = 0.25 s real (main.js counts it before slow-mo)
+  if (e.boss) { shake(14); hitstop(15, true); G.slowmo = 1.4; G.shrink = null; hushEnd(G.player, 'bossdeath'); }   // 15 steps = 0.25 s real (main.js counts it before slow-mo)
 }
 
-// ===== corpses: the death fling (DESIGN §27, meeting R1) ===========================================================
+// ===== corpses: the death fling (docs/design/combat-feel.md, meeting R1) ===========================================================
 // Not a ragdoll: a pooled record per body (cap 8 phone / 12 desktop; full -> the oldest dissolves now). Never a
 // nameplate, light or hit target (it is not in G.enemies). Pixel sprites are never rotated (render.js drawCorpse).
 //   fling : arcs away from the hit (speed 2.5 + 5r t/s, vz 3 + 5r, grav 14), bounces once (vz x -0.35, v x 0.5, squash
@@ -1217,7 +1357,20 @@ function updateCorpses(dt) {
   }
   L.length = j;
 }
-const enemyTimeScale = () => G.player.buffs.dreamveil ? 0.35 : 1;
+// ===== world time (docs/design/combat-feel.md "Hush"): G.timeScale is 1, or 0.25 while Hush runs (eased over 0.15 s).
+// worldScale(e) = the entity's scale: elites x1.5 (0.375), bosses x2 (0.5); a boss in a bar transition (invulnerable) ignores
+// Hush. Dreamveil slows enemies and their projectiles to 0.35: with Hush the slower value wins (min, not the product).
+// worldScale(null) = the field (wind, particles, ELFX, zones, effects). Real time: the hero, cooldowns, input, HUD, camera,
+// hitlag, delays (cast timing), the Hush drain.
+function worldScale(e) {
+  const T = G.timeScale != null ? G.timeScale : 1;
+  let s = T;
+  if (e && e.boss) s = e.bk && e.bk.transT > 0 ? 1 : Math.min(1, T * 2);
+  else if (e && e.def && T < 1 && enemyClassOf(e) === 'elite') s = Math.min(1, T * 1.5);
+  if (e && (e.def || e.friendly === false) && G.player && G.player.buffs && G.player.buffs.dreamveil) s = Math.min(s, 0.35);
+  return s;
+}
+if (typeof window !== 'undefined') window.worldScale = worldScale;   // the Wind lane reads it (js/wind.js)
 
 // telegraphs are tagged with the enemy that made them (PART_SRC) so a stagger or a phase change can clear them
 function tele(o) { o.type = 'tele'; if (!o.src && typeof PART_SRC !== 'undefined' && PART_SRC) o.src = PART_SRC; return fx(o); }
@@ -1229,7 +1382,7 @@ function playerIn(shape) {
   return false;
 }
 
-// ===== enemy sleep (DESIGN §25.2) ======================================================================
+// ===== enemy sleep (docs/design/world-maps.md) ======================================================================
 // Every non-boss, non-dummy enemy farther than SLEEP.dist tiles from the hero is DORMANT (e.dormant; not parts.js
 // `e.asleep`, which is the dormant-until-woken movement part): it runs no parts, moves, attacks or animation, only a
 // 1 Hz heartbeat (status timers, spawn-in, burn ticks, cooldowns). The distance ranking itself is O(n) per frame, so
@@ -1278,40 +1431,41 @@ function cullFar() {
 }
 function updateEnemies(dt) {
   const p = G.player;
-  const ts = enemyTimeScale();
   if (typeof updateArena === 'function') updateArena(dt);
   enemySleepPass();
   cullFar();
   hitlagBudgetTick(); updateCorpses(dt);
   for (const e of G.enemies) {
     if (e.dead) continue;
-    if (e.dormant) { enemyHeartbeat(e, dt); continue; }
+    const ts = worldScale(e), sdt = dt * ts;   // this enemy's world time (Hush, Dreamveil)
+    if (e.dormant) { enemyHeartbeat(e, sdt); continue; }
     SPAWN_TRIG = e.trig || null;
-    e.flash -= dt; e.anim += dt;
-    if (e.stagger > 0) e.stagger = Math.max(0, e.stagger - dt * STAGGER_DECAY);
-    if (e.spawnT > 0) { e.spawnT -= dt; continue; }
+    e.flash -= dt; e.anim += sdt;
+    if (e.stagger > 0) e.stagger = Math.max(0, e.stagger - sdt * STAGGER_DECAY);
+    if (e.spawnT > 0) { e.spawnT -= sdt; continue; }
     // target-only hitlag (R2): counted in steps (unscaled), skips AI / move / knockback; render shows the hit frame.
     // A boss only shows it: its AI keeps running (boss crowd control is already quartered, e.g. stun x0.25).
     if (e.hitFreeze > 0) { e.hitFreeze--; if (!e.boss) continue; }
     if (e.dummy) continue;
     if (e.hopZ > 0) {   // tumble hop: a draw offset only (render.js), never e.z
-      e.hopV -= 12 * dt; e.hopZ += e.hopV * dt;
+      e.hopV -= 12 * sdt; e.hopZ += e.hopV * sdt;
       if (e.hopZ <= 0) { e.hopZ = 0; e.hopV = 0; e.squash = 0.3; }
     }
-    const edt = dt * ts * (e.slowT > 0 ? 0.55 : 1);
-    e.slowT -= dt;
-    if (e.burnT > 0) { e.burnT -= dt; e.burnTick -= dt; if (e.burnTick <= 0) { e.burnTick = 0.5; damageEnemy(e, 14, { dot: true, cast: e.burnCast || null }); if (Math.random() < 0.5) burst(e.x, e.y, e.z + 1, 2, ['#ff9a4a', '#ffd27a'], 1); } if (e.dead) continue; }
+    const edt = sdt * (e.slowT > 0 ? 0.55 : 1);
+    e.slowT -= sdt;
+    if (e.burnT > 0) { e.burnT -= sdt; e.burnTick -= sdt; if (e.burnTick <= 0) { e.burnTick = 0.5; damageEnemy(e, 14, { dot: true, cast: e.burnCast || null }); if (Math.random() < 0.5) burst(e.x, e.y, e.z + 1, 2, ['#ff9a4a', '#ffd27a'], 1); } if (e.dead) continue; }
     // knockback
-    if (Math.abs(e.kx) + Math.abs(e.ky) > 0.05) { moveEntity(e, e.kx * dt, e.ky * dt, tileH(G.map, e.x, e.y)); e.kx *= Math.pow(0.002, dt); e.ky *= Math.pow(0.002, dt); }
-    if (e.stunT > 0) { e.stunT -= dt; if (e.stunT <= 0) e.frozen = 0; continue; }
+    if (Math.abs(e.kx) + Math.abs(e.ky) > 0.05) { moveEntity(e, e.kx * sdt, e.ky * sdt, tileH(G.map, e.x, e.y)); e.kx *= Math.pow(0.002, sdt); e.ky *= Math.pow(0.002, sdt); }
+    WIND.push(e, sdt);   // js/wind.js: emitters push this body (the hero too, once a frame)
+    if (e.stunT > 0) { e.stunT -= sdt; if (e.stunT <= 0) e.frozen = 0; continue; }
     e.cd -= edt;
     const d = dist(e.x, e.y, p.x, p.y), ang = Math.atan2(p.y - e.y, p.x - e.x);
     const hidden = !!p.buffs.veil || p.dead || G.state !== 'play';
     e.face = isoX(p.x, p.y) >= isoX(e.x, e.y) ? 1 : -1;
     if (e.boss) { bossUpdate(e, edt, d, ang, hidden); continue; }
     updatePartsEnemy(e, edt, { p, d, ang, hidden, dt: edt });
-    if (e.squash > 0) e.squash -= dt;
-    if (!e.under) e.z = lerp(e.z, tileH(G.map, e.x, e.y), Math.min(1, dt * 12));
+    if (e.squash > 0) e.squash -= sdt;
+    if (!e.under) e.z = lerp(e.z, tileH(G.map, e.x, e.y), Math.min(1, sdt * 12));
   }
   SPAWN_TRIG = null;
   G.enemies = G.enemies.filter(e => !e.dead);
@@ -1395,7 +1549,7 @@ function applyTuning(t) {
 //   spawnPack { id, at: { x, y } | 'x,y', radius = 1.5, elite } spawns an ENCOUNTERS pack (js/enemydata.js) by id, its
 //     members ringed around `at` (default: beside the hero), tagged e.pack = id. A pack's `after` rule is NOT checked
 //     here: the trigger's own `requires` gates it.
-// Big maps (DESIGN §25; contract in the maps.js header):
+// Big maps (docs/design/world-maps.md; contract in the maps.js header):
 //   warp { to: { x, y } | '<anchorId>' }  a 0.4 s fade warp inside this map (startWarp): no load, trigger state, enemies
 //     and the arena all stay; the hero is rooted for the fade and the camera snaps at its peak.
 //   closeGate { id }  shut a barrier (an arena gate placed with open: true) for a fight; never saved.
@@ -1453,10 +1607,10 @@ function openingOnEnter(m) {
   if (!G.pip || G.pip.map !== m.id) G.pip = { map: m.id, x: p.x + PIP.ox, y: p.y + PIP.oy, z: p.z + PIP.oz, goal: null };
 }
 // the HUD pieces (hud.js draws each with hudShown(piece) as its alpha): bars (portrait, HP / MP / ST / XP, status row), tracker,
-// map (minimap), lmb q e r f c shift (skill chips), skills (1 2 3), pot. Nouns map to pieces; slot chips also need their skill.
-const HUD_PIECES = ['bars', 'tracker', 'map', 'lmb', 'q', 'e', 'r', 'f', 'c', 'shift', 'skills', 'pot'];
-const HUD_NOUNS = { move: ['bars', 'tracker', 'lmb'], vale: ['map'], weapon: ['q'], dodge: ['shift'], skill: ['e'], ultimate: ['r'],
-  chest: ['f'], head: ['c'], boots: ['shift'], level: ['skills'], potion: ['pot'], all: HUD_PIECES };
+// map (minimap), lmb q qu rmb e eu r f v (skill chips), pockets (z x c). Nouns map to pieces; slot chips also need their skill.
+const HUD_PIECES = ['bars', 'tracker', 'map', 'lmb', 'q', 'qu', 'rmb', 'e', 'eu', 'r', 'f', 'v', 'pockets'];
+const HUD_NOUNS = { move: ['bars', 'tracker', 'lmb'], vale: ['map'], weapon: ['q'], dodge: ['v'], skill: ['rmb', 'e'], offhand: ['rmb', 'e', 'eu'],
+  ultimate: ['qu', 'eu'], chest: ['f'], head: ['r'], boots: ['v'], level: [], potion: ['pockets'], all: HUD_PIECES };
 const HUD_FADE = 0.6, HUD_T = {};
 function hudNoun(noun) {
   if (!openingActive()) return;
@@ -1474,13 +1628,13 @@ function hudWatch(p) {
   if (!openingActive()) return;
   const T = G.trig, S = G.prog.secrets;
   if (p.equip.weapon && !S['hud:q']) hudNoun('weapon');
+  if (p.equip.offhand && !S['hud:eu']) hudNoun('offhand');
   if (p.equip.chest && !S['hud:f']) hudNoun('chest');
-  if (p.equip.head && !S['hud:c']) hudNoun('head');
-  if (p.equip.boots && !S['hud:shift']) hudNoun('boots');
-  if (p.equip.weapon && (p.ult || 0) >= ultNeed(p) && !S['hud:r']) hudNoun('ultimate');
-  if (p.level >= 2 && !S['hud:skills']) hudNoun('level');
+  if (p.equip.head && !S['hud:r']) hudNoun('head');
+  if (p.equip.boots && !S['hud:v']) hudNoun('boots');
+  if (p.equip.weapon && (p.ult || 0) >= ultNeed(p) && !S['hud:qu']) hudNoun('ultimate');
   if (p.level >= 3) hudNoun('all');
-  if (p.hp < p.maxHp - 0.5 && T && T.fired.garden_ambush && !S['hud:pot']) hudNoun('potion');
+  if (p.hp < p.maxHp - 0.5 && T && T.fired.garden_ambush && !S['hud:pockets']) hudNoun('potion');
 }
 // Pip (§28): a small warm light parented to the hero (offset up-left, a slow bob). An objective card with x / y sends it drifting
 // up to 2 tiles toward that point for ~1 s, then it returns. No AI, not interactable (the full companion is M7). hud.js draws it;

@@ -1,7 +1,7 @@
 'use strict';
-// vale -- Whispering Vale hub, 80x80 (DESIGN 25.3). The 40x40 hub grown ~1.6x around the cottage, with the start cluster pulled
+// vale -- Whispering Vale hub, 80x80 (docs/design/world-maps.md). The 40x40 hub grown ~1.6x around the cottage, with the start cluster pulled
 // together so the beats keep their rhythm: the dummies and the Elder Stone sit within 15 tiles of the start, the first chest at 10.
-// HOOK: you wake in a dream above the clouds -- one new noun every ~minute (DESIGN 16.2): dummies teach swing, dodge and Q; the Elder
+// HOOK: you wake in a dream above the clouds -- one new noun every ~minute (docs/design/world-maps.md): dummies teach swing, dodge and Q; the Elder
 //       Stone gives a riddle and the lost-lantern quest; a chest with a fishing spot beside it; a garden ambush of three slimes (first
 //       drop, first kill-heal) whose end opens the Pinewood rift. Level band [1,3].
 // SECTIONS (map.sections): hub (outer) -- the whole grid by default; Moon Pond (SE, night fishing + the pearl ritual, behind a fallen-tree

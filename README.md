@@ -125,16 +125,3 @@ Plain HTML5 Canvas 2D with no runtime dependencies, written as classic scripts s
 | `js/main.js` | Main loop, input and transitions |
 
 Showcase URL parameters: `?scene=play`, `?scene=arena`, `?scene=boss`, `?scene=loadout`, `?scene=portal`, `&weapon=starfall|moonbow`.
-
-## Screenshots
-
-![Title](docs/title.png)
-![Whispering Vale with the NE rift](docs/vale.png)
-![Boss fight](docs/boss.png)
-![Loadout](docs/loadout.png)
-![Touch controls on a phone](docs/mobile.png)
-![Editor: map](docs/editor-map.png)
-![Editor: logic](docs/editor-logic.png)
-![Misty Pinewood](docs/pinewood.png)
-![Trolls and ogres](docs/trolls.png)
-![Pixel editor](docs/editor-pixels.png)

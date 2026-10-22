@@ -39,36 +39,50 @@ A dash in "Code id" means no code id yet. Retired terms live only in the last se
 | Charge (ultimate) | The one shared bar both ultimates spend | — | — | M4a |
 | Combo | The primary hit chain of the HAND item (3-hit Blades, 4-hit Shadows, 2-hit Greatarms) | — | — | live |
 | Cooldown | Per-skill recharge timer in seconds | `cd` | — | live |
+| Dash Strike | Blades skill: dash through enemies, cutting everything in your path | `dashstrike` | — | live |
 | Death fling | Dying enemy is thrown from the killing hit | — | — | M4a |
+| Death Mark | Daggers ultimate: mark a spot; a cut now, a killing burst 1.2 s later | `deathmark` | — | M4a |
 | Dodge | Boots-key roll with i-frames | `dodge` | — | live |
 | Echo | The mechanic: replays the HAND action and the Q spell only; the Twice-Told grants it | `echo` | — | live |
+| Fan of Knives | Daggers spell: throw a ring of eight piercing knives | `fanknives` | — | M4a |
+| Firebolt | Staff spell: hurl a bolt that explodes and burns | `firebolt` | — | live |
 | Focus | Shots' hold-M1: aim, then the next shot crits | — | — | M4a |
 | Heavy Strike | Greatarms two-hander hold-M1: 1 s charge, x1.8, poise | — | Heavy (that is the armour class); charged swing | M4a |
+| Heroic Strike | Blades skill: lunge forward and smash; stuns for 1 s | `heroic` | — | live |
 | Hitlag | Brief freeze of attacker and target on a hit; scales with `weight` | `hitstop` | Hitstop (setting label is wrong, UI fix later) | live |
 | Hush | Spell from The Stopped Hour: toggle, world time ×0.25, hero full speed, drains MP | `hush` | time slow; bullet time; slow-mo (that is the boss-death effect) | M4a |
 | I-frames | Invulnerable frames during Boots-key dodge | — | — | live |
+| ICD | Internal cooldown: the minimum time between two procs of the same effect (default 0.5 s; parry 1 s; flash-freeze 6 s) | — | — | M4a |
 | Level | Hero or enemy level number | `level` | — | live |
+| Mark cap | Stat: the most Marks that can sit on one enemy (cap 5) | `markCap` | — | live |
 | Mastery | Per-variant skill rank 1 to 5 earned by use | — | — | live |
 | Mastery rank 3 | Second form of the spell | — | — | M4b |
 | Mastery rank 5 | Hybrid twist of the spell | — | — | M4b |
 | Melee magnet | Short pull toward the target on a melee swing | — | — | live |
+| Meteor | Staff ultimate: call down a meteor; massive area damage and burn | `meteor` | — | live |
 | MP | Mana: the hand action builds 8 per hit; spells spend it | `mp` | — | live |
+| Multishot | Bow spell: loose a fan of five arrows | `multishot` | — | live |
 | Off-action | Offhand item's M2 action: costs stamina, 0 MP, no charge | — | — | M4a |
 | Off-passive | Passive from the OFFHAND item's class | — | — | M4a |
 | Parry | Blades' off-action: 0.25 s window, then riposte stagger | — | Riposte (the old E skill) | M4a |
 | Passive (class) | Bonus from the HAND item's class only | `passive` | — | live |
 | Perfect dodge | Dodge timed to a hit: bonus effect | — | — | live |
 | Poise | Hyper-armour while swinging: hits taken do not interrupt | — | — | live |
+| Proc coefficient | Per-source scaler on proc chance and damage: basic 1.0, projectile 0.6, summon 0.4, zone tick or reflected 0.3, Echo 0.5 | — | — | M4a |
+| Radiant Judgement | Sword ultimate: call a pillar of light; huge damage and a long stun | `judgement` | — | live |
+| Rain of Arrows | Bow ultimate: arrows rain down on an area, slowing everything | `arrowrain` | — | live |
 | Shrine warp | Fast travel between lit Checkpoint shrines | — | Rift; Warp door | live |
 | Snapshot | Shots' and Chakram's off-action: a quick shot | — | — | M4a |
 | Stagger | Meter that fills on hits; full means Break | `stagger` | — | live |
 | Stamina | Resource spent by dodge and off-actions | `stamina` | — | live |
 | Step | Shadows' off-action: 0.6-tile sidestep with a backstab mark | — | — | M4a |
+| Sunslash | Sword spell: sweep a wide arc of dawnlight in front of you | `sunslash` | — | live |
 | Tumble | Wind-pushed enemy tumbling along the ground | — | — | M4a |
 | Ultimate | The strongest cast of an item line; spends Charge | — | — | M4a |
 | Wake at shrine | Respawn at the last Checkpoint shrine after death | — | — | live |
 | Ward | Foci's off-action: hold a mana shield, pops to a nova on release | — | — | M4a |
 | Weight | Hitlag field: basic 1, heavy 1.5, ultimate 2 | `weight` | — | live |
+| Whirling Blade | Blades skill: spin three times, hitting all around you | `whirl` | — | live |
 | World scale | Time multiplier for everything but the hero: 1 normally, 0.25 in Hush | `G.timeScale` | global time scale; enemy time scale | M4a |
 
 ## 3. Elements, statuses and reactions
@@ -76,8 +90,10 @@ A dash in "Code id" means no code id yet. Retired terms live only in the last se
 |---|---|---|---|---|
 | Ablaze | Fire status tier 2 | — | — | M4a |
 | Arcane | Element: marks and unravels | `arcane` | — | live |
+| Blessing | Buff from the Blessing of Dawn page: +40% damage for 8 s | `bless` | Blessing of Dawn (the page) | M4a |
 | Breath | Story name of the wind element | — | — | live |
 | Buffeted | Wind status tier 1: pushed along the gust | — | — | M4a |
+| Bulwark | Chest skill and buff: take 60% less damage for 3.5 s and shove foes away | `bulwark` | — | live |
 | Burning | Fire status tier 1: damage over time | `burn` | Burn; Burning elite (that is the elite modifier) | live |
 | Chilled | Frost status tier 1: slowed | `chill` | Chill | live |
 | Conduct | Reaction: lightning on Chilled or Wet; Shock jumps to nearby Chilled or Wet bodies | — | — | M4a |
@@ -96,8 +112,10 @@ A dash in "Code id" means no code id yet. Retired terms live only in the last se
 | Jolted | Lightning status tier 1 | — | — | M4a |
 | Lifted | Wind status tier 2: knocked up; bosses never | — | — | M4a |
 | Lightning | Element: chains and stuns | `lightning` | — | live |
+| Mana Surge | Chest skill and buff: restore 120 MP and gain +30% power for 6 s | `manasurge`, `surge` | — | live |
 | Marked | Arcane status tier 1 | — | — | M4a |
 | Marks | Shadows' stacking mark counter 0 to 3 on an enemy | `marks` | — | live |
+| Mend | Helmet skill and buff: heal 25% of max HP over 4 s | `mend` | — | live |
 | Nature | Element: poison and roots | `nature` | poison; earth (merged into nature) | live |
 | Numb | Hero-side form of Frozen: 0.5 s root, dodge breaks it | — | — | M4a |
 | Overload | Reaction: arcane on Shocked; extra damage and cooldown cut | — | — | M4a |
@@ -111,10 +129,12 @@ A dash in "Code id" means no code id yet. Retired terms live only in the last se
 | Rent | Slash status tier 2 | — | — | M4a |
 | Rooted | Nature status tier 2: cannot move | `root` | — | M4a |
 | Rupture | Reaction: pierce on a full stagger bar; guaranteed crit | — | — | M4a |
+| Shadow Veil | Chest skill and buff: vanish for 3 s (+40% speed); your next hit is a guaranteed critical | `shadowveil`, `veil` | — | live |
 | Shatter | Reaction: physical hit on Frozen; AoE of damage type shatter | — | Break (that is stagger) | M4a |
 | Shocked | Lightning status tier 2 | — | — | M4a |
 | Slash | Physical element of blades | `slash` | — | live |
 | Smitten | Holy status tier 1 | — | — | M4a |
+| Sprint | Boots skill and buff: +80% move speed for 3 s and shake off slows | `sprint` | — | live |
 | Status | A timed debuff or buff on an entity, two tiers per element | `status.js` | — | M4a |
 | Thaw | Silent interaction: fire on Frozen ends it | — | — | M4a |
 | Unravelled | Arcane status tier 2 | — | — | M4a |
@@ -129,7 +149,7 @@ A dash in "Code id" means no code id yet. Retired terms live only in the last se
 | Boon | Special effect on a Belt, ring or amulet | `boons` | — | live |
 | Boots slot | Armour slot: boots piece, hosts the dodge active | `boots` | — | live |
 | Chest slot | Armour slot: chest piece, hosts the chest active | `chest` | — | live |
-| Companion | Worn offhand item: Grimoire, Quiver or Warhorn | — | — | M4a |
+| Companion | Worn offhand item: Grimoire or Quiver (M4a); Warhorn (M4b) | — | — | M4a |
 | Empty offhand | Allowed: 1H hand then M2 is the class off-action at x1.0 | — | — | M4a |
 | HAND slot | Weapon in the main hand: M1, Q, Shift+Q | `weapon` | weapon 1 (retired) | M4a |
 | Head slot | Armour slot: head piece, hosts the head active | `head` | — | live |
@@ -158,6 +178,7 @@ Each variant has three skills: **action** (primary, or off-action in OFFHAND), *
 ### 5.2 Blades
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
+| Dawn Cut | Sword basic attack: the hand hit | `sword` | — | live |
 | Mace | Spell Crush / ultimate Consecrate; every hit staggers 1 | `mace` | — | M4b |
 | Rapier | Spell Flèche / ultimate Perforate; duelist thrusts | `rapier` | — | M4b |
 | Sword | Spell Sunslash / ultimate Radiant Judgement | `sword` | Dawnblade (its T2 name) | live |
@@ -166,7 +187,8 @@ Each variant has three skills: **action** (primary, or off-action in OFFHAND), *
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
 | Claws | Spell Rend / ultimate Savage; Frenzy attack speed | `claws` | — | M4b |
-| Daggers | Pierce, Marks; spell and ultimate per DESIGN 17.2 options, not yet chosen | `daggers` | Nightfang (its T2 name) | M4b |
+| Daggers | Pierce, Marks; spell and ultimate per docs/design/weapons-and-skills.md | `daggers` | Nightfang (its T2 name) | M4b |
+| Fang Cut | Daggers basic attack: four quick cuts; circle to the rear | `daggers` | — | M4a |
 | Fans | Spell Veil Dance / ultimate Thousand Petals; returning fans | `fans` | — | M4b |
 
 ### 5.4 Greatarms
@@ -182,10 +204,12 @@ Each variant has three skills: **action** (primary, or off-action in OFFHAND), *
 | Bow | Spell Multishot / ultimate Rain of Arrows | `bow` | Moonbow (its T2 name) | live |
 | Chakram | Spell Ricochet / ultimate Guillotine; returning disc | `chakram` | — | M4b |
 | Crossbow | Spell Piercing Bolt / ultimate Ballista; 4-bolt clip | `crossbow` | — | M4b |
+| Moon Arrow | Bow basic attack: the arrow shot | `bow` | — | live |
 
 ### 5.6 Foci
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
+| Arcane Bolt | Staff basic attack: the tapped bolt (hold M1 is Channel) | `staff` | — | live |
 | Orb | 1H focus. Spell Chain Lightning / ultimate Tempest | `orb` | — | M4b |
 | Staff | 2H focus. Spell Firebolt / ultimate Meteor; hold-M1 Channel | `staff` | Starfall (its T2 name) | live |
 | Wand | New 1H focus: bolt action, spell Frost Shards, ultimate Rune of Binding | — | Spellbook (retired hand weapon); Willow Wand (the Staff T1 name) | M4b |
@@ -212,30 +236,55 @@ Each variant has three skills: **action** (primary, or off-action in OFFHAND), *
 ## 6. Shields and companions
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
+| Deck | The companion mechanic: a Grimoire, Quiver or Warhorn holds pages, arrows or calls; its action cycles or primes them and its spell fires the active one | — | page deck | M4a |
+| Aegis | Shield ultimate: for 3 s every hit is parried, and each parry restores 10% HP | `aegis` | — | M4a |
+| Bash | Shield spell: a short shield dash that staggers what it hits | `bash` | — | M4a |
 | Buckler | Shield. Action Parry+ / spell Bash / ultimate Aegis | — | — | M4a |
-| Grimoire | Mage companion. Action Turn / spell Cast / ultimate Chapter | — | Spellbook (retired hand weapon) | M4a |
+| Chapter | Grimoire ultimate: read every page in the book over 1.5 s | `chapter` | — | M4a |
+| Companions | Offhand class of companions (Grimoire, Quiver): worn with any HAND item | `companions` | — | M4a |
+| Grimoire | Mage companion. Action Turn / spell Grimoire cast / ultimate Chapter | — | Spellbook (retired hand weapon) | M4a |
+| Grimoire cast | Grimoire spell: cast the active page | `cast` | Cast | M4a |
 | Heater | Shield. Action Block / spell Shield Bash / ultimate Bulwark Charge | — | — | M4b |
-| Quiver | Ranger companion. Action Nock / spell Loose / ultimate Quiver Storm | — | — | M4b |
+| Nock | Quiver action: nock the next arrow; your next shot hits 40% harder and pierces once | `nock` | — | M4a |
+| Quiver | Ranger companion. Action Nock / spell Quiver loose / ultimate Quiver Storm | — | — | M4a |
+| Quiver loose | Quiver spell: loose the active arrow | `loose` | Loose | M4a |
+| Quiver Storm | Quiver ultimate: loose every arrow in the quiver over 1.5 s | `quiverstorm` | — | M4a |
 | Shield | Held OFFHAND item with three skills; offhand only | — | — | M4a |
+| Shields | Offhand class of shields: fit OFFHAND only, never under a two-hander | `shields` | — | M4a |
 | Tower | Shield. Action Wall / spell Shove / ultimate Fortress | — | — | M4b |
+| Turn | Grimoire action: turn to the next page and flick a free cantrip | `turn` | — | M4a |
 | Warhorn | Warrior companion. Action Bellow / spell Call / ultimate Last Stand | — | — | M4b |
 
 ## 7. Pages, arrows, calls and Grips
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
-| Archmage | Grip: Staff + Grimoire; Chapter costs 80 charge | — | — | M4b |
-| Arrow | Item socketed into the Quiver (Venom, Fire, Frost, Bola, Grapple, Split, Explosive) | — | — | M4b |
+| Arcane Barrage | Page: five homing missiles seek out foes | `barrage` | — | M4a |
+| Arcane Orbit | Page: three orbs circle you for 8 s, burning anything they touch | `orbit` | — | M4a |
+| Archmage | Grip: Staff + Grimoire; Chapter costs 80 charge | — | — | M4a |
+| Arrow | Item socketed into the Quiver (Piercing Shot, Snare Trap, more in M4b) | — | — | M4a |
+| Blessing of Dawn | Page: +40% damage for 8 s | `bless` | Blessing (the buff) | M4a |
 | Call | Item socketed into the Warhorn (War Cry, Rally, Taunt, Quake-call, Stand) | — | — | M4b |
+| Chain Lightning | Page: lightning leaps between up to 6 enemies | `chain` | — | M4a |
 | Cornered | Grip: Claws + Buckler | — | — | M4b |
 | Dancer | Grip: Rapier + Fans; Step shares Parry's cooldown | — | — | M4b |
+| Dawn Wave | Shared page and arrow: release a crescent of light that pierces everything | `dawnwave` | — | M4a |
+| Dreamveil | Page: bend the dream; enemies move at 35% speed for 4 s | `dreamveil` | — | M4a |
 | Faultline | Grip: Hammer + Warhorn | — | — | M4b |
+| Frost Shards | Page: fire three piercing shards that slow | `frostshard` | — | M4a |
+| Gravity Well | Page: open a well that drags enemies in and grinds them | `gravity` | — | M4a |
 | Grip | Named pairing of two items; a Codex discovery with a glint and aura | `src:'grip'` | — | M4b |
+| Moonbeam | Shared page and arrow: channel a beam of moonlight down a long line | `moonbeam` | — | M4a |
 | Page | Item socketed into the Grimoire; a re-homed cast, T1 to T5 plus rarity | — | Dream Tome; rune alternate | M4a |
 | Page slot | Grimoire socket; capacity by tier 2, 3, 4, 5, 6, 6 | — | — | M4a |
+| Piercing Shot | Arrow: a charged arrow that pierces every enemy in a line | `piercing` | — | M4a |
 | Sanctuary | Grip: Mace + Heater; one zone, no stacking | — | — | M4b |
+| Second Wind | Page: instantly heal 35% of max HP | `secondwind` | — | M4a |
+| Shooting Star | Page: a star crashes down at your cursor | `shootingstar` | — | M4a |
+| Snare Trap | Arrow: throw a trap that roots and wounds the first enemies to step in | `snare` | — | M4a |
 | Spellblade | Grip: Sword + Grimoire; pages retype Sunslash | — | — | M4b |
+| Starstorm | Page: a storm of falling stars over an area | `starstorm` | — | M4a |
 | TBD (naming pass, M4b) | Grip: Crossbow + Quiver; clip 6 | — | Arbalest (colliding name) | M4b |
-| TBD (naming pass, M4b) | Grip: Bow + Quiver; Loose costs no Focus | — | Hunter (colliding name) | M4b |
+| TBD (naming pass, M4b) | Grip: Bow + Quiver; Quiver loose costs no Focus; ships in M4a under a placeholder | — | Hunter (colliding name) | M4a |
 | TBD (naming pass, M4b) | Grip: Chakram + Orb | — | Orbit (colliding name) | M4b |
 | TBD (naming pass, M4b) | Grip: Halberd + Quiver | — | Pike Square (colliding name) | M4b |
 | Twin Fangs | Grip: Daggers + Daggers; Marks cap +1 | — | — | M4b |
@@ -246,52 +295,193 @@ Each variant has three skills: **action** (primary, or off-action in OFFHAND), *
 ## 8. Armour
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
+| Arcane Cowl | Frostweave head: +10% power; skill Frost Nova | `arcanecowl` | — | live |
 | Armour class | Heavy, Caster, Medium, Shadow: three suits each | `ARMOUR` | — | live |
+| Blink | Boots skill: teleport a short distance toward your aim | `blink` | — | live |
 | Caster | Armour class: Dreamweave, Frostweave, Stormweave | `caster` | — | live |
+| Charge | Boots skill: charge forward, bowling enemies over | `charge` | — | live |
+| Cloud Sandals | Dreamweave boots: +3 MP/s; skill Blink | `clothsandals` | — | live |
 | Crusader | Heavy suit 2 | `crusader` | — | M4b |
 | Dreamweave | Caster suit 1 | `dreamweave` | Dreamrobe (legacy id) | live |
+| Dreamweave Robe | Dreamweave chest: +25% power, +120 MP, +5 MP/s; skill Mana Surge | `dreamweave` | — | live |
 | Duelist | Medium suit 3 | `duelist` | — | M4b |
+| Frost Nova | Helmet skill: freeze all nearby enemies in place for 2 s | `frostnova` | — | live |
 | Frostweave | Caster suit 2 | `frostweave` | — | M4b |
+| Full-dream bonus | Three pieces of one suit family plus the matching weapon apply the tag rule to trinket boons | — | set bonus | M4b |
 | Heavy | Armour class: Warden, Crusader, Juggernaut | `heavy` | — | live |
 | Juggernaut | Heavy suit 3 | `juggernaut` | — | M4b |
+| Knight Greaves | Warden boots: +5% defence; skill Charge | `knightgreaves` | — | live |
+| Knight Helm | Warden head: +8% defence; skill War Cry | `knighthelm` | — | live |
+| Knight Plate | Warden chest: +20% defence, +220 HP; skill Bulwark | `warden` | — | live |
 | Medium | Armour class: Stalker, Thornwarden, Duelist | `medium` | — | live |
 | Mirage | Shadow suit 3 | `mirage` | — | M4b |
 | Nightshade | Shadow suit 2 | `nightshade` | — | M4b |
 | Piece | One armour item: head, chest or boots | `pieces` | — | live |
+| Roll | Barefoot skill: a quick roll toward your aim; boots replace it | `roll` | — | live |
 | Shade | Shadow suit 1 | `shade` | Shadeleathers (legacy id) | M4b |
 | Shadow (armour) | Armour class: Shade, Nightshade, Mirage | `shadow` | — | live |
 | Stalker | Medium suit 1 | `stalker` | Stalkerjacket (legacy id) | live |
+| Stalker Jacket | Stalker chest: +18% crit, +15% haste; skill Shadow Veil | `stalker` | — | live |
+| Stalker Shoes | Stalker boots: +12% move speed; skill Sprint | `stalkershoes` | — | live |
 | Stormweave | Caster suit 3 | `stormweave` | — | M4b |
 | Suit | Three-piece armour set; suit twist at 3 pieces | — | — | live |
 | Suit twist | Bonus when three suit pieces are worn | — | — | M4b |
 | Thornwarden | Medium suit 2 | `thornwarden` | — | M4b |
+| War Cry | Helmet skill: a roar that stuns and knocks back nearby enemies | `warcry` | — | live |
 | Warden | Heavy armour suit 1 | `warden` | Knightplate (legacy id); Warden alone (ambiguous, write Warden suit) | live |
+| Warden Hood | Thornwarden head: +5 HP/s regeneration; skill Mend | `wardenhood` | — | live |
 | Warden tiers | Iron Mail, Knight Plate, Sunforged Plate, Aurora Plate, Aegis of Dawn; Mythic Shardheart Plate | — | — | M4a |
 
-Mythic armour (one per suit family): Shardheart Plate, Gloomspire Vestment, Forge Deep Cuirass, Nightlong Shroud, Brinemother's Veil, Gravewind, Pinewood Mist, Briarwatch Mantle, Oathless Jacket, Gloamveil, Mossjaw's Skin, Glasswarp Silk. Tier names for the other 11 suits are in DESIGN section 24.
+Mythic armour (one per suit family): Shardheart Plate, Gloomspire Vestment, Forge Deep Cuirass, Nightlong Shroud, Brinemother's Veil, Gravewind, Pinewood Mist, Briarwatch Mantle, Oathless Jacket, Gloamveil, Mossjaw's Skin, Glasswarp Silk. Tier names for the other suits are in docs/design/names.md (the rest are authored in the M4b gear lanes).
 
 ## 9. Item structure
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
 | Affix | Random stat on a rare or better item; prefix or suffix | `AFFIX_V2` | — | live |
+| Ardent | Prefix tier 2: +9 to 12% charge rate | `AFFIX_V2.prefix.chargeSpeed` | — | live |
+| Blazing | Prefix tier 2: +8 to 10% fire damage | `AFFIX_V2.prefix.fireDmg` | — | live |
+| Bound | Prefix tier 2: +2 Mark cap | `AFFIX_V2.prefix.markCap` | — | live |
+| Bulwarked | Suffix tier 2: +4 to 5.5% armour | `AFFIX_V2.suffix.def` | — | live |
+| Cleansing Sash | Boon: Potions also cleanse one status | `potionCleanse` | — | live |
 | Common | Rarity 1, colour #d8d8d8 | `common` | — | live |
+| Crackling | Prefix tier 1: +4 to 6% lightning damage | `AFFIX_V2.prefix.lightningDmg` | — | live |
+| Crushing | Prefix tier 2: +16 to 20% crit damage | `AFFIX_V2.prefix.critDmg` | — | live |
+| Dawnlit | Prefix tier 2: +8 to 10% holy damage | `AFFIX_V2.prefix.holyDmg` | — | live |
+| Dream Tithe | Boon: +10% MP on hit | `originMystic` | — | live |
+| Dreamglass Pendant | Amulet tier 2 (from L16): +5% charge rate | `dreamglass_pendant` | — | live |
+| Dreamsilver Band | Ring tier 2 (from L16): +4% power | `dreamsilver_band` | — | live |
+| Dreamwarded | Suffix tier 3: +8 to 10% all resistance (legendary or better) | `AFFIX_V2.suffix.resAll` | — | live |
+| Drifting Dust | Boon: +2 Dust on elite kills | `dustOnKill` | — | live |
+| Eager | Prefix tier 1: +5 to 7% charge rate | `AFFIX_V2.prefix.chargeSpeed` | — | live |
+| Ember Sign | Boon: +15% fire damage and +10% Burn chance | `fireBurn` | — | live |
 | Epic | Rarity 4, colour #c070ff | `epic` | — | live |
+| Evasive | Suffix tier 1: +1 to 1.5% max HP healed per dodge (epic or better) | `AFFIX_V2.suffix.onDodge` | — | live |
+| Eventide | Prefix tier 3: +12 to 15% arcane damage | `AFFIX_V2.prefix.arcaneDmg` | — | live |
+| Fated | Prefix tier 2: +9 to 12% status chance | `AFFIX_V2.prefix.statusChance` | — | live |
+| Fettered | Prefix tier 3: +3 Mark cap | `AFFIX_V2.prefix.markCap` | — | live |
+| Fierce | Prefix tier 2: +6 to 8% power | `AFFIX_V2.prefix.power` | — | live |
+| First Dawn | Boon: The first R in each fight is free | `rFirstFree` | — | live |
+| Frosted | Prefix tier 2: +8 to 10% frost damage | `AFFIX_V2.prefix.frostDmg` | — | live |
+| Frozen Ultimate | Boon: R gains the frost tag | `rFrostTag` | — | live |
+| Full Charge | Boon: +8% skill damage while charge is full | `skillDmgFull` | — | live |
+| Full Pouch | Boon: +1 potion charge | `potionCap` | — | live |
+| Gathered Light | Boon: Kills grant 2 charge | `chargeOnKill` | — | live |
+| Gift of Victory | Boon: Kill-heal +50% | `killHeal` | — | live |
+| Glacial | Prefix tier 3: +12 to 15% frost damage | `AFFIX_V2.prefix.frostDmg` | — | live |
+| Gleaning | Suffix tier 1: +2 to 3% max MP restored per kill (epic or better) | `AFFIX_V2.suffix.onKill` | — | live |
+| Guarded | Suffix tier 1: +2 to 3% armour | `AFFIX_V2.suffix.def` | — | live |
+| Hale | Suffix tier 2: +55 to 70 max HP | `AFFIX_V2.suffix.hp` | — | live |
+| Hallowed | Prefix tier 1: +4 to 6% holy damage | `AFFIX_V2.prefix.holyDmg` | — | live |
+| Halo Hoop | Boon: +15% holy damage; holy hits stagger more | `holyPower` | — | live |
+| Hardened | Suffix tier 2, on every resistance affix: +10 to 14% resistance | `AFFIX_V2.suffix.res*` | — | live |
+| Hoarfrost Band | Boon: +15% frost damage and +10% Freeze chance | `frostPower` | — | live |
+| Honed | Prefix tier 2: +4 to 5% crit chance | `AFFIX_V2.prefix.crit` | — | live |
 | Imbue | Give a weapon an element for Dust | `imbueItem` | — | live |
 | Implicit | Fixed stat built into an item base | `IMPLICITS` | — | live |
+| Impregnable | Suffix tier 3: +6 to 8% armour | `AFFIX_V2.suffix.def` | — | live |
 | Item level | Level of an item drop | `ilvl` | — | live |
+| Keen | Prefix tier 1: +3 to 5% power | `AFFIX_V2.prefix.power` | — | live |
+| Keen Eye | Boon: +10% crit damage | `originRanger` | — | live |
+| Kindled | Prefix tier 3: +14 to 18% charge rate | `AFFIX_V2.prefix.chargeSpeed` | — | live |
+| Lantern Charm | Amulet tier 1 (from L1): +3% charge rate | `lantern_charm` | — | live |
+| Lantern Heart | Boon: +10% ultimate damage | `ultDmg` | — | live |
+| Lasting Supper | Boon: Cooking buffs last 15 min | `cookingDur` | — | live |
+| Leaping Current | Boon: Conduct +1 jump | `conductJump` | — | live |
 | Legendary | Rarity 5, colour #ffb030 | `legendary` | Unique (different thing) | live |
+| Lethal | Prefix tier 3: +7 to 8% crit chance | `AFFIX_V2.prefix.crit` | — | live |
+| Lingering Dream | Boon: R buffs last 2 s longer | `ultBuffDur` | — | live |
+| Lithe | Suffix tier 1: +10 to 14% move speed | `AFFIX_V2.suffix.speed` | — | live |
+| Long Veil | Boon: Dodge i-frame window 0.1 s longer | `dodgeIframe` | — | live |
+| Lucid | Suffix tier 1: +0.8 to 1.2 MP per second | `AFFIX_V2.suffix.mpRegen` | — | live |
+| Luminous | Prefix tier 2: +8 to 10% skill damage | `AFFIX_V2.prefix.skillDmg` | — | live |
+| Many Threads | Boon: +1 Mark cap | `markCap` | — | live |
+| Mending | Suffix tier 1: +1 to 1.5 HP per second | `AFFIX_V2.suffix.regen` | — | live |
+| Mirror Loop | Boon: +15% arcane damage; Marks last 1 s longer | `arcanePower` | — | live |
+| Mistwoven Belt | Belt tier 2 (from L16): +1 potion charge | `mistwoven_belt` | — | live |
+| Moonlit Girdle | Belt tier 3 (from L32): +1 potion charge | `moonlit_girdle` | — | live |
+| Mossy | Prefix tier 1: +4 to 6% nature damage | `AFFIX_V2.prefix.natureDmg` | — | live |
 | Mythic | Rarity 6 and the tier above T5, colour #ff4f7a | `mythic` | — | live |
+| Nimble | Suffix tier 2: +20 to 26% move speed | `AFFIX_V2.suffix.speed` | — | live |
+| Nimble Heart | Boon: Dodges grant 5 charge | `chargeOnDodge` | — | live |
+| Oath of the Shield | Boon: +10% defence | `originKnight` | — | live |
+| Ominous | Prefix tier 3: +16 to 20% status chance | `AFFIX_V2.prefix.statusChance` | — | live |
+| Overgrown | Prefix tier 3: +12 to 15% nature damage | `AFFIX_V2.prefix.natureDmg` | — | live |
+| Patient | Prefix tier 1: +2 to 3% cooldown reduction | `AFFIX_V2.prefix.cdr` | — | live |
+| Patient Line | Boon: +5% fishing luck | `fishLuck` | — | live |
+| Phantom | Suffix tier 2: +2 to 3% max HP healed per dodge (epic or better) | `AFFIX_V2.suffix.onDodge` | — | live |
+| Piercing Thought | Boon: Projectiles +1 pierce | `projPierce` | — | live |
 | Prefix | Affix before the item name | `AFFIX_V2` | — | live |
+| Quick | Prefix tier 1: +3 to 4% attack speed | `AFFIX_V2.prefix.haste` | — | live |
+| Quickened Wrath | Boon: Charged swings 0.25 s faster | `chargedSwing` | — | live |
+| Quiet Reserve | Boon: R restores 20 MP | `mpOnR` | — | live |
 | Rare | Rarity 3, colour #5aa8ff | `rare` | — | live |
 | Rarity | Item quality: Common, Uncommon, Rare, Epic, Legendary, Mythic | `RARITY` | — | live |
+| Ravening | Suffix tier 3: +6 to 7% max MP restored per kill (epic or better) | `AFFIX_V2.suffix.onKill` | — | live |
+| Reaction Locket | Boon: +15% charge from reactions | `chargeFromReact` | — | live |
+| Reaping | Suffix tier 2: +4 to 5% max MP restored per kill (epic or better) | `AFFIX_V2.suffix.onKill` | — | live |
+| Renewing | Suffix tier 2: +2 to 2.5 HP per second | `AFFIX_V2.suffix.regen` | — | live |
+| Resplendent | Prefix tier 3: +12 to 15% skill damage | `AFFIX_V2.prefix.skillDmg` | — | live |
+| Restless | Prefix tier 1: +5 to 7% status chance | `AFFIX_V2.prefix.statusChance` | — | live |
+| Rimed | Prefix tier 1: +4 to 6% frost damage | `AFFIX_V2.prefix.frostDmg` | — | live |
+| Ring of the Dream | Origin starter ring (Mystic): boon Dream Tithe, +10% MP on hit | `origin_mystic` | — | live |
+| Ring of the Shield | Origin starter ring (Knight): boon Oath of the Shield, +10% defence | `origin_knight` | — | live |
+| Ring of the Trail | Origin starter ring (Ranger): boon Keen Eye, +10% crit damage | `origin_ranger` | — | live |
+| Ring of the Unseen | Origin starter ring (Thief): boon Unseen Debt, +10% damage from behind | `origin_thief` | — | live |
+| Ring of the Vow | Origin starter ring (Warrior): boon Vow of Iron, +1 stagger on weapon skills | `origin_warrior` | — | live |
 | Ring resonance | Bonus when both rings share an origin or element | — | — | live |
+| Rootbound Loop | Boon: +15% nature damage and +10% Poison chance | `naturePower` | — | live |
+| Rope Sash | Belt tier 1 (from L1): +1 potion charge | `rope_sash` | — | live |
+| Ruinous | Prefix tier 3: +24 to 30% crit damage | `AFFIX_V2.prefix.critDmg` | — | live |
 | Salvage | Break gear into Dream Dust; gems return to the bag | `salvageItem` | — | live |
+| Savage | Prefix tier 3: +10 to 13% power | `AFFIX_V2.prefix.power` | — | live |
+| Searing | Prefix tier 3: +12 to 15% fire damage | `AFFIX_V2.prefix.fireDmg` | — | live |
+| Serene | Suffix tier 3: +2.4 to 3.2 MP per second | `AFFIX_V2.suffix.mpRegen` | — | live |
+| Shared Meal | Boon: +10% XP from food | `foodXp` | — | live |
+| Sharpened | Prefix tier 1: +2 to 3% crit chance | `AFFIX_V2.prefix.crit` | — | live |
+| Sharpened Dusk | Boon: +5% crit chance for 6 s after R | `critAfterR` | — | live |
+| Shimmering | Prefix tier 1: +4 to 6% arcane damage | `AFFIX_V2.prefix.arcaneDmg` | — | live |
+| Slow Mending | Boon: Potions heal 3% of max HP per second for 4 s | `flaskRegen` | — | live |
+| Smoldering | Prefix tier 1: +4 to 6% fire damage | `AFFIX_V2.prefix.fireDmg` | — | live |
+| Sovereign | Suffix tier 1: +3 to 4% all resistance (legendary or better) | `AFFIX_V2.suffix.resAll` | — | live |
+| Starhollow Amulet | Amulet tier 3 (from L32): +8% charge rate | `starhollow_amulet` | — | live |
+| Starlit | Prefix tier 2: +8 to 10% arcane damage | `AFFIX_V2.prefix.arcaneDmg` | — | live |
+| Starmetal Band | Ring tier 3 (from L32): +6% power | `starmetal_band` | — | live |
+| Steady | Prefix tier 2: +4 to 5% cooldown reduction | `AFFIX_V2.prefix.cdr` | — | live |
+| Still Water | Boon: Potions also restore 20% MP | `potionMp` | — | live |
+| Storm Ring | Boon: +15% lightning damage; Shock lasts 1 s longer | `lightningPower` | — | live |
+| Stormborn | Prefix tier 3: +12 to 15% lightning damage | `AFFIX_V2.prefix.lightningDmg` | — | live |
+| Sturdy | Suffix tier 1: +25 to 35 max HP | `AFFIX_V2.suffix.hp` | — | live |
 | Suffix | Affix after the item name | `SUFFIX_NOUN` | — | live |
+| Sunwrought | Prefix tier 3: +12 to 15% holy damage | `AFFIX_V2.prefix.holyDmg` | — | live |
+| Swift | Prefix tier 2: +6 to 7% attack speed | `AFFIX_V2.prefix.haste` | — | live |
+| Tarnished Band | Ring tier 1 (from L1): +2% power | `tarnished_band` | — | live |
 | Temper | Spend Dust to raise an item's power step | `TEMPER_COST` | — | live |
 | Tempered | Item upgraded with Temper | `temperItem` | — | live |
+| Tethered | Prefix tier 1: +1 Mark cap | `AFFIX_V2.prefix.markCap` | — | live |
+| Thrifty Hands | Boon: Salvage Dust x1.5 | `salvageDust` | — | live |
+| Thrifty Light | Boon: R costs 80 charge | `rCost` | — | live |
+| Thundering | Prefix tier 2: +8 to 10% lightning damage | `AFFIX_V2.prefix.lightningDmg` | — | live |
+| Timeless | Prefix tier 3: +6 to 8% cooldown reduction | `AFFIX_V2.prefix.cdr` | — | live |
+| Tranquil | Suffix tier 2: +1.6 to 2.2 MP per second | `AFFIX_V2.suffix.mpRegen` | — | live |
 | Trinket | Ring, amulet or belt item | `TRINKET_BASES` | — | live |
+| Unbowed | Suffix tier 2: +5 to 6% all resistance (legendary or better) | `AFFIX_V2.suffix.resAll` | — | live |
+| Unbroken | Suffix tier 3: +75 to 90 max HP | `AFFIX_V2.suffix.hp` | — | live |
 | Uncommon | Rarity 2, colour #6ee36e | `uncommon` | — | live |
+| Undying | Suffix tier 3: +3 to 4 HP per second | `AFFIX_V2.suffix.regen` | — | live |
 | Unique | Fixed named item with a special rule | `UNIQUES` | Legendary (a rarity) | live |
+| Unseen Debt | Boon: +10% damage from behind | `originThief` | — | live |
+| Unyielding | Suffix tier 3, on every resistance affix: +17 to 20% resistance | `AFFIX_V2.suffix.res*` | — | live |
+| Verdant | Prefix tier 2: +8 to 10% nature damage | `AFFIX_V2.prefix.natureDmg` | — | live |
+| Vivid | Prefix tier 1: +4 to 6% skill damage | `AFFIX_V2.prefix.skillDmg` | — | live |
+| Vow of Iron | Boon: +1 stagger on weapon skills | `originWarrior` | — | live |
+| Warded | Suffix tier 1, on every resistance affix: +6 to 8% resistance | `AFFIX_V2.suffix.res*` | — | live |
+| Whirling | Prefix tier 3: +9 to 11% attack speed | `AFFIX_V2.prefix.haste` | — | live |
+| Wide Fracture | Boon: Shatter radius +1 | `shatterRadius` | — | live |
+| Wider Glow | Boon: R radius +1 | `ultRadius` | — | live |
+| Wider Shadow | Boon: Backstab arc +30 degrees | `backstabArc` | — | live |
+| Windborne | Suffix tier 3: +30 to 38% move speed | `AFFIX_V2.suffix.speed` | — | live |
+| Wraithstep | Suffix tier 3: +3.5 to 4% max HP healed per dodge (epic or better) | `AFFIX_V2.suffix.onDodge` | — | live |
+| Wrapped Gems | Boon: Gems in chest and boots count +1 grade, clamped at Radiant | `gemWrap` | — | live |
 
 ## 10. Gems, runes, currencies and consumables
 | Term | Meaning | Code id | Not | Status |
@@ -305,9 +495,13 @@ Mythic armour (one per suit family): Shardheart Plate, Gloomspire Vestment, Forg
 | Dream Oil | Consumable that fuels world puzzles (oil) | — | — | M4b |
 | Elder Stone | Shop and upgrade NPC-object in the Vale hub | — | — | live |
 | Emerald | Nature gem | `emerald` | — | live |
+| Fire Bomb | Pocket bomb: throw a bomb that bursts into flame at your aim | `bomb` | — | M4a |
 | Gem | Socketable stone: Ruby, Sapphire, Emerald, Topaz, Amethyst, Diamond | `GEMS` | — | live |
 | Gem grade | Chipped, Clear, Radiant | `GEM_GRADES` | — | live |
+| Health Potion | Pocket potion: heal 40% of max HP | `potion` | — | live |
+| Mana Flask | Pocket flask: restore 50% of max MP | `flask` | — | M4a |
 | Opal | Wind gem (client-approved) | — | — | M4b |
+| Pearl slot | Extra socket on a legendary, traded from the Elder Stone for a legendary fish | — | — | M4b |
 | Pocket item | Consumable placed in a Pocket (flasks, bombs, traps, oils) | — | — | M4a |
 | Potion | Healing flask held in a Pocket; max 3 | `MAX_POTIONS` | — | live |
 | Radiant | Gem grade 3 | `GEM_GRADES` | — | live |
@@ -320,11 +514,19 @@ Mythic armour (one per suit family): Shardheart Plate, Gloomspire Vestment, Forg
 ## 11. Uniques and Mythic items
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
+| Afterimage Pendant | Amulet unique: dashes leave an image that recasts your last skill once | `afterimagependant` | — | live |
+| Ashen Signet | Ring unique: burn ticks spread Burn to one nearby foe | `ashensignet` | — | live |
+| Cinder Sash | Belt unique: potions leave an ember that burns nearby foes | `cindersash` | — | live |
 | Cinderstride Boots | Unique boots | `UNIQUES` | — | live |
+| Comet Band | Ring unique: projectiles curve toward Marked enemies | `cometband` | — | live |
+| Drowned Compass | Amulet unique: R reveals hidden chests in the room | `drownedcompass` | — | live |
+| Girdle of Quiet Dusk | Belt unique: potions refill on every boss phase change | `quietgirdle` | — | live |
+| Kindred Band | Ring unique: ring resonance bonus doubles when both rings match | `kindredband` | — | live |
 | Morrowbane | Mythic Sword; the Sword line's Mythic name | `UNIQUES` | — | live |
 | Root-Crown | Unique helm | `UNIQUES` | — | live |
 | Tide-Edge | Unique weapon | `UNIQUES` | — | live |
 | The Stopped Hour | Legendary unique (20th) whose rule replaces its spell with Hush | `stillhour` | time rune; Hush (that is the spell) | M4a |
+| Tidewoven Clasp | Belt unique: zone skills follow you as you move | `tidewovenclasp` | — | live |
 | Twice-Told | Legendary unique that grants Echo (see Echo) | `echo` | — | live |
 | Warden's Lantern Plate | Unique chest | `UNIQUES` | Warden's Lantern | live |
 | World unique | Named drop tied to a place or boss | `WORLD_UNIQUES` | — | live |
@@ -346,7 +548,7 @@ Mythic armour (one per suit family): Shardheart Plate, Gloomspire Vestment, Forg
 
 ## 13. Enemies (commons)
 
-Note: count reconciled in the M4a DESIGN rewrite (29 names listed against the stated 28 commons).
+Note: count reconciled in docs/design/enemies-bosses.md (29 names listed against the stated 28 commons).
 
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
@@ -395,7 +597,7 @@ Note: count reconciled in the M4a DESIGN rewrite (29 names listed against the st
 
 ## 14. Bosses
 
-Note: count reconciled in the M4a DESIGN rewrite (12 or 13 bosses; only named bosses listed).
+Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
@@ -403,6 +605,7 @@ Note: count reconciled in the M4a DESIGN rewrite (12 or 13 bosses; only named bo
 | Boss bar | HUD bar with phase pips | — | — | live |
 | Boss move | One entry of `BOSS_MOVES` (cone, circle, line, charge, volley, rain, ring, beam, pull, summon, zone, arenaShrink, blink, mirror, shield, vanish, roar, sequence, random) | `BOSS_MOVES` | — | live |
 | Brinemother | Vault boss, Drowned Vault | `brinemother` | — | later |
+| Cunning form | A boss move variant added per phase: feint, delayed second hit or predicted aim | — | — | M4b |
 | Guardian | Main-boss kind (code `kind`) | `kind` | Boss (any boss); Mini-boss | live |
 | Kharzul the Cinder Colossus | Main boss 4 | `kharzul` | Kharzul | later |
 | Lady Mirelle | Main boss 3 | `mirelle` | Mirelle | later |
@@ -446,6 +649,7 @@ Note: count reconciled in the M4a DESIGN rewrite (12 or 13 bosses; only named bo
 | Drifting Isles | Eighth big map | — | — | later |
 | Drop-down ledge | One-way ledge you step off to a lower level | — | — | live |
 | Drowned Vault | Vault section | — | — | later |
+| Elite pocket | A small elite encounter (2 to 3 per map near the boss) that guarantees a Rare of at least boss ilvl minus 2 on first clear | — | — | M4b |
 | Emberfall Caldera | Zone 5 | — | — | later |
 | Fox Warrens | Pinewood underground section | — | — | live |
 | Gloomspire Ruins | Zone 3; Act II | — | — | M4b |
@@ -504,6 +708,7 @@ Note: count reconciled in the M4a DESIGN rewrite (12 or 13 bosses; only named bo
 | Pause menu | Esc menu | `menu` | — | live |
 | Portrait block | HUD block with hero face, bars | — | — | live |
 | Quest screen | Quest list (J) | `quests` | — | live |
+| Recommended ilvl | Boss-door text "Recommended ilvl N, yours M": information, never a lock | — | — | M4a |
 | Skill bar | HUD bar of 4 groups of 3: [M1 Q Shift+Q] [M2 E Shift+E] [head chest boots] [Z X C] | — | — | M4a |
 | Status row | HUD row of status icons | — | — | live |
 | Title screen | Start screen | — | — | live |
@@ -522,10 +727,21 @@ Note: count reconciled in the M4a DESIGN rewrite (12 or 13 bosses; only named bo
 | ELFX | Effects registry and renderer (rim light, shadows, rays, fog) | `elfx.js` | — | live |
 | Forge | Deterministic sprite generator | `tools/forge/` | — | M4a |
 | Forge bank | Packed sprite data | `js/forge-bank/` | — | M4a |
+| Forge runtime | In-game compositor of forge banks into a cached sheet per loadout | `js/forge-rt.js` (`FORGE`) | — | M4a |
+| Unit | One forge layer baked on its own: body, hair or a gear piece | — | — | M4a |
+| Core sheet | A unit's sheet with every anim except attacks | `<unit>.core` | — | M4a |
+| Atk sheet | A unit's attack anims for one weapon class | `<unit>.atk.<class>` | attack sheet | M4a |
+| Line bank | One gear line's tier file in the forge bank | `js/forge-bank/<line>.t<N>.js` | — | M4a |
+| Forge enemy | Enemy drawn from forge banks (8 true directions); others still use the old sprite | `js/forge-bank/<rig>.js` | — | M4a |
+| Quadruped rig | Shared four-legged forge rig and anims for beasts | `tools/forge/models/quadruped-anims.js` | beast rig | M4a |
+| Die sheet | A unit's hit and death anims in their own sheet | `<unit>.die` | — | M4a |
+| Flat depth | Forge option: one depth value per body part, for smaller banks | `flatDepth` | — | M4a |
+| FORGE_FX | Forge table of tier and rarity effects per item line (geometry per tier, palette, rim light and emitters per rarity) | `FORGE_FX` | — | M4a |
 | Lane | One parallel work stream | — | — | live |
 | Milestone | Delivery step: M1 to M8 | — | — | live |
 | `ref` rig | Hero-frame skeleton: 32 px body in a 48 px frame | — | — | M4a |
 | Rim light | Edge highlight on sprites | — | — | M4a |
+| Rim mask | Forge export: an 8-way outward-normal mask per sprite that the runtime tints by the dominant light | — | — | M4a |
 | Save version | Save format: v4 live, v5 with Loadout v3 | `SAVE_VERSION` | — | live |
 | Side-by-side board | Reference vs forge approval board (M4a gate) | — | — | M4a |
 | Slice (vertical) | M4a scope: Vale and Pinewood | — | — | M4a |

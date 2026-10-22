@@ -1,4 +1,4 @@
-// Enemy, boss and encounter data (DESIGN §21, STORY.md "Bosses").
+// Enemy, boss and encounter data (docs/design/enemies-bosses.md, docs/design/story.md "Bosses").
 // Plain data. Loaded as a classic script; everything is a global `var`.
 //
 // HP values are first drafts; tools/balsim.js owns final tuning.
@@ -151,11 +151,11 @@ var ENCOUNTERS = {
   ]
 };
 
-// ---- Bosses (STORY.md). Move parameters follow BOSS_MOVES (wind, open, dmg, el, stagger, col).
+// ---- Bosses (docs/design/story.md). Move parameters follow BOSS_MOVES (wind, open, dmg, el, stagger, col).
 // Mini-bosses: 60-90 s, 3 moves, +1 move at 50 %.
 // Guardians: 150-240 s, 2 phases.
 //
-// HP formula (DESIGN §20.3): hp = lengthSec * refDPS(L) * uptime, then L1 base = that / enemyHpMul(L), with refDPS
+// HP formula (docs/design/balance.md): hp = lengthSec * refDPS(L) * uptime, then L1 base = that / enemyHpMul(L), with refDPS
 //   = tools/balsim.js's measured rotation DPS against the boss (geometric mean of the three weapon families):
 //   Mossjaw L5, 72 s, uptime 0.7 -> 8560 · Bramblehorn L8, 170 s, uptime 0.6 -> 21470 (enemyHpMul = 1.09^(L-1)).
 var BOSS_DATA = {
@@ -166,7 +166,7 @@ var BOSS_DATA = {
   mossjaw: {
     name: 'Mossjaw', sprite: 'mossjaw', kind: 'mini', level: 5, zone: 'rootHollow',
     type: 'beast', el: 'nature', hp: 10000, lengthSec: [60, 90], staggerMax: 4,   // 8560 -> 6000 (QA M1) -> 8250 (M3 step 2) -> 10000 (§26.2 after the howl was tamed: reference 60-90 s holds; -1 tier 3-4/6 at the L8 arrival)
-    res: { nature: 0.5, fire: -0.5 },        // weak fire, resists nature (STORY.md)
+    res: { nature: 0.5, fire: -0.5 },        // weak fire, resists nature (docs/design/story.md)
     bars: true, transition: 1.5,             // 2 bars (mini-boss)
     moveDefs: {
       lunge:   { type: 'line', len: 6, wind: 0.75, open: 1.2, stagger: 1 },   // wind 0.6 -> 0.75 (QA M1: a 0.3 s reaction + 1.1-tile sidestep must fit); bar 2: 0.64
@@ -188,7 +188,7 @@ var BOSS_DATA = {
   bramblehorn: {
     name: 'Old Bramblehorn', sprite: 'bramblehorn', kind: 'guardian', level: 8, zone: 'pinewood',
     type: 'beast', el: 'nature', hp: 22000, lengthSec: [150, 240], staggerMax: 5,   // 21470 -> 17200 (QA B2) -> 23100 (M3 step 2: v2 gear; every family 150-240 s on reference gear, balsim) -> 22000 (§26.2: 3 bars + cunning forms carry the difficulty; reference 150-240 s holds)
-    res: { nature: 0.5, fire: -0.5 },        // STORY.md gives no weak/resist for Bramblehorn; assumed to match the beast-nature type
+    res: { nature: 0.5, fire: -0.5 },        // docs/design/story.md gives no weak/resist for Bramblehorn; assumed to match the beast-nature type
     bars: true, transition: 1.5,             // 3 bars (guardian)
     moveDefs: {
       stomp:     { type: 'circle', r: 3, at: 'self', wind: 0.9, open: 1.5, stagger: 1 },   // BOSS_FILL scale 'none': 0.9 s wind + 1.5 s open in every bar (walk-out from melee range)

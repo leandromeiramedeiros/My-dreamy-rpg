@@ -81,7 +81,7 @@ function loadData() {
 // ---------------------------------------------------------------- checks
 const F = {
   data: 'js/data.js', items: 'js/items.js', itemdata: 'js/itemdata.js', world: 'js/world.js',
-  game: 'js/game.js', sfx: 'js/sfxdata.js', dialogue: 'js/dialogue.js', music: 'js/music.js',
+  game: 'js/game.js', sfx: 'js/sfxdata.js', dialogue: 'js/dialogue.js', music: 'js/music.js', input: 'js/input.js',
 };
 const errors = [];
 const warnings = [];
@@ -98,7 +98,7 @@ function checkItemRef(file, kind, owner, ref, itemIds) {
   else fail(file, kind, owner, ref);
 }
 
-// Planned content from docs/DESIGN.md §21.1 (roster), §21.3 (vault bosses) and §22.1/22.2 (maps). A reference
+// Planned content from docs/design/enemies-bosses.md (roster), §21.3 (vault bosses) and §22.1/22.2 (maps). A reference
 // to one of these ids is a warning, not an error, until the map or enemy definition lands.
 const PLANNED_MAPS = new Set([
   'roothollow', 'bramblehorn_clearing', 'warden_crypt', 'wardens_hall', 'grotto', 'drowned_vault', 'mirelle_basin',
@@ -117,10 +117,10 @@ const PLANNED_ENEMIES = new Set([
   'oathless', 'brinemother', 'vigils', 'shaman',
 ]);
 
-// Trinket slots are fixed by the engine (rings, amulets and belts; see docs/DESIGN.md §19).
+// Trinket slots are fixed by the engine (rings, amulets and belts; see docs/design/items.md).
 const TRINKET_SLOTS = ['ring', 'amulet', 'belt'];
 
-// Resolve a reference to a map or enemy id. Defined ids pass; planned ids (DESIGN §21/§22) are warnings;
+// Resolve a reference to a map or enemy id. Defined ids pass; planned ids (docs/design/enemies-bosses.md, docs/design/world-maps.md) are warnings;
 // anything else is an error.
 function refOrPlanned(file, kind, owner, ref, defined, planned, what) {
   if (defined.has(ref)) return;
@@ -177,7 +177,7 @@ function main() {
     }
   }
   for (const sk of CHAR_SKILLS || []) if (!skillIds.has(sk)) fail(F.data, 'character skill', sk, 'SKILLS entry');
-  // Every skill needs an aim block (docs/HUD.md, "Touch v2", "Aiming") with a known shape and a numeric range.
+  // Every skill needs an aim block (docs/design/hud-ui.md, "Touch v2", "Aiming") with a known shape and a numeric range.
   const AIM_SHAPES = new Set(['cone', 'circle', 'line', 'proj', 'self', 'dash']);
   for (const [id, sk] of Object.entries(SKILLS || {})) {
     if (!sk.aim || typeof sk.aim !== 'object') fail(F.data, 'aim', id, 'missing aim block');
@@ -364,6 +364,93 @@ function main() {
       for (const n of names) if (!layers[n]) fail(F.music, 'stem', `${songId}.${stem}`, `layer "${n}"`);
     }
     for (const n of Object.keys(song.mix || {})) if (!layers[n]) fail(F.music, 'mix', songId, `layer "${n}"`);
+  }
+
+  // ---- Loadout v3 (docs/design/loadout.md): the HAND x OFFHAND slot matrix, every line's granted skills, deck (page) capacity,
+  // grips, and the default hotkeys (no two actions of one context on one key, no ambiguous Shift chord, Shift never a play key)
+  {
+    const OFFHANDS = get('OFFHANDS') || {}, CLASS_OFF = get('CLASS_OFF') || {}, PAGES = get('PAGES') || {}, PAGE_CAP = get('PAGE_CAP') || [];
+    const GRIPS = get('GRIPS') || [], offhandFits = get('offhandFits'), IN = get('IN');
+    const lines = [];   // { id, row, cls, slot }
+    for (const [cls, C] of Object.entries(WEAPONS || {})) for (const [id, v] of Object.entries(C.variants || {})) if (!v.planned) lines.push({ id, row: v, cls, slot: 'weapon' });
+    for (const [cls, C] of Object.entries(OFFHANDS)) for (const [id, v] of Object.entries(C.variants || {})) lines.push({ id, row: v, cls, slot: 'offhand' });
+    const need = (where, sk) => { if (sk && !skillIds.has(sk)) fail(F.data, 'loadout skill', where, sk); };
+    const baseFor = (L) => Object.values(BASES || {}).find((b) => b.slot === L.slot && b.family === L.id);
+    for (const L of lines) {
+      const r = L.row, w = `${L.slot}.${L.id}`;
+      if (L.slot === 'weapon') {
+        if (![1, 2].includes(r.hands)) fail(F.data, 'hands', w, `1 or 2 (got ${r.hands})`);
+        if (!r.spell || !r.ult) fail(F.data, 'loadout', w, 'a weapon line has spell (Q) + ult (Shift+Q)');
+        need(w + '.spell', r.spell); need(w + '.ult', r.ult);
+        if (r.hold && !['heavy', 'focus', 'channel'].includes(r.hold)) fail(F.data, 'hold', w, 'heavy | focus | channel (game.js holdStep)');
+        if (r.hands === 1 && !skillIds.has(CLASS_OFF[L.cls])) fail(F.data, 'CLASS_OFF', w, `class "${L.cls}" off-action skill`);
+      } else {
+        if (!r.action || !r.spell || !r.ult) fail(F.data, 'loadout', w, 'an offhand line has action (M2) + spell (E) + ult (Shift+E)');
+        need(w + '.action', r.action); need(w + '.ult', r.ult);
+        if (r.role === 'companion') { if (r.hands !== 0 || !['page', 'arrow'].includes(r.deck)) fail(F.data, 'companion', w, 'hands 0 + deck page | arrow'); }
+        else if (r.role === 'shield') { if (r.hands !== 1) fail(F.data, 'shield', w, 'hands 1'); need(w + '.spell', r.spell); }
+        else fail(F.data, 'offhand role', w, `shield | companion (got ${r.role})`);
+      }
+      if (!baseFor(L)) fail(F.items, 'loadout bases', w, 'at least one base');
+    }
+    // the slot matrix, checked through items.js offhandFits on one base per line (empty HAND, 1H and 2H HAND items)
+    if (typeof offhandFits !== 'function') fail(F.items, 'loadout', 'offhandFits', 'function');
+    else {
+      for (const H of [null, ...lines.filter((L) => L.slot === 'weapon')]) for (const O of lines) {
+        const hb = H && baseFor(H), ob = baseFor(O); if ((H && !hb) || !ob) continue;
+        const two = !!H && H.row.hands === 2, comp = O.row.role === 'companion';
+        const want = O.slot === 'weapon' ? O.row.hands === 1 && !two : !two || comp;
+        const got = offhandFits({ base: ob.id }, hb ? { base: hb.id } : null) === '';
+        if (got !== want) fail(F.items, 'slot matrix', `${H ? H.id : '(empty hand)'} + ${O.id}`, want ? 'should fit OFFHAND' : 'should be refused');
+      }
+    }
+    // deck capacity: 2..6 page slots by tier (T1..T5, Mythic), non-decreasing; every page / arrow is a real cast for a real deck
+    if (PAGE_CAP.length !== 6 || PAGE_CAP[0] !== 2 || PAGE_CAP[4] !== 6 || PAGE_CAP.some((n, i) => i && n < PAGE_CAP[i - 1]) || Math.max(...PAGE_CAP) > 6) fail(F.data, 'PAGE_CAP', JSON.stringify(PAGE_CAP), '2..6 by tier, non-decreasing');
+    for (const [id, pg] of Object.entries(PAGES)) {
+      if (!skillIds.has(id)) fail(F.data, 'PAGES', id, 'SKILLS entry');
+      if (!['page', 'arrow', 'both'].includes(pg.deck)) fail(F.data, 'PAGES', id, `deck page | arrow | both (got ${pg.deck})`);
+    }
+    for (const deck of ['page', 'arrow']) {
+      const n = Object.values(PAGES).filter((p) => p.deck === deck || p.deck === 'both').length;
+      if (!n) fail(F.data, 'PAGES', deck, 'no entries for this deck');
+      else if (n < Math.max(...PAGE_CAP)) warn(F.data, 'PAGES', deck, `${n} distinct entries for ${Math.max(...PAGE_CAP)} slots (duplicates fill the rest)`);
+    }
+    // grips: unique ids, two tags naming live lines, and the pair is a legal HAND + OFFHAND
+    const gripIds = new Set();
+    for (const g of GRIPS) {
+      if (gripIds.has(g.id)) fail(F.data, 'GRIPS', g.id, 'unique id');
+      gripIds.add(g.id);
+      if (!g.name || !g.hint) fail(F.data, 'GRIPS', g.id, 'name + hint');
+      const tags = g.tags || [], h = lines.find((L) => L.id === tags[0] && L.slot === 'weapon'), o = lines.find((L) => L.id === tags[1]);
+      if (tags.length !== 2 || !h || !o) { fail(F.data, 'GRIPS', g.id, `two live line tags, HAND first (got ${JSON.stringify(tags)})`); continue; }
+      const hb = baseFor(h), ob = baseFor(o);
+      if (!hb || !ob || (typeof offhandFits === 'function' && offhandFits({ base: ob.id }, { base: hb.id }) !== '')) fail(F.data, 'GRIPS', g.id, `${tags.join(' + ')} is not a legal HAND + OFFHAND pair`);
+    }
+    if (GRIPS.length < 3) fail(F.data, 'GRIPS', 'count', 'the three M4a grips');
+    // default hotkeys (both devices): one key per action within a context (a global key may double as a menu key: Esc = pause / back), no ambiguous Shift chord, Shift alone never a play key,
+    // every one of the 12 actives bound
+    if (!IN || typeof IN.bindingsFor !== 'function' || !IN.DEFAULTS) fail(F.input, 'hotkeys', 'IN', 'input.js did not load');
+    else {
+      const GLOBAL = new Set(['inventory', 'character', 'quests', 'bestiary', 'map', 'pause', 'help', 'mute']);
+      const MENU = new Set(['menuUp', 'menuDown', 'menuLeft', 'menuRight', 'accept', 'back', 'menuAlt', 'menuInfo', 'tabPrev', 'tabNext']);
+      const ctxOf = (a) => (GLOBAL.has(a) ? 'global' : MENU.has(a) ? 'menu' : 'play');
+      for (const dev of ['kbm', 'pad']) {
+        const D = IN.DEFAULTS[dev] || {};
+        for (const a of IN.ACTIONS) for (const code of D[a] || []) {
+          for (const b of IN.ACTIONS) {
+            if (b <= a || !(D[b] || []).includes(code)) continue;
+            const ca = ctxOf(a), cb = ctxOf(b);
+            if (ca === cb || (ca === 'global' && cb === 'play') || (cb === 'global' && ca === 'play')) fail(F.input, 'hotkey conflict', `${dev} ${code}`, `${a} and ${b}`);
+          }
+          if (dev === 'kbm') {
+            if ((code === 'ShiftLeft' || code === 'ShiftRight') && ctxOf(a) === 'play') fail(F.input, 'hotkey', `${dev} ${a}`, 'Shift alone is the chord modifier');
+            const c = typeof IN.chordConflict === 'function' ? IN.chordConflict('kbm', a, code) : null;
+            if (c) fail(F.input, 'hotkey chord', `${dev} ${a} ${code}`, `ambiguous with ${c}`);
+          }
+        }
+        for (const a of ['attack', 'offhand', 'skillQ', 'ultQ', 'skillE', 'ultE', 'skillR', 'skillF', 'dodge', 's1', 's2', 's3']) if (!(D[a] || []).length) fail(F.input, 'hotkey', `${dev} ${a}`, 'unbound active');
+      }
+    }
   }
 
   // ---- report

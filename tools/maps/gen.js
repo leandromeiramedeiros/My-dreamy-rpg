@@ -183,7 +183,7 @@ const T = {
   openPortalId: id => ({ type: 'open_portal', id }),   // by portal id (stable when portals are added/removed per warp mode)
   // M2c: warp within the same map (0.4 s fade, no load, no lost trigger state). `to` = { x, y } or an anchor id. The pre-warp engine ignores it.
   warp: to => ({ type: 'warp', to }),
-  // inline arena (DESIGN 25.1): starts the fight, closes `gate` for it. Pre-engine: nothing (the spawn cards alone run the fight)
+  // inline arena (docs/design/world-maps.md): starts the fight, closes `gate` for it. Pre-engine: nothing (the spawn cards alone run the fight)
   arena(id, gate, x, y, r) { return T.arenaMode === 'arena' ? [{ type: 'arena', id, gate, x: r2(x), y: r2(y), r }] : []; },
   spawn(enemy, count, x, y, radius, extra) {
     enemy = T.enemy(enemy);
@@ -276,7 +276,7 @@ class MapGen {
     this.paths.push(p); this.pathBy[name] = p; return p;
   }
   river(name, o) { const rv = Object.assign({ name, w: 2.6, meander: 2, every: 8 }, o); this.rivers.push(rv); return rv; }
-  // --- M2c sections (DESIGN 25): one grid, several regions. bounds = [x0, y0, x1, y1]; later sections win where bounds overlap.
+  // --- M2c sections (docs/design/world-maps.md): one grid, several regions. bounds = [x0, y0, x1, y1]; later sections win where bounds overlap.
   //     o: { name, kind: 'outer'|'underground'|'vault'|'arena'|'islet'|'pond', ambient, palette, patch: {f, d}, pad, amp, gutter }
   section(id, o) { const sc = Object.assign({ id, name: id, kind: 'outer', gutter: false }, o); this.sections.push(sc); return sc; }
   secAt(x, y) { let r = null; for (const sc of this.sections) { const b = sc.bounds; if (b && x >= b[0] && x < b[2] && y >= b[1] && y < b[3]) r = sc; } return r; }
@@ -388,7 +388,7 @@ class MapGen {
       let prev = base;
       for (const c of cps) { if (c.dl != null) c.lvl = prev + c.dl; if (c.lvl == null) c.lvl = prev; prev = c.lvl; }
       // meander: insert displaced intermediate points
-      const wound = [cps[0]], RG = p.side ? this.sideRng() : this.rng;   // side: an add-on path on its own RNG stream (DESIGN 26.2 pockets)
+      const wound = [cps[0]], RG = p.side ? this.sideRng() : this.rng;   // side: an add-on path on its own RNG stream (docs/design/enemies-bosses.md pockets)
       let sg = RG.sign();
       for (let i = 1; i < cps.length; i++) {
         const a = cps[i - 1], b = cps[i], len = Math.hypot(b.x - a.x, b.y - a.y), k = Math.floor(len / p.every);
@@ -976,7 +976,7 @@ class MapGen {
     return out;
   }
 
-  // ------------------------------ density helpers (DESIGN 25.1) ------------------------
+  // ------------------------------ density helpers (docs/design/world-maps.md) ------------------------
   // nearest sample of a path to (x, y): arclength s, lateral distance d
   pathProject(name, x, y) {
     const p = this.pathBy[name]; let bi = 0, bd = 1e9;
@@ -1089,7 +1089,7 @@ class MapGen {
       objective: this.objective,
     };
     if (this.sigil) m.sigil = { x: this.sigil.x, y: this.sigil.y };
-    if (this.level) m.level = this.level;   // zone level band [lo, hi] (DESIGN 3/11); tools/m1-world.js re-asserts the same table
+    if (this.level) m.level = this.level;   // zone level band [lo, hi] (docs/design/progression-economy-saves.md, docs/design/world-maps.md); tools/m1-world.js re-asserts the same table
     // M2c: sections (bounds, kind, ambient light, palette name), void gutters and warp anchors ride along as plain map fields
     if (this.sections.length) m.sections = this.sections.map(sc => { const b = sc.bounds, o = { id: sc.id, name: sc.name, kind: sc.kind, x: b[0], y: b[1], w: b[2] - b[0], h: b[3] - b[1] }; for (const k of ['ambient', 'dark']) if (sc[k] != null) o[k] = sc[k]; return o; });
     if (Object.keys(this.anchors).length) m.anchors = Object.values(this.anchors).map(a => Object.assign({}, a));

@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// ui.js — "Dream Glass" UI primitives (docs/HUD.md). Layout lives in hud.js; this file only draws pieces
+// ui.js — "Dream Glass" UI primitives (docs/design/hud-ui.md). Layout lives in hud.js; this file only draws pieces
 // and owns the hit-region + focus model shared by mouse, touch and gamepad. Loaded after font.js (FONT_ART,
 // UI_ART) and before hud.js, in index.html AND editor.html. No dependency on G / IN at load time.
 //
@@ -48,7 +48,7 @@
 //
 //   Hit regions (mouse/touch):  UI.begin() once per frame before drawing (main.js does it);
 //        UI.hit(x, y, w, h, fn, o) registers; UI.click(x, y, alt) dispatches -> true if something was hit.
-//   UI.focus — the menu focus model (CONTROLS.md):
+//   UI.focus — the menu focus model (docs/design/controls.md):
 //        register(rect, id, o={fn, alt, def}) -> true if focused. Screens register every focusable rect each frame.
 //        move('up'|'down'|'left'|'right') nearest rect in that direction (never hand-wired), accept(), alt(),
 //        set(id, show), is(id), current() -> rect, showing() -> ring visible, since() -> seconds focused,
@@ -137,7 +137,7 @@ const UI = (() => {
       x += g.adv * sc;
     }
   }
-  // ---- text-run cache (DESIGN §26.4 step 5): a HUD frame drew ~300 glyph blits, each label 1-10 times (outline, shadow, fill).
+  // ---- text-run cache (docs/design/pillars-and-rules.md step 5): a HUD frame drew ~300 glyph blits, each label 1-10 times (outline, shadow, fill).
   // A run seen twice is rastered once - outline, shadow and fill, in the same order, into a canvas at the target's device scale
   // - and blitted. Only under a plain whole-pixel transform at alpha 1 / source-over, so the pixels are the ones the direct
   // draw makes; otherwise (fading text, a scaled menu, the fallback font) the direct path runs as before. TEXT_MAX entries;
@@ -229,7 +229,7 @@ const UI = (() => {
     }
     return c;
   }
-  // procedural fallback (no atlas yet): fill + 2 px edge + 2 px line, per HUD.md
+  // procedural fallback (no atlas yet): fill + 2 px edge + 2 px line, per docs/design/hud-ui.md
   function plainFallback(ctx, x, y, w, h, line) {
     ctx.fillStyle = C.edge; ctx.fillRect(x, y, w, h);
     ctx.fillStyle = line; ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
@@ -470,7 +470,7 @@ const UI = (() => {
   function begin() { hits = []; focus.begin(); }
 
   // ring(ctx,x,y,r,frac,col[,w=2]): a clockwise arc from 12 o'clock covering frac of the circle (touch wheel rims,
-  // cooldown / charge rings; docs/HUD.md "Touch v2"). Not grid-snapped: rings are round.
+  // cooldown / charge rings; docs/design/hud-ui.md "Touch v2"). Not grid-snapped: rings are round.
   function ring(ctx, x, y, r, frac, col, w = 2) {
     frac = Math.max(0, Math.min(1, frac)); if (frac <= 0) return;
     ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'butt';
