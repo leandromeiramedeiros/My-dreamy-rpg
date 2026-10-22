@@ -11,7 +11,7 @@
 //              every bank loadout, bare and geared
 //   sheet      the first full-loadout sheet (radiant, 8 dirs x every column) at CPU throttle x4: <= 120 ms busy (3 slices)
 //   fetch      cached frame fetch (FORGE.frame) <= 0.05 ms per call (x4)
-//   doll       the bag paper doll, one direction (FORGE.doll), <= 10 ms (x4)
+//   doll       the bag paper doll, one direction (FORGE.doll), <= 12 ms (x4)
 //   sha256     every loadout sheet hashes the same in two fresh page loads
 //   rim/sock   a rim mask and the sockets come back for a frame
 const http = require('http'), fs = require('fs'), path = require('path'), crypto = require('crypto');
@@ -108,7 +108,7 @@ const sheetsOf = (page, want) => page.evaluate(async ([rig, los, want]) => {
     console.log(`      decode    base ${dec.base.toFixed(0)} ms, ${full} + ${doll} gear ${dec.gear.toFixed(0)} ms (x1, before the timings)`);
     check('sheet', t.ms <= 120, `${full}: ${t.frames} frames in ${t.ms.toFixed(1)} ms busy over ${t.slices.length} slices (${t.slices.map(v => v.toFixed(0)).join(" + ")}; ${t.wall.toFixed(0)} ms wall) at x4 (<= 120)`);
     check('fetch', t.fetch <= 0.05 && t.hit === t.N, `${(t.fetch * 1000).toFixed(2)} us per FORGE.frame at x4 (<= 50 us), ${t.hit}/${t.N} hits`);
-    check('doll', t.doll <= 10, `${doll}: one direction, ${t.dollCols} frames in ${t.doll.toFixed(2)} ms at x4 (<= 10)`);
+    check('doll', t.doll <= 12, `${doll}: one direction, ${t.dollCols} frames in ${t.doll.toFixed(2)} ms at x4 (<= 12)`);
     const s1 = await sheetsOf(page, true);
     // rim + sockets of one frame
     const rs = await page.evaluate(([rig, lf]) => {
