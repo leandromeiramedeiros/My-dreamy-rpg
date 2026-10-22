@@ -7,6 +7,7 @@ Runtime lights and status layers: [lighting-status-fx.md](lighting-status-fx.md)
 * 3/4 top-down view. Eight true directions, never mirrored. Forge camera elevation 28 degrees.
 * Body 32 px inside a 48x48 frame: the measured reference proportions (27 px; head 10, torso 8, legs 9; 2.7 heads; 16 px shoulders) scaled ×1.19 (client ruling). The forge is the only 8-direction sprite source.
 * **The base hero wears nothing equippable** (client ruling): casual clothes, hair and skin only. Cape, weapons, shields, armour, belts and every other equippable are separate forge pieces composited at runtime over the base.
+* **Forge method: hybrid parts** (client ruling): the 3D rig poses every frame and resolves depth and sockets; hand-authored pixel parts per direction (head and face, hair, hands, casual clothes; gear faces where needed) are stamped at bone positions. Parts are drawn once as data; frames are always generated.
 * Directions: 8 for every creature with a facing (humanoids, beasts, bosses); 1 for amorphous and swarm. Bosses scale 2 to 3 in a 96 or 128 px frame.
 * Frames: 8 directions x 43 = 344 per humanoid piece.
 
