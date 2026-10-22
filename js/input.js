@@ -293,7 +293,7 @@ const IN = (() => {
 
   // ---- glyphs -----------------------------------------------------------------------------------------------
   const KEYNAME = { Space: 'SPACE', ShiftLeft: 'SHIFT', ShiftRight: 'SHIFT', ControlLeft: 'CTRL', ControlRight: 'CTRL', AltLeft: 'ALT', AltRight: 'ALT',
-    Tab: 'TAB', Escape: 'ESC', Enter: 'ENTER', Backspace: 'BKSP', ArrowUp: '▲', ArrowDown: '▼', ArrowLeft: '◄', ArrowRight: '►',
+    Tab: 'TAB', Escape: 'ESC', Enter: 'ENTER', Backspace: 'BKSP', ArrowUp: 'UP', ArrowDown: 'DN', ArrowLeft: 'LF', ArrowRight: 'RT',
     Mouse0: 'LMB', Mouse1: 'MMB', Mouse2: 'RMB', CapsLock: 'CAPS', Backquote: '`', Minus: '-', Equal: '=', BracketLeft: '[', BracketRight: ']',
     Semicolon: ';', Quote: "'", Comma: ',', Period: '.', Slash: '/', Backslash: '\\' };
   const keyName = c => chordBase(c) ? '▲' + keyName(chordBase(c)) : KEYNAME[c] || (/^Key[A-Z]$/.test(c) ? c.slice(3) : /^Digit\d$/.test(c) ? c.slice(5) : /^Numpad\d$/.test(c) ? 'NUM' + c.slice(6) : /^F\d+$/.test(c) ? c : String(c).toUpperCase());

@@ -11,6 +11,7 @@ Terms: [../GLOSSARY.md](../GLOSSARY.md). Skill bar and slots: [loadout.md](loado
 * Bindings are stored in the save (`bindings`) with defaults per device. Bindings are modifier-aware (`'Shift+KeyQ'`):
   Shift alone does nothing. The ultimate chord fires on key-down of Q (or E) while Shift is held, so Q-then-Shift never fires an ultimate.
 * The rebind screen shows chords and refuses a chord whose base key is bound in the same context.
+* Glyph ruling: the pixel font has no ⇧, so **▲ is the Shift chord mark** everywhere (▲Q, ▲E; the rebind list, bar, panel and tooltips agree). To avoid the clash, kbm arrow keys read as text (UP, DN, LF, RT); the pad D-pad keeps D▲ D▼ D◄ D► (no chords on the pad).
 
 ## Default bindings
 Movement stays on WASD. Interact is Space, so it never conflicts with a skill key.

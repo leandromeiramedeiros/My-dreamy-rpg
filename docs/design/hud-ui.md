@@ -33,7 +33,8 @@ Element colours come from `ICONS.elementColor`.
 * Portrait block (bottom-left): portrait 72x72 at (16,452); level badge 24x24 at (72,500). Bars: HP (100,456) 236x18; MP (100,480) 236x12;
   ST (100,498) 236x8; XP (100,512) 236x4. Numbers only on HP; MP and ST numbers on hover or in the Tab screen. Frame variant per Origin.
 * Status row: at (100,428), up to 8 icons 20x20, 4 px gap, debuffs first in a red-tinted frame; stack digit 10 px bottom-right; duration as a darkening sweep.
-* Skill bar (bottom-centre): 4 groups of 3 slots, 44x44, gap 14, from x168 to x792 at y=484: [M1 Q Shift+Q] [M2 E Shift+E] [R V F] [Z X C].
+* Shift chord mark: ▲ (the pixel font has no ⇧; see controls.md glyph ruling). Kbm arrow keys read UP / DN / LF / RT.
+* Skill bar (bottom-centre): 4 groups of 3 slots, 44x44, gap 14, from x168 to x792 at y=484: [M1 Q ▲Q] [M2 E ▲E] [R F V] [Z X C].
   Frame colour = the skill's element; the ultimate gets the gold frame. Key tag: a 12x10 dark tag, 10 px text, at the slot's top-left outside the art.
   Cooldown = clockwise radial wipe at 70% dark with seconds centred. Not enough MP = desaturated icon with the tag tinted blue.
   Unavailable (rooted, dashing) = 50% dim. An uncharged ultimate shows its chord tag dim. Pockets show a charge pip row.
