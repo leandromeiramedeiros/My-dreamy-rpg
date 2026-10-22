@@ -10,12 +10,17 @@
 //   B  resolve: any stack of G-buffers -> RGBA: nearest layer wins per pixel, a dark line where one part sits in front of
 //      another, stray-pixel cleanup, palette lookup (a tier or rarity = a palette swap), outline.
 // render() = A for every layer of a loadout + B. compose() runs B on baked sheets, so the game's composite of a loadout
-// equals the offline render pixel for pixel.
+// equals the offline render pixel for pixel. The game runs B from js/forge-rt.js: build.js copies the <rt> blocks below
+// into it (tools/forge-rt-check.js checks they match and that the browser's frames equal render()).
 //
 //   FORGE.render(model, { dir, anim, frame, pieces })  -> { w, h, rgba, sockets, anim }
 //   FORGE.sheet(model, { pieces, anims })              -> one loadout, rows = dirs, cols = every frame of every anim
-//   FORGE.bake(model, { piece? })                      -> { w, h, rgba (encoded G-buffer sheet), meta } for the body or a piece
+//   FORGE.bake(model, { piece? | group?, anims? })     -> { w, h, rgba (encoded G-buffer sheet), meta, empty } for a piece or a
+//                                                         base group ('body', 'hair'; every base layer when neither), for
+//                                                         the given anims only (default: all)
+//   FORGE.bankSplit(model)                             -> [[suffix, anims]]: how a unit is banked (core, atk.<class> ...)
 //   FORGE.compose(bank, { dir, anim, frame, pieces })  -> RGBA of one frame from baked sheets (the game's runtime path)
+//   FORGE.rt.{ prepare, composeInto, socketsAt, layoutOf, animOf, rim }  the runtime's per-loadout composer (forge-rt.js)
 //   FORGE.sockets(model, { dir, anim, frame, pieces })  -> the frame's sockets only (no raster)
 //   FORGE.raw(model, { dir, anim, frame, pieces, scale }) -> the volumes before the pixel pass (smooth light; a modelling aid)
 //   FORGE.ramp('#rrggbb')                              -> [shadow, low, mid, high] hue-shifted ramp (hex)
@@ -71,6 +76,7 @@
 //   in every direction and depends on (anim, frame) only: see chainDirs. Segment lengths never change.
 // ---------------------------------------------------------------------------
 const FORGE = (function () {
+  // <rt>
   // ---- vectors / rotations -------------------------------------------------------------------------------------
   const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -126,6 +132,7 @@ const FORGE = (function () {
     ];
   }
   const toRamp = m => typeof m === 'string' ? ramp(m) : Array.isArray(m) ? m : toRamp(m.ramp);
+  // </rt>
 
   // ---- signed distance functions (local space) ------------------------------------------------------------------
   function sdf(pr, p) {
@@ -291,7 +298,7 @@ const FORGE = (function () {
   }
 
   // ---- stage A: rasterise one layer -----------------------------------------------------------------------------
-  const SS = 3, FAR = 200, QS = 6;                              // 3x3 rays per pixel; depth stored in 1/6 px steps around the root
+  const SS = 3, FAR = 200;                                     // 3x3 rays per pixel; depth: QS steps per px around the root
   function camera(model) {
     const e = (model.cam && model.cam.elev != null ? model.cam.elev : 25) * Math.PI / 180;
     return { w: model.frame[0], h: model.frame[1], ox: model.origin[0], oy: model.origin[1],
@@ -407,119 +414,273 @@ const FORGE = (function () {
     return G;
   }
 
+  // <rt> (this block and the other <rt> blocks are copied into js/forge-rt.js by build.js: the game runs this same code)
   // ---- stage B: resolve a stack of G-buffers ---------------------------------------------------------------------
-  // list: [{ g, pal: per material 4 rgb, keys: per part an int (same group + part name = same key) }]
-  const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  // The stack is gathered into per-pixel winners (nearest layer wins; a later layer wins a tie), then cleaned up inside
+  // the covered bounding box only. All scratch arrays are reused (no allocation per frame: the runtime composes a whole
+  // loadout sheet in one go). Every pass keeps the exact semantics of a full-frame pass: a pass that reads what it writes
+  // in the same scan collects its changes and applies them after the scan; the in-place passes stay in scan order.
+  const QS = 6;                                                 // depth in 1/6 px steps (stage A quantises with it too)
+  const RS = { n: 0 };                                          // scratch, grown on demand
+  function rsBegin(w, h) {
+    const N = w * h;
+    if (RS.n < N) {
+      RS.n = N; RS.M = new Int32Array(N); RS.K = new Int32Array(N); RS.T = new Uint8Array(N); RS.F = new Uint8Array(N); RS.KP = new Uint8Array(N);
+      RS.Z = new Int16Array(N); RS.SEAM = new Uint8Array(N); RS.SM = new Uint8Array(N); RS.OL = new Uint8Array(N); RS.C = new Int32Array(N);
+      RS.got = new Uint8Array(N); RS.CH = new Int32Array(N * 4); RS.DY = new Uint8Array(N); RS.WL = new Int32Array(N);
+      RS.CL = new Int32Array(N); RS.DLB = new Int32Array(N); RS.OLL = new Int32Array(N); RS.XOF = new Int32Array(N); RS.YOF = new Int32Array(N); RS.OM = new Uint8Array(N); RS.SRC = new Int32Array(N); RS.xw = 0;
+    }
+    if (RS.xw !== w) { for (let i = 0; i < N; i++) { RS.XOF[i] = i % w; RS.YOF[i] = (i / w) | 0; } RS.xw = w; }   // x, y of every index
+    RS.M.fill(-1, 0, N); RS.Z.fill(-1, 0, N); RS.F.fill(0, 0, N); RS.KP.fill(0, 0, N); RS.SEAM.fill(0, 0, N); RS.SM.fill(0, 0, N); RS.OL.fill(0, 0, N);
+    RS.w = w; RS.h = h; RS.x0 = w; RS.y0 = h; RS.x1 = -1; RS.y1 = -1; RS.nc = -1;
+    return RS;
+  }
+  const rgbKey = c => (c[0] << 16) | (c[1] << 8) | c[2];
+  // the colour key of every (layer, material, tone): PK[(layer * 256 + material) * 8 + tone]
+  function palKeys(pals) {
+    const PK = new Int32Array(Math.max(1, pals.length) * 2048);
+    pals.forEach((pal, l) => pal.forEach((tones, m) => tones.forEach((c, t) => { if (t < 8) PK[(l * 256 + m) * 8 + t] = rgbKey(c); })));
+    return PK;
+  }
+  // list: [{ g, pal: per material 4 rgb, keys: per part an int (same group + part name = same key) }]  (full-frame G-buffers)
   function resolve(list, w, h, opt) {
-    const N = w * h, M = new Int32Array(N).fill(-1), K = new Int32Array(N), T = new Uint8Array(N), F = new Uint8Array(N), KP = new Uint8Array(N), Z = new Int16Array(N);
-    for (let i = 0; i < N; i++) {
-      let b = -1, bz = -1;
-      for (let l = 0; l < list.length; l++) { const g = list[l].g; if (g.cov[i] && g.dq[i] >= bz) { b = l; bz = g.dq[i]; } }
-      if (b < 0) continue;
-      const g = list[b].g; M[i] = b * 256 + g.mat[i]; K[i] = list[b].keys[g.part[i]]; T[i] = g.tone[i]; F[i] = g.flat[i]; KP[i] = g.keep[i]; Z[i] = bz;
-    }
-    const at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? -1 : y * w + x;
-    const px = opt.pixel;
-    // pixel pass 1 (opt-in, model.pixel): 1 px spurs off the silhouette go (a pixel with at most one covered 4-neighbour)
-    if (px) for (let pass = 0; pass < 2; pass++) {
-      const kill = [];
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (M[i] < 0 || F[i] || KP[i]) continue;
-        let n = 0; for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) n++; }
-        if (n <= 1) kill.push(i);
+    const S = rsBegin(w, h), N = w * h, { M, K, T, F, KP, Z } = S;
+    let x0 = w, y0 = h, x1 = -1, y1 = -1;
+    for (let l = 0; l < list.length; l++) {
+      const g = list[l].g, keys = list[l].keys, base = l * 256;
+      for (let i = 0; i < N; i++) {
+        if (!g.cov[i] || g.dq[i] < Z[i]) continue;
+        M[i] = base + g.mat[i]; K[i] = keys[g.part[i]]; T[i] = g.tone[i]; F[i] = g.flat[i]; KP[i] = g.keep[i]; Z[i] = g.dq[i];
+        const x = i % w, y = (i - x) / w; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
       }
-      for (const i of kill) M[i] = -1;
     }
-    // dark line on the far side of a depth jump between two parts (an arm in front of the torso reads as separate);
-    // with innerColor it is drawn in that colour (the reference's navy seams), else in the part's own shadow tone
-    const SEAM = new Uint8Array(N);
-    if (opt.jumpQ) {
-      const t0 = T.slice();
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (M[i] < 0 || F[i]) continue;
-        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0 && K[j] !== K[i] && Z[j] > Z[i] + opt.jumpQ) { if (opt.innerColor) SEAM[i] = 1; else t0[i] = 0; break; } }
+    S.x0 = x0; S.y0 = y0; S.x1 = x1; S.y1 = y1;
+    resolveCore(S, opt, palKeys(list.map(e => e.pal)));
+    const rgba = new Uint8ClampedArray(N * 4);
+    resolveOut(S, rgba, w, 0, 0);
+    return rgba;
+  }
+  // a repeated pass revisits only DIRTY pixels: one whose own value or a 4-neighbour's changed since its last visit (its
+  // inputs are unchanged otherwise, so it would decide the same: no change). Pass 0 visits (and cleans) the whole box.
+  function dirty(DY, i, w, h) {
+    const x = i % w; DY[i] = 1;
+    if (x + 1 < w) DY[i + 1] = 1; if (x > 0) DY[i - 1] = 1; if (i + w < w * h) DY[i + w] = 1; if (i >= w) DY[i - w] = 1;
+  }
+  // the most frequent of n values in NB (a tie takes the smaller value): the 'commonest neighbour' of every cleanup pass
+  const NB = new Int32Array(4);
+  function commonest(n) {
+    let bv = 0, bc = 0;
+    for (let p = 0; p < n; p++) {
+      const v = NB[p]; let c = 0; for (let q = 0; q < n; q++) if (NB[q] === v) c++;
+      if (c > bc || (c === bc && v < bv)) { bc = c; bv = v; }
+    }
+    return bv;
+  }
+  // every pass works on the covered pixels CL[0 .. nc) in scan order (composeInto lists them as it gathers), not the box
+  function resolveCore(S, opt, PK) {
+    const { w, M, CL } = S, px = opt.pixel, smear = !!(opt.smears && opt.smears.length);
+    S.dl = CL; S.nd = 0; S.no = 0;
+    if (S.x1 < 0 && !smear) return;
+    let nc = S.nc;
+    if (nc < 0) { nc = 0; for (let y = S.y0; y <= S.y1; y++) for (let i = y * w + S.x0, e = y * w + S.x1; i <= e; i++) if (M[i] >= 0) CL[nc++] = i; }
+    if (px) nc = passSpurs(S, nc);
+    if (opt.jumpQ) passSeams(S, nc, opt.jumpQ, !!opt.innerColor);
+    passLone(S, nc, px ? 2 : 3);
+    passOrphans(S, nc, px ? 1 : 2, px ? 8 : 2);
+    const { C, SEAM, T } = S, seamC = opt.innerColor ? rgbKey(opt.innerColor) : 0;
+    for (let k = 0; k < nc; k++) { const i = CL[k]; C[i] = SEAM[i] ? seamC : PK[M[i] * 8 + T[i]]; }
+    S.dl = CL; S.nd = nc;
+    if (smear) passSmears(S, opt.smears);
+    if (px) passClusters(S);
+    if (opt.outline) passOutline(S, nc, rgbKey(opt.outline));
+  }
+  // pixel pass 1 (opt-in, model.pixel): 1 px spurs off the silhouette go (a pixel with at most one covered 4-neighbour);
+  // returns the new count of covered pixels
+  function passSpurs(S, nc) {
+    const { w, h, M, F, KP, CH, DY, XOF, CL } = S, N = w * h;
+    for (let pass = 0; pass < 2; pass++) {
+      let nk = 0;
+      for (let k = 0; k < nc; k++) {
+        const i = CL[k]; if (pass && !DY[i]) continue; DY[i] = 0;
+        if (M[i] < 0 || F[i] || KP[i]) continue;
+        const x = XOF[i]; let n = 0;
+        if (x + 1 < w && M[i + 1] >= 0) n++; if (x > 0 && M[i - 1] >= 0) n++;
+        if (i + w < N && M[i + w] >= 0) n++; if (i >= w && M[i - w] >= 0) n++;
+        if (n <= 1) CH[nk++] = i;
       }
-      T.set(t0);
+      for (let k = 0; k < nk; k++) { M[CH[k]] = -1; dirty(DY, CH[k], w, h); }
     }
-    // lone material pixel (one stray hand / belt pixel): it joins the commonest neighbouring material
-    {
-      const m0 = M.slice(), k0 = K.slice(), t0 = T.slice();
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (M[i] < 0 || F[i] || KP[i]) continue;
-        const nb = []; for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) nb.push(j); }
-        if (nb.length < (px ? 2 : 3) || nb.some(j => M[j] === M[i])) continue;
-        const cand = nb.filter(j => !F[j]); if (!cand.length) continue;
-        const c = {}; cand.forEach(j => { c[M[j]] = (c[M[j]] || 0) + 1; });
-        const best = cand.reduce((a, j) => c[M[j]] > c[M[a]] ? j : a, cand[0]);
-        m0[i] = M[best]; k0[i] = K[best]; t0[i] = T[best];
+    let n = 0; for (let k = 0; k < nc; k++) if (M[CL[k]] >= 0) CL[n++] = CL[k];
+    return n;
+  }
+  // dark line on the far side of a depth jump between two parts (an arm in front of the torso reads as separate);
+  // with innerColor it is drawn in that colour (the reference's navy seams), else in the part's own shadow tone
+  function passSeams(S, nc, jq, ic) {
+    const { w, h, M, K, T, F, Z, SEAM, XOF, CL } = S, N = w * h;
+    for (let k = 0; k < nc; k++) {
+      const i = CL[k]; if (F[i]) continue;
+      const x = XOF[i], kk = K[i], z = Z[i] + jq;
+      if ((x + 1 < w && M[i + 1] >= 0 && K[i + 1] !== kk && Z[i + 1] > z) || (x > 0 && M[i - 1] >= 0 && K[i - 1] !== kk && Z[i - 1] > z) ||
+        (i + w < N && M[i + w] >= 0 && K[i + w] !== kk && Z[i + w] > z) || (i >= w && M[i - w] >= 0 && K[i - w] !== kk && Z[i - w] > z)) { if (ic) SEAM[i] = 1; else T[i] = 0; }
+    }
+  }
+  // lone material pixel (one stray hand / belt pixel): it joins the commonest neighbouring material
+  function passLone(S, nc, need) {
+    const { w, h, M, K, T, F, KP, CH, XOF, CL } = S, N = w * h;
+    let nl = 0;
+    for (let k = 0; k < nc; k++) {
+      const i = CL[k], m = M[i]; if (F[i] || KP[i]) continue;
+      const x = XOF[i];
+      // the covered 4-neighbours in the fixed order right, left, down, up
+      const j0 = x + 1 < w && M[i + 1] >= 0 ? i + 1 : -1, j1 = x > 0 && M[i - 1] >= 0 ? i - 1 : -1;
+      const j2 = i + w < N && M[i + w] >= 0 ? i + w : -1, j3 = i >= w && M[i - w] >= 0 ? i - w : -1;
+      let n = 0, same = false;
+      if (j0 >= 0) { n++; if (M[j0] === m) same = true; } if (j1 >= 0) { n++; if (M[j1] === m) same = true; }
+      if (j2 >= 0) { n++; if (M[j2] === m) same = true; } if (j3 >= 0) { n++; if (M[j3] === m) same = true; }
+      if (n < need || same) continue;
+      // candidates: the non-flat ones; the first (in order) with the highest count of its material wins
+      let best = -1, bc = 0;
+      for (let q = 0; q < 4; q++) {
+        const j = q === 0 ? j0 : q === 1 ? j1 : q === 2 ? j2 : j3; if (j < 0 || F[j]) continue;
+        const mj = M[j]; let c = 0;
+        if (j0 >= 0 && !F[j0] && M[j0] === mj) c++; if (j1 >= 0 && !F[j1] && M[j1] === mj) c++;
+        if (j2 >= 0 && !F[j2] && M[j2] === mj) c++; if (j3 >= 0 && !F[j3] && M[j3] === mj) c++;
+        if (c > bc) { bc = c; best = j; }
       }
-      M.set(m0); K.set(k0); T.set(t0);
+      if (best < 0) continue;
+      CH[nl * 4] = i; CH[nl * 4 + 1] = M[best]; CH[nl * 4 + 2] = K[best]; CH[nl * 4 + 3] = T[best]; nl++;
     }
-    // orphan cleanup: a lone tone with no same-tone neighbour inside its material takes the commonest neighbour tone
-    // (2 passes; the pixel pass iterates to a fixed point and also takes edge pixels with a single same-material neighbour)
-    for (let pass = 0; pass < (px ? 8 : 2); pass++) {
-      const t0 = T.slice(); let changed = 0;
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (M[i] < 0 || F[i] || SEAM[i]) continue;
-        const nb = []; let same = 0;
-        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] === M[i] && !F[j] && !SEAM[j]) { nb.push(T[j]); if (T[j] === T[i]) same++; } }
-        if (nb.length >= (px ? 1 : 2) && !same) { const c = [0, 0, 0, 0, 0, 0, 0, 0]; nb.forEach(v => c[v]++); t0[i] = c.indexOf(Math.max(...c)); changed++; }
+    for (let k = 0; k < nl; k++) { const i = CH[k * 4]; M[i] = CH[k * 4 + 1]; K[i] = CH[k * 4 + 2]; T[i] = CH[k * 4 + 3]; }
+  }
+  // orphan cleanup: a lone tone with no same-tone neighbour inside its material takes the commonest neighbour tone
+  // (2 passes; the pixel pass iterates to a fixed point and also takes edge pixels with a single same-material neighbour).
+  // A pass reads only the tones before it, so after the first scan only the changed pixels and their neighbours are
+  // visited (a work list, deduplicated by DY). Materials, flat and seam flags stay fixed here: OM = 16 (the pixel takes
+  // part) | which 4-neighbours count (same material, not flat, not a seam: 1 right, 2 left, 4 down, 8 up)
+  function passOrphans(S, nc, need, passes) {
+    const { w, h, M, T, F, SEAM, CH, DY, WL, XOF, CL, OM } = S, N = w * h;
+    for (let k = 0; k < nc; k++) {
+      const i = CL[k], m = M[i]; if (F[i] || SEAM[i]) { OM[i] = 0; continue; }
+      const x = XOF[i]; let b = 16, j;
+      j = i + 1; if (x + 1 < w && M[j] === m && !F[j] && !SEAM[j]) b |= 1;
+      j = i - 1; if (x > 0 && M[j] === m && !F[j] && !SEAM[j]) b |= 2;
+      j = i + w; if (j < N && M[j] === m && !F[j] && !SEAM[j]) b |= 4;
+      j = i - w; if (j >= 0 && M[j] === m && !F[j] && !SEAM[j]) b |= 8;
+      OM[i] = b;
+    }
+    let nw = 0;
+    for (let pass = 0; pass < passes; pass++) {
+      const list = pass ? WL : CL, nl = pass ? nw : nc; let nch = 0;
+      for (let k = 0; k < nl; k++) {
+        const i = list[k]; DY[i] = 0;
+        if (M[i] < 0) continue;
+        const b = OM[i]; if (!b) continue;
+        const t = T[i]; let n = 0, same = false, v;
+        if (b & 1) { v = T[i + 1]; NB[n++] = v; if (v === t) same = true; }
+        if (b & 2) { v = T[i - 1]; NB[n++] = v; if (v === t) same = true; }
+        if (b & 4) { v = T[i + w]; NB[n++] = v; if (v === t) same = true; }
+        if (b & 8) { v = T[i - w]; NB[n++] = v; if (v === t) same = true; }
+        if (n >= need && !same) { CH[nch * 2] = i; CH[nch * 2 + 1] = commonest(n); nch++; }
       }
-      T.set(t0); if (!changed) break;
+      nw = 0;
+      for (let k = 0; k < nch; k++) {
+        const i = CH[k * 2], x = XOF[i]; T[i] = CH[k * 2 + 1];
+        if (!DY[i]) { DY[i] = 1; WL[nw++] = i; }
+        if (x + 1 < w && !DY[i + 1]) { DY[i + 1] = 1; WL[nw++] = i + 1; }
+        if (x > 0 && !DY[i - 1]) { DY[i - 1] = 1; WL[nw++] = i - 1; }
+        if (i + w < N && !DY[i + w]) { DY[i + w] = 1; WL[nw++] = i + w; }
+        if (i >= w && !DY[i - w]) { DY[i - w] = 1; WL[nw++] = i - w; }
+      }
+      if (!nch) break;
     }
-    const rgba = new Uint8ClampedArray(N * 4), seamC = opt.innerColor;
-    for (let i = 0; i < N; i++) if (M[i] >= 0) { const c = SEAM[i] ? seamC : list[M[i] >> 8].pal[M[i] & 255][T[i]]; rgba[i * 4] = c[0]; rgba[i * 4 + 1] = c[1]; rgba[i * 4 + 2] = c[2]; rgba[i * 4 + 3] = 255; }
-    const SM = new Uint8Array(N);
-    // weapon smears: flat polygons, no outline; behind the body unless the tip is in front of it (before the cluster pass,
-    // so a body pixel the smear cuts off is cleaned up too)
-    for (const sm of opt.smears || []) {
-      const got = new Uint8Array(N);
-      fillPoly(sm.poly, w, h, i => { if (!rgba[i * 4 + 3] || (sm.over && !F[i])) got[i] = 1; });
+    for (let k = 0; k < nw; k++) DY[WL[k]] = 0;
+  }
+  // weapon smears: flat polygons, no outline; behind the body unless the tip is in front of it (before the cluster pass,
+  // so a body pixel the smear cuts off is cleaned up too). The drawn list becomes covered + smear, in scan order
+  function passSmears(S, smears) {
+    const { w, h, M, F, SM, C, got } = S, N = w * h;
+    for (const sm of smears) {
+      got.fill(0, 0, N);
+      fillPoly(sm.poly, w, h, i => { if ((M[i] < 0 && !SM[i]) || (sm.over && !F[i])) got[i] = 1; });
       // a smear pixel with no smear 4-neighbour (a sliver at the thin end) is dropped, to a fixed point
       for (let changed = 1; changed;) {
         changed = 0;
         for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
           const i = y * w + x; if (!got[i]) continue;
-          let n = 0; for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && got[j]) n++; }
-          if (!n) { got[i] = 0; changed = 1; }
+          if (!((x + 1 < w && got[i + 1]) || (x > 0 && got[i - 1]) || (y + 1 < h && got[i + w]) || (y > 0 && got[i - w]))) { got[i] = 0; changed = 1; }
         }
       }
-      for (let i = 0; i < N; i++) if (got[i]) { SM[i] = 1; rgba[i * 4] = sm.rgb[0]; rgba[i * 4 + 1] = sm.rgb[1]; rgba[i * 4 + 2] = sm.rgb[2]; rgba[i * 4 + 3] = 255; }
+      const k = rgbKey(sm.rgb); for (let i = 0; i < N; i++) if (got[i]) { SM[i] = 1; C[i] = k; }
     }
-    // pixel pass 2: clusters >= 2 px by final colour (what the eye and the lint see): a pixel with no 4-neighbour of its own
-    // colour takes the commonest neighbouring colour; flat pixels too (a blade pixel cut off by the arm, half an eye)
-    if (px) for (let pass = 0; pass < 6; pass++) {             // in place, scan order: a lone pair cannot swap forever
-      const out = rgba; let changed = 0;
-      const key = i => (rgba[i * 4] << 16) | (rgba[i * 4 + 1] << 8) | rgba[i * 4 + 2];
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if ((M[i] < 0 && !SM[i]) || KP[i]) continue;
-        const k = key(i), cnt = new Map(); let same = false;
-        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j < 0 || (M[j] < 0 && !SM[j])) continue; const kj = key(j); if (kj === k) { same = true; break; } cnt.set(kj, (cnt.get(kj) || 0) + 1); }
-        if (same || !cnt.size) continue;
-        let bk = -1, bn = 0; for (const [kk, n] of cnt) if (n > bn || (n === bn && kk < bk)) { bk = kk; bn = n; }
-        out[i * 4] = bk >> 16; out[i * 4 + 1] = (bk >> 8) & 255; out[i * 4 + 2] = bk & 255; changed++;
+    const DL = S.DLB; let nd = 0; for (let i = 0; i < N; i++) if (M[i] >= 0 || SM[i]) DL[nd++] = i;
+    S.dl = DL; S.nd = nd;
+  }
+  // pixel pass 2: clusters >= 2 px by final colour (what the eye and the lint see): a pixel with no 4-neighbour of its own
+  // colour takes the commonest neighbouring colour; flat pixels too (a blade pixel cut off by the arm, half an eye).
+  // In place, scan order (a lone pair cannot swap forever); a repeat pass revisits only dirty pixels
+  function passClusters(S) {
+    const { w, h, M, KP, SM, C, DY, XOF } = S, N = w * h, DL = S.dl, nd = S.nd;
+    for (let pass = 0; pass < 6; pass++) {
+      let changed = 0;
+      for (let k = 0; k < nd; k++) {
+        const i = DL[k]; if (pass && !DY[i]) continue; DY[i] = 0;
+        if (KP[i]) continue;
+        const x = XOF[i], c = C[i]; let n = 0, same = false, j;
+        j = i + 1; if (x + 1 < w && (M[j] >= 0 || SM[j])) { if (C[j] === c) same = true; else NB[n++] = C[j]; }
+        j = i - 1; if (!same && x > 0 && (M[j] >= 0 || SM[j])) { if (C[j] === c) same = true; else NB[n++] = C[j]; }
+        j = i + w; if (!same && j < N && (M[j] >= 0 || SM[j])) { if (C[j] === c) same = true; else NB[n++] = C[j]; }
+        j = i - w; if (!same && j >= 0 && (M[j] >= 0 || SM[j])) { if (C[j] === c) same = true; else NB[n++] = C[j]; }
+        if (same || !n) continue;
+        C[i] = commonest(n); changed++; dirty(DY, i, w, h);
       }
       if (!changed) break;
     }
-    if (opt.outline) {
-      const c = opt.outline, OL = new Uint8Array(N);
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (M[i] >= 0 || SM[i]) continue;
-        for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) { rgba[i * 4] = c[0]; rgba[i * 4 + 1] = c[1]; rgba[i * 4 + 2] = c[2]; rgba[i * 4 + 3] = 255; OL[i] = 1; break; } }
-      }
-      // a pinhole (an outline pixel with no other outline pixel around it, e.g. one empty pixel between an arm and the
-      // blade) is filled with its commonest covered neighbour's colour instead of a lone dark dot
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const i = y * w + x; if (!OL[i]) continue;
-        let alone = true; for (let dy = -1; dy <= 1 && alone; dy++) for (let dx = -1; dx <= 1; dx++) { const j = at(x + dx, y + dy); if ((dx || dy) && j >= 0 && OL[j]) { alone = false; break; } }
-        if (!alone) continue;
-        const cnt = new Map(); for (const [dx, dy] of N4) { const j = at(x + dx, y + dy); if (j >= 0 && M[j] >= 0) { const k = (rgba[j * 4] << 16) | (rgba[j * 4 + 1] << 8) | rgba[j * 4 + 2]; cnt.set(k, (cnt.get(k) || 0) + 1); } }
-        let bk = -1, bn = 0; for (const [k, n] of cnt) if (n > bn || (n === bn && k < bk)) { bk = k; bn = n; }
-        if (bk >= 0) { rgba[i * 4] = bk >> 16; rgba[i * 4 + 1] = (bk >> 8) & 255; rgba[i * 4 + 2] = bk & 255; }
-      }
-    }
-    return rgba;
   }
+  // outline: every empty, non-smear pixel with a covered 4-neighbour. A pinhole (an outline pixel with no other outline
+  // pixel around it, e.g. one empty pixel between an arm and the blade) takes its commonest covered neighbour's colour
+  // instead of a lone dark dot
+  function passOutline(S, nc, c) {
+    const { w, h, M, SM, OL, C, XOF, CL, OLL } = S, N = w * h;
+    let no = 0;
+    for (let k = 0; k < nc; k++) {
+      const i = CL[k], x = XOF[i]; let j;
+      j = i + 1; if (x + 1 < w && M[j] < 0 && !SM[j] && !OL[j]) { OL[j] = 1; C[j] = c; OLL[no++] = j; }
+      j = i - 1; if (x > 0 && M[j] < 0 && !SM[j] && !OL[j]) { OL[j] = 1; C[j] = c; OLL[no++] = j; }
+      j = i + w; if (j < N && M[j] < 0 && !SM[j] && !OL[j]) { OL[j] = 1; C[j] = c; OLL[no++] = j; }
+      j = i - w; if (j >= 0 && M[j] < 0 && !SM[j] && !OL[j]) { OL[j] = 1; C[j] = c; OLL[no++] = j; }
+    }
+    for (let k = 0; k < no; k++) {
+      const i = OLL[k], x = XOF[i], l = x > 0, r = x + 1 < w, u = i >= w, d = i + w < N;
+      if ((l && OL[i - 1]) || (r && OL[i + 1]) || (u && (OL[i - w] || (l && OL[i - w - 1]) || (r && OL[i - w + 1]))) ||
+        (d && (OL[i + w] || (l && OL[i + w - 1]) || (r && OL[i + w + 1])))) continue;
+      let n = 0;
+      if (r && M[i + 1] >= 0) NB[n++] = C[i + 1]; if (l && M[i - 1] >= 0) NB[n++] = C[i - 1];
+      if (d && M[i + w] >= 0) NB[n++] = C[i + w]; if (u && M[i - w] >= 0) NB[n++] = C[i - w];
+      if (n) C[i] = commonest(n);
+    }
+    S.no = no;
+  }
+  // the resolved frame into out (RGBA, row stride sw px) at (ox, oy); out is assumed clear where nothing is drawn
+  function resolveOut(S, out, sw, ox, oy) {
+    const { C, OLL, XOF, YOF } = S, DL = S.dl, b = oy * sw + ox;
+    for (let k = 0; k < S.nd; k++) { const i = DL[k], o = (b + YOF[i] * sw + XOF[i]) * 4, c = C[i]; out[o] = c >> 16; out[o + 1] = (c >> 8) & 255; out[o + 2] = c & 255; out[o + 3] = 255; }
+    for (let k = 0; k < S.no; k++) { const i = OLL[k], o = (b + YOF[i] * sw + XOF[i]) * 4, c = C[i]; out[o] = c >> 16; out[o + 1] = (c >> 8) & 255; out[o + 2] = c & 255; out[o + 3] = 255; }
+  }
+  // the outer edge of the last resolved frame: a drawn pixel (not outline) with an outline or empty pixel among its 8
+  // neighbours; face = the octant its outward normal points to (0 E, 1 NE, 2 N, 3 NW, 4 W, 5 SW, 6 S, 7 SE; 8 = none)
+  function rimOf(S) {
+    const { w, h, M, SM } = S, mask = new Uint8Array(w * h), face = new Uint8Array(w * h).fill(8);
+    const body = (x, y) => x >= 0 && y >= 0 && x < w && y < h && (M[y * w + x] >= 0 || SM[y * w + x] === 1);
+    for (let k = 0; k < S.nd; k++) {
+      const i = S.dl[k], x = i % w, y = (i - x) / w; let nx = 0, ny = 0, edge = false;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && !body(x + dx, y + dy)) { edge = true; nx += dx; ny += dy; }
+      if (!edge) continue;
+      mask[i] = 1;
+      if (nx || ny) face[i] = ((Math.round(Math.atan2(-ny, nx) / (Math.PI / 4)) % 8) + 8) % 8;
+    }
+    return { w, h, mask, face };
+  }
+
   function fillPoly(P, w, h, set) {                             // even-odd scanline fill, sampled at pixel centres
     for (let y = 0; y < h; y++) {
       const yc = y + 0.5, xs = [];
@@ -566,14 +727,15 @@ const FORGE = (function () {
   const resolveOpts = m => ({ outline: m.outline ? hexRgb(m.outline) : null, jumpQ: Math.round((m.innerLine != null ? m.innerLine : 2.5) * QS),
     innerColor: m.innerColor ? hexRgb(m.innerColor) : null, pixel: m.pixel || null });
   function interner() { const m = new Map(); return s => { if (!m.has(s)) m.set(s, m.size); return m.get(s); }; }
+  // </rt>
 
   // ---- render one frame of a loadout ----------------------------------------------------------------------------
   const yawOf = (model, dir) => ((model.dirs.find(d => d[0] === dir) || [0, 0])[1]) * Math.PI / 180;
-  function frameSockets(model, W, cam, extra) {
+  function frameSockets(model, W, cam, extra, only) {           // only: just these names
     const proj = P => [cam.ox + dot(P, cam.RT), cam.oy - dot(P, cam.UP), dot(P, cam.D)];
     const rootT = proj(W[model.bones[0].name].t)[2], out = {}, all = Object.assign({}, model.sockets || {}, extra || {});
     for (const k in all) {
-      const s = all[k]; if (!W[s.bone]) continue;
+      const s = all[k]; if (!W[s.bone] || (only && !only.includes(k))) continue;
       const [x, y, t] = proj(worldPoint(W, s.bone, s.at));
       out[k] = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, d: Math.round((t - rootT) * 10) / 10, front: t < rootT };
     }
@@ -642,28 +804,46 @@ const FORGE = (function () {
     return { w: SW, h: SH, rgba, cols: layout.length, rows: dirs.length, layout, frame: [w, h], sockets };
   }
 
-  // ---- bake: the G-buffer sheet of the bare body or of one piece -------------------------------------------------
-  // Cells = layer x dir x every frame of every real anim (another weapon class's attack stays empty for a weapon), each
+  // ---- bake: the G-buffer sheet of one UNIT (a base group of the rig: 'body', 'hair'; or a piece) ---------------
+  // A unit can be split over several sheets by anim (opt.anims; every anim by default): build.js banks <unit>.core (every
+  // anim but the attacks) + <unit>.atk.<class> (one weapon class's attack), so the game decodes only what it draws.
+  // Cells = layer x dir x every frame of the sheet's anims (another weapon class's attack stays empty for a weapon), each
   // cropped to its covered pixels, identical crops stored once, shelf-packed into an atlas PACK px wide (tallest first).
-  // meta.cells[(layer * dirs + dir) * frames + col] = [x, y, w, h, frameX, frameY] in the atlas, or 0 when empty.
+  // meta.cells[(layer * dirs + dir) * cols + col] = [x, y, w, h, frameX, frameY] in the atlas, or 0 when empty; cols / col
+  // = the sheet's own layout (bakeLayout filtered to meta.anims). meta.sockets[dir][anim][frame]: the rig's sockets on the
+  // 'body' unit, a piece's own sockets on the piece (+ the rig's when it draws smears), none on other base units.
   // RGBA: R = keep << 7 | material, G = flat << 7 | part << 3 | tone, B = depth (1/6 px steps, 128 = the root), A = coverage
-  function bakeLayout(model) {
+  function bakeLayout(model, anims) {
     const out = [];
-    for (const a in model.anims) for (let f = 0; f < model.anims[a].frames; f++) out.push([a, f]);
+    for (const a in model.anims) if (!anims || anims.includes(a)) for (let f = 0; f < model.anims[a].frames; f++) out.push([a, f]);
+    return out;
+  }
+  function baseUnits(model) {                                   // runs of consecutive base layers of one group (layer order kept)
+    const out = [];
+    for (const L of layersOf(model)) {
+      const g = L.group || 'body', last = out[out.length - 1];
+      if (last && last.id === g) last.layers.push(L);
+      else { if (out.some(u => u.id === g)) throw new Error(`model: base group ${g} is not one run of layers`); out.push({ id: g, layers: [L] }); }
+    }
     return out;
   }
   function bake(model, opt = {}) {
-    const cam = camera(model), piece = opt.piece || null, [w, h] = model.frame, layout = bakeLayout(model), dirs = model.dirs;
-    const layers = piece ? piece.layers : layersOf(model);
-    const SW = w * layout.length, SH = h * dirs.length * layers.length, rgba = new Uint8ClampedArray(SW * SH * 4), sockets = {};
+    const cam = camera(model), piece = opt.piece || null, [w, h] = model.frame, layout = bakeLayout(model, opt.anims), dirs = model.dirs;
+    const unit = piece ? null : opt.group ? baseUnits(model).find(u => u.id === opt.group) : null;
+    if (opt.group && !unit) throw new Error(`model: no base group ${opt.group}`);
+    const layers = piece ? piece.layers : unit ? unit.layers : layersOf(model);
+    const SW = w * layout.length, SH = h * dirs.length * layers.length, rgba = new Uint8ClampedArray(SW * SH * 4);
     const skip = a => piece && piece.class && a.includes(':') && a.split(':')[1] !== piece.class;
+    // sockets: the rig's on the body (or an unsplit bake), a piece's own (+ the rig's for a smear), none on hair & co
+    const sk = piece ? (piece.smear ? null : Object.keys(piece.sockets || {})) : unit && unit.id !== 'body' ? [] : null;
+    const sockets = sk && !sk.length ? null : {};
     dirs.forEach(([dn], r) => {
-      sockets[dn] = {};
+      if (sockets) sockets[dn] = {};
       layout.forEach(([a, f], c) => {
         if (skip(a)) return;
         const extra = piece && piece.pose ? [piece.pose] : [], W = pose(model, yawOf(model, dn), a, f, extra);
         const rootT = dot(W[model.bones[0].name].t, cam.D) + FAR;
-        (sockets[dn][a] = sockets[dn][a] || [])[f] = frameSockets(model, W, cam, piece ? piece.sockets : null);
+        if (sockets) (sockets[dn][a] = sockets[dn][a] || [])[f] = frameSockets(model, W, cam, piece ? piece.sockets : null, sk);
         layers.forEach((L, li) => {
           const G = raster(L, W, cam, a, f, rootT), y0 = (li * dirs.length + r) * h;   // the full grid first, packed below
           for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
@@ -674,14 +854,28 @@ const FORGE = (function () {
         });
       });
     });
+    const id = piece ? piece.id : unit ? unit.id : 'body';
     const meta = {
-      id: piece ? piece.id : 'body', slot: piece ? piece.slot : 'body', family: (piece && piece.family) || null, tier: (piece && piece.tier) || null,
-      class: (piece && piece.class) || null, hides: (piece && piece.hides) || [],
+      id, slot: piece ? piece.slot : 'body', family: (piece && piece.family) || null, tier: (piece && piece.tier) || null,
+      class: (piece && piece.class) || null, hides: (piece && piece.hides) || [], anims: opt.anims || null,
       layers: layers.map(L => ({ id: L.id, tag: L.tag || null, group: L.group || (piece ? piece.id : 'body'), mats: matTable(L).names, ramps: matTable(L).list.map(m => m.ramp), parts: partList(L).names })),
       tiers: (piece && piece.tiers) || null, smear: (piece && piece.smear) || null, sockets,
     };
+    if (sockets) meta.sockets = packSockets(sockets);
     const P = pack(rgba, SW, w, h, layout.length, dirs.length * layers.length); meta.cells = P.cells;
-    return { w: P.w, h: P.h, rgba: P.rgba, meta };
+    return { w: P.w, h: P.h, rgba: P.rgba, meta, empty: !P.cells.some(c => c) };
+  }
+  // sockets in a bank: { names, v: { dir: { anim: [x * 10, y * 10, d * 10, front 0 | 1] per name per frame, flat } } }
+  function packSockets(S) {
+    const names = []; for (const d in S) for (const a in S[d]) for (const fr of S[d][a]) for (const k in fr || {}) if (!names.includes(k)) names.push(k);
+    const v = {};
+    for (const d in S) { v[d] = {}; for (const a in S[d]) v[d][a] = [].concat(...S[d][a].map(fr => [].concat(...names.map(k => fr && fr[k] ? [Math.round(fr[k].x * 10), Math.round(fr[k].y * 10), Math.round(fr[k].d * 10), fr[k].front ? 1 : 0] : [0, 0, 0, 0])))); }
+    return { names, v };
+  }
+  // how build.js splits a unit: [suffix, anims] per sheet: 'core' = every anim but the attacks, 'atk.<class>' = one attack
+  function bankSplit(model) {
+    const all = Object.keys(model.anims), atk = all.filter(a => a.split(':')[0] === 'attack');
+    return [['core', all.filter(a => !atk.includes(a))], ...atk.map(a => ['atk.' + (a.split(':')[1] || 'any'), [a]])];
   }
   const PACK = 256;
   function pack(rgba, SW, w, h, cols, rows) {
@@ -703,40 +897,139 @@ const FORGE = (function () {
     for (const q of crops) for (let y = 0; y < q.ch; y++) out.set(q.px.subarray(y * q.cw * 4, (y + 1) * q.cw * 4), ((q.at[1] + y) * PACK + q.at[0]) * 4);
     return { w: PACK, h: AH, rgba: out, cells: cells.map(e => e ? [...crops[e[0]].at, crops[e[0]].cw, crops[e[0]].ch, e[1], e[2]] : 0) };
   }
-  const bankInfo = model => ({ frame: model.frame, dirs: model.dirs.map(d => d[0]), layout: bakeLayout(model), anims: Object.keys(model.anims),
+  const bankInfo = model => ({ frame: model.frame, origin: model.origin, dirs: model.dirs.map(d => d[0]), layout: bakeLayout(model), anims: Object.keys(model.anims),
+    sheetAnims: model.sheetAnims || Object.keys(model.anims), base: baseUnits(model).map(u => u.id),
     outline: model.outline || null, innerLine: model.innerLine != null ? model.innerLine : 2.5, innerColor: model.innerColor || null, pixel: model.pixel || null,
     smear: Object.fromEntries(Object.keys(model.anims).filter(a => model.anims[a].smear).map(a => [a, model.anims[a].smear])) });
-  // bank = { model: bankInfo(model), sheets: { body: { w, rgba, meta }, <pieceId>: { w, rgba, meta } } }  (rgba decoded from PNG)
-  function compose(bank, sel) {
-    const info = bank.model, [w, h] = info.frame, r = info.dirs.indexOf(sel.dir), N = w * h;
-    const ps = (sel.pieces || []).map(p => typeof p === 'string' ? { id: p } : p);
-    const wp = ps.map(p => bank.sheets[p.id].meta).find(m => m.class);
-    const v = (sel.anim || 'idle') + ':' + (wp ? wp.class : 'none');
-    const anim = info.anims.includes(v) ? v : info.anims.includes(sel.anim) ? sel.anim : 'idle';
-    const c = info.layout.findIndex(l => l[0] === anim && l[1] === (sel.frame || 0));
-    const hidden = new Set(); ps.forEach(p => bank.sheets[p.id].meta.hides.forEach(t => hidden.add(t)));
-    const key = interner(), list = [];
-    const take = (sh, li, L, over) => {
-      const g = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), keep: new Uint8Array(N), dq: new Uint8Array(N) };
-      const q = sh.meta.cells[(li * info.dirs.length + r) * info.layout.length + c] || [0, 0, 0, 0, 0, 0];
-      for (let y = 0; y < q[3]; y++) for (let x = 0; x < q[2]; x++) {
-        const o = ((q[1] + y) * sh.w + q[0] + x) * 4; if (!sh.rgba[o + 3]) continue;
-        const i = (q[5] + y) * w + q[4] + x, g2 = sh.rgba[o + 1];
-        g.cov[i] = 1; g.mat[i] = sh.rgba[o] & 127; g.keep[i] = sh.rgba[o] >> 7; g.flat[i] = g2 >> 7; g.part[i] = (g2 >> 3) & 15; g.tone[i] = g2 & 7; g.dq[i] = sh.rgba[o + 2];
+
+  // <rt>
+  // ---- compose: stage B over baked sheets (the game's runtime path; equals render() byte for byte) ---------------
+  // bank = { model: bankInfo(model), sheets: { <key>: { w, rgba, meta } } }  (rgba decoded from the PNG; a sheet no frame
+  // of a loadout reads may stay undecoded). A unit (meta.id: a base group or a piece id) may span several sheets by anim
+  // (meta.anims, null = every anim). A bank without info.base (one 'body' sheet) still works.
+  // prepare(bank, pieces) -> P, once per loadout: palettes, part keys, hidden tags, the weapon class; composeInto(P, dir,
+  // anim, frame, out, sw, ox, oy) resolves one frame into out (RGBA, row stride sw px) at (ox, oy) and returns the real anim.
+  function unitsOf(bank) {
+    const U = {};
+    for (const k in bank.sheets) { const s = bank.sheets[k], id = s.meta.id; (U[id] || (U[id] = { id, meta: s.meta, sheets: [], by: new Map() })).sheets.push(s); }
+    return U;
+  }
+  function sheetFor(u, a) {                                     // the unit's sheet holding anim a (or null)
+    let s = u.by.get(a);
+    if (s === undefined) { s = u.sheets.find(q => !q.meta.anims || q.meta.anims.includes(a)) || null; u.by.set(a, s); }
+    return s;
+  }
+  // where a layer's cells of anim a are: { sh, base, n } (cell = (layer * dirs + dir) * n + base + frame), or null
+  function cellsOf(info, Lr, a) {
+    let e = Lr.by.get(a);
+    if (e === undefined) {
+      const sh = sheetFor(Lr.u, a); e = null;
+      if (sh) {
+        let n = 0, base = -1;
+        for (const [b] of info.layout) if (!sh.meta.anims || sh.meta.anims.includes(b)) { if (b === a && base < 0) base = n; n++; }
+        e = { sh, base, n };
       }
-      list.push({ g, pal: L.mats.map((n, i) => (over && over[n] ? toRamp(over[n]) : L.ramps[i]).map(hexRgb)), keys: L.parts.map(n => key(L.group + ':' + n)) });
-    };
-    const body = bank.sheets.body;
-    body.meta.layers.forEach((L, li) => { if (!hidden.has(L.tag)) take(body, li, L, null); });
-    for (const p of ps) {
-      const sh = bank.sheets[p.id], over = p.tier != null && sh.meta.tiers ? sh.meta.tiers[p.tier] : p.pal || null;
-      sh.meta.layers.forEach((L, li) => take(sh, li, L, over));
+      Lr.by.set(a, e);
     }
-    const ro = resolveOpts(info), f = sel.frame || 0, sm = ps.map(p => bank.sheets[p.id].meta).find(m => m.smear);
-    if (sm && info.smear && info.smear[anim] && f > 0) { const so = sm.sockets[sel.dir][anim]; ro.smears = smearsOf(info.smear[anim], f, so[f - 1], so[f], sm.smear); }
-    return { w, h, rgba: resolve(list, w, h, ro), anim };
+    return e;
+  }
+  const pieceRefs = pieces => (pieces || []).map(p => typeof p === 'string' ? { id: p } : p);
+  function prepare(bank, pieces) {
+    const info = bank.model, U = unitsOf(bank), ps = pieceRefs(pieces);
+    for (const p of ps) if (!U[p.id]) throw new Error(`forge: ${p.id} is not in the bank`);
+    const wp = ps.map(p => U[p.id].meta).find(m => m.class), hidden = new Set();
+    ps.forEach(p => (U[p.id].meta.hides || []).forEach(t => hidden.add(t)));
+    const layers = [], pals = [], keys = [], key = interner(), units = [];
+    const add = (u, over, base) => {
+      units.push(u);
+      u.meta.layers.forEach((L, li) => {
+        if (base && hidden.has(L.tag)) return;
+        layers.push({ u, li, by: new Map() }); pals.push(L.mats.map((n, i) => (over && over[n] ? toRamp(over[n]) : L.ramps[i]).map(hexRgb)));
+        const kk = new Int32Array(16); L.parts.forEach((n, i) => { kk[i] = key(L.group + ':' + n); }); keys.push(kk);
+      });
+    };
+    for (const id of info.base || ['body']) if (U[id]) add(U[id], null, true);
+    for (const p of ps) { const m = U[p.id].meta; add(U[p.id], p.tier != null && m.tiers ? m.tiers[p.tier] : p.pal || null, false); }
+    const KK = new Int32Array(Math.max(1, layers.length) * 16); keys.forEach((kk, l) => KK.set(kk, l * 16));
+    const sp = ps.find(p => U[p.id].meta.smear);
+    return { info, layers, KK, PK: palKeys(pals), cls: wp ? wp.class : 'none', ro: resolveOpts(info), units, smear: sp ? U[sp.id] : null,
+      lpx: new Array(layers.length).fill(null), key: null, L: null, dirIdx: null, n: null };
+  }
+  function animOf(P, anim) {                                    // 'attack' -> 'attack:<weapon class>' when the rig has it
+    const an = P.info.anims, v = anim + ':' + P.cls;
+    return an.includes(v) ? v : an.includes(anim) ? anim : 'idle';
+  }
+  // the loadout sheet's columns: every frame of every logical anim (info.sheetAnims), as render's sheet() lays them out
+  function layoutOf(P) {
+    const out = [], at = {};
+    for (const a of P.info.sheetAnims || P.info.anims) {
+      const real = animOf(P, a); at[a] = out.length;
+      for (const [b, f] of P.info.layout) if (b === real) out.push([a, f, real]);
+    }
+    return { layout: out, at };
+  }
+  function composeInto(P, dir, anim, f, out, sw, ox, oy) {
+    const info = P.info, w = info.frame[0], h = info.frame[1], r = info.dirs.indexOf(dir), D = info.dirs.length, a = animOf(P, anim);
+    const S = rsBegin(w, h), { M, K, T, F, KP, Z, SRC, CL } = S, KK = P.KK, LPX = P.lpx;
+    let x0 = w, y0 = h, x1 = -1, y1 = -1;
+    // the nearest layer per pixel first (M = its index, SRC = where in its sheet), then one decode per covered pixel
+    for (let l = 0; l < P.layers.length; l++) {
+      const ce = cellsOf(info, P.layers[l], a); if (!ce) continue;
+      const sh = ce.sh, q = sh.meta.cells[(P.layers[l].li * D + r) * ce.n + ce.base + f]; if (!q) continue;
+      const px = sh.rgba; if (!px) throw new Error(`forge: sheet ${sh.meta.id} (${a}) is not decoded`);
+      const sw2 = sh.w, cx = q[4], cy = q[5], cw = q[2], ch = q[3]; LPX[l] = px;
+      for (let y = 0; y < ch; y++) {
+        let o = ((q[1] + y) * sw2 + q[0]) * 4, i = (cy + y) * w + cx;
+        for (let x = 0; x < cw; x++, o += 4, i++) {
+          if (!px[o + 3]) continue;
+          const dq = px[o + 2]; if (dq < Z[i]) continue;
+          Z[i] = dq; M[i] = l; SRC[i] = o;
+        }
+      }
+      if (cx < x0) x0 = cx; if (cy < y0) y0 = cy; if (cx + cw - 1 > x1) x1 = cx + cw - 1; if (cy + ch - 1 > y1) y1 = cy + ch - 1;
+    }
+    let nc = 0;
+    for (let y = y0; y <= y1; y++) for (let i = y * w + x0, e = y * w + x1; i <= e; i++) {
+      const l = M[i]; if (l < 0) continue;
+      const px = LPX[l], o = SRC[i], R = px[o], G = px[o + 1];
+      M[i] = l * 256 + (R & 127); KP[i] = R >> 7; F[i] = G >> 7; K[i] = KK[l * 16 + ((G >> 3) & 15)]; T[i] = G & 7; CL[nc++] = i;
+    }
+    S.x0 = x0; S.y0 = y0; S.x1 = x1; S.y1 = y1; S.nc = nc;
+    let ro = P.ro;
+    if (P.smear && info.smear && info.smear[a] && f > 0) {
+      const sh = sheetFor(P.smear, a), s0 = sh && sockOf(sh.meta, dir, a, f - 1), s1 = sh && sockOf(sh.meta, dir, a, f);
+      if (s0 && s1) ro = Object.assign({}, ro, { smears: smearsOf(info.smear[a], f, s0, s1, P.smear.meta.smear) });
+    }
+    resolveCore(S, ro, P.PK);
+    resolveOut(S, out, sw, ox, oy);
+    return a;
+  }
+  // the sockets of one frame: the rig's (from the body unit) + every piece's own
+  function socketsAt(P, dir, anim, f) {
+    const a = animOf(P, anim), out = {};
+    for (const u of P.units) { const sh = sheetFor(u, a), s = sh && sockOf(sh.meta, dir, a, f); if (s) Object.assign(out, s); }
+    return out;
+  }
+  function sockOf(meta, dir, a, f) {                            // one frame's sockets of a sheet (packed, see packSockets)
+    const S = meta.sockets; if (!S) return null;
+    if (!S.names) { const q = S[dir] && S[dir][a]; return (q && q[f]) || null; }  // an unpacked bank (objects per frame)
+    const q = S.v[dir] && S.v[dir][a], n = S.names.length; if (!q || (f + 1) * n * 4 > q.length) return null;
+    const out = {};
+    for (let k = 0; k < n; k++) { const o = (f * n + k) * 4; out[S.names[k]] = { x: q[o] / 10, y: q[o + 1] / 10, d: q[o + 2] / 10, front: q[o + 3] === 1 }; }
+    return out;
+  }
+  // </rt>
+  const hidden_ = (o, k, v) => Object.defineProperty(o, k, { value: v, configurable: true, writable: true, enumerable: false });
+  function compose(bank, sel) {                                 // one frame, fresh RGBA (tools; the game uses forge-rt.js)
+    const n = Object.keys(bank.sheets).length, k = JSON.stringify(sel.pieces || []);
+    if (!bank._prep || bank._prepN !== n) { hidden_(bank, '_prep', new Map()); hidden_(bank, '_prepN', n); }
+    let P = bank._prep.get(k); if (!P) bank._prep.set(k, P = prepare(bank, sel.pieces));
+    const [w, h] = bank.model.frame, rgba = new Uint8ClampedArray(w * h * 4);
+    const anim = composeInto(P, sel.dir, sel.anim || 'idle', sel.frame || 0, rgba, w, 0, 0);
+    return { w, h, rgba, anim };
   }
 
-  return { render, raw, sheet, bake, bankInfo, compose, sockets, ramp, hexRgb, rgbHex };
+  return { render, raw, sheet, bake, bankInfo, bankSplit, compose, sockets, ramp, hexRgb, rgbHex,
+    rt: { prepare, composeInto, socketsAt, layoutOf, animOf, rim: () => rimOf(RS) } };
 })();
 if (typeof module !== 'undefined') module.exports = FORGE;

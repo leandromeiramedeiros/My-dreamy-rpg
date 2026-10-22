@@ -84,7 +84,9 @@ const TIER_NAMES = { sword: ['Rusty Blade', 'Dawnblade', 'Sunforged Blade', 'Aur
 const SLOT_ORDER = [['head', 'Head'], ['chest', 'Chest'], ['boots', 'Boots'], ['weapon', 'Weapon'], ['offhand', 'Off hand'], ['back', 'Back']];
 const ANIM_NAMES = { idle: 'Idle', walk: 'Walk', attack: 'Attack', cast: 'Cast', dash: 'Dash', hit: 'Hit' };
 const INFO = FORGE_BANK.model, DIRS = INFO.dirs, [FW, FH] = INFO.frame;
-const PIECES = Object.keys(FORGE_BANK.sheets).filter(id => id !== 'body').map(id => FORGE_BANK.sheets[id].meta);
+const META = {};                                     // unit id -> meta (a unit may span several sheets: <id>.core, <id>.atk.<class>)
+for (const k in FORGE_BANK.sheets) { const m = FORGE_BANK.sheets[k].meta; if (!META[m.id]) META[m.id] = m; }
+const PIECES = Object.values(META).filter(m => !(INFO.base || ['body']).includes(m.id));
 const familyOf = m => m.family || m.id;
 const SLOTS = SLOT_ORDER.filter(([s]) => PIECES.some(p => p.slot === s));
 const FAMILIES = {};                                  // slot -> family -> [{ id, tier }] (shape tiers: one baked piece each)
@@ -94,7 +96,7 @@ const ANIMS = [...new Set(INFO.layout.map(l => l[0].split(':')[0]))];
 const name = id => NAMES[id] || id.charAt(0).toUpperCase() + id.slice(1);
 const tierName = (fam, i) => `T${i + 1} ${(TIER_NAMES[fam] || TIER_NAMES['*'])[i] || ''}`.trim();
 // a look = { slot: { id, tier?, pal? } }; a preset comes from the bank's loadouts (ids, or { id, tier, pal } palette swaps)
-const lookOf = entries => { const L = {}; for (const e of entries) { const p = typeof e === 'string' ? { id: e } : e; L[FORGE_BANK.sheets[p.id].meta.slot] = Object.assign({}, p); } return L; };
+const lookOf = entries => { const L = {}; for (const e of entries) { const p = typeof e === 'string' ? { id: e } : e; L[META[p.id].slot] = Object.assign({}, p); } return L; };
 const PRESETS = FORGE_BANK.loadouts || { bare: [] };
 const first = ['knight', 'paladin'].find(k => PRESETS[k]) || Object.keys(PRESETS)[0];
 const state = { look: lookOf(PRESETS[first]), preset: first, anim: 'walk', dir: 'SE', frame: 0 };
@@ -113,14 +115,14 @@ function buildUi() {
     f.append(el('option', { value: '' }, 'None'));
     for (const fam in FAMILIES[slot]) f.append(el('option', { value: fam }, name(fam)));
     f.onchange = () => {
-      const opts = FAMILIES[slot][f.value], cur = state.look[slot], keep = cur && FORGE_BANK.sheets[cur.id].meta.tier;
+      const opts = FAMILIES[slot][f.value], cur = state.look[slot], keep = cur && META[cur.id].tier;
       if (!f.value) delete state.look[slot];
       else state.look[slot] = { id: (opts.find(o => o.tier === keep) || opts[Math.min(opts.length - 1, 2)] || opts[0]).id };
       state.preset = null; syncUi();
     };
     t.onchange = () => {
       const cur = state.look[slot]; if (!cur) return;
-      const meta = FORGE_BANK.sheets[cur.id].meta, opts = FAMILIES[slot][familyOf(meta)];
+      const meta = META[cur.id], opts = FAMILIES[slot][familyOf(meta)];
       if (opts.length > 1) state.look[slot] = { id: opts[+t.value].id };
       else state.look[slot] = { id: cur.id, tier: +t.value };          // palette tiers of one baked piece
       state.preset = null; syncUi();
@@ -143,7 +145,7 @@ function syncUi() {
   const L = state.look;
   for (const [slot] of SLOTS) {
     const f = $('slot-' + slot), t = $('tier-' + slot), cur = L[slot];
-    const meta = cur && FORGE_BANK.sheets[cur.id].meta, fam = meta && familyOf(meta), opts = fam ? FAMILIES[slot][fam] : [];
+    const meta = cur && META[cur.id], fam = meta && familyOf(meta), opts = fam ? FAMILIES[slot][fam] : [];
     f.value = fam || ''; t.innerHTML = '';
     if (opts.length > 1) { opts.forEach((o, i) => t.append(el('option', { value: String(i) }, tierName(fam, i)))); t.value = String(opts.findIndex(o => o.id === cur.id)); t.disabled = false; }
     else if (meta && meta.tiers) { meta.tiers.forEach((_, i) => t.append(el('option', { value: String(i) }, tierName(fam, i)))); t.value = String(cur.tier != null ? cur.tier : 1); t.disabled = false; }
@@ -160,7 +162,7 @@ let bank = null, lastMs = 0;
 const cache = new Map(), tiles = {};
 const pieces = () => SLOT_ORDER.map(([s]) => state.look[s]).filter(Boolean);
 function frameCount(anim) {
-  const w = pieces().map(p => FORGE_BANK.sheets[p.id].meta).find(m => m.class), v = anim + ':' + (w ? w.class : 'none');
+  const w = pieces().map(p => META[p.id]).find(m => m.class), v = anim + ':' + (w ? w.class : 'none');
   const real = INFO.anims.includes(v) ? v : anim;
   return INFO.layout.filter(l => l[0] === real).length || 1;
 }

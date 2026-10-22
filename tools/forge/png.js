@@ -1,6 +1,7 @@
 'use strict';
-// Tiny dependency-free image codecs for the forge tools: PNG encode (RGBA8, filter 0, deterministic) and decode (RGBA8 /
-// RGB8, filters 0-4), and an animated GIF encoder (global palette <= 256 colours, LZW, per-frame delays, loop forever).
+// Tiny dependency-free image codecs for the forge tools: PNG encode (RGBA8, deterministic: filter 0, or pngSmall: the
+// smallest filter choice) and decode (RGBA8 / RGB8, filters 0-4), and an animated GIF encoder (global palette <= 256
+// colours, LZW, per-frame delays, loop forever).
 const zlib = require('zlib');
 
 const crcTable = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
@@ -16,6 +17,34 @@ function png(w, h, d) {
   for (let y = 0; y < h; y++) { raw[y * (w * 4 + 1)] = 0; Buffer.from(d.buffer, d.byteOffset + y * w * 4, w * 4).copy(raw, y * (w * 4 + 1) + 1); }
   const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 6;
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
+}
+// the smallest of a few filter strategies (0 none, 1 sub, 2 up, 4 paeth on every row, or the min-sum adaptive choice per
+// row): same pixels, deterministic, used for the forge banks (the game decodes every filter)
+function pngSmall(w, h, d) {
+  const stride = w * 4, rows = [];
+  const filt = (f, y, out) => {
+    const o = y * stride;
+    for (let i = 0; i < stride; i++) {
+      const x = d[o + i], a = i >= 4 ? d[o + i - 4] : 0, b = y ? d[o - stride + i] : 0, c = y && i >= 4 ? d[o - stride + i - 4] : 0;
+      let p = 0;
+      if (f === 1) p = a; else if (f === 2) p = b; else if (f === 3) p = (a + b) >> 1;
+      else if (f === 4) { const q = a + b - c, pa = Math.abs(q - a), pb = Math.abs(q - b), pc = Math.abs(q - c); p = pa <= pb && pa <= pc ? a : pb <= pc ? b : c; }
+      out[i] = (x - p) & 255;
+    }
+    return out;
+  };
+  for (let y = 0; y < h; y++) rows.push([0, 1, 2, 3, 4].map(f => filt(f, y, Buffer.alloc(stride))));
+  const cost = r => { let s = 0; for (let i = 0; i < r.length; i++) s += r[i] < 128 ? r[i] : 256 - r[i]; return s; };
+  const pick = rows.map(r => { let bf = 0, bc = Infinity; r.forEach((q, f) => { const c = cost(q); if (c < bc) { bc = c; bf = f; } }); return bf; });
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 6;
+  let best = null;
+  for (const strat of [0, 1, 2, 4, 'auto']) {
+    const raw = Buffer.alloc((stride + 1) * h);
+    for (let y = 0; y < h; y++) { const f = strat === 'auto' ? pick[y] : strat; raw[y * (stride + 1)] = f; rows[y][f].copy(raw, y * (stride + 1) + 1); }
+    const z = zlib.deflateSync(raw, { level: 9, memLevel: 9 });
+    if (!best || z.length < best.length) best = z;
+  }
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', best), chunk('IEND', Buffer.alloc(0))]);
 }
 function unpng(buf) {                                             // 8-bit RGBA or RGB, non-interlaced, any filter
   let o = 8, w = 0, h = 0, ct = 6; const idat = [];
@@ -82,4 +111,4 @@ function lzw(idx, minSize) {
   return Buffer.concat(blocks);
 }
 
-module.exports = { png, unpng, gif, crc32 };
+module.exports = { png, pngSmall, unpng, gif, crc32 };

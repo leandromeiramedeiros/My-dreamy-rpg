@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const FORGE = require('./forge.js');
-const { png, unpng } = require('./png.js');
+const { png, pngSmall, unpng } = require('./png.js');
 
 const name = process.argv[2] || 'chibi';
 const model = require(`./models/${name}.js`), gear = require(`./models/${name}-gear.js`);
@@ -24,12 +24,15 @@ const LABEL = { bare: 'bare base', squire: 'T1 squire', footman: 'T2 footman', k
 const ANIMS = ['idle', 'walk', 'attack'], DIRS = model.dirs.map(d => d[0]), [FW, FH] = model.frame;
 const BG = [0x4b, 0x7c, 0x3f], INK = [0xe5, 0xe0, 0xac], DIM = [0x2a, 0x45, 0x22];
 
-// ---- the runtime bank: bare body + every piece used, baked and decoded exactly as build.js does ----------------------
+// ---- the runtime bank: the rig's base units + every piece used, split and decoded exactly as build.js banks them -------
 const t0 = process.hrtime.bigint(), bank = { model: FORGE.bankInfo(model), sheets: {} };
 const used = [...new Set(LOADOUTS.flatMap(l => gear.loadouts[l]))];
-for (const id of ['body', ...used]) {
-  const b = FORGE.bake(model, id === 'body' ? {} : { piece: gear.pieces[id] }), back = unpng(png(b.w, b.h, b.rgba));
-  bank.sheets[id] = { w: back.w, rgba: back.rgba, meta: b.meta };
+for (const u of [...bank.model.base.map(id => ({ id, opt: { group: id } })), ...used.map(id => ({ id, opt: { piece: gear.pieces[id] } }))]) {
+  for (const [suf, anims] of FORGE.bankSplit(model)) {
+    const b = FORGE.bake(model, Object.assign({ anims }, u.opt)); if (b.empty) continue;
+    const back = unpng(pngSmall(b.w, b.h, b.rgba));
+    bank.sheets[`${u.id}.${suf}`] = { w: back.w, rgba: back.rgba, meta: b.meta };
+  }
 }
 let composed = 0, equal = 0, lonePx = 0;
 function stacked(dir, anim, frame, ids) {                         // runtime compose, checked against the offline render

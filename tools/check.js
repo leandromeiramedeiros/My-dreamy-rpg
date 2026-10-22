@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 // Ship gate (M4a). Runs the check suite strictly one step at a time, from the repo root:
-//   smoke -> play -> act1-route -> validate-ids -> maps/engine-check -> perf -> qa/run-big (kbm, all, --god, seed 1)
+//   smoke -> play -> act1-route -> validate-ids -> maps/engine-check -> forge-rt -> perf -> qa/run-big (kbm, all, --god, seed 1)
 // Each step's stdout+stderr goes to tools/out/check/<name>.log (gitignored). Every step runs even after a failure,
 // so the table shows the whole picture. Prints a summary table (name, PASS/FAIL, seconds); exit 1 on any FAIL.
 //
@@ -25,6 +25,7 @@ const STEPS = [
   { name: 'act1-route', file: 'tools/act1-route.js', args: [] },
   { name: 'validate-ids', file: 'tools/validate-ids.js', args: [] },
   { name: 'engine-check', file: 'tools/maps/engine-check.js', args: [] },
+  { name: 'forge-rt', file: 'tools/forge-rt-check.js', args: [] },
   { name: 'perf', file: 'tools/perf.js', args: [], slow: true },
   { name: 'run-big', file: 'tools/qa/run-big.js', args: ['kbm', 'all', '--god', '--seed', '1'], slow: true, bot: true },
 ];
