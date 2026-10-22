@@ -8,106 +8,127 @@
 //
 // One drawing per facing, shared by every sprite of the head; each sprite's key takes only its own characters:
 //   N hair navy   b hair blue   c hair cyan glint   |   o skin   s skin shadow   e eye (navy)
-// `at` = the cell pinned on the sprite's bone point (the chin / nape).
+// `at` = the cell pinned on the sprite's bone point (the chin). Seen from behind, that point is the far side of the head,
+// so the back views carry bias 7 (px towards the camera: the back of the skull), and the hair sits over the cape collar.
+// The read (client verdict on 1c: no blob): from the front a narrow stepped crown (1, 2, 4, 7 px: 45 deg slopes, no rounded dome), ONE
+// wide row of side spikes, then the mass tapers to the face (from behind: two tufts on top and the side spikes kinked down,
+// so the back of the head never reads as a hat and brim); the face is small and angular: straight cheeks (the shadow
+// cheek in s), a one-step jaw, a 3 px chin. The blue streak is a 5 px stroke with a 2 px cyan glint across the crown.
 const HEAD = {
-  S: { at: [9, 11], rows: [
-    '............N...',
-    '...........NN...',
-    '........NNNNN...',
-    '......NNbNNNNN..',
-    '....NNNNbNNNNNN.',
-    '.NNNNNNNbccNNNNN',
-    'NNNNNNNNbbbbNNN.',
-    '..NNNNNNNNNNNNN.',
-    '...NNNNoooooNN..',
-    '...NNNeoooeoN...',
-    '....NNeoooeoN...',
-    '.....Nssssss....',
+  S: { at: [7, 10], rows: [
+    '........N.....',
+    '.......NN.....',
+    '......NNNN....',
+    '....NNNNNNN...',
+    'NNNNNNbbNNNNNN',
+    '.NNNNNNbccNNN.',
+    '..NNNNNNNbbN..',
+    '...NNNooNNNN..',
+    '...NoeooesN...',
+    '...NoeooesN...',
+    '....oooss.....',
+    '.....sss......',
   ] },
-  SE: { at: [10, 11], rows: [
-    '..........N.....',
-    '.........NN.....',
-    '......NNNNNN....',
-    '....NNNbNNNNN...',
-    '..NNNNNbNNNNNN..',
-    'NNNNNNNbccNNNNN.',
-    '.NNNNNNbbbbNNN..',
-    '..NNNNNNooooNN..',
-    '...NNNNeooeoN...',
-    '...NNNNeooeo....',
-    '....NNNsssss....',
+  SE: { at: [9, 10], rows: [
+    '.......N......',
+    '......NN......',
+    '.....NNNN.....',
+    '...NNNNNNNN...',
+    'NNNNNbbNNNNNN.',
+    '.NNNNNbccNNNNN',
+    '..NNNNNNbbNNN.',
+    '...NNNNNooNNN.',
+    '...NNNNoeooeN.',
+    '....NNNoeooeN.',
+    '.....NNoooss..',
+    '........sss...',
   ] },
-  E: { at: [10, 8], rows: [
-    '.......NN.......',
-    '......NNNN......',
-    '....NNNNNNN.....',
-    '..NNNNbNNNNN....',
-    'NNNNNNbccNNNN...',
-    '.NNNNNbbbbNNNN..',
-    '..NNNNNNNNoooo..',
-    '...NNNNNNooeoo..',
-    '...NNNNNoooeoo..',
-    '....NNNNsssoo...',
-    '.....NN..ss.....',
+  E: { at: [8, 8], rows: [
+    '..N..........',
+    '..NNNNN......',
+    '.NNNNNNNN....',
+    '..NNbbNNNN...',
+    'NNNNNbccNNN..',
+    '.NNNNNNbbNNN.',
+    '..NNNNNNNNoo.',
+    '...NNNNNNeoo.',
+    '...NNNNNoeooo',
+    '....NNNsooss.',
+    '......ssss...',
   ] },
-  NE: { at: [9, 7], rows: [
-    '.........N......',
-    '........NNN.....',
-    '.....NNNNNNN....',
-    '...NNNNbNNNNN...',
-    '.NNNNNNbccNNNNN.',
-    'NNNNNNNbbbbNNN..',
-    '..NNNNNNNNNNNs..',
-    '...NNNNNNNNNss..',
+  NE: { at: [8, 6], bias: 7, rows: [
+    '.....NN..NN...',
+    '.....NNNNNN...',
+    '....NNbbNNNN..',
+    '..NNNNNbccNNN.',
+    '.NNNNNNNNbbNNN',
+    'NNNNNNNNNNNNN.',
+    'N.NNNNNNNNNNs.',
+    '...NNNNNNNNNs.',
+    '....NN.NN.....',
   ] },
-  N: { at: [7, 5], rows: [
-    '.......NN.......',
-    '......NNNN......',
-    '....NNNNNNNN....',
-    '..NNNNbNNNNNNN..',
-    'NNNNNNbccNNNNNNN',
-    '.NNNNNbbbbNNNNN.',
-    '..NNNNNNNNNNNN..',
-    '...NNNNNNNNNN...',
-    '....NNNNNNNN....',
+  N: { at: [6, 5], bias: 7, rows: [
+    '....NN..NN....',
+    '....NNNNNNN...',
+    '...NNbbNNNNN..',
+    '..NNNNbccNNNN.',
+    '.NNNNNNNbbNNN.',
+    'NNNNNNNNNNNNNN',
+    'N.NNNNNNNNNN.N',
+    '...NNNNNNNN...',
+    '...NN.NN.NN...',
   ] },
-  NW: { at: [5, 7], rows: [
-    '......N.........',
-    '.....NNN........',
-    '....NNNNNNN.....',
-    '...NNNNNbNNN....',
-    '.NNNNNNNbccNNNN.',
-    '..NNNNNNbbbbNNNN',
-    '..sNNNNNNNNNNN..',
-    '..ssNNNNNNNNN...',
+  NW: { at: [4, 7], bias: 7, rows: [
+    '...NN..NN.....',
+    '...NNNNNN.....',
+    '..NNNNbbNN....',
+    '.NNNccbNNNNN..',
+    'NNNbbNNNNNNNN.',
+    '.NNNNNNNNNNNNN',
+    '.oNNNNNNNNNN.N',
+    '.oNNNNNNNNN...',
+    '.....NN.NN....',
   ] },
-  W: { at: [6, 8], rows: [
-    '.......NN.......',
-    '......NNNN......',
-    '.....NNNNNNN....',
-    '....NNNNNbNNNN..',
-    '...NNNNNNbccNNNN',
-    '..NNNNNNNbbbbNN.',
-    '..ooooNNNNNNNN..',
-    '..ooeooNNNNNN...',
-    '..ooeoooNNNNN...',
-    '...oosssNNNN....',
-    '.....ss..NN.....',
+  W: { at: [4, 8], rows: [
+    '..........N..',
+    '......NNNNN..',
+    '....NNNNNNNN.',
+    '...NNNNbbNN..',
+    '..NNNccbNNNNN',
+    '.NNNbbNNNNNN.',
+    '.ooNNNNNNNN..',
+    '.ooeNNNNNN...',
+    'oooeoNNNNN...',
+    '.ssoosNNN....',
+    '...ssss......',
   ] },
-  SW: { at: [5, 10], rows: [
-    '.....N..........',
-    '.....NN.........',
-    '....NNNNNN......',
-    '...NNNNNbNNN....',
-    '..NNNNNNbccNNN..',
-    '.NNNNNNNbbbbNNNN',
-    '..NNNNNNNNNNNNN.',
-    '..NNooooNNNNNN..',
-    '..NoeooeoNNNN...',
-    '...oeooeoNNNN...',
-    '...ssssssNN.....',
+  SW: { at: [4, 10], rows: [
+    '......N.......',
+    '......NN......',
+    '.....NNNN.....',
+    '...NNNNNNNN...',
+    '.NNNNNNbbNNNNN',
+    'NNNNNccbNNNNN.',
+    '.NNNbbNNNNNN..',
+    '.NNNooNNNNN...',
+    '.NeooeoNNNN...',
+    '.NeooeoNNN....',
+    '..ooossNN.....',
+    '...sss........',
   ] },
 };
+// hair follow-through (forge.js sprite `flow`): per facing, the rest drawing plus three variants made from it by moving
+// only the hair above the brow (`crown` = the rows over the first face row, never a back view's kinked spike tips and nape):
+//   trailL / trailR: the crown moved 1 px to that side and its top 2 rows (the tip) 2 px, the hair lagging a move
+//   lift: the crown raised 1 px over a doubled spike row (the spikes kicked up when the head drops)
+const FACE = /[oes]/;
+function flow(g) {
+  const first = g.rows.findIndex(r => FACE.test(r)), crown = Math.min(first < 0 ? g.rows.length : first - 1, g.rows.length - 4);
+  const shear = k => g.rows.map((r, y) => { const d = y < crown ? (y < 2 ? 2 : 1) * k : 0; return '.'.repeat(2 + d) + r + '.'.repeat(2 - d); });
+  let wide = 0; g.rows.forEach((r, y) => { if (y < crown && r.replace(/\./g, '').length >= g.rows[wide].replace(/\./g, '').length) wide = y; });
+  const off = (dx, dy, rows) => ({ get at() { return [g.at[0] + dx, g.at[1] + dy]; }, rows, bias: g.bias });   // follows the rest anchor
+  return { rest: g, trailL: off(2, 0, shear(-1)), trailR: off(2, 0, shear(1)), lift: off(0, 1, [...g.rows.slice(0, wide + 1), ...g.rows.slice(wide)]) };
+}
 
 // The breastplate (armour piece), chest bone: d a A L = the plate ramp shadow / low / mid / high, N = navy (collar, belt).
 // Bands from the measured reference: shadowed upper chest under the collar, a lit lower plate, the belt.
@@ -221,5 +242,6 @@ function lint(name, set) {
   return set;
 }
 
-module.exports = { HEAD: lint('HEAD', HEAD), PLATE: lint('PLATE', PLATE), PAULDRON: lint('PAULDRON', PAULDRON), HAND: lint('HAND', HAND), SHIRT,
+const HAIR = Object.fromEntries(Object.entries(lint('HEAD', HEAD)).map(([d, g]) => { const v = flow(g); for (const k in v) lint(`HAIR.${d}`, { [k]: v[k] }); return [d, v]; }));
+module.exports = { HEAD, HAIR, PLATE: lint('PLATE', PLATE), PAULDRON: lint('PAULDRON', PAULDRON), HAND: lint('HAND', HAND), SHIRT,
   SHIELD_FACE: lint('SHIELD_FACE', SHIELD_FACE), SHIELD_BACK: lint('SHIELD_BACK', SHIELD_BACK), lint };

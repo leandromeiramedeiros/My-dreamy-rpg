@@ -60,7 +60,11 @@ const MATS = {   // the base wears casual clothes only (client ruling): cream sh
   pants: { ramp: [NAVY, BLUE, BLUE, BLUE], tones: [0.95, 0.5, -0.15] },
   shoes: { ramp: ['#592104', '#592104', '#a64e21', '#a64e21'], tones: [0.95, 0.15, -0.5] },
 };
-const HAIR = { ramp: [NAVY, NAVY, BLUE, CYAN], tones: [1.03, 1.01, -2] }   // fitted: the reference hair reads as one navy mass at 32 px;
+const HAIR = { ramp: [NAVY, NAVY, BLUE, CYAN], tones: [1.03, 1.01, -2] };   // the hair sprite's ramp: navy, blue streak, cyan glint
+// hair flow (forge.js flowOf), followed at the head's centre (on the twist axis, so a chest twist alone does not blow the
+// hair about); the lag weights the previous step by `follow`; idle reacts to its 0.8 px sink (a small sway), the rest from 1 px; travel = px per frame along the facing that
+// the rig does not show: the walk's push-off on the contact frames (1, 4) and the attack's lunge on the swing (frame 1)
+const FLOW = { at: s([0, 4.5, 0]), follow: 0.5, min: { idle: 0.75, other: 1 }, travel: { walk: [0, 1.5, 0.5, 0, 1.5, 0.5], attack: [0, 2.5, 0, 0, 0, 0] } };
 const P = (bone, mat, part, shape, o) => Object.assign({ bone, mat, part, shape }, o);
 
 const layers = [
@@ -87,9 +91,10 @@ const layers = [
       ...SIDES.map(([sd]) => ({ bone: 'hand' + sd, at: s([0, -0.7, 0]), part: 'arm' + sd, key: { o: ['skin', 2], s: ['skin', 0] }, dirs: PARTS.HAND })),
     ],
   },
-  // hair: the same drawing's navy / blue / cyan characters, drawn over the face (a helm hides the whole layer)
+  // hair: the same drawing's navy / blue / cyan characters, drawn over the face (a helm hides the whole layer); secondary
+  // motion: per frame the rest / trail / lift variant (models/ref-parts.js HAIR) picked by the head's motion (forge.js flowOf)
   { id: 'hair', tag: 'hair', group: 'hair', mats: { hair: HAIR }, prims: [],
-    sprites: [{ bone: 'head', at: s([0, 1.0, 2.5]), part: 'hair', bias: FACE_BIAS, key: { N: ['hair', 0], b: ['hair', 2], c: ['hair', 3] }, dirs: PARTS.HEAD }] },
+    sprites: [{ bone: 'head', at: s([0, 1.0, 2.5]), part: 'hair', bias: FACE_BIAS, key: { N: ['hair', 0], b: ['hair', 2], c: ['hair', 3] }, dirs: PARTS.HAIR, flow: FLOW }] },
 ];
 
 module.exports = {
@@ -99,6 +104,7 @@ module.exports = {
   light: [-0.55, 0.7, 0.45],
   tones: [0.8, 0.3, -0.3],
   outline: null, innerLine: 1.6, innerColor: NAVY,
+  depthStep: 4,   // depth kept in 2/3 px steps (forge.js raster): the bank sheets' depth plane compresses to fit the size caps
   pixel: { normalSteps: 8, minCluster: 2 },
   bones, layers, anims, sheetAnims,
   sockets: {

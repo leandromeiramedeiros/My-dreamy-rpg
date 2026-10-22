@@ -55,11 +55,15 @@
 //         when: the prim exists only on the frames where it returns true (a drawn bowstring, a nocked arrow)
 //   stamps: { bone, at, n, facing, on?, px:[[dx, dy, '#hex' | mat], ...] }  pixels pinned to a surface point (eyes):
 //         drawn when the point faces the camera and is not hidden inside the layer; other layers can still cover them
-//   sprites: { bone, at?, part?, bias?, when?, key: { ch: [mat, tone] | '#hex' }, dirs: { S|SE|...|SW: { at:[cx, cy], rows:[..] } } }
+//   sprites: { bone, at?, part?, bias?, when?, flow?, key: { ch: [mat, tone] | '#hex' }, dirs: { S|SE|...|SW: GRID | VARIANTS | null } }
+//         GRID = { at:[cx, cy], rows:[..], bias? (this facing's own bias: hair pinned at the chin but seen from behind) }
 //         hand-authored pixel parts (a face, hair, a shield face): the grid of the bone's facing (nearest 45 deg) is pinned
 //         with cell `at` on the bone point, at that point's depth (minus bias px); '.' (any char not in key) is empty.
 //         Authored pixels are flat (no shading, no cleanup) but depth-tested and stacked like any volume, so bake / compose
-//         carry them unchanged
+//         carry them unchanged.
+//         VARIANTS = { rest: GRID, trailL?, trailR?, lift? }: secondary motion (hair). With `flow` the frame's variant is picked
+//         from the bone's motion over the last two frames (flowOf); without it, rest. flow = { at?, follow, min (px, or
+//         per anim { idle, other }), travel?: { anim: [px per frame along the facing] } }
 // PIECE = { id, slot, family?, tier?, class?, hides:[tags], layers:[LAYER], pose?(anim, f), tiers?:[ { mat: ramp } ], sockets?, smear? }
 //   smear: '#hex' a weapon with a 'tip' socket draws the anim's smear frames in this flat colour (hand -> tip path)
 //   family + tier: one baked piece per shape tier (knighthelm.t3); tiers: palette-only variants of one baked piece
@@ -218,6 +222,14 @@ const FORGE = (function () {
     });
     return W;
   }
+  // the poses of the frames before f (for a sprite's hair flow): past(k) = { W, f } of frame f - k, wrapping in a looping
+  // anim (model.loops, default idle and walk), null before frame 0 of any other (an attack starts from rest)
+  function history(model, yaw, anim, f, extra) {
+    const A = model.anims[anim] || model.anims.idle, loop = (model.loops || ['idle', 'walk']).includes(anim.split(':')[0]), memo = {};
+    return { f, fwd: mv(ry(yaw), [0, 0, 1]), past: k => {
+      let g = f - k; if (g < 0) { if (!loop) return null; g = ((g % A.frames) + A.frames) % A.frames; }
+      return memo[g] || (memo[g] = { W: pose(model, yaw, anim, g, extra), f: g }); } };
+  }
   const worldPoint = (W, bone, at) => { const B = W[bone]; return add(B.t, mv(B.R, [at[0] * B.s[0], at[1] * B.s[1], at[2] * B.s[2]])); };
 
   // ---- stage A: rasterise one layer -----------------------------------------------------------------------------
@@ -227,7 +239,7 @@ const FORGE = (function () {
     return { w: model.frame[0], h: model.frame[1], ox: model.origin[0], oy: model.origin[1],
       D: [0, -Math.sin(e), -Math.cos(e)], RT: [1, 0, 0], UP: [0, Math.cos(e), -Math.sin(e)],
       L: norm(model.light || [-0.55, 0.65, 0.52]), T: model.tones || [0.78, 0.3, -0.25], cover: model.coverage || 4,
-      nsteps: (model.pixel && model.pixel.normalSteps) || 0 };
+      nsteps: (model.pixel && model.pixel.normalSteps) || 0, dstep: model.depthStep || 1 };
   }
   function volumes(layer, W, anim, frame, mt, pl) {           // a layer's live volumes, posed: bounds in world space
     const vol = [];
@@ -271,7 +283,23 @@ const FORGE = (function () {
     for (const d of [0, 1, -1, 2, -2, 3, -3, 4]) { const g = sp.dirs[FACINGS[(k + d + 8) % 8]]; if (g) return g; }
     return null;
   }
-  function raster(layer, W, cam, anim, frame, rootT) {
+  // hair follow-through: which variant of a sprite's grid (rest / trailL / trailR / lift) this frame shows. A point of the
+  // sprite's bone (flow.at, default the sprite's own) is followed over the last two frames (hist.past) plus the anim's travel impulses along the facing (px per
+  // frame: a stride's push-off, an attack's lunge the rig does not translate); the hair lags, so its offset is minus that
+  // motion (this step + follow x the step before). Under `min` px (a number or per anim): rest; mostly sideways: trail to that side; else hair
+  // pushed up (the head dropped): lift; pushed down: rest.
+  function flowOf(sp, W, hist, proj, cam, anim) {
+    const fl = sp.flow, at = fl.at || sp.at || [0, 0, 0], tr = (fl.travel || {})[anim.split(':')[0]] || [];
+    const fx = dot(hist.fwd, cam.RT), fy = -dot(hist.fwd, cam.UP), pt = Wk => proj(worldPoint(Wk, sp.bone, at));
+    const step = k => { const A = k ? hist.past(k) : { W, f: hist.f }, B = hist.past(k + 1); if (!A || !B) return [0, 0];
+      const a = pt(A.W), b = pt(B.W), t = tr[A.f] || 0; return [a[0] - b[0] + t * fx, a[1] - b[1] + t * fy]; };
+    const s0 = step(0), s1 = step(1), ox = -(s0[0] + fl.follow * s1[0]), oy = -(s0[1] + fl.follow * s1[1]);
+    const min = typeof fl.min === 'number' ? fl.min : fl.min[anim.split(':')[0]] || fl.min.other;
+    if (Math.hypot(ox, oy) < min) return 'rest';
+    if (Math.abs(ox) >= min && Math.abs(ox) >= Math.abs(oy)) return ox < 0 ? 'trailL' : 'trailR';
+    return oy < 0 ? 'lift' : 'rest';
+  }
+  function raster(layer, W, cam, anim, frame, rootT, hist) {
     const { w, h, ox, oy, D, RT, UP, L, T } = cam, N = w * h, mt = matTable(layer), pl = partList(layer), H = norm(sub(L, D));
     const G = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), keep: new Uint8Array(N), dq: new Uint8Array(N) };
     const dep = new Float32Array(N).fill(1e9);
@@ -330,8 +358,9 @@ const FORGE = (function () {
     // sprites: hand-authored pixel parts, one grid per facing, pinned to a bone point at that point's depth
     for (const sp of layer.sprites || []) {
       if (sp.when && !sp.when(anim, frame)) continue;
-      const g = spriteGrid(sp, W[sp.bone].R); if (!g) continue;
-      const [sx, sy, t0] = proj(worldPoint(W, sp.bone, sp.at || [0, 0, 0])), t = t0 - (sp.bias || 0), part = pl.index[sp.part || sp.bone];
+      let g = spriteGrid(sp, W[sp.bone].R); if (!g) continue;
+      if (!g.rows) g = g[sp.flow && hist ? flowOf(sp, W, hist, proj, cam, anim) : 'rest'] || g.rest;
+      const [sx, sy, t0] = proj(worldPoint(W, sp.bone, sp.at || [0, 0, 0])), t = t0 - (g.bias != null ? g.bias : sp.bias || 0), part = pl.index[sp.part || sp.bone];
       const X = Math.floor(sx) - g.at[0], Y = Math.floor(sy) - g.at[1];
       g.rows.forEach((row, r) => { for (let c = 0; c < row.length; c++) {
         const k = sp.key[row[c]]; if (k == null) continue;
@@ -357,7 +386,8 @@ const FORGE = (function () {
       }
     }
     const bias = layer.bias || 0;                               // clothing wins over a body part poking through it by < bias px
-    for (let i = 0; i < N; i++) if (G.cov[i]) G.dq[i] = clamp(Math.round(128 + (rootT - dep[i] + bias) * QS), 1, 255);
+    const st = cam.dstep;                                       // model.depthStep: depth kept in multiples of st 1/6 px steps
+    for (let i = 0; i < N; i++) if (G.cov[i]) G.dq[i] = clamp(128 + Math.round((rootT - dep[i] + bias) * QS / st) * st, 1, 255);
     return G;
   }
 
@@ -526,9 +556,10 @@ const FORGE = (function () {
   function render(model, opt) {
     const cam = camera(model), stack = assemble(model, opt.pieces), ps = pieceList(opt.pieces);
     const anim = animName(model, opt.anim || 'idle', opt.pieces), f = opt.frame || 0;
-    const W = pose(model, opt.yaw != null ? opt.yaw * Math.PI / 180 : yawOf(model, opt.dir), anim, f, ps.filter(p => p.piece.pose).map(p => p.piece.pose));
+    const yaw0 = opt.yaw != null ? opt.yaw * Math.PI / 180 : yawOf(model, opt.dir), extra = ps.filter(p => p.piece.pose).map(p => p.piece.pose);
+    const W = pose(model, yaw0, anim, f, extra), hist = history(model, yaw0, anim, f, extra);
     const rootT = dot(W[model.bones[0].name].t, cam.D) + FAR, key = interner();
-    const list = stack.map(a => ({ g: raster(a.layer, W, cam, anim, f, rootT), pal: palOf(a.layer, a.over), keys: partList(a.layer).names.map(n => key(a.group + ':' + n)) }));
+    const list = stack.map(a => ({ g: raster(a.layer, W, cam, anim, f, rootT, hist), pal: palOf(a.layer, a.over), keys: partList(a.layer).names.map(n => key(a.group + ':' + n)) }));
     const extraS = Object.assign({}, ...ps.map(p => p.piece.sockets || {})), sockets = frameSockets(model, W, cam, extraS);
     const ro = resolveOpts(model), A = model.anims[anim], wp = ps.find(p => p.piece.smear);
     if (A.smear && A.smear[f] && wp && f > 0) {
@@ -579,7 +610,9 @@ const FORGE = (function () {
   }
 
   // ---- bake: the G-buffer sheet of the bare body or of one piece -------------------------------------------------
-  // rows = layer x dir, cols = every frame of every real anim (another weapon class's attack stays empty for a weapon).
+  // Cells = layer x dir x every frame of every real anim (another weapon class's attack stays empty for a weapon), each
+  // cropped to its covered pixels, identical crops stored once, shelf-packed into an atlas PACK px wide (tallest first).
+  // meta.cells[(layer * dirs + dir) * frames + col] = [x, y, w, h, frameX, frameY] in the atlas, or 0 when empty.
   // RGBA: R = keep << 7 | material, G = flat << 7 | part << 3 | tone, B = depth (1/6 px steps, 128 = the root), A = coverage
   function bakeLayout(model) {
     const out = [];
@@ -595,11 +628,11 @@ const FORGE = (function () {
       sockets[dn] = {};
       layout.forEach(([a, f], c) => {
         if (skip(a)) return;
-        const W = pose(model, yawOf(model, dn), a, f, piece && piece.pose ? [piece.pose] : []);
+        const extra = piece && piece.pose ? [piece.pose] : [], W = pose(model, yawOf(model, dn), a, f, extra), hist = history(model, yawOf(model, dn), a, f, extra);
         const rootT = dot(W[model.bones[0].name].t, cam.D) + FAR;
         (sockets[dn][a] = sockets[dn][a] || [])[f] = frameSockets(model, W, cam, piece ? piece.sockets : null);
         layers.forEach((L, li) => {
-          const G = raster(L, W, cam, a, f, rootT), y0 = (li * dirs.length + r) * h;
+          const G = raster(L, W, cam, a, f, rootT, hist), y0 = (li * dirs.length + r) * h;   // the full grid first, packed below
           for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
             const i = y * w + x; if (!G.cov[i]) continue;
             const o = ((y0 + y) * SW + c * w + x) * 4;
@@ -614,7 +647,28 @@ const FORGE = (function () {
       layers: layers.map(L => ({ id: L.id, tag: L.tag || null, group: L.group || (piece ? piece.id : 'body'), mats: matTable(L).names, ramps: matTable(L).list.map(m => m.ramp), parts: partList(L).names })),
       tiers: (piece && piece.tiers) || null, smear: (piece && piece.smear) || null, sockets,
     };
-    return { w: SW, h: SH, rgba, meta };
+    const P = pack(rgba, SW, w, h, layout.length, dirs.length * layers.length); meta.cells = P.cells;
+    return { w: P.w, h: P.h, rgba: P.rgba, meta };
+  }
+  const PACK = 256;
+  function pack(rgba, SW, w, h, cols, rows) {
+    const crops = [], uniq = new Map(), cells = [];
+    for (let rr = 0; rr < rows; rr++) for (let c = 0; c < cols; c++) {
+      let x0 = w, y0 = h, x1 = -1, y1 = -1;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (rgba[((rr * h + y) * SW + c * w + x) * 4 + 3]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+      if (x1 < 0) { cells.push(0); continue; }
+      const cw = x1 - x0 + 1, ch = y1 - y0 + 1, px = new Uint8ClampedArray(cw * ch * 4);
+      for (let y = 0; y < ch; y++) px.set(rgba.subarray(((rr * h + y0 + y) * SW + c * w + x0) * 4, ((rr * h + y0 + y) * SW + c * w + x1 + 1) * 4), y * cw * 4);
+      let k = cw + 'x' + ch + ':'; for (let i = 0; i < px.length; i++) k += String.fromCharCode(px[i]);
+      if (!uniq.has(k)) { uniq.set(k, crops.length); crops.push({ cw, ch, px, at: null }); }
+      cells.push([uniq.get(k), x0, y0]);
+    }
+    const order = crops.map((q, i) => i).sort((a, b) => crops[b].ch - crops[a].ch || crops[b].cw - crops[a].cw || a - b);
+    let sx = 0, sy = 0, sh = 0;
+    for (const i of order) { const q = crops[i]; if (sx + q.cw > PACK) { sx = 0; sy += sh; sh = 0; } q.at = [sx, sy]; sx += q.cw; sh = Math.max(sh, q.ch); }
+    const AH = Math.max(1, sy + sh), out = new Uint8ClampedArray(PACK * AH * 4);
+    for (const q of crops) for (let y = 0; y < q.ch; y++) out.set(q.px.subarray(y * q.cw * 4, (y + 1) * q.cw * 4), ((q.at[1] + y) * PACK + q.at[0]) * 4);
+    return { w: PACK, h: AH, rgba: out, cells: cells.map(e => e ? [...crops[e[0]].at, crops[e[0]].cw, crops[e[0]].ch, e[1], e[2]] : 0) };
   }
   const bankInfo = model => ({ frame: model.frame, dirs: model.dirs.map(d => d[0]), layout: bakeLayout(model), anims: Object.keys(model.anims),
     outline: model.outline || null, innerLine: model.innerLine != null ? model.innerLine : 2.5, innerColor: model.innerColor || null, pixel: model.pixel || null,
@@ -631,10 +685,10 @@ const FORGE = (function () {
     const key = interner(), list = [];
     const take = (sh, li, L, over) => {
       const g = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), keep: new Uint8Array(N), dq: new Uint8Array(N) };
-      const y0 = (li * info.dirs.length + r) * h;
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const o = ((y0 + y) * sh.w + c * w + x) * 4; if (!sh.rgba[o + 3]) continue;
-        const i = y * w + x, g2 = sh.rgba[o + 1];
+      const q = sh.meta.cells[(li * info.dirs.length + r) * info.layout.length + c] || [0, 0, 0, 0, 0, 0];
+      for (let y = 0; y < q[3]; y++) for (let x = 0; x < q[2]; x++) {
+        const o = ((q[1] + y) * sh.w + q[0] + x) * 4; if (!sh.rgba[o + 3]) continue;
+        const i = (q[5] + y) * w + q[4] + x, g2 = sh.rgba[o + 1];
         g.cov[i] = 1; g.mat[i] = sh.rgba[o] & 127; g.keep[i] = sh.rgba[o] >> 7; g.flat[i] = g2 >> 7; g.part[i] = (g2 >> 3) & 15; g.tone[i] = g2 & 7; g.dq[i] = sh.rgba[o + 2];
       }
       list.push({ g, pal: L.mats.map((n, i) => (over && over[n] ? toRamp(over[n]) : L.ramps[i]).map(hexRgb)), keys: L.parts.map(n => key(L.group + ':' + n)) });

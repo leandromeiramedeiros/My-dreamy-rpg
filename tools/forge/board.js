@@ -3,9 +3,11 @@
 // tools/forge/ref/crops, made by ref-extract.py, scaled x model.SCALE) next to the FORGE frame: the casual base
 // (models/ref.js) with the 'hero' loadout's pieces (models/ref-gear.js) stacked by the RUNTIME path (FORGE.compose over a
 // freshly baked bank, PNG round trip included; each frame is also checked byte-equal to FORGE.render), same pose index,
-// same 48x48 frame, feet on the same pixel. Below that, the bare base alone (idle, walk) in 8 directions.
+// same 48x48 frame, feet on the same pixel. Below that, the bare base alone (idle, walk) in 8 directions. Also
+// out/head-hair-zoom.png: the head and hair of every walk and attack frame, reference | forge, at 4x.
 //   node tools/forge/board.js [model] [loadout]   -> out/board-<model>.png (2x) + out/board-<model>.gif (animated, 2x)
-// Prints per direction x anim: silhouette IoU, exact-colour match on the overlap, the forge frame's lone pixels next to
+// Prints per direction x anim: silhouette IoU, exact-colour match on the overlap (and, info only, IoU with 1 px tolerance
+// and the mean colour dE), the forge frame's lone pixels next to
 // the reference's, and the sha256 of both files. A direction without a reference frame gets a "NO REF" cell.
 const fs = require('fs');
 const path = require('path');
@@ -25,9 +27,9 @@ for (const id of ['body', ...gear.loadouts[lo]]) {
 let composed = 0, equal = 0;
 function stacked(dir, anim, frame, ids) {                         // runtime compose, checked against the offline render
   const out = FORGE.compose(bank, { dir, anim, frame, pieces: ids }).rgba;
-  const ref = FORGE.render(model, { dir, anim, frame, pieces: ids.map(id => gear.pieces[id]) }).rgba;
+  const r = FORGE.render(model, { dir, anim, frame, pieces: ids.map(id => gear.pieces[id]) }), ref = r.rgba;
   composed++; if (Buffer.compare(Buffer.from(out.buffer, out.byteOffset, out.length), Buffer.from(ref.buffer, ref.byteOffset, ref.length)) === 0) equal++;
-  return out;
+  stacked.sockets = r.sockets; return out;
 }
 const REF = path.join(__dirname, 'ref', 'crops'), OUT = path.join(__dirname, 'out');
 const ANIMS = ['idle', 'walk', 'attack'], DIRS = model.dirs.map(d => d[0]), [FW, FH] = model.frame;
@@ -66,13 +68,22 @@ function lone(rgba, w, h) {                                       // build.js li
   }
   return n;
 }
-function compare(a, b) {                                          // IoU of the silhouettes, exact colour match on the overlap
-  let I = 0, U = 0, same = 0;
+// IoU of the silhouettes and exact colour match on the overlap (the targets), plus two info-only readings: IoU with 1 px
+// tolerance (a union pixel counts when each image covering it has the other within its 8 neighbours) and the mean CIE76
+// dE between the two colours on the overlap (0 = same; the palette's neighbouring ramp tones are ~10-25 apart)
+const lab = (r, g, b) => { const f = c => { c /= 255; return c > 0.04045 ? Math.pow((c + 0.055) / 1.055, 2.4) : c / 12.92; }, [R, G, B] = [f(r), f(g), f(b)];
+  const X = (0.4124 * R + 0.3576 * G + 0.1805 * B) / 0.95047, Y = 0.2126 * R + 0.7152 * G + 0.0722 * B, Z = (0.0193 * R + 0.1192 * G + 0.9505 * B) / 1.08883;
+  const h = t => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; return [116 * h(Y) - 16, 500 * (h(X) - h(Y)), 200 * (h(Y) - h(Z))]; };
+const near = (img, x, y) => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < FW && yy < FH && img[(yy * FW + xx) * 4 + 3]) return true; } return false; };
+function compare(a, b) {
+  let I = 0, U = 0, same = 0, T = 0, dE = 0;
   for (let i = 0; i < a.length; i += 4) {
-    const A = a[i + 3] > 0, B = b[i + 3] > 0; if (A || B) U++;
-    if (A && B) { I++; if (a[i] === b[i] && a[i + 1] === b[i + 1] && a[i + 2] === b[i + 2]) same++; }
+    const A = a[i + 3] > 0, B = b[i + 3] > 0; if (!A && !B) continue; U++;
+    const x = (i / 4) % FW, y = (i / 4 / FW) | 0; if ((!A || near(b, x, y)) && (!B || near(a, x, y))) T++;
+    if (A && B) { I++; if (a[i] === b[i] && a[i + 1] === b[i + 1] && a[i + 2] === b[i + 2]) same++;
+      const p = lab(a[i], a[i + 1], a[i + 2]), q = lab(b[i], b[i + 1], b[i + 2]); dE += Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]); }
   }
-  return { iou: U ? I / U : 0, colour: I ? same / I : 0 };
+  return { iou: U ? I / U : 0, colour: I ? same / I : 0, iouT: U ? T / U : 0, colourE: I ? dE / I : 0 };
 }
 
 // ---- a 3x5 pixel font for the labels --------------------------------------------------------------------------------
@@ -122,13 +133,13 @@ const t0 = process.hrtime.bigint(), frames = {}, stats = {};
 for (const a of ANIMS) {
   frames[a] = {}; stats[a] = {};
   for (const d of DIRS) {
-    frames[a][d] = []; const st = { iou: 0, colour: 0, minI: 1, minC: 1, cells: [], lone: 0, refLone: 0, n: 0, refs: 0, shift: shift(a, d) };
+    frames[a][d] = []; const st = { iou: 0, colour: 0, iouT: 0, colourE: 0, minI: 1, minC: 1, cells: [], lone: 0, refLone: 0, n: 0, refs: 0, shift: shift(a, d) };
     for (let f = 0; f < 6; f++) {
       const fr = moved(stacked(d, a, f, gear.loadouts[lo]), st.shift), rf = refFrame(a, d, f);
-      frames[a][d].push({ forge: fr, ref: rf });
+      const hs = stacked.sockets.head; frames[a][d].push({ forge: fr, ref: rf, head: [hs.x + st.shift[0], hs.y + st.shift[1]] });
       st.lone += lone(fr, FW, FH); st.n++;
       st.cells.push(null);
-      if (rf) { const c = compare(rf, fr); st.cells[f] = c; st.iou += c.iou; st.colour += c.colour; st.minI = Math.min(st.minI, c.iou); st.minC = Math.min(st.minC, c.colour); st.refLone += lone(rf, FW, FH); st.refs++; }
+      if (rf) { const c = compare(rf, fr); st.cells[f] = c; st.iou += c.iou; st.colour += c.colour; st.iouT += c.iouT; st.colourE += c.colourE; st.minI = Math.min(st.minI, c.iou); st.minC = Math.min(st.minC, c.colour); st.refLone += lone(rf, FW, FH); st.refs++; }
     }
     stats[a][d] = st;
   }
@@ -194,18 +205,41 @@ for (let t = 0; t < total; t += TICK) {
 const boardGif = gif(2 * GW, 2 * GH, gframes);
 fs.writeFileSync(path.join(OUT, `board-${name}.gif`), boardGif);
 
+// ---- the head / hair zoom strip: rows = directions, columns = walk f0-5 then attack f0-5; each cell = reference | forge,
+// a 24 x 20 window from just above the forge head socket (the hair tip) down to the collar, written at 4x
+const ZW = 24, ZH = 20, ZA = ['walk', 'attack'], ZC = 2 * ZW + 1, ZG = 3, ZL = 14;
+const zW = ZL + ZA.length * 6 * (ZC + ZG), zH = 8 + DIRS.length * (ZH + 3), zimg = new Uint8ClampedArray(zW * zH * 4);
+fill(zimg, zW, 0, 0, zW, zH, DIM);
+ZA.forEach((a, ai) => text(zimg, zW, ZL + ai * 6 * (ZC + ZG), 1, `${a} f0-5: reference left, forge right`, INK));
+DIRS.forEach((d, di) => {
+  const y = 8 + di * (ZH + 3); text(zimg, zW, 1, y + 8, d, INK);
+  ZA.forEach((a, ai) => { for (let f = 0; f < 6; f++) {
+    const fr = frames[a][d][f], x = ZL + (ai * 6 + f) * (ZC + ZG), cx = Math.round(fr.head[0]) - ZW / 2, cy = Math.round(fr.head[1]) - 4;
+    [fr.ref, fr.forge].forEach((src, k) => {
+      const x0 = x + k * (ZW + 1); fill(zimg, zW, x0, y, ZW, ZH, src ? BG : PANEL); if (!src) return;
+      for (let yy = 0; yy < ZH; yy++) for (let xx = 0; xx < ZW; xx++) {
+        const sx = cx + xx, sy = cy + yy; if (sx < 0 || sy < 0 || sx >= FW || sy >= FH) continue;
+        const i = (sy * FW + sx) * 4; if (src[i + 3]) set(zimg, zW, x0 + xx, y + yy, [src[i], src[i + 1], src[i + 2]]);
+      }
+    });
+  } });
+});
+const upN = (img, W, H, n) => { const o = new Uint8ClampedArray(W * H * n * n * 4); for (let y = 0; y < n * H; y++) for (let x = 0; x < n * W; x++) { const s = (((y / n) | 0) * W + ((x / n) | 0)) * 4, t = (y * n * W + x) * 4; o[t] = img[s]; o[t + 1] = img[s + 1]; o[t + 2] = img[s + 2]; o[t + 3] = 255; } return o; };
+const zoomPng = png(4 * zW, 4 * zH, upN(zimg, zW, zH, 4));
+fs.writeFileSync(path.join(OUT, 'head-hair-zoom.png'), zoomPng);
+
 // ---- report -----------------------------------------------------------------------------------------------------------
 const pct = v => (100 * v).toFixed(0).padStart(3) + '%';
 console.log(`board: ${ANIMS.length} anims x ${DIRS.length} dirs x 6 frames rendered in ${renderMs.toFixed(0)} ms`);
-console.log('anim    dir  IoU (min)  colour (min)  lone forge/ref (sum of 6 frames)');
-let sumI = 0, sumC = 0, nn = 0, lf = 0, lr = 0, mI = 1, mC = 1;
+console.log('anim    dir  IoU (min)  colour (min)  | IoU+-1px  mean dE (info) | lone forge/ref (sum of 6 frames)');
+let sumI = 0, sumC = 0, sumIT = 0, sumCE = 0, nn = 0, lf = 0, lr = 0, mI = 1, mC = 1;
 for (const a of ANIMS) for (const d of DIRS) {
   const s = stats[a][d]; lf += s.lone; lr += s.refLone;
   if (!s.refs) { console.log(`${a.padEnd(7)} ${d.padEnd(3)}  no ref   lone ${s.lone}`); continue; }
-  sumI += s.iou / s.refs; sumC += s.colour / s.refs; nn++; mI = Math.min(mI, s.iou / s.refs); mC = Math.min(mC, s.colour / s.refs);
-  console.log(`${a.padEnd(7)} ${d.padEnd(3)} ${pct(s.iou / s.refs)} (${pct(s.minI)})  ${pct(s.colour / s.refs)} (${pct(s.minC)})   ${String(s.lone).padStart(3)}/${s.refLone}   shift ${s.shift}`);
+  sumI += s.iou / s.refs; sumC += s.colour / s.refs; sumIT += s.iouT / s.refs; sumCE += s.colourE / s.refs; nn++; mI = Math.min(mI, s.iou / s.refs); mC = Math.min(mC, s.colour / s.refs);
+  console.log(`${a.padEnd(7)} ${d.padEnd(3)} ${pct(s.iou / s.refs)} (${pct(s.minI)})  ${pct(s.colour / s.refs)} (${pct(s.minC)})  |  ${pct(s.iouT / s.refs)}    ${(s.colourE / s.refs).toFixed(1).padStart(5)}     |  ${String(s.lone).padStart(3)}/${s.refLone}   shift ${s.shift}`);
 }
 console.log(`runtime compose: ${equal}/${composed} frames byte-equal to FORGE.render`);
 if (equal !== composed) process.exitCode = 1;
-console.log(`mean IoU ${pct(sumI / nn)} (worst cell ${pct(mI)}), colour ${pct(sumC / nn)} (worst ${pct(mC)}); lone pixels forge ${lf} vs reference ${lr} (${ANIMS.length * DIRS.length * 6} frames)`);
-console.log(`out/board-${name}.png ${2 * W}x${2 * H} sha256 ${crypto.createHash('sha256').update(boardPng).digest('hex').slice(0, 16)} | out/board-${name}.gif ${gframes.length} frames sha256 ${crypto.createHash('sha256').update(boardGif).digest('hex').slice(0, 16)}`);
+console.log(`mean IoU ${pct(sumI / nn)} (worst cell ${pct(mI)}), colour ${pct(sumC / nn)} (worst ${pct(mC)}) | info: IoU+-1px ${pct(sumIT / nn)}, mean dE ${(sumCE / nn).toFixed(1)}; lone pixels forge ${lf} vs reference ${lr} (${ANIMS.length * DIRS.length * 6} frames)`);
+console.log(`out/board-${name}.png ${2 * W}x${2 * H} sha256 ${crypto.createHash('sha256').update(boardPng).digest('hex').slice(0, 16)} | out/board-${name}.gif ${gframes.length} frames sha256 ${crypto.createHash('sha256').update(boardGif).digest('hex').slice(0, 16)} | out/head-hair-zoom.png sha256 ${crypto.createHash('sha256').update(zoomPng).digest('hex').slice(0, 16)}`);
