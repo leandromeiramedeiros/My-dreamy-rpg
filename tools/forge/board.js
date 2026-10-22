@@ -1,7 +1,9 @@
 'use strict';
 // BOARD: the M4a approval board. For each of the 8 directions x (idle, walk, attack) the REFERENCE frame (SlyNyrd, from
-// tools/forge/ref/crops, made by ref-extract.py) next to the FORGE frame (models/ref.js + the 'hero' loadout of
-// models/ref-gear.js), same pose index, same 48x48 frame, feet on the same pixel.
+// tools/forge/ref/crops, made by ref-extract.py, scaled x model.SCALE) next to the FORGE frame: the casual base
+// (models/ref.js) with the 'hero' loadout's pieces (models/ref-gear.js) stacked by the RUNTIME path (FORGE.compose over a
+// freshly baked bank, PNG round trip included; each frame is also checked byte-equal to FORGE.render), same pose index,
+// same 48x48 frame, feet on the same pixel. Below that, the bare base alone (idle, walk) in 8 directions.
 //   node tools/forge/board.js [model] [loadout]   -> out/board-<model>.png (2x) + out/board-<model>.gif (animated, 2x)
 // Prints per direction x anim: silhouette IoU, exact-colour match on the overlap, the forge frame's lone pixels next to
 // the reference's, and the sha256 of both files. A direction without a reference frame gets a "NO REF" cell.
@@ -9,11 +11,24 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const FORGE = require('./forge.js');
-const { png, gif } = require('./png.js');
+const { png, unpng, gif } = require('./png.js');
 
 const name = process.argv[2] || 'ref', lo = process.argv[3] || 'hero';
 const model = require(`./models/${name}.js`), gear = require(`./models/${name}-gear.js`);
 const pieces = gear.loadouts[lo].map(id => gear.pieces[id]);
+// the runtime bank: bare body + every piece of the loadout, baked and decoded exactly as build.js does
+const bank = { model: FORGE.bankInfo(model), sheets: {} };
+for (const id of ['body', ...gear.loadouts[lo]]) {
+  const b = FORGE.bake(model, id === 'body' ? {} : { piece: gear.pieces[id] }), back = unpng(png(b.w, b.h, b.rgba));
+  bank.sheets[id] = { w: back.w, rgba: back.rgba, meta: b.meta };
+}
+let composed = 0, equal = 0;
+function stacked(dir, anim, frame, ids) {                         // runtime compose, checked against the offline render
+  const out = FORGE.compose(bank, { dir, anim, frame, pieces: ids }).rgba;
+  const ref = FORGE.render(model, { dir, anim, frame, pieces: ids.map(id => gear.pieces[id]) }).rgba;
+  composed++; if (Buffer.compare(Buffer.from(out.buffer, out.byteOffset, out.length), Buffer.from(ref.buffer, ref.byteOffset, ref.length)) === 0) equal++;
+  return out;
+}
 const REF = path.join(__dirname, 'ref', 'crops'), OUT = path.join(__dirname, 'out');
 const ANIMS = ['idle', 'walk', 'attack'], DIRS = model.dirs.map(d => d[0]), [FW, FH] = model.frame;
 const BG = [0x4b, 0x7c, 0x3f], INK = [0xe5, 0xe0, 0xac], DIM = [0x2a, 0x45, 0x22], PANEL = [0x3f, 0x6a, 0x35];
@@ -21,11 +36,22 @@ const BG = [0x4b, 0x7c, 0x3f], INK = [0xe5, 0xe0, 0xac], DIM = [0x2a, 0x45, 0x22
 // ---- reference crops ------------------------------------------------------------------------------------------------
 const seq = fs.existsSync(path.join(REF, 'seq.json')) ? JSON.parse(fs.readFileSync(path.join(REF, 'seq.json'), 'utf8')) : null;
 const atlas = {};
-function refFrame(anim, dir, f) {                                 // gear pose f (first-seen order = playback order), or null
-  if (!seq || !seq.anims[anim] || !seq.anims[anim][dir]) return null;
-  const e = seq.anims[anim][dir]; if (f >= Math.min(6, e.poses)) return null;
+function refFrame(anim, dir, f, any) {                            // gear pose f (first-seen order = playback order), or null
+  if (!seq || !seq.anims[anim] || !seq.anims[anim][dir]) return null;      // (any: an index past the 6 gear poses, e.g. 6-11 = bare)
+  const e = seq.anims[anim][dir]; if (f >= (any ? e.poses : Math.min(6, e.poses))) return null;
   const buf = atlas[anim] || (atlas[anim] = fs.readFileSync(path.join(REF, anim + '.rgba'))), n = FW * FH * 4;
-  return new Uint8ClampedArray(buf.subarray((e.first + f) * n, (e.first + f + 1) * n));
+  return scaleRef(new Uint8ClampedArray(buf.subarray((e.first + f) * n, (e.first + f + 1) * n)));
+}
+// the reference is drawn at 27 px; the rig is that x model.SCALE (32 px, client ruling), so the reference frame is scaled
+// by the same factor, nearest neighbour, about the feet anchor (origin column, bottom edge of the origin row)
+const S = model.SCALE || 1;
+function scaleRef(src) {
+  if (S === 1) return src; const o = new Uint8ClampedArray(src.length), [ox, oy] = model.origin;
+  for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
+    const sx = Math.floor(ox + (x + 0.5 - ox) / S), sy = Math.floor(oy + 1 + (y + 0.5 - oy - 1) / S);
+    if (sx < 0 || sy < 0 || sx >= FW || sy >= FH) continue; o.set(src.subarray((sy * FW + sx) * 4, (sy * FW + sx) * 4 + 4), (y * FW + x) * 4);
+  }
+  return o;
 }
 const msOf = anim => { const real = anim === 'attack' ? 'attack:' + (pieces.find(p => p.class) || { class: 'none' }).class : anim; return (model.anims[real] || model.anims[anim]).ms; };
 
@@ -67,17 +93,23 @@ function blit(img, W, x0, y0, fr) { for (let y = 0; y < FH; y++) for (let x = 0;
 function up2(img, W, H) { const o = new Uint8ClampedArray(W * H * 16); for (let y = 0; y < 2 * H; y++) for (let x = 0; x < 2 * W; x++) { const s = ((y >> 1) * W + (x >> 1)) * 4, d = (y * 2 * W + x) * 4; o[d] = img[s]; o[d + 1] = img[s + 1]; o[d + 2] = img[s + 2]; o[d + 3] = 255; } return o; }
 const noRef = () => { const f = new Uint8ClampedArray(FW * FH * 4); return f; };
 
-// ---- alignment: the same rule ref-extract.py used for the reference crops. Per direction, the bare body's frames of the
-// anchoring anim (idle for idle + attack, walk for walk) put their lowest row on the origin row and their mean bbox centre
-// on the origin column (a hand-drawn side view keeps the near foot on the ground line; the forge's 3/4 camera puts it ~1 px
-// lower, so the raw origin would compare a shifted frame)
+// ---- alignment: feet on the same pixel. Per direction, over the 6 bare-body frames of the anchoring anim (idle for idle +
+// attack, walk for walk), the reference's base poses and the forge's bare base: lowest row, and the mean x of the leg
+// pixels (the bottom 10 rows; hair spikes and shoulder pads would bias a bbox centre). The forge frame is moved onto the
+// reference's anchor (whole pixels).
 function bboxOf(rgba) { let x0 = FW, y0 = FH, x1 = -1, y1 = -1; for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) if (rgba[(y * FW + x) * 4 + 3]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } return [x0, y0, x1, y1]; }
-const shiftOf = {};
-function shift(a, d) {
-  const k = (a === 'walk' ? 'walk' : 'idle') + d; if (shiftOf[k]) return shiftOf[k];
+function anchorOf(frames) {
   let cx = 0, by = 0;
-  for (let f = 0; f < 6; f++) { const b = bboxOf(FORGE.render(model, { dir: d, anim: a === 'walk' ? 'walk' : 'idle', frame: f, pieces: [] }).rgba); cx += (b[0] + b[2]) / 2; by = Math.max(by, b[3]); }
-  return (shiftOf[k] = [model.origin[0] - Math.round(cx / 6), model.origin[1] - by]);
+  for (const fr of frames) { const b = bboxOf(fr); let sx = 0, n = 0; for (let y = b[3] - 9; y <= b[3]; y++) for (let x = 0; x < FW; x++) if (fr[(y * FW + x) * 4 + 3]) { sx += x; n++; } cx += sx / n / frames.length; by = Math.max(by, b[3]); }
+  return [cx, by];
+}
+const shiftOf = {}, SIX = [0, 1, 2, 3, 4, 5];
+function shift(a, d) {
+  const an = a === 'walk' ? 'walk' : 'idle', k = an + d; if (shiftOf[k]) return shiftOf[k];
+  const e = seq && seq.anims[an] && seq.anims[an][d];
+  const R = e && e.poses >= 12 ? anchorOf(SIX.map(f => refFrame(an, d, 6 + f, true))) : model.origin;
+  const F = anchorOf(SIX.map(f => FORGE.render(model, { dir: d, anim: an, frame: f, pieces: [] }).rgba));
+  return (shiftOf[k] = [Math.round(R[0] - F[0]), R[1] - F[1]]);
 }
 function moved(rgba, [dx, dy]) {
   if (!dx && !dy) return rgba; const o = new Uint8ClampedArray(rgba.length);
@@ -90,37 +122,49 @@ const t0 = process.hrtime.bigint(), frames = {}, stats = {};
 for (const a of ANIMS) {
   frames[a] = {}; stats[a] = {};
   for (const d of DIRS) {
-    frames[a][d] = []; const st = { iou: 0, colour: 0, lone: 0, refLone: 0, n: 0, refs: 0, shift: shift(a, d) };
+    frames[a][d] = []; const st = { iou: 0, colour: 0, minI: 1, minC: 1, cells: [], lone: 0, refLone: 0, n: 0, refs: 0, shift: shift(a, d) };
     for (let f = 0; f < 6; f++) {
-      const fr = moved(FORGE.render(model, { dir: d, anim: a, frame: f, pieces }).rgba, st.shift), rf = refFrame(a, d, f);
+      const fr = moved(stacked(d, a, f, gear.loadouts[lo]), st.shift), rf = refFrame(a, d, f);
       frames[a][d].push({ forge: fr, ref: rf });
       st.lone += lone(fr, FW, FH); st.n++;
-      if (rf) { const c = compare(rf, fr); st.iou += c.iou; st.colour += c.colour; st.refLone += lone(rf, FW, FH); st.refs++; }
+      st.cells.push(null);
+      if (rf) { const c = compare(rf, fr); st.cells[f] = c; st.iou += c.iou; st.colour += c.colour; st.minI = Math.min(st.minI, c.iou); st.minC = Math.min(st.minC, c.colour); st.refLone += lone(rf, FW, FH); st.refs++; }
     }
     stats[a][d] = st;
   }
 }
+const BASE = ['idle', 'walk'], bare = {};                         // the bare base alone
+for (const a of BASE) { bare[a] = {}; for (const d of DIRS) bare[a][d] = [0, 1, 2, 3, 4, 5].map(f => moved(stacked(d, a, f, []), shift(a, d))); }
 const renderMs = Number(process.hrtime.bigint() - t0) / 1e6;
 
 // ---- the static board (1x layout, written at 2x) ------------------------------------------------------------------
-const CW = FW * 2 + 2, GAP = 4, LW = 22, TH = 9, SECTION = TH + DIRS.length * (FH + 2) + 4;
-const W = LW + 6 * (CW + GAP), H = 12 + ANIMS.length * SECTION;
+const CW = FW * 2 + 2, GAP = 4, LW = 22, TH = 9, RH = FH + 8, SECTION = TH + DIRS.length * RH + 4;
+const BSECTION = TH + DIRS.length * (FH + 2) + 4, W = LW + 6 * (CW + GAP), H = 12 + ANIMS.length * SECTION + BASE.length * BSECTION;
 const img = new Uint8ClampedArray(W * H * 4); fill(img, W, 0, 0, W, H, DIM);
-text(img, W, 2, 3, `${name} / ${lo}: reference left, forge right. same pose, same frame, feet on the same pixel`, INK);
+text(img, W, 2, 3, `${name} / ${lo}: reference x${S} left, forge right. under each: IoU / colour %`, INK);
 ANIMS.forEach((a, ai) => {
   const y0 = 12 + ai * SECTION, ms = msOf(a);
   text(img, W, 2, y0 + 2, a, INK);
   for (let f = 0; f < 6; f++) text(img, W, LW + f * (CW + GAP) + 2, y0 + 2, `f${f} ${ms ? ms[f] : ''}`, INK);
   DIRS.forEach((d, di) => {
-    const y = y0 + TH + di * (FH + 2);
+    const y = y0 + TH + di * RH;
     text(img, W, 2, y + 20, d, INK);
-    const s = stats[a][d]; if (s.refs) text(img, W, 2, y + 28, `${Math.round(100 * s.iou / s.refs)}`, INK);
+    const s = stats[a][d]; if (s.refs) { text(img, W, 2, y + 28, `${Math.round(100 * s.iou / s.refs)}`, INK); text(img, W, 2, y + 34, `${Math.round(100 * s.colour / s.refs)}`, INK); }
     for (let f = 0; f < 6; f++) {
       const x = LW + f * (CW + GAP), fr = frames[a][d][f];
       fill(img, W, x, y, FW, FH, BG); fill(img, W, x + FW + 2, y, FW, FH, BG);
       if (fr.ref) blit(img, W, x, y, fr.ref); else { fill(img, W, x, y, FW, FH, PANEL); text(img, W, x + 10, y + 21, 'NO REF', INK); }
       blit(img, W, x + FW + 2, y, fr.forge);
+      const c = s.cells[f]; if (c) text(img, W, x + 30, y + FH + 1, `${Math.round(100 * c.iou)} / ${Math.round(100 * c.colour)}`, INK);
     }
+  });
+});
+BASE.forEach((a, bi) => {
+  const y0 = 12 + ANIMS.length * SECTION + bi * BSECTION;
+  text(img, W, 2, y0 + 2, `bare base ${a}: casual clothes, no gear`, INK);
+  DIRS.forEach((d, di) => {
+    const y = y0 + TH + di * (FH + 2); text(img, W, 2, y + 20, d, INK);
+    for (let f = 0; f < 6; f++) { const x = LW + f * (CW + GAP) + FW / 2 + 1; fill(img, W, x, y, FW, FH, BG); blit(img, W, x, y, bare[a][d][f]); }
   });
 });
 fs.mkdirSync(OUT, { recursive: true });
@@ -153,13 +197,15 @@ fs.writeFileSync(path.join(OUT, `board-${name}.gif`), boardGif);
 // ---- report -----------------------------------------------------------------------------------------------------------
 const pct = v => (100 * v).toFixed(0).padStart(3) + '%';
 console.log(`board: ${ANIMS.length} anims x ${DIRS.length} dirs x 6 frames rendered in ${renderMs.toFixed(0)} ms`);
-console.log('anim    dir  IoU  colour  lone forge/ref (sum of 6 frames)');
-let sumI = 0, sumC = 0, nn = 0, lf = 0, lr = 0;
+console.log('anim    dir  IoU (min)  colour (min)  lone forge/ref (sum of 6 frames)');
+let sumI = 0, sumC = 0, nn = 0, lf = 0, lr = 0, mI = 1, mC = 1;
 for (const a of ANIMS) for (const d of DIRS) {
   const s = stats[a][d]; lf += s.lone; lr += s.refLone;
   if (!s.refs) { console.log(`${a.padEnd(7)} ${d.padEnd(3)}  no ref   lone ${s.lone}`); continue; }
-  sumI += s.iou / s.refs; sumC += s.colour / s.refs; nn++;
-  console.log(`${a.padEnd(7)} ${d.padEnd(3)} ${pct(s.iou / s.refs)}  ${pct(s.colour / s.refs)}   ${String(s.lone).padStart(3)}/${s.refLone}   shift ${s.shift}`);
+  sumI += s.iou / s.refs; sumC += s.colour / s.refs; nn++; mI = Math.min(mI, s.iou / s.refs); mC = Math.min(mC, s.colour / s.refs);
+  console.log(`${a.padEnd(7)} ${d.padEnd(3)} ${pct(s.iou / s.refs)} (${pct(s.minI)})  ${pct(s.colour / s.refs)} (${pct(s.minC)})   ${String(s.lone).padStart(3)}/${s.refLone}   shift ${s.shift}`);
 }
-console.log(`mean IoU ${pct(sumI / nn)}, colour ${pct(sumC / nn)}; lone pixels forge ${lf} vs reference ${lr} (${ANIMS.length * DIRS.length * 6} frames)`);
+console.log(`runtime compose: ${equal}/${composed} frames byte-equal to FORGE.render`);
+if (equal !== composed) process.exitCode = 1;
+console.log(`mean IoU ${pct(sumI / nn)} (worst cell ${pct(mI)}), colour ${pct(sumC / nn)} (worst ${pct(mC)}); lone pixels forge ${lf} vs reference ${lr} (${ANIMS.length * DIRS.length * 6} frames)`);
 console.log(`out/board-${name}.png ${2 * W}x${2 * H} sha256 ${crypto.createHash('sha256').update(boardPng).digest('hex').slice(0, 16)} | out/board-${name}.gif ${gframes.length} frames sha256 ${crypto.createHash('sha256').update(boardGif).digest('hex').slice(0, 16)}`);

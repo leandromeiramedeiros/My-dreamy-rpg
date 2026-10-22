@@ -30,7 +30,8 @@
 //   sockets: { name: { bone, at } }        exported per frame (hands, cast point, head top ...)
 //   anims: { name: { frames, pose(f) -> { bone: { rot, off, scl, aim, point, roll } } } }
 //            'attack:sword' style names: anim 'attack' picks the variant of the equipped weapon's class
-//   anims[].ms: [ms per frame] (read by board.js / the game);  anims[].smear: { frame: band width 0..1 } (weapon smears)
+//   anims[].ms: [ms per frame] (read by board.js / the game);  anims[].smear: { frame: band width 0..1, pivot?, reach?, lead?, tail? }
+//   (weapon smears, see smearPoly)
 //   innerColor: '#hex'                     seams (depth-jump lines) in this colour instead of the part's shadow tone
 //   pixel: { normalSteps }                 opt-in hand-pixel pass: posterised normals, spur removal, clusters >= 2 px
 //   sheetAnims: ['idle', 'walk', ...]      the columns of a loadout sheet (default: every anim)
@@ -444,26 +445,37 @@ const FORGE = (function () {
       for (let k = 0; k + 1 < xs.length; k += 2) for (let x = Math.max(0, Math.ceil(xs[k] - 0.5)); x <= Math.min(w - 1, Math.floor(xs[k + 1] - 0.5)); x++) set(y * w + x);
     }
   }
-  // the smear of one frame: the band the blade sweeps from frame f-1 to f. The hand -> tip vector is slerped in camera
-  // space (x, y on screen, d = depth) from one frame to the next, so the arc follows the 3D swing (over the shoulder, past
-  // the face) instead of a guess on screen; straight segments every 30 deg keep it angular; the band widens from the
-  // trailing end to the leading edge. s0 / s1 = the two frames' sockets, width = 0..1 of the blade
-  function smearPoly(s0, s1, hand, tip, width) {
-    const P = s => [s.x, s.y, s.d || 0], h0 = P(s0[hand]), h1 = P(s1[hand]), v0 = sub(P(s0[tip]), h0), v1 = sub(P(s1[tip]), h1);
+  // the smear of one frame: a wide crescent drawn in SCREEN space around a pivot socket (the sword shoulder by default).
+  // The pivot -> tip vector of frames f-1 and f is slerped in camera space (x, y on screen, d = depth: an orthonormal
+  // frame, so its length is the unforeshortened reach); only the swept screen ANGLE is taken from that 3D path (atan2,
+  // unwrapped), the radius is the full reach. So the crescent is as wide in S / N, where the swing plane is edge-on to
+  // the camera, as in E / W (a hand-drawn smear is drawn in the picture plane). Straight segments every 30 deg keep it
+  // angular; the band widens from the trailing end to the leading edge.
+  //   table = anims[].smear: { <frame>: width 0..1 of the reach, pivot?: socket, reach?: x radius, lead?: deg, tail?: deg }
+  function smearPoly(s0, s1, table, width) {
+    const pv = table.pivot || 'handR', P = s => [s.x, s.y, s.d || 0];
+    if (!s0[pv] || !s1[pv]) return [];
+    const p0 = P(s0[pv]), p1 = P(s1[pv]), v0 = sub(P(s0.tip), p0), v1 = sub(P(s1.tip), p1);
     const r0 = len(v0), r1 = len(v1), n0 = norm(v0), n1 = norm(v1), th = Math.acos(clamp(dot(n0, n1), -1, 1));
-    const n = Math.max(2, Math.ceil(th / (Math.PI / 6))), outer = [], inner = [];
+    const K = Math.max(4, Math.ceil(th / (Math.PI / 36))), ang = [];
+    for (let k = 0; k <= K; k++) {                              // the screen angle along the 3D path, unwrapped
+      const f = k / K, d = th > 1e-3 && th < Math.PI - 1e-3 ? add(mul(n0, Math.sin((1 - f) * th)), mul(n1, Math.sin(f * th))) : add(mul(n0, 1 - f), mul(n1, f));
+      let a = Math.atan2(d[1], d[0]); if (ang.length) { const q = ang[ang.length - 1]; while (a - q > Math.PI) a -= 2 * Math.PI; while (a - q < -Math.PI) a += 2 * Math.PI; }
+      ang.push(a);
+    }
+    const sg = Math.sign(ang[K] - ang[0]) || 1, tail = (table.tail || 0) * Math.PI / 180 * sg, lead = (table.lead || 0) * Math.PI / 180 * sg;
+    const A0 = ang[0] - tail, A1 = ang[K] + lead, span = Math.abs(A1 - A0), n = Math.max(2, Math.ceil(span / (Math.PI / 6)));
+    const R = (Math.max(r0, r1) + 0.6) * (table.reach || 1), outer = [], inner = [];
     for (let k = 0; k <= n; k++) {
-      const f = k / n, piv = add(mul(h0, 1 - f), mul(h1, f));
-      const dir = th > 1e-3 && th < Math.PI - 1e-3 ? norm(add(mul(n0, Math.sin((1 - f) * th)), mul(n1, Math.sin(f * th)))) : norm(add(mul(n0, 1 - f), mul(n1, f)));
-      const r = r0 + (r1 - r0) * f + 0.6, ri = r * (1 - width * (0.3 + 0.7 * f));
-      outer.push([piv[0] + dir[0] * r, piv[1] + dir[1] * r]); inner.push([piv[0] + dir[0] * ri, piv[1] + dir[1] * ri]);
+      const f = k / n, a = A0 + (A1 - A0) * f, c = add(mul(p0, 1 - f), mul(p1, f)), ri = R * (1 - width * (0.3 + 0.7 * f));
+      outer.push([c[0] + Math.cos(a) * R, c[1] + Math.sin(a) * R]); inner.push([c[0] + Math.cos(a) * ri, c[1] + Math.sin(a) * ri]);
     }
     return outer.concat(inner.reverse());
   }
   // smears of one frame from the sockets of frames f-1 and f (the same numbers in render() and compose(), so both match)
   function smearsOf(table, f, prev, cur, hex) {
-    if (!table || !table[f] || !prev || !cur || !hex || !prev.tip || !cur.tip || !cur.handR) return null;
-    return [{ poly: smearPoly(prev, cur, 'handR', 'tip', table[f]), rgb: hexRgb(hex), over: cur.tip.front }];
+    if (!table || !table[f] || !prev || !cur || !hex || !prev.tip || !cur.tip) return null;
+    return [{ poly: smearPoly(prev, cur, table, table[f]), rgb: hexRgb(hex), over: cur.tip.front }];
   }
   const resolveOpts = m => ({ outline: m.outline ? hexRgb(m.outline) : null, jumpQ: Math.round((m.innerLine != null ? m.innerLine : 2.5) * QS),
     innerColor: m.innerColor ? hexRgb(m.innerColor) : null, pixel: m.pixel || null });
