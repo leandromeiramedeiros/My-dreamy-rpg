@@ -48,16 +48,20 @@ const boots = {
     ]) })],
 };
 
-const CAPE = { thick: { walk: 0.6, attack: 0.25 }, walk: [1.35, 1.45, 1.4, 1.35, 1.45, 1.4], attack: [0.6, 1.25, 0.9, 0.7, 0.25, 0.2] };
+// the cape: hand-authored pixel parts per facing (models/ref-parts.js CAPE: fixed 12 px length) hung from the cape bone,
+// the scarf stays a volume. Secondary motion on a lagged 3-segment spring (forge.js springOf): the walk drives it forward
+// with a side kick on each step (frames 1, 4: the sway alternates), the attack swings it against the sword tip.
+const CAPE = { segs: 3, stiff: 0.45, damp: 0.45, warm: 3, min: { idle: 0.5, other: 1 },
+  drive: { walk: { fwd: [4, 4, 4, 4, 4, 4], side: [0, 2.5, 0, 0, -2.5, 0] } },
+  counter: { anims: ['attack'], bone: 'weapon', at: sc([0, 8.6, 0]), gain: 0.15 } };
 const cape = {
   id: 'cape', slot: 'back',
-  layers: [layer({ id: 'cape', mats: { cloth: RED }, prims: [
+  // two layers, so the cape's own layer holds the drawing alone (its pixel area is the drawing's, the scarf stacks on it)
+  layers: [layer({ id: 'scarf', group: 'cape', mats: { cloth: RED }, prims: [
     { bone: 'chest', mat: 'cloth', part: 'scarf', shape: 'ell', c: [0, 4.3, 0.2], r: [4.65, 2.15, 4.75] },
     { bone: 'chest', mat: 'cloth', part: 'scarf', shape: 'ell', c: [0, 3.0, 4.4], r: [2.2, 1.8, 1.0] },
-    { bone: 'cape', mat: 'cloth', part: 'cape', shape: 'cap', a: [0, -0.3, -0.3], b: [0, -8.8, -1.0], ra: 6.2, rb: 4.85, clip: [[0, 1, 0, 0], [0, -1, 0, 9.0]] },
-  ] })],
-  // the cape billows: rot about x per frame (pi/2 = straight back; more lifts it, so in S it shows above the head)
-  pose: (a, f) => { const k = a.split(':')[0], r = (CAPE[k] || [])[f], scl = [1, 1, CAPE.thick[k] || 0.25]; return { cape: r == null ? { scl } : { scl, rot: [r, 0, 0] } }; },
+  ] }), { id: 'cape', group: 'cape', mats: { cloth: RED }, prims: [],
+    sprites: [{ bone: 'cape', face: 'chest', part: 'cape', key: { r: ['cloth', 1], R: ['cloth', 0], N: NAVY }, dirs: PARTS.CAPE, spring: CAPE }] }],
 };
 
 const SHIELD = { rest: { aim: [-0.19, 1, 0], roll: [0.55, 0, 0.83] }, walk: { aim: [-0.07, 1, 0.05], roll: [0.6, 0, 0.8] } };

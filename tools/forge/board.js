@@ -4,7 +4,8 @@
 // (models/ref.js) with the 'hero' loadout's pieces (models/ref-gear.js) stacked by the RUNTIME path (FORGE.compose over a
 // freshly baked bank, PNG round trip included; each frame is also checked byte-equal to FORGE.render), same pose index,
 // same 48x48 frame, feet on the same pixel. Below that, the bare base alone (idle, walk) in 8 directions. Also
-// out/head-hair-zoom.png: the head and hair of every walk and attack frame, reference | forge, at 4x.
+// out/head-hair-zoom.png: the head and hair of every walk and attack frame, reference | forge, at 4x; out/cape-zoom.png:
+// the cape (walk, attack, idle x 8 dirs, reference | forge, 4x), and the cape's own pixel area per idle / walk frame.
 //   node tools/forge/board.js [model] [loadout]   -> out/board-<model>.png (2x) + out/board-<model>.gif (animated, 2x)
 // Prints per direction x anim: silhouette IoU, exact-colour match on the overlap (and, info only, IoU with 1 px tolerance
 // and the mean colour dE), the forge frame's lone pixels next to
@@ -228,6 +229,40 @@ const upN = (img, W, H, n) => { const o = new Uint8ClampedArray(W * H * n * n * 
 const zoomPng = png(4 * zW, 4 * zH, upN(zimg, zW, zH, 4));
 fs.writeFileSync(path.join(OUT, 'head-hair-zoom.png'), zoomPng);
 
+// ---- the cape zoom: per anim (walk, attack, idle) a block of 8 direction rows x 6 frames; each cell = reference | forge,
+// a 34 x 36 window from just above the head socket down past the hips, written at 4x
+const CW2 = 34, CH2 = 36, CA = ['walk', 'attack', 'idle'], CC = 2 * CW2 + 1, CG = 3, CL = 14, CB = 8 + DIRS.length * (CH2 + 3);
+const cW = CL + 6 * (CC + CG), cH = CA.length * CB, cimg = new Uint8ClampedArray(cW * cH * 4);
+fill(cimg, cW, 0, 0, cW, cH, DIM);
+CA.forEach((a, ai) => {
+  const y0 = ai * CB; text(cimg, cW, CL, y0 + 1, `${a} f0-5: reference left, forge right`, INK);
+  DIRS.forEach((d, di) => {
+    const y = y0 + 8 + di * (CH2 + 3); text(cimg, cW, 1, y + 15, d, INK);
+    for (let f = 0; f < 6; f++) {
+      const fr = frames[a][d][f], x = CL + f * (CC + CG), cx = Math.round(fr.head[0]) - CW2 / 2, cy = Math.round(fr.head[1]) - 2;
+      [fr.ref, fr.forge].forEach((src, k) => {
+        const x0 = x + k * (CW2 + 1); fill(cimg, cW, x0, y, CW2, CH2, src ? BG : PANEL); if (!src) return;
+        for (let yy = 0; yy < CH2; yy++) for (let xx = 0; xx < CW2; xx++) {
+          const sx = cx + xx, sy = cy + yy; if (sx < 0 || sy < 0 || sx >= FW || sy >= FH) continue;
+          const i = (sy * FW + sx) * 4; if (src[i + 3]) set(cimg, cW, x0 + xx, y + yy, [src[i], src[i + 1], src[i + 2]]);
+        }
+      });
+    }
+  });
+});
+const capePng = png(4 * cW, 4 * cH, upN(cimg, cW, cH, 4));
+fs.writeFileSync(path.join(OUT, 'cape-zoom.png'), capePng);
+// the cape's own pixel area per frame (the cape part of the baked cape sheet: its whole drawing, hidden or not)
+const capeArea = {};
+if (bank.sheets.cape) {
+  const sh = bank.sheets.cape, li = sh.meta.layers.findIndex(l => l.parts.includes('cape')), pi = sh.meta.layers[li].parts.indexOf('cape'), cols = bank.model.layout;
+  for (const a of ['idle', 'walk']) for (const d of DIRS) for (let f = 0; f < 6; f++) {
+    const c = cols.findIndex(l => l[0] === a && l[1] === f), q = sh.meta.cells[(li * DIRS.length + DIRS.indexOf(d)) * cols.length + c]; let n = 0;
+    if (q) for (let y = 0; y < q[3]; y++) for (let x = 0; x < q[2]; x++) { const o = ((q[1] + y) * sh.w + q[0] + x) * 4; if (sh.rgba[o + 3] && ((sh.rgba[o + 1] >> 3) & 15) === pi) n++; }
+    ((capeArea[d] = capeArea[d] || {})[a] = capeArea[d][a] || []).push(n);
+  }
+}
+
 // ---- report -----------------------------------------------------------------------------------------------------------
 const pct = v => (100 * v).toFixed(0).padStart(3) + '%';
 console.log(`board: ${ANIMS.length} anims x ${DIRS.length} dirs x 6 frames rendered in ${renderMs.toFixed(0)} ms`);
@@ -239,7 +274,9 @@ for (const a of ANIMS) for (const d of DIRS) {
   sumI += s.iou / s.refs; sumC += s.colour / s.refs; sumIT += s.iouT / s.refs; sumCE += s.colourE / s.refs; nn++; mI = Math.min(mI, s.iou / s.refs); mC = Math.min(mC, s.colour / s.refs);
   console.log(`${a.padEnd(7)} ${d.padEnd(3)} ${pct(s.iou / s.refs)} (${pct(s.minI)})  ${pct(s.colour / s.refs)} (${pct(s.minC)})  |  ${pct(s.iouT / s.refs)}    ${(s.colourE / s.refs).toFixed(1).padStart(5)}     |  ${String(s.lone).padStart(3)}/${s.refLone}   shift ${s.shift}`);
 }
+for (const d in capeArea) { const all = [...capeArea[d].idle, ...capeArea[d].walk], mid = (Math.max(...all) + Math.min(...all)) / 2;
+  console.log(`cape area ${d.padEnd(2)} idle ${capeArea[d].idle.join(' ')} | walk ${capeArea[d].walk.join(' ')} | ${Math.min(...all)}-${Math.max(...all)} px = ${mid.toFixed(0)} +-${(100 * (Math.max(...all) - mid) / mid).toFixed(1)}%`); }
 console.log(`runtime compose: ${equal}/${composed} frames byte-equal to FORGE.render`);
 if (equal !== composed) process.exitCode = 1;
 console.log(`mean IoU ${pct(sumI / nn)} (worst cell ${pct(mI)}), colour ${pct(sumC / nn)} (worst ${pct(mC)}) | info: IoU+-1px ${pct(sumIT / nn)}, mean dE ${(sumCE / nn).toFixed(1)}; lone pixels forge ${lf} vs reference ${lr} (${ANIMS.length * DIRS.length * 6} frames)`);
-console.log(`out/board-${name}.png ${2 * W}x${2 * H} sha256 ${crypto.createHash('sha256').update(boardPng).digest('hex').slice(0, 16)} | out/board-${name}.gif ${gframes.length} frames sha256 ${crypto.createHash('sha256').update(boardGif).digest('hex').slice(0, 16)} | out/head-hair-zoom.png sha256 ${crypto.createHash('sha256').update(zoomPng).digest('hex').slice(0, 16)}`);
+console.log(`out/board-${name}.png ${2 * W}x${2 * H} sha256 ${crypto.createHash('sha256').update(boardPng).digest('hex').slice(0, 16)} | out/board-${name}.gif ${gframes.length} frames sha256 ${crypto.createHash('sha256').update(boardGif).digest('hex').slice(0, 16)} | out/head-hair-zoom.png sha256 ${crypto.createHash('sha256').update(zoomPng).digest('hex').slice(0, 16)} | out/cape-zoom.png sha256 ${crypto.createHash('sha256').update(capePng).digest('hex').slice(0, 16)}`);

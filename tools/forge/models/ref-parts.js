@@ -227,6 +227,44 @@ const BACK = { at: [4, 4], rows: ['..BBBB..', '.BBssBB.', 'BssssssB', 'BssBBssB'
 const SHIELD_FACE = { S: ROUND, SE: ROUND, SW: ROUND, E: EDGE, W: EDGE, NE: null, N: null, NW: null };
 const SHIELD_BACK = { S: null, SE: null, SW: null, E: null, W: null, NE: BACK, N: BACK, NW: BACK };
 
+// THE CAPE (cape piece, cape bone = the top of the back; the grid's facing follows the chest, not the cape bone's own
+// swing). Measured on the reference x 1.19: 10 px wide seen square-on (N, S), 8 at the diagonals, 4 edge-on (E, W), and
+// 12 px from the shoulders to the hem in every view; only the facing foreshortens it, never the frame.
+//   r cloth   R cloth shadow (the lining seen from the front, the folds from behind)   N hem underside (navy)
+// Rest drawings; the variants are made from them by moves that keep the area (forge.js picks one per frame from a
+// lagged spring, see capeSet): trailL / trailR shear the cloth below the shoulders sideways in 2-row steps (the hem up to
+// `shear` px), lift raises the hem 1 px (one middle row out), billow raises the whole cape `billow` px.
+const span = (top, mid, n, hem) => [...top, ...Array(n).fill(mid), ...hem];
+const CAPE_REST = {
+  S: { at: [5, 0], rows: span(['rrrrrrrrrr', 'rrrrrrrrrr', 'rrRRRRRRrr'], 'rRRRRRRRRr', 7, ['.rRRRRRRr.', '.rRRRRRRr.']) },
+  SE: { at: [4, 0], rows: span(['rrrrrrrr', 'rrrrrrrr', 'rrRRRRrr'], 'rRRRRRRr', 7, ['.rRRRRr.', '.rRRRRr.']) },
+  E: { at: [3, 0], rows: span(['.rrr', 'rrRR'], 'rrRR', 8, ['.rRR', '.rRR']) },
+  NE: { at: [4, 0], rows: span(['rrrrrrrr', 'rrrrrrrr'], 'rRrrrRrr', 8, ['.rrrrrr.', '.NNNNNN.']) },
+  N: { at: [5, 0], rows: span(['rrrrrrrrrr', 'rrrrrrrrrr'], 'rrRrrrrRrr', 8, ['.rrrrrrrr.', '.NNNNNNNN.']) },
+  NW: { at: [4, 0], rows: span(['rrrrrrrr', 'rrrrrrrr'], 'rrRrrrRr', 8, ['.rrrrrr.', '.NNNNNN.']) },
+  W: { at: [0, 0], rows: span(['rrr.', 'RRrr'], 'RRrr', 8, ['RRr.', 'RRr.']) },
+  SW: { at: [4, 0], rows: span(['rrrrrrrr', 'rrrrrrrr', 'rrRRRRrr'], 'rRRRRRRr', 7, ['.rRRRRr.', '.rRRRRr.']) },
+};
+// per facing: the trail shear (px at the hem; edge-on views swing out the most, as a flag behind the runner) and the
+// billow rise (front views only: from behind, a cape streaming at the camera foreshortens instead, so no billow there)
+// from the front the cape hangs behind the body: moving, it rises `rise` px (it shows over the shoulders, as the
+// reference's running cape does); edge-on, the trail away from the body is a drawn flag of the same area (flag)
+const FLAG_E = { at: [11, 0], rows: ['.....rrrrrrr', '..rrrrrrrrrr', 'rrrrRRrrrRRr', 'rRRRRRRRRRR.', 'RR...RR.....'] };
+const FLAG_W = { at: [0, 0], rows: FLAG_E.rows.map(r => [...r].reverse().join('')) };
+const CAPE_MOVE = { S: { shear: 3, billow: 7, rise: 7 }, SE: { shear: 4, billow: 7, rise: 7 }, E: { shear: 6, flag: ['trailL', FLAG_E] },
+  NE: { shear: 4 }, N: { shear: 3 }, NW: { shear: 4 }, W: { shear: 6, flag: ['trailR', FLAG_W] }, SW: { shear: 4, billow: 7, rise: 7 } };
+function capeSet(g, mv) {
+  const H = g.rows.length, W = g.rows[0].length, sh = mv.shear;
+  const shear = k => g.rows.map((r, y) => { const d = Math.round(sh * Math.pow((y >> 1) * 2 / (H - 2), 1.5)) * k; return '.'.repeat(sh + d) + r + '.'.repeat(sh - d); });
+  const off = (dx, dy, rows) => ({ get at() { return [g.at[0] + dx, g.at[1] + dy]; }, rows, bias: g.bias });
+  const mid = H >> 1, up = mv.rise || 0, v = { rest: g, trailL: off(sh, up, shear(-1)), trailR: off(sh, up, shear(1)), lift: off(0, 0, [...g.rows.slice(0, mid), ...g.rows.slice(mid + 1)]) };
+  if (mv.billow) v.billow = off(0, mv.billow, g.rows);
+  if (mv.flag) v[mv.flag[0]] = Object.assign({ bias: g.bias }, mv.flag[1]);
+  return v;
+}
+for (const d of ['NE', 'N', 'NW']) CAPE_REST[d].bias = 3;   // from behind, the cape is the nearest cloth: over the plate's back
+const CAPE = Object.fromEntries(Object.entries(lint('CAPE', CAPE_REST)).map(([d, g]) => { const v = capeSet(g, CAPE_MOVE[d]); for (const k in v) lint(`CAPE.${d}`, { [k]: v[k] }); return [d, v]; }));
+
 // load-time lint: equal row widths, no lone pixel of one character (the build lint's rule, per drawing)
 function lint(name, set) {
   for (const [d, g] of Object.entries(set)) {
@@ -243,5 +281,5 @@ function lint(name, set) {
 }
 
 const HAIR = Object.fromEntries(Object.entries(lint('HEAD', HEAD)).map(([d, g]) => { const v = flow(g); for (const k in v) lint(`HAIR.${d}`, { [k]: v[k] }); return [d, v]; }));
-module.exports = { HEAD, HAIR, PLATE: lint('PLATE', PLATE), PAULDRON: lint('PAULDRON', PAULDRON), HAND: lint('HAND', HAND), SHIRT,
+module.exports = { HEAD, HAIR, CAPE, CAPE_REST, PLATE: lint('PLATE', PLATE), PAULDRON: lint('PAULDRON', PAULDRON), HAND: lint('HAND', HAND), SHIRT,
   SHIELD_FACE: lint('SHIELD_FACE', SHIELD_FACE), SHIELD_BACK: lint('SHIELD_BACK', SHIELD_BACK), lint };

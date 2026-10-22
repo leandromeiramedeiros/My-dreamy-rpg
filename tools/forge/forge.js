@@ -64,6 +64,9 @@
 //         VARIANTS = { rest: GRID, trailL?, trailR?, lift? }: secondary motion (hair). With `flow` the frame's variant is picked
 //         from the bone's motion over the last two frames (flowOf); without it, rest. flow = { at?, follow, min (px, or
 //         per anim { idle, other }), travel?: { anim: [px per frame along the facing] } }
+//         spring = { segs, stiff, damp, min, drive?: { anim: { fwd?, side?, up?: [px per frame] } }, counter?: { anims,
+//         bone, at, gain } }: cloth (a cape) on a lagged spring chain, variants rest / trailL / trailR / lift / billow (springOf).
+//         face: the bone whose facing picks the grid (default the sprite's bone; a cape follows the chest, not its swing)
 // PIECE = { id, slot, family?, tier?, class?, hides:[tags], layers:[LAYER], pose?(anim, f), tiers?:[ { mat: ramp } ], sockets?, smear? }
 //   smear: '#hex' a weapon with a 'tip' socket draws the anim's smear frames in this flat colour (hand -> tip path)
 //   family + tier: one baked piece per shape tier (knighthelm.t3); tiers: palette-only variants of one baked piece
@@ -226,9 +229,10 @@ const FORGE = (function () {
   // anim (model.loops, default idle and walk), null before frame 0 of any other (an attack starts from rest)
   function history(model, yaw, anim, f, extra) {
     const A = model.anims[anim] || model.anims.idle, loop = (model.loops || ['idle', 'walk']).includes(anim.split(':')[0]), memo = {};
-    return { f, fwd: mv(ry(yaw), [0, 0, 1]), past: k => {
+    const at = g => memo[g] || (memo[g] = { W: pose(model, yaw, anim, g, extra), f: g });
+    return { f, loop, frames: A.frames, fwd: mv(ry(yaw), [0, 0, 1]), right: mv(ry(yaw), [-1, 0, 0]), at, past: k => {
       let g = f - k; if (g < 0) { if (!loop) return null; g = ((g % A.frames) + A.frames) % A.frames; }
-      return memo[g] || (memo[g] = { W: pose(model, yaw, anim, g, extra), f: g }); } };
+      return at(g); } };
   }
   const worldPoint = (W, bone, at) => { const B = W[bone]; return add(B.t, mv(B.R, [at[0] * B.s[0], at[1] * B.s[1], at[2] * B.s[2]])); };
 
@@ -299,6 +303,37 @@ const FORGE = (function () {
     if (Math.abs(ox) >= min && Math.abs(ox) >= Math.abs(oy)) return ox < 0 ? 'trailL' : 'trailR';
     return oy < 0 ? 'lift' : 'rest';
   }
+  // cloth secondary motion (a cape): a chain of `segs` damped springs hung from the sprite's bone point, driven by that
+  // point's screen motion plus the anim's drive impulses (px per frame along the hero's fwd / side (his right) / up) and,
+  // in the `counter` anims, minus `gain` x the screen motion of a counter point (the sword tip: the cloth swings against
+  // the blade). Run from frame 0 over `warm` whole loops (default 1; an anim that does not loop holds its frame 0 instead),
+  // then on to this frame: the result depends on (anim, frame) only. The hem's lag (last segment - anchor; screen x, y and
+  // depth) picks the variant: under `min` px rest; sideways >= min and >= half the rest: trailL / trailR; else mostly in
+  // depth: billow (falls back to lift, then rest, where a facing has none); else hem pushed up: lift; down: rest.
+  function springOf(sp, hist, proj, cam, anim) {
+    const sg = sp.spring, A = anim.split(':')[0], dr = (sg.drive || {})[A] || {}, at = sp.at || [0, 0, 0];
+    const vec = v => [dot(v, cam.RT), -dot(v, cam.UP), dot(v, cam.D)], F = vec(hist.fwd), S = vec(hist.right), U = vec([0, 1, 0]);
+    const ct = sg.counter && sg.counter.anims.includes(A) ? sg.counter : null, seq = [];
+    for (let i = 0; i < hist.frames * (sg.warm || 1); i++) seq.push(hist.loop ? i % hist.frames : 0);
+    for (let i = 0; i <= hist.f; i++) seq.push(i);
+    const n = sg.segs || 3, x = [], v = []; let drift = [0, 0, 0], tip0 = null;
+    seq.forEach((g, s) => {
+      const Wg = hist.at(g).W;
+      if (s) for (const [ax, key] of [[F, 'fwd'], [S, 'side'], [U, 'up']]) drift = add(drift, mul(ax, (dr[key] || [])[g] || 0));
+      if (ct) { const tp = proj(worldPoint(Wg, ct.bone, ct.at)); if (tip0) drift = sub(drift, mul(sub(tp, tip0), ct.gain)); tip0 = tp; }
+      const a = add(proj(worldPoint(Wg, sp.bone, at)), drift);
+      if (!x.length) for (let k = 0; k <= n; k++) { x.push(a.slice()); v.push([0, 0, 0]); }
+      x[0] = a;
+      for (let k = 1; k <= n; k++) { v[k] = add(mul(v[k], sg.damp), mul(sub(x[k - 1], x[k]), sg.stiff)); x[k] = add(x[k], v[k]); }
+    });
+    const o = sub(x[n], x[0]), min = typeof sg.min === 'number' ? sg.min : sg.min[A] || sg.min.other, [ax, ay, ad] = o.map(Math.abs);
+    if (Math.hypot(ax, ay, ad) < min) return 'rest';
+    if (ax >= min && ax >= 0.5 * Math.max(ay, ad)) return o[0] < 0 ? 'trailL' : 'trailR';
+    if (ad >= ay) return 'billow';
+    return o[1] < 0 ? 'lift' : 'rest';
+  }
+  const FALLBACK = { billow: 'lift', lift: 'rest' };
+  function variant(set, name) { while (name && !set[name]) name = FALLBACK[name]; return set[name] || set.rest; }
   function raster(layer, W, cam, anim, frame, rootT, hist) {
     const { w, h, ox, oy, D, RT, UP, L, T } = cam, N = w * h, mt = matTable(layer), pl = partList(layer), H = norm(sub(L, D));
     const G = { cov: new Uint8Array(N), mat: new Uint8Array(N), part: new Uint8Array(N), tone: new Uint8Array(N), flat: new Uint8Array(N), keep: new Uint8Array(N), dq: new Uint8Array(N) };
@@ -358,8 +393,8 @@ const FORGE = (function () {
     // sprites: hand-authored pixel parts, one grid per facing, pinned to a bone point at that point's depth
     for (const sp of layer.sprites || []) {
       if (sp.when && !sp.when(anim, frame)) continue;
-      let g = spriteGrid(sp, W[sp.bone].R); if (!g) continue;
-      if (!g.rows) g = g[sp.flow && hist ? flowOf(sp, W, hist, proj, cam, anim) : 'rest'] || g.rest;
+      let g = spriteGrid(sp, W[sp.face || sp.bone].R); if (!g) continue;
+      if (!g.rows) g = variant(g, !hist ? 'rest' : sp.flow ? flowOf(sp, W, hist, proj, cam, anim) : sp.spring ? springOf(sp, hist, proj, cam, anim) : 'rest');
       const [sx, sy, t0] = proj(worldPoint(W, sp.bone, sp.at || [0, 0, 0])), t = t0 - (g.bias != null ? g.bias : sp.bias || 0), part = pl.index[sp.part || sp.bone];
       const X = Math.floor(sx) - g.at[0], Y = Math.floor(sy) - g.at[1];
       g.rows.forEach((row, r) => { for (let c = 0; c < row.length; c++) {
