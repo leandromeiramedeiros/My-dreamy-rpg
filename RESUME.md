@@ -24,6 +24,7 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
   approval is by the client's eye (scores are info).
 
 ## Next
-1. Both follow-ups green → commit → full check.js → client plays the M4a slice. OPEN QUESTION to the client: play locally now
-   (local server, phone over Wi-Fi) or after fixes on the live site (merge M4a PR to claude/dreamy-rpg-concept).
+1. Both follow-ups green → commit → full check.js → merge the M4a PR to claude/dreamy-rpg-concept → client plays the
+   slice on the live site (client's pick, 2026-10-22). One Opus employee is finishing both follow-ups (status ≤ 0.5 ms,
+   shaman height, hound tone, pre-warm proof, full gate); fast gate was 6/6 green, status 0.66 ms before it started.
 2. After all branches merge: purge tools/qa/old from history (filter-repo + force-push; client-approved).
