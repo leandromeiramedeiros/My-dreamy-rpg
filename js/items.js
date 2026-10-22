@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// Items, loot, gems, XP and save (DESIGN §3–4, §19, §23, §24). ITEMS (data.js) are the live gear FAMILIES (weapon
+// Items, loot, gems, XP and save (docs/design/progression-economy-saves.md, docs/design/items.md, docs/design/weapons-and-skills.md, docs/design/armour-suits.md). ITEMS (data.js) are the live gear FAMILIES (weapon
 // variants, armour pieces) that decide skills + sprites; BASES are their tiers. Loaded by index.html and editor.html
 // right after data.js (js/itemdata.js follows it): no hud/render/main deps at load time.
 //
@@ -184,7 +184,7 @@ function makeUnique(id, ilvl) {
   return makeItem(base, U.mythic ? 'mythic' : 'legendary', Math.max(ilvl, BASES[base].reqLvl), { unique: id });
 }
 
-// ===== gems (DESIGN §4.3) ==========================================================
+// ===== gems (docs/design/items.md) ==========================================================
 const GEM_GRADES = ['Chipped', 'Clear', 'Radiant'], GEM_MAX = 3;
 const G5 = a => g => a[g - 1];   // per-grade value table (grade 1..3)
 // §20.4 gem budget (M2b balsim): Chipped 4 pp, Clear 8, Radiant 14 on the stronger side (1 pp = 1 % DPS or eHP;
@@ -414,7 +414,7 @@ function drawRarityFrame(ctx, x, y, s, rarity, t = G.t) {
   if (R.i >= 4) { const k = (t * 0.6) % 1; ctx.fillStyle = rgba('#ffffff', 0.5); ctx.fillRect(x + 2 + Math.round((s - 6) * k), y + 2, 2, 2); ctx.fillRect(x + s - 4 - Math.round((s - 6) * k), y + s - 4, 2, 2); }
 }
 
-// ===== XP / levels (DESIGN §3) ===========================================================
+// ===== XP / levels (docs/design/progression-economy-saves.md) ===========================================================
 
 const xpToNext = L => Math.round(60 * Math.pow(L, 1.55));
 function gainXp(p, n) {
@@ -696,7 +696,7 @@ function gearAction(a) {
 function openInv(tab) { G.ui.open = true; G.ui.tab = tab || G.ui.tab || 'inv'; G.ui.gem = null; G.ui.salvage = false; G.mouse.down = false; }
 function closeInv() { if (!G.ui.open) return; G.ui.open = false; G.ui.gem = null; G.ui.salvage = false; G.ui.sel = null; G.ui.teach = null; saveGame(); }
 function invNote(s, col = '#ffb0c8') { G.ui.note = { s, col, t: G.t + 2.6 }; if (col === '#ffb0c8') sfx('hurt'); }
-// touch and gamepad are select-then-select (CONTROLS.md): the first tap / A shows the item, the second acts
+// touch and gamepad are select-then-select (docs/design/controls.md): the first tap / A shows the item, the second acts
 const secondTap = key => { if (!(G.touch || (typeof IN !== 'undefined' && IN.device === 'pad')) || G.ui.sel === key) return true; G.ui.sel = key; return false; };
 function clickItem(it) {
   const p = G.player;
@@ -796,7 +796,7 @@ function pickup(p, d) {
     if (d.teach && !worn && openingActive()) delay(0.7, () => teachEquip(p, d.it));
   }
   sfx(RARITY[d.rar].i >= 3 ? 'loot' : 'pickup');
-  if (typeof UI !== 'undefined' && d.kind !== 'potion') {   // loot toast on the right edge (HUD.md)
+  if (typeof UI !== 'undefined' && d.kind !== 'potion') {   // loot toast on the right edge (docs/design/hud-ui.md)
     if (d.kind === 'gem') UI.toast({ text: gemName(d.gem), icon: gemIcon(gemParse(d.gem).type), col: gemParse(d.gem).def.col });
     else UI.toast({ text: itemName(d.it), icon: itemIcon(d.it), rarity: d.it.rarity, item: d.it });
   } else if (typeof UI !== 'undefined') UI.toast({ text: '+1 Potion', icon: miscIcon('potion'), col: '#ff8fa8' });
@@ -982,7 +982,7 @@ function writeSlotIndex() { try { localStorage.setItem('dreamy.slots', JSON.stri
 function selectSlot(n) { G.saveSlot = clamp(n | 0, 1, SAVE_SLOTS); G.save = SAVE_ON ? readSave() : null; try { localStorage.setItem('dreamy.slot', String(G.saveSlot)); } catch (e) { /* ignore */ } return G.save; }
 // showcase / play-test / ?map= runs never touch the real save
 const SAVE_ON = (() => { try { const q = new URLSearchParams(location.search); return !q.get('scene') && !q.get('playtest') && !q.get('map'); } catch (e) { return false; } })();
-// Save shape v4 (DESIGN §16.5, §19.7): { version, slot, player, skills, world, bosses, bestiary, fishing, quests, zone100,
+// Save shape v4 (docs/design/progression-economy-saves.md, docs/design/items.md): { version, slot, player, skills, world, bosses, bestiary, fishing, quests, zone100,
 // settings, bindings, stats }. player.equip has every EQUIP_SLOTS key (null = empty), items are the v2 shape (top of file),
 // skills.wsk is keyed by weapon variant, skills.runes holds rune tokens ('skill_rune' = unbound) and bound runes as
 // 'variant:slot' (e.g. 'sword:q' = the Sword's Q rune alternate, §23). The ultimate charge is not saved.

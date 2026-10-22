@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// PARTS_ART - the parts kit (DESIGN 23.6 / 24): a weapon or armour LOOK is data, not drawing code.
+// PARTS_ART - the parts kit (docs/design/weapons-and-skills.md, docs/design/armour-suits.md): a weapon or armour LOOK is data, not drawing code.
 //
 //   look = TEMPLATE (one silhouette per variant / suit, ASCII) + TIER TABLE (5 rows: a palette + a few part swaps)
 //
@@ -228,7 +228,7 @@ const PARTS_ART = (function () {
 })();
 
 // =====================================================================================================================
-// LIVE WEAPONS: sword / staff / bow x 5 tiers (grey -> ornate -> sun-etched -> glowing -> light, DESIGN 23.3)
+// LIVE WEAPONS: sword / staff / bow x 5 tiers (grey -> ornate -> sun-etched -> glowing -> light, docs/design/weapons-and-skills.md)
 // =====================================================================================================================
 (function () {
   const { KITS } = PARTS_ART;
@@ -696,7 +696,7 @@ const PARTS_ART = (function () {
 })();
 
 // =====================================================================================================================
-// DEMO (preview only, NOT reachable in game): one PLANNED variant written the kit way - the RAPIER (DESIGN 23.3: Tin Needle /
+// DEMO (preview only, NOT reachable in game): one PLANNED variant written the kit way - the RAPIER (docs/design/weapons-and-skills.md: Tin Needle /
 // Moonpoint / Silver Estoc / Starpoint / Needle Eternal). This is everything a new variant costs: one template (the rows below),
 // one tier table (palette + part names), and the few stamps no other variant already has. Nothing else (no hero.js, no icons.js).
 // It lives in PARTS_ART.DEMO, not KITS, so HERO / the game never see it unless a look sets demo:true (tools/hero-preview.html does).

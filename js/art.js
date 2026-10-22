@@ -457,7 +457,7 @@ function deadTree(seed) {
   return pb.toCanvas();
 }
 
-// ===== Trees v2 (DESIGN §29 G2; world-art minutes §2.1) ==============================================================
+// ===== Trees v2 (docs/design/world-maps.md G2; world-art minutes §2.1) ==============================================================
 // canopyTree(seed, S) (broadleaf) and pineTree2(seed, S) return the COMPOSITE canvas (trunk + canopy: what the editor, the
 // shadow tiles, hit tests and audits read; ART.trees.* / ART.pines.* stay canvas arrays) carrying the parts render.js splits:
 //   c.trunk    trunk, root toes, branches, baked 4 px AO ellipse        c.canopy  the leaves (drawn OVER the hero, fades)
@@ -735,7 +735,7 @@ function buildTreesV2() {
   ART.bushV2 = frozenTrees('bush2_') || buildBushes();
 }
 
-// ===== ground decals (DESIGN §29 G2; world-art minutes §2.3) ========================================================
+// ===== ground decals (docs/design/world-maps.md G2; world-art minutes §2.3) ========================================================
 // 16 flat kinds per zone, coloured from the theme's own ramps, baked into the ground chunks / column tops by maps.js (never in
 // the y-sort, no collider). Each kind has 2-3 shape variants. Every mark is >= 2 px in some direction and sits 1-2 ramp steps from
 // the ground it lies on, so a decal never reads as a speck. DECAL_KINDS order = the kind index maps.js stores.
@@ -1012,7 +1012,7 @@ function buildCloud(seed, w, h, pal, alpha = 255) {
   return pb.toCanvas();
 }
 
-// cloud sea tile (DESIGN §29 island edge v2): a 256 x 96 band of soft, dense cloud, tileable in x (period-8 noise over 256 px),
+// cloud sea tile (docs/design/world-maps.md island edge v2): a 256 x 96 band of soft, dense cloud, tileable in x (period-8 noise over 256 px),
 // billowy and lit on top, opaque at the bottom (drawCloudSea fills below it with `base`). layer 0 = the far layer, 1 = the near one.
 // Pure hash noise (no seedRng), so building it never disturbs seeded generation.
 function buildSeaTile(th, seed, layer) {

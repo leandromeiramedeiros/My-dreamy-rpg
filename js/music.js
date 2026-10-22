@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------
 // music.js — all MUSIC DATA for the game (patches + patterns). No audio code lives here except the tiny pure
 // parser at the bottom (MUSIC_UTIL), shared by tools/music-preview.html and the real engine (js/audio.js).
-// Classic script, no dependencies; works from file://. Authoritative spec: docs/AUDIO.md.
+// Classic script, no dependencies; works from file://. Authoritative spec: docs/design/audio.md.
 //
 // IDENTITY: "music box in a cathedral" — celesta/music-box leads, soft square pads, sub-sine bass, generous reverb.
 //
@@ -11,7 +11,7 @@
 // One cell = one 16th-note STEP:
 //     meter '4/4' -> 16 cells per bar   (bpm = quarter notes per minute; step = 60/bpm/4 s)
 //     meter '6/8' -> 12 cells per bar   (bpm = DOTTED-quarter beats per minute, 2 beats per bar; step = 60/bpm/6 s)
-//   (The single deviation from AUDIO.md's "16-step bar": 16 sixteenths cannot hold six eighths. Engine: stepsPerBar
+//   (The single deviation from docs/design/audio.md's "16-step bar": 16 sixteenths cannot hold six eighths. Engine: stepsPerBar
 //    = MUSIC_UTIL.stepsPerBar(meter).)  In 6/8 an eighth = 2 cells, a dotted quarter = 6; lullaby lilt = "quarter + eighth" = 4+2.
 //
 // MELODIC layers (pad, bass, lead, extra):

@@ -1,5 +1,5 @@
 // Sound effect recipes, boss telegraph cues and sound captions.
-// Plain data, synthesized at runtime (docs/AUDIO.md, "Sound design" and "Mixing rules").
+// Plain data, synthesized at runtime (docs/design/audio.md, "Sound design" and "Mixing rules").
 // Layer: { osc: sine|square|triangle|saw|noise, f0, f1 (Hz, sweeps f0 -> f1), dur (s), gain,
 //          filter?: { type, freq, q }, delay? (s offset inside the sound) }
 // prio 0-3 (higher wins voice stealing), bus sfx|ui|ambient, vary = pitch randomization (0 = none).

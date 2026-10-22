@@ -5,7 +5,7 @@
 // the three CHARACTER skills (1 2 3) are chosen freely by the player. `label` = the variant's display name;
 // `name` stays the family's M2 name (it is also the T2 base name and the basic-attack tooltip).
 // ---------------------------------------------------------------------------
-// ===== weapons (DESIGN §23): WEAPONS[class].variants[variantId] ==========================================================
+// ===== weapons (docs/design/weapons-and-skills.md): WEAPONS[class].variants[variantId] ==========================================================
 // A class owns the rhythm + passive (text only until M4); a variant owns its element, Q/E/R (index 0 = the base skill,
 // index 1 = its Skill Rune alternate) and its look. A `planned: 'M4'` row is a NAME-ONLY placeholder: no basic, no skills,
 // no FAMILY_TIERS / BASES row, so nothing can drop, equip or migrate into it. `legacy` = the pre-v4 family id (save v3).
@@ -39,7 +39,7 @@ const WEAPONS = {
     fans: { id: 'fans', label: 'Fans', name: 'Fans', planned: 'M7' },
   } },
 };
-// ===== armour (DESIGN §24): ARMOUR[class].suits[suitId].pieces[slot] =====================================================
+// ===== armour (docs/design/armour-suits.md): ARMOUR[class].suits[suitId].pieces[slot] =====================================================
 // The chest piece's family id IS the suit id (warden / dreamweave / stalker). Helm and boots pieces keep their own family
 // ids (knighthelm ...): the live sprite sheets and FAMILY_TIERS are keyed by them. Each sits in the suit whose C / Shift
 // skill it carries per §24. A null piece or a `planned` suit is not built yet (nothing drops it). Pieces mix freely;
@@ -114,9 +114,9 @@ function targetIn(p, tx, ty, range) {
   return [p.x + (tx - p.x) / d * range, p.y + (ty - p.y) / d * range];
 }
 
-// element = damage type per DESIGN §5b: slash | pierce | fire | frost | nature | lightning | arcane | holy (gloom: enemies only).
+// element = damage type per docs/design/elements-statuses.md: slash | pierce | fire | frost | nature | lightning | arcane | holy (gloom: enemies only).
 // stagger (0-3) rides on heavy hits (stored on the target; the stagger bar is M4). Gems amplify by element (items.js).
-// weight = hitlag weight w (DESIGN §27): basic / light 1 (default), heavy 1.5, ultimate 2. It replaces the old explicit
+// weight = hitlag weight w (docs/design/combat-feel.md): basic / light 1 (default), heavy 1.5, ultimate 2. It replaces the old explicit
 // hitstop() calls: game.js hitlag() freezes the target clamp(round((2 + 6r) w), 2, 8) steps and picks the global freeze.
 const SKILLS = {
   // ---------------- Sword (blades; was the Dawnblade family) ----------------

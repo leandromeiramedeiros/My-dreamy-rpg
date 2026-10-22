@@ -35,7 +35,7 @@ let CAST = null;
 function withCast(c, fn) { const o = CAST; CAST = c; try { fn(); } finally { CAST = o; } }
 const delay = (t, fn) => G.delays.push({ t, fn, c: CAST });
 const shake = a => { if (CAST && CAST.src === 'echo') return; G.shakeA = Math.max(G.shakeA, a * (typeof shakeMul === 'function' ? shakeMul() : 1)); };
-// ===== hit feel: power-scaled hitlag (DESIGN §27, meeting 2026-10-20 R2) ===================================
+// ===== hit feel: power-scaled hitlag (docs/design/combat-feel.md, meeting 2026-10-20 R2) ===================================
 // Two tiers, both counted in fixed STEPs (1/60 s), never seconds, so slow-mo cannot stretch them:
 //  * target-only freeze e.hitFreeze (damageEnemy, every non-DoT hit): the struck enemy skips AI / move / knockback and
 //    shows its hit frame; costs no input latency.
@@ -84,7 +84,7 @@ function aggEnd(A) {
 }
 const fx = o => { o.t = 0; G.effects.push(o); return o; };
 const zone = o => { o.t = 0; o.tickT = 0; o.cast = CAST; G.zones.push(o); return o; };
-// ===== particles: pooled, hard cap PART.cap (DESIGN §0 / §16.6.5) ===========================================
+// ===== particles: pooled, hard cap PART.cap (docs/design/pillars-and-rules.md) ===========================================
 // Combat bursts go through burst(); ambient motes (petals, mist, sparkles…) through addPart(o) and are the first
 // to go: they are skipped by budget and when the pool is full, while a full pool evicts ambient motes for combat.
 // PART.budget (0.35..1) scales with measured frame time (main.js), so a struggling device sheds particles first.
@@ -127,7 +127,7 @@ const pick2 = arr => arr[(Math.random() * arr.length) | 0];
 function text(x, y, z, s, col, big = false, life = 0.9) { const t = { x, y, z, s, col, big, t: 0, life, vx: frand(-0.6, 0.6) }; G.texts.push(t); return t; }
 // damage numbers respect the settings toggle (reveals like WEAK: FIRE always show)
 // o = { e: enemy, kind: 'crit'|'weak'|'resist'|'normal', v: raw damage }: the HUD styles by kind; hits on the same enemy
-// within 80 ms merge into one number (HUD.md)
+// within 80 ms merge into one number (docs/design/hud-ui.md)
 function dmgText(x, y, z, s, col, big, o) {
   if (typeof damageNumbersOn === 'function' && !damageNumbersOn()) return;
   if (o && o.e) {
@@ -351,7 +351,7 @@ function slotSkill(p, slot) {
 // the bare-handed hero (§28): LMB is a shove (1 damage, a little knockback, no skills), SHIFT a barefoot roll
 const UNARMED = { name: 'Bare hands', kind: 'unarmed', element: 'slash', basic: { name: 'Shove', dmg: 1, rate: 0.5 }, roll: 'roll' };
 const weaponOf = p => (p.equip.weapon ? item('weapon', p.gear.weapon) : UNARMED);
-// ===== skill casting: ultimate charge, dodge-cancel, ranks and modifiers (DESIGN §15.2–15.3) ===================
+// ===== skill casting: ultimate charge, dodge-cancel, ranks and modifiers (docs/design/loadout.md) ===================
 const SLOT_ACTION = { lmb: 'attack', q: 'skillQ', e: 'skillE', r: 'skillR', f: 'skillF', c: 'skillC', shift: 'dodge', 1: 's1', 2: 's2', 3: 's3', pot: 'potion' };
 const CANCEL_AFTER = 0.1;            // dodge cancels a cast only after its first 0.1 s (buffered until then)
 const RANK_HITS = 25, RANK_MAX = 5, RANK_BONUS = 0.06;
@@ -777,7 +777,7 @@ function updatePlayer(p, dt) {
 
 const ORBIT_CAST = { skill: 'orbit', el: 'arcane' };
 
-// ===== HUD getters (read-only views the HUD draws from; docs/HUD.md) =========================================
+// ===== HUD getters (read-only views the HUD draws from; docs/design/hud-ui.md) =========================================
 // ultCharge(p) 0..1 · ultReady(p) · skillSlotState(p, slot) · heroStatuses(p) · interactPrompt() · skillInfo(p, id)
 const ultCharge = (p = G.player) => clamp((p.ult || 0) / 100, 0, 1);
 const ultReady = (p = G.player) => (p.ult || 0) >= 100;
@@ -811,7 +811,7 @@ function heroStatuses(p = G.player) {
 }
 const interactPrompt = () => G.prompt && G.state === 'play' && !G.ui.open ? Object.assign({ glyph: typeof IN !== 'undefined' ? IN.glyph('interact') : 'SPACE' }, G.prompt) : null;
 
-// ===== aim: mouse cursor, twin-stick (sticky) or auto, with aim assist on stick/touch only (CONTROLS.md) ======
+// ===== aim: mouse cursor, twin-stick (sticky) or auto, with aim assist on stick/touch only (docs/design/controls.md) ======
 // Writes the canonical aim cursor G.mouse.{wx,wy} (world) + {x,y} (view) that skills, render and HUD read.
 function viewDirToWorld(sx, sy) { const [wx, wy] = toWorld(sx, sy), l = Math.hypot(wx, wy) || 1; return [wx / l, wy / l]; }
 // auto target: nearest living enemy in range, preferring elites/bosses and the one you hit last
@@ -1151,7 +1151,7 @@ function killEnemy(e, dmg = 0, o = {}) {
   if (e.boss) { shake(14); hitstop(15, true); G.slowmo = 1.4; G.shrink = null; }   // 15 steps = 0.25 s real (main.js counts it before slow-mo)
 }
 
-// ===== corpses: the death fling (DESIGN §27, meeting R1) ===========================================================
+// ===== corpses: the death fling (docs/design/combat-feel.md, meeting R1) ===========================================================
 // Not a ragdoll: a pooled record per body (cap 8 phone / 12 desktop; full -> the oldest dissolves now). Never a
 // nameplate, light or hit target (it is not in G.enemies). Pixel sprites are never rotated (render.js drawCorpse).
 //   fling : arcs away from the hit (speed 2.5 + 5r t/s, vz 3 + 5r, grav 14), bounces once (vz x -0.35, v x 0.5, squash
@@ -1229,7 +1229,7 @@ function playerIn(shape) {
   return false;
 }
 
-// ===== enemy sleep (DESIGN §25.2) ======================================================================
+// ===== enemy sleep (docs/design/world-maps.md) ======================================================================
 // Every non-boss, non-dummy enemy farther than SLEEP.dist tiles from the hero is DORMANT (e.dormant; not parts.js
 // `e.asleep`, which is the dormant-until-woken movement part): it runs no parts, moves, attacks or animation, only a
 // 1 Hz heartbeat (status timers, spawn-in, burn ticks, cooldowns). The distance ranking itself is O(n) per frame, so
@@ -1395,7 +1395,7 @@ function applyTuning(t) {
 //   spawnPack { id, at: { x, y } | 'x,y', radius = 1.5, elite } spawns an ENCOUNTERS pack (js/enemydata.js) by id, its
 //     members ringed around `at` (default: beside the hero), tagged e.pack = id. A pack's `after` rule is NOT checked
 //     here: the trigger's own `requires` gates it.
-// Big maps (DESIGN §25; contract in the maps.js header):
+// Big maps (docs/design/world-maps.md; contract in the maps.js header):
 //   warp { to: { x, y } | '<anchorId>' }  a 0.4 s fade warp inside this map (startWarp): no load, trigger state, enemies
 //     and the arena all stay; the hero is rooted for the fade and the camera snaps at its peak.
 //   closeGate { id }  shut a barrier (an arena gate placed with open: true) for a fight; never saved.

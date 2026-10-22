@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Smoke test: opens every game/editor page in headless Chromium, pokes some input,
 // saves a screenshot and fails on any console error or uncaught page exception, then runs tools/balsim.js --quiet
-// and fails on any of its red flags (DESIGN §20.7), then runs tools/save-migrate.js (the save v3 -> v4 gate).
+// and fails on any of its red flags (docs/design/balance.md), then runs tools/save-migrate.js (the save v3 -> v4 gate).
 // Usage: node tools/smoke.js [extra-scene-name ...]
 const http = require('http');
 const fs = require('fs');

@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// bosses.js — the BOSS_MOVES library (STORY.md "BOSS_MOVES library") and the boss table BOSSES. Bosses are DATA:
+// bosses.js — the BOSS_MOVES library (docs/design/story.md "BOSS_MOVES library") and the boss table BOSSES. Bosses are DATA:
 // a boss is a move dictionary + phases; this file runs them. Loaded after parts.js (it adds each boss to ENEMY) and
 // before game.js; everything below runs at play time only.
 //
@@ -45,7 +45,7 @@
 //   arenaShrink { pattern, k (final radius fraction, 0.65), r0, dur, dmg }   blink { to: 'behind' | 'random' }
 //   vanish { dur, then: move name or inline move }  roar { text | banner, dur, adds: [[type, angle, radius]] }
 //   sequence { list: [names], gaps: s }            random { weights: { name: w } }
-// ===== FAIRNESS (STORY.md, §26.1) ==========================================================================
+// ===== FAIRNESS (docs/design/story.md, §26.1) ==========================================================================
 //   every wind-up >= 0.55 s in every phase (§26.1: a 0.3 s reaction + a sidestep); every big hit leaves >= 1.2 s open
 //   (the last link of a 'then' chain); a feint's fake wind-up >= 0.3 s and shorter than the real one; lead <= 0.6 s;
 //   bar transitions 1.2-1.8 s with an onEnter telegraph. bossFairness(id) lists violations (balsim prints them).

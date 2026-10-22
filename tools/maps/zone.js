@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// tools/maps/zone.js -- the `zone` stamp (DESIGN 25.2): ONE big map made of sections that share a grid.
+// tools/maps/zone.js -- the `zone` stamp (docs/design/world-maps.md): ONE big map made of sections that share a grid.
 //   zone(spec) composes an outer section (forest), an underground dungeon (hollow), an optional vault (warrens) and an inline arena
 //   (clearing) with the same room / path / trigger grammar as the outer / dungeon / boss stamps, plus:
 //     * sections    -> map.sections [{ id, name, kind, x, y, w, h, ambient?, dark? }] (the engine's lightmap + darkness + full-map insets)
@@ -49,7 +49,7 @@ function zone(S) {
 
 function populate(S, g, T) {
   const R = g.roomBy, E = S.enemies, X = S.text, SAY = S.say, tr = g.triggers;
-  const lootOf = k => (S.chestLoot && S.chestLoot[k]) ? { loot: S.chestLoot[k] } : {};   // DESIGN 19.4: a chest marker's `loot` guarantees one trinket of that slot (passes through gen -> world.js)
+  const lootOf = k => (S.chestLoot && S.chestLoot[k]) ? { loot: S.chestLoot[k] } : {};   // docs/design/items.md: a chest marker's `loot` guarantees one trinket of that slot (passes through gen -> world.js)
   const snap = (x, y, r = 1.6) => g.nearWalkable(x, y, r);
   const r2 = v => Math.round(v * 100) / 100;
   const doorMode = T.warpMode === 'door';
@@ -128,7 +128,7 @@ function populate(S, g, T) {
   tr.push(T.enter('elite', 'Elite guarding the key', el.x, el.y, el.r + 0.2, [T.banner(E.elite.title, E.elite.sub, true), T.spawn(E.elite.enemy, 1, el.x - 1, el.y, 1.2, { elite: 'shielded' })], ['r1_done']));
   tr.push(T.allDead('elite_done', 'Elite defeated', ['elite'], [T.message(X.eliteDone), T.loot('rare', 1, el.x, el.y, Object.assign({ item: S.key }, E.elite.lootSlot ? { slot: E.elite.lootSlot } : {})), T.dialogue('Pip', [X.keyLine]), T.step(S.quest, 1), T.objective(X.keyObjective)]));
 
-  // ============================================================== FOREST: elite pockets (DESIGN 26.2, the gear loop)
+  // ============================================================== FOREST: elite pockets (docs/design/enemies-bosses.md, the gear loop)
   // S.pockets: [{ id, room, boss, name, sub?, elite, mod, mobs: [[enemy, n], ...] }]. Each pocket is an off-path clearing near its boss:
   //   <id>       enter_area, once: false + a cooldown longer than any visit: it fires once per map entry (G.trig resets on entry and on
   //              respawn) and never settles, so the pocket RESPAWNS on map re-entry. 1 elite (spawn elite: mod) + 3-5 commons.
@@ -215,7 +215,7 @@ function populate(S, g, T) {
     if (!doorMode) g.addObj('keydoor', kd.x, kd.y, { id: 'door_key', key: S.key, ang: r2(kd.ang), len: S.w.branch, force: true, sp: 0.1 });
     g.warp('hollow_door', { x: hd.x, y: hd.y - 0.2, to: { x: hst.x + 1.4, y: hst.y - 0.3 }, key: S.key, label: 'Root Hollow', marker: true, boss: E.den.doorBoss });
     g.anchor('hollow_in', hst.x + 1.4, hst.y - 0.3); g.poi('door', hd.x, hd.y);
-    if (S.doorShrine) {   // DESIGN 26.2 cheap retries: a warp shrine at the boss door, beside the Mossjaw pockets
+    if (S.doorShrine) {   // docs/design/enemies-bosses.md cheap retries: a warp shrine at the boss door, beside the Mossjaw pockets
       const keep = g.rng; g.rng = g.sideRng(); const q = snap(hd.x + S.doorShrine.dx, hd.y + S.doorShrine.dy, 1.2); g.rng = keep;
       g.marker('shrine', q.x, q.y, { id: 'door_shrine', name: S.doorShrine.name, label: 'checkpoint', warp: true }); g.poi('shrine', q.x, q.y); g.anchor('door_shrine_land', q.x + 1.2, q.y + 0.6);
       tr.push(repeat(T.enter('door_shrine', S.doorShrine.name, q.x, q.y, 2.2, [T.checkpoint('Checkpoint: ' + S.doorShrine.name), T.heal(100)])));
@@ -247,7 +247,7 @@ function populate(S, g, T) {
   g.poi('start', hst.x, hst.y);
   tr.push(T.enter('h_intro', 'Pip in the dark', hst.x, hst.y, 5, [T.say(SAY.hollow), T.step(S.quest, 2), T.objective(X.hollowObjective)]));
   tr.push(repeat(T.enter('h_shrine', 'Midpoint shrine', hs.x, hs.y, 2.2, [T.checkpoint('Checkpoint: ' + X.hollowShrineName), T.heal(100)])));
-  if (S.denShrine) {   // DESIGN 26.2: a warp shrine just outside Mossjaw's gate. Dying in the den respawns here (~6 tiles from the fight), and any
+  if (S.denShrine) {   // docs/design/enemies-bosses.md: a warp shrine just outside Mossjaw's gate. Dying in the den respawns here (~6 tiles from the fight), and any
     // forest shrine (door_shrine by the pockets) warps here. Found only past the keyed door and the gallery, so it opens no sequence break:
     // the root-stair out stays sealed until Mossjaw falls, and warping out to a forest shrine only skips a walk.
     const hp = g.pathBy.h_main, want = den.r + S.denShrine.back;

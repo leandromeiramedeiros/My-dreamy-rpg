@@ -9,7 +9,7 @@
 // Interact while the hero holds its key (hasKey, from a loot card's item: 'key_*'). fishspot { pool } is a visible
 // stub with an Interact prompt (fishing lands later). Object x / y may be fractional for every kind (house cells floor).
 //
-// ===== BIG MAPS (DESIGN §25): the contract the generator / level designer emits =================================
+// ===== BIG MAPS (docs/design/world-maps.md): the contract the generator / level designer emits =================================
 // A zone is ONE map record split into SECTIONS that share the grid, separated by 3-tile VOID GUTTERS.
 //   tiles   'v' = gutter drawn as a CLIFF (a chasm under the land lip), 'k' = gutter drawn as DARKNESS (underground).
 //           Both are impassable and count as void for walking, edges, waterfalls and projectiles; only the
@@ -112,7 +112,7 @@ function newMap(W, H, theme) {
 const typeAt = (m, x, y) => (x < 0 || y < 0 || x >= m.W || y >= m.H) ? null : m.type[y][x];
 const isGrassy = t => t === 'g' || t === 'f' || t === 'p' || t === 'd';
 
-// ---- tile surface grammar (DESIGN §29 group 1) ----------------------------------------------------------------------
+// ---- tile surface grammar (docs/design/world-maps.md group 1) ----------------------------------------------------------------------
 // No per-pixel hash: a pixel's colour comes from (a) two low-frequency noise fields, cached per map at 4 samples a tile and read
 // bilinearly (nField / nAt), (b) the tile's hashed micro-variant 0..3 (a brightness offset + 2-3 decorative pixels), (c) the 47-blob
 // transition from the 8-neighbour mask: a lower-priority neighbour laps over this tile as a scalloped 3-5 px tongue with a 1 px dark
@@ -485,7 +485,7 @@ function drawCrystals(m, ctx, x0, y0, w, h) {
     ctx.save(); ctx.translate(s.px - x0, s.py - y0); ctx.scale(1, -1); ctx.drawImage(img, -8, -22); ctx.restore();
   }
 }
-// ===== ground decals (DESIGN §29 G2; world-art minutes §2.3) ===================================================================
+// ===== ground decals (docs/design/world-maps.md G2; world-art minutes §2.3) ===================================================================
 // 16 flat kinds per zone (art.js buildDecalSet, DECAL_KINDS), scattered per tile by a deterministic grammar and BAKED: h = 0 tiles
 // onto their ground chunk (drawDecals, after putImageData like drawCrystals), raised tiles onto their own column top (rasterColumn,
 // source-atop). 0 ms a frame; a few ms per chunk build. The grammar is Lumina's ground-detail scatter (src/game/GroundDetail.js

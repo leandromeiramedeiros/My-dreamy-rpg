@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// Equipment v2 DATA (DESIGN §19, STORY.md voice). Plain tables, no logic.
+// Equipment v2 DATA (docs/design/items.md, docs/design/story.md voice). Plain tables, no logic.
 // Loaded by classic script after items.js. Engine code reads these globals.
 //
 // Units match items.js AFFIX: percent stats are fractions (0.05 = 5%), hp/mp/regen are flat,
@@ -292,7 +292,7 @@ const IMPLICITS = {
   eclipsetreads:   { stat: 'critDmg', v: 0.10, text: '+10% crit damage on Sprint strikes' },
 };
 
-// ===== flavour (§19.3): one line per base and per unique, STORY.md voice, <= 12 words =====
+// ===== flavour (§19.3): one line per base and per unique, docs/design/story.md voice, <= 12 words =====
 const FLAVOR = {
   // Dawnblade
   rustyblade: 'It remembers one good morning, and waits for another.',

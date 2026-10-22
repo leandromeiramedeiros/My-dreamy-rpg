@@ -1,5 +1,5 @@
 'use strict';
-// Shared density helpers for the rule files (DESIGN §29 G2; world-art minutes §2.3, §6.1 item 4). Not a recipe (leading _).
+// Shared density helpers for the rule files (docs/design/world-maps.md G2; world-art minutes §2.3, §6.1 item 4). Not a recipe (leading _).
 //   DENSITY   the x2.5 count factor applied to every rule's n
 //   sstep     smoothstep
 //   glade(c)  0 inside one open glade per 15 x 15 tiles (a hashed disc, r 2.2-3.4), 1 elsewhere, with a 1-tile soft rim, so

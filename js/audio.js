@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// audio.js — the WebAudio engine (docs/AUDIO.md "Engine", "Mixing rules", "Accessibility", "Risks").
+// audio.js — the WebAudio engine (docs/design/audio.md "Engine", "Mixing rules", "Accessibility", "Risks").
 // Classic script, no modules, works from file://. Plays the DATA in js/music.js (MUSIC_PATCHES, MUSIC, MUSIC_UTIL) and
 // js/sfxdata.js (SFX_RECIPES, WARN_SFX, SFX_CAPTIONS); it never rewrites them. Loads after music.js / sfxdata.js and
 // before game.js. Everything browser-touching is guarded, so the vm in tools/validate-ids.js loads it cleanly.

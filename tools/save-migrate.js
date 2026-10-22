@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// tools/save-migrate.js -- the save v3 -> v4 ship gate (DESIGN §16.5, §19.7, §23.6, §24).
+// tools/save-migrate.js -- the save v3 -> v4 ship gate (docs/design/progression-economy-saves.md, docs/design/items.md, docs/design/weapons-and-skills.md, docs/design/armour-suits.md).
 // The fixtures in tools/fixtures/ are GENUINE v3 saves written by the v3 build (commit 3fcaee0, before the v4 refactor):
 //   save-v3-vale-early.json   New Dream from the title, a few steps in the Vale, saveGame() (L1, starter kit)
 //   save-v3-vale-chest.json   the same, plus the Vale starter chest opened and worn (Hunter's Bow + ruby, Bow E rune alternate)

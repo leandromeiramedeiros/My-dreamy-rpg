@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// parts.js — enemies are DATA (DESIGN §21.2): behaviour parts, the enemy table ENEMY and ELITE_MODS (§21.3).
+// parts.js — enemies are DATA (docs/design/enemies-bosses.md): behaviour parts, the enemy table ENEMY and ELITE_MODS (§21.3).
 // Loaded after world.js / enemydata.js and BEFORE bosses.js, maps.js and game.js (index.html + editor.html). Load time is
 // pure data; every function here runs only at play time and may call game.js (moveEntity, hurtPlayer, tele, fx,
 // spawnProj, spawnEnemy ...).
@@ -95,7 +95,7 @@ const BUILTIN_ROWS = {
   troll: { name: 'Mountain troll', ai: 'brute', sprite: 'troll', hp: 1245, r: 0.75, speed: 1.3, dmg: 95, hgt: 4, blood: '#9ab06a', xp: 1.15,
     el: 'nature', dmgType: 'slash', stagger: 0, res: { fire: -0.5, pierce: 0.5 }, tags: ['beast'],
     parts: ['chase', 'brute'], params: { brute: { shape: 'circle', r: 2.4, range: 2, wind: 1, cd: 2.4 } } },
-  // Bramblehorn's phase-2 add (STORY.md): a rooted thorn turret; Wildfire is the counter
+  // Bramblehorn's phase-2 add (docs/design/story.md): a rooted thorn turret; Wildfire is the counter
   sapling: { name: 'Sapling', look: 'ogre', scale: 0.55, hp: 170, r: 0.3, speed: 0, dmg: 15,   // hp 260 -> 170, dmg 22 -> 15, cd 2.6 -> 3.2 (QA B2: 6 card saplings + summons out-chipped an under-geared hero) hgt: 1.6, blood: '#7ac060', xp: 0.03,
     el: 'nature', dmgType: 'pierce', stagger: 1, res: { fire: -0.5, nature: 0.5 }, tags: ['plant', 'child'],
     parts: ['stationary', 'shoot'], params: { shoot: { range: 7, wind: 0.8, cd: 3.2, speed: 6, col: '#a6f08a', tele: true } } },   // tele: its wind-up shows (QA m6 read it as idle)

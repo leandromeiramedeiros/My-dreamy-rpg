@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// Touch controls (docs/HUD.md "Touch v2"):
+// Touch controls (docs/design/hud-ui.md "Touch v2"):
 //  * left side: a floating joystick wherever the thumb lands;
 //  * right side: a circular wheel around the attack button (hold): inner arc Q E R (or 1 2 3 via the page toggle), outer arc
 //    F C Dodge Potion, Interact when a prompt is near. Tap a skill = quick-cast at the auto-target; drag past 12 px = aimed cast
@@ -16,7 +16,7 @@ let TOUCH_AIM = null;
 const touchNow = () => performance.now() / 1000;
 const leftHanded = () => typeof SETTINGS !== 'undefined' && SETTINGS.leftHanded;
 
-// ---- layout (docs/HUD.md "Touch"): safe area 24 px on every edge (plus the device's env(safe-area-inset-*)) ------------
+// ---- layout (docs/design/hud-ui.md "Touch"): safe area 24 px on every edge (plus the device's env(safe-area-inset-*)) ------------
 // G.safe = { l, r, t, b } in display px, read once from a CSS probe and again on resize.
 function readSafeArea() {
   let ins = { l: 0, r: 0, t: 0, b: 0 };
@@ -30,7 +30,7 @@ function readSafeArea() {
   G.safe = ins;
 }
 const TSAFE = () => { const s = G.safe || { l: 0, r: 0, t: 0, b: 0 }; return { l: 24 + UI.snap(s.l), r: 24 + UI.snap(s.r), t: 24 + UI.snap(s.t), b: 24 + UI.snap(s.b) }; };
-// ---- circular wheel (docs/HUD.md "Touch v2") ------------------------------------------------------------------------
+// ---- circular wheel (docs/design/hud-ui.md "Touch v2") ------------------------------------------------------------------------
 // C = attack centre (860,436). Angles are measured clockwise from +x in screen space (so 270 deg = straight up; the spec's
 // "y up" wording cannot be literal: 235 deg would land at y 538). x = Cx + r cos a, y = Cy + r sin a; left-handed play
 // mirrors x about 480. Inner arc r124 O60: Q 200, E 235, R 270 (page 2: 1 2 3 at the same spots). Outer arc r196 O52:

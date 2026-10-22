@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// menus.js — the Tab screens (INVENTORY / CHARACTER / BESTIARY / QUESTS), docs/HUD.md "Screens".
+// menus.js — the Tab screens (INVENTORY / CHARACTER / BESTIARY / QUESTS), docs/design/hud-ui.md "Screens".
 // DRAWING + hit/focus registration only. The actions they call live in items.js (clickBag / clickItem / clickSocket,
 // equipItem, salvageItem, combineGems, sortBag) and game.js (chooseSkillMod); selection state lives in G.ui
 // (open, tab, sel, gem, salvage, note, skSel, scr). Every control registers with UI.focus under a stable id
@@ -114,10 +114,10 @@ function drawTabScreen(ctx) {
 }
 
 // ===== INVENTORY ===================================================================================================================
-// Paper doll (DESIGN §19.4 / HUD.md): 8 slots, 48 px. Spec coordinates are relative to the panel (20,20); ring1 (24,88), ring2 (176,88),
+// Paper doll (docs/design/items.md / docs/design/hud-ui.md): 8 slots, 48 px. Spec coordinates are relative to the panel (20,20); ring1 (24,88), ring2 (176,88),
 // amulet (100,64), belt (100,300). The four gear slots sit between the rings and the belt.
 const EQ_ORIGIN = [PX, PY];
-// R3 #6: amulet / rings keep their DESIGN §19.4 spots; the weapon / head and chest / boots rows close up to a 8 px gap and the belt
+// R3 #6: amulet / rings keep their docs/design/items.md spots; the weapon / head and chest / boots rows close up to a 8 px gap and the belt
 // sits right under the hero (it was at y 300, a 36 px hole below the boots)
 const EQ_REL = { amulet: [100, 64], ring1: [24, 88], ring2: [176, 88], weapon: [24, 144], head: [176, 144], chest: [24, 200], boots: [176, 200], belt: [100, 256] };
 const EQ_POS = {}; for (const k in EQ_REL) EQ_POS[k] = [EQ_ORIGIN[0] + EQ_REL[k][0], EQ_ORIGIN[1] + EQ_REL[k][1]];
@@ -181,7 +181,7 @@ function whatOf(p, id) {
   return null;
 }
 
-// ---- ring rule (DESIGN §19.4) -------------------------------------------------------------------------------------------------
+// ---- ring rule (docs/design/items.md) -------------------------------------------------------------------------------------------------
 // An empty ring slot always fills first (ring1, then ring2). When BOTH are full, equipping a ring never replaces one silently:
 // the bag ring enters "pick" mode (G.ui.ringPick), both ring slots light up, focus lands on the WEAKER ring (lower rarity, then
 // lower ilvl; a tie is ring1) and the player confirms a ring slot (click / tap / A) to swap that one out. The compare deltas always
@@ -310,7 +310,7 @@ function doSell(p) {
   if (typeof r === 'string') invNote(r); else { invNote(`Sold for ${r} Dream Dust`, UC.bright); sfx('chest'); u.sel = null; }
 }
 
-// ===== TOOLTIP v2 (DESIGN §19.3) ================================================================================================
+// ===== TOOLTIP v2 (docs/design/items.md) ================================================================================================
 // itemTipRows(p, it, o) builds the tooltip as DATA (<= 12 logical lines, tested headless); drawTipRows() paints it. o: { w, touch,
 // cmp (the equipped item to compare against), maxH }. Top to bottom: name (rarity colour) · icon row (family, tier, base stats) ·
 // "Lv · ilvl · Rarity" · implicit (dim blue) · affixes P then S with tier pips and green / red deltas · sockets · trinket boon ·
@@ -344,7 +344,7 @@ function chipText(id, v) {
   const w = CHIP_WORD[id] || (/^res/.test(id) ? nm.replace(' res', ' r') : nm);
   return w ? `${num} ${w}` : num;
 }
-// the compact compare (HUD.md): up to 3 stat deltas of `it` against the item it would replace, in STAT_ORDER (damage, HP, armour ...).
+// the compact compare (docs/design/hud-ui.md): up to 3 stat deltas of `it` against the item it would replace, in STAT_ORDER (damage, HP, armour ...).
 // Totals are statsOf (base + implicit + affixes + gems), so a socketed gem or a different base counts too.
 function compareDeltas(it, cmp) {
   if (!it || !cmp || typeof statsOf !== 'function') return [];
@@ -584,7 +584,7 @@ function drawItemPanel(ctx, p, x, y, w, what, hov, gemPick, ringKey, emptyKey) {
   const cmp = replacedBy(p, it, ringKey), CY = 382;   // the compare block starts here; the tooltip gets the room above it
   const T = itemTipRows(p, it, { w: w - 16, touch: IN.device === 'touch' || !!G.touch, cmp, maxH: cmp ? CY - y - 8 : 350 });
   drawTipRows(ctx, T, x + 8, y, w - 16, { p, it, interactive: true, gemPick });
-  // compact stat-delta compare (HUD.md): a header, then up to 3 green / red deltas versus the item this one would replace
+  // compact stat-delta compare (docs/design/hud-ui.md): a header, then up to 3 green / red deltas versus the item this one would replace
   const drawCompare = head => {
     mnDivider(ctx, x + 8, CY, w - 16, 2);
     UI.text(ctx, head, x + 8, CY + 8, 'small', what.pick ? UC.gold : UC.dim);

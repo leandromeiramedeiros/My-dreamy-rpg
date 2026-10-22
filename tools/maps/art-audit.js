@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// tools/maps/art-audit.js -- the DESIGN §29.4 acceptance numbers for the world-art pass, on 6 FIXED camera shots per map.
+// tools/maps/art-audit.js -- the docs/design/world-maps.md acceptance numbers for the world-art pass, on 6 FIXED camera shots per map.
 // For each shot it renders the real game (headless Chromium), reads the 480x270 scene canvas (SCN: the world frame, no HUD) and computes
 //   specks    isolated pixels whose luminance differs by > 60 from ALL 4 neighbours (per 480x270 frame; target < 50); groundSpecks =
 //             the same excluding the sky above the island's silhouette (render.js stars / clouds); terrainSpecks = the same frame

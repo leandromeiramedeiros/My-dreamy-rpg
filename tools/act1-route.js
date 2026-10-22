@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 'use strict';
-// tools/act1-route.js -- scripted Act I walk-through on the BIG maps (DESIGN 25): the 80x80 Whispering Vale, then the 112x112 Misty Pinewood
+// tools/act1-route.js -- scripted Act I walk-through on the BIG maps (docs/design/world-maps.md): the 80x80 Whispering Vale, then the 112x112 Misty Pinewood
 // (forest -> Root Hollow -> Fox Warrens -> Bramblehorn's Clearing, ONE map with warp doors) and home.
 // Drives the real game in headless Chromium. It teleports the hero to each beat (triggers are enter_area / all_enemies_dead cards, so
 // standing there is exactly what a player does), fast-forwards the wave timers, kills what spawns, and asserts that every trigger of
-// the DESIGN 16.2 / STORY beats fires with the right actions (dialogue ids, quest steps, gates, doors, packs, loot) and that the page
+// the docs/design/world-maps.md / STORY beats fires with the right actions (dialogue ids, quest steps, gates, doors, packs, loot) and that the page
 // throws no errors. Barriers, levers and warp doors are exercised through the engine (use.fn / openGate / startWarp), not assumed.
 // At the end EVERY trigger card of both maps must have fired at least once (recorded by wrapping fireTrigger).
 // Warp doors: runs with `warpdoor` objects when the engine has them, else with the same-map portal fallback (the keydoor in front is
@@ -447,7 +447,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   const da = await tryDoor('bridge_arena', 'barrier');
   check('vale (return): the Dream Arena bridge now opens with the key the Pinewood gave (after Act I)', da && da.open, da);
 
-  // =================================================================== M3 trinket sources (DESIGN 19.4 Acquisition): chest markers carry `loot`
+  // =================================================================== M3 trinket sources (docs/design/items.md Acquisition): chest markers carry `loot`
   // §28: the ring moved from the ledge chest to the tutorial chest (the Origin ring is the first chest's ring)
   const wantLoot = [['vale', 'tutorial-chest', 'ring'], ['pinewood', 'boss-chest', 'amulet'], ['pinewood', 'warrens-chest', 'belt']];
   const lootData = await ev(w => w.map(([m, label]) => { const o = G.world.maps[m].objects.filter(q => q.label === label); return { n: o.length, loot: o.length ? o[0].loot : null, chest: o.length ? o[0].t === 'chest' : false }; }), wantLoot);

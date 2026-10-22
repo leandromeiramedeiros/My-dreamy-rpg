@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// screens.js — title, death and pause / settings (docs/HUD.md "Screens"). Drawing + focus registration only:
+// screens.js — title, death and pause / settings (docs/design/hud-ui.md "Screens"). Drawing + focus registration only:
 //   title:  a row of 3 save slots (focus ids 'title:slot1..3'; selectSlot in items.js), then CONTINUE / NEW DREAM /
 //           SETTINGS for the chosen slot with a diamond cursor (focus ids 'title:continue|new|settings')
 //   death:  one button "Wake at shrine" (focus id 'btn:wake')
@@ -182,7 +182,7 @@ function drawDeath(ctx) {
   UI.focus.draw(ctx);
 }
 
-// ===== full-map screen (DESIGN §25.2): M / pad D-pad down (the `map` action), or a tap on the minimap ====================
+// ===== full-map screen (docs/design/world-maps.md): M / pad D-pad down (the `map` action), or a tap on the minimap ====================
 // G.ui.map = { mode: 'view' | 'shrine', sel } while open; main.js pauses the game step and routes input here (fullMapInput).
 // The map is m.mini.base under the explored mask (fog of war: unexplored ground shows as a faint silhouette, UNDERGROUND
 // sections stay dark until discovered). The right column lists the sections as insets (name or ??? until discovered).

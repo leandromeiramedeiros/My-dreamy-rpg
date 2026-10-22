@@ -10,7 +10,7 @@ const dctx = DISP.getContext('2d');
 // upscales the store with smoothing off (index.html image-rendering), and the per-frame scene blit + HUD fill fewer pixels.
 let HUD_K = 1;
 const HUD_K_MAX = 2;
-// ===== resolution governor (phones; Lumina ResolutionGovernor rules, docs/CREDITS.md; DESIGN §26.4 step 3) ====================
+// ===== resolution governor (phones; Lumina ResolutionGovernor rules, docs/CREDITS.md; docs/design/pillars-and-rules.md step 3) ====================
 // The phone backing store runs at a DPR rung (GOV.rungs: 0.5 .. 1.0 of the device ratio, 0.125 steps; k = rung x DPR, whole
 // eighths, 1..2). Timing source: the CPU frame time of loop() (update + render; no GPU timer in Canvas 2D), averaged per 0.5 s
 // sample; decisions on the median of the last 5 samples (one slow burst is no trend). Down one rung after 4 slow medians
@@ -218,7 +218,7 @@ function render() {
 
 // Fixed-step update at 1/60 s with an accumulator (§16.6.3): deterministic reactions, hitstop and scripted
 // tests; render once per display frame. Slow-mo and hitstop scale/zero the game step, never its size.
-// Hitstop is counted in unscaled steps BEFORE slow-mo (game.js hitlagStep, DESIGN §27): a 15-step boss-death freeze is
+// Hitstop is counted in unscaled steps BEFORE slow-mo (game.js hitlagStep, docs/design/combat-feel.md): a 15-step boss-death freeze is
 // 0.25 s of real time even inside the boss slow-mo (it used to stretch to ~0.7 s).
 const STEP = 1 / 60;
 let last = performance.now(), acc = 0, running = true, frameEma = 16.7;
@@ -289,7 +289,7 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
-// ===== ?perf=1: the on-screen frame readout (DESIGN §26.4 step 1: measure on the real device) =============================
+// ===== ?perf=1: the on-screen frame readout (docs/design/pillars-and-rules.md step 1: measure on the real device) =============================
 // Top-centre box, refreshed 4x a second from a 240-frame ring (~4 s): fps, frame avg / p95 (the rAF delta), work avg / p95 (CPU inside
 // loop(): update + render + preload), draw calls (2D context calls this frame, counted by wrappers installed only when ?perf
 // is set), particles (pooled + ambient), and the per-phase split (render.js perfMark). Off: `PERF.on` is false, nothing is

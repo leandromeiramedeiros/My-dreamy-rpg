@@ -98,7 +98,7 @@ function checkItemRef(file, kind, owner, ref, itemIds) {
   else fail(file, kind, owner, ref);
 }
 
-// Planned content from docs/DESIGN.md §21.1 (roster), §21.3 (vault bosses) and §22.1/22.2 (maps). A reference
+// Planned content from docs/design/enemies-bosses.md (roster), §21.3 (vault bosses) and §22.1/22.2 (maps). A reference
 // to one of these ids is a warning, not an error, until the map or enemy definition lands.
 const PLANNED_MAPS = new Set([
   'roothollow', 'bramblehorn_clearing', 'warden_crypt', 'wardens_hall', 'grotto', 'drowned_vault', 'mirelle_basin',
@@ -117,10 +117,10 @@ const PLANNED_ENEMIES = new Set([
   'oathless', 'brinemother', 'vigils', 'shaman',
 ]);
 
-// Trinket slots are fixed by the engine (rings, amulets and belts; see docs/DESIGN.md §19).
+// Trinket slots are fixed by the engine (rings, amulets and belts; see docs/design/items.md).
 const TRINKET_SLOTS = ['ring', 'amulet', 'belt'];
 
-// Resolve a reference to a map or enemy id. Defined ids pass; planned ids (DESIGN §21/§22) are warnings;
+// Resolve a reference to a map or enemy id. Defined ids pass; planned ids (docs/design/enemies-bosses.md, docs/design/world-maps.md) are warnings;
 // anything else is an error.
 function refOrPlanned(file, kind, owner, ref, defined, planned, what) {
   if (defined.has(ref)) return;
@@ -177,7 +177,7 @@ function main() {
     }
   }
   for (const sk of CHAR_SKILLS || []) if (!skillIds.has(sk)) fail(F.data, 'character skill', sk, 'SKILLS entry');
-  // Every skill needs an aim block (docs/HUD.md, "Touch v2", "Aiming") with a known shape and a numeric range.
+  // Every skill needs an aim block (docs/design/hud-ui.md, "Touch v2", "Aiming") with a known shape and a numeric range.
   const AIM_SHAPES = new Set(['cone', 'circle', 'line', 'proj', 'self', 'dash']);
   for (const [id, sk] of Object.entries(SKILLS || {})) {
     if (!sk.aim || typeof sk.aim !== 'object') fail(F.data, 'aim', id, 'missing aim block');

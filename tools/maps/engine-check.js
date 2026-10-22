@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 // Loads a game directory (default: repo root) in headless Chromium, enters each map via ?map=<id>, TOURS EVERY SECTION (the engine's section
-// centres, DESIGN 25.2), and reports load time, column/object counts, chunked-raster stats, frame times per section and console errors.
+// centres, docs/design/world-maps.md), and reports load time, column/object counts, chunked-raster stats, frame times per section and console errors.
 // A desktop pass and a phone pass (?phone=1: 256 px chunks, 12 resident, smaller viewport) run for every map; the phone p95 budget is 20 ms.
 // Exit code 1 on a page error, a load failure, a section that cannot be reached, or an engine that has no sections for a big map.
 // Frame-time budgets are reported (WARN) but never fail the run: headless Chromium rasterises in software, so the numbers are an upper bound.

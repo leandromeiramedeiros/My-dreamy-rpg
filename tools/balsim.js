@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// tools/balsim.js — the balance sim (DESIGN §20.7). Runs the REAL game code headless (js/*.js in index.html order, in a
+// tools/balsim.js — the balance sim (docs/design/balance.md). Runs the REAL game code headless (js/*.js in index.html order, in a
 // vm context, seeded Math.random): recalcStats, useSkill / basicAttack, damageEnemy, the part runtime and BOSS_MOVES.
 //   node tools/balsim.js [--seed=N] [--trials=N] [--quiet] [--json]   (tuning: --miss=N --under-trials=N --only=under,reference --boss=id --patch=file.js)
 // Prints the tables and exits 1 on any red flag (§20.7 "CI red flags"). Explained exceptions are printed, never fail.

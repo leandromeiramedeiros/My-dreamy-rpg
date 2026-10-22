@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// tools/maps/stamps.js -- the three reusable map stamps from DESIGN 11.7
+// tools/maps/stamps.js -- the three reusable map stamps from docs/design/world-maps.md
 //   outer(spec)    coast + 3 encounter rooms + elite (key) + side branches + secrets + shrine(s) + fleeing-animal trail + portals
 //   dungeon(spec)  cave/crypt palette, 2 rooms + mini-boss arena, key door, lever gate + lever shortcut, midpoint shrine, 1 secret
 //   boss(spec)     compact walled arena + fence of standing stones, chest ledge
@@ -32,7 +32,7 @@ function placePortals(g, S) {
 }
 
 // spawn a list of waves around a room; a wave is a list of entries: [enemy, count, opts?] (plain spawn) or
-// { pack: 'pw_ogre_run', press?: 2, toward?: roomId, dist?: 0.7 } (an ENCOUNTERS pack, DESIGN 21.4). `toward` puts the pack on the
+// { pack: 'pw_ogre_run', press?: 2, toward?: roomId, dist?: 0.7 } (an ENCOUNTERS pack, docs/design/enemies-bosses.md). `toward` puts the pack on the
 // far side of the room in that room's direction -- where a sleeper lies in the way. Returns the action list.
 function waveActions(T, g, rm, waves, gap, banner) {
   const acts = []; if (banner) acts.push(T.banner(banner[0], banner[1], banner[2]));
@@ -111,7 +111,7 @@ function outer(S) {
       for (const [x, y] of S.foxes || []) { const q = g.nearWalkable(x, y, 2); g.addObj('fox', q.x, q.y); }
       for (const [x, y] of S.rabbits || []) { const q = g.nearWalkable(x, y, 2); g.addObj('rabbit', q.x, q.y); }
       for (const k of ['r1', 'start']) g.addObj('sunbeam', R[k].x + 2.2, R[k].y + 1.4, { force: true });
-      // extra checkpoint before the third room (DESIGN 16.2: shrine, potions, a breather)
+      // extra checkpoint before the third room (docs/design/world-maps.md: shrine, potions, a breather)
       let shr2 = null;
       if (S.shrine2) { const rm = S.shrine2.room ? R[S.shrine2.room] : { x: 0, y: 0 }; shr2 = snap(rm.x + (S.shrine2.dx != null ? S.shrine2.dx : S.shrine2.x), rm.y + (S.shrine2.dy != null ? S.shrine2.dy : S.shrine2.y)); g.marker('shrine', shr2.x, shr2.y, { label: 'checkpoint-2' }); }
 
@@ -230,7 +230,7 @@ function dungeon(S) {
       const r1 = R.r1, r2 = R.r2;
       tr.push(T.enter('r1', E.r1.name, r1.x, r1.y, r1.r - 1.5, waveActions(T, g, r1, E.r1.waves, E.r1.gap, E.r1.banner)));
       tr.push(T.allDead('r1_done', 'First cavern cleared', ['r1'], [T.message(E.r1.clear), T.heal(25), T.loot('uncommon', 1, r1.x, r1.y), T.objective('Rest at the shrine, then press on')]));
-      // the sleeper (troll) only wakes into the map after the shrine was touched (DESIGN 21.4): r2 requires it
+      // the sleeper (troll) only wakes into the map after the shrine was touched (docs/design/enemies-bosses.md): r2 requires it
       tr.push(T.enter('r2', E.r2.name, r2.x, r2.y, r2.r - 1.5, waveActions(T, g, r2, E.r2.waves, E.r2.gap, E.r2.banner), ['r1_done', 'shrine']));
       tr.push(T.allDead('r2_done', 'Gallery cleared', ['r2'], [T.message(E.r2.clear), T.heal(25), T.loot('uncommon', 1, r2.x, r2.y), T.objective('Find the lever that raises the gate')]));
       // the gate lever and the shortcut lever are real lever objects (Interact -> openGate); only a hint trigger sits by the gate

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// Balance sheets (DESIGN §20.7). Loads the real game data into a vm context, writes five CSVs into
+// Balance sheets (docs/design/balance.md). Loads the real game data into a vm context, writes five CSVs into
 // tools/balance/out/ (gitignored) and prints a summary of the §20.7 thresholds this data can check.
 //   node tools/balance/sheets.js
 //

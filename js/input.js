@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// input.js — the action layer (docs/CONTROLS.md). The game reads ACTIONS, never keys.
+// input.js — the action layer (docs/design/controls.md). The game reads ACTIONS, never keys.
 // Keyboard + mouse, the Gamepad API and touch (touch.js) all write into one table that is snapshotted once per
 // fixed update step by IN.update(dt). Loaded after hud.js, before touch.js / main.js; main.js calls IN.init(canvas).
 //
@@ -30,7 +30,7 @@
 //   IN.consume(code)            ignore a held key/button until released (a click the UI already used)
 //   IN.rumble(ms, strength)     navigator.vibrate on touch, the pad's vibrationActuator on pad (after a user gesture)
 //   IN.ACTIONS                  the action list.  IN.LABEL[action] = display name for the rebinding screen.
-//   Hold-to-aim (docs/HUD.md "Touch v2", desktop + pad), setting SETTINGS.groundIndicators:
+//   Hold-to-aim (docs/design/hud-ui.md "Touch v2", desktop + pad), setting SETTINGS.groundIndicators:
 //     IN.aimMode() -> 'off' | 'hold' | 'always'   ('off' on touch: touch.js owns aiming there)
 //       auto   = (default) per device: keyboard + mouse 'off', pad 'hold'
 //       off    = skills cast on press (M2a behaviour), no indicator (kbm: a faint range ring while hovering a skill slot)

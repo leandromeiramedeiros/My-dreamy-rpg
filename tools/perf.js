@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// Frame-time sample (DESIGN §16.6 rule: measure p95, not the average).
+// Frame-time sample (docs/design/pillars-and-rules.md rule: measure p95, not the average).
 // Loads ?map=<id> in headless Chromium, walks the hero in a slow square while attacking, and records every
 // requestAnimationFrame delta for N seconds. Prints avg / p50 / p95 / p99 / max in ms, plus `work`: the CPU time
 // spent inside main.js loop() per frame (update + render), which headless vsync pacing would otherwise hide.

@@ -1,6 +1,6 @@
 'use strict';
 // ---------------------------------------------------------------------------
-// hud.js — the PLAY HUD, "Dream Glass" (docs/HUD.md). Layout only: every primitive (bitmap font, 9-slice frames,
+// hud.js — the PLAY HUD, "Dream Glass" (docs/design/hud-ui.md). Layout only: every primitive (bitmap font, 9-slice frames,
 // bars, sweeps, toasts, tooltips, hit regions, focus) comes from ui.js. The Tab screens, title, death and the
 // pause / settings screen live in menus.js; the touch layout in touch.js.
 //
@@ -97,7 +97,7 @@ function drawDamageNumbers(ctx) {
     if (kind === 'crit') { size = dsz === 'S' ? 'body' : 'heading'; col = UC.gold; }
     else if (kind === 'weak') { size = dsz === 'S' ? 'body' : 'heading'; col = UC.weak; }
     else if (kind === 'big') size = 'body';
-    else {   // normal / resist: the size follows hit power r = dmg / bar max (DESIGN §27): < 5 % small, < 20 % body, else heading
+    else {   // normal / resist: the size follows hit power r = dmg / bar max (docs/design/combat-feel.md): < 5 % small, < 20 % body, else heading
       const r = t.r || 0, tier = r >= 0.2 ? 2 : r >= 0.05 ? 1 : 0;
       const lv = Math.min(dsz === 'S' ? 1 : 2, Math.max(dsz === 'L' ? 1 : 0, tier));
       size = lv === 2 ? 'heading' : lv === 1 ? 'body' : 'small';
@@ -329,7 +329,7 @@ function skillTooltip(ctx, p, h) {
 }
 
 // ===== minimap: rounded diamond, fog of war, hero arrow, enemies as 4 px dots =========================================================
-// Big maps (DESIGN §25.2): the HUD shows a LOCAL window of MINI_WIN (24) tiles around the hero. m.mini.base is the whole map at
+// Big maps (docs/design/world-maps.md): the HUD shows a LOCAL window of MINI_WIN (24) tiles around the hero. m.mini.base is the whole map at
 // 1 px per tile step ((W + H) + 2 * pad square; tile (i, j) at (ox + i - j, oy + i + j), 2x1 px); m.mini.rev the explored mask
 // at the same scale; m.mini.vis the explored bitfield (saved: items.js world.fog, seeded here from G.prog.fog). The full-map
 // screen (screens.js drawFullMap) reuses base / rev. Gutter tiles draw dark; tapping / clicking the minimap opens the full map.
@@ -487,7 +487,7 @@ function drawTracker(ctx, x, y) {
 }
 
 // ===== boss bar ===========================================================================================================================
-// Boss bar, phase model (DESIGN §26.1, client): bossBars(e) -> { n, i, frac, transition }. ONE full-width bar shows the current phase's
+// Boss bar, phase model (docs/design/enemies-bosses.md, client): bossBars(e) -> { n, i, frac, transition }. ONE full-width bar shows the current phase's
 // HP; under it one yellow diamond per phase still to fight (n - i, the current one included), beaten phases are faded outlines
 // (none for n = 1). When the bar empties (ghost-lag drain) the rightmost filled diamond flashes and dims over 0.4 s, then during
 // `transition` the bar refills from empty to full with a pulsing "SHIELDED" look: that is the next phase's health bar.
@@ -668,7 +668,7 @@ function drawHUD(ctx) {
 }
 
 
-// ===== touch v2: circular wheel (docs/HUD.md "Touch v2"; layout + input in touch.js) ===========================================
+// ===== touch v2: circular wheel (docs/design/hud-ui.md "Touch v2"; layout + input in touch.js) ===========================================
 // ring arcs: UI.ring(ctx,x,y,r,frac,col[,w]) in ui.js
 const TB = { flash: {}, wasCd: {} };
 // one round button: 2 px dark outline + 2 px rim in `col` + #15102a at 80 %, icon, cooldown wipe, seconds

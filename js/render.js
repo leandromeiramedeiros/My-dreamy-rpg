@@ -3,7 +3,7 @@
 // Scene rendering + post-processing: fake lights (lightmap multiply + additive
 // halos), bloom (emitter-only: lights, glints, moon, VFX cores at 1/4 & 1/8 res), drifting fog & mist (a clear zone round the hero),
 // god rays, vignette.
-// Big maps (DESIGN §25.2): drawScene reads the ground from the chunk cache (maps.js CHUNK; drawGround + groundTick
+// Big maps (docs/design/world-maps.md): drawScene reads the ground from the chunk cache (maps.js CHUNK; drawGround + groundTick
 // here schedule the builds: the chunk under the camera synchronously, visible-missing chunks next with a large
 // budget, then a prefetch ring on idle frames), and queries the spatial grid for objects, columns, water glints and
 // static lights inside the view instead of walking whole-map lists. Lights: at most LIGHT_MAX visible (the hero's
@@ -400,7 +400,7 @@ function drawRays(ctx, m, th, mx, my) {
   ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(RAYS.L.c, bx, by, bw, bh, bx, by, bw, bh); ctx.globalCompositeOperation = 'source-over';
 }
 
-// ===== trees v2: canopy over the hero, travelling-gust sway (DESIGN §29 G2; world-art minutes §2.1 / §2.2) ==================
+// ===== trees v2: canopy over the hero, travelling-gust sway (docs/design/world-maps.md G2; world-art minutes §2.1 / §2.2) ==================
 // A tree (o.tree, img = art.js canopyTree / pineTree2 composite) is ONE drawImage of its composite (img.swayF[frame]) unless its
 // canopy is split off: then drawItem draws img.trunk at the tree's key and a { kind: 'canopy' } list entry at key + 0.5 draws
 // img.canopyF[frame] at alpha o._fade, OVER the hero. The canopy is split while the hero's rect meets the canopy box and the hero
@@ -646,7 +646,7 @@ function drawZone(ctx, z) {
   ctx.globalCompositeOperation = 'source-over';
 }
 
-// ===== ground aim indicators (docs/HUD.md "Touch v2" > Aiming) ==============================================
+// ===== ground aim indicators (docs/design/hud-ui.md "Touch v2" > Aiming) ==============================================
 // Anti-confusion rule: the PLAYER's indicators (AIM_STYLE) are thin, dashed, low-alpha and cool-toned and never animate
 // their fill (only the range dashes move, 1 px / 100 ms); ENEMY telegraphs (TELE_STYLE) are thick, solid, hot and
 // high-alpha with a filling countdown. If an enemy telegraph covers the reticle, the player's fill drops to 10 %.
@@ -859,7 +859,7 @@ function drawItem(ctx, it, lights) {
   }
 }
 
-// ===== corpses (DESIGN §27, R1; records: game.js spawnCorpse / updateCorpses) =====================================
+// ===== corpses (docs/design/combat-feel.md, R1; records: game.js spawnCorpse / updateCorpses) =====================================
 // corpseLook(e) -> { img, sc, art, hover } once at the kill: ENEMY_ART enemies play their 3 death frames (art = key);
 // legacy / custom sprites keep their hit frame, drawn as a blood-coloured silhouette (sc = their legacy scale).
 const CORPSE_PROBE = { face: 1, flash: 1, hitFreeze: 0, state: 'chase', anim: 0, asleep: false };
@@ -1565,7 +1565,7 @@ function drawFog(ctx, tex, size, par, spx, spy, alpha) {
 // §16.6.1: one cached 64x64 radial sprite per light colour (alpha 1 -> 0), drawn scaled with globalAlpha = L.a.
 // A linear alpha ramp scaled by globalAlpha equals the old per-light rgba(col, a) -> rgba(col, 0) gradient.
 const COARSE_POINTER = PHONE || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
-// ===== quality tiers (DESIGN §26.4 steps 3-4) ==============================================================================
+// ===== quality tiers (docs/design/pillars-and-rules.md steps 3-4) ==============================================================================
 //   high  : desktop, the reference look (every pass below at full quality; the fog clear zone around the hero)
 //   phone : PHONE / coarse pointer. Lightmap and bloom upscaled without smoothing (the smoothed full-res upscales are the
 //           costliest single blits in a software rasteriser); the bloom glow is smoothed to half res first, so it stays soft
@@ -1616,7 +1616,7 @@ function lightSized(col, d) {
   }
   return c;
 }
-// ===== light cap with hysteresis (Lumina LightPool rules, DESIGN §26.4; see docs/CREDITS.md) ==================================
+// ===== light cap with hysteresis (Lumina LightPool rules, docs/design/pillars-and-rules.md; see docs/CREDITS.md) ==================================
 // The cap used to hard-sort every frame, so at 40 lights a light near the rank boundary popped on and off. Now: a light keeps a
 // record across frames (map lights by object; per-frame lights - VFX, fireflies, braziers - by the nearest same-colour light of
 // the last frame within 10 px), the lit set is re-ranked every LP_RERANK s with LP_HYST off the cost of lights already lit,
@@ -1726,7 +1726,7 @@ function applyLighting(ctx, lights, th, ambient) {
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
 }
 
-// ===== emitter-only bloom (DESIGN §26.4 step 4; Lumina item 5, docs/meetings/2026-10-20-lumina.md; see docs/CREDITS.md) =========
+// ===== emitter-only bloom (docs/design/pillars-and-rules.md step 4; Lumina item 5, docs/meetings/2026-10-20-lumina.md; see docs/CREDITS.md) =========
 // The bloom used to bright-pass the whole scene (v^4 of a 1/4-res copy), so a white slash, a hit flash or the Echo's bright body
 // whited out the very target the fight is about. Now only EMITTERS go into the 1/4-res glow buffer (EM = BT): the drawn lights
 // (cores 0.15 x their radius, weighted by the light pool: braziers / flames, projectiles and spells push lights too), the moon /

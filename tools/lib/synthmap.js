@@ -1,5 +1,5 @@
 'use strict';
-// The synthetic 112x112 engine-check zone (DESIGN §25). Used by tools/play.js.
+// The synthetic 112x112 engine-check zone (docs/design/world-maps.md). Used by tools/play.js.
 // Moved here from tools/engine-tour.js (deleted in M4a cleanup). Pure data, deterministic.
 // Returns a map object in the js/world.js shape; it is injected at run time and never written to js/world.js.
 function synthMap(W = 112, H = 112, seed = 7) {

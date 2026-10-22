@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// The ELFX prototype board (DESIGN §31 / §32; element-vfx minutes A7, P0 / P1 / P7): a node check, then headless captures.
+// The ELFX prototype board (docs/design/visual-bible.md, docs/design/elements-statuses.md; element-vfx minutes A7, P0 / P1 / P7): a node check, then headless captures.
 //   node tools/fx-board.js --check     the P0 / P1 check only (no browser):
 //       * every DMG_ELS / RES_ELS entry, gloom and wind has an ELFX row; ramps are 4 steps; the core is the only step above
 //         0.9 relative luminance; motifs <= 5 x 5 px and <= 3 frames; models exist; life bands are sane
