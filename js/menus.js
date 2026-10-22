@@ -321,7 +321,6 @@ function doSell(p) {
 const TIP_BLUE = '#8fa8e8', TIP_GREEN = '#6ee36e', TIP_BOON = '#7be0d0', TIP_MAX_LINES = 12;
 const SLOT_WORD = { weapon: 'Weapon', offhand: 'Offhand', head: 'Helm', chest: 'Chest', boots: 'Boots', ring: 'Ring', amulet: 'Amulet', belt: 'Belt' };
 const CLASS_WORD = { blades: 'Blades', greatarms: 'Great arms', shots: 'Shots', foci: 'Foci', shadows: 'Shadows', heavy: 'Heavy', caster: 'Caster', medium: 'Medium', shadow: 'Shadow', trinket: 'Trinket' };
-const SKILL_KEY = { chest: 'F', head: 'R', boots: 'V' };
 const AX_NAME = { fireDmg: 'Fire damage', frostDmg: 'Frost damage', natureDmg: 'Nature damage', lightningDmg: 'Lightning damage', arcaneDmg: 'Arcane damage', holyDmg: 'Holy damage',
   statusChance: 'Status chance', markCap: 'Mark cap', chargeSpeed: 'Charge rate', onDodge: 'Heal on dodge', onKill: 'MP on kill', resHoly: 'Holy res' };
 const STAT_COL = { dmg: '#ff9a4a', power: '#ff9a4a', skillDmg: '#ffb86a', crit: '#ffd35a', critDmg: '#ffd35a', haste: '#9ef0ff', cdr: '#9ab8ff', hp: '#ff6a8a', mp: '#4f7df0', def: '#b9c2dc',
@@ -364,6 +363,21 @@ function wrapLines(s, size, w, max) {
   if (out.length > max) { const rest = out.splice(max - 1).join(' '); out.push(fitText(rest, w, size)); }
   return out;
 }
+// an ITEM NAME never gets an ellipsis: it wraps on spaces into as many lines as it needs (a word wider than the column breaks mid-word)
+function nameLines(s, size, w) {
+  const out = []; let line = '';
+  for (let wd of String(s).split(' ')) {
+    while (UI.measure(wd, size) > w) {
+      let k = wd.length - 1; while (k > 1 && UI.measure(wd.slice(0, k), size) > w) k--;
+      if (line) { out.push(line); line = ''; }
+      out.push(wd.slice(0, k)); wd = wd.slice(k);
+    }
+    const t = line ? line + ' ' + wd : wd;
+    if (line && UI.measure(t, size) > w) { out.push(line); line = wd; } else line = t;
+  }
+  if (line) out.push(line);
+  return out.length ? out : [''];
+}
 // boon.text is always the MAJOR wording; a minor boon shows its minor numbers (BOONS row: minor / major value tables)
 function boonText(it) {
   const b = it.boon; if (!b || b.grade !== 'minor' || typeof BOONS === 'undefined') return b ? b.text : '';
@@ -404,7 +418,7 @@ function itemTipRows(p, it, o = {}) {
   const mineB = itemBase(it), cmpB = cmp ? itemBase(cmp) : null, acc = x => { const s = {}; for (const a of x.affixes) s[a.id] = (s[a.id] || 0) + a.v; return s; };
   const mineA = acc(it), cmpA = cmp ? acc(cmp) : null;
   // 1 name
-  const nm = wrapLines(itemName(it), 'body', w, 2);
+  const nm = nameLines(itemName(it), 'body', w);
   add('name', 0, nm.length * UI.lineH('body'), { lines: nm, col: rarityCol(it.rarity) });
   // 2 icon row: art, family + tier, up to two base stats with compare deltas
   const stats = STAT_ORDER.filter(k => mineB[k]).slice(0, 2).map(k => ({ id: k, s: fmtStat(k, mineB[k], k !== 'dmg').replace(/^\+/, ''), d: cmpB ? mineB[k] - (cmpB[k] || 0) : 0 }));
@@ -423,9 +437,9 @@ function itemTipRows(p, it, o = {}) {
   const skills = [];
   const fm = !isTrinket(it) ? item(it.slot, b.family) : null;
   if (fm) {   // Loadout v3: a weapon grants its Q spell + Shift+Q ultimate (in OFFHAND: E / Shift+E); an offhand line its M2 / E / Shift+E
-    const keys = it.slot === 'offhand' ? [['action', 'M2'], ['spell', 'E'], ['ult', '▲E']] : it.slot === 'weapon' ? [['spell', 'Q'], ['ult', '▲Q']] : [];
-    for (const [k, key] of keys) if (fm[k] && SKILLS[fm[k]]) skills.push({ id: fm[k], key });
-    if (fm.skill && SKILLS[fm.skill]) skills.push({ id: fm.skill, key: SKILL_KEY[it.slot] });
+    const keys = it.slot === 'offhand' ? [['action', 'rmb'], ['spell', 'e'], ['ult', 'eu']] : it.slot === 'weapon' ? [['spell', 'q'], ['ult', 'qu']] : [];
+    for (const [k, slot] of keys) if (fm[k] && SKILLS[fm[k]]) skills.push({ id: fm[k], slot });
+    if (fm.skill && SKILLS[fm.skill]) skills.push({ id: fm.skill, slot: SLOT_OF_ARMOUR[it.slot] });
   }
   const gemText = it.sockets.filter(Boolean).map(g => { const gs = gemStats(g, it.slot); return Object.entries(gs).map(([k, v]) => fmtStat(k, v)).join(' '); }).join(', ');
   if (it.sockets.length) add('sockets', 2, 30, { sockets: it.sockets, text: gemText, skills: [] });
@@ -509,12 +523,12 @@ function drawTipRows(ctx, T, x, y, w, o = {}) {
     else if (r.k === 'rule') r.lines.forEach((l, i) => UI.text(ctx, l, x, yy + i * LH, 'small', UC.gold));
     else if (r.k === 'family') UI.text(ctx, fitText(r.s, w, 'small'), x, yy, 'small', UC.bright);
     else if (r.k === 'skills') {   // icon + key on one line, the skill's name under it (fits three 100 px columns at phone width)
-      const nm = r.skills.map(s => (SKILLS[s.id] || {}).name || s.id), nw = nm.map(n => Math.max(44, UI.measure(n, 'small'))), gap = 4;
+      const nm = r.skills.map(s => (SKILLS[s.id] || {}).name || s.id), ks = r.skills.map(s => slotKey(s.slot, 56)), nw = nm.map((n, i) => Math.max(44, 28 + UI.measure(ks[i], 'small'), UI.measure(n, 'small'))), gap = 4;
       const k = Math.min(1, (w - gap * (nm.length - 1)) / nw.reduce((a, b) => a + b, 0));   // columns sized by name length, shrunk to fit
       let sx = x;
       r.skills.forEach((s, i) => {
         const cw = Math.floor(nw[i] * k); ctx.imageSmoothingEnabled = false; ctx.drawImage(uiSkillIcon(s.id), sx, yy + 1, 24, 24);
-        UI.text(ctx, s.key, sx + 28, yy + 6, 'small', UC.dim);
+        UI.text(ctx, ks[i], sx + 28, yy + 6, 'small', UC.dim);
         UI.text(ctx, fitText(nm[i], cw), sx, yy + 28, 'small', UC.text); sx += cw + gap;
       });
     }
@@ -544,21 +558,24 @@ function drawLoadout(ctx, p, x, y, w, emptyKey) {
   UI.text(ctx, 'LOADOUT', x + 8, yy, 'body', UC.gold); yy += 24;
   const hint = emptyKey ? `Empty ${EQ_LABEL[emptyKey].toLowerCase()} slot` : (IN.device === 'touch' ? 'Tap an item to see it here' : 'Hover or select an item for details');
   UI.text(ctx, hint, x + 8, yy, 'small', emptyKey ? UC.text : UC.dim); yy += 24;
-  UI.text(ctx, fitText(wi ? itemName(wi) : wp.name, w - 16, 'body'), x + 8, yy, 'body', wi ? rarityCol(wi.rarity) : UC.text); yy += 26;
+  for (const l of nameLines(wi ? itemName(wi) : wp.name, 'body', w - 16)) { UI.text(ctx, l, x + 8, yy, 'body', wi ? rarityCol(wi.rarity) : UC.text); yy += 22; }
+  yy += 4;
   const skillRow = (key, id, col) => {
     if (!id || !SKILLS[id]) return;
     ctx.imageSmoothingEnabled = false; ctx.drawImage(uiSkillIcon(id), x + 8, yy, 20, 20);
+    const kw = Math.max(36, UI.measure(key, 'small') + 4);
     UI.text(ctx, key, x + 36, yy + 3, 'small', col || UC.stHi);
-    UI.text(ctx, fitText(SKILLS[id].name, w - 110), x + 72, yy + 3, 'small', UC.text);
+    UI.text(ctx, fitText(SKILLS[id].name, w - 74 - kw), x + 36 + kw, yy + 3, 'small', UC.text);
     UI.text(ctx, SKILLS[id].element, x + w - 8, yy + 3, 'small', UC.dim, 'right');
     yy += 22;
   };
-  for (const [k, sl] of [['Q', 'q'], ['▲Q', 'qu']]) skillRow(k, slotSkill(p, sl), sl === 'qu' ? UC.gold : UC.stHi);
+  for (const sl of ['q', 'qu']) skillRow(slotKey(sl, 56), slotSkill(p, sl), sl === 'qu' ? UC.gold : UC.stHi);
   const oi = p.equip.offhand;
-  UI.text(ctx, fitText(oi ? itemName(oi) : 'No offhand', w - 16, 'small'), x + 8, yy + 2, 'small', oi ? rarityCol(oi.rarity) : UC.dim); yy += 20;
-  for (const [k, sl] of [['M2', 'rmb'], ['E', 'e'], ['▲E', 'eu']]) skillRow(k, slotSkill(p, sl), sl === 'eu' ? UC.gold : UC.stHi);
+  for (const l of nameLines(oi ? itemName(oi) : 'No offhand', 'small', w - 16)) { UI.text(ctx, l, x + 8, yy + 2, 'small', oi ? rarityCol(oi.rarity) : UC.dim); yy += 16; }
+  yy += 4;
+  for (const sl of ['rmb', 'e', 'eu']) skillRow(slotKey(sl, 56), slotSkill(p, sl), sl === 'eu' ? UC.gold : UC.stHi);
   yy += 2; mnDivider(ctx, x + 8, yy, w - 16, 2); yy += 8;
-  for (const [k, sk] of [['R', 'r'], ['F', 'f'], ['V', 'v']]) skillRow(k, slotSkill(p, sk));
+  for (const sl of ['r', 'f', 'v']) skillRow(slotKey(sl, 56), slotSkill(p, sl));
   if (p.grip) { const g = GRIPS.find(q => q.id === p.grip); if (g) { UI.text(ctx, fitText(`Grip: ${g.name}. ${g.hint}`, w - 16, 'small'), x + 8, yy + 2, 'small', UC.gold); yy += 20; } }
   yy += 2; mnDivider(ctx, x + 8, yy, w - 16, 2); yy += 8;
   const sb = setBonusLine(p);
@@ -594,14 +611,16 @@ function drawItemPanel(ctx, p, x, y, w, what, hov, gemPick, ringKey, emptyKey) {
   const T = itemTipRows(p, it, { w: w - 16, touch: IN.device === 'touch' || !!G.touch, cmp, maxH: cmp ? CY - y - 8 : 350 });
   drawTipRows(ctx, T, x + 8, y, w - 16, { p, it, interactive: true, gemPick });
   // compact stat-delta compare (docs/design/hud-ui.md): a header, then up to 3 green / red deltas versus the item this one would replace
-  const drawCompare = head => {
+  const drawCompare = (head, named) => {
     mnDivider(ctx, x + 8, CY, w - 16, 2);
     UI.text(ctx, head, x + 8, CY + 8, 'small', what.pick ? UC.gold : UC.dim);
+    let dy = CY + 28;
+    if (named) for (const l of nameLines(itemName(named), 'small', w - 16)) { UI.text(ctx, l, x + 8, dy, 'small', rarityCol(named.rarity)); dy += 16; }
     const D = compareDeltas(it, cmp);
-    if (!D.length) UI.text(ctx, 'No stat change', x + 8, CY + 28, 'small', UC.dim);
-    D.forEach((d, i) => UI.text(ctx, d.text, x + 16, CY + 28 + i * 18, 'small', d.d > 0 ? TIP_GREEN : UC.danger));
+    if (!D.length) UI.text(ctx, 'No stat change', x + 8, dy, 'small', UC.dim);
+    D.forEach((d, i) => UI.text(ctx, d.text, x + 16, dy + i * 18, 'small', d.d > 0 ? TIP_GREEN : UC.danger));
   };
-  if (what.pick) { if (cmp) drawCompare(`Replaces ${fitText(itemName(cmp), 190)}`); else UI.text(ctx, 'Choose a ring slot', x + 8, 436, 'small', UC.gold); }
+  if (what.pick) { if (cmp) drawCompare('Replaces', cmp); else UI.text(ctx, 'Choose a ring slot', x + 8, 436, 'small', UC.gold); }
   else if (what.eq || isEquipped(p, it)) UI.text(ctx, 'Equipped', x + 8, 432, 'small', UC.gold);
   else if (what.bi != null && what.bi >= 0) {
     if (cmp) drawCompare('vs equipped'); else UI.text(ctx, 'Nothing equipped here', x + 8, 436, 'small', UC.dim);
@@ -643,27 +662,31 @@ function clickPageEntry(p, it, id) {
 }
 function drawCharacterTab(ctx, p) {
   const u = G.ui; let hoverId = null;
-  const row = (head, name, nameCol, y0, cells) => {   // a section: heading, item name, then up to three 44 px cells with key tags
+  // a section: heading, the FULL item name (wrapped, rarity colour, never an ellipsis), then up to three 44 px cells with key tags; returns the next y
+  const row = (head, name, nameCol, y0, cells) => {
     mnHead(ctx, head, COL1 + 8, y0);
-    if (name != null) UI.text(ctx, fitText(name, 200, 'small'), COL1 + 8, y0 + 20, 'small', nameCol || UC.text);
-    const cy = y0 + (name != null ? 38 : 20);
+    let cy = y0 + 20;
+    if (name != null) { for (const l of nameLines(name, 'small', 204)) { UI.text(ctx, l, COL1 + 8, cy, 'small', nameCol || UC.text); cy += 16; } cy += 2; }
     cells.forEach((c, i) => {
       const x = COL1 + 8 + i * 60, r = skillSlotBox(ctx, c.id, x, cy, c.key, () => { if (c.id) u.skSel = c.id; }, { icon: c.icon, rim: c.rim, def: c.def });
       UI.text(ctx, c.label, x + 22, cy + 46, 'small', c.rim === UC.gold ? UC.gold : UC.dim, 'center');
       if (c.count != null) UI.text(ctx, c.count, x + 40, cy + 28, 'small', c.count ? UC.text : UC.dim, 'right');
       if (r.on && c.id) hoverId = c.id;
     });
+    return cy + 70;
   };
   const wi = p.equip.weapon, oi = p.equip.offhand, w = weaponOf(p);
-  row('HAND', wi ? itemName(wi) : 'Bare hands', wi ? rarityCol(wi.rarity) : UC.dim, 76, [
-    { key: 'ch:lmb', label: 'M1', icon: uiItemIcon(wi), rim: UC.line, def: true }, { key: 'ch:q', id: slotSkill(p, 'q'), label: 'Q' }, { key: 'ch:qu', id: slotSkill(p, 'qu'), label: '▲Q', rim: UC.gold }]);
-  row('OFFHAND', oi ? itemName(oi) : isTwoHanded(wi) ? 'Two-handed: a companion only' : 'Empty', oi ? rarityCol(oi.rarity) : UC.dim, 176, [
-    { key: 'ch:rmb', id: slotSkill(p, 'rmb'), label: 'M2' }, { key: 'ch:e', id: slotSkill(p, 'e'), label: 'E' }, { key: 'ch:eu', id: slotSkill(p, 'eu'), label: '▲E', rim: UC.gold }]);
-  row('ARMOUR', null, null, 276, [{ key: 'ch:r', id: slotSkill(p, 'r'), label: 'R' }, { key: 'ch:f', id: slotSkill(p, 'f'), label: 'F' }, { key: 'ch:v', id: slotSkill(p, 'v'), label: 'V' }]);
-  row('POCKETS', null, null, 358, (p.pockets || []).slice(0, 3).map((id, i) => {
-    const P = POCKETS[id]; return { key: 'ch:pk' + i, label: ['Z', 'X', 'C'][i], icon: P ? (id === 'potion' ? miscIcon('potion') : icon(P.icon, P.color)) : null, rim: P ? P.color : UC.bevel, count: P ? pocketCount(p, id) : null };
+  const K = sl => slotKey(sl, 56);   // the one key scheme: LMB / Q / ▲Q on kbm, pad glyphs on a pad, role words on touch
+  let ry = 76;
+  ry = row('HAND', wi ? itemName(wi) : 'Bare hands', wi ? rarityCol(wi.rarity) : UC.dim, ry, [
+    { key: 'ch:lmb', label: K('lmb'), icon: uiItemIcon(wi), rim: UC.line, def: true }, { key: 'ch:q', id: slotSkill(p, 'q'), label: K('q') }, { key: 'ch:qu', id: slotSkill(p, 'qu'), label: K('qu'), rim: UC.gold }]);
+  ry = row('OFFHAND', oi ? itemName(oi) : isTwoHanded(wi) ? 'Two-handed: a companion only' : 'Empty', oi ? rarityCol(oi.rarity) : UC.dim, ry, [
+    { key: 'ch:rmb', id: slotSkill(p, 'rmb'), label: K('rmb') }, { key: 'ch:e', id: slotSkill(p, 'e'), label: K('e') }, { key: 'ch:eu', id: slotSkill(p, 'eu'), label: K('eu'), rim: UC.gold }]);
+  ry = row('ARMOUR', null, null, ry, [{ key: 'ch:r', id: slotSkill(p, 'r'), label: K('r') }, { key: 'ch:f', id: slotSkill(p, 'f'), label: K('f') }, { key: 'ch:v', id: slotSkill(p, 'v'), label: K('v') }]);
+  row('POCKETS', null, null, ry, (p.pockets || []).slice(0, 3).map((id, i) => {
+    const P = POCKETS[id]; return { key: 'ch:pk' + i, label: K(['z', 'x', 'c'][i]), icon: P ? (id === 'potion' ? miscIcon('potion') : icon(P.icon, P.color)) : null, rim: P ? P.color : UC.bevel, count: P ? pocketCount(p, id) : null };
   }));
-  if (p.grip) { const g = GRIPS.find(q => q.id === p.grip); if (g) UI.wrap(ctx, `${g.name}: ${g.hint}`, COL1 + 8, 446, 204, 'small', UC.gold); }
+
   // ---- centre: the selected skill ----
   const sid = hoverId || (u.skSel && SKILLS[u.skSel] ? u.skSel : slotSkill(p, 'q') || slotSkill(p, 'v') || UNARMED.roll), sk = SKILLS[sid], info = skillInfo(p, sid);
   hudFrame(ctx, COL2 + 8, 76, 44, 44, 'slot'); ctx.drawImage(skillIcon(sid), COL2 + 14, 82, 32, 32); hudFrame(ctx, COL2 + 8, 76, 44, 44, 'slotRim', { tint: elColor(sk.element) });
@@ -707,6 +730,7 @@ function drawCharacterTab(ctx, p) {
   drawStats(ctx, p, COL3 + 8, 158, 160, 22);
   mnHead(ctx, 'RESIST', COL3 + 8, 308);
   drawResistRow(ctx, p, COL3 + 8, 334, 80);
+  if (p.grip) { const g = GRIPS.find(q => q.id === p.grip); if (g) { mnHead(ctx, 'GRIP', COL3 + 8, 400); UI.wrap(ctx, `${g.name}: ${g.hint}`, COL3 + 8, 422, 316, 'small', UC.gold); } }
 }
 
 // ===== BESTIARY ====================================================================================================================

@@ -279,7 +279,7 @@ const PAD_STUB = () => {
   const near = (b, w) => b && Math.abs(b[0] - w[0]) <= 2 && Math.abs(b[1] - w[1]) <= 2;
   const specOk = near(lay.q, want(124, 200)) && near(lay.e, want(124, 235)) && near(lay.rmb, want(124, 270)) && near(lay.r, want(196, 182)) && near(lay.f, want(196, 202)) &&
     near(lay.v, want(196, 222)) && near(lay.qu, want(196, 242)) && near(lay.eu, want(196, 262)) && near(lay.toggle, want(196, 160)) && lay.atk[0] === 860 && lay.atk[1] === 436 && lay.atk[2] === 96 &&
-    lay.q[2] === 60 && lay.f[2] === 52 && lay.toggle[2] === 40 && Object.values(lay).every(b => b[1] >= 240 && b[0] - b[2] / 2 >= 0 && b[0] + b[2] / 2 <= 936);
+    lay.q[2] === 60 && lay.f[2] === 52 && lay.toggle[2] === 44 && Object.values(lay).every(b => b[2] >= 44) && Object.values(lay).every(b => b[1] >= 240 && b[0] - b[2] / 2 >= 0 && b[0] + b[2] / 2 <= 936);
   check('touch: circular layout at the spec angles / radii / diameters, nothing above y 240', specOk, lay);
   // tap = quick-cast (auto-target, aim assist), lands on the enemy
   await ev(() => { __reset(); const p = G.player, e = spawnEnemy('slime', p.x + 1.3, p.y + 0.5, 0); e.hp = e.maxHp = 1e6; });
@@ -1063,10 +1063,14 @@ const PAD_STUB = () => {
       const cap2 = makeItem('ironcap', 'common', 1); pickup(p, { kind: 'item', it: cap2, rar: 'common', x: p.x, y: p.y, z: p.z, equip: true });
       out.wear = { head: p.equip.head === cap, second: p.bag.includes(cap2), r: slotSkill(p, 'r') };
       // the ambush's fixed boots: Common Iron Boots for an empty slot; a hero already in boots gets the old Uncommon+ roll
-      const L0 = []; const dl = window.dropLoot; window.dropLoot = (x, y, list) => L0.push(list.map(d => d.it ? d.it.base + '/' + d.it.rarity : d.kind));
+      const L0 = []; const dl = window.dropLoot; window.dropLoot = (x, y, list) => L0.push(list.map(d => d.it ? { base: d.it.base, rarity: d.it.rarity, equip: !!d.equip } : { kind: d.kind }));
       lootAction({ type: 'loot', item: 'ironboots', rarity: 'common', x: p.x, y: p.y }); p.equip.boots = makeItem('ironboots', 'common', 1); recalcStats(p, false);
       lootAction({ type: 'loot', item: 'ironboots', rarity: 'common', x: p.x, y: p.y }); window.dropLoot = dl;
-      out.boots = { fresh: L0[0].join(), worn: L0[1].length === 1 && !/^ironboots/.test(L0[1][0]) && !/\/common$/.test(L0[1][0]) };
+      // The worn hero's drop is a random roll (items.js lootAction: rollItem at Uncommon+, any slot, any family), so its base CAN be an
+      // ironboots-family piece (the old check failed ~1 run in N on that). Assert the roll's contract, not its random base: one item,
+      // not the fixed first-kit `equip` pickup, and above Common.
+      const f0 = L0[0] && L0[0][0], w0 = L0[1] || [];
+      out.boots = { fresh: f0 ? f0.base + '/' + f0.rarity + (f0.equip ? '/equip' : '') : '', worn: w0.length === 1 && !!w0[0].base && !w0[0].equip && w0[0].rarity !== 'common', got: w0 };
       // a game that did not start bare (every save from before §28): the HUD is whole
       const sec = G.prog.secrets.opening; G.prog.secrets.opening = undefined; out.hudWhole = ['bars', 'map', 'q', 'rmb', 'pockets'].every(k => hudShown(k) === 1); G.prog.secrets.opening = sec;
       return out;
@@ -1075,7 +1079,7 @@ const PAD_STUB = () => {
     check('§28 bare hero: LMB is a weak Shove (<= 3 damage), Q refuses, the roll dodges', b28.shove.lmb === 'Shove' && b28.shove.dmg > 0 && b28.shove.dmg <= 3 && b28.shove.q === false && b28.shove.roll === true, b28.shove);
     check('§28 save / load: empty gear slots stay empty; an unreadable gear item becomes the slot\'s first-kit Common', b28.load.empty === 0 && b28.load.fallback === 'ironcap/common' && b28.load.others === 0, b28.load);
     check('§28 pickups: a first-kit piece goes on into an empty slot, a second one goes to the bag', b28.wear.head && b28.wear.second && b28.wear.r === 'warcry', b28.wear);
-    check('§28 garden boots: fixed Common Iron Boots (no roll); a hero already in boots gets the old Uncommon+ roll instead', b28.boots.fresh === 'ironboots/common' && b28.boots.worn, b28.boots);
+    check('§28 garden boots: fixed Common Iron Boots (no roll); a hero already in boots gets the old Uncommon+ roll instead', b28.boots.fresh === 'ironboots/common/equip' && b28.boots.worn, b28.boots);
     check('§28 a game that did not start bare keeps the whole HUD', b28.hudWhole);
     check('§28 bare-hero menus, attack and save paths raise no page errors', berr.length === 0, berr.slice(0, 3));
     await bp.close();
@@ -1778,8 +1782,8 @@ const PAD_STUB = () => {
       IN.resetBindings('kbm'); o.after = IN.bindingsFor('skillR', 'kbm').join();
       return { shift: o.shift.ok + ':' + o.shift.reason, amb: o.amb.ok + ':' + o.amb.conflict + ':' + o.amb.reason, clash: o.clash.ok + ':' + o.clash.conflict, chordOk: o.chordOk.ok, label: o.label, row: o.row, rowR: o.rowR, after: o.after };
     });
-    check('M4a rebind: Shift alone refused for play actions; an ambiguous chord (Shift+F over F) and a same-context key are rejected, never swapped; the list shows chords (SHIFT+Q)',
-      rb.shift === 'false:shift' && rb.amb === 'false:skillF:chord' && rb.clash === 'false:skillQ' && rb.chordOk === true && rb.label === 'SHIFT+Q' && rb.row === 'SHIFT+Q' && /SHIFT\+R/.test(rb.rowR) && rb.after === 'KeyR', rb);
+    check('M4a rebind: Shift alone refused for play actions; an ambiguous chord (Shift+F over F) and a same-context key are rejected, never swapped; the list shows chords as the bar does (▲Q), the long form stays SHIFT+Q',
+      rb.shift === 'false:shift' && rb.amb === 'false:skillF:chord' && rb.clash === 'false:skillQ' && rb.chordOk === true && rb.label === 'SHIFT+Q' && rb.row === '▲Q' && /▲R/.test(rb.rowR) && rb.after === 'KeyR', rb);
     // -- shots: the HUD bar, the bag
     await iev(() => { __prep(); const p = G.player; p.hp = p.maxHp; p.ult = 100; p.cds = { sunslash: 1.4 }; p.cdm = Object.assign(p.cdm || {}, { sunslash: 3 }); G.banner = null; G.msg = null; });
     await ip.mouse.move(600, 300); await wait(400);
@@ -1790,7 +1794,71 @@ const PAD_STUB = () => {
     await iev(() => { openInv('skills'); }); await wait(450);
     await ip.screenshot({ path: path.join(M4A, 'character.png') });
     await iev(() => closeInv());
-    check('M4a shots: tools/shots/m4a hud-bar.png, bag.png, character.png', ['hud-bar', 'bag', 'character'].every(n => fs.existsSync(path.join(M4A, n + '.png'))));
+    // rebind list (the keys section of the pause panel): chords read as the bar does
+    await iev(() => { G.ui.pause = true; G.ui.scr = { set: SET_GROUPS.reduce((n, [g]) => n + 24 + 34 * SETTINGS_SCHEMA.filter(q => q.group === g).length, 24) - 4 }; }); await wait(300);
+    await ip.screenshot({ path: path.join(M4A, 'rebind.png') });
+    const rbl = await iev(() => ({ u: bindText('ultQ', 'kbm'), l: bindText('attack', 'kbm'), o: bindText('offhand', 'kbm') }));
+    check("M4a labels: the rebind list uses the bar's glyphs (LMB / RMB / ▲Q), not SHIFT+Q or M1 / M2", rbl.u === '▲Q' && rbl.l === 'LMB' && rbl.o === 'RMB', rbl);
+    await iev(() => { G.ui.pause = false; });
+    // one label scheme per device: the bar, the character panel, the help card and tooltips all read slotKey(); live after a rebind
+    const lab = await iev(() => {
+      const o = {}, ALL = ['lmb', 'q', 'qu', 'rmb', 'e', 'eu', 'r', 'f', 'v', 'z', 'x', 'c']; IN.setDevice('kbm');
+      o.kbm = ALL.map(s => slotKey(s)).join(' ');
+      IN.rebind('kbm', 'skillR', 'Shift+KeyR', { swap: false }); o.reb = slotKey('r'); IN.resetBindings('kbm'); o.back = slotKey('r');
+      IN.setDevice('touch'); o.touch = ALL.map(s => slotKey(s)).join(' '); IN.setDevice('kbm');
+      o.fit = ['lmb', 'rmb', 'qu', 'eu'].every(s => UI.measure(slotKey(s), 'small') <= SLOT_PITCH - 8);
+      return o;
+    });
+    check('M4a labels: kbm LMB Q ▲Q RMB E ▲E R F V Z X C; a rebind shows at once (▲R) and resets; touch uses role words; every cap fits its slot', lab.kbm === 'LMB Q ▲Q RMB E ▲E R F V Z X C' && lab.reb === '▲R' && lab.back === 'R' && lab.touch === 'ATK SPL ULT OFF SPL ULT HEAD BODY ROLL 1 2 3' && lab.fit, lab);
+    // touch wheel at 960x540: M2 on the inner arc, both ultimates on the outer arc, pockets on page 2; no overlaps, every target >= 44 CSS px
+    const GEOM = () => {
+      const B = touchButtons(), k = touchScale(), o = { min: 1e9, over: [], n: B.length };
+      for (const b of B) o.min = Math.min(o.min, b.s * k);
+      for (let i = 0; i < B.length; i++) for (let j = i + 1; j < B.length; j++) { const g = Math.hypot(B[i].x - B[j].x, B[i].y - B[j].y) - B[i].r - B[j].r; if (g < 0) o.over.push(B[i].slot + '/' + B[j].slot + ':' + g.toFixed(1)); }
+      const M = touchMenu(); o.menu = Math.min(...M.map(m => Math.min(m.w, m.h) * k)); o.scale = +k.toFixed(3);
+      o.far = B.filter(b => b.x - b.r < 0 || b.x + b.r > DW || b.y - b.r < 0 || b.y + b.r > DH).map(b => b.slot);
+      return o;
+    };
+    await iev(() => { G.prompt = null; __tp('pointerdown', 9, 5, 5); __tp('pointerup', 9, 5, 5); }); await wait(200);
+    await iev(() => { __prep(); G.player.ult = 60; G.player.hp = G.player.maxHp; G.ui.pause = false; TOUCH.page = 0; }); await wait(400);
+    const g1 = await iev(GEOM); await iev(() => { G.prompt = { text: 'Open', x: G.player.x, y: G.player.y }; }); const g1i = await iev(GEOM); await iev(() => { G.prompt = null; });
+    await ip.screenshot({ path: path.join(M4A, 'touch-wheel.png') });
+    await iev(() => { const b = __bt('toggle'); __tp('pointerdown', 18, b.x, b.y); __tp('pointerup', 18, b.x, b.y); }); await wait(500);
+    await ip.screenshot({ path: path.join(M4A, 'touch-wheel-p2.png') });
+    await iev(() => { const b = __bt('toggle'); __tp('pointerdown', 18, b.x, b.y); __tp('pointerup', 18, b.x, b.y); }); await wait(300);
+    check('M4a touch 960x540: every wheel button >= 44 CSS px, the bag / help / full buttons too, no two overlap (with and without Interact), all on screen', g1.min >= 44 && g1.menu >= 44 && g1.over.length === 0 && g1i.over.length === 0 && g1i.min >= 44 && g1.far.length === 0, { g1, g1i });
+    await iev(() => { openInv('skills'); }); await wait(450);
+    await ip.screenshot({ path: path.join(M4A, 'character-touch.png') });
+    await iev(() => closeInv()); await ip.keyboard.press('KeyW'); await wait(100);
+    // the phone: 844x390 landscape, the touch layout at scale 0.72 (44 CSS px = 61 design px)
+    {
+      const ph = await br.newPage({ viewport: { width: 844, height: 390 } }); ph.on('pageerror', e => errs.push('pageerror(m4a phone): ' + e.message));
+      await ph.addInitScript(PAD_STUB);
+      await ph.goto(`${base}/index.html?scene=play`, { waitUntil: 'load' });
+      await ph.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+      await wait(300);
+      await ph.evaluate(() => {
+        setSetting('groundIndicators', 'off'); G.banner = null; G.enemies.length = 0; G.player.invulnT = 1e9;
+        window.__tp = (type, id, x, y) => { const c = document.getElementById('game'), r = c.getBoundingClientRect(); c.dispatchEvent(new PointerEvent(type, { pointerType: 'touch', pointerId: id, bubbles: true, clientX: r.left + x * r.width / DW, clientY: r.top + y * r.height / DH })); };
+        window.__tp('pointerdown', 9, 5, 5); window.__tp('pointerup', 9, 5, 5); G.player.ult = 60; G.msg = null;
+      });
+      await wait(500);
+      const gp = await ph.evaluate(() => {
+        const B = touchButtons(), k = touchScale(), o = { min: 1e9, over: [] };
+        for (const b of B) o.min = Math.min(o.min, b.s * k);
+        for (let i = 0; i < B.length; i++) for (let j = i + 1; j < B.length; j++) { const g = Math.hypot(B[i].x - B[j].x, B[i].y - B[j].y) - B[i].r - B[j].r; if (g < 0) o.over.push(B[i].slot + '/' + B[j].slot + ':' + g.toFixed(1)); }
+        const M = touchMenu(); o.menu = Math.min(...M.map(m => Math.min(m.w, m.h) * k)); o.scale = +k.toFixed(3); o.dev = IN.device; o.glyphs = ['lmb', 'qu', 'eu', 'r'].map(s => slotKey(s)).join(' ');
+        return o;
+      });
+      await ph.screenshot({ path: path.join(M4A, 'phone-touch.png') });
+      await ph.evaluate(() => { const b = touchButtons().find(q => q.slot === 'toggle'); window.__tp('pointerdown', 18, b.x, b.y); window.__tp('pointerup', 18, b.x, b.y); }); await wait(500);
+      await ph.screenshot({ path: path.join(M4A, 'phone-touch-p2.png') });
+      await ph.evaluate(() => { openInv('skills'); }); await wait(450);
+      await ph.screenshot({ path: path.join(M4A, 'phone-character.png') });
+      check('M4a phone 844x390: every touch target >= 44 CSS px (wheel and menu buttons), no overlaps, touch glyphs are role words', gp.dev === 'touch' && gp.min >= 44 && gp.menu >= 44 && gp.over.length === 0 && gp.glyphs === 'ATK ULT ULT HEAD', gp);
+      await ph.close();
+    }
+    check('M4a shots: tools/shots/m4a hud-bar, bag, character, rebind, touch-wheel (+ p2), character-touch, phone-touch (+ p2), phone-character', ['hud-bar', 'bag', 'character', 'rebind', 'touch-wheel', 'touch-wheel-p2', 'character-touch', 'phone-touch', 'phone-touch-p2', 'phone-character'].every(n => fs.existsSync(path.join(M4A, n + '.png'))));
     // -- Hush and world time (stepped by hand: the rAF loop stopped)
     await iev(() => { running = false; });
     await wait(100);

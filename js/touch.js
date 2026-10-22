@@ -41,11 +41,17 @@ const TOUCH_SKILL_SLOTS = ['q', 'qu', 'rmb', 'e', 'eu', 'r', 'f', 'v'];   // the
 const TOUCH_INNER = { q: 200, e: 235, rmb: 270, z: 200, x: 235, c: 270 };
 const TOUCH_PAGES = [['q', 'e', 'rmb'], ['z', 'x', 'c']];
 const TOUCH_POCKET = { z: 1, x: 1, c: 1 };
+// every touch target is at least 44 CSS px (docs/design/controls.md): the design-px diameter grows when the canvas is scaled down
+// (a phone at 844x390 draws at 0.72, so 44 CSS px = 61 design px); at 960x540 and up nothing changes beyond the 44 floor
+const touchScale = () => (parseFloat(DISP.style.width) || DW) / DW;
+const touchMinD = () => Math.ceil(44 / touchScale());
+const touchSize = d => Math.max(d, touchMinD());
 const touchOrigin = () => { const sf = TSAFE(); return { x: Math.min(860, DW - sf.r - 52), y: Math.min(436, DH - sf.b - 80) }; };
 // tablets >= 1024 px can put the pockets on a third arc instead of the page toggle
 const touchShowAll9 = () => typeof SETTINGS !== 'undefined' && !!SETTINGS.showAll9 && (window.innerWidth >= 1024 || !!TOUCH.forceAll9);
 function touchPolar(slot, r, deg, d, extra) {
   const o = touchOrigin(), mx = x => leftHanded() ? DW - x : x, a = deg * TDEG;
+  d = touchSize(d);
   return Object.assign({ slot, x: mx(UI.snap(o.x + Math.cos(a) * r)), y: UI.snap(o.y + Math.sin(a) * r), s: d, r: d / 2 }, extra);
 }
 // an inner-arc skill button, optionally rotated off its home angle (page-swap animation)
@@ -68,7 +74,8 @@ function touchHit(x, y) {
 // three 40x40 icon buttons under the tracker: bag, help, fullscreen
 function touchMenu() {
   const sf = TSAFE();
-  return ['gear', 'help', 'full'].map((id, i) => ({ id, x: sf.l + i * 44, y: Math.max(112, sf.t + 88), w: 40, h: 40 }));
+  const d = touchSize(40);
+  return ['gear', 'help', 'full'].map((id, i) => ({ id, x: sf.l + i * (d + 4), y: Math.max(112, sf.t + 88), w: d, h: d }));
 }
 
 function toDisplay(ev) {

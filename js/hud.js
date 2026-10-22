@@ -17,7 +17,25 @@ const UC = UI.C;
 // the HAND item, the OFFHAND item, head / chest / boots, the three pockets. Both ultimates show the one shared charge.
 const SLOT_GROUPS = [{ x: 352, slots: ['lmb', 'q', 'qu'] }, { x: 506, slots: ['rmb', 'e', 'eu'] }, { x: 660, slots: ['r', 'f', 'v'] }, { x: 814, slots: ['z', 'x', 'c'] }];
 const SLOT_PITCH = 46, SLOT_Y = 484, SLOT = 44;
-const SLOT_LABEL = { lmb: 'LMB', q: 'Q', qu: '▲Q', rmb: 'RMB', e: 'E', eu: '▲E', r: 'R', f: 'F', v: 'V', z: 'Z', x: 'X', c: 'C' };
+// ONE key-label scheme for every surface (bar, character panel, loadout pane, item tooltips, help, rebind list): slotKey(slot).
+//   kbm   the actual bound key, live: LMB RMB Q E R F V Z X C, a chord as the Shift glyph + key (▲Q, ▲E; IN.keyName);
+//   pad   the bound button text (RT LT RB LB R3 L3 Y X B D◄ ...);   touch   the wheel's role word (no key exists).
+// A rebind shows at once because the label is read from IN every draw. A wide cap (SPACE, ▲SPACE) is abbreviated to fit,
+// never ellipsised.
+const SLOT_TOUCH = { lmb: 'ATK', rmb: 'OFF', q: 'SPL', e: 'SPL', qu: 'ULT', eu: 'ULT', r: 'HEAD', f: 'BODY', v: 'ROLL', z: '1', x: '2', c: '3' };
+const KEY_SHORT = { SPACE: 'SPC', SHIFT: 'SH', CTRL: 'CTL', ENTER: 'ENT', BKSP: 'BS', CAPS: 'CAP', START: 'STA', OPTIONS: 'OPT', SHARE: 'SHR', BACK: 'BCK' };
+function keyCap(s, maxW) {
+  s = String(s);
+  if (UI.measure(s, 'small') > maxW) s = s.replace(/NUM(\d)/, 'N$1').replace(/[A-Z]{3,}/g, w => KEY_SHORT[w] || w);
+  while (s.length > 1 && UI.measure(s, 'small') > maxW) s = s.slice(0, -1);
+  return s;
+}
+function slotKey(slot, maxW = 56, dev = IN.device) {
+  if (dev === 'touch') return SLOT_TOUCH[slot] || '';
+  const g = IN.glyph(SLOT_ACTION[slot], dev === 'pad' ? 'pad' : 'kbm');
+  return g ? keyCap(g, maxW) : '-';
+}
+const SLOT_OF_ARMOUR = { head: 'r', chest: 'f', boots: 'v' };
 const isPocketSlot = slot => slot === 'z' || slot === 'x' || slot === 'c';
 const EL_ICON_COL = { slash: 'physical', pierce: 'physical' };
 const uiReady = () => !!(typeof UI_ART !== 'undefined' && UI.image(UI_ART.src));
@@ -315,9 +333,9 @@ function drawSkillSlot(ctx, p, slot, x, y) {
   }
   if (pk) UI.text(ctx, st.count, x + 40, y + 28, 'small', st.count ? UC.text : UC.dim, 'right');
   // key tag sits above the slot's top-left corner, outside the icon art
-  const label = st.glyph || SLOT_LABEL[slot];
+  const label = slotKey(slot, SLOT_PITCH - 8);
   if (label) {
-    const tw = Math.max(24, UI.measure(label, 'small') + 12);
+    const tw = Math.min(SLOT_PITCH - 2, Math.max(24, UI.measure(label, 'small') + 12));
     hudFrame(ctx, x, y - 16, tw, 20, st.mpShort ? 'keyTagMp' : 'keyTag');
     UI.text(ctx, label, x + tw / 2, y - 14, 'small', st.mpShort ? UC.mpHi : UC.text, 'center', { shadow: false });
   }
@@ -560,7 +578,7 @@ function drawBanner(ctx, p) {
     return;
   }
   ctx.globalAlpha = a;   // zone / boss entry: a 960x64 letterbox strip at y=112
-  const by = G.touch ? touchMenu()[0].y + 40 + 12 : 112;   // touch: below the three top-left buttons (R3 #3), wherever the safe area puts them
+  const by = G.touch ? touchMenu()[0].y + touchMenu()[0].h + 12 : 112;   // touch: below the three top-left buttons (R3 #3), wherever the safe area puts them
   HUD.bannerY = by;
   ctx.fillStyle = UC.edge; ctx.globalAlpha = a * 0.78; ctx.fillRect(0, by, DW, 64); ctx.globalAlpha = a;
   ctx.fillStyle = bn.boss ? UC.danger : UC.line; ctx.fillRect(0, by, DW, 2); ctx.fillRect(0, by + 62, DW, 2);
@@ -608,8 +626,8 @@ function drawHelp(ctx) {
     ['Left thumb', 'Joystick: move'], ['Big button (hold)', 'Weapon basic attack'], ['Tap a skill', 'Cast at the nearest enemy'], ['Drag a skill', 'Aim, release to cast'],
     ['Hold a skill', 'Open the bag'], ['Small button', 'Offhand action'], ['Gold buttons', 'Ultimates (one shared charge)'], ['Toggle', 'Pockets: potion, flask, bomb'], ['Bag / ? / full', 'Top-left buttons'],
   ] : [
-    ['move', 'Move'], ['aim', 'Aim'], ['attack', 'Hand action (builds MP and charge)'], ['skillQ', 'Hand spell (Shift+Q = ultimate)'], ['offhand', 'Offhand action (stamina)'],
-    ['skillE', 'Offhand spell (Shift+E = ultimate)'], ['skillR', 'Head skill (F = chest)'], ['dodge', 'Dodge (boots skill)'], ['s1', 'Pockets Z X C'], ['interact', 'Interact / talk'], ['inventory', 'Bag, character, bestiary, quests'], ['pause', 'Pause and settings'],
+    ['move', 'Move'], ['aim', 'Aim'], ['attack', 'Hand action (builds MP and charge)'], ['skillQ', `Hand spell (${slotKey('qu')} = ultimate)`], ['offhand', 'Offhand action (stamina)'],
+    ['skillE', `Offhand spell (${slotKey('eu')} = ultimate)`], ['skillR', `Head skill (${slotKey('f')} = chest)`], ['dodge', 'Dodge (boots skill)'], ['s1', `Pockets ${slotKey('z')} ${slotKey('x')} ${slotKey('c')}`], ['interact', 'Interact / talk'], ['inventory', 'Bag, character, bestiary, quests'], ['pause', 'Pause and settings'],
   ];
   // the panel grows with the row count (R3 #1): heading, rows, one dim line, then the buttons, all inside the 540 px canvas
   const ROW = 26, top = 62, x = 180, w = 600;
@@ -621,7 +639,7 @@ function drawHelp(ctx) {
     if (G.touch) UI.text(ctx, k, x + 32, yy + 2, 'body', UC.stHi); else { const gw = hudGlyph(ctx, k, x + 32, yy - 2); if (!gw) UI.text(ctx, IN.glyph(k), x + 32, yy + 2, 'body', UC.stHi); }
     UI.text(ctx, v, x + 200, yy + 2, 'body', UC.text); yy += ROW;
   }
-  UI.text(ctx, 'You are what you wear: gear decides Q E R F C SHIFT.', 480, y + footY, 'small', UC.dim, 'center');
+  UI.text(ctx, 'You are what you wear: your gear decides every skill.', 480, y + footY, 'small', UC.dim, 'center');
   const title = G.state === 'title';
   UI.button(ctx, 480 - 170, y + btnY, 160, 36, 'SETTINGS', { id: 'btn:help-settings', size: 'small', fn: () => { G.ui.help = false; if (title) G.ui.settings = true; else G.ui.pause = true; } });
   UI.button(ctx, 480 + 10, y + btnY, 160, 36, 'CLOSE', { id: 'btn:help-close', size: 'small', def: true, fn: () => { G.ui.help = false; } });
@@ -780,10 +798,11 @@ function drawTouchControls(ctx) {
   drawTouchCancel(ctx);
   // bag / help / fullscreen
   for (const m of touchMenu()) {
-    UI.frame(ctx, m.x, m.y, 40, 40, 'plain');
-    if (m.id === 'gear') ctx.drawImage(miscIcon('chest'), m.x + 4, m.y + 4, 32, 32);
-    else if (m.id === 'help') UI.sprite(ctx, 'help', m.x + 8, m.y + 8, { scale: 2 });
-    else { ctx.fillStyle = UC.text; for (const [cx, cy, dx, dy] of [[10, 10, 1, 1], [30, 10, -1, 1], [10, 30, 1, -1], [30, 30, -1, -1]]) { ctx.fillRect(m.x + cx - (dx < 0 ? 6 : 0), m.y + cy - (dy < 0 ? 2 : 0), 6, 2); ctx.fillRect(m.x + cx - (dx < 0 ? 2 : 0), m.y + cy - (dy < 0 ? 6 : 0), 2, 6); } }
+    UI.frame(ctx, m.x, m.y, m.w, m.h, 'plain');   // m.w grows past 40 on a scaled-down phone canvas (touch.js touchSize: 44 CSS px)
+    const mx = m.x + Math.floor((m.w - 40) / 2), my = m.y + Math.floor((m.h - 40) / 2);
+    if (m.id === 'gear') ctx.drawImage(miscIcon('chest'), mx + 4, my + 4, 32, 32);
+    else if (m.id === 'help') UI.sprite(ctx, 'help', mx + 8, my + 8, { scale: 2 });
+    else { ctx.fillStyle = UC.text; for (const [cx, cy, dx, dy] of [[10, 10, 1, 1], [30, 10, -1, 1], [10, 30, 1, -1], [30, 30, -1, -1]]) { ctx.fillRect(mx + cx - (dx < 0 ? 6 : 0), my + cy - (dy < 0 ? 2 : 0), 6, 2); ctx.fillRect(mx + cx - (dx < 0 ? 2 : 0), my + cy - (dy < 0 ? 6 : 0), 2, 6); } }
   }
 }
 // the Ø64 cancel zone at (480,500): fades in after a 40 px drag, lights up under the finger

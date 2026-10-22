@@ -20,7 +20,7 @@ const BIND_ACTIONS = ['attack', 'skillQ', 'ultQ', 'offhand', 'skillE', 'ultE', '
 const bindDev = () => (IN.device === 'pad' ? 'pad' : 'kbm');
 const bindText = (a, dev) => {
   const L = IN.bindingsFor(a, dev); if (!L.length) return '-';
-  return dev === 'pad' ? IN.glyph(a, 'pad') : L.slice(0, 2).map(IN.keyLabel).join(' / ');
+  return dev === 'pad' ? IN.glyph(a, 'pad') : L.slice(0, 2).map(IN.keyName).join(' / ')   // the same short glyph as the bar and the panel (▲Q), not SHIFT+Q;
 };
 function startBind(a) {
   const dev = bindDev(), u = G.ui; u.bind = { a, dev, t: G.t };
@@ -28,7 +28,7 @@ function startBind(a) {
     u.bind = null;
     if (dev === 'kbm' && code === 'Escape') return;
     const r = IN.rebind(dev, a, code, { swap: false });
-    const name = dev === 'pad' ? 'That button' : IN.keyLabel(code);
+    const name = dev === 'pad' ? 'That button' : IN.keyName(code);
     u.bindNote = r.ok ? { a, s: 'Bound to ' + (dev === 'pad' ? IN.glyph(a, 'pad') : name), col: UC.mpHi, t: G.t + 2 }
       : { a, s: r.reason === 'shift' ? 'Shift is the chord key' : r.conflict ? `${name} is ${IN.LABEL[r.conflict]}` : 'Not allowed', col: UC.danger, t: G.t + 2.5 };
     sfx(r.ok ? 'pickup' : 'hurt');
