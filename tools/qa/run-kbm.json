@@ -29,7 +29,7 @@
    "lvl": 9,
    "bossLvl": 5,
    "at": 565.8,
-   "t0": 1792696029020.9883,
+   "t0": 1792697440394.9883,
    "deaths0": 0,
    "hp": 14116,
    "pot0": 3,
@@ -47,7 +47,7 @@
    "lvl": 11,
    "bossLvl": 8,
    "at": 690.6,
-   "t0": 1792696153754.2842,
+   "t0": 1792697565128.2842,
    "deaths0": 0,
    "hp": 40217,
    "pot0": 3,
@@ -288,7 +288,7 @@
    "msg": "MARK vale-done",
    "lvl": 2,
    "deaths": 0,
-   "real": 10.9
+   "real": 10.8
   },
   {
    "at": 100.6,
@@ -335,7 +335,7 @@
    "msg": "MARK pinewood-enter",
    "lvl": 2,
    "deaths": 0,
-   "real": 12
+   "real": 11.9
   },
   {
    "at": 123.3,
@@ -828,7 +828,7 @@
    "msg": "MARK pinewood-r2-done",
    "lvl": 4,
    "deaths": 0,
-   "real": 34.3
+   "real": 34.2
   },
   {
    "at": 314.8,
@@ -1157,7 +1157,7 @@
    "msg": "MARK warrens-enter",
    "lvl": 6,
    "deaths": 0,
-   "real": 43.6
+   "real": 43.5
   },
   {
    "at": 410.7,
@@ -1347,7 +1347,7 @@
    "msg": "MARK warrens-exit",
    "lvl": 7,
    "deaths": 0,
-   "real": 49.8
+   "real": 49.7
   },
   {
    "at": 458.7,
@@ -1389,7 +1389,7 @@
    "msg": "MARK pre-hollow",
    "lvl": 7,
    "deaths": 0,
-   "real": 50.5
+   "real": 50.4
   },
   {
    "at": 472.8,
@@ -1996,7 +1996,7 @@
    "msg": "MARK hollow-lever",
    "lvl": 9,
    "deaths": 0,
-   "real": 61.4
+   "real": 61.3
   },
   {
    "at": 559.4,
@@ -2167,7 +2167,7 @@
    "type": "mossjaw",
    "lvl": 9,
    "bossLvl": 5,
-   "t0": 1792696029020.9883,
+   "t0": 1792697440394.9883,
    "deaths0": 0,
    "hp": 14116,
    "pot0": 3,
@@ -2393,7 +2393,7 @@
    "type": "mossjaw",
    "lvl": 9,
    "bossLvl": 5,
-   "t0": 1792696029020.9883,
+   "t0": 1792697440394.9883,
    "deaths0": 0,
    "hp": 14116,
    "pot0": 3,
@@ -2761,7 +2761,7 @@
    "type": "bramblehorn",
    "lvl": 11,
    "bossLvl": 8,
-   "t0": 1792696153754.2842,
+   "t0": 1792697565128.2842,
    "deaths0": 0,
    "hp": 40217,
    "pot0": 3,
@@ -3875,7 +3875,7 @@
    "type": "bramblehorn",
    "lvl": 11,
    "bossLvl": 8,
-   "t0": 1792696153754.2842,
+   "t0": 1792697565128.2842,
    "deaths0": 0,
    "hp": 40217,
    "pot0": 3,
@@ -4051,7 +4051,7 @@
    "msg": "MARK bramblehorn-done",
    "lvl": 13,
    "deaths": 0,
-   "real": 112.1
+   "real": 111.9
   },
   {
    "at": 897.2,
@@ -4208,7 +4208,7 @@
    "msg": "MARK vale-return",
    "lvl": 13,
    "deaths": 0,
-   "real": 112.8
+   "real": 112.6
   },
   {
    "at": 907.6,
@@ -4639,26 +4639,26 @@
  "stuck": [],
  "fps": {
   "vale": {
-   "frames": 727,
-   "sumMs": 12545.59999999554,
+   "frames": 726,
+   "sumMs": 12535.600000001503,
    "p95s": [
     {
      "p95": 16.799999999999727,
-     "max": 66.70000000000073
+     "max": 83.39999999999964
     },
     {
-     "p95": 49.89999999999418,
-     "max": 50
+     "p95": 33.19999999999709,
+     "max": 66.60000000000582
     }
    ]
   },
   "pinewood": {
-   "frames": 5828,
-   "sumMs": 100846.00000000089,
+   "frames": 5812,
+   "sumMs": 100679.30000000085,
    "p95s": [
     {
-     "p95": 16.799999999995634,
-     "max": 316.70000000000437
+     "p95": 16.79999999998836,
+     "max": 350
     }
    ]
   }
@@ -5603,7 +5603,7 @@
   }
  ],
  "damage": [],
- "started": "2026-10-22T18:57:42.717Z",
+ "started": "2026-10-22T19:21:14.091Z",
  "lite": false,
  "seed": 1,
  "marks": [
@@ -5619,7 +5619,7 @@
   },
   {
    "at": 100.6,
-   "real": 10.9,
+   "real": 10.8,
    "name": "vale-done",
    "map": "vale",
    "sec": "hub",
@@ -5629,7 +5629,7 @@
   },
   {
    "at": 121.5,
-   "real": 12,
+   "real": 11.9,
    "name": "pinewood-enter",
    "map": "pinewood",
    "sec": "forest",
@@ -5659,7 +5659,7 @@
   },
   {
    "at": 314.8,
-   "real": 34.3,
+   "real": 34.2,
    "name": "pinewood-r2-done",
    "map": "pinewood",
    "sec": "forest",
@@ -5679,7 +5679,7 @@
   },
   {
    "at": 410.7,
-   "real": 43.6,
+   "real": 43.5,
    "name": "warrens-enter",
    "map": "pinewood",
    "sec": "warrens",
@@ -5689,7 +5689,7 @@
   },
   {
    "at": 458.7,
-   "real": 49.8,
+   "real": 49.7,
    "name": "warrens-exit",
    "map": "pinewood",
    "sec": "forest",
@@ -5699,7 +5699,7 @@
   },
   {
    "at": 472.8,
-   "real": 50.5,
+   "real": 50.4,
    "name": "pre-hollow",
    "map": "pinewood",
    "sec": "forest",
@@ -5729,7 +5729,7 @@
   },
   {
    "at": 559.4,
-   "real": 61.4,
+   "real": 61.3,
    "name": "hollow-lever",
    "map": "pinewood",
    "sec": "hollow",
@@ -5759,7 +5759,7 @@
   },
   {
    "at": 897.2,
-   "real": 112.1,
+   "real": 111.9,
    "name": "bramblehorn-done",
    "map": "pinewood",
    "sec": "clearing",
@@ -5769,7 +5769,7 @@
   },
   {
    "at": 905.1,
-   "real": 112.8,
+   "real": 112.6,
    "name": "vale-return",
    "map": "vale",
    "sec": "hub",
@@ -9363,9 +9363,9 @@
    "maxHp": 1073
   }
  },
- "finished": "2026-10-22T18:59:36.114Z",
+ "finished": "2026-10-22T19:23:07.322Z",
  "totalSec": 916.6,
- "realSec": 113.4,
+ "realSec": 113.2,
  "mode": {
   "turbo": true,
   "god": true
