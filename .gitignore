@@ -3,3 +3,6 @@ tools/shots/
 tools/qa/shots/
 tools/forge/out/
 tools/forge/ref/
+
+tools/out/
+tools/balance/out/

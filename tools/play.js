@@ -15,7 +15,7 @@
 // Usage: node tools/play.js     (exit 1 on any failed check or page error)
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
-const { synthMap } = require('./engine-tour.js');   // the synthetic 112x112 zone (DESIGN §25 checks)
+const { synthMap } = require('./lib/synthmap.js');   // the synthetic 112x112 zone (DESIGN §25 checks)
 const ROOT = path.join(__dirname, '..');
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/png', '.json': 'application/json', '.css': 'text/css' };
 const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -142,7 +142,7 @@ const PAD_STUB = () => {
   await ev(() => UI.focus.set('set:hitstop', true)); await wait(60); await tap(15); await wait(80);
   const dd = await ev(() => SETTINGS.hitstop);
   await tap(14); await wait(80);
-  check('pause: d-pad left / right change sliders and choices (Hitstop Full -> Off -> Full)', m1 === m0 - 0.25 && dd === 'off' && await ev(() => SETTINGS.hitstop === 'full'), { m0, m1, dd });
+  check('pause: d-pad left / right change sliders and choices (Hitlag Full -> Off -> Full)', m1 === m0 - 0.25 && dd === 'off' && await ev(() => SETTINGS.hitstop === 'full'), { m0, m1, dd });
   await ev(() => setSetting('music', 0.75));
   await tap(9); await wait(200);
   check('pad: Start closes pause', await ev(() => G.ui.pause === false));

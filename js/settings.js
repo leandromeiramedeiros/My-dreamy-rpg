@@ -28,7 +28,7 @@ const SETTINGS_SCHEMA = [
   { key: 'mono', label: 'Mono audio', group: 'audio', type: 'toggle', def: false },
   { key: 'reduceBass', label: 'Reduce bass', group: 'audio', type: 'toggle', def: false },
   { key: 'shake', label: 'Screen shake', group: 'display', type: 'slider', min: 0, max: 100, step: 25, def: 100 },
-  { key: 'hitstop', label: 'Hitstop', group: 'display', type: 'choice', def: 'full', options: [{ v: 'off', label: 'Off' }, { v: 'light', label: 'Light' }, { v: 'full', label: 'Full' }] },
+  { key: 'hitstop', label: 'Hitlag', group: 'display', type: 'choice', def: 'full', options: [{ v: 'off', label: 'Off' }, { v: 'light', label: 'Light' }, { v: 'full', label: 'Full' }] },
   { key: 'flashReduce', label: 'Reduce flashes', group: 'display', type: 'toggle', def: false },
   { key: 'damageNumbers', label: 'Damage numbers', group: 'display', type: 'toggle', def: true },
   { key: 'damageNumberSize', label: 'Damage number size', group: 'display', type: 'choice', def: 'M', options: [{ v: 'S', label: 'S' }, { v: 'M', label: 'M' }, { v: 'L', label: 'L' }] },
