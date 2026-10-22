@@ -64,3 +64,5 @@ One registry: a 4-colour ramp, motif, motion model, rates, light and HUD colour 
 
 Frame p95 at most 20.0 ms on phone (pine fight with 6 status bodies, 4 spell lights and a burning grass ring) and 16.7 ms on desktop.
 Measured by `tools/perf.js` (`?quality=phone`, CPU throttle).
+Forge-enemy fight (`--scene=pine-forge-fight`): budgets are steady-state, measured over 60 s. Tinted frames are made the
+first time each (frame, direction, status) is seen, so a 20 s window is mostly cold cache (status 0.48–0.55 at x4, 0.44 at 60 s).

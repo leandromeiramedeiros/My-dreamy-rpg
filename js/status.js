@@ -54,7 +54,7 @@ const STATUS = (function () {
     wet:        { el: 'water', tier: 1, tint: '#3a7ad8', ta: 0.2, ov: 'wet', oa: 0.7, rate: 4, sock: 'head', light: null },
     drift:      { el: 'wind', tier: 1, tint: '#c8f0e8', ta: 0, ov: null, oa: 0, rate: 0, sock: 'chest', light: null, ring: true },   // Drift: the carried element's motif ring (entry.el)
   };
-  for (const id in FX) FX[id].id = id;
+  { let n = 0; for (const id in FX) { FX[id].id = id; FX[id].n = n++; } }   // n: the status index (status.js tint keys)
   // element -> the statuses it reacts with (glossary section 3: Conduct, Detonate, Drift, Flash-freeze, Overload, Purify, Quench,
   // Shatter, Thaw, Wildfire): the HUD's element dot on a skill slot
   const REACT = {
@@ -65,7 +65,8 @@ const STATUS = (function () {
   const cap = () => CAP[(typeof QUALITY !== 'undefined' && QUALITY.tier) || 'high'] || CAP.high;
   const particlesOn = () => { try { return !(typeof SETTINGS !== 'undefined' && SETTINGS.particles === 'off'); } catch (e) { return true; } };
   const reduced = () => { try { return typeof SETTINGS !== 'undefined' && SETTINGS.particles === 'reduced'; } catch (e) { return false; } };
-  const W = { bodies: 0, tiles: 0, parts: 0, hud: 0 };   // this frame's counters (begin() resets them)
+  const W = { bodies: 0, tiles: 0, parts: 0, hud: 0, tfMade: 0, tfDeferred: 0 };   // this frame's counters (begin() resets them)
+  const TOT = { made: 0, deferred: 0 };   // cumulative since load: stats() tintMadeTotal / tintDeferredTotal (tools/perf.js: the per-frame rate over its sample)
 
   // ---- reading statuses: of(e) -> a reused array of { id, t, max, stacks, el, fx, legacy } ---------------------------------
   const POOL = [], LIST = [];
@@ -76,16 +77,19 @@ const STATUS = (function () {
     o.id = id; o.t = t; o.max = max > 0 ? max : t; o.stacks = stacks | 0; o.el = el || f.el; o.fx = f; o.legacy = !!legacy;
     LIST.push(o);
   }
+  // a field-backed status (of below): its max from e._stm (M) when that is still >= the field, else max(t, d); stacks / el from M
+  const mxOf = (M, id, t, d) => (M && M[id] && M[id].max >= t ? M[id].max : Math.max(t, d));
+  function pushField(M, id, t, d) { const m = M && M[id]; push(id, t, mxOf(M, id, t, d), m ? m.stacks : 0, m ? m.el : null, true); }
   function of(e) {
     LIST.length = 0; if (!e) return LIST;
     const S = e.status, now = (typeof G !== 'undefined' && G.t) || 0;
     if (S) for (const id in S) { const s = S[id]; if (!s) continue; const t = s.until != null ? s.until - now : s.t; push(id, t, s.max, s.stacks, s.el, false); }
-    const M = e._stm, mx = (id, t, d) => (M && M[id] && M[id].max >= t ? M[id].max : Math.max(t, d)), mk = (id, k) => (M && M[id] ? M[id][k] : k === 'stacks' ? 0 : null);
-    if (e.burnT > 0) push('burning', e.burnT, mx('burning', e.burnT, 2), mk('burning', 'stacks'), mk('burning', 'el'), true);
-    if (e.frozen && e.stunT > 0) push('frozen', e.stunT, mx('frozen', e.stunT, 1), mk('frozen', 'stacks'), mk('frozen', 'el'), true);
-    else if (e.slowT > 0) push('chilled', e.slowT, mx('chilled', e.slowT, 2), mk('chilled', 'stacks'), mk('chilled', 'el'), true);
-    if (e.dreadT > 0) push('dread', e.dreadT, mx('dread', e.dreadT, 2), 0, null, true);
-    if (e.rootT > 0.3 && ((e.stMax && e.stMax.rootT > 0.3) || (M && M.rooted))) push('rooted', e.rootT, mx('rooted', e.rootT, (e.stMax && e.stMax.rootT) || 0), 0, null, true);
+    const M = e._stm;
+    if (e.burnT > 0) pushField(M, 'burning', e.burnT, 2);
+    if (e.frozen && e.stunT > 0) pushField(M, 'frozen', e.stunT, 1);
+    else if (e.slowT > 0) pushField(M, 'chilled', e.slowT, 2);
+    if (e.dreadT > 0) push('dread', e.dreadT, mxOf(M, 'dread', e.dreadT, 2), 0, null, true);
+    if (e.rootT > 0.3 && ((e.stMax && e.stMax.rootT > 0.3) || (M && M.rooted))) push('rooted', e.rootT, mxOf(M, 'rooted', e.rootT, (e.stMax && e.stMax.rootT) || 0), 0, null, true);
     return LIST;
   }
   // apply(e, id, dur, stacks, el): THE way a status lands (game.js applyStatus routes every source here). A status the game
@@ -176,11 +180,15 @@ const STATUS = (function () {
   // A row sits centred above the body's HP bar (hud.js drawNameplates: bar top = feet - hgt x ZS - 7; an elite's name above it),
   // the hero's over the head. At most ICON_MAX icons, tier 2 first, the rest as "+N". Rows never overlap: by body priority (boss,
   // the hero, elite, then the nearest the hero) a row takes its spot or moves up one or two rows; with no room it is hidden.
-  const ICON_MAX = 3, ICONS = [], ICON_POOL = [], SEL = [], PLACED = [];
+  const ICON_MAX = 3, ICONS = [], ICON_POOL = [], SEL = [], PLACED = [], PL_POOL = [];
   const bySt = (a, b) => b.fx.tier - a.fx.tier || b.stacks - a.stacks;
   function queueIcons(e, L, hd) {
     SEL.length = 0; for (let i = 0; i < L.length; i++) SEL.push(L[i]); SEL.sort(bySt);
-    const n = Math.min(SEL.length, ICON_MAX), c = strip(SEL, n, SEL.length - n), p = G.player, me = hero(e);
+    const n = Math.min(SEL.length, ICON_MAX), p = G.player, me = hero(e);
+    const K = e._sic || (e._sic = { ids: [], st: [], len: -1, c: null });   // the body's last strip: rebuilt only when its icons change
+    let same = K.len === SEL.length; for (let i = 0; same && i < n; i++) same = K.ids[i] === SEL[i].id && K.st[i] === Math.min(9, SEL[i].stacks);
+    if (!same) { K.len = SEL.length; for (let i = 0; i < n; i++) { K.ids[i] = SEL[i].id; K.st[i] = Math.min(9, SEL[i].stacks); } K.c = strip(SEL, n, SEL.length - n); }
+    const c = K.c;
     const elite = !me && !e.boss && typeof enemyClassOf === 'function' && enemyClassOf(e) === 'elite';
     let ax = hd[0], ay = hd[1] - 13;
     if (!me && e.hgt) { ax = isoX(e.x, e.y) - camX + RW / 2; ay = isoY(e.x, e.y, e.z || 0) - camY + RH / 2 - e.hgt * ZS - (e.type === 'wisp' ? 14 : 0) - 7 - 12 - (elite ? 9 : 0); }
@@ -201,7 +209,7 @@ const STATUS = (function () {
         if (!hit) { y = yy; if (k) W.iconsMoved++; }
       }
       if (y == null) { W.iconsHidden++; continue; }
-      PLACED.push({ x: o.x, y, w: o.w, h: o.h }); ctx.drawImage(o.c, o.x, y);
+      const r = PL_POOL[PLACED.length] || (PL_POOL[PLACED.length] = {}); r.x = o.x; r.y = y; r.w = o.w; r.h = o.h; PLACED.push(r); ctx.drawImage(o.c, o.x, y);
     }
     W.icons = PLACED.length; ICONS.length = 0;
     if (PERF && PERF.on) PERF.ph['sub.status'] = (PERF.ph['sub.status'] || 0) + performance.now() - t0;
@@ -222,7 +230,7 @@ const STATUS = (function () {
       return n;
     }
     const R = typeof ELFX !== 'undefined' && ELFX.rows[el]; if (!R) return 0;
-    const rate = f.rate * (reduced() ? 0.5 : 1) * cap().rate, life = R.life[1], kMin = Math.ceil((t - life) * rate), kMax = Math.floor(t * rate);
+    const rate = f.rate * ((W.cap ? W.red : reduced()) ? 0.5 : 1) * (W.cap || cap()).rate, life = R.life[1], kMin = Math.ceil((t - life) * rate), kMax = Math.floor(t * rate);
     const C = e._stp || (e._stp = {}), ring = C[s.id] || (C[s.id] = { k: new Array(12).fill(-1e9), p: new Array(12) }), seed = ((e.uid || 0) * 0.137 + f.tier * 0.011 + 0.5) % 1;
     let n = 0;
     for (let k = Math.max(kMin, kMax - 11); k <= kMax; k++) {
@@ -237,39 +245,93 @@ const STATUS = (function () {
   }
 
   // ---- bodies --------------------------------------------------------------------------------------------------------------
-  // the tinted frame (sprite + tint at full strength + overlay, binary alpha kept) is cached per (source canvas, frame rect,
-  // status): one blit a body a frame, its pulse / strobe through globalAlpha. Enemy frames are their own canvases (WeakMap);
-  // the hero's are rects of the loadout sheet (a per-sheet Map, at most TINT_MAX entries).
-  const TINTS = new WeakMap(), TINT_MAX = 96;
-  function tinted(img, sx, sy, sw, sh, f) {
-    let M = TINTS.get(img); if (!M) TINTS.set(img, M = new Map());
-    const k = sx + ',' + sy + ',' + sw + ',' + sh + ',' + f.id;
-    let c = M.get(k); if (c) return c;
-    const T = makeCanvas(sw, sh), x = T.x;
-    x.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
-    x.globalCompositeOperation = 'source-atop';
-    if (f.ta > 0) { x.globalAlpha = f.ta; x.fillStyle = f.tint; x.fillRect(0, 0, sw, sh); }
-    if (f.ov) { x.globalAlpha = f.oa; x.fillStyle = ovPattern(f.ov, x); x.fillRect(0, 0, sw, sh); }
-    if (M.size >= TINT_MAX) M.delete(M.keys().next().value);
-    M.set(k, c = T.c);
-    return c;
+  // the tinted frame: the source rect with the status's tile laid over it source-atop (tint key at ta, overlay at oa), binary
+  // alpha kept, blitted at the pulse alpha. Cached per (source canvas, rect, status) in atlas pages: 256 px canvases filled
+  // shelf by shelf, the oldest page cleared for reuse when the tier's page count (TF_PX) is reached; a rect over 256 px (a
+  // boss frame) gets its own canvas (BIG, first in first out). Callers pass the frame's opaque box, not the whole cell
+  // (render.js forgeEnemyBoxes: a forge cell is 20-32 % body), so an entry costs a quarter of a cell.
+  // The working set is every (frame, direction, status) the status bodies visit: 6 forge bodies in a fight (22 frames x 8
+  // directions each) visit ~350 keys in their first 20 s and ~450 in a minute, out of ~1000; measured, no key is made twice
+  // and the sources (render.js cells) are stable: the cache warms over the fight, every make a first visit, not churn.
+  // A make costs a drawImage + a fill into the open page (no new canvas: a canvas + its 2d context was the expensive part of
+  // a make, ~0.15 ms at CPU x4); at most TF_MAKE[tier] a frame, a body over budget shows its last tinted frame of that status.
+  // Measured alternatives (6 forge bodies, CPU x4, status ms): one small canvas per entry 0.40 vs pages 0.36 (sub.status);
+  // one slot per body re-tinted in place on every anim frame change 0.82 vs 0.67 (the re-raster lands in the blit); earlier
+  // lanes: a tinted copy of the whole sheet per (sheet, status) blits 3x slower and costs 5 MB each; one scratch canvas shared
+  // by every body re-uploads it per body (+310 us unthrottled). 256 px pages are big enough to be GPU canvases (Chrome
+  // accelerates from 128 x 129), so a make draws on the GPU rather than re-uploading the page.
+  const PG = 256, PAGES = [], BIG = new Map(), TF_PX = { high: 4e6, phone: 2e6, low: 5e5 }, TF_MAKE = { high: 2, phone: 2, low: 1 }, SRC = new WeakMap(), TILE_PAT = {};
+  let PG_I = -1, TF_N = 0;   // the open page, the live entries
+  const PAT_M = typeof DOMMatrix !== 'undefined' ? new DOMMatrix() : null;
+  function tileFill(f, x, ox, oy) {   // the status's tile: a solid tint (no overlay), or tint + overlay as a 16 px pattern anchored at (ox, oy)
+    if (!f.ov) { x.globalAlpha = f.ta; return f.tint; }
+    if (!TILE_PAT[f.id]) {
+      const c = makeCanvas(16, 16), y = c.x;
+      if (f.ta > 0) { y.globalAlpha = f.ta; y.fillStyle = f.tint; y.fillRect(0, 0, 16, 16); }
+      y.globalAlpha = f.oa; y.fillStyle = ovPattern(f.ov, y); y.fillRect(0, 0, 16, 16);
+      TILE_PAT[f.id] = y.createPattern(c.c, 'repeat');
+    }
+    const P = TILE_PAT[f.id];
+    if (PAT_M && P.setTransform) { PAT_M.e = ox; PAT_M.f = oy; P.setTransform(PAT_M); }
+    return P;
   }
-  function begin() { W.bodies = 0; W.tiles = 0; W.parts = 0; W.icons = 0; ICONS.length = 0; PLACED.length = 0; }
+  function slot(w, h, tier) {   // -> the page with room for a w x h entry at (P.ex, P.ey); a full atlas clears its oldest page
+    let P = PAGES[PG_I];
+    if (P && P.cx + w > PG) { P.sy += P.sh + 1; P.cx = 0; P.sh = 0; }
+    if (!P || P.sy + h > PG) {
+      const max = Math.max(2, Math.floor((TF_PX[tier] || TF_PX.high) / (PG * PG)));
+      PG_I = PAGES.length < max ? PAGES.length : (PG_I + 1) % max; P = PAGES[PG_I];
+      if (!P) { const C = makeCanvas(PG, PG); P = PAGES[PG_I] = { c: C.c, x: C.x, ents: [] }; }
+      else {   // reuse the oldest page: its entries leave the cache
+        for (const E of P.ents) { E.dead = true; if (E.M.get(E.k) === E) E.M.delete(E.k); }
+        TF_N -= P.ents.length; P.ents.length = 0; P.x.globalCompositeOperation = 'source-over'; P.x.globalAlpha = 1; P.x.clearRect(0, 0, PG, PG);
+      }
+      P.cx = 0; P.sy = 0; P.sh = 0;
+    }
+    P.ex = P.cx; P.ey = P.sy; P.cx += w + 1; if (h > P.sh) P.sh = h;
+    return P;
+  }
+  // -> the tinted entry { c, x, y, w, h } (its canvas and corner), or null when this frame's budget of new ones is spent
+  function tinted(img, sx, sy, sw, sh, f) {
+    let M = SRC.get(img); if (!M) SRC.set(img, M = new Map());
+    const k = sx < 8192 && sy < 8192 && sw < 512 && sh < 512 ? (((sx * 8192 + sy) * 512 + sw) * 512 + sh) * 32 + f.n : sx + '|' + sy + '|' + sw + '|' + sh + '|' + f.id;   // < 2^49
+    let E = M.get(k);
+    if (E) return E;
+    const tier = (typeof QUALITY !== 'undefined' && QUALITY.tier) || 'high';
+    if (W.tfMade >= (TF_MAKE[tier] || 1)) { W.tfDeferred++; TOT.deferred++; return null; }
+    let x, X = 0, Y = 0;
+    if (sw > PG || sh > PG) {
+      const T = makeCanvas(sw, sh); x = T.x; E = { c: T.c, x: 0, y: 0, w: sw, h: sh, M, k };
+      if (BIG.size >= 16) { const E0 = BIG.keys().next().value; BIG.delete(E0); E0.dead = true; if (E0.M.get(E0.k) === E0) E0.M.delete(E0.k); TF_N--; }
+      BIG.set(E, 1);
+    } else {
+      const P = slot(sw, sh, tier); x = P.x; X = P.ex; Y = P.ey; E = { c: P.c, x: X, y: Y, w: sw, h: sh, M, k }; P.ents.push(E);
+      x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
+    }
+    x.drawImage(img, sx, sy, sw, sh, X, Y, sw, sh); x.globalCompositeOperation = 'source-atop'; x.fillStyle = tileFill(f, x, X - sx, Y - sy); x.fillRect(X, Y, sw, sh);   // the overlay anchored at the source's origin: steady across frames
+    M.set(k, E); TF_N++; W.tfMade++; TOT.made++;
+    return E;
+  }
+  function begin() { W.cap = cap(); W.pOn = particlesOn(); W.red = reduced(); W.bodies = 0;   // the tier caps and particle settings, read once a frame
+    W.tiles = 0; W.parts = 0; W.icons = 0; W.tfMade = 0; W.tfDeferred = 0; ICONS.length = 0; PLACED.length = 0; }
   // head / chest: [x, y] scene px or null (then taken from the drawn box: head at the top + 3, chest at 60 % of the height)
   const HD = [0, 0], CH = [0, 0];
   function body(ctx, e, img, sx, sy, sw, sh, dx, dy, dw, dh, head, chest, lights) {
     if (!e) return;
     const L = of(e); if (!L.length) return;
+    if (PERF && PERF.flush) ctx.getImageData(0, 0, 1, 1);   // ?perf=flush: the ops queued before this body are not its cost
     const t0 = PERF && PERF.on ? performance.now() : 0, t = G.t, sa = ctx.globalAlpha;
     const hd = head || (HD[0] = dx + dw / 2, HD[1] = dy + Math.min(6, dh * 0.2), HD), ch = chest || (CH[0] = dx + dw / 2, CH[1] = dy + dh * 0.55, CH);
     // tint + overlay, masked to the drawn frame
     const P = primary(L);
     if (img && P && dw > 0 && dh > 0 && sw > 0 && sh > 0) {
       const f = P.fx, pulse = f.strobe ? ((Math.floor(t * 15) & 1) ? 1 : 0.35) : 0.8 + 0.2 * Math.sin(t * 6);
-      ctx.globalAlpha = sa * pulse; ctx.drawImage(tinted(img, sx, sy, sw, sh, f), 0, 0, sw, sh, dx, dy, dw, dh); ctx.globalAlpha = sa;   // over the drawn frame: same mask
+      let T = tinted(img, sx, sy, sw, sh, f);
+      if (T) { e._stT = T; e._stTid = f.id; } else if (e._stTid === f.id && e._stT && !e._stT.dead && e._stT.w === sw && e._stT.h === sh) T = e._stT;   // over budget: the last one
+      if (T) { ctx.globalAlpha = sa * pulse; ctx.drawImage(T.c, T.x, T.y, sw, sh, dx, dy, dw, dh); ctx.globalAlpha = sa; }   // over the drawn frame: same mask
     }
     // emitters (capped per tier), the motif ring of Drift, Lifted's curls
-    const C = cap(), emit = W.bodies < C.bodies && particlesOn();
+    const C = W.cap || cap(), emit = W.bodies < C.bodies && (W.cap ? W.pOn : particlesOn());
     if (emit) {
       W.bodies++;
       for (let i = 0; i < L.length; i++) {
@@ -290,6 +352,7 @@ const STATUS = (function () {
     // the icon row (8x8 glyphs, at most ICON_MAX, then +N), queued: drawIcons lays every body's row out above its HP bar
     ctx.globalAlpha = sa;
     queueIcons(e, L, hd);
+    if (PERF && PERF.flush) ctx.getImageData(0, 0, 1, 1);   // ?perf=flush: this body's own raster counts here
     if (PERF && PERF.on) PERF.ph['sub.status'] = (PERF.ph['sub.status'] || 0) + performance.now() - t0;
   }
 
@@ -324,7 +387,7 @@ const STATUS = (function () {
   // the decals of every live tile are baked into one cached layer (world-screen space, rebuilt when the tile set changes), so a
   // frame costs one blit + one additive flicker blit of the burning tiles, whatever the tile count. While a tile fades in or
   // out the tiles draw one by one instead.
-  const LAYER = { ver: -1, c: null, glow: null, x0: 0, y0: 0, ok: false }; let VER = 0;
+  const LAYER = { ver: -1, c: null, glow: null, x0: 0, y0: 0, ok: false }, SPAN = { ver: -1, u: 0, b: 0 }; let VER = 0;   // SPAN: the tiles' first end / last birth
   function buildLayer(m) {
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
     for (const T of TILES.values()) { const z = typeof tileH === 'function' ? tileH(m, T.x + 0.5, T.y + 0.5) : 0; T.sx = isoX(T.x, T.y) - 16; T.sy = isoY(T.x, T.y, z); x0 = Math.min(x0, T.sx); y0 = Math.min(y0, T.sy); x1 = Math.max(x1, T.sx + 32); y1 = Math.max(y1, T.sy + 17); }
@@ -332,7 +395,8 @@ const STATUS = (function () {
     const w = x1 - x0, h = y1 - y0, L = makeCanvas(w, h), Gl = makeCanvas(w, h); let glow = false;
     for (const T of TILES.values()) { L.x.drawImage(decal(T.kind), T.sx - x0, T.sy - y0); if (T.kind === 'burning') { Gl.x.drawImage(decal('burning'), T.sx - x0, T.sy - y0); glow = true; } }
     LAYER.c = L.c; LAYER.glow = glow ? Gl.c : null; LAYER.x0 = x0; LAYER.y0 = y0;
-    LAYER.live = [...TILES.values()].filter(T => T.kind === 'burning' || (T.kind === 'frozen' && T.h < 0.25));   // the tiles that emit / glint
+    LAYER.burn = [...TILES.values()].filter(T => T.kind === 'burning'); LAYER.glint = [...TILES.values()].filter(T => T.kind === 'frozen' && T.h < 0.25);   // the tiles that emit / glint
+    LAYER.nk = null;
   }
   function drawTiles(ctx, lights) {
     if (!TILES.size) return;
@@ -340,7 +404,9 @@ const STATUS = (function () {
     if (LAYER.map !== m) { if (LAYER.map) { TILES.clear(); VER++; } LAYER.map = m; if (!TILES.size) return; }   // a map change clears the ground
     const near = drawTiles.near || (drawTiles.near = []); near.length = 0;
     let glints = 0, fMin = 1, fMax = 0;
-    for (const [k, T] of TILES) {
+    if (SPAN.ver !== VER) { SPAN.ver = VER; SPAN.u = Infinity; SPAN.b = -Infinity; for (const T of TILES.values()) { if (T.until < SPAN.u) SPAN.u = T.until; if (T.born > SPAN.b) SPAN.b = T.born; } }
+    if (t < SPAN.u - 0.5 && t > SPAN.b + 0.6) fMax = 1;   // settled: none expires or fades this frame (every fade below is 1), skip the scan
+    else for (const [k, T] of TILES) {
       if (T.until < t) { TILES.delete(k); VER++; continue; }
       const fd = clamp(Math.min((T.until - t) * 2, (t - T.born) * 1.33 + 0.25), 0, 1); if (fd < fMin) fMin = fd; if (fd > fMax) fMax = fd;
     }
@@ -353,7 +419,7 @@ const STATUS = (function () {
       ctx.drawImage(LAYER.c, Math.round(LAYER.x0 + ox), Math.round(LAYER.y0 + oy)); ctx.globalAlpha = sa;
       if (LAYER.glow && C.glow) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = fMax * (0.28 + 0.12 * Math.sin(t * 9) + 0.06 * Math.sin(t * 23)); ctx.drawImage(LAYER.glow, Math.round(LAYER.x0 + ox), Math.round(LAYER.y0 + oy)); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
     }
-    for (const T of (layered ? LAYER.live : TILES.values())) {   // layered: only the tiles that emit or glint
+    for (const T of (layered ? LAYER.glint : TILES.values())) {   // layered: only the tiles that glint (the burning ones below)
       const z = layered ? 0 : (typeof tileH === 'function' ? tileH(m, T.x + 0.5, T.y + 0.5) : 0), vx = (layered ? T.sx + 16 : isoX(T.x, T.y)) + ox, vy = (layered ? T.sy : isoY(T.x, T.y, z)) + oy;
       if (vx < -20 || vx > RW + 20 || vy < -20 || vy > RH + 20) continue;
       if (!layered) {
@@ -369,9 +435,17 @@ const STATUS = (function () {
         if (on && lights && C.tiles > 0 && glints++ < Math.max(1, C.tiles)) lights.push({ sx: vx - ox, sy: vy + 7 - oy, r: 12, col: '#bff4ff', a: 0.2, stat: 1, bloom: 0.4 });
       }
     }
+    if (layered && C.tiles && LAYER.burn.length) {   // the burning tiles by distance to the hero's tile, sorted once per (tile set, hero tile)
+      const nk = VER * 1e6 + (p ? Math.floor(p.x) * 1000 + Math.floor(p.y) : 0);
+      if (LAYER.nk !== nk) { LAYER.nk = nk; const hx = p ? Math.floor(p.x) + 0.5 : 0, hy = p ? Math.floor(p.y) + 0.5 : 0; for (const T of LAYER.burn) T._d = Math.abs(T.x + 0.5 - hx) + Math.abs(T.y + 0.5 - hy); LAYER.burn.sort((a, b) => a._d - b._d); }
+      for (const T of LAYER.burn) {
+        const vx = T.sx + 16 + ox, vy = T.sy + oy; if (vx < -20 || vx > RW + 20 || vy < -20 || vy > RH + 20) continue;
+        T._vx = vx; T._vy = vy + 8; near.push(T); if (near.length >= C.tiles) break;
+      }
+    }
     if (!near.length || !C.tiles) return;
     const n = Math.min(near.length, C.tiles);
-    for (let i = 0; i < n; i++) { let b = i; for (let j = i + 1; j < near.length; j++) if (near[j]._d < near[b]._d) b = j; if (b !== i) { const q = near[i]; near[i] = near[b]; near[b] = q; } }   // the n nearest (n <= 4)
+    if (!layered) for (let i = 0; i < n; i++) { let b = i; for (let j = i + 1; j < near.length; j++) if (near[j]._d < near[b]._d) b = j; if (b !== i) { const q = near[i]; near[i] = near[b]; near[b] = q; } }   // the n nearest (n <= 4)
     for (let i = 0; i < n; i++) {
       const T = near[i];
       if (emitOn) W.parts += emitter(ctx, T, TILE_S, T._vx, T._vy, 22, t);
@@ -396,7 +470,7 @@ const STATUS = (function () {
     if (!p) return;
     const t0 = PERF && PERF.on ? performance.now() : 0, t = G.t, C = cap();
     if (!UIP || UIPcap !== C.uip) { UIP = ELFX.makePool(C.uip); UIPcap = C.uip; }
-    const L = of(p), skip = typeof heroStatuses === 'function' ? heroStatuses(p).length : 0;
+    const L = of(p), skip = L.length && typeof heroStatuses === 'function' ? heroStatuses(p).length : 0;   // the status row's width, only with icons to place
     const x0 = touch ? DW - 24 : 100, y0 = touch ? 148 : 428;
     let k = 0, pulseCol = null;
     for (let i = 0; i < L.length; i++) {
@@ -440,7 +514,7 @@ const STATUS = (function () {
     if (PERF && PERF.on) PERF.ph['sub.statusHud'] = (PERF.ph['sub.statusHud'] || 0) + performance.now() - t0;
   }
 
-  function stats() { return { bodies: W.bodies, tiles: TILES.size, emittingTiles: W.tiles, parts: W.parts, hudIcons: W.hud, icons: W.icons || 0, iconsMoved: W.iconsMoved || 0, iconsHidden: W.iconsHidden || 0, iconRects: PLACED.map(r => [r.x, r.y, r.w, r.h]), dots: DOTS.list.length / 2 }; }
+  function stats() { return { bodies: W.bodies, tiles: TILES.size, emittingTiles: W.tiles, parts: W.parts, hudIcons: W.hud, icons: W.icons || 0, iconsMoved: W.iconsMoved || 0, iconsHidden: W.iconsHidden || 0, iconRects: PLACED.map(r => [r.x, r.y, r.w, r.h]), dots: DOTS.list.length / 2, tintCache: TF_N, tintPages: PAGES.length, tintMade: W.tfMade, tintDeferred: W.tfDeferred, tintMadeTotal: TOT.made, tintDeferredTotal: TOT.deferred }; }
   return { FX, REACT, CAP, of, apply, clear, pose, body, begin, drawIcons, setTile, ring, clearTiles, drawTiles, drawHud, stats, glyph, tiles: TILES };
 })();
 if (typeof window !== 'undefined') window.STATUS = STATUS;

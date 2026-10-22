@@ -19,12 +19,12 @@ const bones = Q.bones({
   tail: [2.4, -4.2, 3.0],
 });
 
-const FUR = { ramp: ['#211a33', '#2e2448', '#463864', '#66528e'], lift: 1 };
+const FUR = { ramp: ['#120c1c', '#191226', '#221832', '#2f2244'] };   // a shade: near-black violet, no lift; in Pinewood's light the old #4b3a6c top read lavender (tools/shots/m4a/hound-day-before.png)
 const layers = [
   {
     id: 'body', group: 'body',
-    mats: { fur: FUR, mane: { ramp: ['#2c1846', '#43246a', '#643a9a', '#8e5ec6'], lift: 1 },
-      wisp: { ramp: ['#4a2468', '#7a3ea6', '#b066dc', '#e4a8ff'], lift: 2 },
+    mats: { fur: FUR, mane: { ramp: ['#1e1034', '#2c174c', '#40226a', '#5a308c'] },
+      wisp: { ramp: ['#341a52', '#542a80', '#7c44b0', '#a86ad8'], lift: 1 },
       maw: { ramp: ['#4a0c2a', '#8c1c48', '#d0407a', '#ff86b4'], lift: 1 }, fang: { ramp: ['#8a8098', '#b8b0c4', '#e4def0', '#ffffff'], lift: 2 } },
     prims: [
       // head: a narrow skull, a long snout, tall pointed ears; the jaw hangs from 'jaw' (part 'jaw': it parts from the snout)

@@ -74,6 +74,7 @@ function enterMap(id, at) {
   syncChests(m);
   G.cam.x = isoX(p.x, p.y); G.cam.y = isoY(p.x, p.y, p.z) - 12;
   if (!(typeof onceSeen === 'function' && onceSeen('zone:' + id))) G.banner = { s: m.name, sub: m.sub, t: 3.2, max: 3.2 };   // once per save: a respawn never replays it
+  if (typeof forgeEnemyPrewarm === 'function') forgeEnemyPrewarm(id);   // M4a: boot / respawn / editor entries (the rift starts it in transition)
   startTriggers();
   spawnCritters(m);
   if (G.state === 'play') saveGame();   // autosave on zone entry
@@ -115,6 +116,7 @@ function transition(to, at) {
   if (G.fadeDir) return;
   G.fadeDir = 1; G.fadeTo = to; G.fadeAt = at || null; sfx('portal');
   startPreload(to, at); G.fadeHold = 0; G.preloadLog = null;
+  if (typeof forgeEnemyPrewarm === 'function') forgeEnemyPrewarm(to);   // M4a: the zone's forge enemy sheets build behind the fade (render.js)
   if (typeof AUDIO !== 'undefined') AUDIO.onTransition(to);   // the zone song fades over 1 bar during the rift fade
 }
 // death: lose 10% of this level's bar (never a level), wake at the last checkpoint (or this map's start) with

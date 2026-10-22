@@ -1,7 +1,8 @@
 'use strict';
 // BRAMBLE SHAMAN (`brambleshaman`, Pinewood: poison zones and heals) — a forge enemy on the shared humanoid rig
-// (models/humanoid-anims.js idle / walk / hit, offsets x1.2), thin, in a long hooded robe, with its own cast, heal channel and
-// death. Frame 80 x 88, origin (40, 70), about 46 px tall with the antlers. Recognisable from the old sprite: a purple hooded
+// (models/humanoid-anims.js idle / walk / hit), thin, in a long hooded robe, with its own cast, heal channel and death.
+// Frame 68 x 72, origin (34, 57): a common caster at the hero's scale (SC 1), 38 px tall with the antlers (hero about 31,
+// the Ogre about 45-50). Recognisable from the old sprite: a purple hooded
 // robe, a shadowed face with yellow eyes, pale antlers out of the hood, a leafy green mantle, a wooden staff with a green
 // crystal; bramble details: a thorned vine belt and a vine band round the hem with leaves.
 // Attack = the zone-caster's cast (6 frames; render.js maps the real timing: wind 0.8 s = f0-1, then no action state, so the
@@ -16,7 +17,7 @@ const arm = (s, up, fore) => ({ ['upper' + s]: { point: up }, ['fore' + s]: { po
 const arms = (up, fore, upL, foreL) => Object.assign(arm('R', up, fore), arm('L', upL || mir(up), foreL || mir(fore)));
 const legs = (tR, sR, fR, tL, sL, fL) => ({ thighR: { rot: [tR, 0, 0] }, shinR: { rot: [sR, 0, 0] }, footR: { rot: [fR, 0, 0] },
   thighL: { rot: [tL, 0, 0] }, shinL: { rot: [sL, 0, 0] }, footL: { rot: [fL, 0, 0] } });
-const K = 1.3;
+const K = 1.0;
 const scaled = (A, hold) => Object.assign({}, A, { pose: f => {
   const P = A.pose(f), out = {};
   for (const b in P) { out[b] = Object.assign({}, P[b]); if (P[b].off) out[b].off = P[b].off.map(v => v * K); }
@@ -128,8 +129,8 @@ const death = {
       { hips: { off: [0, -8.0, -5.0], rot: [1.05, 0, 0] }, chest: { rot: [0.3, 0, 0] }, head: { rot: [0.2, 0, 0] }, weapon: { aim: [-0.7, -0.3, -0.65] } }),
   ][f],
 };
-// ---- the whole body x SC (the volumes above are written at the hero's scale) ----------------------------------------------
-const SC = 1.3, sv = v => v.map(x => x * SC);
+// ---- the whole body x SC (the volumes above are written at the hero's scale; SC 1 = as written, the director's 38-40 px) ----------------------------------------------
+const SC = 1.0, sv = v => v.map(x => x * SC);
 for (const b of bones) b.at = sv(b.at);
 for (const L of layers) {
   for (const p of L.prims) {
@@ -149,7 +150,7 @@ for (const k in sockets) sockets[k].at = sv(sockets[k].at);
 
 module.exports = {
   name: 'brambleshaman',
-  frame: [80, 88], origin: [40, 70],
+  frame: [68, 72], origin: [34, 57],
   cam: { elev: 28 },
   light: [-0.55, 0.7, 0.5],
   tones: [0.8, 0.3, -0.3],
