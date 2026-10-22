@@ -515,6 +515,8 @@ Note: count reconciled in the M4a DESIGN rewrite (12 or 13 bosses; only named bo
 |---|---|---|---|---|
 | Balsim | Balance simulator | `tools/balsim.js` | — | live |
 | Bot | Automated play-through runner | `tools/qa/run-big.js` | — | live |
+| God mode | Bot flag `?god`: the hero takes no damage; blocker hunts only, never the ship gate | `--god` | invincible run | M3 hot-fix |
+| Turbo | Bot lockstep fast-forward: the sim advances only when the Bot steps it, no rendering | `--turbo` `?turbo` | god mode (that is invincibility); speed hack | M3 hot-fix |
 | Director | Orchestrating role who merges and rules | — | — | live |
 | Dressing room | Forge preview page | `tools/forge/preview.html` | — | M4a |
 | ELFX | Effects registry and renderer (rim light, shadows, rays, fog) | `elfx.js` | — | live |
