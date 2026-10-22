@@ -362,6 +362,7 @@ function drawScene() {
   perfMark('bloom');
   if (QUALITY.cfg.grade) { ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.22; ctx.drawImage(GRADE[m.themeId], 0, 0); }
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  if (typeof STATUS !== 'undefined') STATUS.drawIcons(ctx);   // M4a: the status icon rows over the bodies, after the light (readable at night)
   perfMark('grade.soft');
   if (p.buffs.dreamveil) { ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = 'rgba(255,140,220,0.25)'; ctx.fillRect(0, 0, RW, RH); ctx.globalCompositeOperation = 'source-over'; }
   ctx.drawImage(VIGNETTE, 0, 0);
@@ -1080,21 +1081,58 @@ function echoGlow(col) {
   }
   return c;
 }
+// M4a: the Echo draws the forge hero's current loadout sheet (the frame of the clone's own anim and facing, cropped to a small
+// canvas so the tint cache keys on it; ECHO_CROP keeps the last 96); ?oldhero or before the first sheet is ready: the old frames.
+const ECHO_CROP = new Map();
+function forgeCrop(img, sx, sy, w, h) {
+  const k = sx + '|' + sy + '|' + w; let m = ECHO_CROP.get(img); if (!m) { if (ECHO_CROP.size > 4) ECHO_CROP.clear(); ECHO_CROP.set(img, m = new Map()); }
+  let c = m.get(k);
+  if (!c) { if (m.size >= 96) m.delete(m.keys().next().value); c = makeCanvas(w, h); c.x.drawImage(img, sx, sy, w, h, 0, 0, w, h); c = c.c; m.set(k, c); }
+  return c;
+}
+function echoForgeFrame(g, e, t) {
+  const N = a => (e.n && e.n[a]) || 1;
+  let a = 'idle', f = Math.floor(t * 5);
+  if (g.spin > 0) { a = 'attack'; f = Math.floor(t * 24); }
+  else if (g.swing) { a = 'attack'; f = Math.min(N('attack') - 1, Math.floor(g.swing.t / Math.max(0.01, g.swing.dur) * N('attack'))); }
+  else if (g.castT > 0) { a = e.at.cast != null ? 'cast' : 'attack'; f = Math.floor(t * 10); }
+  else if (g.dashing || g.dash) { a = 'dash'; f = Math.floor(t * 14); }
+  else if (g.moving) { a = 'walk'; f = Math.floor((g.walkT || 0) * 10); }
+  if (e.at[a] == null) { a = 'idle'; f = Math.floor(t * 5); }
+  return forgeCrop(e.canvas, (e.at[a] + (f % N(a))) * e.w, (e.dirIdx[heroDir(g)] || 0) * e.h, e.w, e.h);
+}
+// the HUD portrait (hud.js drawPortrait): the forge hero's idle S frame, head and shoulders (30 x 30 frame px), current loadout
+function heroPortrait() {
+  if (OLD_HERO || !FH.last || !FH.last.e || !FH.last.e.canvas) return null;
+  const e = FH.last.e, P = heroPortrait.o || (heroPortrait.o = {});
+  let top = PORTRAIT_TOP.get(e.canvas);
+  const fx = e.at.idle * e.w, fy = (e.dirIdx.S || 0) * e.h;
+  if (top == null) {   // the first opaque row of the idle S frame (the top of the hat / hair), once per sheet
+    const d = e.canvas.getContext('2d').getImageData(fx, fy, e.w, e.h).data; top = 0;
+    find: for (let y = 0; y < e.h; y++) for (let x = 0; x < e.w; x++) if (d[(y * e.w + x) * 4 + 3] > 40) { top = y; break find; }
+    PORTRAIT_TOP.set(e.canvas, top);
+  }
+  P.img = e.canvas; P.w = 30; P.h = 30; P.sx = fx + Math.round(e.ax - 15); P.sy = fy + clamp(top - 2, 0, e.h - 30); P.forge = true;
+  return P;
+}
+const PORTRAIT_TOP = new WeakMap();
 function drawEcho(ctx, E, lights) {
   const p = G.player, g = E.g; if (!p.spr || !p.spr.hero) return;
-  const H = p.spr.hero, t = G.t, flip = g.face < 0, view = g.back ? 'back' : 'front', [vx, vy] = worldToView(g.x, g.y, g.z);
+  const FE = !OLD_HERO && FH.last && FH.last.e && FH.last.e.canvas ? FH.last.e : null;
+  const H = p.spr.hero, t = G.t, flip = !FE && g.face < 0, view = g.back ? 'back' : 'front', [vx, vy] = worldToView(g.x, g.y, g.z);
   const w = item('weapon', p.gear.weapon), pose = WEAPON_POSE[w.kind] || 'swing';
   const atk = !!(g.swing || g.castT > 0 || g.spin > 0);
   const fi = atk ? HERO.ATTACK : g.dashing ? 2 + (Math.floor(t * 18) & 3) : g.moving ? 2 + (Math.floor(g.walkT * 8) & 3) : (Math.sin(t * 2.5 + 1) > 0.3 ? 1 : 0);
-  const col = echoPalette(E.el)[Math.floor(t * 4) % ECHO_STEPS], frame = H[view][fi], hand = H.hand[view][fi];
-  const body = echoTint(frame, col), wpn = H.weapon ? echoTint(H.weapon, col) : null;
+  const col = echoPalette(E.el)[Math.floor(t * 4) % ECHO_STEPS], frame = FE ? echoForgeFrame(g, FE, t) : H[view][fi], hand = H.hand[view][fi];
+  const body = echoTint(frame, col), wpn = !FE && H.weapon ? echoTint(H.weapon, col) : null;   // the forge frame holds its weapon
+  const foot = FE ? FE.h - 1 - FE.ay : 0, bodyH = FE ? FE.ay - 6 : H.h;   // forge frames stand on row ay, not the bottom row
   const spawn = clamp(E.age / 0.3, 0, 1), fade = clamp((E.idleT - (ECHO.idle - ECHO.fadeOut)) / ECHO.fadeOut, 0, 1);   // 0..1 materialise / dissolve
   const sa = ctx.globalAlpha, so = ctx.globalCompositeOperation, bob = 2 * Math.sin(t * 3);
   // the afterimage trail: the spirit's last 8 drawn positions (world), copies at 3 and 6 frames back
   const T = E.trail || (E.trail = { b: new Float32Array(24), i: 0, n: 0 });
   T.b[T.i * 3] = g.x; T.b[T.i * 3 + 1] = g.y; T.b[T.i * 3 + 2] = g.z; T.i = (T.i + 1) & 7; T.n = Math.min(8, T.n + 1);
   const blit = (img, x, y, a, wk, rise) => {   // the body canvas centred on feet x,y (view px), width scaled by wk, raised by rise
-    const bw = Math.max(1, Math.round(img.width * wk)), bx = Math.round(x - bw / 2), by = Math.round(y - img.height + 2 - rise);
+    const bw = Math.max(1, Math.round(img.width * wk)), bx = Math.round(x - bw / 2), by = Math.round(y - img.height + 2 - rise + foot);
     ctx.globalAlpha = a;
     if (flip) { ctx.save(); ctx.translate(bx + bw, by); ctx.scale(-1, 1); ctx.drawImage(img, 0, 0, bw, img.height); ctx.restore(); } else ctx.drawImage(img, bx, by, bw, img.height);
   };
@@ -1126,7 +1164,7 @@ function drawEcho(ctx, E, lights) {
   // materialise shimmer: a light column that thins out; dissolve / spawn motes through the budgeted particle pool
   if (spawn < 1) {
     ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - spawn) * 0.8; ctx.fillStyle = mixHex(col, '#ffffff', 0.6);
-    const cw = Math.max(1, Math.round(6 * (1 - spawn))); ctx.fillRect(Math.round(vx - cw / 2), Math.round(vy - H.h - 4), cw, H.h + 4);
+    const cw = Math.max(1, Math.round(6 * (1 - spawn))); ctx.fillRect(Math.round(vx - cw / 2), Math.round(vy - bodyH - 4), cw, bodyH + 4);
   }
   if ((spawn < 1 || fade > 0) && E.moteT !== t) { E.moteT = t; if (Math.random() < 0.5) addPart({ x: g.x + frand(-0.3, 0.3), y: g.y + frand(-0.3, 0.3), z: g.z + frand(0.3, 2.6), vx: 0, vy: 0, vz: frand(0.6, 1.6), life: frand(0.4, 0.8), t: 0, col, grav: 0, size: 1, glow: true }); }
   ctx.globalAlpha = sa; ctx.globalCompositeOperation = so;
@@ -1784,7 +1822,7 @@ function drawParticles(ctx, lights) {
       const a = (0.5 + 0.5 * Math.sin(G.t * 3 + f.ph)) * fade;
       ctx.fillStyle = rgbaQ('#dcffa0', a); ctx.fillRect(x, y, 1, 1);
       ctx.fillStyle = rgbaQ('#c8ff8c', a * 0.35); ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3);
-      if (a > 0.5) lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: 14, col: '#d8ff9a', a: a * 0.6 });
+      if (a > 0.5) lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: 14, col: '#d8ff9a', a: a * 0.6, amb: 1 });   // decorative: culls first
     } else if (f.k === 'mote') {
       ctx.fillStyle = rgbaQ('#ffe2b4', fade * (0.35 + 0.3 * Math.sin(G.t * 2 + f.ph))); ctx.fillRect(x, y, 1, 1);
     } else {
@@ -1909,9 +1947,14 @@ function lightSized(col, d) {
 // distance from the view centre (22 px a unit) minus 3 x log2(1 + strength / 40); the hero's light (keep) always wins.
 // Under the cap a new light shows at once; in a capped view it starts dark, an immediate re-rank decides, and it fades into a
 // freed slot. Under the cap every record simply fades to full.
-const LP_RERANK = 0.2, LP_FADE = 0.35, LP_HYST = 2, LPOOL = { recs: new WeakMap(), prev: [], cur: [], t: 0, timer: 0 };
+const LP_RERANK = 0.2, LP_FADE = 0.35, LP_HYST = 2, LPOOL = { recs: new WeakMap(), prev: [], cur: [], t: 0, timer: 0 }, LP_ST = [], LP_OT = [];
 let LIGHT_VIS = [];
-const lightCost = (vx, vy, L, lit) => L.keep ? -1e9 : Math.hypot(vx - RW / 2, vy - RH / 2) / 22 - 3 * Math.log2(1 + clamp(L.a, 0, 1) * L.r / 40) - (lit ? LP_HYST : 0) + (L.stat ? 40 : 0);   // status lights (L.stat) lose slots first
+// M4a (director ruling): over the cap, STAT_SLOTS of the cap (6 of 40, 4 of 24, 2 of 16) are held for status lights (L.stat),
+// ranked among themselves; the other lights cull by class, decorative first (L.amb: fireflies), then ambient (map lights,
+// L.__st), then the dynamic ones (spells, bodies, VFX); in a class the farthest from the hero goes first (LP_HERO = the hero's
+// view spot at the re-rank). Status lights also take any slot the rest leave free.
+const LP_HERO = [RW / 2, RH / 2], STAT_SLOTS = cap => Math.round(cap * 0.15);
+const lightCost = (vx, vy, L, lit) => L.keep ? -1e9 : (L.amb ? 2000 : L.__st && !L.stat ? 1000 : 0) + Math.hypot(vx - LP_HERO[0], vy - LP_HERO[1]) / 22 - 3 * Math.log2(1 + clamp(L.a, 0, 1) * L.r / 40) - (lit ? LP_HYST : 0);
 function lightPool(vis, cap) {
   const P = LPOOL, now = G.t, dt = clamp(now - P.t, 0, 0.1), capped = vis.length > cap; P.t = now;
   const cur = P.cur; cur.length = 0; let fresh = false;
@@ -1930,7 +1973,14 @@ function lightPool(vis, cap) {
   P.timer -= dt;
   if (P.timer <= 0 || fresh) {
     P.timer = LP_RERANK;
-    if (capped) { cur.sort((a, b) => lightCost(a.vx, a.vy, a.v[2], a.lit) - lightCost(b.vx, b.vy, b.v[2], b.lit)); cur.forEach((r, i) => { r.lit = i < cap; }); }
+    if (capped) {
+      const hp = G.player; if (hp) { const h = worldToView(hp.x, hp.y, hp.z); LP_HERO[0] = h[0]; LP_HERO[1] = h[1]; }
+      const by = (a, b) => lightCost(a.vx, a.vy, a.v[2], a.lit) - lightCost(b.vx, b.vy, b.v[2], b.lit), st = LP_ST, ot = LP_OT; st.length = 0; ot.length = 0;
+      for (const r of cur) (r.v[2].stat ? st : ot).push(r);
+      st.sort(by); ot.sort(by);
+      const nOt = Math.min(ot.length, cap - Math.min(STAT_SLOTS(cap), st.length)), nSt = cap - nOt;
+      ot.forEach((r, i) => { r.lit = i < nOt; }); st.forEach((r, i) => { r.lit = i < nSt; });
+    }
     else for (const r of cur) r.lit = true;
   }
   // slots: at most `cap` lights draw. Lights losing their slot fade out first; a light given a slot fades in once one is free

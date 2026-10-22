@@ -2003,8 +2003,10 @@ const PAD_STUB = () => {
     await sp.mouse.move(600, 300);
     await sp.evaluate(() => {   // lightPool is wrapped to count the status lights offered (over the cap they lose their slots first)
       const lp0 = lightPool; window.__stl = 0; lightPool = function (vis, cap) { window.__stl = vis.filter(v => v[2].stat).length; return lp0(vis, cap); };
-      const p = G.player, ids = ['burning', 'frozen', 'shocked', 'wet', 'rooted', 'smitten'];
-      ids.forEach((id, i) => { const a = i / ids.length * Math.PI * 2, e = spawnEnemy('slime', p.x + Math.cos(a) * 2.6, p.y + Math.sin(a) * 2.6, 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.spawnT = 0; e.asleep = false; STATUS.apply(e, id, 60, i === 0 ? 3 : 0); if (id === 'frozen') { e.frozen = 1; e.stunT = 60; } });
+      // 6 bodies in a ring (one elite with 5 statuses: 3 icons + "+2"), 2 more side by side (their rows would overlap)
+      const p = G.player, sets = [['burning', 'poisoned', 'marked', 'wet', 'smitten'], ['frozen'], ['shocked', 'wet'], ['wet'], ['rooted', 'chilled'], ['smitten', 'burning']];
+      sets.forEach((ids, i) => { const a = i / sets.length * Math.PI * 2, e = spawnEnemy('slime', p.x + Math.cos(a) * 2.6, p.y + Math.sin(a) * 2.6, 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.spawnT = 0; e.asleep = false; e.speed = 0; if (i === 0) e.elite = true; ids.forEach((id, k) => STATUS.apply(e, id, 60, i === 0 && k === 0 ? 3 : 0)); });
+      for (const dx of [0, 0.5]) { const e = spawnEnemy('slime', p.x - 1 + dx, p.y + 3.4, 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.spawnT = 0; e.asleep = false; e.speed = 0; STATUS.apply(e, 'shocked', 60); STATUS.apply(e, 'poisoned', 60); }
       STATUS.apply(p, 'burning', 30, 2); STATUS.apply(p, 'wet', 20);
       STATUS.ring(p.x, p.y, 4.2, 'burning', 60);
     });
@@ -2016,7 +2018,59 @@ const PAD_STUB = () => {
     check('M4a status: tint, overlay, emitters and a merged light on 6 bodies (status lights offered to the light pool)', st.bodies >= 6 && st.parts > 0 && st.lights >= 6, st);
     check('M4a status: a burning ring on the world tiles (emitting tiles capped per tier)', st.tiles > 20 && st.emittingTiles >= 1 && st.emittingTiles <= 4, { tiles: st.tiles, emitting: st.emittingTiles });
     check('M4a status: the HUD shows the hero\'s statuses (icons with timers)', st.hudIcons >= 2, st.hudIcons);
+    const ov = st.iconRects.some((a, i) => st.iconRects.some((b, j) => j > i && a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3]));
+    check('M4a status icons: one row per body, at most 3 icons + "+N" (<= 37 px wide), no two rows overlap (moved up or hidden by priority)',
+      st.icons >= 6 && !ov && st.iconRects.every(r => r[2] <= 37) && st.iconsMoved + st.iconsHidden >= 1, { rows: st.icons, moved: st.iconsMoved, hidden: st.iconsHidden, widest: Math.max(...st.iconRects.map(r => r[2])), overlap: ov });
     await sp.close();
+
+    // 3b. a burn applied in game (a fire projectile with burn hits a slime: game.js damageEnemy -> applyStatus -> STATUS.apply)
+    //     shows on the body (tint, embers, icon row) and on the HUD (the element dot on a holy skill: Purify); burnT stays the rule.
+    //     Tiles: no game rule ignites a tile yet (the grass fire is the world-interaction lane's tilePatch); STATUS.ring is the hook.
+    const bp0 = await lp('scene=play', 'burn');
+    await bp0.evaluate(() => { const p = G.player, e = spawnEnemy('slime', p.x + 2, p.y + 0.5, 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.spawnT = 0; e.asleep = false; e.speed = 0; window.__be = e;
+      spawnProj({ x: p.x, y: p.y, z: p.z + 1.2, ang: Math.atan2(e.y - p.y, e.x - p.x), speed: 8, r: 0.3, dmg: 5, life: 1, kind: 'fire', col: '#ff9a4a', burn: 2 }); });
+    const [bx, by] = await bp0.evaluate(() => worldToView(__be.x, __be.y, 0)); await bp0.mouse.move(bx * 2, by * 2);
+    await wait(700);
+    const B = await bp0.evaluate(() => { const L = STATUS.of(__be), b = L.find(s => s.id === 'burning'), S = STATUS.stats(); return { burnT: +__be.burnT.toFixed(2), st: b ? { el: b.el, max: b.max, t: +b.t.toFixed(2) } : null, bodies: S.bodies, icons: S.icons, dots: S.dots }; });
+    await wait(2200);
+    const B2 = await bp0.evaluate(() => ({ burnT: __be.burnT, on: STATUS.of(__be).some(s => s.id === 'burning') }));
+    await bp0.close();
+    check('M4a status wiring: an in-game burn lands through STATUS.apply (burnT kept as the rule, max + element kept) and shows on the body and the HUD dot',
+      !!B.st && B.st.el === 'fire' && B.st.max === 2 && Math.abs(B.st.t - B.burnT) < 0.01 && B.bodies >= 1 && B.icons >= 1 && B.dots >= 1, B);
+    check('M4a status wiring: the status ends with its field (no drift)', !(B2.burnT > 0) && !B2.on, B2);
+
+    // 3c. the Vale (54 lights in view, cap 40): 6 slots held for status lights, decorative / ambient lights culled first
+    const vp = await lp('scene=play', 'vale lights');
+    await vp.mouse.move(600, 300);
+    await vp.evaluate(() => {
+      const lp0 = lightPool; window.__vl = {}; lightPool = function (vis, cap) { const out = lp0(vis, cap); window.__vl = { inView: vis.length, cap, statIn: vis.filter(v => v[2].stat).length, statOut: out.filter(v => v[2].stat).length, ambOut: out.filter(v => v[2].amb).length, ambIn: vis.filter(v => v[2].amb).length }; return out; };
+      const p = G.player, ids = ['burning', 'frozen', 'shocked', 'smitten', 'burning', 'shocked'];
+      ids.forEach((id, i) => { const a = i / ids.length * Math.PI * 2, e = spawnEnemy('slime', p.x + Math.cos(a) * 2.4, p.y + Math.sin(a) * 2.4, 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.spawnT = 0; e.asleep = false; e.speed = 0; STATUS.apply(e, id, 60); });
+    });
+    await wait(1500);
+    const VL = await vp.evaluate(() => window.__vl);
+    await vp.screenshot({ path: path.join(M4A, 'vale-status-lights.png'), clip: await heroClip(vp, 480, 300, -10) });
+    await vp.close();
+    check('M4a light pool: over the cap in the Vale, 6 status lights draw (slots held), decorative fireflies cull first',
+      VL.inView > VL.cap && VL.statOut >= Math.min(6, VL.statIn) && VL.statOut >= 6 && VL.ambOut < VL.ambIn, VL);
+
+    // 3d. the HUD portrait and the Echo come from the forge (current loadout); ?oldhero keeps both on the old sprite
+    const pe = async (q, tag) => {
+      const pg = await lp(q, tag);
+      await pg.evaluate(() => { const p = G.player; p.equip.weapon = makeUnique('echo', 24); p.equip.head = makeItem('auroravisor', 'rare', 24); p.equip.chest = makeItem('auroraplate', 'rare', 24); recalcStats(p, true);
+        const e = spawnEnemy('slime', p.x + 1.5, p.y + 0.5, 0); e.hp = e.maxHp = 1e9; e.cd = 99; e.spawnT = 0; e.asleep = false; e.speed = 0; });
+      await pg.mouse.move(640, 300); await wait(1500);
+      for (let i = 0; i < 6; i++) { await pg.evaluate(() => { const p = G.player; p.atkT = 0; basicAttack(p); }); await wait(250); }
+      await pg.evaluate(() => { G.player.x -= 1.2; G.player.y += 0.6; });   // step aside: the spirit stays where it replays
+      await wait(120);
+      const r = await pg.evaluate(() => ({ echo: !!(G.echo && G.echo.alive), portrait: !!heroPortrait(), crops: ECHO_CROP.size }));
+      await pg.screenshot({ path: tmp('pe-port-' + tag), clip: { x: 0, y: 440, width: 200, height: 100 } });
+      await pg.screenshot({ path: tmp('pe-echo-' + tag), clip: await heroClip(pg, 260, 200, -20) });
+      await pg.close(); return r;
+    };
+    const PE = await pe('scene=play', 'forge'), PO = await pe('scene=play&oldhero', 'old');
+    stitch([tmp('pe-port-forge'), tmp('pe-echo-forge'), tmp('pe-port-old'), tmp('pe-echo-old')], path.join(M4A, 'portrait-echo.png'), ['portrait (forge)', 'Echo (forge)', '?oldhero', '?oldhero Echo']);
+    check('M4a portrait + Echo: the HUD portrait and the Echo draw the forge hero; ?oldhero keeps both old', PE.echo && PE.portrait && PE.crops > 0 && PO.echo && !PO.portrait && PO.crops === 0, { forge: PE, old: PO });
 
     // 4. bloom whitelist (lighting doc "Bloom": <= 3 % near-white in a 64 px window around any enemy; the hero's window too).
     // Every slot cast at a slime next to the hero; each cast is sampled every 50 ms for 1.2 s: the gate is the settled value
@@ -2047,7 +2101,7 @@ const PAD_STUB = () => {
       { after: { steady: wo.after.steady, settled: wo.after.settled, peak: wo.after.peak, peakSlot: wo.after.peakSlot }, before: { steady: wo.before.steady, settled: wo.before.settled, peak: wo.before.peak } });
     console.log('      white-out per slot [peak, settled] %: after ' + JSON.stringify(wo.after.slots) + ' before ' + JSON.stringify(wo.before.slots));
     for (const f of fs.readdirSync(M4A)) if (f.startsWith('_')) fs.unlinkSync(path.join(M4A, f));
-    check('M4a lighting shots written to tools/shots/m4a', ['hero-forge-vale', 'rim-lights', 'status-entities', 'status-world', 'status-hud', 'bloom-before-after'].every(n => fs.existsSync(path.join(M4A, n + '.png'))));
+    check('M4a lighting shots written to tools/shots/m4a', ['hero-forge-vale', 'rim-lights', 'status-entities', 'status-world', 'status-hud', 'bloom-before-after', 'vale-status-lights', 'portrait-echo'].every(n => fs.existsSync(path.join(M4A, n + '.png'))));
   }
   check('no page errors', errs.length === 0, errs.slice(0, 5));
   await br.close(); srv.close();

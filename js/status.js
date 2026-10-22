@@ -5,8 +5,9 @@
 //   bodies  STATUS.body(ctx, e, img, sx, sy, sw, sh, dx, dy, dw, dh, head, chest, lights) right after the renderer drew e's
 //           sprite (render.js drawPlayer / drawEnemy / drawEnemyArt): the status tint + cached overlay (char, ice, vine,
 //           rent, wet) masked to the drawn frame, the element's ELFX motif emitter pinned to the `chest` / `head` sockets
-//           (scene px; forge sockets for the hero, the body's height for the rest), an 8x8 over-head glyph with a stack
-//           digit, and ONE merged status light per body (alpha <= 0.35, L.stat: the light pool drops them first, bloom 0.4).
+//           (scene px; forge sockets for the hero, the body's height for the rest), an icon row (8x8 glyphs, stack digits,
+//           at most 3 + "+N", laid out above the HP bar by drawIcons(ctx) after the grade, rows never overlap) and ONE
+//           merged status light per body (alpha <= 0.35, L.stat: render.js lightPool holds 15 % of its cap for them, bloom 0.4).
 //           STATUS.pose(e) -> { x, y } the draw offset of a pose (Buffeted 1 px shove, Lifted hop x1.5).
 //   tiles   STATUS.drawTiles(ctx, lights) in the decal pass: burning grass (char + embers + a flicker light), frozen
 //           ground (frost decal + a glint on every 4th tile, one glint light per 4 tiles), wet ground (dark film + a bright
@@ -17,7 +18,8 @@
 // Where statuses come from (STATUS.of(e)): the generic map e.status = { <id>: { t | until, max, stacks, el } } (t: seconds
 // left, ticked by its owner; until: a G.t deadline) which the elements lane fills, plus today's live fields: burnT ->
 // Burning, frozen + stunT -> Frozen, slowT -> Chilled, the hero's dreadT -> Dread and a long rootT -> Rooted.
-// STATUS.apply(e, id, dur, stacks) / clear(e) write e.status with an `until` (tools and shots).
+// STATUS.apply(e, id, dur, stacks, el) / clear(e, id): every status lands here (game.js applyStatus); the field-backed ones write
+// their live field, the rest e.status with an `until` (see apply below).
 // Caps per quality tier (render.js QUALITY.tier) high / phone / low: emitting bodies 12 / 6 / 3, emitting tiles 4 / 2 / 0,
 // UIP slots 48 / 24 / 12. Over the cap a body keeps its tint and glyph, without particles or light.
 // Perf: body() adds its time to PERF.ph['sub.status'], the HUD to 'sub.statusHud' (render.js ?perf); the tile pass is its own phase.
@@ -78,15 +80,40 @@ const STATUS = (function () {
     LIST.length = 0; if (!e) return LIST;
     const S = e.status, now = (typeof G !== 'undefined' && G.t) || 0;
     if (S) for (const id in S) { const s = S[id]; if (!s) continue; const t = s.until != null ? s.until - now : s.t; push(id, t, s.max, s.stacks, s.el, false); }
-    if (e.burnT > 0) push('burning', e.burnT, Math.max(e.burnT, 2), 0, null, true);
-    if (e.frozen && e.stunT > 0) push('frozen', e.stunT, Math.max(e.stunT, 1), 0, null, true);
-    else if (e.slowT > 0) push('chilled', e.slowT, Math.max(e.slowT, 2), 0, null, true);
-    if (e.dreadT > 0) push('dread', e.dreadT, Math.max(e.dreadT, 2), 0, null, true);
-    if (e.rootT > 0.3 && e.stMax && e.stMax.rootT > 0.3) push('rooted', e.rootT, e.stMax.rootT, 0, null, true);
+    const M = e._stm, mx = (id, t, d) => (M && M[id] && M[id].max >= t ? M[id].max : Math.max(t, d)), mk = (id, k) => (M && M[id] ? M[id][k] : k === 'stacks' ? 0 : null);
+    if (e.burnT > 0) push('burning', e.burnT, mx('burning', e.burnT, 2), mk('burning', 'stacks'), mk('burning', 'el'), true);
+    if (e.frozen && e.stunT > 0) push('frozen', e.stunT, mx('frozen', e.stunT, 1), mk('frozen', 'stacks'), mk('frozen', 'el'), true);
+    else if (e.slowT > 0) push('chilled', e.slowT, mx('chilled', e.slowT, 2), mk('chilled', 'stacks'), mk('chilled', 'el'), true);
+    if (e.dreadT > 0) push('dread', e.dreadT, mx('dread', e.dreadT, 2), 0, null, true);
+    if (e.rootT > 0.3 && ((e.stMax && e.stMax.rootT > 0.3) || (M && M.rooted))) push('rooted', e.rootT, mx('rooted', e.rootT, (e.stMax && e.stMax.rootT) || 0), 0, null, true);
     return LIST;
   }
-  function apply(e, id, dur, stacks, el) { if (!e || !FX[id]) return false; (e.status || (e.status = {}))[id] = { until: G.t + dur, max: dur, stacks: stacks || 0, el: el || null }; return true; }
-  function clear(e, id) { if (!e || !e.status) return; if (id) delete e.status[id]; else e.status = null; }
+  // apply(e, id, dur, stacks, el): THE way a status lands (game.js applyStatus routes every source here). A status the game
+  // already runs on a live field writes that field (set to dur: the caller keeps its own max / overwrite rule) so the rules,
+  // the cleanse and the save see no change, and keeps { max, stacks, el } in e._stm for the timer sweep; of() reads the field
+  // back, so the two never drift. Field-backed: Burning burnT and Frozen stunT + frozen (enemies), Chilled slowT (every body),
+  // Dread dreadT and Rooted rootT (the hero); a body without that rule keeps it in e.status. Anything else goes to the generic map e.status with an `until`.
+  const hero = e => typeof G !== 'undefined' && e === G.player;
+  const LEGACY = {   // the live field a status runs on, per body (null: no such rule on that body -> e.status)
+    burning: e => (hero(e) ? null : 'burnT'), frozen: e => (hero(e) ? null : 'stunT'), chilled: e => 'slowT',
+    dread: e => (hero(e) ? 'dreadT' : null), rooted: e => (hero(e) ? 'rootT' : null),
+  };
+  function apply(e, id, dur, stacks, el) {
+    if (!e || !FX[id]) return false;
+    const f = LEGACY[id] && LEGACY[id](e);
+    if (f) {
+      e[f] = dur; if (id === 'frozen') e.frozen = 1;
+      const M = e._stm || (e._stm = {}); M[id] = { max: dur, stacks: stacks || 0, el: el || null };
+      return true;
+    }
+    (e.status || (e.status = {}))[id] = { until: G.t + dur, max: dur, stacks: stacks || 0, el: el || null }; return true;
+  }
+  function clear(e, id) {
+    if (!e) return;
+    const f = id && LEGACY[id] && LEGACY[id](e);
+    if (f) { e[f] = 0; if (id === 'frozen') e.frozen = 0; if (e._stm) delete e._stm[id]; return; }
+    if (!e.status) return; if (id) delete e.status[id]; else e.status = null;
+  }
   // the strongest status of a body: tier 2 first, then the order of LIST
   function primary(L) { let b = null; for (let i = 0; i < L.length; i++) { const s = L[i]; if (s.fx.ta <= 0 && !s.fx.ov) continue; if (!b || s.fx.tier > b.fx.tier) b = s; } return b; }
   function pose(e) {
@@ -132,13 +159,52 @@ const STATUS = (function () {
     return (GLYPH[id] = c.c);
   }
   const STRIPS = new Map();
-  function strip(L, n) {   // the over-head glyph row of a body: n glyphs 9 px apart, stack digits, cached (cap 64)
+  function strip(L, n, more) {   // a body's icon row: n glyphs 9 px apart, stack digits, a "+N" chip for the rest; cached (cap 64)
     let key = ''; for (let i = 0; i < n; i++) key += L[i].id + (L[i].stacks > 1 ? Math.min(9, L[i].stacks) : '') + ',';
+    if (more) key += '+' + more;
     let c = STRIPS.get(key); if (c) return c;
     if (STRIPS.size >= 64) STRIPS.delete(STRIPS.keys().next().value);
-    c = makeCanvas(n * 9 + 2, 12);
+    c = makeCanvas((n + (more ? 1 : 0)) * 9 + 2, 12);
     for (let i = 0; i < n; i++) { c.x.drawImage(glyph(L[i].id), i * 9, 0); if (L[i].stacks > 1) digit(c.x, L[i].stacks, i * 9 + 6, 4); }
+    if (more) {   // "+N": a dark chip, a 3x3 plus and the count
+      const x = n * 9; c.x.globalAlpha = 0.75; c.x.fillStyle = '#0c0714'; c.x.fillRect(x, 0, 9, 8); c.x.globalAlpha = 1; c.x.fillStyle = '#ffffff';
+      c.x.fillRect(x + 1, 3, 3, 1); c.x.fillRect(x + 2, 2, 1, 3); digit(c.x, Math.min(9, more), x + 5, 1);
+    }
     STRIPS.set(key, c.c); return c.c;
+  }
+  // ---- the icon rows: queued by body(), laid out once a frame by drawIcons(ctx) (render.js, after the grade, unlit) -------------
+  // A row sits centred above the body's HP bar (hud.js drawNameplates: bar top = feet - hgt x ZS - 7; an elite's name above it),
+  // the hero's over the head. At most ICON_MAX icons, tier 2 first, the rest as "+N". Rows never overlap: by body priority (boss,
+  // the hero, elite, then the nearest the hero) a row takes its spot or moves up one or two rows; with no room it is hidden.
+  const ICON_MAX = 3, ICONS = [], ICON_POOL = [], SEL = [], PLACED = [];
+  const bySt = (a, b) => b.fx.tier - a.fx.tier || b.stacks - a.stacks;
+  function queueIcons(e, L, hd) {
+    SEL.length = 0; for (let i = 0; i < L.length; i++) SEL.push(L[i]); SEL.sort(bySt);
+    const n = Math.min(SEL.length, ICON_MAX), c = strip(SEL, n, SEL.length - n), p = G.player, me = hero(e);
+    const elite = !me && !e.boss && typeof enemyClassOf === 'function' && enemyClassOf(e) === 'elite';
+    let ax = hd[0], ay = hd[1] - 13;
+    if (!me && e.hgt) { ax = isoX(e.x, e.y) - camX + RW / 2; ay = isoY(e.x, e.y, e.z || 0) - camY + RH / 2 - e.hgt * ZS - (e.type === 'wisp' ? 14 : 0) - 7 - 12 - (elite ? 9 : 0); }
+    const o = ICON_POOL[ICONS.length] || (ICON_POOL[ICONS.length] = {});
+    o.c = c; o.x = Math.round(ax - c.width / 2 + 1); o.y = Math.round(ay); o.w = c.width - 2; o.h = 11;   // 8 px glyphs + a stack digit hanging 3 px
+    o.pri = (e.boss ? 4000 : 0) + (me ? 3000 : 0) + (elite ? 2000 : 0) - (p ? Math.hypot(e.x - p.x, e.y - p.y) : 0);
+    ICONS.push(o);
+  }
+  function drawIcons(ctx) {
+    if (!ICONS.length) return;
+    const t0 = PERF && PERF.on ? performance.now() : 0;
+    ICONS.sort((a, b) => b.pri - a.pri); PLACED.length = 0; W.iconsHidden = 0; W.iconsMoved = 0;
+    for (const o of ICONS) {
+      let y = null;
+      for (let k = 0; k < 3 && y == null; k++) {
+        const yy = o.y - k * 12; let hit = false;
+        for (let j = 0; j < PLACED.length && !hit; j++) { const q = PLACED[j]; hit = o.x < q.x + q.w + 1 && q.x < o.x + o.w + 1 && yy < q.y + q.h && q.y < yy + o.h; }
+        if (!hit) { y = yy; if (k) W.iconsMoved++; }
+      }
+      if (y == null) { W.iconsHidden++; continue; }
+      PLACED.push({ x: o.x, y, w: o.w, h: o.h }); ctx.drawImage(o.c, o.x, y);
+    }
+    W.icons = PLACED.length; ICONS.length = 0;
+    if (PERF && PERF.on) PERF.ph['sub.status'] = (PERF.ph['sub.status'] || 0) + performance.now() - t0;
   }
   function digit(ctx, n, x, y) {
     const d = DIGIT[Math.min(9, n | 0)]; ctx.fillStyle = '#0c0714'; ctx.fillRect(x - 1, y - 1, 5, 7); ctx.fillStyle = '#ffffff';
@@ -188,13 +254,14 @@ const STATUS = (function () {
     M.set(k, c = T.c);
     return c;
   }
-  function begin() { W.bodies = 0; W.tiles = 0; W.parts = 0; }
+  function begin() { W.bodies = 0; W.tiles = 0; W.parts = 0; W.icons = 0; ICONS.length = 0; PLACED.length = 0; }
   // head / chest: [x, y] scene px or null (then taken from the drawn box: head at the top + 3, chest at 60 % of the height)
+  const HD = [0, 0], CH = [0, 0];
   function body(ctx, e, img, sx, sy, sw, sh, dx, dy, dw, dh, head, chest, lights) {
     if (!e) return;
     const L = of(e); if (!L.length) return;
     const t0 = PERF && PERF.on ? performance.now() : 0, t = G.t, sa = ctx.globalAlpha;
-    const hd = head || [dx + dw / 2, dy + Math.min(6, dh * 0.2)], ch = chest || [dx + dw / 2, dy + dh * 0.55];
+    const hd = head || (HD[0] = dx + dw / 2, HD[1] = dy + Math.min(6, dh * 0.2), HD), ch = chest || (CH[0] = dx + dw / 2, CH[1] = dy + dh * 0.55, CH);
     // tint + overlay, masked to the drawn frame
     const P = primary(L);
     if (img && P && dw > 0 && dh > 0 && sw > 0 && sh > 0) {
@@ -220,10 +287,9 @@ const STATUS = (function () {
         lights.push({ sx: ch[0] + camX - RW / 2, sy: ch[1] + camY - RH / 2, r: bl.r, col: bl.col, a: Math.min(0.35, a), stat: 1, bloom: 0.4, own: e });
       }
     }
-    // glyphs over the head: 8x8 each, a stack digit on stacked ones
+    // the icon row (8x8 glyphs, at most ICON_MAX, then +N), queued: drawIcons lays every body's row out above its HP bar
     ctx.globalAlpha = sa;
-    const n = Math.min(L.length, 4);
-    ctx.drawImage(strip(L, n), Math.round(hd[0] - n * 4.5), Math.round(hd[1] - 13));   // one blit: the glyph row is cached per (ids, stacks)
+    queueIcons(e, L, hd);
     if (PERF && PERF.on) PERF.ph['sub.status'] = (PERF.ph['sub.status'] || 0) + performance.now() - t0;
   }
 
@@ -266,6 +332,7 @@ const STATUS = (function () {
     const w = x1 - x0, h = y1 - y0, L = makeCanvas(w, h), Gl = makeCanvas(w, h); let glow = false;
     for (const T of TILES.values()) { L.x.drawImage(decal(T.kind), T.sx - x0, T.sy - y0); if (T.kind === 'burning') { Gl.x.drawImage(decal('burning'), T.sx - x0, T.sy - y0); glow = true; } }
     LAYER.c = L.c; LAYER.glow = glow ? Gl.c : null; LAYER.x0 = x0; LAYER.y0 = y0;
+    LAYER.live = [...TILES.values()].filter(T => T.kind === 'burning' || (T.kind === 'frozen' && T.h < 0.25));   // the tiles that emit / glint
   }
   function drawTiles(ctx, lights) {
     if (!TILES.size) return;
@@ -286,7 +353,7 @@ const STATUS = (function () {
       ctx.drawImage(LAYER.c, Math.round(LAYER.x0 + ox), Math.round(LAYER.y0 + oy)); ctx.globalAlpha = sa;
       if (LAYER.glow && C.glow) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = fMax * (0.28 + 0.12 * Math.sin(t * 9) + 0.06 * Math.sin(t * 23)); ctx.drawImage(LAYER.glow, Math.round(LAYER.x0 + ox), Math.round(LAYER.y0 + oy)); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
     }
-    for (const T of TILES.values()) {
+    for (const T of (layered ? LAYER.live : TILES.values())) {   // layered: only the tiles that emit or glint
       const z = layered ? 0 : (typeof tileH === 'function' ? tileH(m, T.x + 0.5, T.y + 0.5) : 0), vx = (layered ? T.sx + 16 : isoX(T.x, T.y)) + ox, vy = (layered ? T.sy : isoY(T.x, T.y, z)) + oy;
       if (vx < -20 || vx > RW + 20 || vy < -20 || vy > RH + 20) continue;
       if (!layered) {
@@ -303,8 +370,8 @@ const STATUS = (function () {
       }
     }
     if (!near.length || !C.tiles) return;
-    near.sort((a, b) => a._d - b._d);
     const n = Math.min(near.length, C.tiles);
+    for (let i = 0; i < n; i++) { let b = i; for (let j = i + 1; j < near.length; j++) if (near[j]._d < near[b]._d) b = j; if (b !== i) { const q = near[i]; near[i] = near[b]; near[b] = q; } }   // the n nearest (n <= 4)
     for (let i = 0; i < n; i++) {
       const T = near[i];
       if (emitOn) W.parts += emitter(ctx, T, TILE_S, T._vx, T._vy, 22, t);
@@ -373,7 +440,7 @@ const STATUS = (function () {
     if (PERF && PERF.on) PERF.ph['sub.statusHud'] = (PERF.ph['sub.statusHud'] || 0) + performance.now() - t0;
   }
 
-  function stats() { return { bodies: W.bodies, tiles: TILES.size, emittingTiles: W.tiles, parts: W.parts, hudIcons: W.hud }; }
-  return { FX, REACT, CAP, of, apply, clear, pose, body, begin, setTile, ring, clearTiles, drawTiles, drawHud, stats, glyph, tiles: TILES };
+  function stats() { return { bodies: W.bodies, tiles: TILES.size, emittingTiles: W.tiles, parts: W.parts, hudIcons: W.hud, icons: W.icons || 0, iconsMoved: W.iconsMoved || 0, iconsHidden: W.iconsHidden || 0, iconRects: PLACED.map(r => [r.x, r.y, r.w, r.h]), dots: DOTS.list.length / 2 }; }
+  return { FX, REACT, CAP, of, apply, clear, pose, body, begin, drawIcons, setTile, ring, clearTiles, drawTiles, drawHud, stats, glyph, tiles: TILES };
 })();
 if (typeof window !== 'undefined') window.STATUS = STATUS;

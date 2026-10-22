@@ -262,8 +262,8 @@ function recalcStats(p, full) {
 const EFFECT_ICD = 0.5;
 const EFFECT_IMPL = {
   // ring
-  fireBurn: { when: 'hit', stats: { fireDmg: 'fireDmg' }, do(c, v) { if (c.el === 'fire' && Math.random() < (v.burnChance || 0)) { const e = c.e; e.burnT = Math.max(e.burnT || 0, 2); e.burnTick = e.burnTick || 0.5; e.burnCast = c.cast; } } },
-  frostPower: { when: 'hit', stats: { frostDmg: 'frostDmg' }, do(c, v) { if (c.el === 'frost' && Math.random() < (v.freezeChance || 0)) { const e = c.e; e.stunT = Math.max(e.stunT, e.boss ? 0.25 : 1); e.frozen = 1; } } },
+  fireBurn: { when: 'hit', stats: { fireDmg: 'fireDmg' }, do(c, v) { if (c.el === 'fire' && Math.random() < (v.burnChance || 0)) { const e = c.e; applyStatus(e, 'burning', Math.max(e.burnT || 0, 2), 'fire'); e.burnTick = e.burnTick || 0.5; e.burnCast = c.cast; } } },
+  frostPower: { when: 'hit', stats: { frostDmg: 'frostDmg' }, do(c, v) { if (c.el === 'frost' && Math.random() < (v.freezeChance || 0)) { const e = c.e; applyStatus(e, 'frozen', Math.max(e.stunT, e.boss ? 0.25 : 1), 'frost'); } } },
   naturePower: { when: 'passive', stats: { natureDmg: 'natureDmg' }, partial: 'poisonChance (no hero poison yet)' },
   lightningPower: { when: 'passive', stats: { lightningDmg: 'lightningDmg' }, partial: 'shockDur (no Shock status yet)' },
   arcanePower: { when: 'passive', stats: { arcaneDmg: 'arcaneDmg' }, partial: 'markDur (no Marks yet)' },
@@ -398,6 +398,15 @@ const RANK_HITS = 25, RANK_MAX = 5, RANK_BONUS = 0.06;
 // onHit[] = fn(enemy, dmg, opts) called per hit (the M4 EFFECTS layer hooks here). Single call sites for M4's bus:
 // cast = useSkill / basicAttack, dodge = useSkill(slot 'v'), hit = damageEnemy, kill = killEnemy.
 // (Loadout v3 removed the modifier slots: a skill's numbers change only with mastery ranks, tier and rarity.)
+// applyStatus(e, id, dur, el): every status source lands through STATUS.apply (status.js: it writes the live field the rules
+// run on - burnT, stunT + frozen, slowT, dreadT, rootT - and keeps the status's max / element for the status layers). The
+// caller keeps its own max / overwrite rule (dur is the field's new value). Without status.js (node tools) the field alone.
+function applyStatus(e, id, dur, el) {
+  if (typeof STATUS !== 'undefined') return STATUS.apply(e, id, dur, 0, el);
+  const f = { burning: 'burnT', frozen: 'stunT', chilled: 'slowT', dread: 'dreadT', rooted: 'rootT' }[id];
+  if (f) { e[f] = dur; if (id === 'frozen') e.frozen = 1; }
+  return !!f;
+}
 const newCtx = (element, stagger = 0, rank = 1) => ({ dmg: 1, r: 1, stun: 1, slow: 1, burn: 1, cd: 1, mp: 1, dur: 1, extraProj: 0, count: 1, stagger, element, rank, onHit: [] });
 const skillRank = (p, id) => Math.min(RANK_MAX, 1 + Math.floor(((p.ranks[id] && p.ranks[id].hits) || 0) / RANK_HITS));
 const skillRankBonus = (p, id) => RANK_BONUS * (skillRank(p, id) - 1);
@@ -1084,9 +1093,9 @@ function damageEnemy(e, base, o = {}) {
   }
   if (tumble) { e.stunT = Math.max(e.stunT, 0.3); e.hopV = 2.5; e.hopZ = Math.max(e.hopZ || 0, 0.001); }
   if (o.stun) e.stunT = Math.max(e.stunT, o.stun * (cx ? cx.stun : 1) * (e.boss ? 0.25 : 1));
-  if (o.freeze) e.frozen = o.stun;
-  if (o.slow) e.slowT = Math.max(e.slowT, o.slow * 2 * (cx ? cx.slow : 1));
-  if (o.burn && !(echo && e.burnT > 0 && e.burnCast && e.burnCast.src !== 'echo')) { e.burnT = o.burn * (cx ? cx.burn : 1); e.burnTick = 0.5; e.burnCast = c; }   // an echo Burn never overwrites the hero's own
+  if (o.freeze) { if (o.stun && e.stunT > 0) applyStatus(e, 'frozen', e.stunT, 'frost'); else e.frozen = o.stun; }
+  if (o.slow) applyStatus(e, 'chilled', Math.max(e.slowT, o.slow * 2 * (cx ? cx.slow : 1)), 'frost');
+  if (o.burn && !(echo && e.burnT > 0 && e.burnCast && e.burnCast.src !== 'echo')) { applyStatus(e, 'burning', o.burn * (cx ? cx.burn : 1), 'fire'); e.burnTick = 0.5; e.burnCast = c; }   // an echo Burn never overwrites the hero's own
   const A = HITAGG;
   if (!o.dot) {
     // hit particles 5 + 8r (max 12); inside a cast at most 24 in all, 2 per target beyond the 4th
@@ -1216,7 +1225,7 @@ function updateZones(dt) {
     z.t += dt; z.tickT -= dt;
     if (z.t > z.life) { z.dead = true; continue; }
     if (z.hostile) {   // enemy ground zones (parts.js hostileZone): hurt / slow the hero on each tick
-      if (z.tickT <= 0) { z.tickT = z.tick || 0.5; if (playerIn({ kind: 'circle', x: z.x, y: z.y, r: z.r })) { if (z.slow) G.player.slowT = Math.max(G.player.slowT, 0.8); if (z.dmg) hurtPlayer(z.dmg, z.x, z.y, z.el || 'nature'); } }
+      if (z.tickT <= 0) { z.tickT = z.tick || 0.5; if (playerIn({ kind: 'circle', x: z.x, y: z.y, r: z.r })) { if (z.slow) applyStatus(G.player, 'chilled', Math.max(G.player.slowT, 0.8)); if (z.dmg) hurtPlayer(z.dmg, z.x, z.y, z.el || 'nature'); } }
       continue;
     }
     if (z.pull) for (const e of G.enemies) {

@@ -15,7 +15,8 @@
 //                      around the hero (Burning x2 with live burn DoT, Frozen, Shocked, Wet + Poisoned, Smitten), 4 standing
 //                      spell lights (fire projectiles that never move or hit), a burning grass ring (STATUS.ring r 3.5)
 //   --budget           with ?perf=1: also print `budget` (rim / lights / status / shadows ms per frame vs the phone budgets)
-//                      and `whiteOut` (render.js whiteOut() at the end); exit 1 when p95 > 20.0 ms or a budget is over
+//                      and `whiteOut` (render.js whiteOut() at the end). Throttled (--cpu >= 2): exit 1 when a layer budget is
+//                      over, p95 is information (`p95Info`). Unthrottled: exit 1 when p95 > 20.0 ms, the layers are information
 //   e.g. node tools/perf.js . pinewood 20 "quality=phone&perf=1" --scene=pine-fight --cpu=4 --budget
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
@@ -52,6 +53,7 @@ const srv = http.createServer((q, r) => {
     if (window.STATUS) STATUS.ring(p.x, p.y, 3.5, 'burning', 1e6);   // guarded: the same scene runs on a pre-M4a build for an A/B
     window.__pf = { bodies: G.enemies.length, projs: G.projs.length, tiles: window.STATUS ? STATUS.tiles.size : 0 };
   });
+  if (FLAGS.scene === 'pine-fight') await new Promise(r => setTimeout(r, 1500));   // settle: the ring's fade-in and the one-off caches (tints, icon rows, tile layer) are not the steady cost
   if (FLAGS.cpu) { const cdp = await page.context().newCDPSession(page); await cdp.send('Emulation.setCPUThrottlingRate', { rate: +FLAGS.cpu }); }  // CPU work per frame: time spent inside main.js loop() (update steps + render), independent of vsync pacing
   await page.evaluate(() => { const orig = window.loop; window.__work = []; window.loop = function (now) { const t0 = performance.now(); orig(now); window.__work.push(performance.now() - t0); }; });
   await page.evaluate(() => window.__perf && window.__perf(true, true));   // ?perf=1 / ?perf=flush: the phase split starts here
@@ -73,9 +75,11 @@ const srv = http.createServer((q, r) => {
     const ph = pf.ph, g = k => ph[k] || 0;
     out.budget = { rim: +g('sub.rim').toFixed(3), lights: +(g('lights.lm') + g('lights.mul') + g('lights')).toFixed(3), status: +(g('sub.status') + g('sub.statusHud') + g('status.tiles')).toFixed(3), shadows: +g('sub.shadow').toFixed(3) };
     const B = { rim: 0.4, lights: 2.5, status: 0.5, shadows: 0.3 };
-    over = Object.keys(B).filter(k => out.budget[k] > B[k]).map(k => `${k} ${out.budget[k]} > ${B[k]}`);
+    const layers = Object.keys(B).filter(k => out.budget[k] > B[k]).map(k => `${k} ${out.budget[k]} > ${B[k]}`), slow = out.p95 > 20.0 ? [`p95 ${out.p95} > 20.0`] : [];
     out.whiteOut = await page.evaluate(() => typeof whiteOut === 'function' ? whiteOut() : null);
-    if (out.p95 > 20.0) over.push(`p95 ${out.p95} > 20.0`);
+    // director ruling (M4a): the layer budgets hold at CPU x4; the p95 <= 20.0 ms gate is the unthrottled run (x4 p95 = a known miss)
+    if (+FLAGS.cpu >= 2) { over = layers; out.p95Info = slow.length ? slow[0] + ' (x4: information, known miss)' : 'p95 ' + out.p95; }
+    else { over = slow; if (layers.length) out.layersInfo = layers.join(', '); }
     out.gate = over.length ? 'FAIL: ' + over.join(', ') : 'PASS';
   }
   if (pf && pf.ph && Object.keys(pf.ph).length) { out.phases = pf.ph; out.draws = pf.draws; out.parts = pf.parts; out.tier = pf.tier; out.steps = pf.steps; out.slowFrames = pf.slowFrames; out.slow = pf.slow; out.drawsBy = pf.drawsBy; }   // only with ?perf in the query

@@ -199,10 +199,7 @@ function drawNameplates(ctx) {
         if (seen[el] < 0) { elChip(ctx, wx, by - 6, el, 'weak', 16); wx += 18; } else { elChip(ctx, rx, by - 6, el, 'resist', 16); rx -= 18; }
       }
     }
-    let sx = x - 20;
-    const st = [];
-    if (e.burnT > 0) st.push('#ff9a4a'); if (e.slowT > 0) st.push('#9fe8ff'); if (e.stunT > 0) st.push('#ffe36a');
-    for (const c of st) { ctx.fillStyle = UC.edge; ctx.fillRect(sx, by + 10, 16, 16); ctx.fillStyle = c; ctx.fillRect(sx + 2, by + 12, 12, 12); sx += 18; }
+    // M4a: the old status squares are retired; status.js drawIcons draws the icon row above the bar
   }
 }
 
@@ -216,7 +213,9 @@ function drawPortrait(ctx, p) {
   g.addColorStop(0, pg[0]); g.addColorStop(1, pg[1]); ctx.fillStyle = g; ctx.fillRect(X + 6, Y + 6, 60, 60);
   const sp = p.spr, ox = sp.ox || 0, cowl = p.gear.head === 'arcanecowl';
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(sp.portrait, ox, ox, 16, 16, X + 4, Y + (cowl ? 8 : 4), 64, 64);
+  const fp = typeof heroPortrait === 'function' && heroPortrait();   // M4a: the forge hero (render.js), ?oldhero the old portrait
+  if (fp) ctx.drawImage(fp.img, fp.sx, fp.sy, fp.w, fp.h, X + 6, Y + 6, 60, 60);
+  else ctx.drawImage(sp.portrait, ox, ox, 16, 16, X + 4, Y + (cowl ? 8 : 4), 64, 64);
   if (low) { const v = ctx.createRadialGradient(X + 36, Y + 36, 14, X + 36, Y + 36, 44); v.addColorStop(0, 'rgba(255,61,110,0)'); v.addColorStop(1, `rgba(255,61,110,${0.35 + pulse * 0.25})`); ctx.fillStyle = v; ctx.fillRect(X + 6, Y + 6, 60, 60); }
   if (p.hurtT > 0) { ctx.fillStyle = `rgba(255,40,90,${p.hurtT})`; ctx.fillRect(X + 6, Y + 6, 60, 60); }
   ctx.restore();
