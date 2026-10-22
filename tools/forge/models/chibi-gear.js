@@ -17,7 +17,7 @@ const { SIDES, both, TIERS, metal, METAL, GOLD, MAIL, LEATHER, STRAP, WOOD, QUIL
 
 // ---- head ------------------------------------------------------------------------------------------------------------
 function knighthelm(t) {
-  const M = t === 6, P = [], stamps = [], mats = { metal: metal(M ? METAL[3] : METAL[t - 1]), gold: GOLD, plume: ['#8a2238', '#b8324a', '#e0475e', '#ff8a9a'], feather: FEATHER, gem: SAPPHIRE, visor: VISOR, slot: flatOf('#141022'), shard: FROSTG, glow: flatOf(GLOW.frost) };
+  const M = t === 6, P = [], stamps = [], mats = { metal: metal(M ? METAL[3] : METAL[t - 1]), gold: GOLD, plume: ['#8a2238', '#b8324a', '#e0475e', '#ff8a9a'], feather: FEATHER, wing: metal(['#6a6a90', '#aab2d8', '#dde3f6', '#f4f7ff', '#ffffff']), gem: SAPPHIRE, visor: VISOR, slot: flatOf('#141022'), shard: FROSTG, glow: flatOf(GLOW.frost) };
   if (t === 1) {                                                // kettle hat: a crown and a wide brim, the fringe and side locks show
     P.push({ bone: 'head', mat: 'metal', part: 'helm', shape: 'ell', c: [0, 9.0, -0.1], r: [6.6, 4.2, 6.1], clip: [0, -1, 0, -7.6] },
       { bone: 'head', mat: 'metal', part: 'brim', shape: 'disc', c: [0, 8.0, 0.1], r: [8.4, 0.55, 7.8] });
@@ -50,12 +50,14 @@ function knighthelm(t) {
       ...[-50, -25, 0, 25, 50].map(d => { const a = d * Math.PI / 180, sn = Math.sin(a), cs = Math.cos(a);
         return { bone: 'head', mat: 'gold', part: 'crown', shape: 'cap', a: [5.6 * sn, 10.8, 5.3 * cs - 0.2], b: [7.0 * sn, 14.0, 6.6 * cs - 0.6], ra: 0.9, rb: 0.25 }; }));
   }
-  if (t === 4 || t === 5) {                                     // wings: four feathers fanned out of a root at each temple
+  if (t === 4 || t === 5) {                                     // wings: a broad white feather mass at each temple, three fingers fanned out of its top (>= 2 px wide: the cleanup passes eat 1 px tips)
     const g = t === 5 ? 1.35 : 1.1;
-    P.push(...both((s, k) => [[3.6, 0.35], [3.2, 0.75], [2.7, 1.1], [2.2, 1.45]].map(([L, a], i) => {
-      const rt = [-0.6, 0, -a * k], half = rotv([0, L * g * 0.95, 0], rt);
-      return { bone: 'head', mat: 'feather', part: `wing${s}${i}`, shape: 'ell', c: [6.1 * k + half[0], 8.0 + half[1], -1.4 + half[2]], r: [0.5, L * g, 1.15], rot: rt };
-    })));
+    P.push(...both((s, k) => [
+      { bone: 'head', mat: 'wing', part: `wing${s}m`, shape: 'ell', c: [6.7 * k, 9.0, -1.2], r: [2.3 * (t === 5 ? 1.2 : 1), 3.3 * (t === 5 ? 1.25 : 1), 1.3], rot: [-0.2, 0, -0.3 * k] },
+      ...[[3.5, 0.0], [3.2, 0.5], [2.7, 1.05]].map(([L, a], i) => {
+        const rt = [-0.25, 0, -a * k], half = rotv([0, L * g * 0.95, 0], rt);
+        return { bone: 'head', mat: 'wing', part: `wing${s}${i}`, shape: 'ell', c: [6.7 * k + half[0], 10.0 + half[1], -1.2 + half[2]], r: [1.1, L * g, 1.1], rot: rt };
+      })]));
   }
   return piece('knighthelm', 'head', t, { bias: 0.3, mats, prims: P, stamps }, { hides: t === 1 ? ['hair'] : ['hair', 'bangs', 'hairSide'] });
 }
