@@ -9,9 +9,9 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
 - Done on `claude/m4a`: docs split into `docs/design/` (DESIGN.md deleted), cleanup (tools/qa/old etc. deleted),
   check.js / docs-lint / palette-lint, Wind lane (js/wind.js, wind-check.js), comment sweep.
 - **Running lanes** (uncommitted work in the tree belongs to them; commit only their paths with `git commit -- <paths>`):
-  - Forge (Opus): head/face less blobby + hair as secondary motion (trail/lift variants), piece size caps (64 KB body/armour,
-    30 KB other). Owns tools/forge/forge.js, build.js, board.js, ref*.js, humanoid-anims.js. Delivers
-    tools/forge/out/board-ref.png + head-hair-zoom.png → show the client.
+  - Forge runtime (Opus): head/hair APPROVED by the client (1d). Now js/forge-rt.js + js/forge-bank/* + rim-mask export,
+    tools/forge-rt-check.js, one script tag in index.html; owns tools/forge/{forge,build,board}.js. Acceptance: byte-equal
+    to offline, first compose ≤ 120 ms at CPU ×4, cached ≤ 0.05 ms, stable sha256. No render.js (Lighting does the swap).
   - Forge gear lines (Sonnet): tools/forge/models/gear/{sword,buckler,staff,grimoire,warden}.js × 6 tiers, tier strips,
     loadout-mix.png.
   - Loadout v3 + The Stopped Hour/Hush + save v5 + balsim parity (Opus): js/data, items, itemdata, input, game, hud, menus,
@@ -22,7 +22,7 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
 
 ## Next
 1. Loadout checkpoint (a) green → commit; then (b) lines/pages/grips/Hush, (c) balsim.
-2. Client approves head/hair → gear lines continue; then Forge runtime (js/forge-rt.js, banks) and hero swap in render.
+2. Forge runtime green → commit; gear lines adapt to the 1d part format (told).
 3. Lighting + status lane (Opus, owns js/render.js, js/elfx.js, js/status.js) after Forge exports rim masks.
 4. Loadout UI polish (Sonnet) after the engine lane.
 5. After all branches merge: purge tools/qa/old from history (filter-repo + force-push; client-approved).
