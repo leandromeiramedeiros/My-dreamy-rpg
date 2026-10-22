@@ -23,6 +23,7 @@
 ## Employee rules (every brief states them)
 - Never `git commit`, `git stash`, `git reset`, `git checkout` or switch branches; the director commits.
 - Edit only the files your brief lists; the brief names the files other lanes own.
+- Read only the docs your brief names (by file and section). Grep `docs/GLOSSARY.md` for a term; don't read it whole. `docs/meetings/` is an archive: read it only when the brief cites it.
 - Run test suites one at a time.
 - Local Windows box: Playwright with its own Chromium via `npm i`; never run `playwright install`; use `python` (has PIL).
 - Report with numbers and screenshot paths.
