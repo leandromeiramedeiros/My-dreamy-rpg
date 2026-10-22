@@ -1,7 +1,7 @@
 'use strict';
 // tools/qa/lib.js -- QA play-test harness: launches the real game (file://) in Chromium, installs OBSERVER-ONLY hooks,
 // and provides a bot that plays through real inputs (keyboard + mouse, gamepad stub, or touch). No teleports, no god mode.
-process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers';
+if (process.platform !== 'win32') process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers';
 const fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const ROOT = path.join(__dirname, '..', '..'), QA = __dirname, SHOTS = path.join(QA, 'shots');

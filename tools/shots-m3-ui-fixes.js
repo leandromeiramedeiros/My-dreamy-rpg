@@ -2,7 +2,7 @@
 'use strict';
 // R3 UI fixes screenshots -> tools/shots/m3-ui-fixes/<item>-<viewport>-<before|after>.png  (docs/meetings/2026-10-20-feel-ui.md R3)
 // Usage: node tools/shots-m3-ui-fixes.js before|after     Viewports: desktop 1920x1080, phone landscape 844x390, portrait 390x844 (rotate card).
-process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers';
+if (process.platform !== 'win32') process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers';
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const ROOT = path.join(__dirname, '..'), OUT = path.join(__dirname, 'shots', 'm3-ui-fixes');

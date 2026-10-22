@@ -1515,7 +1515,7 @@ const PAD_STUB = () => {
       const e = __hf.mob('thornbackboar', 1.5, -0.8, 300); const s = __hf.mob('slime', 1.4, 0.2, 300); __hf.steps(2); damageEnemy(e, 5000, { knock: 0.4 }); damageEnemy(s, 5000, { knock: 0.4 }); })()`, [0, 3, 4, 5, 6, 6, 6, 8, 8, 10]);
     await ev(() => { running = true; last = performance.now(); acc = 0; requestAnimationFrame(loop); });
     // one strip per sequence (frames left to right) for review
-    const strip = (files, out) => require('child_process').spawnSync('python3', ['-c', `import sys\nfrom PIL import Image\nfs=sys.argv[2:]\nim=[Image.open(f) for f in fs]\nw,h=im[0].size\ns=Image.new('RGB',(w*len(im),h))\nfor i,m in enumerate(im): s.paste(m,(i*w,0))\ns.save(sys.argv[1])`, out, ...files]);
+    const strip = (files, out) => require('child_process').spawnSync(process.platform === 'win32' ? 'python' : 'python3', ['-c', `import sys\nfrom PIL import Image\nfs=sys.argv[2:]\nim=[Image.open(f) for f in fs]\nw,h=im[0].size\ns=Image.new('RGB',(w*len(im),h))\nfor i,m in enumerate(im): s.paste(m,(i*w,0))\ns.save(sys.argv[1])`, out, ...files]);
     const st = [strip(weak, path.join(FEEL_DIR, 'strip-1-weak-hit.png')), strip(heavy, path.join(FEEL_DIR, 'strip-2-heavy-hit.png')), strip(kill, path.join(FEEL_DIR, 'strip-3-kill-fling.png'))];
     check('hit feel: frame strips written to tools/shots/m3-feel (weak hit, heavy hit, kill fling)', weak.length && heavy.length && kill.length && fs.existsSync(path.join(FEEL_DIR, 'strip-3-kill-fling.png')), { frames: weak.length + heavy.length + kill.length, strips: st.map(s => s.status) });
     // 8. phone caps: the corpse pool is 8
@@ -1687,7 +1687,7 @@ const PAD_STUB = () => {
       const f = path.join(ECHO_DIR, `echo-${String(i).padStart(2, '0')}.png`); await xp.screenshot({ path: f, clip: { x: 300, y: 130, width: 360, height: 220 } }); files.push(f);
     }
     const alive = await xp.evaluate(() => !!(G.echo && G.echo.alive && G.echo.count > 0));
-    const strip = require('child_process').spawnSync('python3', ['-c', `import sys\nfrom PIL import Image\nfs=sys.argv[2:]\nim=[Image.open(f) for f in fs]\nw,h=im[0].size\ns=Image.new('RGB',(w*len(im),h))\nfor i,m in enumerate(im): s.paste(m,(i*w,0))\ns.save(sys.argv[1])`, path.join(ECHO_DIR, 'strip-echo.png'), ...files]);
+    const strip = require('child_process').spawnSync(process.platform === 'win32' ? 'python' : 'python3', ['-c', `import sys\nfrom PIL import Image\nfs=sys.argv[2:]\nim=[Image.open(f) for f in fs]\nw,h=im[0].size\ns=Image.new('RGB',(w*len(im),h))\nfor i,m in enumerate(im): s.paste(m,(i*w,0))\ns.save(sys.argv[1])`, path.join(ECHO_DIR, 'strip-echo.png'), ...files]);
     check('echo: frame strip written to tools/shots/m3-echo (8 frames, the spirit replaying the hero\'s swings)', alive && files.length === 8 && strip.status === 0 && fs.existsSync(path.join(ECHO_DIR, 'strip-echo.png')), { frames: files.length, alive, status: strip.status });
     await xp.close();
   }
