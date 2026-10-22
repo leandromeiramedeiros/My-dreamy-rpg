@@ -37,19 +37,20 @@ for (const u of [...bank.model.base.map(id => ({ id, opt: { group: id } })), ...
 let composed = 0, equal = 0, lonePx = 0;
 function stacked(dir, anim, frame, ids) {                         // runtime compose, checked against the offline render
   const out = FORGE.compose(bank, { dir, anim, frame, pieces: ids }).rgba;
-  const ref = FORGE.render(model, { dir, anim, frame, pieces: ids.map(id => gear.pieces[id]) }).rgba;
+  const R = FORGE.render(model, { dir, anim, frame, pieces: ids.map(id => gear.pieces[id]) }), ref = R.rgba;
   composed++; if (Buffer.compare(Buffer.from(out.buffer, out.byteOffset, out.length), Buffer.from(ref.buffer, ref.byteOffset, ref.length)) === 0) equal++;
-  lonePx += lone(out, FW, FH);
+  lonePx += lone(out, FW, FH, R.fine);
   return out;
 }
 // lone pixels: an opaque pixel with no 4-neighbour of its colour; the outline (a 1 px line that steps diagonally) counts as
-// lone only with no outline pixel among its 8 neighbours (a dark dot)
+// lone only with no outline pixel among its 8 neighbours (a dark dot); a fine material's pixel (fine[i]: 1 px feather tips) is
+// intended detail and skipped
 const OUTK = model.outline ? parseInt(model.outline.slice(1), 16) : -1;
 const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]], N8 = N4.concat([[1, 1], [1, -1], [-1, 1], [-1, -1]]);
-function lone(rgba, w, h) {
+function lone(rgba, w, h, fine) {
   let n = 0; const k = i => (rgba[i] << 16) | (rgba[i + 1] << 8) | rgba[i + 2];
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const i = (y * w + x) * 4; if (!rgba[i + 3]) continue;
+    const i = (y * w + x) * 4; if (!rgba[i + 3] || (fine && fine[y * w + x])) continue;
     let same = false;
     for (const [dx, dy] of k(i) === OUTK ? N8 : N4) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue; const j = (yy * w + xx) * 4; if (rgba[j + 3] && k(j) === k(i)) { same = true; break; } }
     if (!same) n++;

@@ -152,17 +152,18 @@ const FORGE = (function () {
     if (nc < 0) { nc = 0; for (let y = S.y0; y <= S.y1; y++) for (let i = y * w + S.x0, e = y * w + S.x1; i <= e; i++) if (M[i] >= 0) CL[nc++] = i; }
     if (px) nc = passSpurs(S, nc);
     if (opt.jumpQ) passSeams(S, nc, opt.jumpQ, !!opt.innerColor);
+    if (opt.own) passOwn(S, nc, opt.own);
     passLone(S, nc, px ? 2 : 3);
     passOrphans(S, nc, px ? 1 : 2, px ? 8 : 2);
-    const { C, SEAM, T } = S, seamC = opt.innerColor ? rgbKey(opt.innerColor) : 0;
-    for (let k = 0; k < nc; k++) { const i = CL[k]; C[i] = SEAM[i] ? seamC : PK[M[i] * 8 + T[i]]; }
+    const { C, SEAM, T } = S, seamC = opt.innerColor ? rgbKey(opt.innerColor) : 0, olC = opt.outline ? rgbKey(opt.outline) : 0;
+    for (let k = 0; k < nc; k++) { const i = CL[k]; C[i] = SEAM[i] ? (SEAM[i] === 2 ? olC : seamC) : PK[M[i] * 8 + T[i]]; }
     S.dl = CL; S.nd = nc;
     if (smear) passSmears(S, opt.smears);
     if (px) passClusters(S);
     if (opt.outline) passOutline(S, nc, rgbKey(opt.outline));
   }
-  // pixel pass 1 (opt-in, model.pixel): 1 px spurs off the silhouette go (a pixel with at most one covered 4-neighbour);
-  // returns the new count of covered pixels
+  // pixel pass 1 (opt-in, model.pixel): 1 px spurs off the silhouette go (a pixel with at most one covered 4-neighbour;
+  // flat and fine material pixels stay: KP); returns the new count of covered pixels
   function passSpurs(S, nc) {
     const { w, h, M, F, KP, CH, DY, XOF, CL } = S, N = w * h;
     for (let pass = 0; pass < 2; pass++) {
@@ -189,6 +190,19 @@ const FORGE = (function () {
       const x = XOF[i], kk = K[i], z = Z[i] + jq;
       if ((x + 1 < w && M[i + 1] >= 0 && K[i + 1] !== kk && Z[i + 1] > z) || (x > 0 && M[i - 1] >= 0 && K[i - 1] !== kk && Z[i - 1] > z) ||
         (i + w < N && M[i + w] >= 0 && K[i + w] !== kk && Z[i + w] > z) || (i >= w && M[i - w] >= 0 && K[i - w] !== kk && Z[i - w] > z)) { if (ic) SEAM[i] = 1; else T[i] = 0; }
+    }
+  }
+  // own outline: a covered pixel with a NEARER 4-neighbour of another unit that draws its own outline (OWN[layer] = unit
+  // << 1 | own) takes the outline colour (SEAM 2: no tone, out of the orphan and cluster passes), whatever the depth jump.
+  // Reads M / Z only and writes SEAM only, so in place
+  function passOwn(S, nc, OWN) {
+    const { w, h, M, Z, SEAM, XOF, CL } = S, N = w * h;
+    for (let k = 0; k < nc; k++) {
+      const j = CL[k], u = OWN[M[j] >> 8] >> 1, z = Z[j], x = XOF[j]; let i, o;
+      if ((x + 1 < w && (i = j + 1, M[i] >= 0) && ((o = OWN[M[i] >> 8]) & 1) && (o >> 1) !== u && Z[i] > z) ||
+        (x > 0 && (i = j - 1, M[i] >= 0) && ((o = OWN[M[i] >> 8]) & 1) && (o >> 1) !== u && Z[i] > z) ||
+        (j + w < N && (i = j + w, M[i] >= 0) && ((o = OWN[M[i] >> 8]) & 1) && (o >> 1) !== u && Z[i] > z) ||
+        (j >= w && (i = j - w, M[i] >= 0) && ((o = OWN[M[i] >> 8]) & 1) && (o >> 1) !== u && Z[i] > z)) SEAM[j] = 2;
     }
   }
   // lone material pixel (one stray hand / belt pixel): it joins the commonest neighbouring material
@@ -223,9 +237,10 @@ const FORGE = (function () {
   // (2 passes; the pixel pass iterates to a fixed point and also takes edge pixels with a single same-material neighbour).
   // A pass reads only the tones before it, so after the first scan only the changed pixels and their neighbours are
   // visited (a work list, deduplicated by DY). Materials, flat and seam flags stay fixed here: OM = 16 (the pixel takes
-  // part) | which 4-neighbours count (same material, not flat, not a seam: 1 right, 2 left, 4 down, 8 up)
+  // part) | which 4-neighbours count (same material, not flat, not a seam: 1 right, 2 left, 4 down, 8 up). A fine material's
+  // pixel always gets the default rule (2 same-material neighbours, the first 2 passes): its 1 px tips keep their tone
   function passOrphans(S, nc, need, passes) {
-    const { w, h, M, T, F, SEAM, CH, DY, WL, XOF, CL, OM } = S, N = w * h;
+    const { w, h, M, T, F, KP, SEAM, CH, DY, WL, XOF, CL, OM } = S, N = w * h;
     for (let k = 0; k < nc; k++) {
       const i = CL[k], m = M[i]; if (F[i] || SEAM[i]) { OM[i] = 0; continue; }
       const x = XOF[i]; let b = 16, j;
@@ -247,7 +262,7 @@ const FORGE = (function () {
         if (b & 2) { v = T[i - 1]; NB[n++] = v; if (v === t) same = true; }
         if (b & 4) { v = T[i + w]; NB[n++] = v; if (v === t) same = true; }
         if (b & 8) { v = T[i - w]; NB[n++] = v; if (v === t) same = true; }
-        if (n >= need && !same) { CH[nch * 2] = i; CH[nch * 2 + 1] = commonest(n); nch++; }
+        if (!same && (KP[i] ? n >= 2 && pass < 2 : n >= need)) { CH[nch * 2] = i; CH[nch * 2 + 1] = commonest(n); nch++; }
       }
       nw = 0;
       for (let k = 0; k < nch; k++) {
@@ -283,15 +298,16 @@ const FORGE = (function () {
     S.dl = DL; S.nd = nd;
   }
   // pixel pass 2: clusters >= 2 px by final colour (what the eye and the lint see): a pixel with no 4-neighbour of its own
-  // colour takes the commonest neighbouring colour; flat pixels too (a blade pixel cut off by the arm, half an eye).
+  // colour takes the commonest neighbouring colour; flat pixels too (a blade pixel cut off by the arm, half an eye), fine
+  // material pixels never (KP).
   // In place, scan order (a lone pair cannot swap forever); a repeat pass revisits only dirty pixels
   function passClusters(S) {
-    const { w, h, M, KP, SM, C, DY, XOF } = S, N = w * h, DL = S.dl, nd = S.nd;
+    const { w, h, M, KP, SM, SEAM, C, DY, XOF } = S, N = w * h, DL = S.dl, nd = S.nd;
     for (let pass = 0; pass < 6; pass++) {
       let changed = 0;
       for (let k = 0; k < nd; k++) {
         const i = DL[k]; if (pass && !DY[i]) continue; DY[i] = 0;
-        if (KP[i]) continue;
+        if (KP[i] || (SEAM[i] === 2 && M[i] >= 0)) continue;     // fine pixels, own-outline lines (a 1 px line, like the outline)
         const x = XOF[i], c = C[i]; let n = 0, same = false, j;
         j = i + 1; if (x + 1 < w && (M[j] >= 0 || SM[j])) { if (C[j] === c) same = true; else NB[n++] = C[j]; }
         j = i - 1; if (!same && x > 0 && (M[j] >= 0 || SM[j])) { if (C[j] === c) same = true; else NB[n++] = C[j]; }
@@ -394,6 +410,14 @@ const FORGE = (function () {
   const resolveOpts = m => ({ outline: m.outline ? hexRgb(m.outline) : null, jumpQ: Math.round((m.innerLine != null ? m.innerLine : 2.5) * QS),
     innerColor: m.innerColor ? hexRgb(m.innerColor) : null, pixel: m.pixel || null });
   function interner() { const m = new Map(); return s => { if (!m.has(s)) m.set(s, m.size); return m.get(s); }; }
+  // own outline: the piece's flag, else the rig's default for its slot
+  const ownOf = (defs, flag, slot) => flag != null ? !!flag : !!(defs && slot && defs[slot]);
+  // per stack layer: unit << 1 | own (ro.own; left out when no layer draws its own outline, so that path costs nothing)
+  function withOwn(ro, layers) {
+    if (!ro.outline || !layers.some(L => L.own)) return ro;
+    const own = new Int32Array(layers.length); layers.forEach((L, l) => { own[l] = (L.unit << 1) | (L.own ? 1 : 0); });
+    return Object.assign({}, ro, { own });
+  }
   // ---- compose: stage B over baked sheets (the game's runtime path; equals render() byte for byte) ---------------
   // bank = { model: bankInfo(model), sheets: { <key>: { w, rgba, meta } } }  (rgba decoded from the PNG; a sheet no frame
   // of a loadout reads may stay undecoded). A unit (meta.id: a base group or a piece id) may span several sheets by anim
@@ -430,12 +454,13 @@ const FORGE = (function () {
     for (const p of ps) if (!U[p.id]) throw new Error(`forge: ${p.id} is not in the bank`);
     const wp = ps.map(p => U[p.id].meta).find(m => m.class), hidden = new Set();
     ps.forEach(p => (U[p.id].meta.hides || []).forEach(t => hidden.add(t)));
-    const layers = [], pals = [], keys = [], key = interner(), units = [];
+    const layers = [], pals = [], keys = [], key = interner(), units = [], own = [];
     const add = (u, over, base) => {
       units.push(u);
+      const un = base ? 0 : units.length, ow = !base && ownOf(info.ownOutline, u.meta.own, u.meta.slot);
       u.meta.layers.forEach((L, li) => {
         if (base && hidden.has(L.tag)) return;
-        layers.push({ u, li, by: new Map() }); pals.push(L.mats.map((n, i) => (over && over[n] ? toRamp(over[n]) : L.ramps[i]).map(hexRgb)));
+        layers.push({ u, li, by: new Map() }); own.push({ unit: un, own: ow }); pals.push(L.mats.map((n, i) => (over && over[n] ? toRamp(over[n]) : L.ramps[i]).map(hexRgb)));
         const kk = new Int32Array(16); L.parts.forEach((n, i) => { kk[i] = key(L.group + ':' + n); }); keys.push(kk);
       });
     };
@@ -443,7 +468,7 @@ const FORGE = (function () {
     for (const p of ps) { const m = U[p.id].meta; add(U[p.id], p.tier != null && m.tiers ? m.tiers[p.tier] : p.pal || null, false); }
     const KK = new Int32Array(Math.max(1, layers.length) * 16); keys.forEach((kk, l) => KK.set(kk, l * 16));
     const sp = ps.find(p => U[p.id].meta.smear);
-    return { info, layers, KK, PK: palKeys(pals), cls: wp ? wp.class : 'none', ro: resolveOpts(info), units, smear: sp ? U[sp.id] : null,
+    return { info, layers, KK, PK: palKeys(pals), cls: wp ? wp.class : 'none', ro: withOwn(resolveOpts(info), own), units, smear: sp ? U[sp.id] : null,
       lpx: new Array(layers.length).fill(null), key: null, L: null, dirIdx: null, n: null };
   }
   function animOf(P, anim) {                                    // 'attack' -> 'attack:<weapon class>' when the rig has it

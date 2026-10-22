@@ -50,13 +50,13 @@ function syncRuntime() {
 }
 
 // ------------------------------------------------------------------ one sheet + its review board
-function lint(model, sh) {                                              // distinct colours, lone pixels (outline excluded)
+function lint(model, sh) {                                              // distinct colours, lone pixels (outline and fine materials excluded)
   const cols = new Set(); let orphans = 0;
   const key = i => (sh.rgba[i] << 16) | (sh.rgba[i + 1] << 8) | sh.rgba[i + 2];
   const outKey = model.outline ? parseInt(model.outline.slice(1), 16) : -1;
   for (let y = 0; y < sh.h; y++) for (let x = 0; x < sh.w; x++) {
     const i = (y * sh.w + x) * 4; if (sh.rgba[i + 3] < 255) continue;
-    const k = key(i); cols.add(k); if (k === outKey) continue;
+    const k = key(i); cols.add(k); if (k === outKey || (sh.fine && sh.fine[y * sh.w + x])) continue;
     let same = false;
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= sh.w || yy >= sh.h) continue;

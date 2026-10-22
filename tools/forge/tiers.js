@@ -10,7 +10,8 @@
 //     det      two bakes give the same sha256
 //     compose  the runtime FORGE.compose of the decoded bank == FORGE.render, byte for byte, every sheet frame
 //     lone     0 lone pixels on every sheet frame (no 4-neighbour of the same colour; the outline is a 1 px line, so an
-//              outline pixel counts only with no outline pixel among its 8 neighbours)
+//              outline pixel counts only with no outline pixel among its 8 neighbours); a fine material's pixels (forge.js
+//              mats fine: 1 px feather tips) are intended detail and skipped
 //     tones    <= 5 per material (4-step ramp + glint);  colours: <= 24 added over the bare base
 //     bright   <= 15 % of the piece's own opaque pixels (its baked layers, every frame) above CIE L* 85: FAIL on T1..T3, warning on
 //              T4, T5 and Mythic
@@ -89,7 +90,7 @@ const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]], N8 = N4.concat([[1, 1], [1, -1], 
 function lone(sh) {
   let n = 0;
   for (let y = 0; y < sh.h; y++) for (let x = 0; x < sh.w; x++) {
-    const i = (y * sh.w + x) * 4; if (sh.rgba[i + 3] < 255) continue;
+    const i = (y * sh.w + x) * 4; if (sh.rgba[i + 3] < 255 || (sh.fine && sh.fine[y * sh.w + x])) continue;   // fine materials: intended 1 px detail
     const k = key(sh.rgba, i), fx = x % FW, fy = y % FH; let same = false;
     for (const [dx, dy] of k === OUTK ? N8 : N4) {
       const xx = fx + dx, yy = fy + dy; if (xx < 0 || yy < 0 || xx >= FW || yy >= FH) continue;   // never across two frames
