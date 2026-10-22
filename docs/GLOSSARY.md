@@ -545,4 +545,4 @@ Note: count reconciled in the M4a DESIGN rewrite (12 or 13 bosses; only named bo
 | Shift dodge | Boots key (V) | `dodge` | client ruling 1 | retired |
 | Spellbook (hand weapon) | Grimoire (companion); Wand takes the Foci 1H seat | `spellbook` | meeting 4.3 | retired |
 | Two weapon slots | HAND and OFFHAND | — | meeting 4.6 | retired |
-| Story difficulty | Damage-taken ×0.6 mode | Removed (client 2026-10-22); Normal is the only difficulty | — | retired |
+| Story difficulty | Removed; Normal is the only difficulty | `difficulty` | client 2026-10-22 | retired |
