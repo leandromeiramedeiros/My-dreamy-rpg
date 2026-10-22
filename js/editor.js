@@ -547,9 +547,12 @@ function renderTunePanel(P) {
       h('tr', null, h('td', null, label), h('td', null, numIn(tuneVal(['player', k], BASE_PLAYER[k]), v => setTune(['player', k], v, BASE_PLAYER[k])))))));
   P.append(h('div', { class: 'hint' }, 'Enemy stats, behaviour and looks are in the ENEMIES tab.'));
   const groups = [];
-  for (const w of ITEMS.weapon) groups.push([w.name, [...w.q, ...w.e, ...w.r]]);
-  groups.push(['Armour', ITEMS.chest.concat(ITEMS.head, ITEMS.boots).map(i => i.skill)]);
-  groups.push(['Character', CHAR_SKILLS]);
+  const has = id => id && SKILLS[id];
+  for (const w of ITEMS.weapon) groups.push([w.name, [w.spell, w.ult].filter(has)]);
+  for (const o of ITEMS.offhand) groups.push([o.name, [o.action, o.spell, o.ult].filter(has)]);
+  groups.push(['Off-actions', Object.values(CLASS_OFF).filter(has)]);
+  groups.push(['Armour', ITEMS.chest.concat(ITEMS.head, ITEMS.boots).map(i => i.skill).filter(has)]);
+  groups.push(['Pages', Object.keys(PAGES).filter(has)]);
   P.append(h('h3', null, 'SKILLS'), h('div', { class: 'hint' }, 'Cooldown (s), mana and stamina costs.'));
   for (const [g, ids] of groups) P.append(h('table', null, h('tr', null, h('th', null, g), h('th', null, 'CD'), h('th', null, 'MP'), h('th', null, 'ST')),
     ids.map(id => h('tr', null, h('td', null, SKILLS[id].name), ['cd', 'mp', 'st'].map(f => h('td', null, numIn(tuneVal(['skills', id, f], BASE_SKILL[id][f]), v => setTune(['skills', id, f], v, BASE_SKILL[id][f]))))))));

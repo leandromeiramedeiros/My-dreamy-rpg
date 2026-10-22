@@ -2,8 +2,9 @@
 // ---------------------------------------------------------------------------
 // Touch controls (docs/design/hud-ui.md "Touch v2"):
 //  * left side: a floating joystick wherever the thumb lands;
-//  * right side: a circular wheel around the attack button (hold): inner arc Q E R (or 1 2 3 via the page toggle), outer arc
-//    F C Dodge Potion, Interact when a prompt is near. Tap a skill = quick-cast at the auto-target; drag past 12 px = aimed cast
+//  * right side: a circular wheel around the attack button (hold = the hand action, M1; its rim = the ultimate charge): inner arc
+//    Q E + the offhand action (M2, the second button), or the pockets Z X C via the page toggle; outer arc R F Dodge and the two
+//    ultimates (gold charge rings, one shared charge); Interact when a prompt is near. Tap a skill = quick-cast at the auto-target; drag past 12 px = aimed cast
 //    (ease-out distance -> range, clamped), release over the button or on the X = cancel. TOUCH_AIM carries the live aim.
 // Touch feeds the same ACTIONS as keyboard and pad (input.js): IN.touchMove / touchHold('attack') / touchTap(skill).
 // The touch aim drives the virtual cursor (G.mouse) that game.js resolveAim() hands to the cast. Drawing lives in hud.js.
@@ -33,14 +34,15 @@ const TSAFE = () => { const s = G.safe || { l: 0, r: 0, t: 0, b: 0 }; return { l
 // ---- circular wheel (docs/design/hud-ui.md "Touch v2") ------------------------------------------------------------------------
 // C = attack centre (860,436). Angles are measured clockwise from +x in screen space (so 270 deg = straight up; the spec's
 // "y up" wording cannot be literal: 235 deg would land at y 538). x = Cx + r cos a, y = Cy + r sin a; left-handed play
-// mirrors x about 480. Inner arc r124 O60: Q 200, E 235, R 270 (page 2: 1 2 3 at the same spots). Outer arc r196 O52:
-// F 190, C 215, Dodge 240, Potion 265; page toggle O40 at 160 deg. Interact O56 at 150 deg on the inner arc (prompt only).
+// mirrors x about 480. Inner arc r124 O60: Q 200, E 235, M2 270 (page 2: the pockets Z X C at the same spots). Outer arc r196
+// O52: R 182, F 202, Dodge 222, Shift+Q 242, Shift+E 262; page toggle O40 at 160 deg. Interact O56 at 150 deg (prompt only).
 const TDEG = Math.PI / 180;
-const TOUCH_SKILL_SLOTS = ['q', 'e', 'r', 'f', 'c', 'shift', '1', '2', '3'];
-const TOUCH_INNER = { q: 200, e: 235, r: 270, 1: 200, 2: 235, 3: 270 };
-const TOUCH_PAGES = [['q', 'e', 'r'], ['1', '2', '3']];
+const TOUCH_SKILL_SLOTS = ['q', 'qu', 'rmb', 'e', 'eu', 'r', 'f', 'v'];   // the aimable buttons (pockets are taps)
+const TOUCH_INNER = { q: 200, e: 235, rmb: 270, z: 200, x: 235, c: 270 };
+const TOUCH_PAGES = [['q', 'e', 'rmb'], ['z', 'x', 'c']];
+const TOUCH_POCKET = { z: 1, x: 1, c: 1 };
 const touchOrigin = () => { const sf = TSAFE(); return { x: Math.min(860, DW - sf.r - 52), y: Math.min(436, DH - sf.b - 80) }; };
-// tablets >= 1024 px can put 1/2/3 on a third arc instead of the page toggle
+// tablets >= 1024 px can put the pockets on a third arc instead of the page toggle
 const touchShowAll9 = () => typeof SETTINGS !== 'undefined' && !!SETTINGS.showAll9 && (window.innerWidth >= 1024 || !!TOUCH.forceAll9);
 function touchPolar(slot, r, deg, d, extra) {
   const o = touchOrigin(), mx = x => leftHanded() ? DW - x : x, a = deg * TDEG;
@@ -52,7 +54,7 @@ function touchButtons() {
   const o = touchOrigin(), L = leftHanded(), all9 = touchShowAll9();
   const B = [{ slot: 'atk', x: L ? DW - o.x : o.x, y: o.y, s: 96, r: 48 }];
   for (const id of all9 ? TOUCH_PAGES[0] : TOUCH_PAGES[TOUCH.page]) B.push(touchInner(id));
-  B.push(touchPolar('f', 196, 190, 52), touchPolar('c', 196, 215, 52), touchPolar('shift', 196, 240, 52), touchPolar('pot', 196, 265, 52));
+  B.push(touchPolar('r', 196, 182, 52), touchPolar('f', 196, 202, 52), touchPolar('v', 196, 222, 52), touchPolar('qu', 196, 242, 52), touchPolar('eu', 196, 262, 52));
   if (all9) TOUCH_PAGES[1].forEach((id, i) => B.push(touchPolar(id, 260, 185 + i * 20, 52)));
   else B.push(touchPolar('toggle', 196, 160, 40));
   if (G.prompt && G.state === 'play') B.push(touchPolar('interact', 124, 150, 56));
@@ -113,10 +115,10 @@ function onTouchDown(ev) {
   const b = touchHit(x, y);
   if (b) {
     if (b.slot === 'toggle') { TOUCH.page ^= 1; TOUCH.pageAt = touchNow(); return; }
-    if (b.slot === 'pot') { IN.touchTap('potion'); return; }
+    if (TOUCH_POCKET[b.slot]) { if (G.state === 'play') { touchAim(G.player, true); TOUCH.pendingAim = { wx: G.mouse.wx, wy: G.mouse.wy }; IN.touchTap(SLOT_ACTION[b.slot]); touchHaptic(15); } return; }
     if (b.slot === 'interact') { IN.touchTap('interact'); return; }
     const t = TOUCH.ptrs[ev.pointerId] = { kind: 'btn', b, sx: x, sy: y, x, y, aiming: false };
-    if (b.slot !== 'atk' && b.slot !== 'shift') {   // long-press a skill button to open the bag
+    if (b.slot !== 'atk' && b.slot !== 'v') {   // long-press a skill button to open the bag
       t.timer = setTimeout(() => { if (TOUCH.ptrs[ev.pointerId] === t && !t.aiming) { t.long = true; IN.touchTap('inventory'); } }, 520);
     }
     if (b.slot === 'atk') {
@@ -175,8 +177,8 @@ function onTouchUp(ev) {
   if (t.b.slot === 'atk') { IN.touchHold('attack', Object.values(TOUCH.ptrs).some(p => p.kind === 'btn' && p.b.slot === 'atk')); return; }
   if (G.state !== 'play' || G.fadeDir) return;
   if (ev.type === 'pointercancel' || (ta && ta.cancel)) { if (ta) touchHaptic(25); return; }   // a cancelled cast costs nothing
-  if (ta) { TOUCH.pendingAim = { wx: ta.to.x, wy: ta.to.y }; touchHaptic(t.b.slot === 'shift' ? 40 : 15); }   // aimed cast: where the indicator was
-  else if (t.b.slot === 'shift') { touchDodge(); return; }
+  if (ta) { TOUCH.pendingAim = { wx: ta.to.x, wy: ta.to.y }; touchHaptic(t.b.slot === 'v' ? 40 : 15); }   // aimed cast: where the indicator was
+  else if (t.b.slot === 'v') { touchDodge(); return; }
   else {
     touchAim(G.player, t);      // tap = quick-cast: auto-target (CONTROLS chain, assist cone) or the movement direction
     TOUCH.pendingAim = { wx: G.mouse.wx, wy: G.mouse.wy }; touchHaptic(15);
@@ -200,7 +202,7 @@ const aimEase = d => 1 - Math.pow(1 - clamp((d - AIM_DEAD) / (AIM_FULL - AIM_DEA
 function skillAimOf(id, slot) {
   const s = SKILLS[id]; if (!s) return null;
   if (s.aim) return s.aim;
-  if (slot === 'shift') return { shape: 'dash', range: 4, w: 1 };
+  if (slot === 'v') return { shape: 'dash', range: 4, w: 1 };
   return s.cast && s.cast.length >= 4 ? { shape: 'circle', range: 6, r: 2 } : { shape: 'proj', range: 6, w: 0.6 };
 }
 const isSkillSlot = slot => TOUCH_SKILL_SLOTS.includes(slot);
@@ -254,8 +256,8 @@ function touchAim(p, forced) {
 }
 
 // ---- charge hook ---------------------------------------------------------------------------------------------------------
-// The game has no held-skill / two-hander charge state yet. When it does, set p.holdCharge (0..1) while a skill button is held;
-// the HUD ring (hud.js) then shows it and this fires the haptic click once when it fills.
+// p.holdCharge (0..1, game.js holdAttack): the hold-M1 charge (Staff Channel, Bow Focus). The HUD ring (hud.js) shows it on the
+// attack button and this fires the haptic click once when it fills.
 function touchChargeFrac(p) {
   const f = clamp(+p.holdCharge || 0, 0, 1);
   if (f >= 1 && !TOUCH.chargeFull) { TOUCH.chargeFull = true; touchHaptic(25); } else if (f < 1) TOUCH.chargeFull = false;

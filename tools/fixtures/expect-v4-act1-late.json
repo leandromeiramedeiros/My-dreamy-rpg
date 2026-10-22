@@ -1,0 +1,105 @@
+{
+ "level": 10,
+ "xp": 655,
+ "dust": 0,
+ "potions": 3,
+ "gear": {
+  "weapon": "sword",
+  "head": "knighthelm",
+  "chest": "warden",
+  "boots": "clothsandals"
+ },
+ "equip": {
+  "weapon": {
+   "id": "i_53",
+   "base": "dawnblade",
+   "rarity": "epic",
+   "sockets": [
+    "ruby_1",
+    "topaz_2"
+   ]
+  },
+  "head": {
+   "id": "i_51",
+   "base": "knighthelm",
+   "rarity": "rare",
+   "sockets": [
+    "ruby_2"
+   ]
+  },
+  "chest": {
+   "id": "i_47",
+   "base": "ironmail",
+   "rarity": "epic",
+   "sockets": [
+    "ruby_2",
+    "diamond_2"
+   ]
+  },
+  "boots": {
+   "id": "i_48",
+   "base": "ropesandals",
+   "rarity": "epic",
+   "sockets": [
+    "sapphire_1",
+    "topaz_1",
+    "emerald_1"
+   ]
+  },
+  "ring1": null,
+  "ring2": null,
+  "amulet": null,
+  "belt": null
+ },
+ "bag": [
+  null,
+  "item:i_45:knightplate",
+  "item:i_46:mossmantle",
+  "item:i_3:ironmail",
+  "item:i_4:ironboots",
+  "item:i_49:starfall",
+  null,
+  null,
+  "item:i_50:knighthelm",
+  "item:i_2:ironcap",
+  "item:i_52:ironcap",
+  null,
+  "item:i_1:rustyblade",
+  "item:i_54:ironmail",
+  "item:i_55:knighthelm",
+  "item:i_56:knightgreaves",
+  "item:i_57:cometrod",
+  "item:i_58:silverwing",
+  "item:i_59:sunforged",
+  "item:i_60:nightcoat",
+  "item:i_61:sunguard",
+  "item:i_62:sungreaves",
+  null,
+  null,
+  null,
+  "gem:diamond_1x1",
+  "gem:amethyst_1x1",
+  null,
+  null,
+  null
+ ],
+ "map": "vale",
+ "quests": 2,
+ "chests": 1,
+ "seen": 10,
+ "ranks": {
+  "sunslash": {
+   "hits": 60
+  },
+  "dashstrike": {
+   "hits": 30
+  }
+ },
+ "stats": {
+  "maxHp": 1191,
+  "maxMp": 280,
+  "power": 2.3056596,
+  "def": 0.2642514494246446,
+  "crit": 0.11599999999999999
+ }
+}

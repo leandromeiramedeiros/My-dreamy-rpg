@@ -12,6 +12,28 @@
 // ---------------------------------------------------------------------------
 const SET_GROUPS = [['audio', 'AUDIO'], ['display', 'DISPLAY'], ['controls', 'CONTROLS']];   // 'game' (Difficulty) removed: Normal is the only difficulty
 const settingDef = key => SETTINGS_SCHEMA.find(d => d.key === key);
+// ---- key bindings (docs/design/loadout.md "Input"): a plain list under the settings, one row per play action for the current
+// device (keyboard + mouse, or pad). Select a row, press the new key: Shift held with a key binds the chord (Shift+Q); a key
+// another action of the same context uses, a chord whose base key is taken, or Shift alone, is REJECTED with the reason (no
+// silent swap). Esc cancels a keyboard capture. RESET puts the device back to its defaults. Bindings ride the save (items.js).
+const BIND_ACTIONS = ['attack', 'skillQ', 'ultQ', 'offhand', 'skillE', 'ultE', 'skillR', 'skillF', 'dodge', 's1', 's2', 's3', 'interact', 'inventory', 'map', 'pause'];
+const bindDev = () => (IN.device === 'pad' ? 'pad' : 'kbm');
+const bindText = (a, dev) => {
+  const L = IN.bindingsFor(a, dev); if (!L.length) return '-';
+  return dev === 'pad' ? IN.glyph(a, 'pad') : L.slice(0, 2).map(IN.keyLabel).join(' / ');
+};
+function startBind(a) {
+  const dev = bindDev(), u = G.ui; u.bind = { a, dev, t: G.t };
+  IN.capture(dev, code => {
+    u.bind = null;
+    if (dev === 'kbm' && code === 'Escape') return;
+    const r = IN.rebind(dev, a, code, { swap: false });
+    const name = dev === 'pad' ? 'That button' : IN.keyLabel(code);
+    u.bindNote = r.ok ? { a, s: 'Bound to ' + (dev === 'pad' ? IN.glyph(a, 'pad') : name), col: UC.mpHi, t: G.t + 2 }
+      : { a, s: r.reason === 'shift' ? 'Shift is the chord key' : r.conflict ? `${name} is ${IN.LABEL[r.conflict]}` : 'Not allowed', col: UC.danger, t: G.t + 2.5 };
+    sfx(r.ok ? 'pickup' : 'hurt');
+  });
+}
 function settingSteps(d) { return Math.round((d.max - d.min) / d.step); }
 // dir = -1 / +1 (pad, arrows, ◄ ►); toggles flip; choices cycle; sliders move one step
 function adjustSetting(d, dir) {
@@ -41,13 +63,31 @@ function drawSettingsPanel(ctx, mode) {
   const LX = X + 12, LY = Y + 50, LW = W - 40, LH = 178, ROW = 34, HEAD = 24;
   const rows = []; let total = 0;
   for (const [g, name] of SET_GROUPS) { rows.push({ head: name, y: total }); total += HEAD; for (const d of SETTINGS_SCHEMA.filter(q => q.group === g)) { rows.push({ d, y: total }); total += ROW; } }
+  const dev = bindDev(), u = G.ui;
+  rows.push({ head: dev === 'pad' ? 'BUTTONS (PAD)' : 'KEYS (KEYBOARD + MOUSE)', y: total }); total += HEAD;
+  for (const a of BIND_ACTIONS) { rows.push({ bind: a, y: total }); total += ROW; }
+  rows.push({ reset: true, y: total }); total += ROW;
+  if (u.bind && !IN.capturing()) u.bind = null;
   const fc = UI.focus.current();
-  if (fc && UI.focus.showing() && fc.id.startsWith('set:')) { const r = rows.find(q => q.d && 'set:' + q.d.key === fc.id); if (r) mnReveal('set', LH, LY, r.y, ROW); }
+  if (fc && UI.focus.showing() && (fc.id.startsWith('set:') || fc.id.startsWith('bind:'))) { const r = rows.find(q => (q.d && 'set:' + q.d.key === fc.id) || (q.bind && 'bind:' + q.bind === fc.id) || (q.reset && fc.id === 'bind:reset')); if (r) mnReveal('set', LH, LY, r.y, ROW); }
   const off = mnScroll('set', LX, LY, LW + 20, LH, total);
   ctx.save(); ctx.beginPath(); ctx.rect(LX - 4, LY, LW + 8, LH); ctx.clip();
   for (const r of rows) {
     const y = LY + r.y - off;
     if (r.head) { if (y > LY - HEAD && y < LY + LH) UI.text(ctx, r.head, LX + 4, y + 5, 'small', UC.dim); continue; }
+    if (r.bind || r.reset) {
+      const id = r.reset ? 'bind:reset' : 'bind:' + r.bind, vis = y >= LY - ROW && y < LY + LH, full = y >= LY && y + ROW <= LY + LH;
+      const fn = r.reset ? () => { IN.resetBindings(dev); u.bindNote = { a: null, s: 'Defaults restored', col: UC.mpHi, t: G.t + 2 }; sfx('pickup'); } : () => { if (!IN.capturing()) startBind(r.bind); };
+      const reg = full ? mnRegion(LX, y, LW, ROW - 2, id, fn) : (UI.focus.register({ x: LX, y, w: LW, h: ROW - 2 }, id, { fn }), { on: false });
+      if (!vis) continue;
+      if (reg.on) { ctx.fillStyle = UC.bevel; ctx.globalAlpha = 0.55; ctx.fillRect(LX, y, LW, ROW - 2); ctx.globalAlpha = 1; }
+      if (r.reset) { UI.text(ctx, 'Reset to defaults', LX + 8, y + 9, 'small', reg.on ? UC.gold : UC.text); if (u.bindNote && u.bindNote.a === null && u.bindNote.t > G.t) UI.text(ctx, u.bindNote.s, LX + LW - 8, y + 9, 'small', u.bindNote.col, 'right'); continue; }
+      UI.text(ctx, fitText(IN.LABEL[r.bind] || r.bind, 170, 'small'), LX + 8, y + 9, 'small', reg.on ? UC.gold : UC.text);
+      const cap = u.bind && u.bind.a === r.bind, note = u.bindNote && u.bindNote.a === r.bind && u.bindNote.t > G.t ? u.bindNote : null;
+      const val = cap ? (dev === 'pad' ? 'PRESS A BUTTON' : 'PRESS A KEY (ESC)') : note ? note.s : bindText(r.bind, dev);
+      UI.text(ctx, fitText(val, 170, 'small'), LX + LW - 8, y + 9, 'small', cap ? UC.gold : note ? note.col : UC.stHi, 'right');
+      continue;
+    }
     const d = r.d, id = 'set:' + d.key, vis = y >= LY - ROW && y < LY + LH, full = y >= LY && y + ROW <= LY + LH;
     const tx = LX + LW - 148, tw = 120;
     const fn = () => {

@@ -156,8 +156,8 @@ const PAD_STUB = () => {
   await page.keyboard.press('KeyW');
   await wait(100);
   const gKbm = await ev(() => ({ dev: IN.device, q: skillSlotState(G.player, 'q').glyph, dodge: IN.glyph('dodge'), interact: IN.glyph('interact'), attack: skillSlotState(G.player, 'lmb').glyph }));
-  check('switch: pad glyphs (Xbox)', gPad.q === 'RB' && gPad.dodge === 'LT' && gPad.interact === 'A' && gPad.attack === 'RT', gPad);
-  check('switch: keyboard press flips to kbm glyphs', gKbm.dev === 'kbm' && gKbm.q === 'Q' && gKbm.dodge === 'SHIFT' && gKbm.interact === 'SPACE' && gKbm.attack === 'LMB', gKbm);
+  check('switch: pad glyphs (Xbox)', gPad.q === 'RB' && gPad.dodge === 'B' && gPad.interact === 'A' && gPad.attack === 'RT', gPad);
+  check('switch: keyboard press flips to kbm glyphs', gKbm.dev === 'kbm' && gKbm.q === 'Q' && gKbm.dodge === 'V' && gKbm.interact === 'SPACE' && gKbm.attack === 'LMB', gKbm);
   await ev(() => { window.__pad.id = 'DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)'; });
   await tap(3);
   const gPs = await ev(() => ({ dev: IN.device, style: IN.padStyle, interact: IN.glyph('interact'), sprite: IN.glyphInfo('interact').sprite, q: IN.glyph('skillQ') }));
@@ -170,25 +170,26 @@ const PAD_STUB = () => {
   check('switch: touch hides glyphs and uses the touch layout', gT.dev === 'touch' && gT.touch === true && gT.q === '', gT);
   await page.keyboard.press('KeyS'); await wait(80);
   // ---------- 3. combat feel ----------
-  const ultGate = await ev(() => { const p = G.player; p.ult = 50; p.mp = p.maxMp; const r1 = useSkill(p, 'r'); p.ult = 100; p.cds = {}; const r2 = useSkill(p, 'r'); return { r1, r2, after: p.ult }; });
+  const ultGate = await ev(() => { const p = G.player; p.ult = 50; p.mp = p.maxMp; const r1 = useSkill(p, 'qu'); p.ult = 100; p.cds = {}; const r2 = useSkill(p, 'qu'); return { r1, r2, after: p.ult }; });
   check('combat: ultimate gated by the charge bar (0..100), consumed on cast', ultGate.r1 === false && ultGate.r2 === true && ultGate.after === 0, ultGate);
   await wait(800);
   const cancel = await ev(() => {
-    const p = G.player; p.wsk.sword.e = 'whirl'; recalcStats(p); p.cds = {}; p.mp = 200; p.st = p.maxSt; p.dash = null;
-    useSkill(p, 'e'); return { mpAfterCast: p.mp, dur: p.cast && p.cast.dur };
+    const p = G.player; window.__offKeep = p.equip.offhand; p.equip.offhand = makeItem('worngrimoire', 'rare', p.level, { sockets: 0, pages: ['barrage'] }); recalcStats(p); deckClamp(p);
+    p.cds = {}; p.mp = 200; p.st = p.maxSt; p.dash = null;
+    useSkill(p, 'e'); return { id: slotSkill(p, 'e'), mpAfterCast: p.mp, dur: p.cast && p.cast.dur };
   });
-  await page.keyboard.down('ShiftLeft'); await wait(40); await page.keyboard.up('ShiftLeft');   // within 0.1 s: buffered
+  await page.keyboard.down('KeyV'); await wait(40); await page.keyboard.up('KeyV');   // within 0.1 s: buffered
   await wait(250);
-  const c2 = await ev(() => ({ cancelled: G.cancelled && G.cancelled.id, mp: G.player.mp, pending: G.delays.filter(d => d.c && d.c.skill === 'whirl').length }));
-  check('combat: dodge cancels a cast after 0.1 s (buffered) and refunds 50 % MP', c2.cancelled === 'whirl' && c2.pending === 0 && c2.mp >= cancel.mpAfterCast + 14, { cancel, c2 });
+  const c2 = await ev(() => { const o = { cancelled: G.cancelled && G.cancelled.id, mp: G.player.mp, pending: G.delays.filter(d => d.c && d.c.skill === 'barrage').length }; const p = G.player; p.equip.offhand = window.__offKeep; recalcStats(p); deckClamp(p); return o; });
+  check('combat: V dodge cancels a cast (a Grimoire page) after 0.1 s (buffered) and refunds 50 % MP', cancel.id === 'barrage' && c2.cancelled === 'barrage' && c2.pending === 0 && c2.mp >= cancel.mpAfterCast + 14, { cancel, c2 });
   const blocked = await ev(() => { const p = G.player; p.cds = {}; p.mp = 200; p.atkT = 0; p.dash = null; useSkill(p, 'q'); const a0 = p.atkT; basicAttack(p); return { blocked: p.atkT === a0, castActive: castActive(p) }; });
   check('combat: skills never cancel into attacks', blocked.blocked && blocked.castActive, blocked);
-  const ranks = await ev(() => { const p = G.player; const r0 = skillRank(p, 'sunslash'); for (let i = 0; i < 25; i++) addSkillHit(p, 'sunslash'); const r1 = skillRank(p, 'sunslash'); for (let i = 0; i < 200; i++) addSkillHit(p, 'sunslash'); return { r0, r1, r5: skillRank(p, 'sunslash'), bonus: +skillRankBonus(p, 'sunslash').toFixed(2), slots: skillModSlots(p, 'sunslash').map(s => s.open) }; });
-  check('ranks: 25 hitting casts per rank, max 5, +6 %/rank, mod slots at 3 and 5', ranks.r0 === 1 && ranks.r1 === 2 && ranks.r5 === 5 && ranks.bonus === 0.24 && ranks.slots.join() === 'true,true', ranks);
+  const ranks = await ev(() => { const p = G.player; const r0 = skillRank(p, 'sunslash'); for (let i = 0; i < 25; i++) addSkillHit(p, 'sunslash'); const r1 = skillRank(p, 'sunslash'); for (let i = 0; i < 200; i++) addSkillHit(p, 'sunslash'); return { r0, r1, r5: skillRank(p, 'sunslash'), bonus: +skillRankBonus(p, 'sunslash').toFixed(2) }; });
+  check('ranks: 25 hitting casts per rank, max 5, +6 %/rank (no modifier slots in Loadout v3)', ranks.r0 === 1 && ranks.r1 === 2 && ranks.r5 === 5 && ranks.bonus === 0.24 && typeof skillModSlots === 'undefined', ranks);
   const castHit = await ev(() => { const p = G.player; delete p.ranks.sunslash; G.enemies.length = 0; const e = spawnEnemy('slime', p.x + 1, p.y, 0); e.hp = e.maxHp = 1e6; p.cds = {}; p.mp = 200; p.dash = null; p.cast = null; p.aim = Math.atan2(e.y - p.y, e.x - p.x); useSkill(p, 'q'); const h = p.ranks.sunslash && p.ranks.sunslash.hits; G.enemies.length = 0; return h; });
   check('ranks: a skill cast that hits counts once', castHit === 1, castHit);
-  const mod = await ev(() => { SKILL_MODS.test_wide = { id: 'test_wide', skill: 'sunslash', rank: 3, name: 'Wide', apply(c) { c.r *= 1.5; c.dmg *= 'x'; } }; const p = G.player; for (let i = 0; i < 60; i++) addSkillHit(p, 'sunslash'); const ok = chooseSkillMod(p, 'sunslash', 3, 'test_wide'); const ctx = skillCtx(p, 'sunslash', SKILLS.sunslash); delete SKILL_MODS.test_wide; return { ok, r: ctx.r, dmg: ctx.dmg }; });
-  check('SKILL_MODS: numbers-only ctx (bad values rejected)', mod.ok && mod.r === 1.5 && mod.dmg === 1, mod);
+  const mod = await ev(() => { const c = skillCtx(G.player, 'sunslash', SKILLS.sunslash); return { mods: typeof SKILL_MODS, r: c.r, dmg: c.dmg }; });
+  check('ctx: numbers-only cast context, no SKILL_MODS table (Loadout v3)', mod.mods === 'undefined' && mod.r === 1 && mod.dmg === 1, mod);
   // ---------- 4. rebinding + save ----------
   const rb = await ev(() => {
     const r = IN.rebind('kbm', 'interact', 'KeyG'); const c = IN.rebind('kbm', 'interact', 'KeyQ', { swap: false });
@@ -203,9 +204,9 @@ const PAD_STUB = () => {
       wsk: { dawnblade: { q: 'heroic', e: 'dashstrike', r: 'judgement' } }, csk: ['orbit', 'chain'], prog: { chests: { 'vale:4.5,17.2': true }, firsts: { 'ruins:boss': true }, trig: { vale: ['t1'] } },
       seen: { slime: { kills: 4, res: { slash: -0.5 } } }, cp: { map: 'vale', x: 2, y: 3 }, uid: 99 };
     const s = migrate(JSON.parse(JSON.stringify(v2))); const q = makePlayer(); applySave(q, s);
-    return { v: s.version, level: q.level, xp: q.xp, dust: q.dust, q: q.wsk.sword.q, csk: q.csk.join(), chest: !!G.prog.chests['vale:4.5,17.2'], boss: !!G.prog.firsts['ruins:boss'], trig: G.prog.trig.vale.join(), slime: G.seen.slime.kills, res: G.seen.slime.res.slash, cp: G.checkpoint.x, bag: q.bag.filter(Boolean).length === p.bag.filter(Boolean).length };
+    return { v: s.version, level: q.level, xp: q.xp, dust: q.dust, gone: !('wsk' in s.player) && !('csk' in s.player) && !q.wsk && !q.csk, hand: !!q.equip.weapon, chest: !!G.prog.chests['vale:4.5,17.2'], boss: !!G.prog.firsts['ruins:boss'], trig: G.prog.trig.vale.join(), slime: G.seen.slime.kills, res: G.seen.slime.res.slash, cp: G.checkpoint.x, bag: q.bag.filter(Boolean).length === p.bag.filter(Boolean).length };
   });
-  check('save: v2 -> v4 migration keeps everything (pre-v4 wsk key dawnblade -> sword)', mig.v === 4 && mig.level === 7 && mig.xp === 120 && mig.dust === 33 && mig.q === 'heroic' && mig.csk === 'orbit,chain' && mig.chest && mig.boss && mig.trig === 't1' && mig.slime === 4 && mig.res === -0.5 && mig.cp === 2 && mig.bag, mig);
+  check('save: v2 -> v5 migration keeps everything (character skills and weapon-skill choices dropped)', mig.v === 5 && mig.level === 7 && mig.xp === 120 && mig.dust === 33 && mig.gone && mig.hand && mig.chest && mig.boss && mig.trig === 't1' && mig.slime === 4 && mig.res === -0.5 && mig.cp === 2 && mig.bag, mig);
   const st = await ev(() => { const a = setSetting('difficulty', 'story'), b = setSetting('shake', 999); setSetting('shake', 100); return { a, b, has: 'difficulty' in SETTINGS, row: SETTINGS_SCHEMA.some(d => d.key === 'difficulty'), fn: typeof damageTakenMul }; });
   check('settings: validated setters; no Difficulty setting (Story removed, Normal only)', st.a === undefined && st.b === 100 && !st.has && !st.row && st.fn === 'undefined', st);
   // ---------- 3b. §20.5 MP builder: once per swing, 40 MP/s cap; ultimate gain cap ----------
@@ -232,9 +233,9 @@ const PAD_STUB = () => {
   await ev(() => { const p = G.player; p.hp = p.maxHp / 2; p.potions = 3; p.potT = 0; G.ui.open = false; G.ui.help = false; });
   await tap(8); await wait(100);
   await tap(1, 150); await wait(150);
-  check('input: B closing the bag does not also drink a potion', await ev(() => !G.ui.open && G.player.potions === 3), await ev(() => ({ open: G.ui.open, potions: G.player.potions })));
-  await tap(1, 120); await wait(80);
-  check('input: the next B press does drink it', await ev(() => G.player.potions === 2));
+  check('input: B closing the bag does not also dodge (B = dodge in play)', await ev(() => !G.ui.open && !G.player.dash && G.player.potions === 3), await ev(() => ({ open: G.ui.open, dash: !!G.player.dash, potions: G.player.potions })));
+  await tap(14, 120); await wait(80);
+  check('input: D-pad left (pocket 1) drinks a potion', await ev(() => G.player.potions === 2));
   // ---------- 4c. ui.js primitives draw (bitmap font + atlas live) ----------
   const prim = await ev(() => {
     const c = document.createElement('canvas'); c.width = 960; c.height = 540; const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
@@ -276,8 +277,8 @@ const PAD_STUB = () => {
   const lay = await ev(() => { const o = {}; for (const b of touchButtons()) o[b.slot] = [b.x, b.y, b.s]; return o; });
   const want = (r, a) => [860 + r * Math.cos(a * Math.PI / 180), 436 + r * Math.sin(a * Math.PI / 180)];
   const near = (b, w) => b && Math.abs(b[0] - w[0]) <= 2 && Math.abs(b[1] - w[1]) <= 2;
-  const specOk = near(lay.q, want(124, 200)) && near(lay.e, want(124, 235)) && near(lay.r, want(124, 270)) && near(lay.f, want(196, 190)) && near(lay.c, want(196, 215)) &&
-    near(lay.shift, want(196, 240)) && near(lay.pot, want(196, 265)) && near(lay.toggle, want(196, 160)) && lay.atk[0] === 860 && lay.atk[1] === 436 && lay.atk[2] === 96 &&
+  const specOk = near(lay.q, want(124, 200)) && near(lay.e, want(124, 235)) && near(lay.rmb, want(124, 270)) && near(lay.r, want(196, 182)) && near(lay.f, want(196, 202)) &&
+    near(lay.v, want(196, 222)) && near(lay.qu, want(196, 242)) && near(lay.eu, want(196, 262)) && near(lay.toggle, want(196, 160)) && lay.atk[0] === 860 && lay.atk[1] === 436 && lay.atk[2] === 96 &&
     lay.q[2] === 60 && lay.f[2] === 52 && lay.toggle[2] === 40 && Object.values(lay).every(b => b[1] >= 240 && b[0] - b[2] / 2 >= 0 && b[0] + b[2] / 2 <= 936);
   check('touch: circular layout at the spec angles / radii / diameters, nothing above y 240', specOk, lay);
   // tap = quick-cast (auto-target, aim assist), lands on the enemy
@@ -286,49 +287,46 @@ const PAD_STUB = () => {
   const tq = await ev(() => ({ hp: G.enemies[0] ? G.enemies[0].hp : 0, cd: G.player.cds.sunslash || 0, vib: window.__vib.slice() }));
   check('touch: tap Q quick-casts at the enemy (hit, cooldown, 15 ms haptic)', tq.hp < 1e6 && tq.cd > 0 && tq.vib.includes(15), tq);
   // drag past range clamps; 40 px drag = 60 % of range; the cast uses the indicator's target
-  await ev(() => { __reset(); G.player.ult = 100; const b = __bt('r'); __tp('pointerdown', 21, b.x, b.y); __tp('pointermove', 21, b.x - 40, b.y); });
+  await ev(() => { __reset(); G.player.ult = 100; const b = __bt('qu'); __tp('pointerdown', 21, b.x, b.y); __tp('pointermove', 21, b.x - 40, b.y); });
   const d40 = await ev(() => { const a = TOUCH_AIM; return a && { range: a.aim.range, d: Math.hypot(a.to.x - a.from.x, a.to.y - a.from.y), clamped: a.clamped, cancel: a.cancel, shape: a.aim.shape }; });
-  await ev(() => { const b = __bt('r'); __tp('pointermove', 21, b.x - 170, b.y - 60); });
+  await ev(() => { const b = __bt('qu'); __tp('pointermove', 21, b.x - 170, b.y - 60); });
   const dfar = await ev(() => { const a = TOUCH_AIM; return a && { range: a.aim.range, d: Math.hypot(a.to.x - a.from.x, a.to.y - a.from.y), clamped: a.clamped, cancel: a.cancel, slot: a.slot, skill: a.skill, tx: a.to.x, ty: a.to.y }; });
   check('touch: drag 40 px maps to ~60 % of range (ease-out)', !!d40 && (d40.shape === 'self' || Math.abs(d40.d / d40.range - 0.6) < 0.03), d40);
-  check('touch: drag past 96 px clamps to the range and sets TOUCH_AIM.clamped', dfar && dfar.clamped && !dfar.cancel && (dfar.d === 0 || Math.abs(dfar.d - dfar.range) < 1e-6) && dfar.slot === 'r', dfar);
-  await ev(() => { const b = __bt('r'); __tp('pointerup', 21, b.x - 170, b.y - 60); });
+  check('touch: drag past 96 px clamps to the range and sets TOUCH_AIM.clamped', dfar && dfar.clamped && !dfar.cancel && (dfar.d === 0 || Math.abs(dfar.d - dfar.range) < 1e-6) && dfar.slot === 'qu', dfar);
+  await ev(() => { const b = __bt('qu'); __tp('pointerup', 21, b.x - 170, b.y - 60); });
   await wait(300);
-  const rel = await ev(() => { const c = window.__casts.find(q => q.slot === 'r') || {}; return { ult: G.player.ult, aim: TOUCH_AIM, mx: c.wx, my: c.wy, vib: window.__vib.slice() }; });
+  const rel = await ev(() => { const c = window.__casts.find(q => q.slot === 'qu') || {}; return { ult: G.player.ult, aim: TOUCH_AIM, mx: c.wx, my: c.wy, vib: window.__vib.slice() }; });
   check('touch: release casts through the aimed path at the clamped target (ult spent, TOUCH_AIM cleared, 8 + 15 ms haptics)', dfar && rel.ult === 0 && rel.aim === null && Math.abs(rel.mx - dfar.tx) < 1e-6 && Math.abs(rel.my - dfar.ty) < 1e-6 && rel.vib.includes(8) && rel.vib.includes(15), { rel, dfar });
   // cancel: the X zone, and back over the button; costs nothing, starts no cooldown
-  await ev(() => { __reset(); G.player.ult = 100; const b = __bt('r'); __tp('pointerdown', 22, b.x, b.y); __tp('pointermove', 22, b.x - 60, b.y - 30); __tp('pointermove', 22, 480, 500); });
+  await ev(() => { __reset(); G.player.ult = 100; const b = __bt('qu'); __tp('pointerdown', 22, b.x, b.y); __tp('pointermove', 22, b.x - 60, b.y - 30); __tp('pointermove', 22, 480, 500); });
   const cx = await ev(() => TOUCH_AIM && { cancel: TOUCH_AIM.cancel, d: TOUCH_AIM.d });
   await ev(() => { __tp('pointerup', 22, 480, 500); });
   await wait(300);
   const cr = await ev(() => { const p = G.player; return { ult: p.ult, mp: p.mp, max: p.maxMp, cd: p.cds.judgement || 0, aim: TOUCH_AIM, vib: window.__vib.slice() }; });
   check('touch: release on the cancel X costs nothing (no ult / MP / cooldown), 25 ms haptic', cx && cx.cancel && cr.ult === 100 && cr.mp === cr.max && cr.cd <= 0.5 && cr.aim === null && cr.vib.includes(25), { cx, cr });
-  await ev(() => { __reset(); G.player.ult = 100; const b = __bt('r'); __tp('pointerdown', 23, b.x, b.y); __tp('pointermove', 23, b.x - 70, b.y); __tp('pointermove', 23, b.x + 2, b.y + 2); });
+  await ev(() => { __reset(); G.player.ult = 100; const b = __bt('qu'); __tp('pointerdown', 23, b.x, b.y); __tp('pointermove', 23, b.x - 70, b.y); __tp('pointermove', 23, b.x + 2, b.y + 2); });
   const cb = await ev(() => TOUCH_AIM && TOUCH_AIM.cancel);
-  await ev(() => { const b = __bt('r'); __tp('pointerup', 23, b.x + 2, b.y + 2); });
+  await ev(() => { const b = __bt('qu'); __tp('pointerup', 23, b.x + 2, b.y + 2); });
   await wait(300);
   check('touch: release back over the button cancels', cb === true && await ev(() => G.player.ult === 100));
   // page toggle -> cast 1 / 2 / 3, hidden skills keep ticking
   await ev(() => __reset());
   await tap2('toggle'); await wait(150);
   const pg = await ev(() => ({ page: TOUCH.page, slots: touchButtons().map(b => b.slot).join() }));
-  check('touch: page toggle swaps [Q E R] for [1 2 3]', pg.page === 1 && /(^|,)1,2,3(,|$)/.test(pg.slots) && !/(^|,)q(,|$)/.test(pg.slots), pg);
+  check('touch: page toggle swaps [Q E M2] for the pockets [Z X C]', pg.page === 1 && /(^|,)z,x,c(,|$)/.test(pg.slots) && !/(^|,)q(,|$)/.test(pg.slots), pg);
   const casts = [];
-  for (const sl of ['1', '2', '3']) {
-    await ev(() => { const p = G.player; p.cds = {}; p.mp = p.maxMp; p.st = p.maxSt; p.dash = null; p.cast = null; p.rootT = 0; });
+  for (const sl of ['z', 'x', 'c']) {
+    await ev(() => { const p = G.player; p.cds = {}; p.hp = p.maxHp / 2; p.mp = p.maxMp / 2; p.st = p.maxSt; p.dash = null; p.cast = null; p.rootT = 0; p.potT = 0; refillPockets(p); });
     await tap2(sl);
-    casts.push(await ev(s => { const p = G.player, id = slotSkill(p, s); return { s, id, cd: p.cds[id] || 0 }; }, sl));
+    casts.push(await ev(s => { const p = G.player, id = p.pockets['zxc'.indexOf(s)]; return { s, id, n: pocketCount(p, id), max: pocketMax(p, id) }; }, sl));
   }
-  check('touch: page 2 taps cast skills 1 / 2 / 3', casts.every(c => c.id && c.cd > 0), casts);
+  check('touch: page 2 taps use pockets Z / X / C (potion, flask, bomb)', casts.every(c => c.id && c.n === c.max - 1), casts);
   await tap2('toggle'); await wait(150);
-  check('touch: toggling back restores Q E R', await ev(() => TOUCH.page === 0 && touchButtons().some(b => b.slot === 'q')));
-  // dodge + potion + interact
-  await ev(() => { __reset(); G.player.hp = G.player.maxHp / 2; G.player.potions = 3; });
-  await tap2('pot');
-  check('touch: potion button drinks a potion', await ev(() => G.player.potions === 2));
+  check('touch: toggling back restores Q E M2', await ev(() => TOUCH.page === 0 && touchButtons().some(b => b.slot === 'q')));
+  // dodge + interact
   await ev(() => { __reset(); });
-  await tap2('shift');
-  const dg = await ev(() => { const p = G.player, id = slotSkill(p, 'shift'); return { id, cd: p.cds[id] || 0, vib: window.__vib.slice() }; });
+  await tap2('v');
+  const dg = await ev(() => { const p = G.player, id = slotSkill(p, 'v'); return { id, cd: p.cds[id] || 0, vib: window.__vib.slice() }; });
   check('touch: dodge button dodges (cooldown, 40 ms haptic)', dg.id && dg.cd > 0 && dg.vib.includes(40), dg);
   const ch2 = await ev(() => { __reset(); const o = G.map.objects.find(q => q.chest && !q.opened); if (!o) return null; G.player.x = o.x + 0.6; G.player.y = o.y + 0.3; return true; });
   if (ch2) {
@@ -339,7 +337,7 @@ const PAD_STUB = () => {
   }
   // show-all-9 puts 1 2 3 on a third arc and drops the toggle
   const a9 = await ev(() => { TOUCH.forceAll9 = true; setSetting('showAll9', true); const s = touchButtons().map(b => b.slot); setSetting('showAll9', false); TOUCH.forceAll9 = false; return s.join(); });
-  check('touch: show-all-9 shows 1 2 3 beside Q E R, no toggle', ['q', 'e', 'r', '1', '2', '3'].every(k => a9.split(',').includes(k)) && !/toggle/.test(a9), a9);
+  check('touch: show-all-9 shows the pockets Z X C beside Q E M2, no toggle', ['q', 'e', 'rmb', 'z', 'x', 'c'].every(k => a9.split(',').includes(k)) && !/toggle/.test(a9), a9);
   // charge hook: one haptic click when full
   const chg = await ev(() => { const p = G.player; window.__vib.length = 0; TOUCH.chargeFull = false; p.holdCharge = 0.4; const a = touchChargeFrac(p); p.holdCharge = 1; touchChargeFrac(p); touchChargeFrac(p); const n = window.__vib.filter(v => v === 25).length; p.holdCharge = 0; touchChargeFrac(p); return { a, n }; });
   check('touch: charge hook reads p.holdCharge and clicks once at full', chg.a === 0.4 && chg.n === 1, chg);
@@ -377,20 +375,21 @@ const PAD_STUB = () => {
   const cone = await ev(() => { const a = currentAim(); return a && { shape: a.aim.shape, cx: a.from.x === G.player.x && a.from.y === G.player.y, shown: G.t - AIMV.lastShown < 0.2 }; });
   check('aim: touch drag draws the cone indicator, its range ellipse centred on the hero', cone && cone.shape === 'cone' && cone.cx && cone.shown, cone);
   await aimShot('touch-aim-cone'); await endAim();
-  await ev(() => { __reset(); G.player.ult = 100; }); await dragAim('r', -170, -90);
+  await ev(() => { __reset(); G.player.ult = 100; }); await dragAim('qu', -170, -90);
   const circ = await ev(() => { const a = currentAim(); return a && { shape: a.aim.shape, clamped: a.clamped, d: +Math.hypot(a.to.x - a.from.x, a.to.y - a.from.y).toFixed(2), range: a.aim.range }; });
   check('aim: circle reticle clamped to the range circle (clamped flag, |to-from| = range)', circ && circ.shape === 'circle' && circ.clamped && Math.abs(circ.d - circ.range) < 1e-6, circ);
   await aimShot('touch-aim-circle-clamped'); await endAim();
   // line: equip the Moonbow ultimate (moonbeam)
-  await ev(() => { __reset(); const p = G.player; p.equip.weapon = makeItem('moonbow', 'rare', p.level, { sockets: 0 }); recalcStats(p); p.wsk.bow.r = 'moonbeam'; p.ult = 100; });
-  await dragAim('r', -120, -40);
+  await ev(() => { __reset(); const p = G.player; window.__offKeep = p.equip.offhand; p.equip.weapon = makeItem('moonbow', 'rare', p.level, { sockets: 0 }); p.equip.offhand = makeItem('moonquiver', 'rare', p.level, { sockets: 0, pages: ['moonbeam'] }); recalcStats(p); deckClamp(p); });
+  await dragAim('e', -120, -40);
   const line = await ev(() => { const a = currentAim(); return a && a.aim.shape; });
-  check('aim: line indicator (Moonbeam)', line === 'line', line);
+  check('aim: line indicator (Moonbeam arrow in a Quiver)', line === 'line', line);
   await aimShot('touch-aim-line'); await endAim();
   // vs a boss telegraph: player indicator stays thin / cool, its fill drops to 10 % under the enemy circle
   await ev(() => { const p = G.player; __reset(); p.equip.weapon = makeItem('rustyblade', 'rare', p.level, { sockets: 0 }); recalcStats(p); p.invulnT = 99; p.ult = 100;
+    p.equip.offhand = window.__offKeep; recalcStats(p); deckClamp(p);
     const b = spawnEnemy('bramblehorn', p.x + 3.2, p.y - 0.6, 0); b.cd = 99; startMove(b, 'stomp'); });
-  await dragAim('r', 14, 6);
+  await dragAim('qu', 14, 6);
   const ov = await ev(() => { const a = currentAim(), b = G.boss; return { boss: !!b, tele: G.effects.some(f => f.type === 'tele' && f.src === b), covered: a ? teleCovers(a.to.x, a.to.y) : null, AIM: AIM_STYLE.fillCovered, TELE: TELE_STYLE.lw > AIM_STYLE.lw }; });
   await aimShot('touch-vs-boss-telegraph'); await endAim();
   check('aim: TELE_STYLE thicker than AIM_STYLE; a reticle under an enemy telegraph drops to 10 % fill', ov.boss && ov.tele && ov.TELE && ov.AIM === 0.1 && ov.covered === true, ov);
@@ -663,7 +662,7 @@ const PAD_STUB = () => {
     const old = JSON.parse(JSON.stringify(d)); delete old.world.fog; delete old.world.sections; delete old.world.shrines; const mo = migrate(old);
     return { vis0, vis1, same, len: str.length, secs, shr, keys, v, migFog: JSON.stringify(mo.world.fog), migSec: JSON.stringify(mo.world.sections), secAfter: (G.prog.sections.synth112 || []).length };
   });
-  check('save: fog bitmap + discovered sections / shrines persist per map in world (v4, same top-level keys, migration defaults)', fog.vis0 > 300 && fog.vis1 === fog.vis0 && fog.same && fog.len < 3000 && fog.secs === 'arena,main,outer,under,vault'.split(',').filter(s => fog.secs.includes(s)).join() && fog.secs.includes('under') && fog.shr >= 2 && fog.v === 4 && fog.keys === 'bestiary,bindings,bosses,fishing,player,quests,settings,skills,slot,stats,t,version,world,zone100' && fog.migFog === '{}' && fog.migSec === '{}' && fog.secAfter >= 4, fog);
+  check('save: fog bitmap + discovered sections / shrines persist per map in world (v5, same top-level keys, migration defaults)', fog.vis0 > 300 && fog.vis1 === fog.vis0 && fog.same && fog.len < 3000 && fog.secs === 'arena,main,outer,under,vault'.split(',').filter(s => fog.secs.includes(s)).join() && fog.secs.includes('under') && fog.shr >= 2 && fog.v === 5 && fog.keys === 'bestiary,bindings,bosses,fishing,player,quests,settings,skills,slot,stats,t,version,world,zone100' && fog.migFog === '{}' && fog.migSec === '{}' && fog.secAfter >= 4, fog);
   // settling is per trigger: walking away from a live pack (it goes dormant) and dying must respawn it, not clear it
   const stl = await ev(async () => {
     const w = ms => new Promise(r => setTimeout(r, ms)), m = G.map, p = G.player, tr = m.triggers.find(t => t.id === 'pack0').when;
@@ -1046,10 +1045,10 @@ const PAD_STUB = () => {
     const b28 = await bp.evaluate(async () => {
       const w = ms => new Promise(r => setTimeout(r, ms)), out = {};
       G.state = 'play'; G.banner = null; const p = G.player = makePlayer(); p.x = G.map.start.x; p.y = G.map.start.y; p.z = tileH(G.map, p.x, p.y); p.invulnT = 99;
-      out.bare = { slots: EQUIP_SLOTS.filter(k => p.equip[k]).length, gear: Object.values(p.gear).join(), wdmg: p.wdmg, dmgBase: +p.dmgBase.toFixed(2), skills: ['q', 'e', 'r', 'f', 'c', 'shift'].map(k => slotSkill(p, k)).join() };
+      out.bare = { slots: EQUIP_SLOTS.filter(k => p.equip[k]).length, gear: Object.values(p.gear).join(), wdmg: p.wdmg, dmgBase: +p.dmgBase.toFixed(2), skills: ['q', 'qu', 'rmb', 'e', 'eu', 'r', 'f', 'v'].map(k => slotSkill(p, k)).join() };
       // the shove: 1 damage-ish (no sword damage), knockback; Q refuses, the barefoot roll dodges
       G.enemies.length = 0; const e = spawnEnemy('slime', p.x + 0.9, p.y, 0); e.spawnT = 0; const hp0 = e.hp; p.aim = 0; p.atkT = 0; basicAttack(p); await w(120);
-      out.shove = { dmg: +(hp0 - e.hp).toFixed(1), lmb: skillSlotState(p, 'lmb').name, q: useSkill(p, 'q'), roll: (p.st = p.maxSt, useSkill(p, 'shift')) };
+      out.shove = { dmg: +(hp0 - e.hp).toFixed(1), lmb: skillSlotState(p, 'lmb').name, q: useSkill(p, 'q'), roll: (p.st = p.maxSt, useSkill(p, 'v')) };
       G.enemies.length = 0; p.dash = null; await w(300);
       // menus with every slot empty: character, inventory, loadout panel
       for (const t of ['skills', 'inv']) { openInv(t); await w(200); } G.ui.sel = null; await w(150); closeInv();
@@ -1062,20 +1061,20 @@ const PAD_STUB = () => {
       // pickups flagged `equip` go on when the slot is empty, into the bag when it is not
       const cap = makeItem('ironcap', 'common', 1); pickup(p, { kind: 'item', it: cap, rar: 'common', x: p.x, y: p.y, z: p.z, equip: true });
       const cap2 = makeItem('ironcap', 'common', 1); pickup(p, { kind: 'item', it: cap2, rar: 'common', x: p.x, y: p.y, z: p.z, equip: true });
-      out.wear = { head: p.equip.head === cap, second: p.bag.includes(cap2), c: slotSkill(p, 'c') };
+      out.wear = { head: p.equip.head === cap, second: p.bag.includes(cap2), r: slotSkill(p, 'r') };
       // the ambush's fixed boots: Common Iron Boots for an empty slot; a hero already in boots gets the old Uncommon+ roll
       const L0 = []; const dl = window.dropLoot; window.dropLoot = (x, y, list) => L0.push(list.map(d => d.it ? d.it.base + '/' + d.it.rarity : d.kind));
       lootAction({ type: 'loot', item: 'ironboots', rarity: 'common', x: p.x, y: p.y }); p.equip.boots = makeItem('ironboots', 'common', 1); recalcStats(p, false);
       lootAction({ type: 'loot', item: 'ironboots', rarity: 'common', x: p.x, y: p.y }); window.dropLoot = dl;
       out.boots = { fresh: L0[0].join(), worn: L0[1].length === 1 && !/^ironboots/.test(L0[1][0]) && !/\/common$/.test(L0[1][0]) };
       // a game that did not start bare (every save from before §28): the HUD is whole
-      const sec = G.prog.secrets.opening; G.prog.secrets.opening = undefined; out.hudWhole = ['bars', 'map', 'q', 'pot', 'skills'].every(k => hudShown(k) === 1); G.prog.secrets.opening = sec;
+      const sec = G.prog.secrets.opening; G.prog.secrets.opening = undefined; out.hudWhole = ['bars', 'map', 'q', 'rmb', 'pockets'].every(k => hudShown(k) === 1); G.prog.secrets.opening = sec;
       return out;
     });
-    check('§28 bare hero: every slot null; p.gear keeps default ids for render; wdmg 1; no Q E R F C, SHIFT = barefoot Roll', b28.bare.slots === 0 && b28.bare.wdmg === 1 && b28.bare.skills === ',,,,,roll' && b28.bare.gear === 'sword,knighthelm,warden,knightgreaves', b28.bare);
+    check('§28 bare hero: every slot null; p.gear keeps default ids for render; wdmg 1; no Q ▲Q M2 E ▲E R F, V = barefoot Roll', b28.bare.slots === 0 && b28.bare.wdmg === 1 && b28.bare.skills === ',,,,,,,roll' && b28.bare.gear === 'sword,,knighthelm,warden,knightgreaves', b28.bare);
     check('§28 bare hero: LMB is a weak Shove (<= 3 damage), Q refuses, the roll dodges', b28.shove.lmb === 'Shove' && b28.shove.dmg > 0 && b28.shove.dmg <= 3 && b28.shove.q === false && b28.shove.roll === true, b28.shove);
     check('§28 save / load: empty gear slots stay empty; an unreadable gear item becomes the slot\'s first-kit Common', b28.load.empty === 0 && b28.load.fallback === 'ironcap/common' && b28.load.others === 0, b28.load);
-    check('§28 pickups: a first-kit piece goes on into an empty slot, a second one goes to the bag', b28.wear.head && b28.wear.second && b28.wear.c === 'warcry', b28.wear);
+    check('§28 pickups: a first-kit piece goes on into an empty slot, a second one goes to the bag', b28.wear.head && b28.wear.second && b28.wear.r === 'warcry', b28.wear);
     check('§28 garden boots: fixed Common Iron Boots (no roll); a hero already in boots gets the old Uncommon+ roll instead', b28.boots.fresh === 'ironboots/common' && b28.boots.worn, b28.boots);
     check('§28 a game that did not start bare keeps the whole HUD', b28.hudWhole);
     check('§28 bare-hero menus, attack and save paths raise no page errors', berr.length === 0, berr.slice(0, 3));
@@ -1134,8 +1133,8 @@ const PAD_STUB = () => {
     await wait(500);
     // -- paper doll: the 4 trinket slots at the §19.4 positions (relative to the panel), all 8 slots focusable / hit-testable
     const doll = await m3(() => ({ rel: EQ_REL, pos: EQ_POS, keys: EQUIP_SLOTS, ids: UI.focus.list.map(r => r.id).filter(i => i.startsWith('eq:')) }));
-    check('paper doll: ring1 (24,88) ring2 (176,88) amulet (100,64) from the panel origin, belt tightened to (100,256) (R3 #6); 8 slots registered',
-      JSON.stringify([doll.rel.ring1, doll.rel.ring2, doll.rel.amulet, doll.rel.belt]) === '[[24,88],[176,88],[100,64],[100,256]]' && doll.keys.every(k => doll.ids.includes('eq:' + k)) && doll.ids.length === 8, doll);
+    check('paper doll: ring1 (24,88) ring2 (176,88) amulet (100,64), Hand (24,144) | Offhand (176,144), belt (176,256); 9 slots registered',
+      JSON.stringify([doll.rel.ring1, doll.rel.ring2, doll.rel.amulet, doll.rel.weapon, doll.rel.offhand, doll.rel.belt]) === '[[24,88],[176,88],[100,64],[24,144],[176,144],[176,256]]' && doll.keys.every(k => doll.ids.includes('eq:' + k)) && doll.ids.length === 9, doll);
     // -- tooltip rows: <= 12 lines for every kind, name in rarity colour, v2 names only (legacy mirrors never read)
     const tip = await m3(() => {
       const p = G.player, out = [];
@@ -1209,7 +1208,7 @@ const PAD_STUB = () => {
       const seen = new Set(['eq:ring1']), q = ['eq:ring1']; while (q.length) for (const n of edges[q.shift()]) if (!seen.has(n)) { seen.add(n); q.push(n); }
       return { reach: seen.size, edges };
     });
-    check('pad / keyboard focus: all 8 paper-doll slots are reachable with the d-pad', pad.reach === 8, pad);
+    check('pad / keyboard focus: all 9 paper-doll slots are reachable with the d-pad', pad.reach === 9, pad);
     const touch = await m3(() => {
       const p = G.player, e = window.__ring3, r = {}; G.touch = true; IN.device = 'touch'; G.ui.sel = null; G.ui.ringPick = null;
       const bi = p.bag.indexOf(e), keep1 = p.equip.ring1, keep2 = p.equip.ring2;
@@ -1277,13 +1276,13 @@ const PAD_STUB = () => {
       return {
         zones: [zoneName('spire'), zoneName('pinewood'), zoneName('caldera'), zoneName('nowhere_land')], found: L.rows.find(r => r.k === 'footer').parts[0],
         negZero: rows.concat(statRows(p, true)).some(r => /-0%/.test(String(r[1]))) || /-0%/.test(affixText('cdr', -0.0004)) || /-0%/.test(affixText('skillDmg', -0.001)), cdr: rows.find(r => r[0] === 'CDR')[1],
-        deltas: D.map(d => d.text), nDelta: D.length, labels: rows.map(r => r[0]), short, chip: chipText('hp', 63), unit: affixText('hp', 63), skillNames: skills && skills.skills.length === 3, touchK: TT.rows.map(r => r.k).join(','),
+        deltas: D.map(d => d.text), nDelta: D.length, labels: rows.map(r => r[0]), short, chip: chipText('hp', 63), unit: affixText('hp', 63), skillNames: skills && skills.skills.length === 2, touchK: TT.rows.map(r => r.k).join(','),
         n: [T.count, TT.count], hasChips: TT.rows.some(r => r.k === 'chips')
       };
     });
     check('R3 #4 copy: zone display names ("Sleepless Spire", not "spire"), no "-0%" anywhere, units on affixes and touch chips ("+63 HP")',
       copy.zones[0] === 'Sleepless Spire' && copy.zones[1] === 'Misty Pinewood' && copy.zones[2] === 'Emberfall Caldera' && copy.zones[3] === 'Nowhere land' && copy.found === 'Found: Sleepless Spire' && !copy.negZero && copy.cdr === '0%' && copy.chip === '+63 HP' && copy.unit === '+63 HP', copy);
-    check('R3 #4 compare: up to 3 stat deltas (damage first, with units); Q/E/R names row at touch width; tooltip within 12 lines',
+    check('R3 #4 compare: up to 3 stat deltas (damage first, with units); Q / ▲Q names row at touch width; tooltip within 12 lines',
       copy.nDelta >= 1 && copy.nDelta <= 3 && copy.deltas.every(t => /^[+-]\d/.test(t) && !/^[+-]0/.test(t)) && copy.skillNames && copy.hasChips && copy.n.every(n => n <= 12), copy);
     // draw it for real (the compare block, no "vs equipped: <name>" line) and the idle loadout pane
     await e(() => { G.touch = false; IN.device = 'kbm'; openInv('inv'); G.ui.sel = window.__r3; }); await frames(pg1);
@@ -1627,7 +1626,7 @@ const PAD_STUB = () => {
       steps(60); out.order = G.echo.log.slice();
       reset(); for (let i = 0; i < 6; i++) { p.atkT = 0; p.cast = null; basicAttack(p); } out.queued = G.echo.q.length; steps(40); out.replayed6 = G.echo.count;
       // 3. never R: an ultimate is not recorded or replayed
-      reset(); p.ult = 100; const okR = useSkill(p, 'r'); out.r = { cast: okR, queued: G.echo ? G.echo.q.length : 0 }; steps(40); out.r.replays = G.echo ? G.echo.count : 0;
+      reset(); p.ult = 100; const okR = useSkill(p, 'qu'); out.r = { cast: okR, queued: G.echo ? G.echo.q.length : 0 }; steps(40); out.r.replays = G.echo ? G.echo.count : 0;
       // 4. retyping: the hero's most-amplified element, arcane when none; never slash
       reset(); const sum = p.sum, keep = Object.assign({}, sum); for (const el of DMG_ELS) sum[el + 'Dmg'] = 0; p.amp = {};
       out.el0 = echoElement(p); sum.fireDmg = 0.1; sum.frostDmg = 0.3; sum.slashDmg = 0.9; out.el1 = echoElement(p); sum.slashDmg = 0;
@@ -1661,11 +1660,11 @@ const PAD_STUB = () => {
     });
     check('echo: the 19th unique (Twice-Told): a Legendary weapon with rule + unique "echo" on the finder\'s own weapon variant; drops once on a boss-class kill at L17+ (Act III)',
       X.item.unique === 'echo' && X.item.rule === 'echo' && X.item.rarity === 'legendary' && X.item.slot === 'weapon' && X.item.variant === X.item.hero && X.item.name === 'Twice-Told' && X.item.count <= 19
-      && X.gate[0] === null && X.gate[1] === null && X.gate[2] === 'echo' && X.gate[3] === null, { item: X.item, gate: X.gate });
+      && X.gate[0] === null && X.gate[1] === null && X.gate[2] === 'echo' && X.gate[3] !== 'echo', { item: X.item, gate: X.gate });   // gate[3] may be the next late unique (The Stopped Hour)
     check('echo: the spirit forms 0.4 s (24 fixed steps) after the attack, standing where the hero stood then (an after-image: it trails a moving hero)',
       !X.spawn.s1.alive && X.spawn.s1.n === 0 && X.spawn.s1.q === 1 && X.spawn.steps === 24 && Math.abs(X.spawn.at.x - X.spawn.at.x0) < 0.06 && X.spawn.heroX > 1, X.spawn);
-    check('echo: replays basic, Q, E in the order cast; the queue holds 4 (6 rapid basics replay 4)',
-      X.qLen === 'lmb,q,e' && X.order.join() === ['lmb', X.q, X.e].join() && X.queued === 4 && X.replayed6 === 4, { qLen: X.qLen, order: X.order, queued: X.queued, replayed6: X.replayed6 });
+    check('echo: replays basic and Q in the order cast (never the offhand E); the queue holds 4 (6 rapid basics replay 4)',
+      X.qLen === 'lmb,q' && X.order.join() === ['lmb', X.q].join() && X.queued === 4 && X.replayed6 === 4, { qLen: X.qLen, order: X.order, queued: X.queued, replayed6: X.replayed6 });
     check('echo: never R (an ultimate is neither recorded nor replayed)', X.r.cast && X.r.queued === 0 && X.r.replays === 0, X.r);
     check('echo: retyped to the most-amplified element (arcane with none, never slash); a replayed hit is that element at k x focus of the hero\'s hit',
       X.el0 === 'arcane' && X.el1 === 'frost' && X.retype.echoHits >= 1 && X.retype.els === 'frost' && X.retype.heroEl === 'slash' && X.retype.ratio > X.retype.kf * 0.7 && X.retype.ratio < X.retype.kf * 1.6, { el0: X.el0, el1: X.el1, retype: X.retype });
@@ -1690,6 +1689,157 @@ const PAD_STUB = () => {
     const strip = require('child_process').spawnSync(process.platform === 'win32' ? 'python' : 'python3', ['-c', `import sys\nfrom PIL import Image\nfs=sys.argv[2:]\nim=[Image.open(f) for f in fs]\nw,h=im[0].size\ns=Image.new('RGB',(w*len(im),h))\nfor i,m in enumerate(im): s.paste(m,(i*w,0))\ns.save(sys.argv[1])`, path.join(ECHO_DIR, 'strip-echo.png'), ...files]);
     check('echo: frame strip written to tools/shots/m3-echo (8 frames, the spirit replaying the hero\'s swings)', alive && files.length === 8 && strip.status === 0 && fs.existsSync(path.join(ECHO_DIR, 'strip-echo.png')), { frames: files.length, alive, status: strip.status });
     await xp.close();
+  }
+  // ======================= M4a Loadout v3 (docs/design/loadout.md, combat-feel.md "Hush") =======================
+  // 1. input routes: the 12 actives ([M1 Q ⇧Q] [M2 E ⇧E] [R F V] [Z X C]), the two Shift chords included, on keyboard + mouse,
+  //    pad and touch; Shift alone never dodges; a chord never also fires its base key
+  // 2. rebinding: chord labels, Shift alone refused, ambiguous chords and same-context clashes rejected (no silent swap)
+  // 3. Hush (The Stopped Hour) and world time: G.timeScale / worldScale(e)
+  // 4. shots: the 12-slot HUD bar and the bag paper doll (tools/shots/m4a)
+  {
+    const M4A = path.join(__dirname, 'shots', 'm4a'); fs.mkdirSync(M4A, { recursive: true });
+    const ip = await br.newPage({ viewport: { width: 960, height: 540 } });
+    ip.on('pageerror', e => errs.push('pageerror(m4a): ' + e.message));
+    await ip.addInitScript(PAD_STUB);
+    await ip.goto(`${base}/index.html?scene=play`, { waitUntil: 'load' });
+    await ip.waitForFunction(() => window.__ready === true, null, { timeout: 60000 });
+    await wait(300);
+    const iev = (fn, arg) => ip.evaluate(fn, arg);
+    await iev(() => {
+      setSetting('groundIndicators', 'off'); G.banner = null; G.enemies.length = 0;
+      const p = G.player; p.invulnT = 1e9;
+      window.__rec = [];
+      const u = useSkill; window.useSkill = function (pp, slot) { window.__rec.push(slot); return u(pp, slot); };
+      const b = basicAttack; window.basicAttack = function (pp) { if (window.__rec[window.__rec.length - 1] !== 'lmb') window.__rec.push('lmb'); return b(pp); };
+      const k = usePocket; window.usePocket = function (pp, i) { window.__rec.push('zxc'[i]); return k(pp, i); };
+      window.__prep = () => { const p = G.player; G.enemies.length = 0; G.state = 'play'; G.ui.open = false; p.cds = {}; p.mp = p.maxMp; p.st = p.maxSt; p.ult = 100; p.dash = null; p.cast = null; p.rootT = 0; p.atkT = 0; p.potT = 0; p.hp = p.maxHp / 2; p.dodgeBuf = 0; refillPockets(p); if (IN.clearAimHold) IN.clearAimHold(); window.__rec.length = 0; };
+      window.__tp = (type, id, x, y) => { const c = document.getElementById('game'), r = c.getBoundingClientRect(); c.dispatchEvent(new PointerEvent(type, { pointerType: 'touch', pointerId: id, bubbles: true, clientX: r.left + x * r.width / DW, clientY: r.top + y * r.height / DH })); };
+      window.__bt = slot => touchButtons().find(q => q.slot === slot);
+    });
+    const SLOTS12 = ['lmb', 'q', 'qu', 'rmb', 'e', 'eu', 'r', 'f', 'v', 'z', 'x', 'c'];
+    const recOf = async () => (await iev(() => window.__rec.slice()));
+    // -- keyboard + mouse
+    await ip.mouse.move(600, 300); await wait(80);
+    const KBM = { q: 'KeyQ', e: 'KeyE', r: 'KeyR', f: 'KeyF', v: 'KeyV', z: 'KeyZ', x: 'KeyX', c: 'KeyC' };
+    const kres = {};
+    for (const s of SLOTS12) {
+      await iev(() => __prep()); await wait(60);
+      if (s === 'lmb') { await ip.mouse.down(); await wait(90); await ip.mouse.up(); }
+      else if (s === 'rmb') { await ip.mouse.down({ button: 'right' }); await wait(60); await ip.mouse.up({ button: 'right' }); }
+      else if (s === 'qu' || s === 'eu') { await ip.keyboard.down('ShiftLeft'); await wait(30); await ip.keyboard.press(s === 'qu' ? 'KeyQ' : 'KeyE'); await wait(30); await ip.keyboard.up('ShiftLeft'); }
+      else await ip.keyboard.press(KBM[s]);
+      await wait(120);
+      kres[s] = (await recOf()).join();
+    }
+    const kOk = SLOTS12.filter(s => kres[s] !== s);
+    check('M4a kbm: each of the 12 actives fires exactly its slot (M1 / Q / Shift+Q / M2 / E / Shift+E / R / F / V / Z / X / C; a chord never also fires Q or E)', kOk.length === 0, kres);
+    await iev(() => __prep()); await ip.keyboard.down('ShiftLeft'); await wait(150); await ip.keyboard.up('ShiftLeft'); await wait(120);
+    const shiftOnly = await iev(() => ({ rec: window.__rec.join(), dash: !!G.player.dash }));
+    check('M4a kbm: Shift alone does nothing (no dodge; V is the dodge)', shiftOnly.rec === '' && !shiftOnly.dash, shiftOnly);
+    const gl = await iev(() => ({ ultQ: IN.glyph('ultQ', 'kbm'), ultE: IN.glyph('ultE', 'kbm'), dodge: IN.glyph('dodge', 'kbm'), off: IN.glyph('offhand', 'kbm'), chord: !!IN.glyphInfo('ultQ', 'kbm').chord, quLabel: skillSlotState(G.player, 'qu').glyph }));
+    check('M4a kbm: chord glyphs (▲Q / ▲E on the bar), V dodge, RMB off-action', gl.ultQ === '▲Q' && gl.ultE === '▲E' && gl.dodge === 'V' && gl.off === 'RMB' && gl.chord, gl);
+    // -- pad
+    const PAD = { lmb: 7, q: 5, qu: 11, rmb: 6, e: 4, eu: 10, r: 3, f: 2, v: 1, z: 14, x: 12, c: 15 };
+    const ptap = async (i, ms = 110) => { await iev(i => window.__btn(i, true), i); await wait(ms); await iev(i => window.__btn(i, false), i); await wait(80); };
+    await ptap(16);   // wake the pad (Home: unbound)
+    const pres = {};
+    for (const s of SLOTS12) { await iev(() => __prep()); await wait(40); await ptap(PAD[s]); await wait(60); pres[s] = (await recOf()).join(); }
+    const pOk = SLOTS12.filter(s => pres[s] !== s);
+    const pgl = await iev(() => ({ dev: IN.device, q: IN.glyph('skillQ'), qu: IN.glyph('ultQ'), off: IN.glyph('offhand'), e: IN.glyph('skillE'), eu: IN.glyph('ultE'), dodge: IN.glyph('dodge'), s1: IN.glyph('s1') }));
+    check('M4a pad: RT / RB / R3 / LT / LB / L3 / Y / X / B / D-pad left, up, right fire the 12 actives', pOk.length === 0 && pgl.dev === 'pad', { pres, pgl });
+    // -- touch
+    await iev(() => { __tp('pointerdown', 9, 5, 5); __tp('pointerup', 9, 5, 5); }); await wait(150);
+    const tres = {};
+    for (const s of SLOTS12) {
+      await iev(() => __prep());
+      const pg = ['z', 'x', 'c'].includes(s) ? 1 : 0;
+      if (await iev(() => TOUCH.page) !== pg) { await iev(() => { const b = __bt('toggle'); __tp('pointerdown', 18, b.x, b.y); __tp('pointerup', 18, b.x, b.y); }); await wait(250); await iev(() => __prep()); }
+      const btn = s === 'lmb' ? 'atk' : s;
+      await iev(([b, hold]) => { const q = __bt(b); __tp('pointerdown', 20, q.x, q.y); if (!hold) __tp('pointerup', 20, q.x, q.y); }, [btn, s === 'lmb']);
+      await wait(s === 'lmb' ? 160 : 220);
+      if (s === 'lmb') await iev(() => { const q = __bt('atk'); __tp('pointerup', 20, q.x, q.y); });
+      await wait(60);
+      tres[s] = (await recOf()).join();
+    }
+    if (await iev(() => TOUCH.page) !== 0) { await iev(() => { const b = __bt('toggle'); __tp('pointerdown', 18, b.x, b.y); __tp('pointerup', 18, b.x, b.y); }); await wait(250); }
+    const tOk = SLOTS12.filter(s => tres[s] !== s);
+    check('M4a touch: the attack button, the inner arc (Q E M2), the outer arc (R F V ▲Q ▲E) and the pocket page (Z X C) fire the 12 actives', tOk.length === 0, tres);
+    const ring = await iev(() => { const p = G.player; p.ult = 50; const a = typeof touchSkillBtn === 'function'; p.ult = 100; return { fn: a, slots: touchButtons().map(b => b.slot).join() }; });
+    check('M4a touch: second button (M2) on the inner arc, both ultimates on the outer arc', /rmb/.test(ring.slots) && /qu/.test(ring.slots) && /eu/.test(ring.slots), ring);
+    // -- rebinding
+    await ip.keyboard.press('KeyW'); await wait(80);
+    const rb = await iev(() => {
+      const o = {};
+      o.shift = IN.rebind('kbm', 'interact', 'ShiftLeft', { swap: false });
+      o.amb = IN.rebind('kbm', 'skillR', 'Shift+KeyF', { swap: false });
+      o.clash = IN.rebind('kbm', 'dodge', 'KeyQ', { swap: false });
+      o.chordOk = IN.rebind('kbm', 'skillR', 'Shift+KeyR', { swap: false });
+      o.label = IN.keyLabel('Shift+KeyQ'); o.row = typeof bindText === 'function' ? bindText('ultQ', 'kbm') : null; o.rowR = typeof bindText === 'function' ? bindText('skillR', 'kbm') : null;
+      IN.resetBindings('kbm'); o.after = IN.bindingsFor('skillR', 'kbm').join();
+      return { shift: o.shift.ok + ':' + o.shift.reason, amb: o.amb.ok + ':' + o.amb.conflict + ':' + o.amb.reason, clash: o.clash.ok + ':' + o.clash.conflict, chordOk: o.chordOk.ok, label: o.label, row: o.row, rowR: o.rowR, after: o.after };
+    });
+    check('M4a rebind: Shift alone refused for play actions; an ambiguous chord (Shift+F over F) and a same-context key are rejected, never swapped; the list shows chords (SHIFT+Q)',
+      rb.shift === 'false:shift' && rb.amb === 'false:skillF:chord' && rb.clash === 'false:skillQ' && rb.chordOk === true && rb.label === 'SHIFT+Q' && rb.row === 'SHIFT+Q' && /SHIFT\+R/.test(rb.rowR) && rb.after === 'KeyR', rb);
+    // -- shots: the HUD bar, the bag
+    await iev(() => { __prep(); const p = G.player; p.hp = p.maxHp; p.ult = 100; p.cds = { sunslash: 1.4 }; p.cdm = Object.assign(p.cdm || {}, { sunslash: 3 }); G.banner = null; G.msg = null; });
+    await ip.mouse.move(600, 300); await wait(400);
+    await ip.screenshot({ path: path.join(M4A, 'hud-bar.png'), clip: { x: 330, y: 440, width: 630, height: 100 } });
+    await ip.screenshot({ path: path.join(M4A, 'hud-full.png') });
+    await iev(() => { sampleBag(G.player); openInv('inv'); G.ui.sel = null; }); await wait(450);
+    await ip.screenshot({ path: path.join(M4A, 'bag.png') });
+    await iev(() => { openInv('skills'); }); await wait(450);
+    await ip.screenshot({ path: path.join(M4A, 'character.png') });
+    await iev(() => closeInv());
+    check('M4a shots: tools/shots/m4a hud-bar.png, bag.png, character.png', ['hud-bar', 'bag', 'character'].every(n => fs.existsSync(path.join(M4A, n + '.png'))));
+    // -- Hush and world time (stepped by hand: the rAF loop stopped)
+    await iev(() => { running = false; });
+    await wait(100);
+    const H = await iev(() => {
+      const p = G.player, out = {};
+      const steps = n => { for (let i = 0; i < n; i++) { const fr = hitlagStep(); update(fr ? 0 : STEP, STEP); } };
+      const reset = () => { G.state = 'play'; G.ui.open = false; G.banner = null; G.msg = null; G.enemies.length = 0; G.projs.length = 0; G.zones.length = 0; G.delays.length = 0; G.boss = null; p.cds = {}; p.cast = null; p.dash = null; p.invulnT = 1e9; p.buffs = {}; p.hush = null; G.timeScale = 1; G.slowmo = 0; };
+      reset();
+      p.equip.weapon = makeUnique('stillhour', 20); recalcStats(p, true); p.maxMp = Math.max(p.maxMp, 200);
+      out.q = slotSkill(p, 'q'); out.qu = slotSkill(p, 'qu');
+      // start: -30 MP, then -60 MP per real second; the world eases to 0.25 within 0.15 s
+      p.mp = p.maxMp; const mp0 = p.mp; out.start = useSkill(p, 'q'); out.cost = +(mp0 - p.mp).toFixed(2);
+      steps(6); out.easing = +G.timeScale.toFixed(3);
+      const m1 = p.mp; steps(30); out.drain = +((m1 - p.mp) / (30 * STEP)).toFixed(1); out.scale = G.timeScale;
+      // entity scales: enemy 0.25, elite 0.375, boss 0.5, the field 0.25; Dreamveil + Hush = min (0.25), not the product
+      const sl = spawnEnemy('slime', p.x + 2, p.y, 0), el = spawnEnemy('slime', p.x + 2, p.y + 1, 0), bo = spawnEnemy('bramblehorn', p.x + 3, p.y - 2, 0);
+      el.elite = true; for (const e of [sl, el, bo]) { e.hp = e.maxHp = 1e9; e.cd = 99; e.spawnT = 0; }
+      out.ws = { enemy: worldScale(sl), elite: worldScale(el), boss: worldScale(bo), field: worldScale(null) };
+      p.buffs.dreamveil = { t: 9, max: 9 }; out.veil = worldScale(sl); delete p.buffs.dreamveil;
+      // a DoT ticks on world time; the hero's cooldowns on real time; a wind phase on world time
+      sl.burnT = 2; sl.burnTick = 0.5; p.cds.test = 1; const w0 = WIND.now(); const b0 = sl.burnT;
+      steps(60);
+      out.burn = +(b0 - sl.burnT).toFixed(3); out.cd = +(1 - Math.max(0, p.cds.test)).toFixed(3); out.wind = +(WIND.now() - w0).toFixed(3);
+      // a hero projectile slows once it leaves the hand
+      p.mp = p.maxMp; const pr = spawnProj({ x: p.x, y: p.y, z: p.z + 1, ang: Math.PI / 2, speed: 8, r: 0.2, dmg: 0, life: 9, kind: 'arcane', col: '#fff' }); const py0 = pr.y;
+      steps(30); out.proj = +(pr.y - py0).toFixed(3);
+      // no MP from hits while active
+      p.mpHits = []; G.t += 2; const mh = p.mp; basicMpGain(p, { basic: true }); out.mpHit = +(p.mp - mh).toFixed(3);
+      // a second press ends it (toggle), 3 s cooldown, the world eases back
+      out.toggle = useSkill(p, 'q'); out.why1 = G.hushLog && G.hushLog.why; out.cd1 = +p.cds.hush.toFixed(2); steps(12); out.back = G.timeScale;
+      // 0 MP ends it
+      p.cds = {}; p.mp = p.maxMp; useSkill(p, 'q'); p.mp = 10; steps(30); out.mp0 = { on: !!p.hush, why: G.hushLog && G.hushLog.why, mp: p.mp, cd: +(p.cdm.hush || 0) };
+      // boss-death slow-mo ends it; the save never stores it
+      p.cds = {}; p.mp = p.maxMp; useSkill(p, 'q'); const on = !!p.hush; out.saved = 'hush' in saveData().player || /"hush":\{/.test(JSON.stringify(saveData().player));
+      killEnemy(bo, 1); out.boss = { on, after: !!p.hush, why: G.hushLog && G.hushLog.why };
+      reset(); G.enemies.length = 0;
+      return out;
+    });
+    check('M4a Hush: The Stopped Hour turns Q into Hush (the line keeps its ultimate)', H.q === 'hush' && !!H.qu, { q: H.q, qu: H.qu });
+    check('M4a Hush: starts for 30 MP, drains 60 MP per real second, the world eases to 0.25 within 0.15 s', H.start && H.cost === 30 && Math.abs(H.drain - 60) <= 1 && H.easing > 0.25 && H.easing < 1 && H.scale === 0.25, { start: H.start, cost: H.cost, drain: H.drain, easing: H.easing, scale: H.scale });
+    check('M4a world time: enemy 0.25x, elite 0.375x, boss 0.5x, the field 0.25x; Dreamveil + Hush = 0.25 (min, not 0.0875)', H.ws.enemy === 0.25 && H.ws.elite === 0.375 && H.ws.boss === 0.5 && H.ws.field === 0.25 && H.veil === 0.25, { ws: H.ws, veil: H.veil });
+    check('M4a world time: a DoT and a wind phase advance at 0.25x; the hero\'s cooldowns stay real time', Math.abs(H.burn - 0.25) < 0.02 && Math.abs(H.wind - 0.25) < 0.02 && Math.abs(H.cd - 1) < 0.02, { burn: H.burn, wind: H.wind, cd: H.cd });
+    check('M4a world time: a hero projectile slows once it leaves the hand (8 t/s x 0.5 s x 0.25 = 1 tile)', Math.abs(H.proj - 1) < 0.08, H.proj);
+    check('M4a Hush: no MP from hits while active', H.mpHit === 0, H.mpHit);
+    check('M4a Hush: a second press ends it (3 s cooldown) and the world eases back to 1', H.toggle && H.why1 === 'toggle' && H.cd1 === 3 && H.back === 1, { toggle: H.toggle, why: H.why1, cd: H.cd1, back: H.back });
+    check('M4a Hush: ends at 0 MP (cooldown 3 s; regen resumes after)', !H.mp0.on && H.mp0.why === 'mp' && H.mp0.mp < 5 && H.mp0.cd === 3, H.mp0);
+    check('M4a Hush: boss-death slow-mo ends it; saves never store it', H.boss.on && !H.boss.after && H.boss.why === 'bossdeath' && !H.saved, { boss: H.boss, saved: H.saved });
+    check('M4a: window.worldScale exported for the Wind lane', await iev(() => typeof window.worldScale === 'function' && typeof G.timeScale === 'number'));
+    await ip.close();
   }
   check('no page errors', errs.length === 0, errs.slice(0, 5));
   await br.close(); srv.close();

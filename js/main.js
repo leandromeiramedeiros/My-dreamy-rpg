@@ -61,6 +61,8 @@ function getMap(id) {
 }
 // `at` = { x, y } to arrive somewhere other than the map start (a checkpoint)
 function enterMap(id, at) {
+  if (G.player && typeof hushEnd === 'function') hushEnd(G.player, 'map');   // a map change ends Hush
+  G.timeScale = 1;
   const m = getMap(id), p = G.player;
   G.map = m; prepTheme(m);
   for (const pt of m.portals) pt.open = (G.world.maps[id].portals.find(q => q.x === pt.x && q.y === pt.y) || pt).open !== false;
@@ -159,9 +161,10 @@ function update(dt, rdt) {
     if (G.state === 'dead') { G.deadT += rdt; if (G.deadT > 4.5) respawn(); }
   }
   updateAmbient(rdt);
-  for (const e of G.effects) { e.t += dt; if (e.t >= e.life) { e.done = true; if (e.onDone) e.onDone(e); } }
+  const wdt = dt * (typeof worldScale === 'function' ? worldScale(null) : 1);   // world time (Hush): effects and particles
+  for (const e of G.effects) { e.t += wdt; if (e.t >= e.life) { e.done = true; if (e.onDone) e.onDone(e); } }
   G.effects = G.effects.filter(e => !e.done);
-  updateParts(rdt, m);   // pooled, hard cap PART.cap (game.js)
+  updateParts(rdt * (typeof worldScale === 'function' ? worldScale(null) : 1), m);   // pooled, hard cap PART.cap (game.js)
   for (const t of G.texts) t.t += rdt;
   G.texts = G.texts.filter(t => t.t < (t.life || 0.9));
   G.shakeA = Math.max(0, G.shakeA - rdt * 30);

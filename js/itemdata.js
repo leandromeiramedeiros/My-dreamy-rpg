@@ -290,10 +290,62 @@ const IMPLICITS = {
   quietstep:       { stat: 'crit', v: 0.02, text: '+2% crit chance after Sprint' },
   shadowstep:      { stat: 'speed', v: 0.25, text: '+7% move speed' },
   eclipsetreads:   { stat: 'critDmg', v: 0.10, text: '+10% crit damage on Sprint strikes' },
+
+  // Nightfang daggers (Shadows, pierce; M4a hidden line): Fan of Knives, Death Mark
+  shiv:            { stat: 'crit', v: 0.02, text: '+2% crit chance' },
+  nightfang:       { stat: 'haste', v: 0.04, text: '+4% attack speed' },
+  twineclipse:     { stat: 'critDmg', v: 0.10, text: '+10% crit damage' },
+  widowskiss:      { stat: 'statusChance', v: 0.05, text: '+5% status chance on cuts' },
+  fangseternal:    { stat: 'power', v: 0.04, text: '+4% damage' },
+
+  // Buckler (OFFHAND shield): Parry+, Bash, Aegis
+  woodbuckler:     { stat: 'hp', v: 40, text: '+40 HP' },
+  ironbuckler:     { stat: 'poise', v: 1, text: '+1 poise' },
+  sunbuckler:      { stat: 'holyDmg', v: 0.05, text: '+5% holy damage' },
+  aurorabuckler:   { stat: 'reflect', v: 0.03, text: 'Reflects 3% of damage taken' },
+  bucklereternal:  { stat: 'regen', v: 1, text: '+1 HP regen per second' },
+
+  // Grimoire (OFFHAND companion, pages): Turn, Cast, Chapter
+  worngrimoire:    { stat: 'mpRegen', v: 0.5, text: '+0.5 MP regen per second' },
+  dreamgrimoire:   { stat: 'skillDmg', v: 0.06, text: '+6% skill damage' },
+  stargrimoire:    { stat: 'mpRegen', v: 0.8, text: '+0.8 MP regen per second' },
+  nebulacodex:     { stat: 'cdr', v: 0.03, text: '+3% cooldown reduction' },
+  codexeternal:    { stat: 'mpRegen', v: 1.0, text: '+1 MP regen per second' },
+
+  // Quiver (OFFHAND companion, arrows): Nock, Loose, Quiver Storm
+  leatherquiver:   { stat: 'haste', v: 0.03, text: '+3% attack speed' },
+  moonquiver:      { stat: 'pierce', v: 1, text: '+1 pierce' },
+  silverquiver:    { stat: 'critDmg', v: 0.08, text: '+8% crit damage on arrows' },
+  eclipsequiver:   { stat: 'statusChance', v: 0.04, text: '+4% status chance on arrows' },
+  quivereternal:   { stat: 'crit', v: 0.03, text: '+3% crit chance' },
 };
 
 // ===== flavour (§19.3): one line per base and per unique, docs/design/story.md voice, <= 12 words =====
 const FLAVOR = {
+  // Nightfang daggers
+  shiv: 'Small enough to forget, sharp enough to be remembered.',
+  nightfang: 'Two quiet teeth that bite only in the dark.',
+  twineclipse: 'One for the sun, one for the moon, both for you.',
+  widowskiss: 'Its touch is light. Its goodbye is not.',
+  fangseternal: 'The night lent its fangs and never asked for them back.',
+  // Buckler
+  woodbuckler: 'Planks from a door that never let the cold in.',
+  ironbuckler: 'Dented in the shape of every blow it turned aside.',
+  sunbuckler: 'A little round sunrise you can hold up to the dark.',
+  aurorabuckler: 'The sky above the north, bent into a shield.',
+  bucklereternal: 'It has stood in front of you in every dream.',
+  // Grimoire
+  worngrimoire: 'Half its pages are blank. They are waiting for you.',
+  dreamgrimoire: 'Written in a hand that changes while you read.',
+  stargrimoire: 'Each page is a small night sky, folded flat.',
+  nebulacodex: 'The ink drifts like clouds that remember a shape.',
+  codexeternal: 'The last chapter is always the one you are living.',
+  // Quiver
+  leatherquiver: 'It smells of pine needles and patient mornings.',
+  moonquiver: 'Arrows drawn from it come out cool and silver.',
+  silverquiver: 'Every arrow rings once, like a bell, as it leaves.',
+  eclipsequiver: 'Dark on one side, bright on the other, never empty.',
+  quivereternal: 'It holds one more arrow than you will ever need.',
   // Dawnblade
   rustyblade: 'It remembers one good morning, and waits for another.',
   dawnblade: 'Forged where the first light touched the cold water.',
@@ -373,6 +425,7 @@ const FLAVOR = {
   cinderstride: 'The boots still glow where a king once walked.',
   morrowbane: 'It was forged to end a dream, and it does so gently.',
   echo: 'Whatever you do, it does again: a breath behind you, and a little brighter.',
+  stillhour: 'The clock stopped at a quarter past. You did not.',
   // Trinket uniques
   pipslantern: 'A small lantern that still remembers its first light.',
   drownedcompass: 'It points toward the things the water was keeping.',

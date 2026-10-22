@@ -13,9 +13,12 @@
 const HUD = { cache: {}, gray: new WeakMap(), uid: 0, trk: { key: '', t0: 0 }, ready: {}, lvl: { n: 0, t: -9 }, bossPhase: false, bossShakeT: -9,
   breakT: -9, fogTile: '' };
 const UC = UI.C;
-const SLOT_GROUPS = [{ x: 350, slots: ['lmb', 'q', 'e', 'r'] }, { x: 552, slots: ['f', 'c', 'shift'] }, { x: 706, slots: ['1', '2', '3'] }];
-const SLOT_PITCH = 48, SLOT_Y = 484, SLOT = 44, POTION_X = 858;
-const SLOT_LABEL = { lmb: 'LMB', q: 'Q', e: 'E', r: 'R', f: 'F', c: 'C', shift: 'SHF', 1: '1', 2: '2', 3: '3', pot: '4' };
+// Loadout v3 bar (docs/design/loadout.md "HUD"): 12 slots in four groups of three, [M1 Q ⇧Q] [M2 E ⇧E] [R F V] [Z X C]:
+// the HAND item, the OFFHAND item, head / chest / boots, the three pockets. Both ultimates show the one shared charge.
+const SLOT_GROUPS = [{ x: 352, slots: ['lmb', 'q', 'qu'] }, { x: 506, slots: ['rmb', 'e', 'eu'] }, { x: 660, slots: ['r', 'f', 'v'] }, { x: 814, slots: ['z', 'x', 'c'] }];
+const SLOT_PITCH = 46, SLOT_Y = 484, SLOT = 44;
+const SLOT_LABEL = { lmb: 'LMB', q: 'Q', qu: '▲Q', rmb: 'RMB', e: 'E', eu: '▲E', r: 'R', f: 'F', v: 'V', z: 'Z', x: 'X', c: 'C' };
+const isPocketSlot = slot => slot === 'z' || slot === 'x' || slot === 'c';
 const EL_ICON_COL = { slash: 'physical', pierce: 'physical' };
 const uiReady = () => !!(typeof UI_ART !== 'undefined' && UI.image(UI_ART.src));
 // element -> rim colour, cached (UI.el asks ICONS each call; ~20 calls a frame from the skill bar). Cached only once ICONS is
@@ -241,8 +244,16 @@ function drawStatusRow(ctx, p, x0, y0, rightAlign) {
 // ===== skill bar ==================================================================================================================
 function slotIcon(p, st) {
   if (st.slot === 'lmb') return uiItemIcon(p.equip.weapon);
-  if (st.slot === 'pot') return miscIcon('potion');
+  if (st.pocket) { const P = POCKETS[st.pocket]; return P ? (st.pocket === 'potion' ? miscIcon('potion') : icon(P.icon, P.color)) : null; }
   return st.id ? skillIcon(st.id) : null;
+}
+// The Hush (combat-feel.md): the world slows while the hero does not. M4a draws it as a cool tint over the scene that follows
+// G.timeScale (no desaturation / audio filter yet: the Lighting lane owns render.js).
+function drawHushTint(ctx, p) {
+  const ts = G.timeScale == null ? 1 : G.timeScale, k = clamp((1 - ts) / 0.75, 0, 1); if (k <= 0) return;
+  ctx.save(); ctx.globalAlpha = 0.22 * k; ctx.fillStyle = '#1b2a5c'; ctx.fillRect(0, 0, DW, DH);
+  ctx.globalAlpha = 0.5 * k; ctx.fillStyle = '#bcd0ff'; ctx.fillRect(0, 0, DW, 2); ctx.fillRect(0, DH - 2, DW, 2); ctx.fillRect(0, 0, 2, DH); ctx.fillRect(DW - 2, 0, 2, DH);
+  ctx.restore();
 }
 // ===== §28 the HUD fades in one piece per noun (game.js hudNoun / hudShown) ======================================================
 // hudFaded(ctx, a, fn): fn draws at full alpha (a >= 1), not at all (a <= 0: no hit regions either), or, during its 0.6 s fade-in,
@@ -260,12 +271,12 @@ function hudFaded(ctx, a, fn) {
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = a; ctx.imageSmoothingEnabled = false; ctx.drawImage(HUD_FADE_C, 0, 0); ctx.restore();
   return r;
 }
-const hudPieceOf = slot => (slot === '1' || slot === '2' || slot === '3' || slot === 1 || slot === 2 || slot === 3 ? 'skills' : String(slot));
+const hudPieceOf = slot => (isPocketSlot(slot) ? 'pockets' : String(slot));
 const hudA = piece => (typeof hudShown === 'function' ? hudShown(piece) : 1);
 // a chip's alpha: its piece's fade; in a bare opening a chip whose slot grants nothing (no weapon, no helm...) stays hidden
 function chipAlpha(p, slot) {
   const a = hudA(hudPieceOf(slot));
-  if (a > 0 && slot !== 'lmb' && slot !== 'pot' && typeof openingActive === 'function' && openingActive() && !slotSkill(p, slot)) return 0;
+  if (a > 0 && slot !== 'lmb' && !isPocketSlot(slot) && typeof openingActive === 'function' && openingActive() && !slotSkill(p, slot)) return 0;
   return a;
 }
 function drawSkillBar(ctx, p, inert) {
@@ -275,30 +286,26 @@ function drawSkillBar(ctx, p, inert) {
     const x = grp.x + i * SLOT_PITCH;
     if (hudFaded(ctx, chipAlpha(p, slot), c => drawSkillSlot(c, p, slot, x, SLOT_Y))) hover = { slot, x };
   });
-  if (hudFaded(ctx, chipAlpha(p, 'pot'), c => {
-    const h = drawSkillSlot(c, p, 'pot', POTION_X, SLOT_Y);
-    for (let k = 0; k < potionMax(p); k++) UI.sprite(c, k < p.potions ? 'pipFull' : 'pipEmpty', POTION_X + 5 + k * 12, 530, { scale: 2 });   // potion charge pips
-    return h;
-  })) hover = { slot: 'pot', x: POTION_X };
   HUD.hoverSlot = hover && !inert && IN.device === 'kbm' ? hover.slot : null;   // render.js: faint range ring
   if (hover && !inert && (IN.device === 'kbm')) skillTooltip(ctx, p, hover);
 }
 function drawSkillSlot(ctx, p, slot, x, y) {
-  const st = skillSlotState(p, slot), icon = slotIcon(p, st), ult = slot === 'r', pot = slot === 'pot';
-  const ready = pot ? (st.cd <= 0 && st.potions > 0) : st.ready !== false && !st.cdFrac;
-  // ready flash: cooldown just ended -> 120 ms white rim + a 2 px icon pop
-  const prev = HUD.ready[slot]; if (prev && prev.cd && !(st.cd > 0)) prev.t = G.t; HUD.ready[slot] = Object.assign(prev || {}, { cd: st.cd > 0 || (ult && ultFrac(p) < 1) });
+  const st = skillSlotState(p, slot), icon = slotIcon(p, st), ult = !!st.ult, pk = !!st.pocket, uf = ult ? st.charge || 0 : 1;
+  // ready flash: cooldown (or the ultimate's charge) just completed -> 120 ms white rim + a 2 px icon pop
+  const busy = st.cd > 0 || (ult && uf < 1), prev = HUD.ready[slot]; if (prev && prev.cd && !busy) prev.t = G.t; HUD.ready[slot] = Object.assign(prev || {}, { cd: busy });
   const flashK = prev && prev.t != null ? 1 - (G.t - prev.t) / 0.12 : 0;
-  const rim = !icon ? UC.bevel : ult ? UC.gold : pot ? UC.hp : slot === 'lmb' ? UC.line : elColor(st.element);
+  const rim = !icon ? UC.bevel : ult ? UC.gold : pk ? (POCKETS[st.pocket] && POCKETS[st.pocket].color) || UC.hp : slot === 'lmb' ? UC.line : elColor(st.element);
   const empty = !icon;
   const dy = flashK > 0 ? -2 : 0;
-  hudSlot(ctx, x, y, SLOT, empty ? UC.bevel : rim, icon, { gray: !!st.mpShort || !!st.stShort || (pot && !st.potions), dy });
-  const ix = x + 6, iy = y + 6;
+  hudSlot(ctx, x, y, SLOT, empty ? UC.bevel : rim, icon, { gray: !!st.mpShort || !!st.stShort || (pk && !st.count), dy });
   if (!empty) {
-    if (ult && ultFrac(p) < 1) { UI.sweep(ctx, x + 4, y + 4, 36, 36, 1 - ultFrac(p), { label: Math.floor(ultFrac(p) * 100) + '', col: UC.edge }); }
+    if (ult && uf < 1) { UI.sweep(ctx, x + 4, y + 4, 36, 36, 1 - uf, { label: Math.floor(uf * 100) + '', col: UC.edge }); }
     else if (st.cdFrac > 0) UI.sweep(ctx, x + 4, y + 4, 36, 36, st.cdFrac, { label: st.cd >= 1 ? Math.ceil(st.cd) + '' : st.cd.toFixed(1) });
-    else if (pot && st.cd > 0) UI.sweep(ctx, x + 4, y + 4, 36, 36, st.cd, {});
-    if (ult && ultFrac(p) >= 1) { ctx.globalAlpha = 0.25 + 0.25 * Math.sin(G.t * 8); ctx.fillStyle = UC.gold; ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; hudFrame(ctx, x, y, SLOT, SLOT, 'slotRim', { tint: UC.gold, alpha: 1 }); }
+    else if (pk && st.cd > 0) UI.sweep(ctx, x + 4, y + 4, 36, 36, st.cd, {});
+    if (st.active) { ctx.globalAlpha = 0.3 + 0.2 * Math.sin(G.t * 6); ctx.fillStyle = '#bcd0ff'; ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; hudFrame(ctx, x, y, SLOT, SLOT, 'slotRim', { tint: '#bcd0ff' }); }   // Hush is on
+    if (st.deck && st.deck.n > 1) for (let k = 0; k < st.deck.n; k++) { ctx.fillStyle = k === st.deck.i ? UC.bright : UC.bevel; ctx.fillRect(x + 22 - st.deck.n * 3 + k * 6, y + 38, 4, 2); }   // the deck's pages, active lit
+    if (slot === 'lmb' && st.hold > 0) { ctx.fillStyle = st.hold >= 1 ? UC.gold : UC.text; ctx.fillRect(x + 4, y + 38, Math.round(36 * st.hold / 2) * 2, 2); }   // hold-M1 charge (Channel / Focus)
+    if (ult && uf >= 1) { ctx.globalAlpha = 0.25 + 0.25 * Math.sin(G.t * 8); ctx.fillStyle = UC.gold; ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; hudFrame(ctx, x, y, SLOT, SLOT, 'slotRim', { tint: UC.gold, alpha: 1 }); }
     if (st.unavailable) { ctx.fillStyle = UC.edge; ctx.globalAlpha = 0.5; ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; }
     if (st.flash > 0) { ctx.fillStyle = '#ffffff'; ctx.globalAlpha = Math.min(0.6, st.flash * 2); ctx.fillRect(x + 4, y + 4, 36, 36); ctx.globalAlpha = 1; }
   }
@@ -306,7 +313,7 @@ function drawSkillSlot(ctx, p, slot, x, y) {
     ctx.globalAlpha = flashK * 0.35; ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 4, y + 4, 36, 36);
     ctx.globalAlpha = flashK; hudFrame(ctx, x, y, SLOT, SLOT, 'slotRim', { tint: '#ffffff' }); UI.frame(ctx, x - 4, y - 4, SLOT + 8, SLOT + 8, 'focus', { tint: '#ffffff' }); ctx.globalAlpha = 1;
   }
-  if (pot) UI.text(ctx, st.potions, x + 40, y + 28, 'small', UC.text, 'right');
+  if (pk) UI.text(ctx, st.count, x + 40, y + 28, 'small', st.count ? UC.text : UC.dim, 'right');
   // key tag sits above the slot's top-left corner, outside the icon art
   const label = st.glyph || SLOT_LABEL[slot];
   if (label) {
@@ -318,12 +325,17 @@ function drawSkillSlot(ctx, p, slot, x, y) {
 }
 function skillTooltip(ctx, p, h) {
   const st = skillSlotState(p, h.slot); let c;
-  if (h.slot === 'pot') c = { title: 'Health Potion', titleCol: UC.hpHi, lines: [`Heal 40% of max HP. ${p.potions}/${potionMax(p)} charges, refilled at checkpoints.`] };
-  else if (h.slot === 'lmb') { const w = weaponOf(p); c = { title: w.basic.name, lines: [p.equip.weapon ? `Basic attack of the ${w.name}. Builds MP on hit.` : 'Bare hands: a weak shove. Find a weapon.'] }; }
-  else if (!st.id) return;
+  if (st.pocket) { const P = POCKETS[st.pocket]; c = { title: P.name, titleCol: P.color, lines: [P.desc, `${st.count}/${st.max} charges, refilled at checkpoints.`] }; }
+  else if (isPocketSlot(h.slot)) return;
+  else if (h.slot === 'lmb') {
+    const w = weaponOf(p), hold = { channel: 'Hold: Channel, a beam at 115% of the bolt.', focus: 'Stand still 0.6 s: the next shot crits (Focus).' }[w.hold];
+    c = { title: w.basic.name, lines: [p.equip.weapon ? `The ${w.name}'s combo. Builds MP and ultimate charge.` : 'Bare hands: a weak shove. Find a weapon.'].concat(hold ? [hold] : []) };
+  }
+  else if (!st.id) { if (h.slot === 'rmb' || h.slot === 'e' || h.slot === 'eu') c = { title: 'Offhand', lines: [isTwoHanded(p.equip.weapon) ? 'Two-handed: only a worn companion fits.' : 'Empty. Equip a shield, a companion or a one-handed weapon.'] }; else return; }
   else {
-    const s = SKILLS[st.id];
-    c = { title: s.name, titleCol: h.slot === 'r' ? UC.gold : UC.text, lines: [{ s: `${s.element}   ${s.mp ? s.mp + ' MP   ' : ''}${s.st ? s.st + ' ST   ' : ''}CD ${s.cd}s   Rank ${st.rank}`, col: UC.dim }, '', s.desc] };
+    const s = SKILLS[st.id], off = h.slot === 'rmb';
+    const cost = off ? `${s.st || 0} ST   no MP, no charge` : st.ult ? 'Ultimate: the shared charge' : `${s.mp ? s.mp + ' MP   ' : ''}${s.st ? s.st + ' ST   ' : ''}CD ${s.cd}s`;
+    c = { title: s.name, titleCol: st.ult ? UC.gold : UC.text, lines: [{ s: `${s.element}   ${cost}   Rank ${st.rank}`, col: UC.dim }, '', s.desc].concat(st.deck ? [`Page ${st.deck.i + 1}/${st.deck.n}: the offhand action turns it.`] : []) };
   }
   UI.tooltip(ctx, Math.min(h.x, DW - 296), 300, c, { w: 288 });
 }
@@ -594,10 +606,10 @@ function drawHelp(ctx) {
   ctx.fillStyle = UC.edge; ctx.globalAlpha = 0.6; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
   const rows = G.touch ? [
     ['Left thumb', 'Joystick: move'], ['Big button (hold)', 'Weapon basic attack'], ['Tap a skill', 'Cast at the nearest enemy'], ['Drag a skill', 'Aim, release to cast'],
-    ['Hold a skill', 'Open the bag'], ['Potion', 'Drink a potion (40% HP)'], ['Bag / ? / full', 'Top-left buttons'],
+    ['Hold a skill', 'Open the bag'], ['Small button', 'Offhand action'], ['Gold buttons', 'Ultimates (one shared charge)'], ['Toggle', 'Pockets: potion, flask, bomb'], ['Bag / ? / full', 'Top-left buttons'],
   ] : [
-    ['move', 'Move'], ['aim', 'Aim'], ['attack', 'Attack (builds MP)'], ['skillQ', 'Weapon skills Q E R (R = ultimate)'], ['skillF', 'Chest skill (C = helmet)'],
-    ['dodge', 'Dodge (boots skill)'], ['s1', 'Character skills 1 2 3'], ['potion', 'Potion'], ['interact', 'Interact / talk'], ['inventory', 'Bag, character, bestiary, quests'], ['pause', 'Pause and settings'],
+    ['move', 'Move'], ['aim', 'Aim'], ['attack', 'Hand action (builds MP and charge)'], ['skillQ', 'Hand spell (Shift+Q = ultimate)'], ['offhand', 'Offhand action (stamina)'],
+    ['skillE', 'Offhand spell (Shift+E = ultimate)'], ['skillR', 'Head skill (F = chest)'], ['dodge', 'Dodge (boots skill)'], ['s1', 'Pockets Z X C'], ['interact', 'Interact / talk'], ['inventory', 'Bag, character, bestiary, quests'], ['pause', 'Pause and settings'],
   ];
   // the panel grows with the row count (R3 #1): heading, rows, one dim line, then the buttons, all inside the 540 px canvas
   const ROW = 26, top = 62, x = 180, w = 600;
@@ -640,7 +652,7 @@ function drawPlayHud(ctx, p, inert) {
   drawInteractPrompt(ctx);
   const near = G.map.portals.find(pt => pt.open && dist(p.x, p.y, pt.x, pt.y) < 3.2);
   if (near && G.state === 'play') { const [a, b] = zoneLevel(near.to); UI.text(ctx, `Rift to ${(G.world.maps[near.to] || {}).name || near.to} (Lv ${a}-${b}): step in`, 480, 372, 'small', UC.dim, 'center'); }
-  if (!touch) hudHelpButton(ctx, 928, 480, inert);
+  if (!touch) hudHelpButton(ctx, 928, 436, inert);   // above the pockets group (the 12-slot bar reaches x 950)
   UI.drawToasts(ctx);
   drawBanner(ctx, p);
 }
@@ -659,6 +671,7 @@ function drawHUD(ctx) {
   }
   const modal = u.help || u.pause || u.map || G.state === 'dead';
   if (TOUCH_AIM) updateTouchAim();   // drops a stale drag when a menu opens or the hero dies
+  if (p && G.state === 'play') drawHushTint(ctx, p);
   drawPlayHud(ctx, p, modal);
   if (G.touch && G.state === 'play' && !modal) drawTouchControls(ctx);
   if (u.map && typeof drawFullMap === 'function') drawFullMap(ctx);   // full-map screen (screens.js)
@@ -691,24 +704,30 @@ function touchBtn(ctx, x, y, r, col, o = {}) {
 }
 // a skill slot button; returns nothing. `b` from touchButtons()/touchInner(), `a` = alpha for the page swap
 function touchSkillBtn(ctx, p, b, held, aiming, a = 1) {
-  const st = skillSlotState(p, b.slot), ult = b.slot === 'r', now = touchNow();
-  const cd = st.id ? (ult ? 0 : st.cd) : 0;
-  if (TB.wasCd[b.slot] > 0 && cd === 0 && st.id) TB.flash[b.slot] = now;
+  const st = skillSlotState(p, b.slot), ult = !!st.ult, pk = !!st.pocket, uf = ult ? st.charge || 0 : 1, now = touchNow();
+  const cd = st.id || pk ? (ult ? 0 : st.cd || 0) : 0;
+  if (TB.wasCd[b.slot] > 0 && cd === 0 && (st.id || pk)) TB.flash[b.slot] = now;
   TB.wasCd[b.slot] = cd;
   const fl = Math.max(0, 1 - (now - (TB.flash[b.slot] || -9)) / 0.25);
-  const short = !!(st.mpShort || st.stShort), rim = !st.id ? UC.bevel : short ? UC.mp : ult ? UC.gold : elColor(st.element);
-  let icon = st.id ? skillIcon(st.id) : (b.slot === 'shift' ? miscIcon('dust') : null);
-  const lock = st.unavailable ? 0.5 : 1;
-  touchBtn(ctx, b.x, b.y, b.r, rim, { icon, gray: short, cdFrac: ult ? (ultFrac(p) < 1 ? 1 - ultFrac(p) : 0) : st.cdFrac, held, lift: aiming ? 4 : 0, flash: fl, alpha: a * lock });
-  if (st.id && a > 0.5) {
-    const y = b.y - (aiming ? 4 : 0);
-    if (ult && ultFrac(p) < 1) UI.text(ctx, Math.floor(ultFrac(p) * 100) + '', b.x, y - 7, 'small', UC.text, 'center');
+  const short = !!(st.mpShort || st.stShort), has = !!(st.id || pk);
+  const rim = !has ? UC.bevel : short ? UC.mp : ult ? UC.gold : pk ? (POCKETS[st.pocket] && POCKETS[st.pocket].color) || UC.hp : st.active ? '#bcd0ff' : elColor(st.element);
+  const icon = slotIcon(p, st), lock = st.unavailable && !pk ? 0.5 : 1;
+  touchBtn(ctx, b.x, b.y, b.r, rim, { icon, gray: short || (pk && !st.count), cdFrac: ult ? 0 : pk ? Math.min(1, cd) : st.cdFrac, held, lift: aiming ? 4 : 0, flash: fl, alpha: a * lock });
+  const y = b.y - (aiming ? 4 : 0);
+  if (ult && has) {   // the ultimate's charge ring (the one shared charge)
+    UI.ring(ctx, b.x, y, b.r - 2, 1, UC.edge, 3); UI.ring(ctx, b.x, y, b.r - 2, uf, UC.gold, 3);
+    if (uf >= 1) { ctx.save(); ctx.globalAlpha = (0.35 + 0.35 * Math.sin(now * 8)) * a; UI.ring(ctx, b.x, y, b.r + 1, 1, UC.gold, 3); ctx.restore(); }
+  }
+  if (has && a > 0.5) {
+    if (pk) UI.text(ctx, st.count, b.x, y + 6, 'small', st.count ? UC.text : UC.dim, 'center');
+    else if (ult && uf < 1) UI.text(ctx, Math.floor(uf * 100) + '', b.x, y - 7, 'small', UC.text, 'center');
     else if (cd > 0) UI.text(ctx, cd >= 1 ? Math.ceil(cd) + '' : cd.toFixed(1), b.x, y - 7, 'small', UC.text, 'center');
+    if (st.deck && st.deck.n > 1) for (let k = 0; k < st.deck.n; k++) { ctx.fillStyle = k === st.deck.i ? UC.bright : UC.bevel; ctx.fillRect(UI.snap(b.x - st.deck.n * 3 + k * 6), y + b.r - 10, 4, 2); }
   }
 }
 function drawTouchToggle(ctx, p, b, u) {
   const hidden = TOUCH.page ? TOUCH_PAGES[0] : TOUCH_PAGES[1];
-  const ready = hidden.some(sl => { const st = skillSlotState(p, sl); return st.id && st.ready && !st.mpShort && !st.stShort && !st.unavailable; });
+  const ready = hidden.some(sl => { const st = skillSlotState(p, sl); return st.pocket ? st.count > 0 && p.hp < p.maxHp * 0.5 && st.pocket === 'potion' : st.id && st.ready && !st.mpShort && !st.stShort && !st.unavailable; });
   touchBtn(ctx, b.x, b.y, b.r, UC.line, {});
   ctx.save(); ctx.translate(b.x, b.y); ctx.rotate((TOUCH.page + u - 1) * Math.PI);   // "◐" turns half a turn per swap
   ctx.fillStyle = UC.bright; ctx.beginPath(); ctx.arc(0, 0, b.r - 8, Math.PI / 2, Math.PI * 1.5); ctx.fill();
@@ -736,17 +755,7 @@ function drawTouchControls(ctx) {
   for (const b of touchButtons()) {
     const held = heldSlots.has(b.slot), aiming = aimSlot === b.slot;
     if (b.slot === 'toggle') { toggle = b; continue; }
-    if (b.slot !== 'interact' && b.slot !== 'atk' && !(chipAlpha(p, b.slot === 'pot' ? 'pot' : b.slot) > 0)) continue;   // §28: hidden until its noun
-    if (b.slot === 'pot') {
-      const st = skillSlotState(p, 'pot'), n = p.potions || 0;
-      touchBtn(ctx, b.x, b.y, b.r, UC.hp, { icon: miscIcon('potion'), gray: !n, cdFrac: st.cd > 0 ? st.cd / 1 : 0, held });
-      for (let i = 0; i < potionMax(p); i++) {   // one pip per potion on the rim
-        const a = (270 + (i - (potionMax(p) - 1) / 2) * 24) * TDEG, px = b.x + Math.cos(a) * (b.r - 3), py = b.y + Math.sin(a) * (b.r - 3);
-        ctx.fillStyle = '#0b0716'; ctx.beginPath(); ctx.arc(px, py, 4, 0, 7); ctx.fill();
-        ctx.fillStyle = i < n ? UC.hpHi : UC.bevel; ctx.beginPath(); ctx.arc(px, py, 2.5, 0, 7); ctx.fill();
-      }
-      continue;
-    }
+    if (b.slot !== 'interact' && b.slot !== 'atk' && !(chipAlpha(p, b.slot) > 0)) continue;   // §28: hidden until its noun
     if (b.slot === 'interact') { touchBtn(ctx, b.x, b.y, b.r, UC.gold, { held, label: G.prompt ? G.prompt.text.split(' ')[0].toUpperCase() : 'USE' }); continue; }
     if (b.slot === 'atk') {
       touchBtn(ctx, b.x, b.y, b.r, UC.line, { held, icon: uiItemIcon(p.equip.weapon), iconSize: 48 });
@@ -765,9 +774,9 @@ function drawTouchControls(ctx) {
     TOUCH_PAGES[TOUCH.page].forEach(id => { const b = touchInner(id, -dir * (1 - ease) * 35); touchSkillBtn(ctx, p, b, heldSlots.has(id), aimSlot === id, ease); });
   }
   if (toggle) drawTouchToggle(ctx, p, toggle, u);
-  // two-hander charge ring inside the rim of the held skill button: white -> gold over 1 s (hook: p.holdCharge)
-  const cf = touchChargeFrac(p), hb = activeAimPtr();
-  if (cf > 0 && hb) UI.ring(ctx, hb.b.x, hb.b.y - (TOUCH_AIM ? 4 : 0), hb.b.r - 7, cf, mixHex('#ffffff', UC.gold, cf), 3);
+  // hold-M1 charge ring inside the attack button's rim: white -> gold (Channel / Focus; hook: p.holdCharge, game.js holdAttack)
+  const cf = touchChargeFrac(p), hb = Object.values(TOUCH.ptrs).find(t => t.kind === 'btn' && t.b.slot === 'atk');
+  if (cf > 0 && hb) UI.ring(ctx, hb.b.x, hb.b.y, hb.b.r - 7, cf, mixHex('#ffffff', UC.gold, cf), 3);
   drawTouchCancel(ctx);
   // bag / help / fullscreen
   for (const m of touchMenu()) {

@@ -47,11 +47,16 @@
 // Engine (step 2): makeItem / rollTrinket / makeTrinketUnique / originRing, temperItem / imbueItem (Elder Stone, no UI yet),
 // trinkets 15 % of drops once Act I's placements are done (trinketDropsOn), chest markers `loot: ring|amulet|belt`.
 // ---------------------------------------------------------------------------
-const SLOTS = ['weapon', 'head', 'chest', 'boots'];                 // gear slots (they grant skills; recalc + gems read these)
+const SLOTS = ['weapon', 'head', 'chest', 'boots'];                 // the four first-kit gear slots (sprites, the bare opening, gear ilvl)
+const GEAR_SLOTS = SLOTS.concat('offhand');                           // every gear item.slot with BASES (offhand = shields + companions)
 const TRINKET_SLOTS = ['ring1', 'ring2', 'amulet', 'belt'];          // §19.4 equip keys (passive only; stats land in step 2)
-const EQUIP_SLOTS = SLOTS.concat(TRINKET_SLOTS);                      // every player.equip key (save v4)
+// every player.equip key (save v5). 'weapon' IS the HAND slot (glossary code id); 'offhand' = the OFFHAND slot (loadout v3)
+const EQUIP_SLOTS = ['weapon', 'offhand', 'head', 'chest', 'boots'].concat(TRINKET_SLOTS);
 const TRINKET_KINDS = ['ring', 'amulet', 'belt'];                     // item.slot of a trinket
-const equipKeysFor = slot => slot === 'ring' ? ['ring1', 'ring2'] : [slot];
+// the equip keys an item.slot may go to: a ring either ring slot; a weapon HAND or (1H only, equipItem checks) OFFHAND
+const equipKeysFor = slot => slot === 'ring' ? ['ring1', 'ring2'] : slot === 'weapon' ? ['weapon', 'offhand'] : [slot];
+// the keys a keyless equip / pickup tries: a weapon always goes to HAND (OFFHAND is an explicit pick in the bag)
+const autoKeysFor = slot => slot === 'weapon' ? ['weapon'] : equipKeysFor(slot);
 const MAX_LEVEL = 40;
 // affixes = the §19.1 count (Common 0 · Uncommon 1 · Rare 1P+1S · Epic 3 · Legendary 2P+2S · Mythic 3P+2S); AFFIX_COUNT splits it
 const RARITY = {
@@ -86,14 +91,44 @@ const FAMILY_TIERS = {
   knightgreaves: ['ironboots:Iron Boots', 'knightgreaves', 'sungreaves:Sunforged Greaves', 'auroragreaves:Aurora Greaves', 'dawnstriders:Dawnstriders'],
   clothsandals: ['ropesandals:Rope Sandals', 'clothsandals', 'mistwalkers:Mistwalkers', 'skystep:Skystep Sandals', 'cloudsteps:Eternal Cloudsteps'],
   stalkershoes: ['softshoes:Soft Shoes', 'stalkershoes', 'quietstep:Quietstep Boots', 'shadowstep:Shadowstep Boots', 'eclipsetreads:Eclipse Treads'],
+  // loadout v3 (M4a). Daggers T5 and the offhand tier names are placeholders until the M4b naming pass.
+  daggers: ['shiv:Shiv', 'nightfang', 'twineclipse:Twin Eclipse', 'widowskiss:Widow\'s Kiss', 'fangseternal:Fangs Eternal'],
+  buckler: ['woodbuckler:Wooden Buckler', 'ironbuckler:Iron Buckler', 'sunbuckler:Sunforged Buckler', 'aurorabuckler:Aurora Buckler', 'bucklereternal:Buckler Eternal'],
+  grimoire: ['worngrimoire:Worn Grimoire', 'dreamgrimoire:Dream Grimoire', 'stargrimoire:Starbound Grimoire', 'nebulacodex:Nebula Codex', 'codexeternal:Codex Eternal'],
+  quiver: ['leatherquiver:Leather Quiver', 'moonquiver:Moon Quiver', 'silverquiver:Silver Quiver', 'eclipsequiver:Eclipse Quiver', 'quivereternal:Quiver Eternal'],
 };
 const BASES = {};
-for (const slot of SLOTS) for (const fam of ITEMS[slot]) FAMILY_TIERS[fam.id].forEach((s, tier) => {
+for (const slot of GEAR_SLOTS) for (const fam of ITEMS[slot]) FAMILY_TIERS[fam.id].forEach((s, tier) => {
   const [id, name] = s.includes(':') ? s.split(':') : [s, fam.name];
   // family === variant (kept: older readers use b.family); suit = the §24 suit an armour piece counts toward
-  BASES[id] = { id, name, slot, family: fam.id, variant: fam.id, class: fam.class, suit: fam.suit || null, tier, reqLvl: TIER_REQ[tier], icon: fam.icon, color: fam.color, kind: fam.kind };
+  BASES[id] = { id, name, slot, family: fam.id, variant: fam.id, class: fam.class, suit: fam.suit || null, tier, reqLvl: TIER_REQ[tier], icon: fam.icon, color: fam.color, kind: fam.kind,
+    hands: fam.hands != null ? fam.hands : null, role: fam.role || null, deck: fam.deck || null };
 });
 const familyOf = base => (baseOf(base) || {}).family;
+// ===== HAND / OFFHAND rules (loadout.md slot matrix) =========================================================================
+// the data row (WEAPONS variant / OFFHANDS line) of an item instance, or null
+const lineOf = it => { const b = it && baseOf(it.base); return b && GEAR_SLOTS.includes(b.slot) ? item(b.slot, b.family) || null : null; };
+const handsOf = it => { const l = lineOf(it); return l ? l.hands || 0 : 0; };       // 1 | 2 (weapons, shields), 0 = worn companion
+const isTwoHanded = it => handsOf(it) === 2;
+const isCompanion = it => { const l = lineOf(it); return !!(l && l.role === 'companion'); };
+const isShield = it => { const l = lineOf(it); return !!(l && l.role === 'shield'); };
+// '' when `it` may sit in OFFHAND beside `hand` (null = empty HAND), else the reason
+function offhandFits(it, hand) {
+  if (!it) return '';
+  const b = baseOf(it.base); if (!b) return 'Nothing to equip';
+  if (b.slot === 'weapon' && handsOf(it) !== 1) return 'Two-handers go in the hand';
+  if (b.slot !== 'weapon' && b.slot !== 'offhand') return 'That does not go in the offhand';
+  if (hand && isTwoHanded(hand) && !isCompanion(it)) return 'A two-hander takes only a worn companion';
+  return '';
+}
+// deck capacity of a companion (pages / arrows by tier, PAGE_CAP)
+const pageCap = it => isCompanion(it) ? PAGE_CAP[it.rarity === 'mythic' ? 5 : clamp(it.tier | 0, 0, 4)] : 0;
+function fitPages(it) {   // normalise a companion's `pages` array to its capacity (keeps socketed entries that fit its deck)
+  if (!isCompanion(it)) { if (it && it.pages) delete it.pages; return it; }
+  const deck = lineOf(it).deck, cap = pageCap(it), cur = Array.isArray(it.pages) ? it.pages : [];
+  it.pages = Array.from({ length: cap }, (_, i) => (cur[i] && pageFits(cur[i], deck) ? cur[i] : null));
+  return it;
+}
 // trinket bases live in itemdata.js (loaded after this file): resolved lazily, never put in BASES (the gear-only tables)
 let TRK_BASES = null;
 function trinketBases() {
@@ -157,7 +192,7 @@ function fmtStat(k, v, sign = true) {
 }
 // Named legendaries (§4.5): first-kill boss drops that change a skill's RULE. Rules are hooks for M4
 // (check `hasUnique(p, id)` at the skill); M1 ships the table + drop path. `boss` = map:enemy that guarantees it.
-const ECHO_DROP_LVL = 17;   // §30 "drops late (Act III+)": Grotto, the Act III band, starts at L17 (§11)
+const ECHO_DROP_LVL = 17, HUSH_DROP_LVL = 13;   // §30 "drops late (Act III+)": Grotto, the Act III band, starts at L17 (§11)
 const UNIQUES = {
   rootcrown: { name: 'Root-Crown', base: 'mossmantle', boss: 'pinewood:bramblehorn', desc: 'Snare and Frost Nova root bosses for 1s.' },
   lanternplate: { name: 'Warden\'s Lantern Plate', base: 'sunplate', boss: 'ruins:boss', desc: 'Bulwark reflects projectiles.' },
@@ -167,7 +202,10 @@ const UNIQUES = {
   // §30 the 19th unique (client decision; the §19.5 cap is 19 from here on): rule 'echo' (game.js ECHO). Not a boss's named drop
   // (boss ''): it is the Act III+ reward (lateUniqueDrop). anyWeapon: it rolls on the finder's own weapon variant at the drop's tier
   // (base = the fallback when there is no hero), so it works with every weapon class.
-  echo: { name: 'Twice-Told', base: 'nebulasceptre', boss: '', anyWeapon: true, late: ECHO_DROP_LVL, desc: 'A spirit of you repeats your attacks a breath later (basic, Q, E; never R), retyped to your strongest element.' },
+  echo: { name: 'Twice-Told', base: 'nebulasceptre', boss: '', anyWeapon: true, late: ECHO_DROP_LVL, desc: 'A spirit of you repeats your hand action and Q spell a breath later (never ultimates, pages or the offhand), retyped to your strongest element.' },
+  // the 20th unique (docs/design/combat-feel.md "Hush"): rolled on the finder's own weapon variant; its rule replaces that item's
+  // spell with Hush (Q in HAND, E in OFFHAND). Drops once, on a boss-class kill at level 13+, never on the same kill as Twice-Told.
+  stillhour: { name: 'The Stopped Hour', base: 'cometrod', boss: '', anyWeapon: true, late: HUSH_DROP_LVL, desc: 'Its spell becomes Hush: the world slows to a quarter while you do not.' },
 };
 const hasUnique = (p, id) => EQUIP_SLOTS.some(s => p.equip[s] && p.equip[s].unique === id);
 const hasRule = (p, id) => EQUIP_SLOTS.some(s => p.equip[s] && p.equip[s].rule === id);
@@ -344,6 +382,7 @@ function makeItem(base, rarity = 'common', ilvl, o = {}) {
   it.name = nameParts(it, o.mythicName);
   const ns = o.sockets != null ? o.sockets : rollSockets(b.slot, rarity, ilvl);
   for (let i = 0; i < ns; i++) it.sockets.push(null);
+  if (b.deck) { fitPages(it); if (o.pages !== false) { const first = Object.keys(PAGES).filter(id => pageFits(id, b.deck)); it.pages[0] = Array.isArray(o.pages) ? o.pages[0] || null : pick2(first); if (Array.isArray(o.pages)) o.pages.slice(0, it.pages.length).forEach((g, i) => { it.pages[i] = pageFits(g, b.deck) ? g : null; }); } }   // a new deck comes with one entry socketed
   return it;
 }
 // ===== trinkets (§19.4): rollTrinket (drops), makeTrinketUnique (vaults / chests), originRing (the free starter ring) =====
@@ -481,9 +520,10 @@ const trinketDropsOn = (p = G.player) => !!((G.prog && G.prog.secrets && G.prog.
 function rollItem(lvl, rarity, slot) {
   const p = G.player;
   if (TRINKET_KINDS.includes(slot) || (!slot && trinketDropsOn(p) && Math.random() < TRINKET_DROP)) return rollTrinket(lvl, rarity, slot);
-  slot = slot || pick2(['weapon', 'weapon', 'head', 'chest', 'boots', 'head', 'chest', 'boots']);
-  // 40% of drops stay in the families you already wear
-  const fams = ITEMS[slot].map(f => f.id), fam = p && p.equip && p.equip[slot] && p.gear[slot] && Math.random() < 0.4 ? p.gear[slot] : pick2(fams);   // an empty slot (§28) biases nothing
+  slot = slot || pick2(['weapon', 'weapon', 'head', 'chest', 'boots', 'head', 'chest', 'boots', 'offhand']);
+  // 40% of drops stay in the families you already wear (a `hidden` line, Daggers, never drops)
+  const fams = ITEMS[slot].filter(f => !f.hidden).map(f => f.id), worn = p && p.equip && p.equip[slot] && p.gear && p.gear[slot];
+  const fam = worn && FAMILY_TIERS[worn] && fams.includes(worn) && Math.random() < 0.4 ? worn : pick2(fams);   // an empty slot (§28) biases nothing
   let tier = 0; for (let t = 0; t < 5; t++) if (TIER_REQ[t] <= lvl + 1) tier = t;
   if (tier > 0 && Math.random() < 0.25) tier--;
   if (tier === 4 && !rarityAtLeast(rarity, 'legendary')) tier = 3;   // the Eternal tier is legendary+
@@ -506,6 +546,7 @@ function rollLoot(cls, lvl, unique, pool) {
   } else if (cls === 'chest') {
     itm(rollRarity('chest', lvl)); itm(rollRarity('chest', lvl));
     if (Math.random() < 0.7) out.push({ kind: 'gem', gem: rollGem(lvl) });
+    if (Math.random() < 0.3) out.push({ kind: 'page', page: rollPage(G.player) });   // pages turn up in chests (loadout.md)
     out.push({ kind: 'potion' });
   } else {
     if (Math.random() < 0.24) itm(rollRarity('normal', lvl));
@@ -542,7 +583,7 @@ const isEquipped = (p, it) => EQUIP_SLOTS.some(s => p.equip[s] === it);
 // item level, then ring1). Every keyless path (clickBag, pad / touch) follows this; the inventory's pick mode passes a key.
 const ringScore = it => (it ? RARITY[it.rarity].i * 100 + it.ilvl : -1);
 function equipKey(p, it) {
-  const ks = equipKeysFor(it.slot); if (ks.some(k => p.equip[k] === it)) return ks.find(k => p.equip[k] === it);
+  const ks = autoKeysFor(it.slot); if (equipKeysFor(it.slot).some(k => p.equip[k] === it)) return equipKeysFor(it.slot).find(k => p.equip[k] === it);
   const empty = ks.find(k => !p.equip[k]); if (empty || ks.length === 1) return empty || ks[0];
   return ks.reduce((w, k) => (ringScore(p.equip[k]) < ringScore(p.equip[w]) ? k : w), ks[0]);
 }
@@ -552,9 +593,54 @@ function equipItem(p, inst, key) {
   key = key && equipKeysFor(inst.slot).includes(key) ? key : equipKey(p, inst);
   const i = p.bag.indexOf(inst), old = p.equip[key];
   if (old === inst) return '';
-  p.equip[key] = inst;
-  if (i >= 0) p.bag[i] = old || null; else if (old && !bagAdd(p, old)) { p.equip[key] = old; return 'Bag full'; }
+  // slot matrix (loadout.md): OFFHAND takes a 1H weapon, a shield or a companion; under a two-hander only a worn companion
+  const from = equipKeysFor(inst.slot).find(k => p.equip[k] === inst) || null;   // already worn in the other hand: a move / swap
+  const next = Object.assign({}, p.equip); next[key] = inst;
+  let toBag = old && !from ? old : null;
+  if (from) { if (old && equipKeysFor(old.slot).includes(from) && (from !== 'offhand' || !offhandFits(old, inst))) next[from] = old; else { next[from] = null; toBag = old; } }
+  let bump = null;
+  if (next.offhand && offhandFits(next.offhand, next.weapon)) {
+    if (key === 'offhand') return offhandFits(inst, next.weapon);
+    bump = next.offhand; next.offhand = null;   // a two-hander into HAND moves a shield / 1H offhand back to the bag
+  }
+  const free = p.bag.filter(e => !e).length + (i >= 0 ? 1 : 0);
+  if ((toBag ? 1 : 0) + (bump ? 1 : 0) > free) return 'Bag full';
+  if (i >= 0) p.bag[i] = null;
+  for (const k of EQUIP_SLOTS) p.equip[k] = next[k] || null;
+  if (toBag) { if (i >= 0) p.bag[i] = toBag; else bagAdd(p, toBag); }
+  if (bump) bagAdd(p, bump);
   recalcStats(p, false); return '';
+}
+// unequip an equip key into the bag ('' or the reason)
+function unequipItem(p, key) {
+  const it = p.equip[key]; if (!it) return '';
+  if (!bagAdd(p, it)) return 'Bag full';
+  p.equip[key] = null; recalcStats(p, false); return '';
+}
+// ===== pages (the Pages store p.pages = { id: count }, socketed into a companion's `pages`) ===================================
+const pagesOwned = (p, id) => (p.pages && p.pages[id]) || 0;
+const pageName = id => (SKILLS[id] ? SKILLS[id].name : id) + (PAGES[id] && PAGES[id].deck === 'arrow' ? ' Arrow' : ' Page');
+// a drop: an entry the hero owns none of first (socketed ones count), arrows when a Quiver is worn
+function rollPage(p) {
+  const off = p && p.equip && p.equip.offhand, deck = isCompanion(off) ? lineOf(off).deck : null, ids = Object.keys(PAGES);
+  const has = id => pagesOwned(p, id) > 0 || EQUIP_SLOTS.some(k => p && p.equip[k] && Array.isArray(p.equip[k].pages) && p.equip[k].pages.includes(id));
+  let pool = ids.filter(id => (!deck || pageFits(id, deck)) && !has(id)); if (!pool.length) pool = ids.filter(id => !deck || pageFits(id, deck));
+  return pick2(pool);
+}
+function pageAdd(p, id, n = 1) { if (!PAGES[id]) return false; (p.pages || (p.pages = {}))[id] = pagesOwned(p, id) + n; return true; }
+// socket page `id` (null = take it out) into slot `si` of companion `it`: '' or the reason
+function socketPage(p, it, si, id) {
+  if (!isCompanion(it)) return 'Only a Grimoire or Quiver holds pages';
+  fitPages(it);
+  if (si < 0 || si >= it.pages.length) return 'No such page slot';
+  if (id && !pageFits(id, lineOf(it).deck)) return lineOf(it).deck === 'arrow' ? 'That is not an arrow' : 'That is not a page';
+  if (id && pagesOwned(p, id) <= 0) return 'You have none of those';
+  const old = it.pages[si];
+  if (old) pageAdd(p, old);
+  if (id) { p.pages[id]--; if (p.pages[id] <= 0) delete p.pages[id]; }
+  it.pages[si] = id || null;
+  if (typeof deckClamp === 'function') deckClamp(p);
+  return '';
 }
 // gem from bag stack `bi` into socket `si` of `it` (first empty when si is null); a filled socket swaps
 function socketGem(p, it, si, bi) {
@@ -625,7 +711,7 @@ function imbueItem(it, p = G.player) {
 // bag sort: gear by rarity (best first) then slot then item level, gems last (grouped by type and grade)
 function sortBag(p) {
   const rank = e => e.gem ? 1000 : -RARITY[e.rarity].i * 100 - e.ilvl / 100;
-  const slotI = e => e.gem ? 0 : ['weapon', 'head', 'chest', 'boots', 'ring', 'amulet', 'belt'].indexOf(e.slot);
+  const slotI = e => e.gem ? 0 : ['weapon', 'offhand', 'head', 'chest', 'boots', 'ring', 'amulet', 'belt'].indexOf(e.slot);
   const list = p.bag.filter(Boolean).sort((a, b) => rank(a) - rank(b) || slotI(a) - slotI(b) || (a.gem ? String(a.gem).localeCompare(b.gem) : 0));
   p.bag = list.concat(new Array(BAG_SIZE - list.length).fill(null));
 }
@@ -670,6 +756,7 @@ function lootAction(a) {
     else if (UNIQUES[a.item]) list.push({ kind: 'item', it: makeUnique(a.item, L) });
     else if (trinketBases()[a.item] && trinketBases()[a.item].unique) list.push({ kind: 'item', it: makeTrinketUnique(a.item, L) });   // vault / world uniques (§19.5)
     else if (gearBase) { /* the fixed piece above */ }
+    else if (PAGES[a.item] || a.item === 'skill_rune') list.push({ kind: 'page', page: PAGES[a.item] ? a.item : rollPage(p) });   // the old skill rune is a page now
     else { (p.runes = p.runes || []).push(a.item); if (typeof UI !== 'undefined') UI.toast({ text: a.item.replace(/_/g, ' '), col: '#b48aff' }); }
   }
   const has = v => v != null && v !== '', x = has(a.x) ? +a.x : p.x + 1, y = has(a.y) ? +a.y : p.y + 1;
@@ -733,8 +820,8 @@ const MAX_DROPS = 40;
 function spawnDrop(x, y, d) {
   const m = G.map; let tx = x, ty = y;
   for (let k = 0; k < 10; k++) { const a = Math.random() * 6.28, r = 0.5 + Math.random() * 0.9, nx = x + Math.cos(a) * r, ny = y + Math.sin(a) * r; if (walkable(m, nx, ny, tileH(m, x, y))) { tx = nx; ty = ny; break; } }
-  const rar = d.kind === 'item' ? d.it.rarity : d.kind === 'gem' ? 'rare' : 'uncommon';
-  const name = d.kind === 'item' ? itemName(d.it) : d.kind === 'gem' ? gemName(d.gem) : 'Health Potion';
+  const rar = d.kind === 'item' ? d.it.rarity : d.kind === 'gem' || d.kind === 'page' ? 'rare' : 'uncommon';
+  const name = d.kind === 'item' ? itemName(d.it) : d.kind === 'gem' ? gemName(d.gem) : d.kind === 'page' ? pageName(d.page) : 'Health Potion';
   G.drops.push(Object.assign({ sx: x, sy: y, x: tx, y: ty, z: tileH(m, tx, ty), t: 0, rar, name }, d));
   if (RARITY[rar].i >= 1) sfx('drop' + RARITY[rar].i);   // pitch-stepped chime per rarity
   if (G.drops.length > MAX_DROPS) { let i = G.drops.findIndex(q => q.rar === 'common' && !q.keep); if (i < 0) i = G.drops.findIndex(q => !q.keep); if (i >= 0) G.drops.splice(i, 1); }
@@ -744,18 +831,19 @@ function onEnemyKilled(e) {
   if (e.dummy || !G.player) return;
   const p = G.player, c = enemyClassOf(e);
   gainXp(p, killXp(e));
-  let uq = null;
+  let uq = null, pageDrop = false;
   const w = p.equip.weapon; if (w && w.hist) { w.hist.kills++; if (c === 'boss') w.hist.bossKills++; }   // §19.3: equipped weapon only
   if (c === 'boss') {
     const k = G.map.id + ':' + e.type, d = ENEMY[e.type] || {}, B = typeof BOSSES !== 'undefined' ? BOSSES[d.boss || e.type] : null;
     if (!G.prog.firsts[k]) {
       uq = uniqueFor(k) || (B && B.unique && UNIQUES[B.unique] ? B.unique : null) || Object.keys(UNIQUES).find(u => (UNIQUES[u].boss || '').split(':')[1] === e.type) || null;
-      if (B && B.rune) { (p.runes = p.runes || []).push('skill_rune'); if (typeof UI !== 'undefined') UI.toast({ text: 'Skill Rune', col: '#b48aff' }); }   // Mossjaw: guaranteed rune
+      if (B && B.rune) pageDrop = true;   // Mossjaw: the old guaranteed Skill Rune is a page now (loadout v3: no rune alternates)
     }
     G.prog.firsts[k] = true;
   }
   const loot = rollLoot(c, e.lvl, uq, (ENEMY[e.type] || {}).loot), late = lateUniqueDrop(e, c);
   if (late) loot.unshift({ kind: 'item', it: makeUnique(late, e.lvl) });
+  if (pageDrop || (c === 'boss' && Math.random() < 0.5)) loot.push({ kind: 'page', page: rollPage(p) });   // pages drop from bosses (and Mossjaw always)
   dropLoot(e.x, e.y, loot);
   if (c === 'boss') delay(1.5, saveGame);
 }
@@ -773,7 +861,7 @@ function lateUniqueDrop(e, c) {
 // (gearAction never places it again).
 function wearOnPickup(p, d) {
   if (!d.equip || d.kind !== 'item') return false;
-  const it = d.it, key = equipKeysFor(it.slot).find(k => !p.equip[k]);
+  const it = d.it, key = autoKeysFor(it.slot).find(k => !p.equip[k]);
   if (!key || it.req > p.level) return false;
   p.equip[key] = it; recalcStats(p, false);
   if (typeof hudNoun === 'function') hudNoun(key);
@@ -784,6 +872,8 @@ function wearOnPickup(p, d) {
 function pickup(p, d) {
   if (d.kind === 'potion') {
     if (p.potions < maxPotions(p)) { p.potions++; text(p.x, p.y, p.z + 3, '+1 Potion', '#ff8aa8'); } else healPlayer(p, p.maxHp * 0.15);
+  } else if (d.kind === 'page') {
+    pageAdd(p, d.page); text(p.x, p.y, p.z + 3, pageName(d.page), '#d6b0ff');
   } else if (d.kind === 'gem') {
     if (!bagAdd(p, { gem: d.gem })) return false; text(p.x, p.y, p.z + 3, gemName(d.gem), gemParse(d.gem).def.col);
     if (d.teach === 'socket' && openingActive()) delay(0.7, () => teachSocket(p, d.gem));
@@ -797,7 +887,8 @@ function pickup(p, d) {
   }
   sfx(RARITY[d.rar].i >= 3 ? 'loot' : 'pickup');
   if (typeof UI !== 'undefined' && d.kind !== 'potion') {   // loot toast on the right edge (docs/design/hud-ui.md)
-    if (d.kind === 'gem') UI.toast({ text: gemName(d.gem), icon: gemIcon(gemParse(d.gem).type), col: gemParse(d.gem).def.col });
+    if (d.kind === 'page') UI.toast({ text: pageName(d.page), icon: skillIcon(d.page), col: '#d6b0ff' });
+    else if (d.kind === 'gem') UI.toast({ text: gemName(d.gem), icon: gemIcon(gemParse(d.gem).type), col: gemParse(d.gem).def.col });
     else UI.toast({ text: itemName(d.it), icon: itemIcon(d.it), rarity: d.it.rarity, item: d.it });
   } else if (typeof UI !== 'undefined') UI.toast({ text: '+1 Potion', icon: miscIcon('potion'), col: '#ff8fa8' });
   burst(d.x, d.y, d.z + 0.3, 8 + RARITY[d.rar].i * 4, [rarityCol(d.rar), '#ffffff'], 2);
@@ -875,8 +966,8 @@ const maxPotions = p => p.maxPotions || MAX_POTIONS;   // MAX_POTIONS + belt pot
 function setCheckpoint(x, y, label) {
   const p = G.player;
   G.checkpoint = { map: G.map.id, x, y };
-  p.potions = maxPotions(p);
-  say(`${label || 'Checkpoint'} — potions refilled`); sfx('heal'); fx({ type: 'ring', x, y, r: 1.4, col: '#9ef0ff', life: 0.5 }); saveGame();
+  refillPockets(p);
+  say(`${label || 'Checkpoint'} — pockets refilled`); sfx('heal'); fx({ type: 'ring', x, y, r: 1.4, col: '#9ef0ff', life: 0.5 }); saveGame();
 }
 const INTERACT_R = 2.5, LOOT_NEAR = [];
 function updateLoot(dt) {
@@ -950,15 +1041,39 @@ function teachSocket(p, gem) {
   openInv('inv'); G.ui.gem = i; G.ui.sel = { gem, gemIdx: i }; G.ui.teach = { gem, t: G.t };
 }
 
-// ===== potions =========================================================================================
+// ===== pockets (Z / X / C) and potions ===================================================================
+// p.pockets = [id | null] x 3 (POCKETS ids, data.js); p.potions is the potion count, p.pocketN[id] the others' counts.
+// Pockets work without a belt in M4a (the Belt / Satchel split lands with the UI lane).
+const pocketMax = (p, id) => id === 'potion' ? maxPotions(p) : (POCKETS[id] && POCKETS[id].max) || 0;
+const pocketCount = (p, id) => id === 'potion' ? p.potions : ((p.pocketN || {})[id] || 0);
+function refillPockets(p) { p.potions = maxPotions(p); p.pocketN = p.pocketN || {}; for (const id in POCKETS) if (id !== 'potion') p.pocketN[id] = pocketMax(p, id); }
+function usePocket(p, i) {
+  const id = p.pockets && p.pockets[i]; if (!id || p.dead || G.state !== 'play') return false;
+  if (id === 'potion') return drinkPotion(p);
+  if ((p.potT || 0) > G.t) return false;
+  if (pocketCount(p, id) <= 0) { say(`No ${POCKETS[id].name}s left — they refill at checkpoints`); return false; }
+  if (id === 'flask') {
+    if (p.mp >= p.maxMp) { say('Mana is already full'); return false; }
+    p.mp = Math.min(p.maxMp, p.mp + p.maxMp * 0.5); burst(p.x, p.y, p.z + 1, 14, ['#7fb0ff', '#ffffff'], 2); sfx('heal');
+  } else if (id === 'bomb') {
+    const [tx, ty] = targetIn(p, G.mouse.wx, G.mouse.wy, 6);
+    fx({ type: 'marker', x: tx, y: ty, r: 1.6, col: '#ff8a4a', life: 0.45 });
+    const c = { skill: null, el: 'fire', slot: 'pocket', ctx: newCtx('fire'), noCharge: true };
+    delay(0.45, () => withCast(c, () => { hitArea(tx, ty, 1.6, 90, { burn: 3, knock: 0.6 }); fx({ type: 'ring', x: tx, y: ty, r: 1.8, col: '#ffb070', life: 0.4 }); burst(tx, ty, 0, 26, ['#ffd27a', '#ff8a4a', '#fff'], 4); shake(4); sfx('boom'); }));
+    sfx('swing');
+  } else return false;
+  p.pocketN[id]--; p.potT = G.t + 0.5;
+  return true;
+}
 function drinkPotion(p) {
   if (p.dead || G.state !== 'play') return;
   if ((p.potT || 0) > G.t) return;
-  if (p.potions <= 0) { say('No potions — they refill at checkpoints'); return; }
-  if (p.hp >= p.maxHp) { say('Already at full health'); return; }
+  if (p.potions <= 0) { say('No potions — they refill at checkpoints'); return false; }
+  if (p.hp >= p.maxHp) { say('Already at full health'); return false; }
   p.potions--; p.potT = G.t + 1; healPlayer(p, p.maxHp * 0.4);
   burst(p.x, p.y, p.z + 1, 16, ['#ff8aa8', '#ffffff', '#ffd6ec'], 2); sfx('heal');
   if (typeof emitEffects === 'function') emitEffects('potion', { p });   // belt boons (cleanse, regen, MP)
+  return true;
 }
 
 // ===== save / load: 3 slots ===================================================================================
@@ -982,23 +1097,23 @@ function writeSlotIndex() { try { localStorage.setItem('dreamy.slots', JSON.stri
 function selectSlot(n) { G.saveSlot = clamp(n | 0, 1, SAVE_SLOTS); G.save = SAVE_ON ? readSave() : null; try { localStorage.setItem('dreamy.slot', String(G.saveSlot)); } catch (e) { /* ignore */ } return G.save; }
 // showcase / play-test / ?map= runs never touch the real save
 const SAVE_ON = (() => { try { const q = new URLSearchParams(location.search); return !q.get('scene') && !q.get('playtest') && !q.get('map'); } catch (e) { return false; } })();
-// Save shape v4 (docs/design/progression-economy-saves.md, docs/design/items.md): { version, slot, player, skills, world, bosses, bestiary, fishing, quests, zone100,
-// settings, bindings, stats }. player.equip has every EQUIP_SLOTS key (null = empty), items are the v2 shape (top of file),
-// skills.wsk is keyed by weapon variant, skills.runes holds rune tokens ('skill_rune' = unbound) and bound runes as
-// 'variant:slot' (e.g. 'sword:q' = the Sword's Q rune alternate, §23). The ultimate charge is not saved.
-// migrate() upgrades older saves losslessly.
+// Save shape v5 (docs/design/progression-economy-saves.md, loadout v3): { version, slot, player, skills, world, bosses, bestiary, fishing,
+// quests, zone100, settings, bindings, stats }. player.equip has every EQUIP_SLOTS key (weapon = HAND, offhand = OFFHAND; null = empty),
+// items are the v2 shape (top of file; a companion also carries `pages`), player.pockets = 3 POCKETS ids, player.pocketN = the
+// non-potion counts, player.pages = the Pages store { id: count }. skills.byId = mastery ranks by use; skills.runes = loot tokens
+// (socket_rune). Not saved: the ultimate charge, Hush, statuses. migrate() upgrades older saves (v4 -> v5 drops the learned skills).
 function saveData() {
   const p = G.player, seenOut = {};
   for (const k in G.seen) seenOut[k] = Object.assign({ seen: true, reactions: {} }, G.seen[k]);
   const byId = {};
-  for (const id in p.ranks) byId[id] = { rank: skillRank(p, id), xp: p.ranks[id].hits, mods: [(p.mods[id] || {})[3] || null, (p.mods[id] || {})[5] || null] };
-  for (const id in p.mods) if (!byId[id]) byId[id] = { rank: skillRank(p, id), xp: 0, mods: [p.mods[id][3] || null, p.mods[id][5] || null] };
+  for (const id in p.ranks) byId[id] = { rank: skillRank(p, id), xp: p.ranks[id].hits };
   const bosses = {};
   for (const k in G.prog.firsts) { const type = k.split(':')[1]; bosses[k] = { kills: (G.seen[type] && G.seen[type].kills) || 1, firstKill: true }; }
   return {
     version: SAVE_VERSION, t: Date.now(), slot: G.saveSlot || 1,
-    player: { level: p.level, xp: Math.floor(p.xp), equip: p.equip, bag: p.bag, dust: p.dust, potions: p.potions, tool: p.tool || null, uid: UID },
-    skills: { byId, runes: p.runes || [], tomes: p.tomes || [], wsk: p.wsk, csk: p.csk },
+    player: { level: p.level, xp: Math.floor(p.xp), equip: p.equip, bag: p.bag, dust: p.dust, potions: p.potions, tool: p.tool || null, uid: UID,
+      pockets: (p.pockets || POCKET_DEFAULT).slice(0, 3), pocketN: Object.assign({}, p.pocketN || {}), pages: Object.assign({}, p.pages || {}) },
+    skills: { byId, runes: p.runes || [] },
     world: { map: G.map.id, checkpoint: G.checkpoint, trig: G.prog.trig, chests: G.prog.chests, secrets: G.prog.secrets || {}, gates: G.prog.gates || {},
       fog: fogSaveData(), sections: G.prog.sections || {}, shrines: G.prog.shrines || {}, once: G.prog.once || {}, obj: G.prog.obj || {} },
     bosses, bestiary: seenOut, fishing: G.prog.fishing || {}, quests: G.prog.quests || {}, zone100: G.prog.zone100 || {},
@@ -1015,7 +1130,7 @@ function readSave(slot = G.saveSlot || 1) {
   try { const s = migrate(JSON.parse(localStorage.getItem(saveKey(slot)))); return s && s.player && s.player.equip ? s : null; } catch (e) { return null; }
 }
 // the ONE place old saves are upgraded; add a step per schema change (bestiary, quests, secrets, mastery...)
-const SAVE_VERSION = 4;
+const SAVE_VERSION = 5;
 // v3 -> v4 item: v2 fields filled from the base (implicit) and the item level (old affix tiers); prefixes first
 function migrateItem(it) {
   if (!it || typeof it !== 'object' || it.gem || !BASES[it.base]) return it;   // gem stacks; unknown bases stay (applySave drops them)
@@ -1062,6 +1177,30 @@ function migrate(s) {
     if (Array.isArray(K.runes)) K.runes = K.runes.map(renameRune);
     s.version = 4;
   }
+  if (s.version === 4) {                                      // v5 (loadout v3 "Lead / Support"): HAND / OFFHAND, pockets, pages
+    const P = s.player = s.player || {}, K = s.skills = s.skills || {}, eq = P.equip && typeof P.equip === 'object' ? P.equip : {};
+    // the old weapon is the HAND item (equip.weapon keeps its key); OFFHAND starts empty; armour, rings, amulet, belt unchanged
+    P.equip = {}; for (const k of EQUIP_SLOTS) P.equip[k] = k === 'offhand' ? null : eq[k] || null;
+    // learned skills are gone: character skills, Dream Tomes, rune alternates, modifier slots. Each Skill Rune (bound or not)
+    // becomes one page (a bound rune keeps its alternate when that cast is a page now); socket runes stay loot tokens.
+    const pages = {}, runes = Array.isArray(K.runes) ? K.runes : [], RUNE_ALT = { 'staff:q': 'frostshard', 'staff:e': 'gravity', 'staff:r': 'starstorm', 'sword:r': 'dawnwave', 'bow:q': 'piercing', 'bow:e': 'snare', 'bow:r': 'moonbeam' };
+    const order = Object.keys(PAGES);
+    for (const r of runes) if (r === 'skill_rune' || /^[a-z]+:(q|e|r|f|c|shift)$/.test(r)) { const id = RUNE_ALT[r] || order.find(x => !pages[x]) || order[0]; pages[id] = (pages[id] || 0) + 1; }
+    P.pages = pages; P.pockets = POCKET_DEFAULT.slice(); P.pocketN = {};
+    K.runes = runes.filter(r => r !== 'skill_rune' && !/^[a-z]+:(q|e|r|f|c|shift)$/.test(r));
+    const byId = {}; for (const id in K.byId || {}) { const r = K.byId[id] || {}; byId[id] = { rank: r.rank, xp: r.xp }; }
+    s.skills = { byId, runes: K.runes };
+    s.bindings = null;   // keys moved (Shift is no dodge, R is the head): every device back to the v3 defaults
+    // the bare opening's HUD pieces were renamed: r (ultimate) -> qu, c (helm) -> r, shift -> v, e -> rmb + e, skills / pot -> pockets
+    const W = s.world || {}, S = W.secrets;
+    if (S && typeof S === 'object') {
+      const had = k => !!S['hud:' + k], MAP = { r: ['qu', 'eu'], c: ['r'], shift: ['v'], e: ['rmb', 'e'], pot: ['pockets'], skills: [] };
+      const add = [];
+      for (const k in MAP) if (had(k)) { add.push(...MAP[k]); delete S['hud:' + k]; }
+      for (const k of add) S['hud:' + k] = 1;
+    }
+    s.version = 5;
+  }
   return s.version === SAVE_VERSION ? s : null;
 }
 // ===== fog of war in the save: world.fog[mapId] = 'WxH:' + base64 of the explored-tile bitfield (1 bit per tile,
@@ -1095,25 +1234,23 @@ function applySave(p, s) {
   const pot = P.potions != null ? +P.potions : null;   // clamped to the belt-aware max after recalcStats below
   for (const slot of EQUIP_SLOTS) {
     const it = (P.equip || {})[slot];
-    if (validItem(it) && equipKeysFor(baseOf(it.base).slot).includes(slot)) { it.sockets = it.sockets.map(g => gemParse(g) ? g : null); p.equip[slot] = compatItem(it); }
+    if (validItem(it) && equipKeysFor(baseOf(it.base).slot).includes(slot) && (slot !== 'offhand' || !offhandFits(it, p.equip.weapon))) { it.sockets = it.sockets.map(g => gemParse(g) ? g : null); p.equip[slot] = fitPages(compatItem(it)); }
     // §28 null gear slots: an empty saved slot stays empty (a bare hero mid-opening); a gear slot holding an item this build
     // cannot read gets the slot's first-kit Common (the old starter-kit fallback), so an existing save never loses a slot
     else p.equip[slot] = it && SLOTS.includes(slot) ? firstKitPiece(slot) : null;
   }
   p.bag = Array(BAG_SIZE).fill(null);
-  (P.bag || []).slice(0, BAG_SIZE).forEach((e, i) => { if (validItem(e)) p.bag[i] = compatItem(e); else if (e && gemParse(e.gem) && e.n > 0) p.bag[i] = { gem: e.gem, n: e.n | 0 }; });
+  (P.bag || []).slice(0, BAG_SIZE).forEach((e, i) => { if (validItem(e)) p.bag[i] = fitPages(compatItem(e)); else if (e && gemParse(e.gem) && e.n > 0) p.bag[i] = { gem: e.gem, n: e.n | 0 }; });
   p.tool = P.tool || null;
-  if (K.wsk) for (const f in p.wsk) for (const k of ['q', 'e', 'r']) if (K.wsk[f] && SKILLS[K.wsk[f][k]] && item('weapon', f)[k].includes(K.wsk[f][k])) p.wsk[f][k] = K.wsk[f][k];   // keyed by variant (v4)
-  if (Array.isArray(K.csk)) p.csk = K.csk.filter(id => CHAR_SKILLS.includes(id)).slice(0, 3);
-  p.ranks = {}; p.mods = {};
+  p.pockets = [0, 1, 2].map(i => (Array.isArray(P.pockets) && (P.pockets[i] === null || POCKETS[P.pockets[i]]) ? P.pockets[i] : POCKET_DEFAULT[i]));
+  p.pocketN = {}; for (const id in POCKETS) if (id !== 'potion') p.pocketN[id] = clamp(+((P.pocketN || {})[id]) || 0, 0, POCKETS[id].max || 0);
+  p.pages = {}; for (const id in P.pages || {}) if (PAGES[id] && +P.pages[id] > 0) p.pages[id] = +P.pages[id] | 0;
+  p.ranks = {};
   for (const id in K.byId || {}) {
     if (!SKILLS[id]) continue;
     const r = K.byId[id] || {}; p.ranks[id] = { hits: Math.max(0, Math.min(RANK_HITS * (RANK_MAX - 1), +r.xp | 0)) };
-    const m = Array.isArray(r.mods) ? r.mods : [];
-    if (m[0] && SKILL_MODS[m[0]]) (p.mods[id] = p.mods[id] || {})[3] = m[0];
-    if (m[1] && SKILL_MODS[m[1]]) (p.mods[id] = p.mods[id] || {})[5] = m[1];
   }
-  p.runes = Array.isArray(K.runes) ? K.runes : []; p.tomes = Array.isArray(K.tomes) ? K.tomes : [];
+  p.runes = Array.isArray(K.runes) ? K.runes.filter(r => typeof r === 'string') : [];
   const firsts = {}; for (const k in s.bosses || {}) if (s.bosses[k] && s.bosses[k].firstKill) firsts[k] = true;
   G.prog = { chests: W.chests || {}, firsts, trig: W.trig || {}, secrets: W.secrets || {}, gates: W.gates || {},
     fishing: s.fishing || {}, quests: s.quests || {}, zone100: s.zone100 || {},
@@ -1145,6 +1282,7 @@ function applySave(p, s) {
 function starterKit(p) {
   p.equip = {}; for (const k of EQUIP_SLOTS) p.equip[k] = null;
   p.bag = Array(BAG_SIZE).fill(null);
+  p.pockets = POCKET_DEFAULT.slice(); p.pocketN = {}; p.pages = {};
 }
 // the four Commons the Vale hands out (§28 table); FIRST_KIT_GEAR is also the fallback piece for a save whose gear slot holds an
 // item this build cannot read (applySave: an existing save never loses a slot), and the dev kit for a bare hero dropped into a
@@ -1161,6 +1299,9 @@ function showcaseKit(p, wfam = 'sword') {
   p.equip.weapon = makeItem(t2(wfam), 'epic', 16, { sockets: 2 }); p.equip.weapon.sockets[0] = 'ruby_3';
   ['head', 'chest', 'boots'].forEach((s, i) => { p.equip[s] = makeItem(t2(set[i]), i === 1 ? 'epic' : 'rare', 16, { sockets: 1 }); });
   p.equip.chest.sockets[0] = 'diamond_2'; p.equip.head.sockets[0] = 'topaz_2';
+  const off = { sword: 'sunbuckler', staff: 'stargrimoire', bow: 'silverquiver' }[wfam];
+  if (off) { p.equip.offhand = makeItem(off, 'rare', 16, { sockets: 1 }); if (p.equip.offhand.pages) Object.keys(PAGES).filter(id => pageFits(id, BASES[off].deck)).slice(0, p.equip.offhand.pages.length).forEach((id, i) => { p.equip.offhand.pages[i] = id; }); }
+  refillPockets(p);
   recalcStats(p, true);
 }
 function sampleBag(p) {

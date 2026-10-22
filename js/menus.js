@@ -2,8 +2,8 @@
 // ---------------------------------------------------------------------------
 // menus.js — the Tab screens (INVENTORY / CHARACTER / BESTIARY / QUESTS), docs/design/hud-ui.md "Screens".
 // DRAWING + hit/focus registration only. The actions they call live in items.js (clickBag / clickItem / clickSocket,
-// equipItem, salvageItem, combineGems, sortBag) and game.js (chooseSkillMod); selection state lives in G.ui
-// (open, tab, sel, gem, salvage, note, skSel, scr). Every control registers with UI.focus under a stable id
+// equipItem, salvageItem, combineGems, sortBag, socketPage); selection state lives in G.ui
+// (open, tab, sel, gem, salvage, note, skSel, pageSel, scr). Every control registers with UI.focus under a stable id
 // ('tab:inv', 'bag:3', 'eq:weapon', 'sock:1', 'btn:sort', ...), so mouse, touch and gamepad all work.
 // Loaded after hud.js (uses HUD helpers hudFrame / elChip / hudGlyph) and before screens.js.
 // ---------------------------------------------------------------------------
@@ -114,14 +114,14 @@ function drawTabScreen(ctx) {
 }
 
 // ===== INVENTORY ===================================================================================================================
-// Paper doll (docs/design/items.md / docs/design/hud-ui.md): 8 slots, 48 px. Spec coordinates are relative to the panel (20,20); ring1 (24,88), ring2 (176,88),
-// amulet (100,64), belt (100,300). The four gear slots sit between the rings and the belt.
+// Paper doll (docs/design/items.md / docs/design/hud-ui.md): 9 slots, 48 px, relative to the panel (20,20). Loadout v3: HAND (weapon) and
+// OFFHAND side by side under the rings, then head / chest, then boots / belt; the amulet stays on top.
 const EQ_ORIGIN = [PX, PY];
 // R3 #6: amulet / rings keep their docs/design/items.md spots; the weapon / head and chest / boots rows close up to a 8 px gap and the belt
 // sits right under the hero (it was at y 300, a 36 px hole below the boots)
-const EQ_REL = { amulet: [100, 64], ring1: [24, 88], ring2: [176, 88], weapon: [24, 144], head: [176, 144], chest: [24, 200], boots: [176, 200], belt: [100, 256] };
+const EQ_REL = { amulet: [100, 64], ring1: [24, 88], ring2: [176, 88], weapon: [24, 144], offhand: [176, 144], head: [24, 200], chest: [176, 200], boots: [24, 256], belt: [176, 256] };
 const EQ_POS = {}; for (const k in EQ_REL) EQ_POS[k] = [EQ_ORIGIN[0] + EQ_REL[k][0], EQ_ORIGIN[1] + EQ_REL[k][1]];
-const EQ_LABEL = { weapon: 'Weapon', head: 'Helm', chest: 'Chest', boots: 'Boots', ring1: 'Ring', ring2: 'Ring', amulet: 'Amulet', belt: 'Belt' };
+const EQ_LABEL = { weapon: 'Hand', offhand: 'Offhand', head: 'Helm', chest: 'Chest', boots: 'Boots', ring1: 'Ring', ring2: 'Ring', amulet: 'Amulet', belt: 'Belt' };
 const EQ_DOLL = [144, 158];   // doll sprite: centre x, top y
 const RING_KEYS = ['ring1', 'ring2'];
 // R3 #6: full words by default; `short` (phone landscape only) abbreviates. The order pairs long labels with short ones so both
@@ -192,6 +192,7 @@ const ringsFull = p => RING_KEYS.every(k => p.equip[k]);
 // the equipped item `it` would replace if equipped now (null when it goes to an empty slot, is equipped, or has no peer)
 function replacedBy(p, it, chosen) {
   if (!it || it.gem || isEquipped(p, it)) return null;
+  if (it.slot === 'weapon') return p.equip[chosen === 'offhand' ? 'offhand' : 'weapon'] || null;   // a weapon compares against the HAND item
   const ks = equipKeysFor(it.slot);
   if (ks.length === 1) return p.equip[ks[0]] || null;
   if (ks.some(k => !p.equip[k])) return null;
@@ -318,9 +319,9 @@ function doSell(p) {
 // Touch (o.touch): affixes collapse to icon + number-and-unit chips (two a row), skills (with names) get their own row, and the family, synergy and
 // flavour lines are dropped. Over budget, the lowest-priority rows go first (synergy, flavour, skills, family, footer ...).
 const TIP_BLUE = '#8fa8e8', TIP_GREEN = '#6ee36e', TIP_BOON = '#7be0d0', TIP_MAX_LINES = 12;
-const SLOT_WORD = { weapon: 'Weapon', head: 'Helm', chest: 'Chest', boots: 'Boots', ring: 'Ring', amulet: 'Amulet', belt: 'Belt' };
+const SLOT_WORD = { weapon: 'Weapon', offhand: 'Offhand', head: 'Helm', chest: 'Chest', boots: 'Boots', ring: 'Ring', amulet: 'Amulet', belt: 'Belt' };
 const CLASS_WORD = { blades: 'Blades', greatarms: 'Great arms', shots: 'Shots', foci: 'Foci', shadows: 'Shadows', heavy: 'Heavy', caster: 'Caster', medium: 'Medium', shadow: 'Shadow', trinket: 'Trinket' };
-const SKILL_KEY = { chest: 'F', head: 'C', boots: 'SHF' };
+const SKILL_KEY = { chest: 'F', head: 'R', boots: 'V' };
 const AX_NAME = { fireDmg: 'Fire damage', frostDmg: 'Frost damage', natureDmg: 'Nature damage', lightningDmg: 'Lightning damage', arcaneDmg: 'Arcane damage', holyDmg: 'Holy damage',
   statusChance: 'Status chance', markCap: 'Mark cap', chargeSpeed: 'Charge rate', onDodge: 'Heal on dodge', onKill: 'MP on kill', resHoly: 'Holy res' };
 const STAT_COL = { dmg: '#ff9a4a', power: '#ff9a4a', skillDmg: '#ffb86a', crit: '#ffd35a', critDmg: '#ffd35a', haste: '#9ef0ff', cdr: '#9ab8ff', hp: '#ff6a8a', mp: '#4f7df0', def: '#b9c2dc',
@@ -421,7 +422,11 @@ function itemTipRows(p, it, o = {}) {
   // 6 sockets (+ granted skills on touch)
   const skills = [];
   const fm = !isTrinket(it) ? item(it.slot, b.family) : null;
-  if (fm) { if (it.slot === 'weapon') for (const k of ['q', 'e', 'r']) { if (fm[k] && fm[k][0] && SKILLS[fm[k][0]]) skills.push({ id: fm[k][0], key: k.toUpperCase() }); } else if (fm.skill && SKILLS[fm.skill]) skills.push({ id: fm.skill, key: SKILL_KEY[it.slot] }); }
+  if (fm) {   // Loadout v3: a weapon grants its Q spell + Shift+Q ultimate (in OFFHAND: E / Shift+E); an offhand line its M2 / E / Shift+E
+    const keys = it.slot === 'offhand' ? [['action', 'M2'], ['spell', 'E'], ['ult', '▲E']] : it.slot === 'weapon' ? [['spell', 'Q'], ['ult', '▲Q']] : [];
+    for (const [k, key] of keys) if (fm[k] && SKILLS[fm[k]]) skills.push({ id: fm[k], key });
+    if (fm.skill && SKILLS[fm.skill]) skills.push({ id: fm.skill, key: SKILL_KEY[it.slot] });
+  }
   const gemText = it.sockets.filter(Boolean).map(g => { const gs = gemStats(g, it.slot); return Object.entries(gs).map(([k, v]) => fmtStat(k, v)).join(' '); }).join(', ');
   if (it.sockets.length) add('sockets', 2, 30, { sockets: it.sockets, text: gemText, skills: [] });
   // 7 trinket boon, unique rule
@@ -542,16 +547,20 @@ function drawLoadout(ctx, p, x, y, w, emptyKey) {
   UI.text(ctx, fitText(wi ? itemName(wi) : wp.name, w - 16, 'body'), x + 8, yy, 'body', wi ? rarityCol(wi.rarity) : UC.text); yy += 26;
   const skillRow = (key, id, col) => {
     if (!id || !SKILLS[id]) return;
-    ctx.imageSmoothingEnabled = false; ctx.drawImage(uiSkillIcon(id), x + 8, yy, 24, 24);
-    UI.text(ctx, key, x + 40, yy + 5, 'small', col || UC.stHi);
-    UI.text(ctx, fitText(SKILLS[id].name, w - 100), x + 40 + UI.measure('SHF', 'small') + 8, yy + 5, 'small', UC.text);
-    UI.text(ctx, SKILLS[id].element, x + w - 8, yy + 5, 'small', UC.dim, 'right');
-    yy += rowH;
+    ctx.imageSmoothingEnabled = false; ctx.drawImage(uiSkillIcon(id), x + 8, yy, 20, 20);
+    UI.text(ctx, key, x + 36, yy + 3, 'small', col || UC.stHi);
+    UI.text(ctx, fitText(SKILLS[id].name, w - 110), x + 72, yy + 3, 'small', UC.text);
+    UI.text(ctx, SKILLS[id].element, x + w - 8, yy + 3, 'small', UC.dim, 'right');
+    yy += 22;
   };
-  for (const k of ['q', 'e', 'r']) skillRow(k.toUpperCase(), slotSkill(p, k), k === 'r' ? UC.gold : UC.stHi);
-  yy += 4; mnDivider(ctx, x + 8, yy, w - 16, 2); yy += 10;
-  for (const [k, sk] of [['F', 'f'], ['C', 'c'], ['SHF', 'shift']]) skillRow(k, slotSkill(p, sk));
-  yy += 4; mnDivider(ctx, x + 8, yy, w - 16, 2); yy += 10;
+  for (const [k, sl] of [['Q', 'q'], ['▲Q', 'qu']]) skillRow(k, slotSkill(p, sl), sl === 'qu' ? UC.gold : UC.stHi);
+  const oi = p.equip.offhand;
+  UI.text(ctx, fitText(oi ? itemName(oi) : 'No offhand', w - 16, 'small'), x + 8, yy + 2, 'small', oi ? rarityCol(oi.rarity) : UC.dim); yy += 20;
+  for (const [k, sl] of [['M2', 'rmb'], ['E', 'e'], ['▲E', 'eu']]) skillRow(k, slotSkill(p, sl), sl === 'eu' ? UC.gold : UC.stHi);
+  yy += 2; mnDivider(ctx, x + 8, yy, w - 16, 2); yy += 8;
+  for (const [k, sk] of [['R', 'r'], ['F', 'f'], ['V', 'v']]) skillRow(k, slotSkill(p, sk));
+  if (p.grip) { const g = GRIPS.find(q => q.id === p.grip); if (g) { UI.text(ctx, fitText(`Grip: ${g.name}. ${g.hint}`, w - 16, 'small'), x + 8, yy + 2, 'small', UC.gold); yy += 20; } }
+  yy += 2; mnDivider(ctx, x + 8, yy, w - 16, 2); yy += 8;
   const sb = setBonusLine(p);
   if (sb) {
     UI.text(ctx, `Set: ${sb.name} ${sb.n}/3`, x + 8, yy, 'small', sb.n >= 3 ? UC.gold : UC.bright); yy += 18;
@@ -608,49 +617,55 @@ function drawItemPanel(ctx, p, x, y, w, what, hov, gemPick, ringKey, emptyKey) {
 }
 
 // ===== CHARACTER ===================================================================================================================
-function toggleCharSkill(id) {
-  const p = G.player, i = p.csk.indexOf(id);
-  if (i >= 0) p.csk.splice(i, 1); else if (p.csk.length < 3) p.csk.push(id); else p.csk[2] = id;
-}
+// Loadout v3 (docs/design/loadout.md): nothing to pick here, everything comes from items. Left: the HAND, OFFHAND, armour and pocket
+// slots the bar shows. Centre: the selected skill (rank) and, with a companion worn, its page / arrow slots and the owned entries
+// (G.ui.pageSel = the chosen slot; pick an entry to socket it, pick a filled chosen slot again to take its entry out). Right: stats.
 function skillSlotBox(ctx, id, x, y, id2, fn, o = {}) {   // a 44 px skill slot, focusable; returns the region
   const r = mnRegion(x, y, 44, 44, id2, fn, { def: o.def });
   hudFrame(ctx, x, y, 44, 44, 'slot');
-  if (id) ctx.drawImage(skillIcon(id), x + 6, y + 6, 32, 32);
-  hudFrame(ctx, x, y, 44, 44, 'slotRim', { tint: o.rim || (id ? elColor(SKILLS[id].element) : UC.bevel) });
+  const ic = o.icon || (id && SKILLS[id] ? skillIcon(id) : null);
+  if (ic) ctx.drawImage(ic, x + 6, y + 6, 32, 32);
+  hudFrame(ctx, x, y, 44, 44, 'slotRim', { tint: o.rim || (id && SKILLS[id] ? elColor(SKILLS[id].element) : UC.bevel) });
   if (o.sel) UI.frame(ctx, x - 4, y - 4, 52, 52, 'focus', { tint: UC.gold });
   else if (r.on) UI.frame(ctx, x - 4, y - 4, 52, 52, 'focus', { tint: UC.dim });
   return r;
 }
+function clickPageSlot(p, it, si) {
+  const u = G.ui;
+  if (u.pageSel === si && it.pages[si]) { const r = socketPage(p, it, si, null); if (r) invNote(r); else { sfx('pickup'); deckClamp(p); } return; }
+  u.pageSel = si; sfx('pickup');
+}
+function clickPageEntry(p, it, id) {
+  const u = G.ui; fitPages(it);
+  let si = u.pageSel != null && u.pageSel < it.pages.length ? u.pageSel : it.pages.indexOf(null);
+  if (si < 0) { invNote('Every slot is full: choose a slot to replace', UC.dim); return; }
+  const r = socketPage(p, it, si, id); if (r) invNote(r); else { sfx('shield'); deckClamp(p); u.pageSel = null; }
+}
 function drawCharacterTab(ctx, p) {
-  const u = G.ui, w = weaponOf(p); let hoverId = null;
-  mnHead(ctx, `${w.name.toUpperCase()}`, COL1 + 8, 76);
-  if (!p.equip.weapon) UI.text(ctx, 'No weapon: Q E R come with one.', COL1 + 8, 110, 'small', UC.dim);   // §28 bare start
-  else ['q', 'e', 'r'].forEach((slot, i) => {
-    const y = 96 + i * 52;
-    UI.text(ctx, slot.toUpperCase(), COL1 + 8, y + 14, 'body', slot === 'r' ? UC.gold : UC.stHi);
-    w[slot].forEach((id, k) => {
-      const cur = p.wsk[w.id][slot] === id;
-      const r = skillSlotBox(ctx, id, COL1 + 40 + k * 52, y, `sk:${slot}${k}`, () => { p.wsk[w.id][slot] = id; u.skSel = id; }, { sel: cur, rim: slot === 'r' ? UC.gold : null, def: i === 0 && k === 0 });
-      if (r.on) hoverId = id;
+  const u = G.ui; let hoverId = null;
+  const row = (head, name, nameCol, y0, cells) => {   // a section: heading, item name, then up to three 44 px cells with key tags
+    mnHead(ctx, head, COL1 + 8, y0);
+    if (name != null) UI.text(ctx, fitText(name, 200, 'small'), COL1 + 8, y0 + 20, 'small', nameCol || UC.text);
+    const cy = y0 + (name != null ? 38 : 20);
+    cells.forEach((c, i) => {
+      const x = COL1 + 8 + i * 60, r = skillSlotBox(ctx, c.id, x, cy, c.key, () => { if (c.id) u.skSel = c.id; }, { icon: c.icon, rim: c.rim, def: c.def });
+      UI.text(ctx, c.label, x + 22, cy + 46, 'small', c.rim === UC.gold ? UC.gold : UC.dim, 'center');
+      if (c.count != null) UI.text(ctx, c.count, x + 40, cy + 28, 'small', c.count ? UC.text : UC.dim, 'right');
+      if (r.on && c.id) hoverId = c.id;
     });
-    const cur = p.wsk[w.id][slot], rp = skillRankProgress(p, cur);
-    UI.text(ctx, `Rk ${rp.rank}`, COL1 + 148, y + 14, 'small', UC.dim);
-  });
-  mnHead(ctx, 'ARMOUR', COL1 + 8, 258);
-  [['F', 'chest'], ['C', 'head'], ['SHF', 'boots']].forEach(([k, slot], i) => {
-    const id = slotSkill(p, { chest: 'f', head: 'c', boots: 'shift' }[slot]), r = skillSlotBox(ctx, id, COL1 + 8 + i * 52, 278, 'ar:' + slot, () => { if (id) u.skSel = id; });
-    UI.text(ctx, k, COL1 + 30 + i * 52, 326, 'small', UC.dim, 'center');
-    if (r.on) hoverId = id;
-  });
-  mnHead(ctx, 'SKILLS: PICK 3', COL1 + 8, 344);
-  CHAR_SKILLS.forEach((id, i) => {
-    const x = COL1 + 8 + (i % 3) * 52, y = 364 + Math.floor(i / 3) * 56, idx = p.csk.indexOf(id);
-    const r = skillSlotBox(ctx, id, x, y, 'cs:' + id, () => { toggleCharSkill(id); u.skSel = id; }, { sel: idx >= 0, rim: idx >= 0 ? UC.xp : null });
-    if (idx >= 0) UI.text(ctx, String(idx + 1), x + 40, y + 28, 'small', UC.text, 'right');
-    if (r.on) hoverId = id;
-  });
-  // ---- centre: the selected skill + modifier cards ----
-  const sid = hoverId || (u.skSel && SKILLS[u.skSel] ? u.skSel : slotSkill(p, 'q') || slotSkill(p, 'shift') || UNARMED.roll), sk = SKILLS[sid], info = skillInfo(p, sid);
+  };
+  const wi = p.equip.weapon, oi = p.equip.offhand, w = weaponOf(p);
+  row('HAND', wi ? itemName(wi) : 'Bare hands', wi ? rarityCol(wi.rarity) : UC.dim, 76, [
+    { key: 'ch:lmb', label: 'M1', icon: uiItemIcon(wi), rim: UC.line, def: true }, { key: 'ch:q', id: slotSkill(p, 'q'), label: 'Q' }, { key: 'ch:qu', id: slotSkill(p, 'qu'), label: '▲Q', rim: UC.gold }]);
+  row('OFFHAND', oi ? itemName(oi) : isTwoHanded(wi) ? 'Two-handed: a companion only' : 'Empty', oi ? rarityCol(oi.rarity) : UC.dim, 176, [
+    { key: 'ch:rmb', id: slotSkill(p, 'rmb'), label: 'M2' }, { key: 'ch:e', id: slotSkill(p, 'e'), label: 'E' }, { key: 'ch:eu', id: slotSkill(p, 'eu'), label: '▲E', rim: UC.gold }]);
+  row('ARMOUR', null, null, 276, [{ key: 'ch:r', id: slotSkill(p, 'r'), label: 'R' }, { key: 'ch:f', id: slotSkill(p, 'f'), label: 'F' }, { key: 'ch:v', id: slotSkill(p, 'v'), label: 'V' }]);
+  row('POCKETS', null, null, 358, (p.pockets || []).slice(0, 3).map((id, i) => {
+    const P = POCKETS[id]; return { key: 'ch:pk' + i, label: ['Z', 'X', 'C'][i], icon: P ? (id === 'potion' ? miscIcon('potion') : icon(P.icon, P.color)) : null, rim: P ? P.color : UC.bevel, count: P ? pocketCount(p, id) : null };
+  }));
+  if (p.grip) { const g = GRIPS.find(q => q.id === p.grip); if (g) UI.wrap(ctx, `${g.name}: ${g.hint}`, COL1 + 8, 446, 204, 'small', UC.gold); }
+  // ---- centre: the selected skill ----
+  const sid = hoverId || (u.skSel && SKILLS[u.skSel] ? u.skSel : slotSkill(p, 'q') || slotSkill(p, 'v') || UNARMED.roll), sk = SKILLS[sid], info = skillInfo(p, sid);
   hudFrame(ctx, COL2 + 8, 76, 44, 44, 'slot'); ctx.drawImage(skillIcon(sid), COL2 + 14, 82, 32, 32); hudFrame(ctx, COL2 + 8, 76, 44, 44, 'slotRim', { tint: elColor(sk.element) });
   UI.text(ctx, sk.name, COL2 + 64, 78, 'body', UC.gold);
   UI.text(ctx, `${sk.element}   ${sk.mp ? sk.mp + ' MP   ' : ''}${sk.st ? sk.st + ' ST   ' : ''}CD ${sk.cd}s`, COL2 + 64, 102, 'small', UC.dim);
@@ -659,19 +674,30 @@ function drawCharacterTab(ctx, p) {
   UI.text(ctx, `+${Math.round(info.bonus * 100)}% damage`, COL2 + 324, 216, 'small', UC.dim, 'right');
   UI.bar(ctx, COL2 + 12, 242, 300, 8, info.frac, { id: 'rank-bar', col: UC.st, hi: UC.stHi, ghost: false, wipe: false });
   UI.text(ctx, info.max ? 'Rank complete' : `${info.into}/${info.need} casts that hit`, COL2 + 8, 258, 'small', UC.dim);
-  mnHead(ctx, 'MODIFIERS', COL2 + 8, 292);
-  info.slots.forEach((ms, i) => {
-    const x = COL2 + 8 + i * 164, y = 314, cw = 156, ch = 150;
-    UI.frame(ctx, x, y, cw, ch, ms.open ? 'plain' : 'tabInactive');
-    UI.text(ctx, `Rank ${ms.rank}`, x + 12, y + 12, 'small', ms.open ? UC.gold : UC.dim);
-    if (!ms.open) { UI.wrap(ctx, `Locked: reach rank ${ms.rank} (${info.rank}/${ms.rank})`, x + 12, y + 40, cw - 24, 'small', UC.dim); return; }
-    if (!ms.options.length) { UI.wrap(ctx, 'Slot open. No modifiers found yet.', x + 12, y + 40, cw - 24, 'small', UC.dim); return; }
-    ms.options.forEach((m, k) => {
-      const oy = y + 36 + k * 34, chosen = ms.chosen === m.id, r = mnRegion(x + 8, oy, cw - 16, 30, `mod:${ms.rank}:${m.id}`, () => chooseSkillMod(p, sid, ms.rank, chosen ? null : m.id));
-      UI.frame(ctx, x + 8, oy, cw - 16, 30, chosen ? 'gold' : 'plain');
-      UI.text(ctx, fitText(m.name, cw - 36), x + 18, oy + 6, 'small', chosen || r.on ? UC.gold : UC.text);
+  // ---- centre: the companion's deck ----
+  if (isCompanion(oi)) {
+    fitPages(oi);
+    const deck = lineOf(oi).deck, word = deck === 'arrow' ? 'ARROWS' : 'PAGES';
+    if (u.pageSel != null && u.pageSel >= oi.pages.length) u.pageSel = null;
+    mnHead(ctx, `${word} ${oi.pages.filter(Boolean).length}/${oi.pages.length}`, COL2 + 8, 288);
+    oi.pages.forEach((id, si) => {
+      const x = COL2 + 8 + si * 52, r = skillSlotBox(ctx, id, x, 310, 'pg:' + si, () => clickPageSlot(p, oi, si), { sel: u.pageSel === si, rim: id ? null : UC.bevel });
+      if (id && deckActive(p) === id && deckEntries(p).indexOf(id) === (p.deck | 0)) UI.text(ctx, '►', x + 22, 356, 'small', UC.gold, 'center');
+      if (r.on && id) hoverId = id;
     });
-  });
+    const owned = Object.keys(PAGES).filter(id => pageFits(id, deck) && pagesOwned(p, id) > 0);
+    UI.text(ctx, owned.length ? `Owned (pick to socket${u.pageSel != null ? ' in slot ' + (u.pageSel + 1) : ''})` : `No spare ${word.toLowerCase()}: bosses, chests and runes drop them`, COL2 + 8, 376, 'small', UC.dim);
+    owned.slice(0, 12).forEach((id, k) => {
+      const x = COL2 + 8 + (k % 6) * 52, y = 396 + Math.floor(k / 6) * 52, r = skillSlotBox(ctx, id, x, y, 'po:' + id, () => clickPageEntry(p, oi, id));
+      UI.text(ctx, 'x' + pagesOwned(p, id), x + 42, y + 30, 'small', UC.text, 'right');
+      if (r.on) hoverId = id;
+    });
+  } else {
+    const n = Object.values(p.pages || {}).reduce((a, b) => a + b, 0);
+    mnHead(ctx, 'PAGES', COL2 + 8, 288);
+    UI.wrap(ctx, `A Grimoire holds pages, a Quiver arrows: wear one in the offhand to use them. Owned: ${n}.`, COL2 + 8, 312, 316, 'small', UC.dim);
+  }
+  if (u.note && u.note.t > G.t) UI.text(ctx, fitText(u.note.s, 316, 'small'), COL2 + 8, 504, 'small', u.note.col);
   // ---- right: stats ----
   UI.text(ctx, `Lv ${p.level}   ${p.name || ''}`, COL3 + 8, 78, 'body', UC.gold);
   const need = xpToNext(p.level);

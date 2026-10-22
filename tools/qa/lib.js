@@ -146,7 +146,7 @@ function installHooks() {
     o.map = m && m.id; o.W = m && m.W; o.warp = !!G.warp; try { const sc = sectionAt(m, p.x, p.y); o.sec = sc && sc.id; } catch (e) { o.sec = null; }
     let wk = null; try { wk = item('weapon', p.gear.weapon).kind; } catch (e) { /* */ }
     o.p = { x: +p.x.toFixed(2), y: +p.y.toFixed(2), z: p.z, hp: Math.round(p.hp), maxHp: Math.round(p.maxHp), mp: Math.round(p.mp), maxMp: Math.round(p.maxMp), pot: p.potions, lvl: p.level, xp: Math.round(p.xp), dead: p.dead, ult: Math.round(p.ult), dash: !!p.dash, rootT: p.rootT, slowT: p.slowT, invul: p.invulnT > 0, aim: p.aim, wk, wid: p.gear.weapon, st: Math.round(p.st), castT: p.castT, casting: !!p.cast, bag: p.bag.filter(Boolean).length, dust: p.dust };
-    o.sk = {}; for (const s of ['q', 'e', 'r', 'f', 'c', 'shift', '1', '2', '3']) { try { const id = slotSkill(p, s); if (id) o.sk[s] = { id, cd: +((p.cds[id] || 0)).toFixed(2), mp: Math.round((SKILLS[id].mp || 0)), st: SKILLS[id].st || 0 }; } catch (e) { /* */ } }
+    o.sk = {}; for (const s of ['q', 'qu', 'rmb', 'e', 'eu', 'r', 'f', 'v']) { try { const id = slotSkill(p, s); if (id) o.sk[s] = { id, cd: +((p.cds[id] || 0)).toFixed(2), mp: Math.round((SKILLS[id].mp || 0)), st: SKILLS[id].st || 0 }; } catch (e) { /* */ } }
     o.en = G.enemies.filter(e => !e.dead).map(e => ({ type: e.type, x: +e.x.toFixed(2), y: +e.y.toFixed(2), hp: Math.round(e.hp), max: Math.round(e.maxHp), boss: !!e.boss, dummy: !!e.dummy, asleep: !!e.asleep, spawnT: +(e.spawnT || 0).toFixed(2), r: e.r, elite: !!(e.mods && e.mods.length), state: e.state, lvl: e.lvl, stun: e.stunT > 0, still: e.move === 'stationary' }));
     o.boss = G.boss && !G.boss.dead ? { type: G.boss.type, hp: Math.round(G.boss.hp), max: Math.round(G.boss.maxHp), phase: G.boss.phaseN || 0, x: +G.boss.x.toFixed(2), y: +G.boss.y.toFixed(2), lvl: G.boss.lvl, state: G.boss.state } : null;
     o.warn = G.lastWarn ? { boss: G.lastWarn.boss, move: G.lastWarn.move, type: G.lastWarn.type, wind: G.lastWarn.wind, open: G.lastWarn.open, t: G.lastWarn.t } : null;
@@ -365,11 +365,12 @@ class Bot {
     if (d < (ranged ? 8 : 2.2)) await this.drv.attack(true); else await this.drv.attack(false);
     // skills
     if (now() - this.lastSkill > 260 && d < 7.5 && !p.casting) {
-      for (const sl of ['r', 'q', 'e', 'f', 'c', '1', '2', '3']) {
+      // Loadout v3: the two ultimates share one charge; M2 (the off-action) costs stamina, never MP; V is the dodge (never a skill)
+      for (const sl of ['qu', 'eu', 'q', 'e', 'f', 'r', 'rmb']) {
         const k = s.sk[sl]; if (!k || k.cd > 0) continue;
-        if (sl === 'r' && p.ult < 100) continue;
-        if (k.mp > p.mp) continue;
-        if ((sl === '1' || sl === '2' || sl === '3') && !(p.hp / p.maxHp < 0.7 || tg.boss || engage.length >= 3)) continue;
+        if ((sl === 'qu' || sl === 'eu') && p.ult < 100) continue;
+        if (sl === 'rmb' ? (k.st || 0) > p.st || p.st < 40 : k.mp > p.mp) continue;
+        if (sl === 'r' && !(p.hp / p.maxHp < 0.7 || tg.boss || engage.length >= 3)) continue;
         this.lastSkill = now(); await this.drv.skill(sl, tg, s); break;
       }
     }
@@ -496,9 +497,13 @@ class KbmDriver {
   }
   async attack(on) { if (on && !this.mouseDown) { this.mouseDown = true; await this.page.mouse.down(); } else if (!on && this.mouseDown) { this.mouseDown = false; await this.page.mouse.up(); } }
   async aimAt(vx, vy) { if (!this.cv) await this.cvr(); const c = this.cv; await this.page.mouse.move(c.l + vx / c.DW * c.w, c.t + vy / c.DH * c.h); }
-  async skill(sl) { const k = { q: 'KeyQ', e: 'KeyE', r: 'KeyR', f: 'KeyF', c: 'KeyC', 1: 'Digit1', 2: 'Digit2', 3: 'Digit3' }[sl]; await this.tap(k, 60); }
-  async dodge() { await this.tap('ShiftLeft', 60); }
-  async potion() { await this.tap('Digit4', 60); }
+  async skill(sl) {
+    if (sl === 'rmb') { await this.page.mouse.down({ button: 'right' }); await sleep(60); await this.page.mouse.up({ button: 'right' }); return; }
+    if (sl === 'qu' || sl === 'eu') { await this.page.keyboard.down('ShiftLeft'); await this.tap(sl === 'qu' ? 'KeyQ' : 'KeyE', 60); await this.page.keyboard.up('ShiftLeft'); return; }   // the Shift chord
+    await this.tap({ q: 'KeyQ', e: 'KeyE', r: 'KeyR', f: 'KeyF' }[sl], 60);
+  }
+  async dodge() { await this.tap('KeyV', 60); }
+  async potion() { await this.tap('KeyZ', 60); }   // pocket 1 = the potion
   async interact() { await this.tap('Space', 70); }
   async closeMenu(s) { await this.tap('Escape', 70); }
   async closeMap() { await this.tap('KeyM', 70); }
@@ -518,9 +523,9 @@ class PadDriver {
   async move(sx, sy) { this.L = [sx, sy]; await this.axes(); }
   async attack(on) { if (on !== this.atk) { this.atk = on; await this.b(7, on); } }
   async aimAt(vx, vy, x, y, st) { if (!st || !st.p) return; const [ax, ay] = Bot.scr(x - st.p.x, y - st.p.y); this.R = [ax, ay]; await this.axes(); }
-  async skill(sl) { const i = { q: 5, e: 4, r: 11, f: 2, c: 3, 1: 14, 2: 12, 3: 15 }[sl]; await this.tap(i, 70); }
-  async dodge() { await this.tap(6, 70); }
-  async potion() { await this.tap(1, 70); }
+  async skill(sl) { const i = { q: 5, e: 4, qu: 11, eu: 10, rmb: 6, r: 3, f: 2 }[sl]; await this.tap(i, 70); }
+  async dodge() { await this.tap(1, 70); }     // B
+  async potion() { await this.tap(14, 70); }   // D-pad left = pocket 1
   async interact() { await this.tap(0, 70); }
   async closeMenu() { await this.tap(1, 80); }
   async closeMap() { await this.tap(1, 80); }
@@ -555,11 +560,11 @@ class TouchDriver {
   async aimAt() { }
   async page_(n) { const st = await this.page.evaluate(() => window.__qa.snap().tpage); if (st !== n) { await this.tapBtn('toggle'); await sleep(250); } }
   async skill(sl) {
-    if (['1', '2', '3'].includes(sl)) { await this.page_(1); await this.tapBtn(sl); await sleep(120); await this.page_(0); }
-    else { await this.page_(0); await this.tapBtn(sl); }
+    if (['q', 'e', 'rmb'].includes(sl)) await this.page_(0);   // the inner arc's page 0; qu eu r f v sit on the outer arc
+    await this.tapBtn(sl);
   }
-  async dodge() { await this.tapBtn('shift'); }
-  async potion() { await this.tapBtn('pot'); }
+  async dodge() { await this.tapBtn('v'); }
+  async potion() { await this.page_(1); await this.tapBtn('z'); await sleep(120); await this.page_(0); }   // pockets are page 2
   async interact() { await this.tapBtn('interact'); }
   async closeMenu() {
     const fl = await this.page.evaluate(() => window.__qa.focusList());

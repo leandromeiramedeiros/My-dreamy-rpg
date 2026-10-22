@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 'use strict';
-// tools/save-migrate.js -- the save v3 -> v4 ship gate (docs/design/progression-economy-saves.md, docs/design/items.md, docs/design/weapons-and-skills.md, docs/design/armour-suits.md).
+// tools/save-migrate.js -- the save v3 -> v5 and v4 -> v5 ship gate (v5 = Loadout v3 "Lead / Support", docs/design/loadout.md) (docs/design/progression-economy-saves.md, docs/design/items.md, docs/design/weapons-and-skills.md, docs/design/armour-suits.md).
 // The fixtures in tools/fixtures/ are GENUINE v3 saves written by the v3 build (commit 3fcaee0, before the v4 refactor):
 //   save-v3-vale-early.json   New Dream from the title, a few steps in the Vale, saveGame() (L1, starter kit)
 //   save-v3-vale-chest.json   the same, plus the Vale starter chest opened and worn (Hunter's Bow + ruby, Bow E rune alternate)
 //   save-v3-act1-late.json    the end of tools/act1-route.js (all Act I quests/triggers/fog/bosses), the loot of the route
 //                             rolled by the v3 rollers and the best of it equipped and socketed, alternates + ranks (L10)
 // and expect-v3-<name>.json is what the v3 build computed after continueGame() on that save (PROBE below, verbatim).
+// save-v4-<name>.json are GENUINE v4 saves (the same three runs, written by the v4 build at commit 0bebcbf; act1-late also carries
+// a rebound key and a Dream Tome) with expect-v4-<name>.json = the v4 build's probe (level, gear, equip, bag, ranks, key stats).
+// v5 checks on top: OFFHAND empty, learned skills gone (no wsk / csk / tomes / mods), mastery ranks kept, every Skill Rune is
+// one page (socket runes stay tokens), the pockets set, key bindings reset, every slot of the new bar casts.
 // For each fixture: write it to all 3 slots, then per slot: migrate on load, equipment intact under the v4 ids, the v2 item
 // fields present, stats as v4 computes them (below), quests / world / bestiary / progress preserved, every slotted skill casts, then
 // save -> migrate is a no-op -> applySave -> save is identical; finally reload the page and check every slot again.
@@ -38,11 +42,12 @@ const PROBE = () => {
   for (const k of ['level', 'xp', 'maxHp', 'maxMp', 'maxSt', 'power', 'dmgBase', 'wdmg', 'bonus', 'def', 'crit', 'critDmg', 'haste', 'cdr', 'skillDmg', 'regen', 'mpRegen', 'speed', 'dust', 'potions']) r[k] = p[k];
   r.res = Object.assign({}, p.res); r.amp = Object.assign({}, p.amp);
   r.gear = Object.assign({}, p.gear);
-  r.slots = {}; for (const s of ['q', 'e', 'r', 'f', 'c', 'shift', '1', '2', '3']) r.slots[s] = slotSkill(p, s);
+  r.slots = {}; for (const s of ['q', 'qu', 'rmb', 'e', 'eu', 'r', 'f', 'v']) r.slots[s] = slotSkill(p, s);
   r.equip = {}; for (const s of SLOTS) { const it = p.equip[s]; r.equip[s] = it ? { uid: it.id, base: it.base, rarity: it.rarity, ilvl: it.ilvl, reqLvl: it.req, affixes: it.affixes.map(a => a.id + '=' + a.v), sockets: it.sockets.slice(), unique: it.unique || null, stats: statsOf(it) } : null; }
   r.bag = p.bag.map(e => e ? (e.gem ? 'gem:' + e.gem + 'x' + e.n : 'item:' + e.id + ':' + e.base) : null);
-  r.wsk = JSON.parse(JSON.stringify(p.wsk)); r.csk = p.csk.slice(); r.runes = (p.runes || []).slice();
-  r.ranks = JSON.parse(JSON.stringify(p.ranks)); r.mods = JSON.parse(JSON.stringify(p.mods));
+  r.runes = (p.runes || []).slice(); r.pages = Object.assign({}, p.pages || {}); r.pockets = (p.pockets || []).slice(); r.offhand = p.equip.offhand;
+  r.ranks = JSON.parse(JSON.stringify(p.ranks)); r.learned = ['wsk', 'csk', 'mods', 'tomes'].filter(k => k in p);
+  r.bind = typeof IN !== 'undefined' ? IN.bindingsFor('interact', 'kbm') : null;
   r.map = G.map.id; r.checkpoint = G.checkpoint;
   r.prog = { quests: G.prog.quests, chests: Object.keys(G.prog.chests).length, firsts: Object.keys(G.prog.firsts), trig: G.prog.trig, secrets: G.prog.secrets, gates: G.prog.gates, sections: G.prog.sections, shrines: G.prog.shrines, once: G.prog.once, obj: G.prog.obj, fogMaps: Object.keys(G.prog.fog || {}) };
   r.seen = Object.keys(G.seen).length; r.stats = G.stats;
@@ -52,6 +57,20 @@ const RENAME = { dawnblade: 'sword', starfall: 'staff', moonbow: 'bow', knightpl
 const ren = id => RENAME[id] || id;
 const near = (a, b) => Math.abs(a - b) <= 0.01 * Math.max(Math.abs(a), Math.abs(b), 1e-6);
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const handGear = g => { const o = Object.assign({}, g); if (o.offhand != null) return o; delete o.offhand; return o; };   // v5 adds gear.offhand (null: empty)
+const SKILL_RUNE = r => r === 'skill_rune' || /^[a-z]+:(q|e|r|f|c|shift)$/.test(r);
+// v5 skills: the HAND line's Q / Shift+Q, the class off-action of a 1H hand on M2 (none for a 2H), no OFFHAND casts, the armour
+// skills moved keys (F stays, the helm C -> R, the boots Shift -> V); ranks keep their hits; skill runes -> pages
+const HAND = { sword: ['sunslash', 'judgement', 'parry'], staff: ['firebolt', 'meteor', null], bow: ['multishot', 'arrowrain', null] };
+function skillsV5(exp, got, runes0, armour) {
+  const h = HAND[got.gear.weapon] || [];
+  const slots = got.slots.q === h[0] && got.slots.qu === h[1] && got.slots.rmb === h[2] && got.slots.e === null && got.slots.eu === null && (!armour || same([got.slots.f, got.slots.r, got.slots.v], armour));
+  const ranks = Object.keys(exp.ranks || {}).every(id => got.ranks[id] && got.ranks[id].hits === exp.ranks[id].hits);
+  const pageN = Object.values(got.pages || {}).reduce((a, b) => a + b, 0), want = runes0.filter(SKILL_RUNE).length;
+  const runes = same(got.runes, runes0.filter(r => !SKILL_RUNE(r)));
+  return { slots, skills: ranks && runes && pageN === want && got.learned.length === 0 && got.offhand === null && same(got.pockets, ['potion', 'flask', 'bomb']),
+    info: { slots: got.slots, ranks: got.ranks, pages: got.pages, pageN, want, runes: got.runes, learned: got.learned, pockets: got.pockets } };
+}
 // v3 expectation -> what v4 must show (ids renamed, affixes P-first is an order change only: compared as sorted lists)
 function compare(exp, got) {
   const bad = [];
@@ -79,12 +98,24 @@ function compare(exp, got) {
     if (Object.keys(want).sort().join() !== Object.keys(b.stats).sort().join()) ok = false;
     eq[s] = ok;
   }
-  const wskExp = {}; for (const f in exp.wsk) wskExp[ren(f)] = exp.wsk[f];
+  const sk = skillsV5(exp, got, exp.runes || [], [exp.slots.f, exp.slots.c, exp.slots.shift]);
   return {
-    stats, gear: same(gearExp, got.gear), equip: eq, slots: same(exp.slots, got.slots), wsk: same(wskExp, got.wsk), wskKeys: Object.keys(got.wsk).join(),
-    bag: same(exp.bag, got.bag), skills: same([exp.csk, exp.runes, exp.ranks, exp.mods], [got.csk, got.runes, got.ranks, got.mods]),
+    stats, gear: same(gearExp, handGear(got.gear)), equip: eq, slots: sk.slots, skills: sk.skills, skInfo: sk.info,
+    bag: same(exp.bag, got.bag),
     world: same([exp.map, exp.checkpoint], [got.map, got.checkpoint]), prog: same(exp.prog, got.prog), seen: exp.seen === got.seen, playtime: got.stats.playtime >= exp.stats.playtime && got.stats.deaths === exp.stats.deaths,
   };
+}
+// v4 expectation (expect-v4-*.json, the v4 build's probe) -> v5: same items, numbers and progress; skills per skillsV5
+function compare4(exp, got, runes0) {
+  const bad = [];
+  for (const k of ['level', 'xp', 'dust', 'potions']) if (exp[k] !== got[k]) bad.push(`${k}: ${exp[k]} -> ${got[k]}`);
+  for (const k of ['maxHp', 'maxMp', 'power', 'def', 'crit']) if (!near(exp.stats[k], got[k])) bad.push(`${k}: ${exp.stats[k]} -> ${got[k]}`);
+  for (const k of ['maxHp', 'maxMp', 'power', 'dmgBase', 'wdmg', 'bonus', 'def', 'crit', 'critDmg', 'haste', 'cdr', 'skillDmg', 'regen', 'mpRegen', 'speed']) if (got[k] !== got.fresh[k]) bad.push(`fresh ${k}: ${got.fresh[k]} != loaded ${got[k]}`);
+  const eq = {};
+  for (const sl in got.equip) { const a = exp.equip[sl], b = got.equip[sl]; eq[sl] = same(a && [a.id, a.base, a.rarity, a.sockets], b && [b.uid, b.base, b.rarity, b.sockets]); }
+  const sk = skillsV5(exp, got, runes0, null);
+  return { stats: { maxDev: 0, bad }, gear: same(exp.gear, handGear(got.gear)), equip: eq, slots: sk.slots, skills: sk.skills, skInfo: sk.info, bag: same(exp.bag, got.bag),
+    world: exp.map === got.map, prog: Object.keys(got.prog.quests || {}).length === exp.quests && got.prog.chests === exp.chests, seen: exp.seen === got.seen, playtime: true };
 }
 // the v2 item checks (every equipped + bag item); runs in the page
 const V2_CHECK = () => {
@@ -105,14 +136,12 @@ const V2_CHECK = () => {
   }
   return { n: items.length, bad: out, trinkets: TRINKET_SLOTS.map(s => p.equip[s]), tiers: [...new Set(items.flatMap(it => it.affixes.map(a => it.ilvl + ':T' + a.tier)))].join(' ') };
 };
-// cast every slotted skill (and both options of each weapon slot) at a dummy; the engine must accept each cast
+// cast every slotted skill of the v5 bar at a dummy; the engine must accept each cast
 const CASTS = async () => {
   const p = G.player, res = {}, w = ms => new Promise(r => setTimeout(r, ms));
   const prep = () => { G.enemies.length = 0; spawnEnemy('dummy', p.x + 1.5, p.y, 0); p.cds = {}; p.mp = p.maxMp; p.st = p.maxSt; p.ult = 100; p.dash = null; p.cast = null; p.atkT = 0; p.rootT = 0; p.invulnT = 99; p.hp = p.maxHp; p.aim = 0; };
-  const v = item('weapon', p.gear.weapon), keep = Object.assign({}, p.wsk[v.id]);
-  for (const k of ['q', 'e', 'r']) for (const id of v[k]) { p.wsk[v.id][k] = id; prep(); res[k + ':' + id] = useSkill(p, k) === true; await w(700); }
-  Object.assign(p.wsk[v.id], keep);
-  for (const k of ['f', 'c', 'shift', '1', '2', '3']) { const id = slotSkill(p, k); if (!id) continue; prep(); res[k + ':' + id] = useSkill(p, k) === true; await w(700); }
+  const v = item('weapon', p.gear.weapon);
+  for (const k of ['q', 'qu', 'rmb', 'e', 'eu', 'r', 'f', 'v']) { const id = slotSkill(p, k); if (!id) continue; prep(); res[k + ':' + id] = useSkill(p, k) === true; await w(700); }
   prep(); p.atkT = 0; basicAttack(p); res['lmb:' + v.id] = p.atkT > 0;
   await w(1500); G.enemies.length = 0; p.invulnT = 0;
   return res;
@@ -124,7 +153,7 @@ const OPENING = async () => {
   window.talk = a => { talks.push(a.id || (a.lines || [])[0]); return tk(a); };
   G.trig.t += 30; await w(900); window.talk = tk;
   return { opening: (G.prog.secrets || {}).opening || null, days: !!G.trig.fired.days, placed: G.drops.filter(d => d.found).map(d => d.found), talks,
-    hud: ['bars', 'tracker', 'map', 'lmb', 'q', 'e', 'r', 'f', 'c', 'shift', 'skills', 'pot'].every(k => hudShown(k) === 1), gear: SLOTS.map(k => p.equip[k] && p.equip[k].id).join() === before && SLOTS.every(k => p.equip[k]) };
+    hud: HUD_PIECES.every(k => hudShown(k) === 1), gear: SLOTS.map(k => p.equip[k] && p.equip[k].id).join() === before && SLOTS.every(k => p.equip[k]) };
 };
 // save -> read back -> migrate (no-op on v4) -> applySave onto a fresh hero -> save: identical (t stripped); one evaluate, no frame between
 const ROUND = () => {
@@ -144,11 +173,13 @@ const ROUND = () => {
   await new Promise(r => srv.listen(0, '127.0.0.1', r));
   const base = `http://127.0.0.1:${srv.address().port}`;
   const br = await chromium.launch({ headless: true });
-  const fixtures = fs.readdirSync(FIX).filter(f => /^save-v3-.*\.json$/.test(f)).sort();
-  check(`fixtures: at least two genuine v3 saves (${fixtures.join(', ')})`, fixtures.length >= 2);
+  const fixtures = fs.readdirSync(FIX).filter(f => /^save-v[34]-.*\.json$/.test(f)).sort();
+  check(`fixtures: at least two genuine v3 saves and two v4 saves (${fixtures.join(', ')})`, fixtures.filter(f => f.startsWith('save-v3')).length >= 2 && fixtures.filter(f => f.startsWith('save-v4')).length >= 2);
   for (const f of fixtures) {
-    const name = f.replace(/^save-v3-|\.json$/g, ''), raw = fs.readFileSync(path.join(FIX, f), 'utf8'), exp = JSON.parse(fs.readFileSync(path.join(FIX, `expect-v3-${name}.json`), 'utf8'));
-    check(`${name}: fixture is a v3 save`, JSON.parse(raw).version === 3);
+    const ver = +f.slice(6, 7), name = `v${ver} ` + f.replace(/^save-v[34]-|\.json$/g, ''), file = f.replace(/^save-|\.json$/g, '');
+    const raw = fs.readFileSync(path.join(FIX, f), 'utf8'), exp = JSON.parse(fs.readFileSync(path.join(FIX, `expect-${file}.json`), 'utf8')), src = JSON.parse(raw);
+    const runes0 = ((src.skills || {}).runes || []).slice();
+    check(`${name}: fixture is a v${ver} save`, src.version === ver);
     const ctx = await br.newContext({ viewport: { width: 960, height: 540 } }), page = await ctx.newPage();
     const errs = [];
     page.on('pageerror', e => errs.push('pageerror: ' + e.message));
@@ -166,8 +197,9 @@ const ROUND = () => {
     const saved = {};
     for (const n of [1, 2, 3]) {
       const tag = `${name} slot ${n}`;
-      const mig = await ev(n => { const s = selectSlot(n); return s && { v: s.version, eq: Object.keys(s.player.equip).join(), trk: ['ring1', 'ring2', 'amulet', 'belt'].map(k => s.player.equip[k]), wsk: Object.keys(s.skills.wsk || {}).join() }; }, n);
-      check(`${tag}: migrates to v4 (equip gains ring1 ring2 amulet belt, empty; wsk keyed by variant)`, mig && mig.v === 4 && mig.eq === 'weapon,head,chest,boots,ring1,ring2,amulet,belt' && mig.trk.every(x => x === null) && mig.wsk.split(',').every(k => ['sword', 'staff', 'bow'].includes(k)), mig);
+      const mig = await ev(n => { const s = selectSlot(n); return s && { v: s.version, eq: Object.keys(s.player.equip).join(), off: s.player.equip.offhand, trk: ['ring1', 'ring2', 'amulet', 'belt'].map(k => s.player.equip[k]), learned: ['wsk', 'csk', 'tomes'].filter(k => k in s.skills), bindings: s.bindings, pockets: s.player.pockets }; }, n);
+      const trkOk = ver === 3 ? mig && mig.trk.every(x => x === null) : true;
+      check(`${tag}: migrates to v5 (equip gains an empty OFFHAND${ver === 3 ? ', ring1 ring2 amulet belt empty' : ''}; no wsk / csk / tomes; bindings reset; pockets set)`, mig && mig.v === 5 && mig.eq === 'weapon,offhand,head,chest,boots,ring1,ring2,amulet,belt' && mig.off === null && trkOk && mig.learned.length === 0 && mig.bindings === null && same(mig.pockets, ['potion', 'flask', 'bomb']), mig);
       const got = await ev(src => { continueGame(G.save); const r = (new Function('return (' + src + ')()'))();
         // a fresh v4 hero wearing the same items, and the same with every implicit stripped (copies; the live hero is untouched)
         const p = G.player, KS = ['maxHp', 'maxMp', 'power', 'dmgBase', 'wdmg', 'bonus', 'def', 'crit', 'critDmg', 'haste', 'cdr', 'skillDmg', 'regen', 'mpRegen', 'speed'];
@@ -175,15 +207,17 @@ const ROUND = () => {
           const o = {}; for (const k of KS) o[k] = q[k]; o.res = Object.assign({}, q.res); return o; };
         r.fresh = calc(false); r.stripped = calc(true);
         r.implicits = {}; for (const s of SLOTS) { const it = p.equip[s]; if (it && IMPLICITS[it.base]) r.implicits[it.base] = IMPLICITS[it.base]; }
+        // a v3 save's armour skills, as v3 read them (the expect file's slots) map to F / R / V now
         return r; }, PROBE.toString());
-      const c = compare(exp, got);
+      const c = ver === 3 ? compare(exp, got) : compare4(exp, got, runes0);
       check(`${tag}: equipment intact under the v4 ids (gear ${Object.values(got.gear).join('/')})`, c.gear && Object.values(c.equip).every(Boolean) && c.bag, { gear: got.gear, equip: c.equip, bag: c.bag });
-      check(`${tag}: stats = a fresh v4 recalc (implicits on, CAPS); items = v3 + implicit; implicits stripped = v3 within 1 % (max ${(c.stats.maxDev * 100).toFixed(4)} %)`, c.stats.bad.length === 0, c.stats.bad);
-      check(`${tag}: skills (slots, wsk ${c.wskKeys}, csk, runes, ranks, mods) preserved`, c.slots && c.wsk && c.skills, { slots: got.slots, wsk: got.wsk });
+      check(ver === 3 ? `${tag}: stats = a fresh recalc (implicits on, CAPS); items = v3 + implicit; implicits stripped = v3 within 1 % (max ${(c.stats.maxDev * 100).toFixed(4)} %)` : `${tag}: stats = the v4 build's (within 1 %) and a fresh recalc`, c.stats.bad.length === 0, c.stats.bad);
+      check(`${tag}: skills = the v5 bar (Q ${got.slots.q}, ⇧Q ${got.slots.qu}, M2 ${got.slots.rmb}, E / ⇧E empty${ver === 3 ? ', armour F R V kept' : ''}); ranks kept; ${c.skInfo.want} skill rune(s) -> pages; socket runes kept; no learned skills`, c.slots && c.skills, c.skInfo);
+      if (ver === 4) check(`${tag}: key bindings back to the defaults (interact ${(got.bind || []).join()})`, same(got.bind, ['Space']), got.bind);
       check(`${tag}: quests, world and progress preserved (map ${got.map}, ${Object.keys(got.prog.quests || {}).length} quests, ${got.prog.chests} chests, ${got.seen} bestiary)`, c.world && c.prog && c.seen && c.playtime, { world: c.world, prog: c.prog, seen: c.seen, playtime: c.playtime });
       const v2 = await ev(V2_CHECK);
       check(`${tag}: every item has the v2 fields (${v2.n} items; affix tiers ${v2.tiers || 'none'})`, v2.bad.length === 0 && v2.trinkets.every(x => x === null), v2.bad);
-      if (n === 1) { await wait(1200); await page.screenshot({ path: path.join(SHOTS, `${name}-v4.png`) }); }
+      if (n === 1) { await wait(1200); await page.screenshot({ path: path.join(SHOTS, `${file}-v5.png`) }); }
       if (n === 1) {
         const op = await ev(OPENING);
         check(`${tag}: §28 the opening does not replay (no bare-start marker, no "three days" line, no sword / cap placed, whole HUD, all gear kept; map ${got.map})`, !op.opening && !op.days && !op.placed.length && !op.talks.length && op.hud && op.gear, op);
@@ -191,7 +225,7 @@ const ROUND = () => {
       const casts = await ev(CASTS);
       check(`${tag}: every slotted skill + both weapon options cast (${Object.keys(casts).join(' ')})`, Object.values(casts).every(Boolean) && errs.length === 0, { casts, errs: errs.slice(0, 3) });
       const rt = await ev(ROUND);
-      check(`${tag}: save -> migrate (no-op) -> load -> save is identical; no pre-v4 ids or fields on disk`, rt.ok && rt.version === 4 && rt.noop && rt.same && !rt.oldIds && !rt.uidField && !rt.reqLvl && !rt.stat, Object.assign({}, rt, { json: undefined }));
+      check(`${tag}: save -> migrate (no-op) -> load -> save is identical; no pre-v4 ids or fields on disk`, rt.ok && rt.version === 5 && rt.noop && rt.same && !rt.oldIds && !rt.uidField && !rt.reqLvl && !rt.stat, Object.assign({}, rt, { json: undefined }));
       saved[n] = rt.json;
     }
     // reload: the title reads the three v4 saves, each loads back to exactly what was saved
