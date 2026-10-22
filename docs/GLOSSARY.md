@@ -47,7 +47,9 @@ A dash in "Code id" means no code id yet. Retired terms live only in the last se
 | Hitlag | Brief freeze of attacker and target on a hit; scales with `weight` | `hitstop` | Hitstop (setting label is wrong, UI fix later) | live |
 | Hush | Spell from The Stopped Hour: toggle, world time ×0.25, hero full speed, drains MP | `hush` | time slow; bullet time; slow-mo (that is the boss-death effect) | M4a |
 | I-frames | Invulnerable frames during Boots-key dodge | — | — | live |
+| ICD | Internal cooldown: the minimum time between two procs of the same effect (default 0.5 s; parry 1 s; flash-freeze 6 s) | — | — | M4a |
 | Level | Hero or enemy level number | `level` | — | live |
+| Mark cap | Stat: the most Marks that can sit on one enemy (cap 5) | `markCap` | — | live |
 | Mastery | Per-variant skill rank 1 to 5 earned by use | — | — | live |
 | Mastery rank 3 | Second form of the spell | — | — | M4b |
 | Mastery rank 5 | Hybrid twist of the spell | — | — | M4b |
@@ -59,6 +61,7 @@ A dash in "Code id" means no code id yet. Retired terms live only in the last se
 | Passive (class) | Bonus from the HAND item's class only | `passive` | — | live |
 | Perfect dodge | Dodge timed to a hit: bonus effect | — | — | live |
 | Poise | Hyper-armour while swinging: hits taken do not interrupt | — | — | live |
+| Proc coefficient | Per-source scaler on proc chance and damage: basic 1.0, projectile 0.6, summon 0.4, zone tick or reflected 0.3, Echo 0.5 | — | — | M4a |
 | Shrine warp | Fast travel between lit Checkpoint shrines | — | Rift; Warp door | live |
 | Snapshot | Shots' and Chakram's off-action: a quick shot | — | — | M4a |
 | Stagger | Meter that fills on hits; full means Break | `stagger` | — | live |
@@ -166,7 +169,7 @@ Each variant has three skills: **action** (primary, or off-action in OFFHAND), *
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
 | Claws | Spell Rend / ultimate Savage; Frenzy attack speed | `claws` | — | M4b |
-| Daggers | Pierce, Marks; spell and ultimate per DESIGN 17.2 options, not yet chosen | `daggers` | Nightfang (its T2 name) | M4b |
+| Daggers | Pierce, Marks; spell and ultimate per docs/design/weapons-and-skills.md | `daggers` | Nightfang (its T2 name) | M4b |
 | Fans | Spell Veil Dance / ultimate Thousand Petals; returning fans | `fans` | — | M4b |
 
 ### 5.4 Greatarms
@@ -212,6 +215,7 @@ Each variant has three skills: **action** (primary, or off-action in OFFHAND), *
 ## 6. Shields and companions
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
+| Deck | The companion mechanic: a Grimoire, Quiver or Warhorn holds pages, arrows or calls; its action cycles or primes them and its spell fires the active one | — | page deck | M4a |
 | Buckler | Shield. Action Parry+ / spell Bash / ultimate Aegis | — | — | M4a |
 | Grimoire | Mage companion. Action Turn / spell Cast / ultimate Chapter | — | Spellbook (retired hand weapon) | M4a |
 | Heater | Shield. Action Block / spell Shield Bash / ultimate Bulwark Charge | — | — | M4b |
@@ -252,6 +256,7 @@ Each variant has three skills: **action** (primary, or off-action in OFFHAND), *
 | Dreamweave | Caster suit 1 | `dreamweave` | Dreamrobe (legacy id) | live |
 | Duelist | Medium suit 3 | `duelist` | — | M4b |
 | Frostweave | Caster suit 2 | `frostweave` | — | M4b |
+| Full-dream bonus | Three pieces of one suit family plus the matching weapon apply the tag rule to trinket boons | — | set bonus | M4b |
 | Heavy | Armour class: Warden, Crusader, Juggernaut | `heavy` | — | live |
 | Juggernaut | Heavy suit 3 | `juggernaut` | — | M4b |
 | Medium | Armour class: Stalker, Thornwarden, Duelist | `medium` | — | live |
@@ -268,7 +273,7 @@ Each variant has three skills: **action** (primary, or off-action in OFFHAND), *
 | Warden | Heavy armour suit 1 | `warden` | Knightplate (legacy id); Warden alone (ambiguous, write Warden suit) | live |
 | Warden tiers | Iron Mail, Knight Plate, Sunforged Plate, Aurora Plate, Aegis of Dawn; Mythic Shardheart Plate | — | — | M4a |
 
-Mythic armour (one per suit family): Shardheart Plate, Gloomspire Vestment, Forge Deep Cuirass, Nightlong Shroud, Brinemother's Veil, Gravewind, Pinewood Mist, Briarwatch Mantle, Oathless Jacket, Gloamveil, Mossjaw's Skin, Glasswarp Silk. Tier names for the other 11 suits are in DESIGN section 24.
+Mythic armour (one per suit family): Shardheart Plate, Gloomspire Vestment, Forge Deep Cuirass, Nightlong Shroud, Brinemother's Veil, Gravewind, Pinewood Mist, Briarwatch Mantle, Oathless Jacket, Gloamveil, Mossjaw's Skin, Glasswarp Silk. Tier names for the other suits are in docs/design/names.md (the rest are authored in the M4b gear lanes).
 
 ## 9. Item structure
 | Term | Meaning | Code id | Not | Status |
@@ -308,6 +313,7 @@ Mythic armour (one per suit family): Shardheart Plate, Gloomspire Vestment, Forg
 | Gem | Socketable stone: Ruby, Sapphire, Emerald, Topaz, Amethyst, Diamond | `GEMS` | — | live |
 | Gem grade | Chipped, Clear, Radiant | `GEM_GRADES` | — | live |
 | Opal | Wind gem (client-approved) | — | — | M4b |
+| Pearl slot | Extra socket on a legendary, traded from the Elder Stone for a legendary fish | — | — | M4b |
 | Pocket item | Consumable placed in a Pocket (flasks, bombs, traps, oils) | — | — | M4a |
 | Potion | Healing flask held in a Pocket; max 3 | `MAX_POTIONS` | — | live |
 | Radiant | Gem grade 3 | `GEM_GRADES` | — | live |
@@ -346,7 +352,7 @@ Mythic armour (one per suit family): Shardheart Plate, Gloomspire Vestment, Forg
 
 ## 13. Enemies (commons)
 
-Note: count reconciled in the M4a DESIGN rewrite (29 names listed against the stated 28 commons).
+Note: count reconciled in docs/design/enemies-bosses.md (29 names listed against the stated 28 commons).
 
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
@@ -395,7 +401,7 @@ Note: count reconciled in the M4a DESIGN rewrite (29 names listed against the st
 
 ## 14. Bosses
 
-Note: count reconciled in the M4a DESIGN rewrite (12 or 13 bosses; only named bosses listed).
+Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
@@ -403,6 +409,7 @@ Note: count reconciled in the M4a DESIGN rewrite (12 or 13 bosses; only named bo
 | Boss bar | HUD bar with phase pips | — | — | live |
 | Boss move | One entry of `BOSS_MOVES` (cone, circle, line, charge, volley, rain, ring, beam, pull, summon, zone, arenaShrink, blink, mirror, shield, vanish, roar, sequence, random) | `BOSS_MOVES` | — | live |
 | Brinemother | Vault boss, Drowned Vault | `brinemother` | — | later |
+| Cunning form | A boss move variant added per phase: feint, delayed second hit or predicted aim | — | — | M4b |
 | Guardian | Main-boss kind (code `kind`) | `kind` | Boss (any boss); Mini-boss | live |
 | Kharzul the Cinder Colossus | Main boss 4 | `kharzul` | Kharzul | later |
 | Lady Mirelle | Main boss 3 | `mirelle` | Mirelle | later |
@@ -446,6 +453,7 @@ Note: count reconciled in the M4a DESIGN rewrite (12 or 13 bosses; only named bo
 | Drifting Isles | Eighth big map | — | — | later |
 | Drop-down ledge | One-way ledge you step off to a lower level | — | — | live |
 | Drowned Vault | Vault section | — | — | later |
+| Elite pocket | A small elite encounter (2 to 3 per map near the boss) that guarantees a Rare of at least boss ilvl minus 2 on first clear | — | — | M4b |
 | Emberfall Caldera | Zone 5 | — | — | later |
 | Fox Warrens | Pinewood underground section | — | — | live |
 | Gloomspire Ruins | Zone 3; Act II | — | — | M4b |
@@ -504,6 +512,7 @@ Note: count reconciled in the M4a DESIGN rewrite (12 or 13 bosses; only named bo
 | Pause menu | Esc menu | `menu` | — | live |
 | Portrait block | HUD block with hero face, bars | — | — | live |
 | Quest screen | Quest list (J) | `quests` | — | live |
+| Recommended ilvl | Boss-door text "Recommended ilvl N, yours M": information, never a lock | — | — | M4a |
 | Skill bar | HUD bar of 4 groups of 3: [M1 Q Shift+Q] [M2 E Shift+E] [head chest boots] [Z X C] | — | — | M4a |
 | Status row | HUD row of status icons | — | — | live |
 | Title screen | Start screen | — | — | live |
@@ -522,10 +531,12 @@ Note: count reconciled in the M4a DESIGN rewrite (12 or 13 bosses; only named bo
 | ELFX | Effects registry and renderer (rim light, shadows, rays, fog) | `elfx.js` | — | live |
 | Forge | Deterministic sprite generator | `tools/forge/` | — | M4a |
 | Forge bank | Packed sprite data | `js/forge-bank/` | — | M4a |
+| FORGE_FX | Forge table of tier and rarity effects per item line (geometry per tier, palette, rim light and emitters per rarity) | `FORGE_FX` | — | M4a |
 | Lane | One parallel work stream | — | — | live |
 | Milestone | Delivery step: M1 to M8 | — | — | live |
 | `ref` rig | Hero-frame skeleton: 32 px body in a 48 px frame | — | — | M4a |
 | Rim light | Edge highlight on sprites | — | — | M4a |
+| Rim mask | Forge export: an 8-way outward-normal mask per sprite that the runtime tints by the dominant light | — | — | M4a |
 | Save version | Save format: v4 live, v5 with Loadout v3 | `SAVE_VERSION` | — | live |
 | Side-by-side board | Reference vs forge approval board (M4a gate) | — | — | M4a |
 | Slice (vertical) | M4a scope: Vale and Pinewood | — | — | M4a |
