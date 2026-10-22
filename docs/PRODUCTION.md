@@ -54,6 +54,8 @@ Gate: 100 % forge sprites in play; phone p95 ≤ 20 ms on every zone; docs curre
 * Reports to the client: substance only, no commit/PR chatter.
 
 ## Known misses (not blockers)
+* Phone p95 at CPU ×4 on pine-fight ~28 ms (pre-M4a build 25.8 ms): final upscale ~7 ms + HUD ~2.3 ms. Ship gate is p95 ≤ 20 ms at ×1; layer budgets at ×4.
+* Radiant Judgement pillar white-out ~59 % for ≤ 0.5 s (signature ultimate, exempt); single-frame impact flashes allowed.
 * §29 speck and cluster metrics.
 * Bramblehorn fight gap 30 s vs 15–25 s target.
 * ELFX phone cost risk (A7 gate).
