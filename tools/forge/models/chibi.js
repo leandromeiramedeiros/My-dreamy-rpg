@@ -92,6 +92,7 @@ module.exports = {
   light: [-0.55, 0.7, 0.5],
   tones: [0.8, 0.3, -0.3],
   outline: '#0c0714', innerLine: 2.0,
+  ownOutline: { weapon: true, offhand: true },   // held items draw their own outline over the body and other gear (client pick B; companions are offhand)
   pixel: { normalSteps: 0 },   // the cleanup passes only (spurs, orphan tones, clusters >= 2 px by final colour); shading stays smooth
   bones, layers, anims, sheetAnims, springs, CAPE_SEG,
   sockets: {

@@ -204,6 +204,28 @@ const FORGE = (function () {
         (j + w < N && (i = j + w, M[i] >= 0) && ((o = OWN[M[i] >> 8]) & 1) && (o >> 1) !== u && Z[i] > z) ||
         (j >= w && (i = j - w, M[i] >= 0) && ((o = OWN[M[i] >> 8]) & 1) && (o >> 1) !== u && Z[i] > z)) SEAM[j] = 2;
     }
+    // a dark dot (a line pixel with no other line or outer-outline pixel among its 8 neighbours: a corner touch) goes back
+    // to its own colour; collected, then applied
+    const { YOF, CH } = S; let nd = 0;
+    for (let k = 0; k < nc; k++) {
+      const j = CL[k]; if (SEAM[j] !== 2) continue;
+      const x = XOF[j], y = YOF[j];
+      if (!(lineAt(S, x + 1, y) || lineAt(S, x - 1, y) || lineAt(S, x, y + 1) || lineAt(S, x, y - 1) || lineAt(S, x + 1, y + 1) || lineAt(S, x - 1, y + 1) ||
+        lineAt(S, x + 1, y - 1) || lineAt(S, x - 1, y - 1))) CH[nd++] = j;
+    }
+    for (let k = 0; k < nd; k++) SEAM[CH[k]] = 0;
+  }
+  // is (xx, yy) part of a line for passOwn's dot test: an own-outline pixel, or an outer-outline pixel (empty, touched by a
+  // covered pixel, and not a pinhole: passOutline fills one with no other empty pixel around it)
+  function lineAt(S, xx, yy) {
+    const { w, h, M, SEAM } = S;
+    if (xx < 0 || yy < 0 || xx >= w || yy >= h) return false;
+    const n = yy * w + xx; if (M[n] >= 0) return SEAM[n] === 2;
+    if (!((xx + 1 < w && M[n + 1] >= 0) || (xx > 0 && M[n - 1] >= 0) || (yy + 1 < h && M[n + w] >= 0) || (yy > 0 && M[n - w] >= 0))) return false;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const ex = xx + dx, ey = yy + dy; if ((dx || dy) && ex >= 0 && ey >= 0 && ex < w && ey < h && M[ey * w + ex] < 0) return true;
+    }
+    return false;
   }
   // lone material pixel (one stray hand / belt pixel): it joins the commonest neighbouring material
   function passLone(S, nc, need) {
