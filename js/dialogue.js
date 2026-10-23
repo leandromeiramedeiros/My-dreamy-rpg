@@ -2,6 +2,9 @@
 // Narrative data: story dialogue, bestiary lore and side quests. Source of truth: docs/design/story.md.
 // Classic script (no modules). Every line is <= 12 words; boss lines keyed boss_<name>_<beat>.
 
+// speaker -> RASTER id (js/art-raster.js): these speakers get the dialogue panel with a raster portrait (hud.js drawSay)
+const PORTRAIT = { 'Pip': 'pip', 'Elder Stone': 'elderstone', 'Fox kit': 'foxkit' };
+
 // ---------------------------------------------------------------- DIALOGUE
 const DIALOGUE = {
   // Whispering Vale

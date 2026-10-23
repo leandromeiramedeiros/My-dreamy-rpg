@@ -166,8 +166,9 @@ function drawRotateCard(ctx) {
 function drawTitle(ctx) {
   const u = G.ui;
   ctx.fillStyle = '#0b0716'; ctx.globalAlpha = 0.55; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
-  const bob = Math.round(Math.sin(G.t * 1.2) * 2) * 2, logo = titleLogo();
-  if (logo) { ctx.imageSmoothingEnabled = false; ctx.drawImage(logo, 480 - 340, 160 - 40 + bob, 680, 80); } else UI.text(ctx, 'MY DREAMY RPG', 480, 140 + bob, 'heading', UC.gold, 'center');
+  const bob = Math.round(Math.sin(G.t * 1.2) * 2) * 2, logo = titleLogo(), wm = typeof RASTER !== 'undefined' && RASTER.get('wordmark');
+  if (wm) { ctx.imageSmoothingEnabled = false; ctx.drawImage(wm, 480 - wm.width, 108 + bob, wm.width * 2, wm.height * 2); }   // M4b raster wordmark, x2, nearest
+  else if (logo) { ctx.imageSmoothingEnabled = false; ctx.drawImage(logo, 480 - 340, 160 - 40 + bob, 680, 80); } else UI.text(ctx, 'MY DREAMY RPG', 480, 140 + bob, 'heading', UC.gold, 'center');
   UI.text(ctx, 'a high-fantasy dream above the clouds', 480, 216, 'small', UC.dim, 'center');
   if (u.help) { drawHelp(ctx); return; }   // the "?" entry (below): the same overlay as in play, no title controls underneath
   const s = G.save && G.save.player ? { level: G.save.player.level, map: G.save.world && G.save.world.map } : null;
