@@ -20,6 +20,9 @@
 //                      node tools/perf.js . pinewood 20 "quality=phone&perf=1" --scene=pine-forge-fight --cpu=4 --budget
 //                      sceneInfo: status = STATUS.stats() at the end (tintMade / tintDeferred: that frame; *Total: since load),
 //                      tintPerFrame = tints made / deferred per frame over the sample (the cache's warm-up), fenCells = FEN.cells
+//   --scene=stress    the stress arena (js/arenas.js, ?map=stress&god): 24 awake bodies, 40+ light props, 8 status bodies cycling and
+//                      a burning / frozen / wet ring; the Arenas perf gate. The map argument is ignored. e.g.
+//                      node tools/perf.js . stress 20 "quality=phone&perf=1" --scene=stress --cpu=4 --budget     (p95 at x1: <= 20.0 ms gate)
 //   --budget           with ?perf=1: also print `budget` (rim / lights / status / shadows ms per frame vs the phone budgets)
 //                      and `whiteOut` (render.js whiteOut() at the end). Throttled (--cpu >= 2): exit 1 when a layer budget is
 //                      over, p95 is information (`p95Info`). Unthrottled: exit 1 when p95 > 20.0 ms, the layers are information
@@ -28,9 +31,9 @@ const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const FLAGS = {}; const ARGV = process.argv.filter(a => { const m = /^--([\w-]+)(?:=(.*))?$/.exec(a); if (m) FLAGS[m[1]] = m[2] == null ? true : m[2]; return !m; });
 const root = path.resolve(ARGV[2] || path.join(__dirname, '..'));
-const map = ARGV[3] || 'pinewood';
+const map = FLAGS.scene === 'stress' ? 'stress' : ARGV[3] || 'pinewood';
 const secs = +(ARGV[4] || 60);
-const extra = ARGV[5] ? '&' + ARGV[5].replace(/^[?&]/, '') : '';
+const extra = (ARGV[5] ? '&' + ARGV[5].replace(/^[?&]/, '') : '') + (FLAGS.scene === 'stress' ? '&god' : '');
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/png', '.json': 'application/json', '.css': 'text/css' };
 const srv = http.createServer((q, r) => {
   const f = path.join(root, decodeURIComponent(new URL(q.url, 'http://x').pathname));
@@ -62,6 +65,11 @@ const srv = http.createServer((q, r) => {
     window.__pf = { bodies: G.enemies.length, projs: G.projs.length, tiles: window.STATUS ? STATUS.tiles.size : 0 };
   }, FORGE_FIGHT);
   if (FORGE_FIGHT) await page.waitForFunction(() => typeof FEN !== 'undefined' && ['brambleshaman', 'ogre', 'mountaintroll', 'shadehound'].every(r => FEN.last[r]), null, { timeout: 30000 });
+  if (FLAGS.scene === 'stress') {   // the arena spawns and starts its status cycle itself (map_enter + a 1.5 s timer): settle, then check the load is really there
+    await new Promise(r => setTimeout(r, 4000));
+    await page.evaluate(() => { setSetting('groundIndicators', 'off'); G.banner = null; G.msg = null; const lights = G.map.objects.filter(o => o.src && /lantern|crystal|brazier|mushroom/.test(o.src.t)).length;
+      window.__pf = { awake: G.enemies.filter(e => !e.dummy && !e.dead && !e.asleep).length, lights, statusBodies: G.enemies.filter(e => !e.dead && e.status && Object.keys(e.status).length).length, tiles: window.STATUS ? STATUS.tiles.size : 0 }; });
+  }
   if (FLAGS.scene === 'pine-fight' || FORGE_FIGHT) await new Promise(r => setTimeout(r, 1500));   // settle: the ring's fade-in and the one-off caches (tints, icon rows, tile layer) are not the steady cost
   if (FLAGS.cpu) { const cdp = await page.context().newCDPSession(page); await cdp.send('Emulation.setCPUThrottlingRate', { rate: +FLAGS.cpu }); }  // CPU work per frame: time spent inside main.js loop() (update steps + render), independent of vsync pacing
   await page.evaluate(() => { const orig = window.loop; window.__work = []; window.loop = function (now) { const t0 = performance.now(); orig(now); window.__work.push(performance.now() - t0); }; });

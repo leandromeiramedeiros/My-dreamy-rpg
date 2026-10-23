@@ -31,7 +31,7 @@ function loadOrder() {
 const LOAD_ORDER = loadOrder();
 // Scripts whose top-level code is pure data. A load failure in one of these is an error; in the
 // DOM-driven scripts it is only a warning, because the stubs cannot stand in for a real page.
-const DATA_FILES = new Set(['util', 'settings', 'data', 'items', 'itemdata', 'world', 'maps', 'sfxdata', 'dialogue', 'music']);
+const DATA_FILES = new Set(['util', 'settings', 'data', 'items', 'itemdata', 'world', 'maps', 'sfxdata', 'dialogue', 'music', 'arenas']);
 
 // ---------------------------------------------------------------- browser stubs
 // A callable, chainable stub: any property read returns another stub, any call returns one too.
@@ -81,7 +81,7 @@ function loadData() {
 // ---------------------------------------------------------------- checks
 const F = {
   data: 'js/data.js', items: 'js/items.js', itemdata: 'js/itemdata.js', world: 'js/world.js',
-  game: 'js/game.js', sfx: 'js/sfxdata.js', dialogue: 'js/dialogue.js', music: 'js/music.js', input: 'js/input.js',
+  game: 'js/game.js', arenas: 'js/arenas.js', sfx: 'js/sfxdata.js', dialogue: 'js/dialogue.js', music: 'js/music.js', input: 'js/input.js',
 };
 const errors = [];
 const warnings = [];
@@ -314,6 +314,65 @@ function main() {
       for (const a of tr.actions || []) {
         if (a.type === 'spawn' && a.enemy !== undefined) {
           refOrPlanned(F.world, 'enemy', `${mapId}:${tr.id}`, a.enemy, enemyIds, PLANNED_ENEMIES, 'enemy');
+        }
+      }
+    }
+  }
+
+  // ---- arenas (js/arenas.js, docs/design/arenas.md): hand-written mockup maps. Enemy ids must be DEFINED (no planned ids), object types
+  // must be in OBJ_TYPES, tile rows must match W x H, gates / levers / keydoors / triggers must reference ids that exist, every boss
+  // row is a real ai:'boss' enemy, elite mods are real, loadouts name a real weapon line
+  {
+    const ARENAS = get('ARENAS'), OBJ_TYPES = get('OBJ_TYPES'), ELITE_MODS = get('ELITE_MODS'), WEAPONS_ = get('WEAPONS') || {};
+    if (!ARENAS || typeof ARENAS !== 'object') fail(F.arenas, 'ARENAS', 'table', 'js/arenas.js defines ARENAS');
+    else {
+      const ARENA_STATUS = (get('STATUS') && get('STATUS').FX && Object.keys(get('STATUS').FX)) || null, weaponLines = new Set();
+      for (const C of Object.values(WEAPONS_)) for (const id of Object.keys(C.variants || {})) weaponLines.add(id);
+      const arenaIds = Object.keys(ARENAS);
+      if (arenaIds.length < 12) fail(F.arenas, 'ARENAS', 'count', `at least 12 arenas (got ${arenaIds.length})`);
+      for (const [aid, a] of Object.entries(ARENAS)) {
+        const at = (what) => `${aid}${what ? ':' + what : ''}`;
+        if (!(a.W > 0 && a.H > 0 && a.W <= 32 && a.H <= 32)) fail(F.arenas, 'size', at(), `W x H within 32 x 32 (got ${a.W} x ${a.H})`);
+        const rows = a.tiles || [];
+        if (rows.length !== a.H || rows.some((r) => String(r).length !== a.W)) fail(F.arenas, 'tiles', at(), `${a.H} rows of ${a.W} chars`);
+        if (!a.start || !(a.start.x >= 0 && a.start.x < a.W && a.start.y >= 0 && a.start.y < a.H)) fail(F.arenas, 'start', at(), 'inside the map');
+        else if (rows[Math.floor(a.start.y)] && rows[Math.floor(a.start.y)][Math.floor(a.start.x)] === '.') fail(F.arenas, 'start', at(), 'on a floor tile, not void');
+        if (a.loadout && a.loadout.weapon && weaponLines.size && !weaponLines.has(a.loadout.weapon)) fail(F.arenas, 'loadout', at(), `weapon line "${a.loadout.weapon}"`);
+        const objIds = new Map();   // id -> type
+        (a.objects || []).forEach((o, i) => {
+          if (OBJ_TYPES && !OBJ_TYPES[o.t]) fail(F.arenas, 'object type', at('#' + i), o.t);
+          if (!(o.x >= 0 && o.x <= a.W && o.y >= 0 && o.y <= a.H)) fail(F.arenas, 'object position', at(o.t + '#' + i), `inside ${a.W} x ${a.H} (got ${o.x}, ${o.y})`);
+          if (o.id) { if (objIds.has(o.id)) fail(F.arenas, 'object id', at(o.id), 'unique within the arena'); objIds.set(o.id, o.t); }
+        });
+        const barrier = (id) => ['gate', 'keydoor'].includes(objIds.get(id));
+        const keyIds = new Set();
+        for (const o of a.objects || []) {
+          if (o.t === 'lever' && !barrier(o.gate)) fail(F.arenas, 'lever gate', at(o.id), `${o.gate} (a gate or keydoor of this arena)`);
+          if (o.t === 'keydoor') { if (!o.key) fail(F.arenas, 'keydoor', at(o.id), 'a key id'); else keyIds.add(o.key); }
+        }
+        const trigIds = new Set((a.triggers || []).map((t) => t.id));
+        if (trigIds.size !== (a.triggers || []).length) fail(F.arenas, 'trigger id', at(), 'unique within the arena');
+        const lootKeys = new Set();
+        for (const tr of a.triggers || []) {
+          for (const r of tr.requires || []) if (!trigIds.has(r)) fail(F.arenas, 'requires', at(tr.id), r);
+          if (tr.when && tr.when.type === 'enter_area' && !(tr.when.x >= 0 && tr.when.x <= a.W && tr.when.y >= 0 && tr.when.y <= a.H)) fail(F.arenas, 'enter_area', at(tr.id), 'inside the map');
+          for (const act of tr.actions || []) {
+            if (act.type === 'spawn' && act.enemy !== undefined) {
+              if (ENEMY && !ENEMY[act.enemy]) fail(F.arenas, 'enemy', at(tr.id), act.enemy);
+              if (act.elite && ELITE_MODS && !ELITE_MODS[act.elite]) fail(F.arenas, 'elite mod', at(tr.id), act.elite);
+            }
+            if ((act.type === 'openGate' || act.type === 'closeGate') && !barrier(act.id)) fail(F.arenas, act.type, at(tr.id), `${act.id} (a gate or keydoor of this arena)`);
+            if (act.type === 'loot' && act.item) lootKeys.add(act.item);
+            if (act.type === 'status' && ARENA_STATUS) for (const k of [...(act.cycle || []), ...(act.rings || []).map((q) => q.kind)]) if (!ARENA_STATUS.includes(k)) fail(F.arenas, 'status', at(tr.id), k);
+          }
+        }
+        for (const k of keyIds) if (!lootKeys.has(k)) fail(F.arenas, 'keydoor key', at(), `${k} (dropped by a loot action of this arena)`);
+        if (a.boss) {
+          const row = ENEMY && ENEMY[a.boss];
+          if (!row) fail(F.arenas, 'boss', at(), `${a.boss} (an ENEMY row)`);
+          else if (row.ai !== 'boss') fail(F.arenas, 'boss', at(), `${a.boss} has ai "${row.ai}", not "boss"`);
+          const intro = (a.triggers || []).find((t) => t.id === 'intro');
+          if (!intro || !(intro.actions || []).some((q) => q.type === 'spawn' && q.enemy === a.boss)) fail(F.arenas, 'boss', at(), 'an intro trigger that spawns the boss');
         }
       }
     }

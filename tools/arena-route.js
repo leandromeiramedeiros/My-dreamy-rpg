@@ -128,7 +128,7 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
         check(`elite: pocket ${p.n} cleared -> done_${p.n} fires, gate re-opens`, await fired('done_' + p.n) && await gate(g));
       }
     } else if (/^boss-/.test(id)) {
-      const bid = id.slice(5);
+      const bid = await ev(() => G.world.maps[G.map.id].boss);
       const sp = await ev(() => G.map.triggers.find(t => t.id === 'intro').actions.find(a => a.type === 'spawn').enemy);
       check(`${id}: intro trigger spawns ${bid}`, sp === bid, sp);
       const okIntro = await wf(() => !!G.trig.fired.intro, null, 9000);

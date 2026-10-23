@@ -5,12 +5,14 @@
 // level) plus two extra fields buildMapStages ignores: `desc` (one line for the title list) and `loadout` (the reference hero:
 // { weapon, level, tier? }; tier = the highest TIER_REQ at or below the level unless set; main.js applies it before enterMap).
 //
+// This file is the hand-edited source: the tile rows are literal ASCII (. void, g/x floor, c pillar), edit them in place. No generator.
+//
 // Loading: index.html loads this after world.js. main.js boot() calls mergeArenas(world, PARAMS.get('map')): the arena records are
 // added to a shallow copy of the world only when ?map=<arena id> names one, so the real game and the editor never see them.
 // ?map=<id> never touches the save (SAVE_ON is off). Title screen: ARENAS opens arenaList() (screens.js drawArenaList).
 // Extra trigger actions (installed by mergeArenas, game.js untouched):
 //   { type: 'kit', weapon?, tier }            re-kits the hero: reference gear of that weapon line and tier (weapon racks, tier plates)
-//   { type: 'status', cycle[], dur, every, times, rings[] }   status bodies for the stress arena (STATUS.ring tiles + applyStatus)
+//   { type: 'status', cycle[], bodies?, dur, every, times, rings[] }   status bodies (the first `bodies` live enemies) for the stress arena (STATUS.ring tiles + applyStatus)
 // Boss arenas: boss-<id> for every boss in BOSSES (mossjaw and bramblehorn are written out, the rest are stubs from bossArena()).
 // Zones with no enemies yet (grotto, caldera, spire) use placeholder packs of existing enemy types: TODO(M6) marks each.
 //
@@ -134,8 +136,8 @@ function stressArena(sp) {
   for (const y of [6, 12, 19, 25]) for (const x of [6, 12, 19, 25]) o.push({ t: lights[n++ % lights.length], x: x + 1.5, y: y + 0.5 });
   for (let i = 0; i < 24; i++) { const q = Q[i % 4]; acts.push(spawnA(kinds[i % kinds.length], 1, q[0], q[1], 3, { instant: true })); }
   t.push({ id: 'in', name: 'Swarm', when: { type: 'map_enter' }, actions: [{ type: 'banner', title: 'Stress arena', sub: '24 bodies, 40 lights, status effects' }].concat(acts) });
-  t.push({ id: 'status', name: 'Status bodies', when: { type: 'timer', seconds: 1.5, after: 'map' }, actions: [{ type: 'status', cycle: ['burning', 'chilled', 'poisoned', 'shocked', 'marked', 'dread', 'wet', 'rooted'], dur: 8, every: 6, times: 40,
-    rings: [{ x: 8.5, y: 8.5, r: 3, kind: 'burning', dur: 8 }, { x: 23.5, y: 8.5, r: 3, kind: 'frozen', dur: 8 }, { x: 8.5, y: 23.5, r: 3, kind: 'wet', dur: 8 }, { x: 23.5, y: 23.5, r: 3, kind: 'burning', dur: 8 }] }] });
+  t.push({ id: 'status', name: 'Status bodies', when: { type: 'timer', seconds: 1.5, after: 'map' }, actions: [{ type: 'status', cycle: ['burning', 'chilled', 'shocked', 'wet', 'poisoned', 'dread'], bodies: 6, dur: 8, every: 6, times: 40,
+    rings: [{ x: 17, y: 17, r: 3.5, kind: 'burning', dur: 8 }] }] });
   return arenaBase({ name: 'Stress arena', sub: 'Arena: perf', theme: 'ruins', W: 32, H: 32, tiles: sp.tiles, start: { x: 17, y: 17 }, objects: o, objective: 'Survive (use ?god)', triggers: t, level: [10, 17],
     desc: '24 awake bodies, 40 lights, status bodies and tiles (perf)', loadout: { weapon: 'sword', level: 14 } });
 }
@@ -261,8 +263,8 @@ const ARENAS = {
       '................................',
     ],
   }),
-  'pack-ruins': packArena({ zone: 'ruins', name: 'Ruins pack arena', theme: 'ruins', level: [10, 17], desc: 'Ruins: dream moths, slimes, a gloomed mountain troll elite (L14)', loadout: { weapon: 'sword', level: 14 },
-    packs: [[{ e: 'dreammoth', n: 3 }], [{ e: 'gloomslime', n: 3 }, { e: 'shadehound', n: 2 }], [{ e: 'mountaintroll', n: 1, elite: 'gloomed' }, { e: 'dreammoth', n: 2 }]],
+  'pack-ruins': packArena({ zone: 'ruins', name: 'Ruins pack arena', theme: 'ruins', level: [10, 17], desc: 'Ruins commons: wisps, knights, archers, a chanter, a swarm, a gloomed knight elite with a mimic (L14)', loadout: { weapon: 'sword', level: 14 },
+    packs: [[{ e: 'wisp', n: 3 }, { e: 'gloomknight', n: 1 }], [{ e: 'voidarcher', n: 2 }, { e: 'shadelingswarm', n: 1 }, { e: 'gravechanter', n: 1 }], [{ e: 'gloomknight', n: 1, elite: 'gloomed' }, { e: 'pillarmimic', n: 1 }, { e: 'wisp', n: 2 }]],
     tiles: [
       '................................',
       '.xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.',
@@ -463,6 +465,62 @@ const ARENAS = {
       '........................',
     ],
   }),
+  'boss-oathless': bossArena({ boss: 'oathless', title: 'The Oathless', sub: 'The oath without a reason', theme: 'ruins', level: [8, 16], desc: 'The Oathless alone on a ruined round floor (L12)', loadout: { weapon: 'sword', level: 12 },
+    tiles: [
+      '........................',
+      '...........xx...........',
+      '.......xxxxxxxxxx.......',
+      '......xxxxxxxxxxxx......',
+      '.....xxxxcxxxxcxxxx.....',
+      '....xxxxxxxxxxxxxxxx....',
+      '...xxxxxxxxxxxxxxxxxx...',
+      '..xxxxxxxxxxxxxxxxxxxx..',
+      '..xxxxxxxxxxxxxxxxxxxx..',
+      '..xxcxxxxxxxxxxxxxxcxx..',
+      '..xxxxxxxxxxxxxxxxxxxx..',
+      '.xxxxxxxxxxxxxxxxxxxxxx.',
+      '.xxxxxxxxxxxxxxxxxxxxxx.',
+      '..xxxxxxxxxxxxxxxxxxxx..',
+      '..xxcxxxxxxxxxxxxxxcxx..',
+      '..xxxxxxxxxxxxxxxxxxxx..',
+      '..xxxxxxxxxxxxxxxxxxxx..',
+      '...xxxxxxxxxxxxxxxxxx...',
+      '....xxxxxxxxxxxxxxxx....',
+      '.....xxxxcxxxxcxxxx.....',
+      '......xxxxxxxxxxxx......',
+      '.......xxxxxxxxxx.......',
+      '...........xx...........',
+      '........................',
+    ],
+  }),
+  'boss-gloamwarden': bossArena({ boss: 'gloamwarden', title: 'The Gloam Warden', sub: 'The lantern keeper', theme: 'ruins', level: [10, 18], desc: 'The Gloam Warden alone on a ruined round floor (L14)', loadout: { weapon: 'sword', level: 14 },
+    tiles: [
+      '........................',
+      '...........xx...........',
+      '.......xxxxxxxxxx.......',
+      '......xxxxxxxxxxxx......',
+      '.....xxxxcxxxxcxxxx.....',
+      '....xxxxxxxxxxxxxxxx....',
+      '...xxxxxxxxxxxxxxxxxx...',
+      '..xxxxxxxxxxxxxxxxxxxx..',
+      '..xxxxxxxxxxxxxxxxxxxx..',
+      '..xxcxxxxxxxxxxxxxxcxx..',
+      '..xxxxxxxxxxxxxxxxxxxx..',
+      '.xxxxxxxxxxxxxxxxxxxxxx.',
+      '.xxxxxxxxxxxxxxxxxxxxxx.',
+      '..xxxxxxxxxxxxxxxxxxxx..',
+      '..xxcxxxxxxxxxxxxxxcxx..',
+      '..xxxxxxxxxxxxxxxxxxxx..',
+      '..xxxxxxxxxxxxxxxxxxxx..',
+      '...xxxxxxxxxxxxxxxxxx...',
+      '....xxxxxxxxxxxxxxxx....',
+      '.....xxxxcxxxxcxxxx.....',
+      '......xxxxxxxxxxxx......',
+      '.......xxxxxxxxxx.......',
+      '...........xx...........',
+      '........................',
+    ],
+  }),
   stress: stressArena({
     tiles: [
       '................................',
@@ -554,7 +612,7 @@ function arenaKitAction(a) {
 function arenaStatusAction(a) {
   const m = G.map, cyc = a.cycle || ['burning'], run = n => {
     if (G.map !== m) return;
-    let i = 0; for (const e of G.enemies) { if (e.dead || e.dummy) continue; applyStatus(e, cyc[i++ % cyc.length], a.dur || 8); }
+    let i = 0; for (const e of G.enemies) { if (e.dead || e.dummy) continue; if (a.bodies && i >= a.bodies) break; applyStatus(e, cyc[i++ % cyc.length], a.dur || 8); }
     for (const r of a.rings || []) STATUS.ring(r.x, r.y, r.r, r.kind, r.dur || 8);
     if (n + 1 < (a.times || 1)) delay(a.every || 6, () => run(n + 1));
   };
