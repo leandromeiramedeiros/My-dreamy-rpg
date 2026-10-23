@@ -28,6 +28,10 @@ forge and the frozen art and writes `handoff/art/`.
 * `blob47` sidecars (tiles) add the template description (below). A sidecar never holds numbers that belong to game data.
 
 ## Units and the depth split
+**Client ruling 2026-10-23: the `_front`/`_back` split is retired.** Every gear piece ships as **one colour sheet plus one depth
+sheet**, and the renderer layers every equipped piece at runtime, per pixel (nearest wins), in the JS build (forge-rt already does)
+and in Godot (a layering shader). The Export v2 lane rewrites this section and the hand-edit steps below; until then they describe the old split.
+
 * Hero: `hero/body.png` (body and hair) plus `gear/<piece>.t<N>.png` for 36 armour pieces x 6 tiers and 21 held lines x 6 tiers.
 * **Depth split:** each gear piece exports as two sheets, `<piece>_front` and `<piece>_back`, split against the body's depth per pixel
   by the forge (`--split-body`). Inner lines and the held item's own outline are baked into the piece's pixels.
