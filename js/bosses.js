@@ -45,6 +45,11 @@
 //   arenaShrink { pattern, k (final radius fraction, 0.65), r0, dur, dmg }   blink { to: 'behind' | 'random' }
 //   vanish { dur, then: move name or inline move }  roar { text | banner, dur, adds: [[type, angle, radius]] }
 //   sequence { list: [names], gaps: s }            random { weights: { name: w } }
+//   shield { arc (deg, 150), dur (2), mul (0.1: a hit from inside the front arc deals this share), turn (deg/s it turns toward
+//            the hero, 70), r (cue radius), then }   no damage: a raised shield (the Oathless). bossClampDmg applies it.
+//   gloam { safeR (2.2), near (2.5), far (4), wind, hit }   darkness: the whole arena hits except the lantern's light, a
+//            safeR circle placed near..far tiles from the hero (the Gloam Warden). G.gloam = { x, y, r, until } while it
+//            runs (the render hook for the dark); the telegraph carries safe: { x, y, r } (bots, captions).
 // ===== FAIRNESS (docs/design/story.md, §26.1) ==========================================================================
 //   every wind-up >= 0.55 s in every phase (§26.1: a 0.3 s reaction + a sidestep); every big hit leaves >= 1.2 s open
 //   (the last link of a 'then' chain); a feint's fake wind-up >= 0.3 s and shorter than the real one; lead <= 0.6 s;
@@ -118,7 +123,7 @@ const BOSSES = {};
     if (k === 'boss') { Object.assign(ENEMY.boss, { hp: b.hp, boss: k, level: b.level, kind: b.kind }); continue; }
     ENEMY[k] = { name: b.name, ai: 'boss', boss: k, sprite: b.sprite, look: b.look, scale: b.scale, hp: b.hp, r: b.r || 0.9, speed: b.speed || 1.6, dmg: 0, range: 0, wind: 0, cd: 0,
       hgt: b.hgt || 5, blood: b.blood || '#c7a8ff', element: b.el || 'slash', dmgType: b.el || 'slash', el: b.el, res: Object.assign({}, b.res || {}), tags: b.tags || [], parts: [],
-      level: b.level, kind: b.kind, xp: b.xp };
+      level: b.level, kind: b.kind, xp: b.xp, art: b.art };
   }
 })();
 const summonAlive = b => G.enemies.filter(o => o.summoner === b && !o.dead).length;
@@ -139,7 +144,7 @@ const barBot = (D, i) => (i + 1 < D.phases.length ? D.phases[i + 1].hpBelow : 0)
 function enterPhase(b, i) {
   const K = b.bk, D = K.def;
   K.phase = i; b.phase2 = i >= 1; b.phaseN = i; K.phaseT = 0; K.frenzy = false; b.frenzy = false;
-  K.mv = null; K.queue = (D.phases[i].onEnter || []).slice(); b.state = 'chase'; b.under = false; b.fadeT = 0;
+  K.mv = null; K.shield = null; K.queue = (D.phases[i].onEnter || []).slice(); b.state = 'chase'; b.under = false; b.fadeT = 0;
   G.effects = G.effects.filter(e => !(e.type === 'tele' && e.src === b));
 }
 // the deepest phase whose threshold is at or above the current HP (threshold mode, and direct hp writes in bar mode)
@@ -162,6 +167,11 @@ function bossBarBreak(b, i) {
 function bossClampDmg(b, dmg) {
   const K = b.bk; if (!K) return dmg;
   if (K.transT > 0) { if (!(K.immT > G.t)) { K.immT = G.t + 0.4; text(b.x, b.y, b.z + (b.hgt || 3), 'IMMUNE', '#9a92b0'); } return 0; }
+  // a raised shield (BOSS_MOVES.shield): a hit from the hero's side inside the front arc deals K.shield.mul (hit its back)
+  if (K.shield) {
+    const p = G.player, off = Math.abs(angDiff(K.shield.a, Math.atan2(p.y - b.y, p.x - b.x)));
+    if (off < K.shield.arc / 2) { dmg *= K.shield.mul; if (!(K.blockT > G.t)) { K.blockT = G.t + 0.3; text(b.x, b.y, b.z + (b.hgt || 3) + 0.3, 'BLOCK', '#cfd6ea'); sfx('shield'); } }
+  }
   const D = K.def; if (!barsOn(D)) return dmg;
   syncPhase(b);
   if (K.phase >= D.phases.length - 1) return dmg;
@@ -258,7 +268,7 @@ function endMove(b) {
 function bossBreak(b) {
   if (b.bk && b.bk.transT > 0) return;   // no stagger break during a bar transition
   const D = bossDefOf(b), t = D && D.breakOpen != null ? D.breakOpen : 1.5;
-  if (t > 0) { b.breakStun = t; if (b.bk) b.bk.mv = null; b.state = 'chase'; b.under = false; G.effects = G.effects.filter(e => !(e.type === 'tele' && e.src === b)); text(b.x, b.y, b.z + b.hgt, 'BREAK!', '#ff8a2a', true); shake(6); }
+  if (t > 0) { b.breakStun = t; if (b.bk) { b.bk.mv = null; b.bk.shield = null; } b.state = 'chase'; b.under = false; G.effects = G.effects.filter(e => !(e.type === 'tele' && e.src === b)); text(b.x, b.y, b.z + b.hgt, 'BREAK!', '#ff8a2a', true); shake(6); }
 }
 // damage of a move hit: absolute (x level multiplier) or a fraction of the reference eHP at the boss level
 const moveDmg = (b, M) => M.dmg != null ? M.dmg * b.dm : (M.dmgPct || HIT_FRAC[M.hit] || 0.1) * REF_EHP(b.lvl);
@@ -407,8 +417,9 @@ const BOSS_MOVES = {
       const m = G.map, ar = G.arena && !G.arena.done && G.arena.map === m.id ? G.arena : null;
       const A = G.shrink || (G.shrink = ar ? { x: ar.x, y: ar.y, r: M.r0 || ar.r || 7.5, dmg: 0 } : { x: m.cx, y: m.cy, r: M.r0 || 7.5, dmg: 0 });
       s.r0 = A.r; s.r1 = Math.max(M.rMin || 3.5, A.r * (M.k || 0.65)); A.dmg = moveDmg(b, Object.assign({ hit: 'chip' }, M)) * 0.5; A.el = M.el || b.el; A.pattern = M.pattern || 'roots_inward';
+      A.warn = M.warn || null; A.col = M.col || null;   // the step-outside cue (default the roots' 'ROOTS! GET INSIDE', green)
       A.armAt = G.t + (s.wind || 0.8) + (M.dur || 2);   // the new ring only bites once it has finished closing (updateArena)
-      tele({ kind: 'circle', x: A.x, y: A.y, r: s.r1, life: s.wind || 0.8, col: '#9ae06a' });
+      tele({ kind: 'circle', x: A.x, y: A.y, r: s.r1, life: s.wind || 0.8, col: M.col || '#9ae06a' });
       say(M.text || 'The roots close in!'); shake(5);
     },
     update(b, M, s) {
@@ -451,6 +462,48 @@ const BOSS_MOVES = {
       }
       return s.t > s.wind + (M.dur || 1.2);
     } },
+  // shield (the Oathless's shield-wall): raised after a short wind, it turns slowly toward the hero for dur s; hits from inside
+  // its front arc deal M.mul (bossClampDmg). No damage of its own: a `then` (the shield bash) punishes whoever stayed in front.
+  shield: {
+    start(b, M, s) { s.a = s.aim; tele({ kind: 'cone', x: b.x, y: b.y, ang: s.a, arc: degArc(M.arc || 150), r: M.r || 2.4, life: Math.max(0.3, s.wind), col: M.col || '#cfd6ea', cue: true }); if (M.then) s.after = M.then; },   // cue: a no-damage tele (the shield's arc)
+    update(b, M, s, dt) {
+      const K = b.bk;
+      if (s.t <= s.wind) return false;
+      if (s.step === 0) { s.step = 1; sfx('shield'); text(b.x, b.y, b.z + (b.hgt || 3) + 0.5, 'SHIELD WALL', '#cfd6ea', true); }
+      const p = G.player, k = (M.turn || 70) * Math.PI / 180 * dt;
+      s.a += clamp(angDiff(s.a, Math.atan2(p.y - b.y, p.x - b.x)), -k, k); b.aimA = s.a;
+      K.shield = { a: s.a, arc: degArc(M.arc || 150), mul: M.mul != null ? M.mul : 0.1 };
+      if (Math.random() < 0.5) fx({ type: 'slash', x: b.x, y: b.y, z: 1, ang: s.a, arc: degArc(M.arc || 150), r: (b.r || 0.9) + 0.9, col: M.col || '#cfd6ea', life: 0.1, w: 4 });
+      if (s.t > s.wind + (M.dur || 2)) { K.shield = null; return true; }
+      return false;
+    } },
+  // gloam (the Gloam Warden's lantern): the hall goes dark; only the lantern's light is safe. The lantern lands near..far
+  // tiles from the hero (inside a shrinking ring when one runs); after the wind, anywhere outside it takes the hit.
+  gloam: {
+    start(b, M, s) {
+      const p = G.player, m = G.map, A = G.shrink && G.shrink.dmg ? G.shrink : null, R = M.safeR || 2.2;
+      let lx = p.x, ly = p.y;
+      for (let k = 0; k < 24; k++) {
+        const a = Math.random() * 6.28, r = (M.near || 2.5) + Math.random() * ((M.far || 4) - (M.near || 2.5)), x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r;
+        if (!walkable(m, x, y, tileH(m, x, y)) || (A && dist(x, y, A.x, A.y) > A.r - R * 0.5)) continue;
+        lx = x; ly = y; break;
+      }
+      s.lx = lx; s.ly = ly; s.R = R; const big = M.r || 14;
+      G.gloam = { x: lx, y: ly, r: R, until: G.t + s.wind + 0.4, boss: b.type };
+      tele({ kind: 'circle', x: b.x, y: b.y, r: big, life: s.wind, col: M.col || '#3a2458', safe: { x: lx, y: ly, r: R } });
+      fx({ type: 'ring', x: lx, y: ly, r: R, col: '#ffd27a', life: s.wind });
+      burst(lx, ly, 1.5, 24, ['#ffd27a', '#fff2c0'], 2);
+      say(M.text || 'The lantern is the only light!'); sfx('veil');
+    },
+    update(b, M, s) {
+      if (s.step === 0 && s.t > s.wind) {
+        s.step = 1; const p = G.player;
+        if (dist(p.x, p.y, s.lx, s.ly) > s.R + p.r * 0.5) bossHit(b, M, b.x, b.y);
+        fx({ type: 'ring', x: s.lx, y: s.ly, r: s.R + 0.2, col: '#ffd27a', life: 0.5 }); shake(8); sfx('boom');
+        for (let k = 0; k < 10; k++) { const a = Math.random() * 6.28, r = s.R + 1 + Math.random() * 5; fx({ type: 'pillar', x: s.lx + Math.cos(a) * r, y: s.ly + Math.sin(a) * r, col: '#5a3a8a', life: 0.4, r: 0.8 }); }
+      }
+      return s.t > s.wind + s.open;
+    } },
   sequence: {
     start(b, M, s) { s.i = 0; s.gapT = 0; },
     update(b, M, s, dt) {
@@ -476,9 +529,9 @@ function updateArena(dt) {
   const p = G.player; A.tickT = (A.tickT || 0) - dt;
   const out = dist(p.x, p.y, A.x, A.y) > A.r && !(A.armAt > G.t);
   if (!out) A.outT = null;
-  else if (A.outT == null) { A.outT = G.t; A.tickT = Math.max(A.tickT, SHRINK_GRACE); text(p.x, p.y, p.z + 3.4, 'ROOTS! GET INSIDE', '#9ae06a', true); sfx(typeof WARN_SFX !== 'undefined' && WARN_SFX.arenaShrink || 'trap'); G.lastWarn = { boss: G.boss ? G.boss.type : null, move: 'rootRing', type: 'arenaShrink', sfx: null, wind: SHRINK_GRACE, open: 0, t: G.t }; }
+  else if (A.outT == null) { A.outT = G.t; A.tickT = Math.max(A.tickT, SHRINK_GRACE); text(p.x, p.y, p.z + 3.4, A.warn || 'ROOTS! GET INSIDE', A.col || '#9ae06a', true); sfx(typeof WARN_SFX !== 'undefined' && WARN_SFX.arenaShrink || 'trap'); G.lastWarn = { boss: G.boss ? G.boss.type : null, move: 'rootRing', type: 'arenaShrink', sfx: null, wind: SHRINK_GRACE, open: 0, t: G.t }; }
   if (A.tickT <= 0) { A.tickT = 0.5; if (out) hurtPlayer(A.dmg, A.x, A.y, A.el || 'nature'); }
-  if (Math.random() < dt * 30) { const a = Math.random() * 6.28; addPart({ x: A.x + Math.cos(a) * A.r, y: A.y + Math.sin(a) * A.r, z: 0, vx: 0, vy: 0, vz: 1.5, life: 0.6, t: 0, col: '#9ae06a', grav: 0, size: 1, glow: true }, false); }
+  if (Math.random() < dt * 30) { const a = Math.random() * 6.28; addPart({ x: A.x + Math.cos(a) * A.r, y: A.y + Math.sin(a) * A.r, z: 0, vx: 0, vy: 0, vz: 1.5, life: 0.6, t: 0, col: A.col || '#9ae06a', grav: 0, size: 1, glow: true }, false); }
 }
 
 // ---------------------------------------------------------------- fairness + length (balsim, tests)
@@ -498,13 +551,14 @@ function walkOutNeed(D, M) {
     case 'cone': return Math.max(0, Math.min((M.r || 3) + R - d0, d0 * Math.sin(Math.min(Math.PI / 2, degArc(M.arc || 2) / 2))));
     case 'line': return (M.w || 0.6) + R;
     case 'charge': return Math.max(M.w || 1.1, (D.r || 0.9) + 0.3) + R;
+    case 'gloam': return Math.max(0, (M.far || 4) - (M.safeR || 2.2) + R);   // into the light from the far edge
     default: return 0;
   }
 }
 function bossFairness(id) {
   const D = BOSSES[id], rows = new Map(); if (!D) return [];
   const add = (move, rule, got, legacy, phase) => { const k = move + '|' + rule, o = rows.get(k); if (!o || got < o.got) rows.set(k, { move, rule, got: +(+got).toFixed(2), legacy: !!legacy, phase }); };
-  const SKIP = ['sequence', 'random', 'blink', 'arenaShrink', 'pull'];
+  const SKIP = ['sequence', 'random', 'blink', 'arenaShrink', 'pull', 'shield'];
   const check = (n, M, W, phase) => {
     const sc = M.scale || 'all';
     if (M.type === 'roar') { const w = (M.wind > 0 ? M.wind : ROAR_WIND) * (sc === 'none' ? 1 : W); if (w < FAIR_WIND - 1e-6) add(n, 'roar wind >= ' + FAIR_WIND + ' s', w, M.legacy, phase); return; }
@@ -555,3 +609,22 @@ function bossFairness(id) {
 Object.defineProperty(ENEMY.boss, 'name', { enumerable: true, configurable: true,
   get() { const b = typeof G !== 'undefined' && G.boss && !G.boss.dead ? G.boss : null; return b && b.type !== 'boss' && ENEMY[b.type] ? ENEMY[b.type].name : 'The Gloam Warden'; },
   set(v) { /* the editor may write it back; the Warden's name is fixed here */ } });
+
+// ---------------------------------------------------------------- debug arena (tools/qa/dbg-fight.js, tools/ruins-bestiary-check.js, the console)
+// debugFight(id, { elite, d, x, y, r, keepTriggers }): a clean fight on the CURRENT map without its story: every trigger is marked
+// fired (no waves, no story boss), the field is cleared, the hero stands d tiles west of the spot (the map's sigil by default)
+// at full HP, and `id` spawns there at once. A boss gets an inline arena (G.arena, r) so a shrinking ring centres on the fight.
+// Commons take the hero's level clamped to the map's band (items.js enemyLevel): use ?map=ruins (L10-17) for the Ruins rows.
+function debugFight(id, o = {}) {
+  id = enemyId(id); if (!ENEMY[id]) return null;
+  const m = G.map, p = G.player;
+  if (!o.keepTriggers && G.trig && m.triggers) for (const t of m.triggers) G.trig.fired[t.id] = true;
+  for (const e of G.enemies) e.dead = true;
+  G.enemies.length = 0; G.projs.length = 0; G.zones.length = 0; G.effects.length = 0; G.boss = null; G.shrink = null; G.gloam = null; G.banner = null;
+  const cx = o.x != null ? o.x : m.cx, cy = o.y != null ? o.y : m.cy;
+  p.x = cx - (o.d != null ? o.d : 4); p.y = cy; p.z = tileH(m, p.x, p.y); p.hp = p.maxHp; p.dead = false; p.invulnT = 0; G.state = 'play';
+  G.arena = ENEMY[id].ai === 'boss' ? { id: 'debug', map: m.id, gates: [], x: cx, y: cy, r: o.r || 7.5, pillars: [], broken: [], done: false } : null;
+  const e = spawnEnemy(id, cx, cy, 0, { elite: o.elite || null });
+  if (e && e.boss) G.boss = e;
+  return e;
+}
