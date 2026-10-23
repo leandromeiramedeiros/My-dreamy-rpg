@@ -700,7 +700,7 @@ function drawCharacterTab(ctx, p) {
   // ---- centre: the companion's deck ----
   if (isCompanion(oi)) {
     fitPages(oi);
-    const deck = lineOf(oi).deck, word = deck === 'arrow' ? 'ARROWS' : 'PAGES';
+    const deck = lineOf(oi).deck, word = deck === 'arrow' ? 'ARROWS' : deck === 'call' ? 'CALLS' : 'PAGES';
     if (u.pageSel != null && u.pageSel >= oi.pages.length) u.pageSel = null;
     mnHead(ctx, `${word} ${oi.pages.filter(Boolean).length}/${oi.pages.length}`, COL2 + 8, 288);
     oi.pages.forEach((id, si) => {
@@ -718,7 +718,7 @@ function drawCharacterTab(ctx, p) {
   } else {
     const n = Object.values(p.pages || {}).reduce((a, b) => a + b, 0);
     mnHead(ctx, 'PAGES', COL2 + 8, 288);
-    UI.wrap(ctx, `A Grimoire holds pages, a Quiver arrows: wear one in the offhand to use them. Owned: ${n}.`, COL2 + 8, 312, 316, 'small', UC.dim);
+    UI.wrap(ctx, `A Grimoire holds pages, a Quiver arrows, a Warhorn calls: wear one in the offhand to use them. Owned: ${n}.`, COL2 + 8, 312, 316, 'small', UC.dim);
   }
   if (u.note && u.note.t > G.t) UI.text(ctx, fitText(u.note.s, 316, 'small'), COL2 + 8, 504, 'small', u.note.col);
   // ---- right: stats ----

@@ -144,7 +144,8 @@ function simGear(fams, L, rarity, kind) {
     if (!offhandFits(it, p.equip.weapon)) p.equip.offhand = it;   // offhandFits = '' when it fits
   }
   p.equip.ring1 = originRing(p.equip.weapon.base);   // the Origin ring (first Vale chest, ~2:00): every build, 'under' too
-  simTrinkets(p, L, rarity, kind, fam === 'staff' ? 'staff' : fam === 'bow' ? 'bow' : 'sword');
+  const wc = p.equip.weapon && lineOf(p.equip.weapon) && lineOf(p.equip.weapon).class;   // M4b lines: the ring boon by class
+  simTrinkets(p, L, rarity, kind, fam === 'staff' || wc === 'foci' ? 'staff' : fam === 'bow' || wc === 'shots' ? 'bow' : 'sword');
   recalcStats(p, true); return p;
 }`);
 ev(`function simHero(fams, L, rarity, kind) { const p = simGear(fams, L, rarity, kind); G.player = p; p.x = 24; p.y = 24; p.z = 0; p.invulnT = 0; return p; }`);
@@ -589,19 +590,19 @@ SMath.random = mulberry32(SEED + 101);   // its own seeded stream: the tables ab
 // per hand + offhand and tier the suit of its best kit; any offhand or suit best in more than 60 % of its cells is red.
 const LO_SUITS = { knight: FAMS.sword.slice(1), arcane: FAMS.staff.slice(1), ranger: FAMS.bow.slice(1) };
 const LO_HANDS = ['sword', 'daggers', 'staff', 'bow'], LO_OFFS = [null, 'buckler', 'grimoire', 'quiver', 'daggers', 'sword'];
-const LO_TIERS = [['T1', 4], ['T2', 12], ['T3', 20]], LO_T = +arg('loadout-t', 60), LO_TRIALS = +arg('loadout-trials', 3);
+const LO_TIERS = [['T1', 4], ['T2', 12], ['T3', 20]], LO_T = +arg('loadout-t', 60), LO_TRIALS = +arg('loadout-trials', 3), LO_PTRIALS = +arg('parity-trials', 8);
 const LO_KITS = [['sword', 'buckler', 'knight'], ['staff', 'grimoire', 'arcane'], ['sword', 'daggers', 'knight'], ['bow', 'quiver', 'ranger']];
-function loadoutRun(hand, off, suit, L) {
+function loadoutRun(hand, off, suit, L, trials = LO_TRIALS) {
   ctx.SIM_OFF = off;
   ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); G.__ultAlt = true;`);
   const p = ev(`simHero(${JSON.stringify([hand].concat(LO_SUITS[suit]))}, ${L}, '${rarityAt(L)}', 'reference')`);
   const legal = !off || !!p.equip.offhand;
   let dps = 0;
-  if (legal) for (let k = 0; k < LO_TRIALS; k++) {   // the mean of LO_TRIALS runs (crits and procs are rolled)
+  if (legal) for (let k = 0; k < trials; k++) {   // the mean of LO_TRIALS runs (crits and procs are rolled)
     if (k) ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); G.__ultAlt = true; simHero(${JSON.stringify([hand].concat(LO_SUITS[suit]))}, ${L}, '${rarityAt(L)}', 'reference')`);
     ctx.__t = ev(`(() => { const e = spawnEnemy('__neutral', 27, 24, 0); e.hp = e.maxHp = 1e9; e.stunT = 9; return e; })()`);
     ev(`simRotation(__t, ${LO_T}, ${standoffOf(hand)})`);
-    dps += (1e9 - ctx.__t.hp) / LO_T / LO_TRIALS;
+    dps += (1e9 - ctx.__t.hp) / LO_T / trials;
   }
   ev(`G.__ultAlt = false;`); delete ctx.SIM_OFF;
   return legal ? { hand, off: off || '-', suit, L, dps, ehp: p.maxHp / (1 - p.def) } : null;
@@ -619,7 +620,8 @@ log(`\nLOADOUT v3 (hand x offhand x suit, reference gear, ${LO_T} s rotation wit
 log('  tier  kit                       DPS    eHP    vs mean');
 for (const [tn] of LO_TIERS) {
   const rows = loRows.filter(r => r.tier === tn);
-  const kits = LO_KITS.map(([h, o, s]) => rows.find(r => r.hand === h && r.off === o && r.suit === s));
+  // the parity kits re-run at LO_PTRIALS (M4b: 3 rolled runs swing a kit +-5 %, enough to flip a +-15 % flag on noise)
+  const kits = LO_KITS.map(([h, o, s]) => { const r0 = rows.find(r => r.hand === h && r.off === o && r.suit === s); return r0 && Object.assign({}, r0, { dps: loadoutRun(h, o, s, r0.L, LO_PTRIALS).dps }); });
   if (kits.some(k => !k)) { red(`loadout: a reference kit is not a legal build at ${tn}`); continue; }
   const mean = kits.reduce((a, r) => a + r.dps, 0) / kits.length;
   for (const r of kits) {
@@ -647,9 +649,65 @@ for (const [kind, P] of Object.entries(loPick)) for (const [k, n] of Object.entr
   // one live chest per armour class and Dreamweave's +25 % power reads for every hand: an armour-lane finding, carried as explained
   if (kind === 'suit' && k === 'arcane') explained.push(s + ' (Dreamweave +25 % power is universal; one live chest per class: armour lane)'); else red(s);
 }
+// 8. M4b LINES (weapons-and-skills.md "Parity targets"): every live weapon line at T1..T3 in its class's natural kit (offhand LN_OFFC,
+// suit LN_SUIT, reference gear, the LOADOUT rotation): DPS within +-15 % of the mean of all lines at that tier (red outside). Then every
+// offhand line on its natural hand and every suit on its class's natural hand + offhand: DPS within 0.8..1.2 of the four reference kits'
+// mean DPS (the "utility 0.8 to 1.2x" band; red outside; eHP is listed: a tank line pays in DPS what it gains in eHP). The T1 Foci sit on
+// the low-level Staff gap (HERO parity note): -25 % there is explained, not red. The rotation taps M1 (no
+// Heavy Strike / Orb drain holds) and fights a frozen target, so control (roots, pulls, Taunt, guards) reads only through eHP.
+const LN_TRIALS = +arg('line-trials', 5);
+const LN_OFFC = { blades: 'buckler', greatarms: 'warhorn', shots: 'quiver', foci: 'grimoire', shadows: 'buckler' };
+const LN_SUIT = { blades: 'warden', greatarms: 'juggernaut', shots: 'stalker', foci: 'dreamweave', shadows: 'shade' };
+const suitFams = s => ['head', 'chest', 'boots'].map(slot => ev(`ARMOUR_PIECE(${JSON.stringify(s)}, '${slot}')`));
+ev(`function ARMOUR_PIECE(s, slot) { for (const c in ARMOUR) if (ARMOUR[c].suits[s]) return ARMOUR[c].suits[s].pieces[slot].id; return null; }`);
+const LN_LINES = ev(`(() => { const L = []; for (const c in WEAPONS) for (const id in WEAPONS[c].variants) if (!WEAPONS[c].variants[id].planned) L.push([id, c]); return L; })()`);
+const LN_OFF = { buckler: 'sword', heater: 'mace', tower: 'rapier', grimoire: 'staff', quiver: 'bow', warhorn: 'axe' };
+const LN_STAND = (hand, cls) => (hand === 'halberd' ? 1.6 : cls === 'shots' || cls === 'foci' ? 3.5 : 1.1);
+function lineRun(hand, cls, off, suit, L) {
+  ctx.SIM_OFF = off; const fams = JSON.stringify([hand].concat(suitFams(suit)));
+  let dps = 0, ehp = 0;
+  for (let k = 0; k < LN_TRIALS; k++) {
+    ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); G.__ultAlt = true;`);
+    const p = ev(`simHero(${fams}, ${L}, '${rarityAt(L)}', 'reference')`); ehp = p.maxHp / (1 - p.def);
+    if (off && !p.equip.offhand) { ev(`G.__ultAlt = false;`); delete ctx.SIM_OFF; return null; }
+    ctx.__t = ev(`(() => { const e = spawnEnemy('__neutral', 27, 24, 0); e.hp = e.maxHp = 1e9; e.stunT = 9; return e; })()`);
+    ev(`simRotation(__t, ${LO_T}, ${LN_STAND(hand, cls)})`);
+    dps += (1e9 - ctx.__t.hp) / LO_T / LN_TRIALS;
+  }
+  ev(`G.__ultAlt = false;`); delete ctx.SIM_OFF;
+  return { hand, off: off || '-', suit, L, dps, ehp };
+}
+const lnRows = [];
+log(`\nM4b LINES (reference gear, ${LO_T} s LOADOUT rotation, mean of ${LN_TRIALS}; weapons: the class offhand + suit, vs the mean of all lines)`);
+log('  line        class       ' + LO_TIERS.map(([tn]) => `${tn} DPS  vs mean`.padEnd(18)).join(''));
+const lnW = {};
+for (const [tn, L] of LO_TIERS) for (const [id, cls] of LN_LINES) { const r = lineRun(id, cls, LN_OFFC[cls], LN_SUIT[cls], L); lnW[tn + id] = r; lnRows.push(Object.assign({ tier: tn, kind: 'weapon', cls }, r)); }
+const lnMean = {}; for (const [tn] of LO_TIERS) { const R = LN_LINES.map(([id]) => lnW[tn + id]); lnMean[tn] = R.reduce((a, r) => a + r.dps, 0) / R.length; }
+for (const [id, cls] of LN_LINES) {
+  log(`  ${id.padEnd(11)} ${cls.padEnd(11)} ` + LO_TIERS.map(([tn]) => { const r = lnW[tn + id], dev = r.dps / lnMean[tn] - 1; r.dev = dev;
+    if (Math.abs(dev) > 0.15) { const m = `line parity: ${id} at ${tn} is ${Math.round(dev * 100)} % off the mean of all weapon lines (+-15 %)`; if (tn === 'T1' && cls === 'foci' && dev > -0.25) explained.push(m + ' (the low-level Foci gap, see the HERO parity note)'); else red(m); }
+    return `${String(Math.round(r.dps)).padStart(6)}  ${((dev >= 0 ? '+' : '') + Math.round(dev * 100) + ' %').padStart(6)}    `; }).join(''));
+}
+log('  offhand / suit   on hand    ' + LO_TIERS.map(([tn]) => `${tn} DPS   eHP  x mean`.padEnd(25)).join(''));
+const lnRef = {}; for (const [tn] of LO_TIERS) { const K = loParity.filter(r => r.tier === tn); const mE = K.reduce((a, r) => a + r.ehp, 0) / K.length; lnRef[tn] = { mE, mD: K.reduce((a, r) => a + r.dps, 0) / K.length }; }
+const lnUtil = [];
+for (const [off, hand] of Object.entries(LN_OFF)) lnUtil.push({ label: off, hand, off, suit: LN_SUIT[LN_LINES.find(l => l[0] === hand)[1]] });
+for (const s of ['crusader', 'juggernaut', 'frostweave', 'stormweave', 'thornwarden', 'duelist', 'shade', 'nightshade', 'mirage']) {
+  const cls = Object.entries(LN_SUIT).find(([, v]) => v === s);
+  const hand = { crusader: 'mace', juggernaut: 'hammer', frostweave: 'wand', stormweave: 'orb', thornwarden: 'bow', duelist: 'rapier', shade: 'daggers', nightshade: 'claws', mirage: 'fans' }[s];
+  lnUtil.push({ label: s, hand, off: LN_OFFC[LN_LINES.find(l => l[0] === hand)[1]], suit: s, cls, isSuit: true });
+}
+for (const u of lnUtil) {
+  const cls = LN_LINES.find(l => l[0] === u.hand)[1];
+  log(`  ${u.label.padEnd(16)} ${u.hand.padEnd(10)} ` + LO_TIERS.map(([tn, L]) => {
+    const r = lineRun(u.hand, cls, u.off, u.suit, L); if (!r) { red(`line: ${u.label} on ${u.hand} is not a legal build`); return 'illegal'.padEnd(24); }
+    const pw = r.dps / lnRef[tn].mD; lnRows.push(Object.assign({ tier: tn, kind: u.isSuit ? 'suit' : 'offhand', label: u.label, power: pw }, r));
+    if (pw < 0.8 || pw > 1.2) { const m = `line utility: ${u.label} (on ${u.hand}) at ${tn} deals x${pw.toFixed(2)} of the reference kits' mean DPS (0.8-1.2)`; if (tn === 'T1' && cls === 'foci' && pw >= 0.75) explained.push(m + ' (the low-level Foci gap)'); else red(m); }
+    return `${String(Math.round(r.dps)).padStart(6)} ${String(Math.round(r.ehp)).padStart(6)}  x${pw.toFixed(2)}      `; }).join(''));
+}
 if (explained.length && !QUIET) { log('\nEXPLAINED (not red):'); for (const s of explained) log('  - ' + s); }
 if (notes.length) { log('\nNOTES (targets, not CI flags):'); for (const s of notes) log('  - ' + s); }
 say(flags.length ? `\nbalsim RED FLAGS (${flags.length}):` : `\nbalsim: no red flags (${explained.length} explained, ${notes.length} notes).`);
 for (const s of flags) say('  ! ' + s);
-if (JSON_OUT) console.log(JSON.stringify({ heroRows, loRows, loParity, loPick, ttkRows, bossRows, liveRows, surv, econ, xp: { p2, p5 }, flags, explained, notes }, null, 1));
+if (JSON_OUT) console.log(JSON.stringify({ heroRows, loRows, loParity, lnRows, loPick, ttkRows, bossRows, liveRows, surv, econ, xp: { p2, p5 }, flags, explained, notes }, null, 1));
 process.exit(flags.length ? 1 : 0);
