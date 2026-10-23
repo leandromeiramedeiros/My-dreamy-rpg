@@ -89,13 +89,14 @@ async function smokeOne(browser, base, rel) {
     server.close();
   }
   console.log(failed ? `\n${failed}/${PAGES.length} pages failed` : `\nAll ${PAGES.length} pages passed`);
-  // §20.7: the balance sim's CI red flags fail the smoke run too
+  // balance red flags (exit 3) are report-only (client ruling 2026-10-23: the client tunes numbers); a balsim crash still fails
   const sim = require('child_process').spawnSync(process.execPath, [path.join(__dirname, 'balsim.js'), '--quiet'], { stdio: 'inherit' });
-  console.log(sim.status === 0 ? 'balsim: no red flags' : `balsim: RED FLAGS (exit ${sim.status})`);
+  const simFail = sim.status !== 0 && sim.status !== 3;
+  console.log(sim.status === 0 ? 'balsim: no red flags' : sim.status === 3 ? 'balsim: red flags (report-only)' : `balsim: CRASHED (exit ${sim.status})`);
   // the save v3 -> v4 ship gate (genuine v3 fixtures in tools/fixtures)
   const mig = require('child_process').spawnSync(process.execPath, [path.join(__dirname, 'save-migrate.js')], { stdio: ['ignore', 'pipe', 'inherit'], encoding: 'utf8' });
   const migOut = String(mig.stdout || '');
   for (const l of migOut.split('\n')) if (/^FAIL/.test(l)) console.log('save-migrate: ' + l);
   console.log(mig.status === 0 ? `save-migrate: ${(migOut.match(/^PASS/gm) || []).length} checks passed` : `save-migrate: FAILED (exit ${mig.status})`);
-  process.exit(failed || sim.status !== 0 || mig.status !== 0 ? 1 : 0);
+  process.exit(failed || simFail || mig.status !== 0 ? 1 : 0);
 })();

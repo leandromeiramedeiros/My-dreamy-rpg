@@ -15,7 +15,7 @@
 ## The employees (models)
 | Model | For | Examples |
 |---|---|---|
-| Opus, high effort | heavy implementation: engine, combat, bosses, render/perf, world art, forge rig, balance | lighting lane, loadout engine, forge pixel pass |
+| Opus, high effort | heavy implementation: engine, combat, bosses, render/perf, world art, forge rig | lighting lane, loadout engine, forge pixel pass |
 | Sonnet, high effort | medium, well-specified work: data tables, UI, tests, ports, gear model lines, docs | gear lines, UI polish, glossary |
 | Haiku, high effort | mechanical sweeps: renames, migrations, deletes, lint, screenshot runs | ID renames, fixtures, cleanup |
 | Fable | only when the client asks: expert consults and meetings, design only, no code | studio experts meeting |
@@ -31,7 +31,8 @@
 ## Ship gate (the director checks after each report)
 `node tools/check.js`: smoke (balsim + save-migrate) · play · validate-ids · forge-rt · perf · the bot; after the M4b
 Arena cut, `tools/arena-route.js` and `tools/qa/run-arenas.js` replace act1-route, maps/engine-check and run-big.
-Known flakes: play.js warp-fade, perf under load.
+Known flakes: play.js warp-fade, perf under load. Balance is the client's (2026-10-23): balsim red flags and bot win
+rates are report-only; the studio never tunes numbers to targets, only fixes crashes and non-completable arenas.
 
 ## Godot pivot (client ruling 2026-10-23)
 The studio never makes maps: test only in mockup arenas (`js/arenas.js`). Every asset ships human-editable (PNG + JSON

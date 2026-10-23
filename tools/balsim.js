@@ -719,4 +719,4 @@ if (notes.length) { log('\nNOTES (targets, not CI flags):'); for (const s of not
 say(flags.length ? `\nbalsim RED FLAGS (${flags.length}):` : `\nbalsim: no red flags (${explained.length} explained, ${notes.length} notes).`);
 for (const s of flags) say('  ! ' + s);
 if (JSON_OUT) console.log(JSON.stringify({ heroRows, loRows, loParity, lnRows, loPick, ttkRows, bossRows, liveRows, surv, econ, xp: { p2, p5 }, flags, explained, notes }, null, 1));
-process.exit(flags.length ? 1 : 0);
+process.exit(flags.length ? 3 : 0);   // 3 = balance red flags (report-only in smoke); 1 = a crash

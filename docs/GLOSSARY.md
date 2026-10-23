@@ -892,6 +892,8 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Action block | M10: one editable step of a Godot skill (projectile, cone, zone, dash, status build, VFX, SFX…); a SkillData is a list of them | `SkillData` | skill node, blueprint node | later |
 | Data table | M10 Godot editor dock: every data table (enemies, items, skills, loot…) as an editable spreadsheet | — | blueprint | later |
 | Editor-first authoring | M10: every game object is a Godot Resource or scene, edited in the Inspector and placed by drag and drop | `.tres` | blueprints | later |
+| FX preset | M10: a reusable, editable effect (particles, sprite anim, light, trail, tint, decal, shake, hit stop, SFX) dropped into an FX slot | `FxData` | vfx prefab | later |
+| FX slot | M10: a per-event field (spawn, idle, hit, crit, cast, death, pick-up…) on any data resource that holds FX presets | — | — | later |
 | Golden vector | A recorded input and output of a JS function (damage, build, reaction, roll) that the GDScript port must reproduce | — | — | later |
 
 ## 20. Retired terms

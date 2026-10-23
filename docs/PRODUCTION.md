@@ -72,6 +72,11 @@ GL Compatibility, web export). Contract: `docs/PORTING.md` (folder tree, autoloa
   each `cast` becomes a SkillData built from **action blocks** (projectile, cone, zone, dash, beam, summon, buff, status
   build, knockback, spawn VFX, play SFX, camera/hit feel…) with timing, numbers, element, VFX, SFX and anim in the
   Inspector. A skill no block set can express gets a small script slot, listed in PORTING.md as an exception.
+* **Everything is parametric** (client): no hard-coded number, colour, timing, sound or look in GDScript; every one is a field.
+* **Swappable FX:** effects, VFX and particles are a library of **FX presets** (`FxData`: particles, sprite anim, light,
+  trail, shader tint, decal, screen shake, hit stop, SFX), each buildable from layers in the Inspector. Any data resource
+  (item, skill block, enemy, status, reaction, receiver, shrine, chest…) has FX slots per event (spawn, idle, hit, crit,
+  cast, death, pick-up…); drop a preset into a slot or build a new one in place.
 * **Arenas only:** the studio rebuilds the mockup arenas as Godot scenes (`godot/arenas/`, the same ids as `js/arenas.js`)
   to test the port. It never makes zones: the client builds them in `godot/zones/`, which no lane touches.
 * **After M10** the Godot project is the game: the JS build freezes as the reference, and later gameplay work happens in GDScript.
@@ -90,6 +95,8 @@ Gate: golden vectors match; balsim parity ±2 % between JS and Godot; the Godot 
 web export runs with 0 errors (no web or phone perf target, client ruling); desktop p95 ≤ 16.7 ms on `stress`; the client plays the arenas in Godot (desktop + phone web) and approves.
 
 ## Client rulings (latest first)
+* 2026-10-23 — **Everything parametric; FX swappable** (FX presets in slots on any data resource).
+* 2026-10-23 — **The client tunes balance.** The studio focuses on assets and logic; balance targets (parity, TTK, fight times, win rates) are report-only, never gates or tuning work. Gates keep correctness: no crash, every arena completable, the Godot port matching the JS maths.
 * 2026-10-23 — **Runtime layering:** no `_front`/`_back` split; every gear piece is one colour + one depth sheet, layered per pixel at runtime (JS and Godot). Export v2 lane.
 * 2026-10-23 — **The artist paints the world art and skill icons:** `codex-image` makes tiles, props, trees, decals, skill icons and item icons (current ones judged ugly); every prompt anchored on forge references for visual constancy; a sample board first, for the client's eye. Hero, gear, enemies and bosses stay forge-made.
 * 2026-10-23 — **Editor-first Godot:** drag-and-drop enemies and every other game object, edit all their properties (HP, resists, loot, effects, audio, behaviour) in the Inspector and a table editor, live while the game runs. Godot stays the engine.
