@@ -1,0 +1,73 @@
+{
+ "unit": "cape.t3",
+ "sheet": "atk.none",
+ "images": {
+  "front": "cape.t3.atk.none_front.png",
+  "back": "cape.t3.atk.none_back.png"
+ },
+ "layer": "back",
+ "zorder": {
+  "S": 2,
+  "SE": 20,
+  "E": 25,
+  "NE": 31,
+  "N": 37,
+  "NW": 19,
+  "W": 19,
+  "SW": 17
+ },
+ "hides": [],
+ "slot": "back",
+ "tier": 3,
+ "class": null,
+ "split": {
+  "rule": "front = pixels where body + this unit differs from the body alone; back = this unit's own pixels hidden behind the body",
+  "body_pixels_lost": 0
+ },
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  4,
+  8
+ ],
+ "anims": {
+  "attack": {
+   "from": 0,
+   "count": 4,
+   "ms": [
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl"
+}

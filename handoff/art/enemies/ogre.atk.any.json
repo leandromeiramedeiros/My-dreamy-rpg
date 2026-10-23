@@ -1,0 +1,1156 @@
+{
+ "unit": "ogre",
+ "sheet": "atk.any",
+ "images": {
+  "color": "ogre.atk.any.png",
+  "normal": "ogre.atk.any_n.png"
+ },
+ "layer": "body",
+ "zorder": {
+  "S": 0,
+  "SE": 0,
+  "E": 0,
+  "NE": 0,
+  "N": 0,
+  "NW": 0,
+  "W": 0,
+  "SW": 0
+ },
+ "rig": "ogre",
+ "cell": [
+  80,
+  88
+ ],
+ "origin": [
+  40,
+  72
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  6,
+  8
+ ],
+ "anims": {
+  "attack": {
+   "from": 0,
+   "count": 6,
+   "ms": [
+    300,
+    300,
+    75,
+    75,
+    300,
+    300
+   ],
+   "loop": false
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   80,
+   88
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_ogre.gpl",
+ "sockets": {
+  "S": {
+   "attack": [
+    {
+     "handR": {
+      "x": 23.6,
+      "y": 29.7,
+      "front": false
+     },
+     "tip": {
+      "x": 15.6,
+      "y": 16.7,
+      "front": false
+     },
+     "head": {
+      "x": 39.4,
+      "y": 30.4,
+      "front": true
+     },
+     "chest": {
+      "x": 40.1,
+      "y": 47.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.9,
+      "y": 27.3,
+      "front": true
+     },
+     "tip": {
+      "x": 22.7,
+      "y": 13.2,
+      "front": false
+     },
+     "head": {
+      "x": 40.9,
+      "y": 27.5,
+      "front": true
+     },
+     "chest": {
+      "x": 40.1,
+      "y": 45.3,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 27.8,
+      "y": 51.2,
+      "front": true
+     },
+     "tip": {
+      "x": 34.2,
+      "y": 51.8,
+      "front": true
+     },
+     "head": {
+      "x": 42.1,
+      "y": 39.8,
+      "front": true
+     },
+     "chest": {
+      "x": 40.1,
+      "y": 49.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.6,
+      "y": 63.6,
+      "front": true
+     },
+     "tip": {
+      "x": 36.8,
+      "y": 76.4,
+      "front": true
+     },
+     "head": {
+      "x": 42.8,
+      "y": 42.8,
+      "front": true
+     },
+     "chest": {
+      "x": 40.1,
+      "y": 51.3,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.8,
+      "y": 63.7,
+      "front": true
+     },
+     "tip": {
+      "x": 31.5,
+      "y": 78.9,
+      "front": true
+     },
+     "head": {
+      "x": 43.6,
+      "y": 41.2,
+      "front": true
+     },
+     "chest": {
+      "x": 40.1,
+      "y": 49.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.9,
+      "y": 59.9,
+      "front": true
+     },
+     "tip": {
+      "x": 21.1,
+      "y": 74.5,
+      "front": true
+     },
+     "head": {
+      "x": 40.6,
+      "y": 34.8,
+      "front": true
+     },
+     "chest": {
+      "x": 40,
+      "y": 47.5,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SE": {
+   "attack": [
+    {
+     "handR": {
+      "x": 18.7,
+      "y": 37,
+      "front": true
+     },
+     "tip": {
+      "x": 5.4,
+      "y": 28.2,
+      "front": true
+     },
+     "head": {
+      "x": 40,
+      "y": 30.6,
+      "front": true
+     },
+     "chest": {
+      "x": 39.5,
+      "y": 47.2,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 23.2,
+      "y": 33.3,
+      "front": true
+     },
+     "tip": {
+      "x": 11.7,
+      "y": 22.1,
+      "front": true
+     },
+     "head": {
+      "x": 38.2,
+      "y": 27.6,
+      "front": true
+     },
+     "chest": {
+      "x": 39.2,
+      "y": 45.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 44.9,
+      "y": 52.6,
+      "front": true
+     },
+     "tip": {
+      "x": 58.9,
+      "y": 49.2,
+      "front": true
+     },
+     "head": {
+      "x": 50.5,
+      "y": 37.3,
+      "front": true
+     },
+     "chest": {
+      "x": 41.8,
+      "y": 49.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 46.5,
+      "y": 64.4,
+      "front": true
+     },
+     "tip": {
+      "x": 60.1,
+      "y": 73.1,
+      "front": true
+     },
+     "head": {
+      "x": 51.9,
+      "y": 39.9,
+      "front": true
+     },
+     "chest": {
+      "x": 42.5,
+      "y": 50.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 41.8,
+      "y": 65.9,
+      "front": true
+     },
+     "tip": {
+      "x": 51.9,
+      "y": 78.3,
+      "front": true
+     },
+     "head": {
+      "x": 52.1,
+      "y": 38.1,
+      "front": true
+     },
+     "chest": {
+      "x": 41.7,
+      "y": 49.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 35.5,
+      "y": 63.5,
+      "front": true
+     },
+     "tip": {
+      "x": 33.8,
+      "y": 79.4,
+      "front": true
+     },
+     "head": {
+      "x": 46.2,
+      "y": 33.5,
+      "front": true
+     },
+     "chest": {
+      "x": 40.7,
+      "y": 47.4,
+      "front": true
+     }
+    }
+   ]
+  },
+  "E": {
+   "attack": [
+    {
+     "handR": {
+      "x": 26.2,
+      "y": 43.8,
+      "front": true
+     },
+     "tip": {
+      "x": 15.4,
+      "y": 39.7,
+      "front": true
+     },
+     "head": {
+      "x": 40.6,
+      "y": 30.5,
+      "front": true
+     },
+     "chest": {
+      "x": 39.2,
+      "y": 47.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.3,
+      "y": 38.5,
+      "front": true
+     },
+     "tip": {
+      "x": 17.2,
+      "y": 32,
+      "front": true
+     },
+     "head": {
+      "x": 36.5,
+      "y": 28.7,
+      "front": true
+     },
+     "chest": {
+      "x": 38.7,
+      "y": 45.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 59.1,
+      "y": 48,
+      "front": true
+     },
+     "tip": {
+      "x": 72.5,
+      "y": 39.2,
+      "front": true
+     },
+     "head": {
+      "x": 52.7,
+      "y": 32.8,
+      "front": true
+     },
+     "chest": {
+      "x": 42.5,
+      "y": 48.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 59.7,
+      "y": 59.3,
+      "front": true
+     },
+     "tip": {
+      "x": 71.7,
+      "y": 63.1,
+      "front": true
+     },
+     "head": {
+      "x": 54.1,
+      "y": 34.9,
+      "front": true
+     },
+     "chest": {
+      "x": 43.5,
+      "y": 49.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 55.8,
+      "y": 62.5,
+      "front": true
+     },
+     "tip": {
+      "x": 65.3,
+      "y": 71,
+      "front": true
+     },
+     "head": {
+      "x": 53.5,
+      "y": 33.1,
+      "front": true
+     },
+     "chest": {
+      "x": 42.4,
+      "y": 48.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 47.7,
+      "y": 62.9,
+      "front": true
+     },
+     "tip": {
+      "x": 50.2,
+      "y": 78.6,
+      "front": true
+     },
+     "head": {
+      "x": 48.1,
+      "y": 30.7,
+      "front": true
+     },
+     "chest": {
+      "x": 40.9,
+      "y": 47.1,
+      "front": true
+     }
+    }
+   ]
+  },
+  "NE": {
+   "attack": [
+    {
+     "handR": {
+      "x": 41.8,
+      "y": 46.2,
+      "front": true
+     },
+     "tip": {
+      "x": 39.8,
+      "y": 44.6,
+      "front": true
+     },
+     "head": {
+      "x": 40.9,
+      "y": 30.2,
+      "front": true
+     },
+     "chest": {
+      "x": 39.4,
+      "y": 47.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 43.1,
+      "y": 39.8,
+      "front": true
+     },
+     "tip": {
+      "x": 36.1,
+      "y": 37.2,
+      "front": true
+     },
+     "head": {
+      "x": 36.9,
+      "y": 30,
+      "front": true
+     },
+     "chest": {
+      "x": 39,
+      "y": 46.3,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 62.2,
+      "y": 39.9,
+      "front": true
+     },
+     "tip": {
+      "x": 67.1,
+      "y": 27.6,
+      "front": false
+     },
+     "head": {
+      "x": 47.5,
+      "y": 28.9,
+      "front": true
+     },
+     "chest": {
+      "x": 41.7,
+      "y": 47.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 61.3,
+      "y": 51.3,
+      "front": false
+     },
+     "tip": {
+      "x": 64.7,
+      "y": 52.1,
+      "front": false
+     },
+     "head": {
+      "x": 47.9,
+      "y": 30.6,
+      "front": true
+     },
+     "chest": {
+      "x": 42.4,
+      "y": 48.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 60.5,
+      "y": 55.5,
+      "front": true
+     },
+     "tip": {
+      "x": 63.9,
+      "y": 61.5,
+      "front": false
+     },
+     "head": {
+      "x": 47,
+      "y": 29.1,
+      "front": true
+     },
+     "chest": {
+      "x": 41.6,
+      "y": 47.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 55.4,
+      "y": 58.4,
+      "front": true
+     },
+     "tip": {
+      "x": 60.5,
+      "y": 72.7,
+      "front": false
+     },
+     "head": {
+      "x": 45.3,
+      "y": 28.1,
+      "front": true
+     },
+     "chest": {
+      "x": 40.6,
+      "y": 46.8,
+      "front": true
+     }
+    }
+   ]
+  },
+  "N": {
+   "attack": [
+    {
+     "handR": {
+      "x": 56.4,
+      "y": 42.6,
+      "front": true
+     },
+     "tip": {
+      "x": 64.4,
+      "y": 39.9,
+      "front": true
+     },
+     "head": {
+      "x": 40.6,
+      "y": 29.9,
+      "front": true
+     },
+     "chest": {
+      "x": 39.9,
+      "y": 47.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 54.1,
+      "y": 36.4,
+      "front": true
+     },
+     "tip": {
+      "x": 57.3,
+      "y": 34.6,
+      "front": true
+     },
+     "head": {
+      "x": 39.1,
+      "y": 30.8,
+      "front": true
+     },
+     "chest": {
+      "x": 39.9,
+      "y": 46.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 52.2,
+      "y": 33.2,
+      "front": false
+     },
+     "tip": {
+      "x": 45.8,
+      "y": 21.2,
+      "front": false
+     },
+     "head": {
+      "x": 37.9,
+      "y": 27.9,
+      "front": true
+     },
+     "chest": {
+      "x": 39.9,
+      "y": 47.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 50.4,
+      "y": 45.2,
+      "front": false
+     },
+     "tip": {
+      "x": 43.2,
+      "y": 46.7,
+      "front": false
+     },
+     "head": {
+      "x": 37.2,
+      "y": 29.6,
+      "front": true
+     },
+     "chest": {
+      "x": 39.9,
+      "y": 48.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 53.2,
+      "y": 48.9,
+      "front": false
+     },
+     "tip": {
+      "x": 48.5,
+      "y": 55.2,
+      "front": false
+     },
+     "head": {
+      "x": 36.4,
+      "y": 28.5,
+      "front": true
+     },
+     "chest": {
+      "x": 39.9,
+      "y": 47.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 54.1,
+      "y": 52.7,
+      "front": false
+     },
+     "tip": {
+      "x": 58.9,
+      "y": 65,
+      "front": false
+     },
+     "head": {
+      "x": 39.4,
+      "y": 27.2,
+      "front": true
+     },
+     "chest": {
+      "x": 40,
+      "y": 46.7,
+      "front": true
+     }
+    }
+   ]
+  },
+  "NW": {
+   "attack": [
+    {
+     "handR": {
+      "x": 61.3,
+      "y": 35.3,
+      "front": true
+     },
+     "tip": {
+      "x": 74.6,
+      "y": 28.4,
+      "front": true
+     },
+     "head": {
+      "x": 40,
+      "y": 29.8,
+      "front": true
+     },
+     "chest": {
+      "x": 40.5,
+      "y": 47.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 56.8,
+      "y": 30.4,
+      "front": true
+     },
+     "tip": {
+      "x": 68.3,
+      "y": 25.7,
+      "front": true
+     },
+     "head": {
+      "x": 41.8,
+      "y": 30.6,
+      "front": true
+     },
+     "chest": {
+      "x": 40.8,
+      "y": 46.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 35.1,
+      "y": 31.8,
+      "front": false
+     },
+     "tip": {
+      "x": 21.1,
+      "y": 23.8,
+      "front": false
+     },
+     "head": {
+      "x": 29.5,
+      "y": 30.3,
+      "front": true
+     },
+     "chest": {
+      "x": 38.2,
+      "y": 47.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 33.5,
+      "y": 44.4,
+      "front": false
+     },
+     "tip": {
+      "x": 19.9,
+      "y": 50,
+      "front": false
+     },
+     "head": {
+      "x": 28.1,
+      "y": 32.5,
+      "front": true
+     },
+     "chest": {
+      "x": 37.5,
+      "y": 48.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 38.2,
+      "y": 46.7,
+      "front": false
+     },
+     "tip": {
+      "x": 28.1,
+      "y": 55.8,
+      "front": false
+     },
+     "head": {
+      "x": 27.9,
+      "y": 31.5,
+      "front": true
+     },
+     "chest": {
+      "x": 38.3,
+      "y": 48,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 44.5,
+      "y": 49.1,
+      "front": false
+     },
+     "tip": {
+      "x": 46.2,
+      "y": 60.1,
+      "front": false
+     },
+     "head": {
+      "x": 33.8,
+      "y": 28.5,
+      "front": true
+     },
+     "chest": {
+      "x": 39.3,
+      "y": 46.8,
+      "front": true
+     }
+    }
+   ]
+  },
+  "W": {
+   "attack": [
+    {
+     "handR": {
+      "x": 53.8,
+      "y": 28.5,
+      "front": false
+     },
+     "tip": {
+      "x": 64.6,
+      "y": 16.9,
+      "front": false
+     },
+     "head": {
+      "x": 39.4,
+      "y": 29.9,
+      "front": true
+     },
+     "chest": {
+      "x": 40.8,
+      "y": 47.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 49.7,
+      "y": 25.2,
+      "front": true
+     },
+     "tip": {
+      "x": 62.8,
+      "y": 15.8,
+      "front": true
+     },
+     "head": {
+      "x": 43.5,
+      "y": 29.5,
+      "front": true
+     },
+     "chest": {
+      "x": 41.3,
+      "y": 46,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 20.9,
+      "y": 36.5,
+      "front": false
+     },
+     "tip": {
+      "x": 7.5,
+      "y": 33.8,
+      "front": true
+     },
+     "head": {
+      "x": 27.3,
+      "y": 34.8,
+      "front": true
+     },
+     "chest": {
+      "x": 37.5,
+      "y": 48.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 20.3,
+      "y": 49.5,
+      "front": false
+     },
+     "tip": {
+      "x": 8.3,
+      "y": 60.1,
+      "front": false
+     },
+     "head": {
+      "x": 25.9,
+      "y": 37.5,
+      "front": true
+     },
+     "chest": {
+      "x": 36.5,
+      "y": 49.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 24.2,
+      "y": 50.1,
+      "front": false
+     },
+     "tip": {
+      "x": 14.7,
+      "y": 63.1,
+      "front": false
+     },
+     "head": {
+      "x": 26.5,
+      "y": 36.5,
+      "front": true
+     },
+     "chest": {
+      "x": 37.6,
+      "y": 48.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32.3,
+      "y": 49.7,
+      "front": false
+     },
+     "tip": {
+      "x": 29.8,
+      "y": 60.9,
+      "front": false
+     },
+     "head": {
+      "x": 31.9,
+      "y": 31.3,
+      "front": true
+     },
+     "chest": {
+      "x": 39.1,
+      "y": 47.1,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SW": {
+   "attack": [
+    {
+     "handR": {
+      "x": 38.2,
+      "y": 26.2,
+      "front": false
+     },
+     "tip": {
+      "x": 40.2,
+      "y": 12,
+      "front": false
+     },
+     "head": {
+      "x": 39.1,
+      "y": 30.2,
+      "front": true
+     },
+     "chest": {
+      "x": 40.6,
+      "y": 47.2,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 36.9,
+      "y": 23.9,
+      "front": false
+     },
+     "tip": {
+      "x": 43.9,
+      "y": 10.6,
+      "front": false
+     },
+     "head": {
+      "x": 43.1,
+      "y": 28.2,
+      "front": true
+     },
+     "chest": {
+      "x": 41,
+      "y": 45.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 17.8,
+      "y": 44.5,
+      "front": true
+     },
+     "tip": {
+      "x": 12.9,
+      "y": 45.4,
+      "front": true
+     },
+     "head": {
+      "x": 32.5,
+      "y": 38.7,
+      "front": true
+     },
+     "chest": {
+      "x": 38.3,
+      "y": 49.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 18.7,
+      "y": 57.5,
+      "front": true
+     },
+     "tip": {
+      "x": 15.3,
+      "y": 71,
+      "front": true
+     },
+     "head": {
+      "x": 32.1,
+      "y": 41.8,
+      "front": true
+     },
+     "chest": {
+      "x": 37.6,
+      "y": 50.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 19.5,
+      "y": 57.2,
+      "front": true
+     },
+     "tip": {
+      "x": 16.1,
+      "y": 72.7,
+      "front": true
+     },
+     "head": {
+      "x": 33,
+      "y": 40.5,
+      "front": true
+     },
+     "chest": {
+      "x": 38.4,
+      "y": 49.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 24.6,
+      "y": 54.2,
+      "front": false
+     },
+     "tip": {
+      "x": 19.5,
+      "y": 66.9,
+      "front": false
+     },
+     "head": {
+      "x": 34.7,
+      "y": 33.9,
+      "front": true
+     },
+     "chest": {
+      "x": 39.4,
+      "y": 47.4,
+      "front": true
+     }
+    }
+   ]
+  }
+ }
+}

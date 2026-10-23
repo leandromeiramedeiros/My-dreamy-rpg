@@ -1,0 +1,77 @@
+{
+ "unit": "knighthelm.t4",
+ "sheet": "atk.staff",
+ "images": {
+  "front": "knighthelm.t4.atk.staff_front.png",
+  "back": "knighthelm.t4.atk.staff_back.png"
+ },
+ "layer": "head",
+ "zorder": {
+  "S": 49,
+  "SE": 48,
+  "E": 49,
+  "NE": 51,
+  "N": 53,
+  "NW": 51,
+  "W": 51,
+  "SW": 44
+ },
+ "hides": [
+  "hair",
+  "bangs",
+  "hairSide"
+ ],
+ "slot": "head",
+ "tier": 4,
+ "class": null,
+ "split": {
+  "rule": "front = pixels where body + this unit differs from the body alone; back = this unit's own pixels hidden behind the body",
+  "body_pixels_lost": 0
+ },
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  4,
+  8
+ ],
+ "anims": {
+  "attack": {
+   "from": 0,
+   "count": 4,
+   "ms": [
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl"
+}

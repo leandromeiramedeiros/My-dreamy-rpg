@@ -1,0 +1,44 @@
+{
+ "id": "tree_birch_07",
+ "kind": "tree_birch",
+ "label": "Birch (forest)",
+ "size": [
+  18,
+  44
+ ],
+ "origin": [
+  9,
+  43
+ ],
+ "collider_r": 0.26,
+ "shadow": 7,
+ "light": null,
+ "layers": {
+  "trunk": "tree_birch_07_trunk.png",
+  "canopy": "tree_birch_07_canopy.png"
+ },
+ "canopy": {
+  "box": [
+   0,
+   1,
+   16,
+   26
+  ],
+  "fade": 0.35,
+  "fade_s": 0.2,
+  "rule": "split while the hero (14 x 32 px box at his feet) overlaps box and stands behind the trunk; canopy alpha 1 -> fade"
+ },
+ "wind": {
+  "cut_row": 26,
+  "px": [
+   -2,
+   -1,
+   0,
+   1,
+   2
+  ],
+  "about": "rows above cut_row shift by the wind frame (js/wind.js); Godot: a canopy shader"
+ },
+ "flip_by_light": true,
+ "flip_about": "mirrored when the zone light is on the left (zones.json light_side)"
+}

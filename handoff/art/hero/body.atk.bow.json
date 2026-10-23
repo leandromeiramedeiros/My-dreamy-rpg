@@ -1,0 +1,964 @@
+{
+ "unit": "body",
+ "sheet": "atk.bow",
+ "images": {
+  "color": "body.atk.bow.png",
+  "normal": "body.atk.bow_n.png"
+ },
+ "layer": "body",
+ "zorder": {
+  "S": 0,
+  "SE": 0,
+  "E": 0,
+  "NE": 0,
+  "N": 0,
+  "NW": 0,
+  "W": 0,
+  "SW": 0
+ },
+ "about": "The base layer of the hero paper doll. Draw order per direction: every <unit>_back by zorder, this body, hair and every <unit>_front by zorder.",
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  4,
+  8
+ ],
+ "anims": {
+  "attack": {
+   "from": 0,
+   "count": 4,
+   "ms": [
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl",
+ "sockets": {
+  "S": {
+   "attack": [
+    {
+     "handR": {
+      "x": 22.9,
+      "y": 36.6,
+      "front": true
+     },
+     "handL": {
+      "x": 30.2,
+      "y": 38.5,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 22.4,
+      "y": 40.2,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 22.2,
+      "y": 34,
+      "front": true
+     },
+     "handL": {
+      "x": 30.1,
+      "y": 38.5,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 22.1,
+      "y": 40.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 18.9,
+      "y": 31.5,
+      "front": false
+     },
+     "handL": {
+      "x": 30.2,
+      "y": 38.3,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 22.4,
+      "y": 40.2,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.1,
+      "y": 39.9,
+      "front": true
+     },
+     "handL": {
+      "x": 30.8,
+      "y": 39.6,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 24.5,
+      "y": 40.5,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SE": {
+   "attack": [
+    {
+     "handR": {
+      "x": 25.6,
+      "y": 37.3,
+      "front": true
+     },
+     "handL": {
+      "x": 33.9,
+      "y": 36.1,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 28.1,
+      "y": 40.5,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 22.5,
+      "y": 35.4,
+      "front": true
+     },
+     "handL": {
+      "x": 34,
+      "y": 36.2,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 27.7,
+      "y": 40.5,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 17.5,
+      "y": 34.5,
+      "front": true
+     },
+     "handL": {
+      "x": 33.9,
+      "y": 36,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 28.1,
+      "y": 40.5,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 23.9,
+      "y": 41.2,
+      "front": true
+     },
+     "handL": {
+      "x": 33.3,
+      "y": 37.2,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 30.1,
+      "y": 40,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ]
+  },
+  "E": {
+   "attack": [
+    {
+     "handR": {
+      "x": 28.6,
+      "y": 36.9,
+      "front": true
+     },
+     "handL": {
+      "x": 33,
+      "y": 33.2,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 32.6,
+      "y": 38.8,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 24.8,
+      "y": 36.4,
+      "front": true
+     },
+     "handL": {
+      "x": 33.1,
+      "y": 33.2,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 32.4,
+      "y": 38.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21,
+      "y": 37.1,
+      "front": true
+     },
+     "handL": {
+      "x": 33,
+      "y": 33.1,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 32.6,
+      "y": 38.8,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 27.8,
+      "y": 41.3,
+      "front": true
+     },
+     "handL": {
+      "x": 31.5,
+      "y": 34.7,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 33.4,
+      "y": 37.8,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ]
+  },
+  "NE": {
+   "attack": [
+    {
+     "handR": {
+      "x": 30,
+      "y": 35.6,
+      "front": true
+     },
+     "handL": {
+      "x": 27.9,
+      "y": 31.5,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 33.2,
+      "y": 36.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 27.8,
+      "y": 36.2,
+      "front": true
+     },
+     "handL": {
+      "x": 28.1,
+      "y": 31.4,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 33.3,
+      "y": 36.3,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 27.5,
+      "y": 37.8,
+      "front": true
+     },
+     "handL": {
+      "x": 27.9,
+      "y": 31.3,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 33.2,
+      "y": 36.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.7,
+      "y": 40,
+      "front": true
+     },
+     "handL": {
+      "x": 26.4,
+      "y": 33.6,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 32.3,
+      "y": 35.1,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ]
+  },
+  "N": {
+   "attack": [
+    {
+     "handR": {
+      "x": 29.1,
+      "y": 34.2,
+      "front": true
+     },
+     "handL": {
+      "x": 21.8,
+      "y": 31.9,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 29.6,
+      "y": 34,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.8,
+      "y": 35.1,
+      "front": true
+     },
+     "handL": {
+      "x": 21.9,
+      "y": 31.8,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 29.9,
+      "y": 34.1,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 33.1,
+      "y": 36.1,
+      "front": true
+     },
+     "handL": {
+      "x": 21.8,
+      "y": 31.8,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 29.6,
+      "y": 34,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.9,
+      "y": 38.2,
+      "front": false
+     },
+     "handL": {
+      "x": 21.2,
+      "y": 34.4,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 27.5,
+      "y": 33.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ]
+  },
+  "NW": {
+   "attack": [
+    {
+     "handR": {
+      "x": 26.4,
+      "y": 33.6,
+      "front": false
+     },
+     "handL": {
+      "x": 18.1,
+      "y": 34.3,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 23.9,
+      "y": 33.7,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.5,
+      "y": 33.7,
+      "front": true
+     },
+     "handL": {
+      "x": 18,
+      "y": 34.2,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 24.3,
+      "y": 33.7,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 34.5,
+      "y": 33.1,
+      "front": true
+     },
+     "handL": {
+      "x": 18.1,
+      "y": 34.1,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 23.9,
+      "y": 33.7,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.1,
+      "y": 36.8,
+      "front": false
+     },
+     "handL": {
+      "x": 18.7,
+      "y": 36.8,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 21.9,
+      "y": 34.1,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ]
+  },
+  "W": {
+   "attack": [
+    {
+     "handR": {
+      "x": 23.4,
+      "y": 34,
+      "front": true
+     },
+     "handL": {
+      "x": 19,
+      "y": 37.2,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 19.4,
+      "y": 35.4,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 27.2,
+      "y": 32.8,
+      "front": true
+     },
+     "handL": {
+      "x": 18.9,
+      "y": 37.1,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 19.6,
+      "y": 35.2,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 31,
+      "y": 30.5,
+      "front": false
+     },
+     "handL": {
+      "x": 19,
+      "y": 37,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 19.4,
+      "y": 35.4,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 24.2,
+      "y": 36.8,
+      "front": false
+     },
+     "handL": {
+      "x": 20.5,
+      "y": 39.3,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 18.6,
+      "y": 36.4,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SW": {
+   "attack": [
+    {
+     "handR": {
+      "x": 22,
+      "y": 35.3,
+      "front": true
+     },
+     "handL": {
+      "x": 24.1,
+      "y": 38.9,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 18.8,
+      "y": 38.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 24.2,
+      "y": 32.9,
+      "front": true
+     },
+     "handL": {
+      "x": 23.9,
+      "y": 38.9,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 18.7,
+      "y": 37.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 24.5,
+      "y": 29.8,
+      "front": false
+     },
+     "handL": {
+      "x": 24.1,
+      "y": 38.8,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 18.8,
+      "y": 38.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.3,
+      "y": 38,
+      "front": false
+     },
+     "handL": {
+      "x": 25.6,
+      "y": 40.4,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 19.7,
+      "y": 39,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ]
+  }
+ }
+}

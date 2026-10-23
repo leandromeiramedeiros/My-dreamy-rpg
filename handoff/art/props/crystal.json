@@ -1,0 +1,23 @@
+{
+ "id": "crystal",
+ "kind": "crystal",
+ "label": "Crystal",
+ "size": [
+  18,
+  24
+ ],
+ "origin": [
+  9,
+  23
+ ],
+ "collider_r": 0.25,
+ "shadow": 0,
+ "light": {
+  "r": 60,
+  "col": "#7fd2ff",
+  "a": 0.85,
+  "h": 10
+ },
+ "image": "crystal.png",
+ "frames": null
+}

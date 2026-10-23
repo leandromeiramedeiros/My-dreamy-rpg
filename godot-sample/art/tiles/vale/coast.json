@@ -1,0 +1,443 @@
+{
+ "zone": "vale",
+ "theme": "vale",
+ "cell": [
+  32,
+  174
+ ],
+ "tile_shape": "isometric",
+ "tile_layout": "diamond_down",
+ "texture_origin": [
+  0,
+  -77
+ ],
+ "directions": [
+  {
+   "bit": 0,
+   "offset": [
+    -1,
+    0
+   ],
+   "name": "NW",
+   "godot": "TOP_LEFT_SIDE"
+  },
+  {
+   "bit": 1,
+   "offset": [
+    1,
+    0
+   ],
+   "name": "SE",
+   "godot": "BOTTOM_RIGHT_SIDE"
+  },
+  {
+   "bit": 2,
+   "offset": [
+    0,
+    -1
+   ],
+   "name": "NE",
+   "godot": "TOP_RIGHT_SIDE"
+  },
+  {
+   "bit": 3,
+   "offset": [
+    0,
+    1
+   ],
+   "name": "SW",
+   "godot": "BOTTOM_LEFT_SIDE"
+  },
+  {
+   "bit": 4,
+   "offset": [
+    -1,
+    -1
+   ],
+   "name": "N",
+   "godot": "TOP_CORNER"
+  },
+  {
+   "bit": 5,
+   "offset": [
+    1,
+    -1
+   ],
+   "name": "E",
+   "godot": "RIGHT_CORNER"
+  },
+  {
+   "bit": 6,
+   "offset": [
+    -1,
+    1
+   ],
+   "name": "W",
+   "godot": "LEFT_CORNER"
+  },
+  {
+   "bit": 7,
+   "offset": [
+    1,
+    1
+   ],
+   "name": "S",
+   "godot": "BOTTOM_CORNER"
+  }
+ ],
+ "image": "coast.png",
+ "layout": "coast",
+ "footprint_row": 2,
+ "grid": [
+  12,
+  4
+ ],
+ "about": "The floating island's edge, for a ground tile whose SW and / or SE neighbour is void: the 2 px lit lip on the top (grass), the 18 px slab (overhang lip, underline, strata, AO), then rock lobes fading to alpha 0 and some hanging roots. length = fraction of the zone's full skirt (the engine makes it longest under the island's middle). kind rim: the 1 px dark rim over a NW / NE back edge that meets the sky. The footprint diamond is rows 2..17; draw this layer under the ground layer.",
+ "cells": [
+  {
+   "col": 0,
+   "row": 0,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": false,
+   "length": 0.3,
+   "variant": 0
+  },
+  {
+   "col": 1,
+   "row": 0,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": false,
+   "length": 0.3,
+   "variant": 1
+  },
+  {
+   "col": 2,
+   "row": 0,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": false,
+   "length": 0.3,
+   "variant": 2
+  },
+  {
+   "col": 3,
+   "row": 0,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": false,
+   "length": 0.3,
+   "variant": 3
+  },
+  {
+   "col": 4,
+   "row": 0,
+   "kind": "skirt",
+   "edge_sw": false,
+   "edge_se": true,
+   "length": 0.3,
+   "variant": 0
+  },
+  {
+   "col": 5,
+   "row": 0,
+   "kind": "skirt",
+   "edge_sw": false,
+   "edge_se": true,
+   "length": 0.3,
+   "variant": 1
+  },
+  {
+   "col": 6,
+   "row": 0,
+   "kind": "skirt",
+   "edge_sw": false,
+   "edge_se": true,
+   "length": 0.3,
+   "variant": 2
+  },
+  {
+   "col": 7,
+   "row": 0,
+   "kind": "skirt",
+   "edge_sw": false,
+   "edge_se": true,
+   "length": 0.3,
+   "variant": 3
+  },
+  {
+   "col": 8,
+   "row": 0,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": true,
+   "length": 0.3,
+   "variant": 0
+  },
+  {
+   "col": 9,
+   "row": 0,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": true,
+   "length": 0.3,
+   "variant": 1
+  },
+  {
+   "col": 10,
+   "row": 0,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": true,
+   "length": 0.3,
+   "variant": 2
+  },
+  {
+   "col": 11,
+   "row": 0,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": true,
+   "length": 0.3,
+   "variant": 3
+  },
+  {
+   "col": 0,
+   "row": 1,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": false,
+   "length": 0.6,
+   "variant": 0
+  },
+  {
+   "col": 1,
+   "row": 1,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": false,
+   "length": 0.6,
+   "variant": 1
+  },
+  {
+   "col": 2,
+   "row": 1,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": false,
+   "length": 0.6,
+   "variant": 2
+  },
+  {
+   "col": 3,
+   "row": 1,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": false,
+   "length": 0.6,
+   "variant": 3
+  },
+  {
+   "col": 4,
+   "row": 1,
+   "kind": "skirt",
+   "edge_sw": false,
+   "edge_se": true,
+   "length": 0.6,
+   "variant": 0
+  },
+  {
+   "col": 5,
+   "row": 1,
+   "kind": "skirt",
+   "edge_sw": false,
+   "edge_se": true,
+   "length": 0.6,
+   "variant": 1
+  },
+  {
+   "col": 6,
+   "row": 1,
+   "kind": "skirt",
+   "edge_sw": false,
+   "edge_se": true,
+   "length": 0.6,
+   "variant": 2
+  },
+  {
+   "col": 7,
+   "row": 1,
+   "kind": "skirt",
+   "edge_sw": false,
+   "edge_se": true,
+   "length": 0.6,
+   "variant": 3
+  },
+  {
+   "col": 8,
+   "row": 1,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": true,
+   "length": 0.6,
+   "variant": 0
+  },
+  {
+   "col": 9,
+   "row": 1,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": true,
+   "length": 0.6,
+   "variant": 1
+  },
+  {
+   "col": 10,
+   "row": 1,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": true,
+   "length": 0.6,
+   "variant": 2
+  },
+  {
+   "col": 11,
+   "row": 1,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": true,
+   "length": 0.6,
+   "variant": 3
+  },
+  {
+   "col": 0,
+   "row": 2,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": false,
+   "length": 1,
+   "variant": 0
+  },
+  {
+   "col": 1,
+   "row": 2,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": false,
+   "length": 1,
+   "variant": 1
+  },
+  {
+   "col": 2,
+   "row": 2,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": false,
+   "length": 1,
+   "variant": 2
+  },
+  {
+   "col": 3,
+   "row": 2,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": false,
+   "length": 1,
+   "variant": 3
+  },
+  {
+   "col": 4,
+   "row": 2,
+   "kind": "skirt",
+   "edge_sw": false,
+   "edge_se": true,
+   "length": 1,
+   "variant": 0
+  },
+  {
+   "col": 5,
+   "row": 2,
+   "kind": "skirt",
+   "edge_sw": false,
+   "edge_se": true,
+   "length": 1,
+   "variant": 1
+  },
+  {
+   "col": 6,
+   "row": 2,
+   "kind": "skirt",
+   "edge_sw": false,
+   "edge_se": true,
+   "length": 1,
+   "variant": 2
+  },
+  {
+   "col": 7,
+   "row": 2,
+   "kind": "skirt",
+   "edge_sw": false,
+   "edge_se": true,
+   "length": 1,
+   "variant": 3
+  },
+  {
+   "col": 8,
+   "row": 2,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": true,
+   "length": 1,
+   "variant": 0
+  },
+  {
+   "col": 9,
+   "row": 2,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": true,
+   "length": 1,
+   "variant": 1
+  },
+  {
+   "col": 10,
+   "row": 2,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": true,
+   "length": 1,
+   "variant": 2
+  },
+  {
+   "col": 11,
+   "row": 2,
+   "kind": "skirt",
+   "edge_sw": true,
+   "edge_se": true,
+   "length": 1,
+   "variant": 3
+  },
+  {
+   "col": 0,
+   "row": 3,
+   "kind": "rim",
+   "edge_nw": true,
+   "edge_ne": false
+  },
+  {
+   "col": 1,
+   "row": 3,
+   "kind": "rim",
+   "edge_nw": false,
+   "edge_ne": true
+  },
+  {
+   "col": 2,
+   "row": 3,
+   "kind": "rim",
+   "edge_nw": true,
+   "edge_ne": true
+  }
+ ]
+}

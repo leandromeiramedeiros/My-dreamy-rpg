@@ -1,0 +1,23 @@
+{
+ "id": "shrine",
+ "kind": "shrine",
+ "label": "Checkpoint shrine",
+ "size": [
+  11,
+  11
+ ],
+ "origin": [
+  5.5,
+  10
+ ],
+ "collider_r": 0.35,
+ "shadow": 7,
+ "light": {
+  "r": 56,
+  "col": "#9ef0ff",
+  "a": 0.85,
+  "h": 16
+ },
+ "image": "shrine.png",
+ "frames": null
+}

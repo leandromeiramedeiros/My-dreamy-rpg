@@ -1,0 +1,18 @@
+{
+ "id": "house",
+ "kind": "house",
+ "label": "Cottage (2x2)",
+ "size": [
+  80,
+  104
+ ],
+ "origin": [
+  40,
+  66
+ ],
+ "collider_r": 0,
+ "shadow": 0,
+ "light": null,
+ "image": "house.png",
+ "frames": null
+}

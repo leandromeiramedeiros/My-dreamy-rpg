@@ -1,0 +1,78 @@
+GIMP Palette
+Name: Gloomspire Ruins (ruins)
+Columns: 7
+#
+  7   4  14	sky 0
+ 18   8  34	sky 1
+ 31  12  51	sky 2
+ 54  16  67	sky 3
+ 85  22  76	sky 4
+122  31  79	sky 5
+163  51  77	sky 6
+201  86  74	sky 7
+224 122  82	sky 8
+ 58  32  80	mtnFar 0
+ 29  15  48	mtnFar 1
+106  36  80	mtnFar 2
+ 34  18  47	mtnNear 0
+ 12   7  22	mtnNear 1
+ 65  20  58	mtnNear 2
+ 26  15  42	cloud 0
+ 46  26  68	cloud 1
+ 74  42  94	cloud 2
+110  58 112	cloud 3
+160  90 128	cloud 4
+ 14  14  21	grass 0
+ 27  36  47	grass 1
+ 38  68  72	grass 2
+ 47  96  80	grass 3
+ 59 119  82	grass 4
+ 72 140  79	grass 5
+ 99 158  87	grass 6
+ 42  36  66	path 0
+ 58  51  88	path 1
+ 77  69 112	path 2
+ 99  90 138	path 3
+126 117 166	path 4
+ 18  14  30	gap
+ 21  19  27	stone 0
+ 41  36  56	stone 1
+ 58  50  84	stone 2
+ 75  63 112	stone 3
+108  78 138	stone 4
+145  94 162	stone 5
+173 122 173	stone 6
+ 18  10  42	water 0
+ 28  16  64	water 1
+ 42  26  90	water 2
+ 60  40 120	water 3
+ 90  63 154	water 4
+143 111 208	water 5
+216 196 255	water 6
+ 33  21  44	wood 0
+ 58  36  71	wood 1
+ 85  53  94	wood 2
+110  74 116	wood 3
+138  98 144	wood 4
+ 14  13  18	earth 0
+ 28  22  36	earth 1
+ 44  31  54	earth 2
+ 63  38  71	earth 3
+ 88  47  88	earth 4
+102  57  91	earth 5
+115  68  92	earth 6
+ 12  10  15	under 0
+ 22  18  30	under 1
+ 32  25  46	under 2
+ 43  31  60	under 3
+ 57  38  74	under 4
+ 72  46  87	under 5
+ 87  56  97	under 6
+182 140 255	flowers 0
+255 122 166	flowers 1
+232 216 255	flowers 2
+ 74  42  88	haze
+ 42  31  58	root
+138 118 180	ambient
+154 106 192	fog
+255 106 154	fog2

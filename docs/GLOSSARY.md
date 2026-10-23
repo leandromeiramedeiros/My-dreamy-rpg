@@ -754,6 +754,9 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Sidecar | JSON beside each sheet PNG: cell, origin, dirs, anims, sockets, layer, zorder, palette | `<sheet>.json` | metadata file | M4b |
 | Terrain set | Godot TileSet terrain ("Match Corners and Sides") filled from a blob-47 template | `terrain_<name>.png` | autotile | M4b |
 | Blob-47 template | The standard 12x4 layout of the 47 neighbour configurations of a terrain, plus 4 plain variants | `blob47` | wang tileset | M4b |
+| Skirt | The hanging underside band of a floating island's edge (roots, lobes, fade); exported as the coast atlas | `coast.png` | — | M4b |
+| Peering bit | Godot terrain neighbour flag on a tile; the importer fills them from the blob-47 sidecar | — | — | M4b |
+| Zone record | One editable zone entry (name, theme, palette, terrains, cliff/coast/water files) | `handoff/data/zones.json` | — | M4b |
 | Depth split | A gear piece exported as two sheets, drawn under and over the body | `_front` `_back` | layer split | M4b |
 | Export manifest | Per-file sha256 list; a file whose hash differs was hand-edited and is skipped on rerun | `handoff/art/manifest.json` | export log | M4b |
 | Godot pivot | Client ruling 2026-10-23: the studio makes no maps; the client builds every zone and ports the game to Godot | — | Godot port-ready rules (dropped, now reversed) | M4b |

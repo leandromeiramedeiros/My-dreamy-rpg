@@ -1,0 +1,23 @@
+{
+ "id": "lantern_blue",
+ "kind": "lantern_blue",
+ "label": "Blue lantern",
+ "size": [
+  7,
+  16
+ ],
+ "origin": [
+  3.5,
+  15
+ ],
+ "collider_r": 0.12,
+ "shadow": 0,
+ "light": {
+  "r": 50,
+  "col": "#8ff0ff",
+  "a": 0.8,
+  "h": 14
+ },
+ "image": "lantern_blue.png",
+ "frames": null
+}

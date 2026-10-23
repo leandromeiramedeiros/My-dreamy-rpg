@@ -1,0 +1,44 @@
+{
+ "id": "tree_oak_02",
+ "kind": "tree_oak",
+ "label": "Oak (forest)",
+ "size": [
+  40,
+  64
+ ],
+ "origin": [
+  20,
+  63
+ ],
+ "collider_r": 0.34,
+ "shadow": 12,
+ "light": null,
+ "layers": {
+  "trunk": "tree_oak_02_trunk.png",
+  "canopy": "tree_oak_02_canopy.png"
+ },
+ "canopy": {
+  "box": [
+   0,
+   2,
+   39,
+   37
+  ],
+  "fade": 0.35,
+  "fade_s": 0.2,
+  "rule": "split while the hero (14 x 32 px box at his feet) overlaps box and stands behind the trunk; canopy alpha 1 -> fade"
+ },
+ "wind": {
+  "cut_row": 38,
+  "px": [
+   -2,
+   -1,
+   0,
+   1,
+   2
+  ],
+  "about": "rows above cut_row shift by the wind frame (js/wind.js); Godot: a canopy shader"
+ },
+ "flip_by_light": true,
+ "flip_about": "mirrored when the zone light is on the left (zones.json light_side)"
+}

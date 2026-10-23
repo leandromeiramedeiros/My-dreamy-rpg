@@ -45,10 +45,13 @@ forge and the frozen art and writes `handoff/art/`.
 Tiles and props: edit the PNG in place the same way; keep the cell size, and for `blob47` keep the template layout.
 
 ## World tiles
-Per zone, 16 px cells, rasterised by pinning the noise to a fixed seed and sampling each neighbour configuration.
+Per zone, 32x16 isometric diamond cells (Godot TileSet shape Isometric), rasterised by pinning the noise to a fixed seed and sampling each neighbour configuration.
 * `tiles/<zone>/terrain_<name>.png`: the **blob-47 template** (standard 12x4 blob layout, recorded in the sidecar as `blob47`) plus 4 plain variants.
 * `tiles/<zone>/cliff_<zone>.png`: strata faces for 1 to 3 levels, corners, lip, wedge shadows.
-* `tiles/<zone>/coast.png`: skirt bands. `tiles/<zone>/water.png`: 4 frames.
+* `tiles/<zone>/coast.png`: skirt bands (cells padded to an even height so the Godot texture origin is whole). `tiles/<zone>/water.png`: 4 frames.
+* Zone records (name, theme, palette, terrains, cliff/coast/water files) live in the editable `handoff/data/zones.json`.
+* Known gap: the engine's multi-tile grass patches are not tiles; paint them in Godot as a decal or second terrain layer.
+* `node tools/export/all.js` rebuilds `handoff/`; `node tools/export/godot.js` refills `godot-sample/` and runs the Godot checks (do not hand-edit `godot-sample/`).
 * Godot reads the template with a TileSet terrain set in "Match Corners and Sides" mode ([../PORTING.md](../PORTING.md), terrain import).
 
 ## Props and trees
@@ -92,3 +95,22 @@ snake_case ids equal the game ids (`validate-ids` checks them).
 
 ## Determinism
 The forge gate stays: sha256 stable, 0 lone pixels, runtime equals offline byte for byte. The Dressing room stays.
+
+## Aseprite
+Every handoff sheet (`handoff/art/**.png` + its `.json` sidecar) opens in Aseprite 1.3 for hand edits.
+- **Open a sheet:** `node tools/export/aseprite.js to-ase handoff/art/hero/body.json` writes `tools/out/aseprite/body.aseprite`.
+  Character sheets get one frame per cell, a tag per anim and direction (`walk_S`, `idle_NE`...), frame durations from the
+  sidecar `ms`, the pivot as slice `origin`, and the palette from the sidecar's `.gpl`. Tile, prop and decal atlases are a single
+  frame with Aseprite's grid set to the cell size (View > Show Grid).
+- **Gear:** `to-ase handoff/art/gear/cape.t3.json` gives three layers on the body's grid and origin: `cape.t3_back` (drawn behind
+  the hero), `body` (locked, reference only, never written back) and `cape.t3_front`. Paint each half on its own layer and keep
+  the piece's pixels inside the cell.
+- **Save back:** `node tools/export/aseprite.js from-ase tools/out/aseprite/cape.t3.aseprite` rewrites the same grid PNGs in
+  place (same cell size, rows S, SE, E, NE, N, NW, W, SW; the sidecar is not touched). Do not add, remove or reorder frames.
+- **Plain import also works:** File > Import Sprite Sheet, Type "By Rows", cell = the sidecar's `aseprite.cell`.
+- **Your edits are kept:** the exporter (`node tools/export/all.js`) skips any file whose hash differs from
+  `handoff/art/manifest.json` and lists it as hand-edited; `--force` overwrites.
+- **Godot:** it reimports a changed PNG on focus, and the SpriteFrames and TileSet only point at the PNG, so nothing needs
+  rebuilding. Rerun the importer only after a sidecar change (`node tools/export/godot.js` for the sample).
+- **Proof:** `node tools/export/aseprite.js roundtrip-check --all` exports every sheet to `.aseprite` and back and checks the PNGs
+  are byte-identical (411 sheets, 741 PNGs).
