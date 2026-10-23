@@ -32,8 +32,9 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
   `node tools/forge/build.js chibi` (js/forge-bank/chibi.js is a generated manifest both touch).
 - Usage pace (client, 2026-10-23): **two lanes at a time**. Skills + data and Export run; when one finishes, resume the
   next paused lane (SendMessage, full scope) in this order: Arenas, Enemy forge (re-run play.js + perf, then merge),
-  Gear A suits, Gear B follow-ups.
-- Merged: Raster embed, Docs pivot rewrite, Gear B (21 lines), Ruins bestiary. Running: wave 1 (Gear A suits, Gear B weapons, Enemy forge, Skills + data, Ruins bestiary),
+  Gear A suits (then rebuild chibi in claude/m4b; knighthelm.t4/t5 219.6 KB > 160 cap to fix).
+- Gear B done + merged (follow-ups too). Polish backlog: bow still faint facing E/NE at T1–T4.
+- Merged: Raster embed, Docs pivot rewrite, Gear B (21 lines + follow-ups), Ruins bestiary. Running: wave 1 (Gear A suits, Gear B weapons, Enemy forge, Skills + data, Ruins bestiary),
   wave 2 (Docs pivot rewrite, Arenas, Export tiles/props/sheets).
 - Wave 3 after merges: Elements in the world (the `verbs` arena), Map cut (Haiku deletes + save v6 + check.js).
 
