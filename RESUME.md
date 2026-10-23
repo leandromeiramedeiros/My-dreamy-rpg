@@ -24,14 +24,17 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
   for Pip, Elder Stone, Fox kit, palette-snapped to native size (portraits ~44 px shown x2 in the 88 px slot). Awaiting
   the client's eye; on approval: ruling into visual-bible.md, a Sonnet lane embeds them as data-URI PNGs (file://).
 
-## M4b (2026-10-23, branch `claude/m4b`)
-- Client approved the raster art board (ruling in visual-bible.md "Raster art").
-- Wave 1 running, each lane in its own worktree (lane table in PRODUCTION.md): Raster embed (Sonnet), Gear A suits (Sonnet),
-  Gear B weapons (Sonnet), Enemy forge (Opus), Skills + data (Opus), Ruins bestiary (Opus). Director commits each
-  worktree on its branch and merges into claude/m4b; after Gear A + B merge, rerun `node tools/forge/build.js chibi`
-  (js/forge-bank/chibi.js is a generated manifest both touch).
-- Wave 2 after merge: Act II Ruins level, Elements in the world. Wave 3: Balance + QA, perf scenes per zone.
+## M4b Arena cut (2026-10-23, branch `claude/m4b`)
+- **Godot pivot** (client): studio makes no maps; arenas only; human-editable assets; client ports to Godot.
+  Minutes: docs/meetings/2026-10-23-godot-handoff.md. Plan M4b → M9 in PRODUCTION.md. Act I maps tagged `maps-pre-godot`.
+- Lane worktrees start at origin's default branch: every brief begins with `git merge --ff-only claude/m4b`.
+  Director commits each worktree on its branch and merges into claude/m4b; after Gear A + B merge, rerun
+  `node tools/forge/build.js chibi` (js/forge-bank/chibi.js is a generated manifest both touch).
+- Merged: Raster embed. Running: wave 1 (Gear A suits, Gear B weapons, Enemy forge, Skills + data, Ruins bestiary),
+  wave 2 (Docs pivot rewrite, Arenas, Export tiles/props/sheets).
+- Wave 3 after merges: Elements in the world (the `verbs` arena), Map cut (Haiku deletes + save v6 + check.js).
 
 ## Next
-1. Merge wave 1, run `node tools/check.js`, start wave 2.
-2. After M4b merges: purge tools/qa/old from history (needs `pip install git-filter-repo`; client-approved).
+1. Merge lanes as they report; `node tools/check.js`; wave 3; ship M4b (Pages shows the Arena list).
+2. Client's open questions (minutes end): Godot 4.4 + GDScript/web; hand-edit sprites?; keep Pages; zone brief; install Godot.
+3. After M4b merges: purge tools/qa/old from history (needs `pip install git-filter-repo`; client-approved).
