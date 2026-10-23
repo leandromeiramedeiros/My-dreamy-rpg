@@ -30,8 +30,8 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
 - Lane worktrees start at origin's default branch: every brief begins with `git merge --ff-only claude/m4b`.
   Director commits each worktree on its branch and merges into claude/m4b; after Gear A + B merge, rerun
   `node tools/forge/build.js chibi` (js/forge-bank/chibi.js is a generated manifest both touch).
-- Usage pace (client, 2026-10-23): **two lanes at a time**. Gear A suits (finish) and Arenas (part 2) run; when one finishes, resume the
-  next paused lane (SendMessage, full scope) in this order: Skill visuals (render.js), then wave 3 (Elements in the `verbs` arena, Map cut).
+- Usage pace (client, 2026-10-23): **two lanes at a time**. Gear A suits (finish) and Skill visuals run; when one finishes, resume the
+  next paused lane (SendMessage, full scope) in this order: wave 3 (Elements in the `verbs` arena, Map cut).
 - Enemy forge merged: 20 rigs at 8 dirs incl. 4 bosses (base + moves rigs); perf p95 18.0 ms. enemyart.js still used by
   ?oldenemy, a pre-load death pop, editor + fx-board. Open: ruins-bestiary-check gloomknight 25 s vs 20 s target.
 - Skills + data merged: all 15 weapons, 6 offhands, 12 suits (36 pieces), 14 grips live; balsim green (under-trials 96).
@@ -39,9 +39,9 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
   new poses, new skill icons, Codex grip tab.
 - Export merged: handoff/ (tiles vale/pinewood/ruins, props, sheets, palettes, zones.json, manifest), Aseprite round trip
   411 sheets identical, godot-sample/ (Godot 4.7.2: import, run, web export 0 errors). Rebuild: tools/export/all.js, godot.js.
-- Arenas part 1 merged (12 arenas, ?map=, title list, arena-route). On resume: perf stress, run-arenas, validate-ids;
-  commit the arenas.js generator template into tools/ (it lives in the lane's scratchpad) or make arenas.js the hand-edited
-  source; pack-ruins should use the Ruins commons.
+- Arenas merged: 14 hand-edited arenas; arena-route 14/14; run-arenas kbm 10/10, pad 10/10; stress p95 17.9 ms.
+  QA backlog (Balance + QA lane): touch bot partial (TouchDriver leaks touch points, hangs on pack-spire/bramblehorn;
+  full map opens on a top-right tap and has no touch close, hud.js:433); gloomknight 25 s vs 20 s.
 - Gear B done + merged (follow-ups too). Polish backlog: bow still faint facing E/NE at T1–T4.
 - Merged: Raster embed, Docs pivot rewrite, Gear B (21 lines + follow-ups), Ruins bestiary. Running: wave 1 (Gear A suits, Gear B weapons, Enemy forge, Skills + data, Ruins bestiary),
   wave 2 (Docs pivot rewrite, Arenas, Export tiles/props/sheets).
