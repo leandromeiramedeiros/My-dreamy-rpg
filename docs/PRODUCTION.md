@@ -12,7 +12,7 @@ Plan: `docs/meetings/2026-10-23-godot-handoff.md`. Act I maps tagged `maps-pre-g
 `node tools/check.js` (`--fast` skips perf + bot): smoke (balsim + save-migrate) · play · validate-ids · forge-rt · perf · the bot.
 Until the M4b Arena cut lands: act1-route, maps/engine-check, qa/run-big. After it: `tools/arena-route.js`,
 `tools/qa/run-arenas.js kbm|pad|touch`, perf on the `stress` arena. Director reviews shots, merges.
-Local box: Windows 11, Node 24, Python 3.13 + PIL, Playwright with its own Chromium (`npm i`). Godot 4.7.2 + export templates (web): `%LOCALAPPDATA%/Programs/Godot/Godot_v4.7.2-stable_win64_console.exe` (headless: `--headless --path godot-sample`).
+Local box: Windows 11, Node 24, Python 3.13 + PIL, Playwright with its own Chromium (`npm i`). Godot 4.7.2 + export templates (web): `%LOCALAPPDATA%/Programs/Godot/Godot_v4.7.2-stable_win64_console.exe` (headless: `--headless --path godot-sample`). Aseprite 1.3.18 (Steam): `C:/Program Files (x86)/Steam/steamapps/common/Aseprite/Aseprite.exe` (`--batch`, `--script`).
 Known flakes: play.js warp-fade, perf under load.
 
 ## Status
@@ -53,6 +53,7 @@ Piece ids: chest = suit id; new heads `<suit>helm`, new boots `<suit>boots`; wea
 Gate: check.js green on arenas; 100 % forge sprites; phone p95 ≤ 20 ms on `stress`; Pages shows the Arena list.
 
 ## Client rulings (latest first)
+* 2026-10-23 — Every sprite sheet must open and edit cleanly in **Aseprite** (client owns 1.3.18); the studio may use Aseprite's CLI as a tool.
 * 2026-10-23 (answers) — Godot **4.7.2**, GDScript, **web builds** wanted. The client will hand-edit **both** sprites/gear and tiles/props (every sheet, incl. `_front`/`_back` gear splits, must be edit-friendly). GitHub Pages **comes down at handoff**. Zone names, hooks and pacing **stay** as his build targets but must be **easy to change**: they live in editable data (`handoff/data/zones.json`), never hard-coded.
 * 2026-10-23 (later) — **Godot pivot.** The studio no longer makes maps: the client builds every map himself in Godot. Act I maps are scrapped. The studio makes weapons, systems, gameplay, enemies, bosses, UI, and tests them only in tiny mockup arenas. When the game is finished the client ports it to Godot, so every asset (sprite sheets, map tiles, props) must be human-editable files. Map assets are remade only as reusable Godot tile/prop assets. This reverses the old "Godot port-ready rules" drop. Minutes: `docs/meetings/2026-10-23-godot-handoff.md`.
 * 2026-10-23 — Raster art board approved: the artist (`codex-image`) paints art outside the forge only (wordmark, dialogue portraits, key art); see visual-bible.md.
