@@ -10,7 +10,7 @@
 - **Design decisions are the director's**: research (code, docs, references, web), weigh the options, decide, record the decision in the matching file under `docs/design/` (index: `docs/design/INDEX.md`), and brief the client with any choices that are truly theirs.
 - **Fable is used only when the client asks for it** (an expert consult or meeting, or the Fable advisor). Never spawn a Fable consult on your own initiative. When the client asks, minutes go to `docs/meetings/`.
 - Reports to the client: substance only, no commit/PR/merge chatter. A stop-hook nag about uncommitted files gets a silent WIP commit.
-- Dropped by the client, never re-offer: the jade tint for the nature Echo, real-phone `?perf=1` readings.
+- Dropped by the client, never re-offer: the jade tint for the nature Echo, real-phone `?perf=1` readings, Godot web/phone performance tuning.
 
 ## The employees (models)
 | Model | For | Examples |

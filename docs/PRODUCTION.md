@@ -59,8 +59,7 @@ The studio rewrites the game code in GDScript and hands the client a **playable 
 GL Compatibility, web export). Contract: `docs/PORTING.md` (folder tree, autoloads, what ports 1:1, trigger vocabulary).
 * **When:** after M9. Systems, tables and art are frozen by then, so nothing is ported twice. The risk is found early by the
   **port spike** in M5: hero movement, one weapon line's hand action and spell, damage and one status ladder, one enemy
-  (Ogre) in `godot-sample/`, matched against golden vectors from the JS build; plus a web-build stress scene (24 bodies,
-  40 `Light2D`s) on a phone, because Godot web lighting cost is the port's biggest unknown.
+  (Ogre) in `godot-sample/`, matched against golden vectors from the JS build.
 * **Data, not code:** every number is read from the exported JSON (`handoff/data/`); GDScript holds only the maths.
 * **Arenas only:** the studio rebuilds the mockup arenas as Godot scenes (`godot/arenas/`, the same ids as `js/arenas.js`)
   to test the port. It never makes zones: the client builds them in `godot/zones/`, which no lane touches.
@@ -71,15 +70,16 @@ GL Compatibility, web export). Contract: `docs/PORTING.md` (folder tree, autoloa
 | Core | Opus | autoloads `Data`, `Save` (v6 + migrate), `Game`; project settings; scene tree | loads every `handoff/data` table; save round-trip with JS fixtures |
 | Combat | Opus | hero, Loadout v3, casts, `Effects`, `Status` (ladders, 8 reactions), elements in the world, `Wind` | golden vectors from the JS build match (damage, builds, reactions, EFFECTS rows) |
 | Bestiary + bosses | Opus | enemy parts state machine, elites, bosses (`BOSS_MOVES` as Resources) | Godot bot clears every `pack-*` and `boss-*` arena per band |
-| Render + feel | Opus | layered `AnimatedSprite2D` hero, `Light2D` + normal sheets, rim shader, VFX, hit feel | 8 dirs × every anim; p95 ≤ 20 ms on `stress` in the web build |
+| Render + feel | Opus | layered `AnimatedSprite2D` hero, `Light2D` + normal sheets, rim shader, VFX, hit feel | 8 dirs × every anim; desktop p95 ≤ 16.7 ms on `stress` |
 | UI + input | Sonnet | HUD, every menu, touch wheel, pad, rebind | the play.js UI checks ported; kbm, pad and touch route |
 | Audio | Sonnet | `Audio` autoload, buses, music director, `handoff/audio/*.ogg` | every SFX and motif fires |
 | Arenas + QA | Sonnet | `godot/arenas/*.tscn`, headless GDScript test runner, `check.js` step `godot` | every arena loads; the suite runs headless |
 
 Gate: golden vectors match; balsim parity ±2 % between JS and Godot; the Godot bot wins every arena it wins in JS;
-web export with 0 errors; phone p95 ≤ 20 ms on `stress`; the client plays the arenas in Godot (desktop + phone web) and approves.
+web export runs with 0 errors (no web or phone perf target, client ruling); desktop p95 ≤ 16.7 ms on `stress`; the client plays the arenas in Godot (desktop + phone web) and approves.
 
 ## Client rulings (latest first)
+* 2026-10-23 — **No web optimisation for the Godot build**: the web export must run, but there is no web/phone perf target or tuning work.
 * 2026-10-23 — **The studio ports the game code to GDScript** (M10): the client gets a playable Godot project and builds his zones in it. Reverses "the client ports the game".
 * 2026-10-23 — Every sprite sheet must open and edit cleanly in **Aseprite** (client owns 1.3.18); the studio may use Aseprite's CLI as a tool.
 * 2026-10-23 (answers) — Godot **4.7.2**, GDScript, **web builds** wanted. The client will hand-edit **both** sprites/gear and tiles/props (every sheet, incl. `_front`/`_back` gear splits, must be edit-friendly). GitHub Pages **comes down at handoff**. Zone names, hooks and pacing **stay** as his build targets but must be **easy to change**: they live in editable data (`handoff/data/zones.json`), never hard-coded.
@@ -90,7 +90,7 @@ web export with 0 errors; phone p95 ≤ 20 ms on `stress`; the client plays the 
   companion; Grimoire/Quiver/Warhorn decks; R head · F chest · V boots; 32 px hero; 8 dirs for every facing creature;
   forge is the only 8-dir sprite source; runtime status/lighting layers; wind field; purge tools/qa/old from history; unique cap 20 (The Stopped Hour); Story difficulty removed (Normal only, plus NG+); bosses keep hit-kill potential (no hit cap, telegraphed only).
 * 2026-10-20 — elements (§33): 9 hero elements, Opal, 8 reactions incl. Drift; pixel-FX prototype approved.
-* Dropped, never re-offer: jade tint for the nature Echo; real-phone `?perf=1` readings.
+* Dropped, never re-offer: jade tint for the nature Echo; real-phone `?perf=1` readings; Godot web/phone performance tuning.
 * Reports to the client: substance only, no commit/PR chatter.
 
 ## Known misses (not blockers)
