@@ -30,7 +30,8 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
 - Lane worktrees start at origin's default branch: every brief begins with `git merge --ff-only claude/m4b`.
   Director commits each worktree on its branch and merges into claude/m4b; after Gear A + B merge, rerun
   `node tools/forge/build.js chibi` (js/forge-bank/chibi.js is a generated manifest both touch).
-- Merged: Raster embed. Running: wave 1 (Gear A suits, Gear B weapons, Enemy forge, Skills + data, Ruins bestiary),
+- Usage budget (client, 2026-10-23 06:50): lanes report by 09:50, director merges + gate by 10:50; no new lanes until then.
+- Merged: Raster embed, Docs pivot rewrite, Gear B (21 lines), Ruins bestiary. Running: wave 1 (Gear A suits, Gear B weapons, Enemy forge, Skills + data, Ruins bestiary),
   wave 2 (Docs pivot rewrite, Arenas, Export tiles/props/sheets).
 - Wave 3 after merges: Elements in the world (the `verbs` arena), Map cut (Haiku deletes + save v6 + check.js).
 
