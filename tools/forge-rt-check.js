@@ -94,7 +94,7 @@ const enemySheetsOf = (page, want) => page.evaluate(async ([rigs, want]) => {
     const fkb = fs.statSync(path.join(ROOT, 'js', 'forge-bank', f)).size / 1024; if (f !== `${RIG}.js` && !ENEMY_RIGS.includes(f.slice(0, -3)) && fkb > top.kb) top = { f, kb: fkb };
   }
   const starter = (fs.statSync(path.join(ROOT, 'js', 'forge-rt.js')).size + fs.statSync(path.join(ROOT, 'js', 'forge-bank', `${RIG}.js`)).size) / 1024;
-  const named = new Set([RIG, ...ENEMY_RIGS, ...Object.values(BANK.lines)].map(l => l + '.js')), stale = files.filter(f => !named.has(f)), missing = [...named].filter(f => !files.includes(f));
+  const named = new Set([RIG, ...ENEMY_RIGS, ...Object.values(BANK.lines), ...Object.values(BANK.atk || {})].map(l => l + '.js')), stale = files.filter(f => !named.has(f)), missing = [...named].filter(f => !files.includes(f));
   check('banks', worst.kb <= 64 && starter <= 400 && !stale.length && !missing.length,
     `${files.length} files, ${n} sheets, largest sheet ${worst.key} ${worst.kb.toFixed(1)} KB (<= 64) | starter bundle ${starter.toFixed(0)} KB (<= 400)` +
     (stale.length ? ` | stale: ${stale.join(' ')}` : ' | no stale file') + (missing.length ? ` | missing: ${missing.join(' ')}` : ''));
@@ -155,6 +155,36 @@ const enemySheetsOf = (page, want) => page.evaluate(async ([rigs, want]) => {
       }));
     }
     check('equal', !bad, `${frames - bad}/${frames} board frames identical (${Object.keys(LOADOUTS).join(', ')} x idle/walk/attack x 8 dirs)${bad ? ' | first: ' + badAt.join(', ') : ''}`);
+    // ---- weapon classes: one piece per class (T3), a fresh page (so the lazy <rig>.atk.<class> files load on demand): attack frames == offline
+    {
+      const byCls = {}; for (const id in pieces) { const q = pieces[id]; if (id.endsWith('.t3') && q.class && !byCls[q.class]) byCls[q.class] = id; }
+      const { page: pg, errs: pe } = await fresh(br), cls = Object.keys(byCls);
+      const rt = await pg.evaluate(async ([rig, ids]) => {
+        const out = {};
+        for (const id of ids) {
+          const e = FORGE.sheet(rig, [id]); await e.promise;
+          const d = e.canvas.getContext('2d').getImageData(0, 0, e.canvas.width, e.canvas.height).data; let s = '';
+          for (let i = 0; i < d.length; i += 0x8000) s += String.fromCharCode.apply(null, d.subarray(i, i + 0x8000));
+          out[id] = { b64: btoa(s), w: e.canvas.width, at: e.at, dirs: Object.keys(e.dirIdx) };
+        }
+        return { out, lazy: Object.keys(window.FORGE_BANK || {}).filter(k => k.includes('.atk.')) };
+      }, [RIG, cls.map(c => byCls[c])]);
+      let wf = 0, wb = 0; const wAt = [];
+      for (const c of cls) {
+        const id = byCls[c], S = rt.out[id], px = Buffer.from(S.b64, 'base64'), off = FORGE.sheet(model, { pieces: [pieces[id]], anims: ['attack'] }), [fw, fh] = off.frame;
+        off.layout.forEach(([an, f], ci) => model.dirs.forEach(([dn], r) => {
+          const rr = S.dirs.indexOf(dn), cc = S.at[an] + f; wf++;
+          for (let y = 0; y < fh; y++) {
+            const A = px.subarray(((rr * fh + y) * S.w + cc * fw) * 4, ((rr * fh + y) * S.w + cc * fw + fw) * 4);
+            const B = Buffer.from(off.rgba.buffer, ((r * fh + y) * off.w + ci * fw) * 4, fw * 4);
+            if (Buffer.compare(A, B)) { wb++; if (wAt.length < 5) wAt.push(`${id} ${dn} ${an}${f}`); break; }
+          }
+        }));
+      }
+      const need = Object.keys(BANK.atk || {}).length;
+      check('weapons', !wb && !pe.length && rt.lazy.length === need, `${cls.length} classes (${cls.join(' ')}): ${wf - wb}/${wf} attack frames identical to the offline render | ${rt.lazy.length}/${need} lazy atk banks loaded${pe.length ? ' | page errors: ' + pe[0] : ''}${wb ? ' | first: ' + wAt.join(', ') : ''}`);
+      await pg.close();
+    }
     // ---- equality: every frame of every forge enemy vs the offline render
     let ef = 0, eb = 0; const ebAt = [], efile = {};
     for (const rig of ENEMY_RIGS) {

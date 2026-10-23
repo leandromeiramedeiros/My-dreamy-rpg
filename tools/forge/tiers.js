@@ -71,9 +71,9 @@ function strip(rows, file, labels, small) {                        // rows: [[id
 // Staff + Grimoire, a Mythic knight (Shardheart set + Morrowbane + the Mythic Heater) and a Mythic caster
 const MIX = [
   ['knighthelm.t3', 'warden.t3', 'knightgreaves.t3', 'cape.t3', 'sword.t3', 'buckler.t2'],
-  ['knighthelm.t5', 'warden.t4', 'knightgreaves.t5', 'cape.t4', 'sword.t5', 'shield.t4'],
+  ['knighthelm.t5', 'warden.t4', 'knightgreaves.t5', 'cape.t4', 'sword.t5', 'heater.t4'],
   ['knighthelm.t2', 'warden.t1', 'knightgreaves.t2', 'cape.t2', 'staff.t4', 'grimoire.t4'],
-  ['knighthelm.t6', 'warden.t6', 'knightgreaves.t6', 'cape.t6', 'sword.t6', 'shield.t6'],
+  ['knighthelm.t6', 'warden.t6', 'knightgreaves.t6', 'cape.t6', 'sword.t6', 'heater.t6'],
   ['knighthelm.t4', 'warden.t2', 'knightgreaves.t3', 'cape.t5', 'sword.t2', 'grimoire.t3'],
   ['knighthelm.t3', 'warden.t5', 'knightgreaves.t1', 'cape.t1', 'staff.t6', 'grimoire.t6'],
 ];

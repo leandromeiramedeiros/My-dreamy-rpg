@@ -15,7 +15,8 @@ const model = require('./models/chibi.js'), gear = require('./models/chibi-gear.
 
 const LINES = ['sword', 'rapier', 'mace', 'axe', 'hammer', 'halberd', 'bow', 'crossbow', 'chakram', 'staff', 'wand', 'orb', 'daggers', 'claws', 'fans',
   'buckler', 'heater', 'tower', 'grimoire', 'quiver', 'warhorn'];
-const VIEW = Object.assign({ quiver: 'NE', crossbow: 'SE', claws: 'SE', fans: 'SE', daggers: 'SE', warhorn: 'SE' }, JSON.parse(process.env.ICON_VIEW || '{}')), DEFAULT_VIEW = process.env.ICON_DEFAULT || 'S', N = 24, FIT = 22, TILT = 40 * Math.PI / 180;
+const VIEW = Object.assign({ quiver: 'NE', claws: 'SE', fans: 'SE', daggers: 'SE', warhorn: 'SE' }, JSON.parse(process.env.ICON_VIEW || '{}')), DEFAULT_VIEW = process.env.ICON_DEFAULT || 'S', N = 24, FIT = 22, TILT = 40 * Math.PI / 180;
+const ICON_AIM = Object.assign({ crossbow: [0.3, 0.95, 0.1] }, JSON.parse(process.env.ICON_AIM || '{}'));      // icon-only weapon aim (the crossbow's in-game aim is level, which shows it end-on)
 const NOTILT = ['grimoire', 'quiver', 'warhorn', 'buckler', 'heater', 'tower'];
 const SCALED = ['weapon', 'offhand', 'spine'];
 const iconModel = Object.assign({}, model, { layers: [], frame: [160, 160], origin: [80, 112] });
@@ -24,8 +25,9 @@ const roll = (v, a) => [v[0] * Math.cos(a) + v[1] * Math.sin(a), -v[0] * Math.si
 function renderAt(piece, k, dir, tilt) {
   const wrapped = Object.assign({}, piece, { pose: (a, f) => {
     const q = piece.pose ? piece.pose(a, f) || {} : {}, o = Object.assign({}, q);
-    if (tilt) { if (q.weapon && q.weapon.aim) o.weapon = Object.assign({}, q.weapon, { aim: roll(q.weapon.aim, tilt) }); if (q.offhand && q.offhand.aim) o.offhand = Object.assign({}, q.offhand, { aim: roll(q.offhand.aim, -tilt) }); }
-    for (const b of SCALED) o[b] = Object.assign({}, q[b] || {}, { scl: [k, k, k] });
+    if (ICON_AIM[piece.family]) o.weapon = Object.assign({}, q.weapon || {}, { aim: ICON_AIM[piece.family] });
+    if (tilt) { if (o.weapon && o.weapon.aim) o.weapon = Object.assign({}, o.weapon, { aim: roll(o.weapon.aim, tilt) }); if (q.offhand && q.offhand.aim) o.offhand = Object.assign({}, q.offhand, { aim: roll(q.offhand.aim, -tilt) }); }
+    for (const b of SCALED) o[b] = Object.assign({}, o[b] || {}, { scl: [k, k, k] });
     return o;
   } });
   const r = FORGE.render(iconModel, { dir, anim: 'idle', frame: 0, pieces: [wrapped] });
