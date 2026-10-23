@@ -587,7 +587,21 @@ function drawBanner(ctx, p) {
 }
 function drawSay(ctx) {
   if (G.tablet && G.tablet.src && G.state === 'play') return;   // an open tablet panel owns that band (the Elder Stone double render, QA kbm-004)
-  if (G.msg && G.msg.t > 0) UI.text(ctx, G.msg.s, 480, 404, 'body', UC.text, 'center', { alpha: Math.min(1, G.msg.t * 2) });
+  if (!(G.msg && G.msg.t > 0)) return;
+  const a = Math.min(1, G.msg.t * 2), m = /^([^:]{1,24}): ([\s\S]*)$/.exec(G.msg.s), rid = m && typeof PORTRAIT !== 'undefined' && PORTRAIT[m[1]];
+  const im = rid && typeof RASTER !== 'undefined' && RASTER.get(rid);
+  if (!im) { UI.text(ctx, G.msg.s, 480, 404, 'body', UC.text, 'center', { alpha: a }); return; }   // other speakers, or the portrait still decoding
+  // dialogue panel (hud-ui.md): 720x112 at (120,372), raster portrait x2 centred in the 88 px slot at (132,384), gold name, text column
+  const a0 = ctx.globalAlpha; ctx.globalAlpha = a0 * a;
+  UI.frame(ctx, 120, 372, 720, 112, 'primary');
+  ctx.fillStyle = UC.edge; ctx.globalAlpha = a0 * a * 0.6; ctx.fillRect(132, 384, 88, 88); ctx.globalAlpha = a0 * a;
+  ctx.fillStyle = UC.line; ctx.fillRect(132, 384, 88, 2); ctx.fillRect(132, 470, 88, 2); ctx.fillRect(132, 384, 2, 88); ctx.fillRect(218, 384, 2, 88);
+  const sm = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(im, 132 + Math.round((88 - im.width * 2) / 2), 384 + Math.round((88 - im.height * 2) / 2), im.width * 2, im.height * 2);
+  ctx.imageSmoothingEnabled = sm;
+  UI.text(ctx, m[1], 236, 384, 'body', UC.gold);
+  UI.wrap(ctx, m[2], 236, 410, 560, 'body', UC.text);
+  ctx.globalAlpha = a0;
 }
 // ===== Pip (§28): a small warm light parented to the hero (state + drift: game.js updatePip). Drawn here, over the lit scene, as an
 // additive halo and a 3 px core; the lightmap entry (game.js pipLight) is the render lane's to add to drawScene's lights.
