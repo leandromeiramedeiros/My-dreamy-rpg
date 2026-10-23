@@ -286,7 +286,8 @@ function drawScene() {
     for (const e of viewEnemies) { const [vx, vy] = worldToView(e.x, e.y, 0); lightShadow(ctx, vx, vy, enemyShadowR(e), e, enemyShadowSil(e)); }
     if (PERF.on) PERF.ph['sub.shadow'] = (PERF.ph['sub.shadow'] || 0) + performance.now() - t0; }
   for (const c of G.corpses) if (c.mode === 'fling' && c.t < c.life) shadow(c.x, c.y, c.gz, 5);   // the fling arc reads off its shadow
-  for (const z of G.zones) if (inViewE(z) || z.r > 4) drawZone(ctx, z);
+  for (const z of G.zones) if (inViewE(z) || z.r > 4) drawZone(ctx, z, lights);
+  if (G.decoys && G.decoys.length) { const t0 = skT0(); ctx.fillStyle = 'rgba(20,8,40,0.32)'; for (const d of G.decoys) if (!d.dead && inViewE(d)) { const [vx, vy] = worldToView(d.x, d.y, tileH(m, d.x, d.y)); ctx.globalAlpha = 0.6; lightShadow(ctx, vx, vy, 5, d, null); ctx.globalAlpha = 1; } skT1(t0); }   // M4b decoys
   for (const e of G.effects) if (e.type === 'tele' || e.type === 'marker' || e.type === 'line' || e.type === 'summon') drawDecal(ctx, e);
   const aimNow = currentAim();   // the player's ground indicator (kind:'aim'), under the sprites
   if (aimNow) drawAimIndicator(aimNow.aim, aimNow.from, aimNow.to, aimNow);
@@ -313,6 +314,7 @@ function drawScene() {
   for (const d of G.drops) if (inView(isoX(d.x, d.y), isoY(d.x, d.y, d.z))) list.push({ kind: 'drop', d, key: d.x + d.y + d.z * 0.35 + 0.02 });
   for (const c of G.critters || []) if (inViewE(c)) list.push({ kind: 'critter', c, key: c.x + c.y + c.z * 0.35 });
   for (const e of G.effects) if (e.type === 'ghost') list.push({ kind: 'ghost', e, key: e.x + e.y });
+  if (G.decoys) for (const d of G.decoys) if (!d.dead && inViewE(d)) list.push({ kind: 'decoy', d, key: depthKey(m, d.x, d.y, d.z) + 0.01 });   // M4b decoys / Mirror Images
   if (G.echo && G.echo.alive && G.echo.alpha > 0.01) { const g = G.echo.g; list.push({ kind: 'echo', key: g.x + g.y + g.z * 0.35 + 0.008 }); }   // §30 spirit clone
   for (const c of G.corpses) if (inView(isoX(c.x, c.y), isoY(c.x, c.y, c.gz))) { c.key = c.x + c.y + 0.005; list.push(c); }
   if (p.buffs.orbit) for (let k = 0; k < 3; k++) { const a = G.t * 4 + k * Math.PI * 2 / 3; list.push({ kind: 'orb', x: p.x + Math.cos(a) * 1.4, y: p.y + Math.sin(a) * 1.4, z: p.z + 1.2, key: p.x + Math.cos(a) * 1.4 + p.y + Math.sin(a) * 1.4 + p.z * 0.35 }); }
@@ -327,6 +329,7 @@ function drawScene() {
   // ---- top effects + particles ----
   ctx.globalCompositeOperation = 'lighter';
   { const n0 = lights.length;
+    if (p.fortress && p.fortress.until > G.t) drawFortress(ctx, p.fortress, lights);   // M4b the Tower's Fortress dome
     for (const e of G.effects) if (e.type !== 'tele' && e.type !== 'marker' && e.type !== 'line' && e.type !== 'ghost' && e.type !== 'summon' && e.type !== 'aimflash') drawEffect(ctx, e, lights);
     bloomTag(lights, n0, 1); }   // spells bloom at 1.0
   ctx.globalCompositeOperation = 'source-over';
@@ -664,7 +667,8 @@ function projRing(ctx, x, y, z, r, a0 = 0, a1 = Math.PI * 2, steps = 40) {
   }
 }
 
-function drawZone(ctx, z) {
+function drawZone(ctx, z, lights) {
+  if (z.crack || (z.seg && z.kind === 'frost') || z.kind === 'consecrate') { drawSkillZone(ctx, z, lights); return; }   // M4b skill decals (below)
   const k = z.t / z.life, fade = Math.min(1, (z.life - z.t) * 3);
   ctx.globalCompositeOperation = 'lighter';
   ctx.strokeStyle = rgba(z.col, 0.7 * fade); ctx.lineWidth = 1;
@@ -673,6 +677,188 @@ function drawZone(ctx, z) {
   if (z.kind === 'well') for (let s = 0; s < 3; s++) { ctx.strokeStyle = rgba(z.col, 0.5 * fade); projRing(ctx, z.x, z.y, 0, z.r * (1 - ((G.t * 0.8 + s / 3) % 1)), G.t * 3 + s, G.t * 3 + s + 3.5, 20); ctx.stroke(); }
   if (z.kind === 'trap') { const [vx, vy] = worldToView(z.x, z.y, 0); ctx.fillStyle = rgba('#d6ffd8', 0.8); for (let i = -2; i <= 2; i++) ctx.fillRect(Math.round(vx + i * 3), Math.round(vy - 2 - (i % 2 ? 1 : 0)), 1, 3); }
   ctx.globalCompositeOperation = 'source-over';
+}
+
+// ===== M4b skill visuals (docs/design/weapons-and-skills.md, loadout.md "Shields", armour-suits.md "Suits") =====================
+// Decoys and Mirror Images (game.js G.decoys): a translucent, flickering copy of the hero's current forge frame, depth-sorted with a
+// ground shadow. The Chakram disc: any friendly projectile with `ret` (the basic disc, Guillotine) or `bounce` (Ricochet) is a
+// spinning ring, out and back. Ground decals by zone kind: cracks (z.crack: Earthbreaker, Aftershock, Ground Slam, Quake-call),
+// the frost trail (z.seg + kind 'frost': Glide), consecrate circles (kind 'consecrate': Consecrate, Consecrated Guard, the Crusader
+// twist); and the Fortress dome (G.player.fortress, Tower ultimate). Every look is baked once into a cached canvas (SKFX.cache, by
+// kind / variant / colour / size); a frame only blits. Cost: PERF.ph['sub.skillfx'] (?perf=1).
+const SKFX = { cache: new Map() };
+function skBake(key, w, h, px) {   // px(x, y) -> [r, g, b, a] | null; baked once per key
+  let c = SKFX.cache.get(key); if (c) return c;
+  const M = makeCanvas(w, h), im = M.x.createImageData(w, h), d = im.data;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const v = px(x, y); if (!v) continue;
+    const i = (y * w + x) * 4; d[i] = v[0]; d[i + 1] = v[1]; d[i + 2] = v[2]; d[i + 3] = v[3] == null ? 255 : v[3];
+  }
+  M.x.putImageData(im, 0, 0); SKFX.cache.set(key, M.c); return M.c;
+}
+const skT0 = () => (PERF.on ? performance.now() : 0);
+const skT1 = t0 => { if (PERF.on) PERF.ph['sub.skillfx'] = (PERF.ph['sub.skillfx'] || 0) + performance.now() - t0; };
+const skMix = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
+const skRgba = (c, a) => [c[0], c[1], c[2], a];
+const skHash = (x, y) => { const s = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453; return s - Math.floor(s); };
+const skAng = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+
+// ---- decoys / Mirror Images ----
+function drawDecoy(ctx, d, lights) {
+  const p = G.player; if (!p || d.dead) return;
+  const t0 = skT0(), [vx, vy] = worldToView(d.x, d.y, d.z);
+  const fade = Math.min(1, d.t * 6) * Math.min(1, (d.life - d.t) * 2.5), col = d.image ? '#d8c8ff' : '#8a7aaa';
+  const ph = Math.floor(G.t * 14 + d.x * 5 + d.y * 3), worn = d.hits < DECOY.hits;
+  let a = (ph % 4 === 0 ? 0.3 : 0.55) * fade; if (worn && ph % 2) a *= 0.45;   // a 14 Hz flicker; one that took a hit stutters
+  const H = !OLD_HERO && forgeHero(p);
+  let img, sx = 0, sy = 0, w, h, ax, ay;
+  if (H) { const F = heroFrame(p, H); img = F.img; sx = F.sx; sy = F.sy; w = F.w; h = F.h; ax = F.ax; ay = F.ay; }
+  else { img = p.spr && p.spr.front && currentPlayerSprite(p); if (!img) return; w = img.width; h = img.height; ax = w >> 1; ay = h - 1; }
+  const dx = Math.round(vx) - ax, dy = Math.round(vy) - ay, sil = silOf(img, col);
+  ctx.globalAlpha = a; ctx.drawImage(img, sx, sy, w, h, dx, dy, w, h);
+  ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a * (d.image ? 0.5 : 0.4); ctx.drawImage(sil, sx, sy, w, h, dx, dy, w, h);
+  if (ph % 9 === 0) {   // a glitch slice: one band of the frame jumps 2 px sideways
+    const b = (h * (0.3 + skHash(ph, d.x) * 0.4)) | 0, bh = 3 + (ph % 3);
+    ctx.globalAlpha = a; ctx.drawImage(sil, sx, sy + b, w, bh, dx + (ph & 1 ? 2 : -2), dy + b, w, bh);
+  }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  lights.push({ sx: vx + camX - RW / 2, sy: vy - 14 + camY - RH / 2, r: d.image ? 30 : 22, col, a: 0.35 * fade, bloom: 0.4 });
+  skT1(t0);
+}
+
+// ---- the Chakram disc: 8 spin frames of an iso ring (4 raked blade teeth, a travelling glint) per colour and size ----
+function discFrames(col, R) {
+  const key = 'disc|' + col + '|' + R; let F = SKFX.cache.get(key); if (F) return F;
+  const rx = Math.max(4, Math.round(R * 16 * 1.25)), ry = Math.max(2, Math.round(rx * 0.5)), W = rx * 2 + 6, Hh = ry * 2 + 6, cx = W / 2, cy = Hh / 2;
+  const c0 = hexToRgb(col), dark = skMix(c0, [26, 16, 48], 0.6), lite = skMix(c0, [255, 255, 255], 0.65), hole = R > 0.6 ? 0.52 : 0.34, Q = Math.PI / 2;
+  F = [];
+  for (let f = 0; f < 8; f++) {
+    const ph = f / 8 * Q;   // 4 teeth: a quarter turn repeats
+    F.push(skBake(key + '|' + f, W, Hh, (x, y) => {
+      const u = (x + 0.5 - cx) / rx, v = (y + 0.5 - cy) / ry, d = Math.hypot(u, v), an = Math.atan2(v, u);
+      const s = (((an - ph) % Q) + Q) % Q, tooth = s < 0.6 ? 1 + 0.34 * (1 - s / 0.6) : 1;
+      if (d > tooth || d < hole) return null;
+      if (d > 1) return skRgba(lite, 255);   // the blade teeth
+      if (d > 0.62 && skAng(an, ph * 4) < 0.32) return [255, 255, 255, 255];   // the glint, one turn over the 8 frames
+      if (d < hole + 0.13 || d > 0.87) return skRgba(dark, 255);
+      return skRgba(skMix(c0, lite, v < 0 ? 0.45 : 0.05), 255);   // the lit top face
+    }));
+  }
+  SKFX.cache.set(key, F); return F;
+}
+function drawDisc(ctx, pr, vx, vy, lights) {
+  const t0 = skT0(), F = discFrames(pr.col || '#e7eeff', pr.r > 0.6 ? 1.1 : 0.35), fi = Math.floor(G.t * 48) & 7, w = F[0].width, h = F[0].height;
+  const [gx, gy] = worldToView(pr.x, pr.y, tileH(G.map, pr.x, pr.y));
+  ctx.fillStyle = 'rgba(20,8,40,0.28)'; ctx.beginPath(); ctx.ellipse(Math.round(gx), Math.round(gy), w * 0.32, h * 0.26, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 2; i >= 1; i--) {   // two after-images along the flight (out or back)
+    const [ax, ay] = worldToView(pr.x - pr.vx * 0.028 * i, pr.y - pr.vy * 0.028 * i, pr.z);
+    ctx.globalAlpha = 0.42 / i; ctx.drawImage(F[(fi + 8 - i * 2) & 7], Math.round(ax - w / 2), Math.round(ay - h / 2));
+  }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(F[fi], Math.round(vx - w / 2), Math.round(vy - h / 2));
+  lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r: pr.r > 0.6 ? 64 : 26, col: pr.col || '#e7eeff', a: 0.75 });
+  skT1(t0);
+}
+
+// ---- cracks: a jagged fissure (3-4 branches, twigs, rubble) flattened to the ground; a base and a hot glow layer, 4 variants ----
+function crackSprites(v, col) {
+  const key = 'crack|' + v + '|' + col; let S = SKFX.cache.get(key); if (S) return S;
+  const W = 38, H = 20, cx = 19, cy = 10, M = new Uint8Array(W * H), rnd = k => skHash(v * 7.31 + k * 0.37, k * 1.7 + v * 3.1);
+  const put = (x, y, l) => { x = Math.round(x); y = Math.round(y); if (x < 0 || y < 0 || x >= W || y >= H) return; const i = y * W + x; if (M[i] < l) M[i] = l; };
+  const walk = (x, y, a, len, seed, wide) => {
+    for (let s = 0; s < len; s++) {
+      a += (rnd(seed * 31 + s) - 0.5) * 0.9; x += Math.cos(a); y += Math.sin(a) * 0.5;
+      put(x, y + 1, 1); put(x, y, 3); put(x, y - 1, 2); if (s < wide) { put(x, y + 1, 3); put(x + 1, y, 2); put(x, y + 2, 1); put(x - 1, y, 2); }
+      if (s === 3 && seed < 40) walk(x, y, a + (rnd(seed + 50) > 0.5 ? 0.9 : -0.9), 3 + rnd(seed + 60) * 3, seed + 40, 0);   // a twig
+    }
+  };
+  const nb = 3 + (v & 1);
+  for (let b = 0; b < nb; b++) walk(cx, cy, (b / nb) * Math.PI * 2 + rnd(b) * 1.1, 7 + rnd(b + 9) * 9, b, 4);
+  for (let k = 0; k < 7; k++) put(cx + (rnd(k + 70) - 0.5) * 26, cy + (rnd(k + 80) - 0.5) * 12, 1);   // rubble
+  const c0 = hexToRgb(col), lip = skMix(c0, [255, 255, 255], 0.3), hot = skMix(c0, [255, 214, 140], 0.6);
+  const base = skBake(key + '|b', W, H, (x, y) => { const l = M[y * W + x]; return l === 3 ? [20, 12, 26, 255] : l === 2 ? [48, 34, 44, 200] : l === 1 ? skRgba(lip, 150) : null; });
+  const glow = skBake(key + '|g', W, H, (x, y) => (M[y * W + x] === 3 && y > 0 && M[(y - 1) * W + x] !== 3 ? skRgba(hot, 255) : null));
+  S = { base, glow, W, H }; SKFX.cache.set(key, S); return S;
+}
+// ---- the frost trail: an ice film patch (dithered edge, crystal lines, glints), 4 variants ----
+function frostSprite(v) {
+  const rx = 16, ry = 8, W = rx * 2 + 2, H = ry * 2 + 2, cx = W / 2, cy = H / 2;
+  return skBake('frost|' + v, W, H, (x, y) => {
+    const u = (x + 0.5 - cx) / rx, w = (y + 0.5 - cy) / ry, d = Math.hypot(u, w) + (skHash(x + v * 17, y) - 0.5) * 0.22;
+    if (d > 1) return null;
+    if (d > 0.72 && bayer(x, y) < (d - 0.72) / 0.28) return null;
+    if (skHash(x * 3 + v, y * 5) > 0.965) return [255, 255, 255, 255];
+    if (d < 0.8 && (x + y * 2 + v * 3) % 9 === 0) return [236, 252, 255, 210];   // crystal lines
+    return d > 0.72 ? [191, 244, 255, 150] : [143, 216, 248, 105];
+  });
+}
+// ---- consecrate: a double ring of drifting runes, a faint cross sigil and a dithered holy fill; 6 phase frames per radius ----
+function consecrateFrames(r, col) {
+  const key = 'cons|' + r + '|' + col; let F = SKFX.cache.get(key); if (F) return F;
+  const [ax, ay] = isoAxes(r), rx = Math.round(ax), ry = Math.round(ay), W = rx * 2 + 4, H = ry * 2 + 4, cx = W / 2, cy = H / 2;
+  const c0 = skMix(hexToRgb(col), [255, 190, 70], 0.35), core = skMix(c0, [255, 255, 255], 0.4), P8 = Math.PI / 4, t1 = 1.1 / ry, t2 = 0.8 / ry;
+  F = [];
+  for (let f = 0; f < 6; f++) {
+    const ph = f / 6 * P8;
+    F.push(skBake(key + '|' + f, W, H, (x, y) => {
+      const u = (x + 0.5 - cx) / rx, v = (y + 0.5 - cy) / ry, d = Math.hypot(u, v), an = Math.atan2(v, u);
+      if (d > 1.02) return null;
+      if (Math.abs(d - 0.97) < t1) return skRgba(core, 170);
+      if (Math.abs(d - 0.8) < t2) return skRgba(c0, 115);
+      if (d > 0.83 && d < 0.94) {   // a rune per eighth: a 4 x 2 cell glyph picked from its slot's hash
+        const s = (((an - ph) % P8) + P8) % P8, slot = Math.floor((((an - ph) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / P8);
+        if (s > 0.12 && s < 0.5) { const cA = Math.floor((s - 0.12) / 0.095), cR = d < 0.885 ? 0 : 1; if (skHash(slot * 5 + cA, cR + slot) > 0.42) return skRgba(core, 160); }
+        return null;
+      }
+      if (d < 0.6 && (Math.abs(u * rx) < 0.7 || Math.abs(v * ry) < 0.5)) return skRgba(c0, 60 * (1 - d / 0.6) | 0);
+      if (d < 0.8) return skRgba(c0, bayer(x, y) < 0.22 ? 30 : 12);
+      return null;
+    }));
+  }
+  SKFX.cache.set(key, F); return F;
+}
+function drawSkillZone(ctx, z, lights) {
+  const t0 = skT0(), [vx, vy] = worldToView(z.x, z.y, 0);
+  if (z.crack) {
+    const S = crackSprites(((z.x * 7 + z.y * 13) | 0) & 3, z.col || '#c0a080'), fade = Math.min(1, (z.life - z.t) * 1.5), x0 = Math.round(vx - S.W / 2), y0 = Math.round(vy - S.H / 2);
+    ctx.globalAlpha = fade; ctx.drawImage(S.base, x0, y0);
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = fade * (0.3 + 0.7 * Math.max(0, 1 - z.t * 1.2)); ctx.drawImage(S.glow, x0, y0);   // hot, then cooling
+  } else if (z.kind === 'frost') {
+    const img = frostSprite(((z.x * 5 + z.y * 11) | 0) & 3);
+    ctx.globalAlpha = Math.min(1, (z.life - z.t) * 1.2) * Math.min(1, z.t * 10); ctx.drawImage(img, Math.round(vx - img.width / 2), Math.round(vy - img.height / 2));
+  } else {   // consecrate: pulses on each tick
+    const F = consecrateFrames(z.r, z.col || '#fff2b0'), img = F[Math.floor(G.t * 6) % 6], fade = Math.min(1, (z.life - z.t) * 2) * Math.min(1, z.t * 6);
+    const pulse = z.tick ? clamp(z.tickT / z.tick, 0, 1) : 0.5;
+    ctx.globalAlpha = fade * (0.6 + 0.4 * pulse);   // source-over: the gold holds its hue on any ground (additive went mint on grass)
+    ctx.drawImage(img, Math.round(vx - img.width / 2), Math.round(vy - img.height / 2));
+    lights.push({ sx: isoX(z.x, z.y), sy: isoY(z.x, z.y), r: z.r * 22, col: z.col || '#fff2b0', a: 0.25 * fade, bloom: 0.3 });
+    if (Math.random() < 0.3 * fade) { const a = Math.random() * 6.28, rr = Math.sqrt(Math.random()) * z.r * 0.9; addPart({ x: z.x + Math.cos(a) * rr, y: z.y + Math.sin(a) * rr, z: 0.1, vx: 0, vy: 0, vz: frand(1, 2), life: 0.8, t: 0, col: '#fff2b0', grav: 0, size: 1, glow: true }); }
+  }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  skT1(t0);
+}
+// ---- the Fortress dome (Tower ultimate): a translucent hemisphere with a fresnel rim and a hex lattice, cached per radius ----
+function domeSprite(r, col) {
+  const [ax, ay] = isoAxes(r), rx = Math.round(ax), ry = Math.round(ay), ht = Math.round(rx * 0.72), W = rx * 2 + 4, H = ht + ry + 4, cx = W / 2, by = ht + 2;
+  const c0 = hexToRgb(col), tol = 1.1 / ry;
+  const img = skBake('dome|' + r + '|' + col, W, H, (x, y) => {
+    const X = (x + 0.5 - cx) / rx, Y = y + 0.5 - by, e = Math.hypot(X, Y >= 0 ? Y / ry : Y / ht);
+    if (e > 1) return null;
+    if (Y >= 0 && Math.abs(e - 1) < tol * 1.5) return skRgba(skMix(c0, [255, 255, 255], 0.4), 150);   // the base ring
+    let a = 10 + 125 * e ** 4;
+    if (Y < 0 && e < 0.96 && ((x + ((y / 5 | 0) & 1) * 3) % 6 === 0 || y % 5 === 0)) a += 30;   // the lattice
+    return skRgba(skMix(c0, [255, 255, 255], e ** 3 * 0.6), Math.min(255, a | 0));
+  });
+  img.by = by; return img;
+}
+function drawFortress(ctx, f, lights) {
+  const t0 = skT0(), img = domeSprite(f.r, '#bcd4ff'), [vx, vy] = worldToView(f.x, f.y, tileH(G.map, f.x, f.y)), left = f.until - G.t;
+  let a = Math.min(1, (4 - left) * 5) * Math.min(1, left * 2) * (0.6 + 0.1 * Math.sin(G.t * 6));
+  if (left < 1 && Math.floor(G.t * 16) % 2) a *= 0.5;   // about to drop
+  ctx.globalAlpha = a; ctx.drawImage(img, Math.round(vx - img.width / 2), Math.round(vy - img.by)); ctx.globalAlpha = 1;
+  lights.push({ sx: isoX(f.x, f.y), sy: isoY(f.x, f.y) - 16, r: img.width * 0.6, col: '#cfe0ff', a: 0.25 * a, bloom: 0.3 });
+  skT1(t0);
 }
 
 // ===== ground aim indicators (docs/design/hud-ui.md "Touch v2" > Aiming) ==============================================
@@ -886,6 +1072,7 @@ function drawItemK(ctx, it, lights) {
   if (it.kind === 'enemy') { drawEnemy(ctx, it.e, lights); return; }
   if (it.kind === 'critter') { drawCritter(ctx, it.c); return; }
   if (it.kind === 'proj') { drawProj(ctx, it.pr, lights); return; }
+  if (it.kind === 'decoy') { drawDecoy(ctx, it.d, lights); return; }
   if (it.kind === 'drop') { drawDrop(ctx, it.d, lights); return; }
   if (it.kind === 'orb') {
     const [vx, vy] = worldToView(it.x, it.y, it.z);
@@ -1308,9 +1495,12 @@ function heroAnim(p, e) {
   if (p.dead) r = ['hit', 0];
   else if (p.dash) r = ['dash', Math.floor(t * 14) % N('dash')];
   else if (p.spin > 0) r = ['attack', Math.floor(t * 24) % N('attack')];
+  else if (p.heavy) r = ['attack', Math.min(1, N('attack') - 1)];   // M4b Heavy Strike: the wind-up held while it charges
+  else if (p.channel && p.holdT > 0) r = ['cast', Math.max(0, N('cast') - 2) + (Math.floor(t * 8) & 1)];   // Channel: the cast's last two frames loop
   else if (p.swing) r = ['attack', fi('attack', p.swing.t / p.swing.dur)];
   else if (p.castT > 0) { const a = FH.castAtk ? 'attack' : 'cast'; r = [a, fi(a, 1 - p.castT / Math.max(0.01, FH.castMax))]; }
   else if (p.hurtT > 0.12) r = ['hit', 0];
+  else if (p.focusReady && !p.moving && p.holdT > 0) r = ['attack', 0];   // Focus: the shot drawn and held
   else if (p.moving) r = ['walk', Math.floor((p.walkT || 0) * 10) % N('walk')];
   else r = ['idle', Math.floor(t * 5) % N('idle')];
   if (e && e.at && e.at[r[0]] == null) r = ['idle', Math.floor(t * 5) % N('idle')];
@@ -2003,6 +2193,7 @@ function drawProj(ctx, pr, lights) {
   const [vx, vy] = worldToView(pr.x, pr.y, pr.z);
   const sa = Math.atan2(8 * (pr.vx + pr.vy), 16 * (pr.vx - pr.vy));
   const L = (r, a) => lights.push({ sx: vx + camX - RW / 2, sy: vy + camY - RH / 2, r, col: pr.col, a });
+  if (pr.friendly && (pr.ret != null || pr.bounce != null)) { drawDisc(ctx, pr, vx, vy, lights); return; }   // the Chakram disc (M4b)
   if (pr.kind === 'arrow') {
     ctx.save(); ctx.translate(Math.round(vx), Math.round(vy)); ctx.rotate(sa); ctx.drawImage(ART.weapons.arrow, -8, -1); if (pr.big) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(200,220,255,0.6)'; ctx.fillRect(-14, -1, 14, 3); } ctx.restore();
     L(pr.big ? 40 : 16, 0.5);

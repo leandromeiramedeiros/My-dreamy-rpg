@@ -754,12 +754,24 @@ function enemySprite(type) {
   } catch (e) { /* no art */ }
   return null;
 }
+// the BESTIARY tab holds two views (hud-ui.md: "A Combo Codex tab sits beside it"): the Bestiary and the Codex (Grips)
+function bestiaryViews(ctx, u) {
+  let x = COL1 + 4;
+  for (const [id, label] of [['beasts', 'BESTIARY'], ['codex', 'CODEX']]) {
+    const on = (u.beView || 'beasts') === id, w = UI.measure(label, 'small') + 20;
+    const r = mnRegion(x, 76, w, 20, 'bev:' + id, () => { if (u.beView !== id) { u.beView = id; sfx('pickup'); } });
+    UI.frame(ctx, x, 76, w, 20, on ? 'tabActive' : 'tabInactive');
+    UI.text(ctx, label, x + w / 2, 80, 'small', on || r.on ? UC.gold : UC.dim, 'center'); x += w + 6;
+  }
+}
 function drawBestiaryTab(ctx, p) {
-  const u = G.ui, rows = bestiaryList(), lore = typeof BESTIARY_LORE !== 'undefined' ? BESTIARY_LORE : {};
-  const LX = COL1 + 4, LY = 100, LW = 208, LH = 380, ROW = 30, HEAD = 24;
+  const u = G.ui; bestiaryViews(ctx, u);
+  if (u.beView === 'codex') { drawCodexGrips(ctx, p); return; }
+  const rows = bestiaryList(), lore = typeof BESTIARY_LORE !== 'undefined' ? BESTIARY_LORE : {};
+  const LX = COL1 + 4, LY = 124, LW = 208, LH = 356, ROW = 30, HEAD = 24;
   let total = 0; for (const r of rows) { r.y = total; total += r.head ? HEAD : ROW; }
   const found = rows.filter(r => !r.head && r.seen).length, all = rows.filter(r => !r.head).length;
-  UI.text(ctx, `Discovered ${found}/${all}`, LX + 4, 78, 'small', UC.dim);
+  UI.text(ctx, `Discovered ${found}/${all}`, LX + 4, 104, 'small', UC.dim);
   const sel0 = rows.find(r => !r.head && r.id === u.beSel) || rows.find(r => !r.head && r.seen) || rows.find(r => !r.head);
   const fc = UI.focus.current(), fid = UI.focus.showing() && fc && fc.id.startsWith('be:') ? fc.id.slice(3) : null;
   if (fid) { const r = rows.find(q => q.id === fid); if (r) mnReveal('be', LH, LY, r.y, ROW); }
@@ -821,6 +833,47 @@ function drawBestiaryTab(ctx, p) {
   yy += 44; mnHead(ctx, 'DROPS', COL3 + 8, yy); yy += 22;
   const uq = UNIQUES && Object.keys(UNIQUES).find(k => /:/.test(UNIQUES[k].boss) && UNIQUES[k].boss.split(':')[1] === r.id);
   UI.wrap(ctx, !seen ? '???' : uq ? `${UNIQUES[uq].name} (first kill), gear, gems, dust` : r.id === 'boss' ? 'Warden\'s Lantern Plate, gear, gems' : 'Gear, gems, potions, dust', COL3 + 8, yy, 316, 'small', UC.text);
+}
+
+// ===== CODEX: the Grips (loadout.md "Grips"; data.js GRIPS). A Grip is found the first time its pairing is worn (game.js
+// G.prog.secrets 'grip:<id>'); until then its row is "???" and its pairing and effect stay hidden. The worn Grip is marked.
+const gripFound = id => !!(G.prog && G.prog.secrets && G.prog.secrets['grip:' + id]);
+const gripPair = g => g.tags.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(' + ');
+function gripItemIcon(tag) {   // the line's first-tier item art (ICONS.item), or null
+  try { const b = FAMILY_TIERS[tag] && FAMILY_TIERS[tag][0].split(':')[0]; return b && typeof ICONS !== 'undefined' && ICONS.item ? ICONS.item(b, 0, 'rare') : null; } catch (e) { return null; }
+}
+function drawCodexGrips(ctx, p) {
+  const u = G.ui, rows = typeof GRIPS !== 'undefined' ? GRIPS : [], LX = COL1 + 4, LY = 124, LW = 208, ROW = 25;
+  UI.text(ctx, `Grips found ${rows.filter(g => gripFound(g.id)).length}/${rows.length}`, LX + 4, 104, 'small', UC.dim);
+  const sel = rows.find(g => g.id === u.cxSel) || rows.find(g => g.id === p.grip) || rows.find(g => gripFound(g.id)) || rows[0];
+  rows.forEach((g, i) => {
+    const y = LY + i * ROW, found = gripFound(g.id), worn = p.grip === g.id;
+    const r = mnRegion(LX, y, LW, ROW - 2, 'cx:' + g.id, () => { u.cxSel = g.id; }, { def: g === sel });
+    if (g === sel || r.on) { ctx.fillStyle = UC.bevel; ctx.globalAlpha = 0.6; ctx.fillRect(LX, y, LW, ROW - 2); ctx.globalAlpha = 1; }
+    UI.sprite(ctx, found ? 'bullet' : 'bulletHollow', LX + 6, y + 6, { scale: 2, tint: worn ? UC.gold : found ? UC.hpHi : UC.dim });
+    UI.text(ctx, found ? g.name : '???', LX + 28, y + 5, 'small', worn || g === sel ? UC.gold : found ? UC.text : UC.dim);
+    if (worn) UI.text(ctx, 'worn', LX + LW - 6, y + 5, 'small', UC.gold, 'right');
+  });
+  if (!sel) return;
+  const found = gripFound(sel.id), worn = p.grip === sel.id;
+  // ---- centre: the pairing (two item icons) on a vignette ----
+  const vx = COL2 + 8, vy = 76, vw = 324, vh = 150;
+  const vg = ctx.createRadialGradient(vx + vw / 2, vy + vh / 2, 10, vx + vw / 2, vy + vh / 2, vw / 1.6);
+  vg.addColorStop(0, worn ? '#4a3a1a' : '#2a1f4a'); vg.addColorStop(1, '#0b0716'); ctx.fillStyle = vg; ctx.fillRect(vx, vy, vw, vh);
+  UI.frame(ctx, vx - 4, vy - 4, vw + 8, vh + 8, 'plain', { alpha: 0 });
+  ctx.imageSmoothingEnabled = false;
+  sel.tags.forEach((t, i) => {
+    const ix = vx + vw / 2 + (i ? 22 : -94), iy = vy + 39, ic = found ? gripItemIcon(t) : null;
+    hudFrame(ctx, ix - 4, iy - 4, 80, 80, 'slot');
+    if (ic) ctx.drawImage(ic, ix, iy, 72, 72); else UI.text(ctx, '?', ix + 36, iy + 26, 'heading', UC.dim, 'center');
+  });
+  UI.text(ctx, '+', vx + vw / 2, vy + 66, 'heading', found ? UC.gold : UC.dim, 'center');
+  UI.text(ctx, found ? sel.name : '???', COL2 + 8, 242, 'body', found ? UC.gold : UC.text);
+  UI.text(ctx, found ? gripPair(sel) : 'Pairing unknown', COL2 + 8, 268, 'small', UC.dim);
+  UI.text(ctx, worn ? 'Worn now: its effect is live.' : found ? 'Found. Wear the pair again to use it.' : 'Not found yet.', COL2 + 8, 292, 'small', worn ? UC.stHi : UC.text);
+  // ---- right: the effect ----
+  mnHead(ctx, 'EFFECT', COL3 + 8, 78);
+  UI.wrap(ctx, found ? sel.hint : 'Wear the right weapon and offhand together to find this Grip.', COL3 + 8, 100, 316, 'small', found ? UC.text : UC.dim);
 }
 
 // ===== QUESTS ======================================================================================================================

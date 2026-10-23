@@ -655,8 +655,8 @@ const guardCut = (p, sx, sy) => { const g = p.guard; if (!g || sx == null || sy 
 // decoys and images (G.decoys; one cap of 3 with summons, images 1): a non-boss enemy within 8 tiles that is nearer a decoy than
 // the hero targets the decoy (updateEnemies hands its parts the decoy as `p`); a blow an enemy aims at a decoy the hero is not
 // standing on is absorbed (hurtPlayer) and costs the decoy one of its 2 hits. An image (Mirror Image) also shoots arcane bolts.
-// The Shade twist: a decoy pops into 2 Marks on every foe within 2.5 tiles. Drawn as hero after-images (fx ghost) until the
-// art lane gives decoys a look of their own.
+// The Shade twist: a decoy pops into 2 Marks on every foe within 2.5 tiles. Drawn by render.js drawDecoy (a flickering copy
+// of the hero's current forge frame).
 const DECOY = { cap: 3, images: 1, hits: 2, aggro: 8, boltCd: 0.8 };
 function spawnDecoy(x, y, life, o = {}) {
   const L = G.decoys || (G.decoys = []);
@@ -673,13 +673,10 @@ function decoyPop(d) {
 }
 function updateDecoys(dt) {
   const L = G.decoys; if (!L || !L.length) return;
-  const p = G.player;
   for (const d of L) {
     if (d.dead) continue;
     if (d.map !== G.map) { d.dead = true; continue; }
     d.t += dt; if (d.t >= d.life || d.hits <= 0) { decoyPop(d); continue; }
-    d.ghostT -= dt;
-    if (d.ghostT <= 0 && p && p.spr) { d.ghostT = 0.2; fx({ type: 'ghost', x: d.x, y: d.y, z: d.z, life: 0.24, spr: currentPlayerSprite(p), col: d.image ? '#d8c8ff' : '#8a7aaa' }); }
     if (d.image && d.bolt) {
       d.boltT -= dt; if (d.boltT > 0) continue; d.boltT = DECOY.boltCd;
       const e = nearestEnemy(d.x, d.y, 8, null); if (!e) continue;
