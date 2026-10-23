@@ -119,6 +119,81 @@ var ENEMY_DATA = {
     parts: ['burrow', 'brute', 'aura-buffer'],
     params: { burrow: { vanish: 1.4, erupt: { shape: 'circle', r: 2.2 }, staggerOnSurface: true }, brute: { shape: 'cone', r: 2.0, range: 1.7, wind: 0.7 }, 'aura-buffer': { r: 3.5, dmg: 1.2, speed: 1.1 } },
     xp: 0.6, loot: 'common_pinewood'
+  },
+
+  // ---- Gloomspire Ruins (L10-17, mid L13) — M4b wave 1 (docs/design/enemies-bosses.md "Commons by zone").
+  // Zone identity: deals gloom / arcane / slash; weak holy and pierce (wisps weak lightning); resists arcane.
+  // loot: 'common_pinewood' until items.js LOOT_POOLS has a common_ruins pool (Skills lane; same starter-base exclusion).
+  // Every attack winds up >= 0.6 s with a telegraph (tools/ruins-bestiary-check.js asserts it). `look` borrows an existing
+  // enemy's art until the Enemy forge lane's ENEMY_ART[<id>] lands (render.js picks ENEMY_ART first).
+  // Wisp: a BUILTIN_ROWS id (js/parts.js): its parts stay kite + shoot (tools/play.js pins the M2a five); `ownParams` lets
+  // this row retune the part numbers. Verb: a drifting light-mote whose slow bolt carries Dread (gloom tier 1: the hero
+  // deals 15 % less for 3 s). The aim line is its telegraph; the bolt flies along it (step off the line).
+  wisp: {
+    name: 'Wisp', hp: 235, speed: 1.9, dmg: 34, el: 'arcane', dmgType: 'arcane', stagger: 1,
+    res: { slash: 0.5, pierce: 0.5, arcane: 0.5, holy: -0.5, lightning: -0.5, wind: -0.5 },
+    tags: ['ethereal', 'flying'],
+    ownParams: true,
+    params: { kite: { near: 3.2, far: 5.6, strafe: 1.0 }, shoot: { range: 6.5, wind: 0.7, cd: 2.6, speed: 4.6, r: 0.3, tele: true, col: '#b89cff', dread: 3 } },
+    xp: 0.09, loot: 'common_pinewood'
+  },
+  // Gloom Knight: the anchor. A tower shield on its facing (shield-front: hits from the front deal 15 %, from the back x1.3);
+  // it turns toward the hero at 140 deg/s and only swings at what is in front of it, so circling behind it is the answer.
+  // Telegraph: a 100 deg cone, 0.75 s.
+  gloomknight: {
+    name: 'Gloom Knight', look: 'ogre', scale: 0.9, r: 0.45, hgt: 3.2, blood: '#8a7ab8', hp: 300, speed: 1.6, dmg: 54, el: 'gloom', dmgType: 'slash', stagger: 3,
+    res: { slash: 0.5, wind: 0.5, arcane: 0.5, pierce: -0.5, holy: -0.5 },
+    tags: ['armoured', 'gloom'],
+    parts: ['chase', 'brute', 'shield-front'],
+    params: { brute: { shape: 'cone', arc: 100, r: 2.0, range: 1.7, wind: 0.75, open: 1.0, cd: 1.6, front: 120 }, 'shield-front': { arc: 140, mul: 0.15, rear: 1.3, turn: 140 } },
+    xp: 0.16, loot: 'common_pinewood'
+  },
+  // Grave Chanter: the support. Raises wisps (summon, at most 2, bound: they unravel when it dies), curses the hero's spot
+  // (bomber: a 1.4-tile circle, 0.9 s) and blinks away when the hero closes in (teleport, trigger 2.8 tiles, every 5 s).
+  gravechanter: {
+    name: 'Grave Chanter', look: 'brambleshaman', scale: 0.8, blood: '#9a7ad0', hp: 500, speed: 1.6, dmg: 40, el: 'gloom', dmgType: 'gloom', stagger: 1,
+    res: { arcane: 0.5, holy: -0.5, pierce: -0.5 },
+    tags: ['caster', 'support', 'gloom'],
+    parts: ['teleport', 'bomber', 'summon'],
+    params: {
+      teleport: { trigger: 2.8, near: 5, far: 7, cd: 5, wind: 0.6 },
+      bomber: { range: 7, wind: 0.9, cd: 3.2, r: 1.4, col: '#b070ff' },
+      summon: { kind: 'wisp', n: 1, max: 2, cd: 9, wind: 1.0, range: 9, bound: true }
+    },
+    xp: 0.16, loot: 'common_pinewood'
+  },
+  // Pillar Mimic: the ambush. Stands as a cracked pillar (e.mimic + e.mimicAs 'pillar': render.js draws the chest today, the
+  // forge lane keys the pillar disguise on mimicAs) until the hero is within 1.8 tiles: 'MIMIC!' + a 0.6 s wake, then a
+  // ground slam (circle r 2, 0.8 s) and a slow chase. Sleepers and mimics: once per map, after a shrine (ENCOUNTERS).
+  pillarmimic: {
+    name: 'Pillar Mimic', look: 'mountaintroll', scale: 0.8, r: 0.5, hgt: 3.6, blood: '#a89cc0', hp: 480, speed: 1.3, dmg: 70, el: 'gloom', dmgType: 'slash', stagger: 4,
+    res: { slash: 0.5, arcane: 0.5, pierce: -0.5, holy: -0.5 },
+    tags: ['armoured', 'sleeper', 'gloom'],
+    parts: ['mimic', 'brute'],
+    params: { mimic: { wakeRadius: 1.8, as: 'pillar', then: 'chase' }, brute: { shape: 'circle', r: 2.0, range: 1.6, wind: 0.8, open: 1.2, cd: 2.0 } },
+    xp: 0.2, loot: 'common_pinewood'
+  },
+  // Shadeling Swarm: pressure. Five small shadows sharing one HP pool (swarm: one XP / loot / kill), circling the hero and
+  // nipping (a small splat circle, 0.6 s). Shadow bodies: resist pierce (arrows pass through), weak holy; no slash weakness
+  // (balsim: a sword cleave already hits all five, weak slash put its TTK under 1 s): a cleave clears it, arrows waste time.
+  // Its visible source is a shadow rift (`source`, the map lane places it).
+  shadelingswarm: {
+    name: 'Shadeling Swarm', look: 'gloomslime', scale: 0.5, r: 0.26, hgt: 1.3, blood: '#5a4a7a', hp: 760, speed: 2.8, dmg: 16, el: 'gloom', dmgType: 'gloom', stagger: 1,
+    res: { pierce: 0.5, holy: -0.5 },
+    tags: ['swarm', 'gloom'],
+    parts: ['orbit', 'brute', 'swarm'],
+    params: { orbit: { r: 0.9, k: 1.4 }, brute: { shape: 'circle', r: 0.9, range: 1.2, wind: 0.6, cd: 1.6, rec: 0.4, splat: true }, swarm: { n: 5, spread: 1.0, knockK: 0.25, source: 'shadow_rift' } },
+    xp: 0.14, loot: 'common_pinewood'
+  },
+  // Void Archer: ranged. Kites at 4-7.5 tiles; a locked sniper line (1.0 s) then a fast void bolt; inside 4 tiles a
+  // 3-bolt fan with its own aim line (0.65 s). The correct first target of a ranged pack.
+  voidarcher: {
+    name: 'Void Archer', look: 'brambleshaman', scale: 0.75, blood: '#7a5ab0', hp: 520, speed: 2.0, dmg: 42, el: 'gloom', dmgType: 'gloom', stagger: 1,
+    res: { arcane: 0.5, holy: -0.5, pierce: -0.5 },
+    tags: ['ranged', 'gloom'],
+    parts: ['kite', 'sniper', 'shoot'],
+    params: { kite: { near: 4, far: 7.5, strafe: 0.5 }, sniper: { range: 9, wind: 1.0, cd: 3.4, speed: 14 }, shoot: { range: 4, wind: 0.65, cd: 2.6, n: 3, spread: 0.3, speed: 6, tele: true, col: '#c070ff' } },
+    xp: 0.15, loot: 'common_pinewood'
   }
 };
 
@@ -148,6 +223,25 @@ var ENCOUNTERS = {
     { id: 'rh_troll_sleeper', members: ['mountaintroll', 'gloomslime', 'shadehound', 'brambleshaman'],
       roles: { anchor: 'mountaintroll', pressure: ['gloomslime', 'shadehound'], support: ['brambleshaman'], ranged: [] },
       wrongWeapon: null, after: 'shrine' }
+  ],
+  // Gloomspire Ruins (M4b). Movement parts: chase (knight), kite (wisp, archer: never in one pack), teleport (chanter),
+  // mimic (pillar), orbit (shadelings), charge (hound) = 6 in the zone. After room 1 every pack has a support or ranged
+  // first target. One pack combines two supports (ru_two_voices), one is the wrong weapon on purpose (ru_wall_slash:
+  // the knight and the wisp both resist slash), the mimic pack comes once, after a shrine.
+  ruins: [
+    { id: 'ru_knight_intro',  members: ['gloomknight', 'shadelingswarm', 'shadehound'],
+      roles: { anchor: 'gloomknight', pressure: ['shadelingswarm', 'shadehound'], support: [], ranged: [] }, wrongWeapon: null },
+    { id: 'ru_knight_archer', members: ['gloomknight', 'shadelingswarm', 'shadehound', 'voidarcher'],
+      roles: { anchor: 'gloomknight', pressure: ['shadelingswarm', 'shadehound'], support: [], ranged: ['voidarcher'] }, wrongWeapon: null },
+    { id: 'ru_chanter_wisps', members: ['gloomknight', 'shadelingswarm', 'wisp', 'gravechanter'],
+      roles: { anchor: 'gloomknight', pressure: ['shadelingswarm', 'wisp'], support: ['gravechanter'], ranged: [] }, wrongWeapon: null },
+    { id: 'ru_two_voices',    members: ['gloomknight', 'shadehound', 'shadelingswarm', 'gravechanter', 'brambleshaman'],
+      roles: { anchor: 'gloomknight', pressure: ['shadehound', 'shadelingswarm'], support: ['gravechanter', 'brambleshaman'], ranged: [] }, wrongWeapon: null },
+    { id: 'ru_wall_slash',    members: ['gloomknight', 'wisp', 'shadehound', 'gravechanter'],
+      roles: { anchor: 'gloomknight', pressure: ['wisp', 'shadehound'], support: ['gravechanter'], ranged: [] }, wrongWeapon: 'slash' },
+    // Oath Reliquary: the pillar mimic (once per map, after the shrine)
+    { id: 'ru_reliquary_mimic', members: ['pillarmimic', 'shadelingswarm', 'shadehound', 'voidarcher'],
+      roles: { anchor: 'pillarmimic', pressure: ['shadelingswarm', 'shadehound'], support: [], ranged: ['voidarcher'] }, wrongWeapon: null, after: 'shrine' }
   ]
 };
 
@@ -213,5 +307,70 @@ var BOSS_DATA = {
         onEnter: [{ type: 'roar', banner: 'Old Bramblehorn splinters into a fury', dur: 1.0 }] }
     ],
     xp: 1, loot: 'root_crown'
+  },
+  // ---- Gloomspire Ruins (M4b) --------------------------------------------------------------------------------------
+  // The Oathless (Oath Reliquary, L12): a knight who kept the oath's shape and lost its reason. Ruins teach positioning:
+  // shield-wall (a 150 deg front shield for 2 s, it turns slowly: walk round and hit its back) ends in a shield bash at
+  // whoever stayed in front; cleave; a gloom-bolt volley. Bar 2 (50 %): new move oath-charge, the cleave gains a delayed
+  // backswing (cunning), windMul 0.85. Armoured gloom knight: weak holy + pierce, resists arcane (the zone's resist). No slash
+  // resist (story.md lists one): with it the sword / bow length spread was 3.8x (balsim 130 / 36 s); the shield-wall carries the armour.
+  // Counter: Rupture (pierce on a full stagger bar). HP: tools/ruins-bestiary-check.js (reference-tier T2 sword live, 71-78 s) + tools/balsim.js.
+  oathless: {
+    name: 'The Oathless', sprite: 'oathless', look: 'ogre', scale: 1.7, r: 0.85, hgt: 4.6, blood: '#8a7ab8', kind: 'mini', level: 12, zone: 'oathReliquary',
+    type: 'armoured', el: 'gloom', hp: 11600, lengthSec: [60, 90], staggerMax: 6, breakOpen: 2.5, speed: 1.7, keep: 1.8, unique: null,
+    res: { arcane: 0.5, wind: 0.5, holy: -0.5, pierce: -0.5 },
+    tags: ['armoured', 'gloom'],
+    bars: true, transition: 1.5,
+    moveDefs: {
+      shieldWall: { type: 'shield', arc: 150, dur: 2.0, wind: 0.4, mul: 0.1, turn: 70, then: 'shieldBash', cd: 0.6 },
+      shieldBash: { type: 'cone', arc: 100, r: 2.6, wind: 0.75, open: 1.2, hit: 'chip', dmgPct: 0.16, el: 'gloom', cd: 0.8 },
+      cleave:     { type: 'cone', arc: 120, r: 3.0, wind: 0.9, open: 1.3, hit: 'big', dmgPct: 0.62, el: 'slash', cd: 1.0, range: 'near' },
+      backswing:  { type: 'cone', arc: 120, r: 3.2, wind: 0.9, open: 1.3, hit: 'chip', dmgPct: 0.18, el: 'slash', cd: 1.0 },
+      volley:     { type: 'volley', n: 8, rings: 3, delay: 0.7, gap: 0.5, rot: 0.3, speed: 4.8, life: 3, hit: 'chip', dmgPct: 0.05, el: 'gloom', col: '#c070ff', scale: 'none', cd: 1.0 },
+      oathCharge: { type: 'charge', len: 7, w: 1.0, wind: 1.0, speed: 13, open: 1.3, hit: 'big', dmgPct: 0.62, el: 'slash', scale: 'wind', cd: 1.0, range: 'far' }
+    },
+    phases: [
+      { hpBelow: 1.0, moves: { shieldWall: 2, cleave: 3, volley: 2 }, cdMul: 0.9, onEnter: [] },
+      { hpBelow: 0.5, moves: { shieldWall: 2, cleave: 3, volley: 2, oathCharge: 2.5 }, windMul: 0.85, cdMul: 0.65, speedMul: 1.2,
+        forms: { cleave: { open: 0.35, then: 'backswing' } },
+        onEnter: [{ type: 'roar', banner: 'The Oathless breaks its vow', dur: 1.2 }] }
+    ],
+    xp: 0.5, loot: null
+  },
+  // The Gloam Warden (Warden's Hall, L14, Act II guardian). Contract id `gloamwarden`; the legacy M2a fight stays `boss`
+  // (bosses.js BUILTIN_BOSSES, the demo ruins map and tools/play.js pin it). Ethereal: resists physical and arcane, weak holy
+  // and lightning. Counter: Overload. Drops Warden's Lantern Plate (items.js UNIQUES.lanternplate; it answers the volley).
+  // Bar 1: cleave, slam, volley, charge. Bar 2 (50 %, enrage): new move void rain, a summon of wisps, the cleave gains a
+  // delayed second hit (cunning), windMul 0.85. Bar 3 (20 %): the pillars fall (the arena shrinks), the volley becomes a
+  // spiral, new move gloam: darkness swallows the hall and only its lantern's light (a 2.2-tile circle 2.5-4 tiles from the
+  // hero) is safe (the Ruins darkness hook; G.gloam is the render hook), the charge lead-aims; windMul 0.7.
+  gloamwarden: {
+    name: 'The Gloam Warden', sprite: 'gloamwarden', kind: 'guardian', level: 14, zone: 'wardensHall',
+    type: 'ethereal', el: 'gloom', hp: 11000, lengthSec: [150, 240], staggerMax: 5, breakOpen: 2, speed: 1.6, keep: 2.2, r: 0.95, hgt: 9, blood: '#c78bff', bob: true,
+    unique: 'lanternplate',
+    res: { slash: 0.5, pierce: 0.5, arcane: 0.5, holy: -0.5, lightning: -0.5 },
+    tags: ['ethereal', 'gloom'],
+    bars: true, transition: 1.5,
+    moveDefs: {
+      cleave:     { type: 'cone', arc: 110, r: 3.4, wind: 1.05, open: 1.2, hit: 'big', dmgPct: 0.62, el: 'slash', cd: 1.0, range: 'near' },
+      backcleave: { type: 'cone', arc: 110, r: 3.6, wind: 1.05, open: 1.3, hit: 'chip', dmgPct: 0.18, el: 'slash', cd: 1.0 },
+      slam:       { type: 'circle', at: 'self', r: 3.0, wind: 1.0, open: 1.3, hit: 'big', el: 'gloom', hitstop: 0.06, scale: 'none', cd: 1.0, range: 'near' },
+      volley:     { type: 'volley', n: 12, rings: 3, delay: 0.75, gap: 0.5, rot: 0.2, speed: 4.4, life: 3.2, hit: 'chip', dmgPct: 0.03, el: 'arcane', scale: 'none', cd: 1.0 },
+      charge:     { type: 'charge', len: 8, w: 1.1, wind: 1.1, speed: 14, open: 1.3, hit: 'big', dmgPct: 0.62, el: 'slash', scale: 'wind', cd: 1.0, range: 'far' },
+      voidrain:   { type: 'rain', count: 6, r: 1.3, spread: [1, 4], wind: 1.0, hit: 'chip', el: 'gloom', scale: 'none', cd: 0.8 },
+      wisps:      { type: 'summon', kind: 'wisp', n: 1, max: 2, wind: 0.9, open: 0.8, rest: 18, addHp: 0.8, addDmg: 0.7, cd: 0.6 },
+      gloam:      { type: 'gloam', safeR: 2.2, near: 2.5, far: 4, wind: 1.8, open: 1.3, hit: 'big', dmgPct: 0.45, el: 'gloom', scale: 'none', cd: 1.2, rest: 9 }
+    },
+    phases: [
+      { hpBelow: 1.0, moves: { cleave: 2, slam: 1.5, volley: 1.5, charge: 1.5 }, onEnter: [] },
+      { hpBelow: 0.5, moves: { cleave: 2, slam: 1.5, volley: 1.5, charge: 1.5, voidrain: 2, wisps: 1 }, windMul: 0.85, cdMul: 0.8, speedMul: 1.25,
+        forms: { cleave: { open: 0.35, then: 'backcleave' } },
+        onEnter: [{ type: 'roar', banner: 'The Gloam Warden raises its lantern', dur: 1.2 }, 'wisps'] },
+      { hpBelow: 0.2, moves: { cleave: 2, slam: 1.5, volley: 2, charge: 1.5, voidrain: 1.5, wisps: 1, gloam: 3 }, windMul: 0.7, cdMul: 0.7, speedMul: 1.3,
+        forms: { volley: { spiral: true, n: 10, rings: 6, gap: 0.24, rot: 0.3, dmgPct: 0.025 }, charge: { lead: 0.4 } },
+        onEnter: [{ type: 'arenaShrink', pattern: 'pillars_fall', k: 0.72, rMin: 5.5, dur: 2, wind: 0.9, open: 1.2, text: 'The pillars fall!', warn: 'PILLARS! GET INSIDE', col: '#c78bff', el: 'gloom' },
+          { type: 'roar', banner: 'The hall goes dark', dur: 1.0 }] }
+    ],
+    xp: 1, loot: 'lanternplate'
   }
 };

@@ -569,19 +569,19 @@ Note: count reconciled in docs/design/enemies-bosses.md (29 names listed against
 | Forge Priest | Caldera | — | — | M4b |
 | Frost Jelly | Grotto: splitting jelly | — | — | M4b |
 | Frozen elite | Elite modifier, becomes Rime; not the Frozen status | — | Frozen (that is the status) | M4b |
-| Gloom Knight | Ruins: shield-front | — | — | M4b |
+| Gloom Knight | Ruins: shield-front (blocks 85 % from the front, takes x1.3 from behind) | `gloomknight` | — | M4b |
 | Gloom Slime | Pinewood: splits | `gloomslime` | — | live |
 | Gloomed elite | Elite modifier: gloom-touched elite | — | Gloomed (that is the status) | M4b |
 | Glowfin Shoal | Grotto: orbiting swarm | — | — | M4b |
 | Gnarlroot Brute | Pinewood elite brute | `gnarlbrute` | — | live |
-| Grave Chanter | Ruins: summons wisps | — | — | M4b |
+| Grave Chanter | Ruins: teleporting caster, gloom bombs, raises bound wisps (no XP; they unravel when it dies) | `gravechanter` | — | M4b |
 | Lightning Eel | Grotto | — | — | M4b |
 | Magma Hopper | Caldera | — | — | M4b |
 | Mountain Troll | Pinewood | `mountaintroll` | — | live |
 | Ogre | Pinewood: cone brute | `ogre` | — | live |
-| Pillar Mimic | Ruins: ambush | — | — | M4b |
+| Pillar Mimic | Ruins: ambush, sleeps as a pillar, wakes at 1.8 tiles | `pillarmimic` | — | M4b |
 | Shade Hound | Pinewood: line lunge | `shadehound` | — | live |
-| Shadeling Swarm | Ruins | — | — | M4b |
+| Shadeling Swarm | Ruins: orbiting swarm, 5 bodies, one kill | `shadelingswarm` | — | M4b |
 | Slag Golem | Caldera: poise brute | — | — | M4b |
 | Star Archer | Spire: sniper | — | — | M4b |
 | Storm elite | Elite modifier: lightning storm | — | Storm | M4b |
@@ -591,9 +591,9 @@ Note: count reconciled in docs/design/enemies-bosses.md (29 names listed against
 | Training dummy | Vale tutorial target | `dummy` | — | live |
 | Unmade | Spire: copies the hero | — | — | M4b |
 | Vigil Knight | Spire common: linked shield pair; the Twin Vigils boss is two of them | — | — | M4b |
-| Void Archer | Ruins | — | — | M4b |
+| Void Archer | Ruins: kiting sniper plus a 3-bolt fan | `voidarcher` | — | M4b |
 | Void Bomber | Spire | — | — | M4b |
-| Wisp | Ruins: kiting shooter | — | — | M4b |
+| Wisp | Ruins: kiting shooter, its bolt lands Dread | `wisp` | — | M4b |
 
 ## 14. Bosses
 
@@ -603,7 +603,7 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 |---|---|---|---|---|
 | Boss | Any boss, main or mini | — | Guardian; Mini-boss (narrower kinds) | live |
 | Boss bar | HUD bar with phase pips | — | — | live |
-| Boss move | One entry of `BOSS_MOVES` (cone, circle, line, charge, volley, rain, ring, beam, pull, summon, zone, arenaShrink, blink, mirror, shield, vanish, roar, sequence, random) | `BOSS_MOVES` | — | live |
+| Boss move | One entry of `BOSS_MOVES` (cone, circle, line, charge, volley, rain, ring, beam, pull, summon, zone, arenaShrink, blink, mirror, shield, gloam, vanish, roar, sequence, random) | `BOSS_MOVES` | — | live |
 | Brinemother | Vault boss, Drowned Vault | `brinemother` | — | later |
 | Cunning form | A boss move variant added per phase: feint, delayed second hit or predicted aim | — | — | M4b |
 | Guardian | Main-boss kind (code `kind`) | `kind` | Boss (any boss); Mini-boss | live |
@@ -612,11 +612,11 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Mini-boss | Mini-kind boss, e.g. Mossjaw, Slagheart | `mini` | Guardian | live |
 | Morrow | Main boss 5, the finale; also the Unwaking King of the story | `morrow` | — | later |
 | Mossjaw | Mini-boss, Root Hollow | `mossjaw` | — | live |
-| Oathless | Vault boss, Warden Crypt | `oathless` | — | M4b |
+| Oathless | Mini-boss, Oath Reliquary (Ruins): shield-wall, cleave, volley; oath-charge at 50 % | `oathless` | — | M4b |
 | Old Bramblehorn | Main boss 1, Pinewood | `bramblehorn` | Bramblehorn | live |
 | Slagheart | Mini-boss, Forge Deep | `slagheart` | — | later |
 | Sorrel's Echo | Optional boss | `sorrel_echo` | — | later |
-| The Gloam Warden | Main boss 2 | `boss` | Gloam Warden; Warden alone (ambiguous) | live |
+| The Gloam Warden | Main boss 2, Warden's Hall (Act II guardian, 3 bars). The legacy M2a fight on the demo map is `boss` | `gloamwarden` | Gloam Warden; Warden alone (ambiguous) | live |
 | Twin Vigils | Boss made of two linked Vigil Knights, Spire ascent (see Vigil Knight) | `vigils` | — | later |
 | Unwaking Child | Optional boss | `unwaking_child` | — | later |
 

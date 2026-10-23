@@ -27,6 +27,9 @@ const SEED = +arg('seed', 7), TRIALS = +arg('trials', 5), QUIET = process.argv.i
 // ---------------------------------------------------------------- load the game
 function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const rng = mulberry32(SEED);
+// rows added after the M4a baseline (the M4b Ruins bestiary) run on a side stream, so the main stream (and every later
+// seeded section, e.g. the live boss fights) draws exactly what it drew before they existed
+const sideRng = mulberry32(SEED ^ 0x5bd1e995), SIDE_ROWS = new Set(['gravechanter', 'pillarmimic', 'shadelingswarm', 'voidarcher', 'oathless', 'gloamwarden']);
 const SMath = Object.create(Math); SMath.random = rng;
 const noop = () => {};
 const ctx = {
@@ -75,7 +78,9 @@ const SLOTS = ['weapon', 'head', 'chest', 'boots'];
 const BANDS = [
   { name: 'Vale', lo: 1, hi: 3, ttk: [2, 2], refs: ['dreammoth', 'slime'] },
   { name: 'Pinewood', lo: 3, hi: 10, ttk: [2.5, 3.5], elite: 12, refs: ['gloomslime', 'shadehound', 'brambleshaman', 'ogre', 'thornbackboar', 'mountaintroll'], elites: ['troll'] },
-  { name: 'Ruins', lo: 10, hi: 17, ttk: [3, 4], elite: 14, refs: ['slime', 'wisp', 'hound'] },
+  // Ruins: the M2a trio + the M4b commons (gloomknight is left out: its front shield blocks a rotation that stands still in
+  // front of a frozen target; tools/ruins-bestiary-check.js measures it live, flanking)
+  { name: 'Ruins', lo: 10, hi: 17, ttk: [3, 4], elite: 14, refs: ['slime', 'wisp', 'hound', 'gravechanter', 'pillarmimic', 'shadelingswarm', 'voidarcher'] },
   { name: 'Grotto', lo: 17, hi: 24, ttk: [3, 4], refs: [] }, { name: 'Caldera', lo: 24, hi: 31, ttk: [3.5, 4.5], refs: [] }, { name: 'Spire', lo: 31, hi: 38, ttk: [4, 5], refs: [] },
 ];
 const DPS_TABLE = [[1, 3, 60, 60], [3, 10, 110, 220], [10, 17, 220, 420], [17, 24, 420, 700], [24, 31, 700, 1100], [31, 38, 1100, 1600]];
@@ -238,6 +243,7 @@ log('  band       L    enemy             sword  staff  bow    target');
 const ttkRows = [];
 for (const b of BANDS) for (const type of b.refs) {
   if (!ENEMY[type]) continue;
+  SMath.random = SIDE_ROWS.has(type) ? sideRng : rng;
   const L = Math.round((b.lo + b.hi) / 2), row = { band: b.name, L, type };
   for (const fam of ['sword', 'staff', 'bow']) row[fam] = ttk(type, L, fam);
   ttkRows.push(row);
@@ -249,6 +255,7 @@ for (const b of BANDS) for (const type of b.refs) {
     else if (v < 1.5 || v > 7) red(`common TTK ${r1(v)} s (${fam}) for ${type} at ${b.name} L${L}: outside 1.5-7`);
   }
 }
+SMath.random = rng;
 // elite spawns (makeElite) at Pinewood
 log('\nELITE SPAWN TTK (Pinewood L7, x ELITE_HP, target 12 s)');
 for (const type of ['ogre', 'gloomslime', 'gnarlbrute', 'thornsow']) {   // gnarlbrute / thornsow: the §26.2 elite-pocket rows (always spawned as elites)
@@ -261,10 +268,11 @@ for (const type of ['ogre', 'gloomslime', 'gnarlbrute', 'thornsow']) {   // gnar
 // 3. bosses: length + fairness + hit size
 log('\nBOSSES (length = HP / (rotation DPS vs the boss x uptime) + the bar transitions; red: mini 45-120 s, guardian 100-300 s)');
 log('  boss          kind      L   HP       DPS(sword/staff/bow)    length s (sword/staff/bow)   target');
-const BOSS_IDS = ['mossjaw', 'bramblehorn', 'boss'];
+const BOSS_IDS = ['mossjaw', 'bramblehorn', 'boss', 'oathless', 'gloamwarden'];
 const bossRows = [];
 for (const id of BOSS_IDS) {
   if (!ENEMY[id]) continue;
+  SMath.random = SIDE_ROWS.has(id) ? sideRng : rng;
   const B = ev(`BOSSES['${ENEMY[id].boss || id}']`), mini = B.kind === 'mini', L = ENEMY[id].level || 17, up = mini ? 0.7 : 0.6;
   ev(`simMap(${bandOf(L).lo}, ${bandOf(L).hi}); G.player = makePlayer(); G.player.level = ${L};`);
   const hp = ev(`Math.round(ENEMY['${id}'].hp * enemyHpMul(${ev(`enemyLevel('${id}')`)}))`);
@@ -294,6 +302,7 @@ for (const id of BOSS_IDS) {
     }
   }
 }
+SMath.random = rng;
 
 // 3b. live boss fights (§26.2 the gear loop: farm until you can beat the boss; QA M1 / B2; §20.3 "three mistakes kill, one never does")
 // The boss runs its real AI, BOSS_MOVES, bars and cunning forms (not frozen). The hero, a sword at the lowest level a QA run

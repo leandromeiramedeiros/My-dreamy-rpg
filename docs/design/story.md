@@ -90,7 +90,7 @@ everything plus a phase that changes the rules. Every wind-up is at least 0.6 s.
 | Mini-boss | Dungeon, level | Type | Weak / resists | Moves | Counter |
 |---|---|---|---|---|---|
 | Mossjaw | Root Hollow, L5 | beast, nature | weak fire; resists nature | lunge-bite (line 6, 0.6 s wind-up), root-spit (3 circles r1.2), burrow (vanish 1.5 s, erupt circle r2) | Wildfire |
-| The Oathless | Warden Crypt, L12 | armoured knight, gloom | weak holy, pierce; resists slash | shield-wall (blocks the front 2 s: hit its back), cleave, gloom-bolt volley; stagger 6, break 2.5 s | Rupture |
+| The Oathless | Oath Reliquary, L12 | armoured knight, gloom | weak holy, pierce; resists arcane, wind (M4b: no slash resist, it made the sword fight 3.8x the bow's) | shield-wall (blocks the front 2 s: hit its back), cleave, gloom-bolt volley; stagger 6, break 2.5 s | Rupture |
 | Brinemother | Drowned Vault, L18 | amorphous, frost | weak slash; resists pierce | tide-pull (circle r5, pulls), summon 3 jellies, ice-geyser line | Shatter |
 | Slagheart | Forge Deep, L25 | armoured golem, fire | weak frost, stagger; immune Burn | lava-ring (expanding), slam, magma-pool zones | Shatter after Frost (Detonate is useless: it teaches immunity) |
 | The Twin Vigils | Spire gauntlet, L33 | two gloom knights sharing HP | weak holy | mirrored charges, alternating volleys, link-beam (rotating line between them) | Purify; Conduct through a Chilled pair |
@@ -99,7 +99,7 @@ everything plus a phase that changes the rules. Every wind-up is at least 0.6 s.
 * **Old Bramblehorn** (Pinewood, L8): clearing arena with four root pillars; beast, nature; 2 phases (100 / 50%). Stomp (circle r3, 0.9 s wind-up),
   root-grab (line 7 that roots 1.5 s; dodge i-frames or the Root-Crown answer it), trunk-swipe cone. Phase 2 adds root-wall (the arena shrinks) and summons saplings. Stagger 5.
   Counter: Wildfire on the saplings. Drops Root-Crown.
-* **The Gloam Warden** (Ruins, L14): cleave, slam, volley, charge, void rain, adds, enrage at 50%; phase 3 at 20%: pillars fall (arena shrinks) and the volley becomes a spiral.
+* **The Gloam Warden** (Ruins, L14): cleave, slam, volley, charge, void rain, adds, enrage at 50%; phase 3 at 20%: pillars fall (arena shrinks), the volley becomes a spiral and the hall goes dark (move `gloam`: only the lantern's light is safe). Code id `gloamwarden` (the legacy M2a fight stays `boss`).
   Ethereal: resists physical, weak holy. The Lantern Plate answers the volley. Counter: Overload. Drops Warden's Lantern Plate.
 * **Lady Mirelle** (Grotto, L20): flooded ring arena; the water rises in phase 2 (slow zone on the outer ring). Frost; resists frost, weak lightning.
   Tidal wave (wide sweeping line, 1.3 s), pull (circle r6), icicle rain (6 circles), freeze-beam (rotating line). 60%: drowned adds; 25%: the arena halves.
