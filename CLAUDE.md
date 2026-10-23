@@ -10,7 +10,7 @@
 - **Design decisions are the director's**: research (code, docs, references, web), weigh the options, decide, record the decision in the matching file under `docs/design/` (index: `docs/design/INDEX.md`), and brief the client with any choices that are truly theirs.
 - **Fable is used only when the client asks for it** (an expert consult or meeting, or the Fable advisor). Never spawn a Fable consult on your own initiative. When the client asks, minutes go to `docs/meetings/`.
 - Reports to the client: substance only, no commit/PR/merge chatter. A stop-hook nag about uncommitted files gets a silent WIP commit.
-- Dropped by the client, never re-offer: Godot port-ready rules, the jade tint for the nature Echo, real-phone `?perf=1` readings.
+- Dropped by the client, never re-offer: the jade tint for the nature Echo, real-phone `?perf=1` readings.
 
 ## The employees (models)
 | Model | For | Examples |
@@ -29,8 +29,13 @@
 - Report with numbers and screenshot paths.
 
 ## Ship gate (the director checks after each report)
-`node tools/smoke.js` (runs balsim + save-migrate) · `tools/play.js` · `tools/act1-route.js` · `tools/validate-ids.js` ·
-`tools/maps/engine-check.js` · `tools/perf.js` · `tools/qa/run-big.js kbm all` (the bot). Known flakes: play.js warp-fade, perf under load.
+`node tools/check.js`: smoke (balsim + save-migrate) · play · validate-ids · forge-rt · perf · the bot; after the M4b
+Arena cut, `tools/arena-route.js` and `tools/qa/run-arenas.js` replace act1-route, maps/engine-check and run-big.
+Known flakes: play.js warp-fade, perf under load.
+
+## Godot pivot (client ruling 2026-10-23)
+The studio never makes maps: test only in mockup arenas (`js/arenas.js`). Every asset ships human-editable (PNG + JSON
+sidecar, see `docs/design/asset-pipeline.md`) for the client's Godot port.
 
 ## Glossary (enforced)
 `docs/GLOSSARY.md` holds the canonical name of every game term.

@@ -1,0 +1,18 @@
+GIMP Palette
+Name: forge shadehound (every colour of its exported sheets)
+Columns: 16
+#
+ 12   7  20	c0
+ 18  12  28	c1
+ 25  18  38	c2
+ 30  16  52	c3
+ 34  24  50	c4
+ 44  23  76	c5
+ 47  34  68	c6
+ 64  34 106	c7
+ 84  42 128	c8
+ 90  48 140	c9
+124  68 176	c10
+168 106 216	c11
+228 222 240	c12
+255  90 168	c13

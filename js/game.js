@@ -83,7 +83,18 @@ function aggEnd(A) {
   shake(Math.min(6, 1.5 + 4 * A.r));
 }
 const fx = o => { o.t = 0; G.effects.push(o); return o; };
-const zone = o => { o.t = 0; o.tickT = 0; o.cast = CAST; G.zones.push(o); return o; };
+// a hero zone (not hostile, not a trap, not a trail segment / crack) counts toward the 2-zone cap (loadout.md caps): a third
+// drops the oldest. The Caster 3-piece rule: a zone created within 3 tiles of the hero follows the hero.
+const ZONE_CAP = 2;
+const heroZone = z => !z.hostile && !z.trap && !z.seg && !z.dead;
+const zone = o => {
+  o.t = 0; o.tickT = 0; o.cast = CAST;
+  if (heroZone(o)) {
+    const mine = G.zones.filter(heroZone); if (mine.length >= ZONE_CAP) mine[0].dead = true;
+    const p = G.player; if (p && p.classSet === 'caster' && dist(o.x, o.y, p.x, p.y) < 3) o.follow = true;
+  }
+  G.zones.push(o); return o;
+};
 // ===== particles: pooled, hard cap PART.cap (docs/design/pillars-and-rules.md) ===========================================
 // Combat bursts go through burst(); ambient motes (petals, mist, sparkles…) through addPart(o) and are the first
 // to go: they are skipped by budget and when the pool is full, while a full pool evicts ambient motes for combat.
@@ -200,7 +211,15 @@ function recalcStats(p, full) {
   p.gear.offhand = p.equip.offhand ? familyOf(p.equip.offhand.base) : null;
   // a Grip (loadout.md): matched by the two items' variant tags
   const tags = [p.equip.weapon, p.equip.offhand].filter(Boolean).map(it => familyOf(it.base));
-  p.grip = (GRIPS.find(g => g.tags.every(t => tags.includes(t)) && tags.length === 2) || {}).id || null;
+  p.grip = (GRIPS.find(g => tags.length === 2 && (g.tags[0] === g.tags[1] ? tags[0] === g.tags[0] && tags[1] === g.tags[0] : g.tags.every(t => tags.includes(t)))) || {}).id || null;
+  if (p.grip && G.prog && p === G.player) {   // the first time a pairing is worn: a Codex discovery (G.prog.secrets 'grip:<id>')
+    const S = G.prog.secrets || (G.prog.secrets = {}), k = 'grip:' + p.grip;
+    if (!S[k]) { S[k] = 1; const g = GRIPS.find(r => r.id === p.grip); if (typeof UI !== 'undefined' && UI.toast) UI.toast({ text: `Grip found: ${g.name}`, col: '#ffd35a' }); }
+  }
+  // suit twist (three pieces of one suit) and class rule (three pieces of one armour class): armour-suits.md
+  const pcs = ['head', 'chest', 'boots'].map(k => p.equip[k] && baseOf(p.equip[k].base)).filter(Boolean);
+  p.suitFull = pcs.length === 3 && pcs.every(b => b.suit && b.suit === pcs[0].suit) ? pcs[0].suit : null;
+  p.classSet = pcs.length === 3 && pcs.every(b => b.class === pcs[0].class) ? pcs[0].class : null;
   for (const slot of EQUIP_SLOTS) {
     const it = p.equip[slot]; if (!it) continue;
     const st = statsOf(it), trk = isTrinket(it);
@@ -245,7 +264,8 @@ function recalcStats(p, full) {
   p.def = s.def / (1 + s.def);   // additive armour sum -> one diminishing transform (0.2 -> 17%, 0.7 -> 41%, 1.5 -> 60%)
   p.crit = Math.min(C.crit, B.crit + s.crit); p.critDmg = 0.8 + s.critDmg; p.haste = Math.min(C.haste, s.haste);
   p.cdr = Math.min(C.cdr, s.cdr); p.skillDmg = s.skillDmg; p.regen = B.regen + s.regen; p.mpRegen = B.mpRegen + s.mpRegen; p.speed = B.speed + s.speed;
-  p.markCap = Math.min(C.markCap, MARK_BASE + (s.markCap || 0));
+  p.markCap = Math.min(C.markCap, MARK_BASE + (s.markCap || 0) + (p.grip === 'grip_twinfangs' ? 1 : 0));   // Twin Fangs grip: +1
+  p.clipMax = w && w.clip ? (p.grip === 'grip_siegeworks' ? 6 : w.clip) : 0;   // Crossbow clip (Siegeworks grip: 6)
   p.maxPotions = Math.min(C.potions, MAX_POTIONS + (s.potionCharge || 0));
   if (p.potions > p.maxPotions) p.potions = p.maxPotions;
   p.hp = p.maxHp * hpR; p.mp = p.maxMp * mpR; if (full) p.st = p.maxSt;
@@ -307,6 +327,38 @@ const AFFIX_EFFECTS = [
 const UNIQUE_EFFECTS = [
   { id: 'echo', src: 'unique', when: 'cast', icd: 0, name: 'Echo', hint: 'A spirit repeats your attacks', do(c, v, p) { echoRecord(p, c); } },
 ];
+// suit twists (src 'suit', live while p.suitFull === row.suit: three pieces of one suit; armour-suits.md "Suit twists") and the
+// class 3-piece rules (src 'class', live while p.classSet === row.cls). A row without `when` is an inline engine check
+// (suitTwist / p.classSet at its one hook site, named in `at`); a row with `when` runs on the bus like any boon.
+const SUIT_EFFECTS = [
+  { suit: 'warden', name: 'Warden twist', hint: 'Bulwark reflects projectiles at any tier; a reflected shot staggers 1', at: 'updateProjs' },
+  { suit: 'crusader', name: 'Crusader twist', hint: 'Vault lands in a Consecrated Guard zone', at: 'SKILLS.vault' },
+  { suit: 'juggernaut', name: 'Juggernaut twist', hint: 'Poise never breaks below 25% HP', at: 'poised' },
+  { suit: 'dreamweave', name: 'Dreamweave twist', hint: 'The Arcane Ward nova restores 8 MP per enemy hit', at: 'updateArcaneWard' },
+  { suit: 'frostweave', name: 'Frostweave twist', hint: 'Frost hits on a Chilled foe deal +30%', at: 'damageEnemy' },
+  { suit: 'stormweave', name: 'Stormweave twist', hint: 'Conduct jumps +1 (Chain Lightning +1 jump)', at: 'chainLightning' },
+  { suit: 'stalker', name: 'Stalker twist', hint: 'A hit from stealth deals +50% crit damage', at: 'damageEnemy' },
+  { suit: 'thornwarden', name: 'Thornwarden twist', hint: 'Snares and thorns Poison; Poisoned foes take +15% fire', at: 'damageEnemy' },
+  { suit: 'duelist', name: 'Duelist twist', when: 'parry', hint: 'A parry resets Side-step and grants 1 s of haste',
+    do(c, v, p) { p.cds.sidestep = 0; addBuff(p, 'haste', 1); } },
+  { suit: 'shade', name: 'Shade twist', hint: 'A decoy pops into 2 Marks on every foe near it', at: 'updateDecoys' },
+  { suit: 'nightshade', name: 'Nightshade twist', when: 'kill', icd: 0, hint: 'Poison spreads to two foes nearby on a kill',
+    do(c) { const e = c.e; if (!(e.poisonN > 0)) return; const near = new Set([e]); for (let k = 0; k < 2; k++) { const n = nearestEnemy(e.x, e.y, 3, near); if (!n) break; near.add(n); poisonEnemy(n, e.poisonN, c.e.poisonCast); } } },
+  { suit: 'mirage', name: 'Mirage twist', hint: 'Mirror Image bolts +50% and the image lasts 4 s longer', at: 'SKILLS.mirrorimage' },
+];
+const CLASS_EFFECTS = [
+  { cls: 'heavy', name: 'Heavy rule', hint: 'Melee skills gain poise', at: 'useSkill' },
+  { cls: 'caster', name: 'Caster rule', hint: 'Zones you create near you follow you', at: 'zone' },
+  { cls: 'medium', name: 'Medium rule', hint: 'Your projectiles pierce once more', at: 'spawnProj' },
+  { cls: 'shadow', name: 'Shadow rule', hint: 'Dashes leave a decoy (once per 3 s)', at: 'dashPlayer' },
+];
+// grips (src 'grip', live while p.grip === row.id; the data rows are GRIPS in data.js)
+const GRIP_IMPL = {
+  grip_twinstars: { when: 'hit', icd: 4, do(c, v, p) { if (c.el === 'arcane' && c.e.status && c.e.status.jolted && c.e.status.jolted.until > G.t) for (const k of ['q', 'e']) { const id = slotSkill(p, k); if (id && p.cds[id] > 0) p.cds[id] = Math.max(0, p.cds[id] - 2); } } },
+  grip_warband: { when: 'hit', icd: 0, do(c, v, p) { const e = c.e; if (c.cast && c.cast.call && e.burnT > 0 && !e.dead) { const n = Math.ceil(e.burnT / 0.5); e.burnT = 0; damageEnemy(e, 14 * n * 1.5, { dot: true, el: 'fire', cast: c.cast }); fx({ type: 'ring', x: e.x, y: e.y, r: 1, col: '#ff9a4a', life: 0.3 }); } } },
+  grip_faultline: { when: 'cast', icd: 0, do(c, v, p) { if (c.c && c.c.call) eruptCracks(); } },
+};
+const suitTwist = (p, id) => !!p && p.suitFull === id;
 const EFFECTS = [], EFFECT_BY_ID = {}, EFFECTS_WHEN = {};
 (function buildEffects() {
   const rows = [];
@@ -319,6 +371,9 @@ const EFFECTS = [], EFFECT_BY_ID = {}, EFFECTS_WHEN = {};
   }
   for (const r of AFFIX_EFFECTS) { const row = Object.assign({ icd: EFFECT_ICD, name: r.id, hint: '' }, r); EFFECTS.push(row); EFFECT_BY_ID['affix:' + r.id] = row; }
   for (const r of UNIQUE_EFFECTS) { EFFECTS.push(r); EFFECT_BY_ID['unique:' + r.id] = r; }
+  for (const r of SUIT_EFFECTS) { const row = Object.assign({ id: 'suit_' + r.suit, src: 'suit', when: null, icd: EFFECT_ICD }, r); EFFECTS.push(row); EFFECT_BY_ID['suit:' + r.suit] = row; }
+  for (const r of CLASS_EFFECTS) { const row = Object.assign({ id: 'class_' + r.cls, src: 'class', when: null, icd: 0 }, r); EFFECTS.push(row); EFFECT_BY_ID['class:' + r.cls] = row; }
+  for (const g of typeof GRIPS !== 'undefined' ? GRIPS : []) { const row = Object.assign({ id: g.id, src: 'grip', when: null, icd: EFFECT_ICD, name: g.name, hint: g.hint }, GRIP_IMPL[g.id] || {}); EFFECTS.push(row); EFFECT_BY_ID['grip:' + g.id] = row; }
   for (const r of EFFECTS) if (r.do && r.when) (EFFECTS_WHEN[r.when] || (EFFECTS_WHEN[r.when] = [])).push(r);
 })();
 const boonLive = id => !!(EFFECT_BY_ID[id] && !EFFECT_BY_ID[id].dataOnly);
@@ -329,7 +384,8 @@ function emitEffects(when, ctx) {
   FX_DEPTH++;
   try {
     for (const r of list) {
-      const vals = r.src === 'trinket' ? p.boons && p.boons[r.id] && p.boons[r.id].vals : r.src === 'unique' ? hasRule(p, r.id) || null : p.sum && p.sum[r.id];
+      const vals = r.src === 'trinket' ? p.boons && p.boons[r.id] && p.boons[r.id].vals : r.src === 'unique' ? hasRule(p, r.id) || null
+        : r.src === 'suit' ? p.suitFull === r.suit : r.src === 'class' ? p.classSet === r.cls : r.src === 'grip' ? p.grip === r.id : p.sum && p.sum[r.id];
       if (!vals) continue;
       if (r.icd && (icd[r.id] || -1e9) > G.t) continue;
       r.do(ctx, vals, p);
@@ -374,7 +430,7 @@ function slotSkill(p, slot) {
   if (slot === 'e' || slot === 'eu') {
     if (!off) return null;
     const l = lineOf(off); if (!l) return null;
-    if (slot === 'eu') return l.role === 'companion' && !deckEntries(p).length ? null : l.ult;
+    if (slot === 'eu') return l.role === 'companion' && l.deck !== 'call' && !deckEntries(p).length ? null : l.ult;   // Last Stand needs no calls
     if (l.slot === 'weapon' && off.rule === 'stillhour') return 'hush';
     return l.role === 'companion' ? deckActive(p) : l.spell;
   }
@@ -401,12 +457,29 @@ const RANK_HITS = 25, RANK_MAX = 5, RANK_BONUS = 0.06;
 // applyStatus(e, id, dur, el): every status source lands through STATUS.apply (status.js: it writes the live field the rules
 // run on - burnT, stunT + frozen, slowT, dreadT, rootT - and keeps the status's max / element for the status layers). The
 // caller keeps its own max / overwrite rule (dur is the field's new value). Without status.js (node tools) the field alone.
-function applyStatus(e, id, dur, el) {
-  if (typeof STATUS !== 'undefined') return STATUS.apply(e, id, dur, 0, el);
+function applyStatus(e, id, dur, el, stacks) {
+  if (typeof STATUS !== 'undefined') return STATUS.apply(e, id, dur, stacks || 0, el);
   const f = { burning: 'burnT', frozen: 'stunT', chilled: 'slowT', dread: 'dreadT', rooted: 'rootT' }[id];
-  if (f) { e[f] = dur; if (id === 'frozen') e.frozen = 1; }
-  return !!f;
+  if (f && !(id === 'rooted' && e !== G.player)) { e[f] = dur; if (id === 'frozen') e.frozen = 1; return true; }
+  (e.status || (e.status = {}))[id] = { until: G.t + dur, max: dur, stacks: stacks || 0, el: el || null };   // node tools: the generic map
+  return true;
 }
+const hasStatus = (e, id) => !!(e && e.status && e.status[id] && e.status[id].until > G.t);
+// ===== M4b combat verbs on enemies: Marks, Poison, Root, Jolt, Rent (elements-statuses.md "Statuses") ==========================
+// Marks: e.marks (<= the hero's Mark cap, 5 s, refreshed by a new Mark), +4 % hero damage per Mark (damageEnemy); the Fans' Marks
+// also slow by 10 % each (updateEnemies). Poison: e.poisonN stacks (<= 3), 4 s, a nature tick of 8 per stack every 0.5 s. Root:
+// e.rootUntil (the body stays put; it still attacks). Jolt / Rent: plain e.status entries (Rent: +15 % damage taken).
+const MARK = { per: 0.04, dur: 5, slow: 0.1 }, POISON = { cap: 3, dur: 4, tick: 0.5, dmg: 8 }, RENT = 0.15;
+function markEnemy(e, n, fans) {
+  const p = G.player, cap = (p && p.markCap) || MARK_BASE;
+  e.marks = Math.min(cap, (e.markT > G.t ? e.marks || 0 : 0) + n); e.markT = G.t + MARK.dur; if (fans) e.markFans = true;
+  applyStatus(e, 'marked', MARK.dur, 'arcane', e.marks);
+}
+function poisonEnemy(e, n, cast) {
+  e.poisonN = Math.min(POISON.cap, (e.poisonT > 0 ? e.poisonN || 0 : 0) + n); e.poisonT = POISON.dur; e.poisonTick = e.poisonTick || POISON.tick; e.poisonCast = cast || null;
+  applyStatus(e, 'poisoned', POISON.dur, 'nature', e.poisonN);
+}
+function rootEnemy(e, dur) { if (e.boss) dur *= 0.25; e.rootUntil = Math.max(e.rootUntil || 0, G.t + dur); applyStatus(e, 'rooted', dur, 'nature'); }
 const newCtx = (element, stagger = 0, rank = 1) => ({ dmg: 1, r: 1, stun: 1, slow: 1, burn: 1, cd: 1, mp: 1, dur: 1, extraProj: 0, count: 1, stagger, element, rank, onHit: [] });
 const skillRank = (p, id) => Math.min(RANK_MAX, 1 + Math.floor(((p.ranks[id] && p.ranks[id].hits) || 0) / RANK_HITS));
 const skillRankBonus = (p, id) => RANK_BONUS * (skillRank(p, id) - 1);
@@ -440,7 +513,7 @@ const MP_HIT_CAP = 40;
 function basicMpGain(p, c) {
   if (p.hush) return;   // Hush: no MP from hits
   if (c && c.basic) { if (c.mpDone) return; c.mpDone = true; }
-  const w = weaponOf(p), g0 = MP_ON_HIT[w && w.kind] != null ? MP_ON_HIT[w.kind] : G.tune.player.mpOnHit;
+  const w = weaponOf(p), cls = w && w.class && WEAPONS[w.class], g0 = cls && cls.mpOnHit != null ? cls.mpOnHit : MP_ON_HIT[w && w.kind] != null ? MP_ON_HIT[w.kind] : G.tune.player.mpOnHit;   // per class (data.js WEAPONS[class].mpOnHit)
   const gain = Math.round(g0 * (1 + ((p.sum && p.sum.mpOnHit) || 0)));   // +x % MP on hit (Linen Robe implicit, Mystic origin ring)
   const L = p.mpHits || (p.mpHits = []), t = G.t;
   while (L.length && t - L[0][0] >= 1) L.shift();
@@ -486,8 +559,11 @@ function useSkill(p, slot) {
   if (p.swing && p.atkT > 0) p.swing = null;   // attacks cancel into skills
   if (id === 'sunslash' && p.vanguardT > G.t) { ctx.dmg *= 1.4; p.vanguardT = 0; }   // Vanguard grip: a parry primed Sunslash
   if (deck && p.grip === 'grip_archmage') ctx.dmg *= ARCHMAGE_PAGE;   // Archmage grip: pages hit harder
-  // off-actions never feed the charge; the Bow + Quiver grip: a loosed arrow is a focused shot (always crits)
-  const c = { skill: id, el: ctx.element, slot, ctx, hit: false, noCharge: off, deck, crit: deck && p.grip === 'grip_bow_quiver' };
+  // Spellblade grip (Sword + Grimoire): Sunslash takes the active page's element, +15 %
+  if (id === 'sunslash' && p.grip === 'grip_spellblade') { const pg = deckActive(p); if (pg && SKILLS[pg]) { ctx.element = SKILLS[pg].element; ctx.dmg *= 1.15; } }
+  // off-actions never feed the charge; the Fletcher grip (Bow + Quiver): a loosed arrow gains +40 % crit chance
+  const call = deck && lineOf(p.equip.offhand).deck === 'call';   // a Warhorn call (Warband / Faultline grips)
+  const c = { skill: id, el: ctx.element, slot, ctx, hit: false, noCharge: off, deck, call, critAdd: deck && p.grip === 'grip_fletcher' ? 0.4 : 0 };
   const n0 = G.delays.length, a0 = p.aim, tx0 = G.mouse.wx, ty0 = G.mouse.wy, x0 = p.x, y0 = p.y;
   withCast(c, () => s.cast(p, a0, tx0, ty0));
   emitEffects('cast', { p, c, slot, id, a: a0, tx: tx0, ty: ty0, x: x0, y: y0 });   // §30: the cast hook (Echo records lmb / q only)
@@ -497,6 +573,8 @@ function useSkill(p, slot) {
   for (let i = n0; i < G.delays.length; i++) if (G.delays[i].c === c) dur = Math.max(dur, G.delays[i].t);
   if (p.dash && p.dash.cast === c) dur = Math.max(dur, p.dash.t);
   p.cast = dodge || off ? null : { c, id, slot, age: 0, dur: Math.min(1.5, dur), mp };
+  if (p.classSet === 'heavy' && !dodge && !off) poiseFor(p, Math.max(0.3, Math.min(1.5, dur)));   // Heavy rule: skills gain poise
+  if (id === 'step' && p.grip === 'grip_dancer' && !(p.cds.parry > 0)) { startParry(p, PARRY.blades); p.cds.parry = p.cdm.parry = 1; }   // Dancer grip: Step opens a parry window (shared ICD)
   G.lastCast = { slot, t: 0.25 };
   if (slot === 'q') hudNoun('skill');   // §28: the first Q brings the offhand chips in
   if (!dodge && typeof aimFlash === 'function' && (G.touch || (IN.aimMode && IN.aimMode() !== 'off'))) aimFlash(id, slot);   // quick-cast: 1-frame flash of the shape at the target
@@ -508,7 +586,7 @@ function say(s) { G.msg = { s, t: 1.6 }; }
 // is negated and the nearest enemy to the hit's source is riposted (stagger 3, stun). One ICD for every parry source (1 s: the
 // shared `parry` cooldown key). A Buckler parry from T3 reflects projectiles. Aegis: every hit is parried for 3 s and each parry
 // restores 10 % HP. The Vanguard grip: a parry primes Sunslash (+40 %).
-const PARRY = { blades: 0.25, buckler: 0.35, bladesOff: 0.1, riposte: 70, stagger: 3, stun: 0.6, aegisHeal: 0.1 };
+const PARRY = { blades: 0.25, buckler: 0.35, bladesOff: 0.1, riposte: 70, rapier: 2.2, stagger: 3, stun: 0.6, aegisHeal: 0.1 };
 function startParry(p, win, o = {}) {
   const off = p.equip.offhand, bl = off && lineOf(off) && lineOf(off).class === 'blades' ? PARRY.bladesOff : 0;
   p.parry = { until: G.t + win + bl, reflect: !!o.reflect, t0: G.t };
@@ -522,8 +600,12 @@ function parried(p, sx, sy) {
   if (p.grip === 'grip_vanguard') p.vanguardT = G.t + 4;
   p.invulnT = Math.max(p.invulnT, 0.2);
   const e = nearestEnemy(sx != null ? sx : p.x, sy != null ? sy : p.y, 3, null);
-  const c = { skill: null, el: 'slash', slot: 'rmb', ctx: newCtx('slash', PARRY.stagger), noCharge: true, riposte: true };
-  if (e) withCast(c, () => damageEnemy(e, PARRY.riposte, { stagger: PARRY.stagger, stun: PARRY.stun, knock: 0.6, cast: c }));
+  // the Rapier's Riposte: a parry with a Rapier in hand ripostes x2.2 and always crits
+  const rap = p.equip.weapon && lineOf(p.equip.weapon) && lineOf(p.equip.weapon).riposte;
+  const c = { skill: null, el: rap ? 'pierce' : 'slash', slot: 'rmb', ctx: newCtx(rap ? 'pierce' : 'slash', PARRY.stagger), noCharge: true, riposte: true, crit: !!rap };
+  if (e) withCast(c, () => damageEnemy(e, PARRY.riposte * (rap ? PARRY.rapier : 1), { stagger: PARRY.stagger, stun: PARRY.stun, knock: 0.6, cast: c }));
+  if (p.grip === 'grip_cornered') { p.frenzy = Math.min(frenzyCap(p), (p.frenzy || 0) + 3); p.frenzyT = G.t + 1.5; }   // Cornered grip: a parry adds 3 Frenzy
+  emitEffects('parry', { p, e });
   fx({ type: 'ring', x: p.x, y: p.y, r: 1.3, col: '#ffffff', life: 0.25 }); burst(p.x, p.y, p.z + 1.2, 12, ['#ffffff', '#fff2b0'], 3); sfx('heavy'); shake(3);
 }
 function tryParry(p, sx, sy) { if (!parrying(p)) return false; parried(p, sx, sy); return true; }
@@ -533,9 +615,14 @@ function parryReflect(p, q) {
   const refl = p.buffs.aegis || (p.parry && p.parry.reflect);
   parried(p, q.x, q.y);
   if (!refl) { q.dead = true; return true; }
-  q.friendly = true; q.reflected = true; q.vx = -q.vx; q.vy = -q.vy; q.t = 0; q.life = 1.2; q.hit = new Set(); q.pierce = 0;
-  q.dmg = Math.min(q.dmg, p.power * 0.4 / Math.max(0.01, p.dmgBase)); q.cast = { skill: null, el: q.el || 'slash', slot: 'rmb', ctx: newCtx(q.el || 'slash'), noCharge: true, reflected: true };
+  reflectProj(p, q, 0);
   return true;
+}
+// turn an enemy shot around (parry, Shield Bash mid-dash, the Warden twist's Bulwark): reflected damage <= 40 % of power
+function reflectProj(p, q, stagger) {
+  q.friendly = true; q.reflected = true; q.vx = -q.vx; q.vy = -q.vy; q.t = 0; q.life = 1.2; q.hit = new Set(); q.pierce = 0;
+  q.dmg = Math.min(q.dmg, p.power * 0.4 / Math.max(0.01, p.dmgBase)); q.cast = { skill: null, el: q.el || 'slash', slot: 'rmb', ctx: newCtx(q.el || 'slash', stagger || 0), noCharge: true, reflected: true };
+  if (stagger) q.stagger = stagger;
 }
 // ===== companions = decks (Grimoire pages, Quiver arrows) ===================================================================
 function deckNext(p) { const n = deckEntries(p).length; if (n) p.deck = ((p.deck | 0) + 1) % n; }
@@ -545,6 +632,96 @@ function deckAll(p, a, tx, ty) {
   const L = deckEntries(p), c = CAST; if (!L.length) return;
   L.forEach((id, i) => delay(i * 1.5 / L.length, () => { const s = SKILLS[id]; if (!s || p.dead) return; const cc = Object.assign({}, c, { skill: id, el: s.element, ctx: newCtx(s.element, s.stagger || 0) }); if (p.grip === 'grip_archmage') cc.ctx.dmg *= ARCHMAGE_PAGE; withCast(cc, () => s.cast(p, p.aim, G.mouse.wx, G.mouse.wy)); }));
   fx({ type: 'ring', x: p.x, y: p.y, r: 1.4, col: SKILLS[c && c.skill] ? SKILLS[c.skill].color : '#c79bff', life: 0.4 }); sfx('arcane');
+}
+// ===== M4b engine verbs: poise, held guards, decoys, cracks, Frenzy, the Arcane Ward, buff ends ===================================
+// poise (p.poiseT): a hit taken while poised never interrupts a hold (the Staff / Orb channel). Heavy Strike's charge, Colossus
+// Strike, Ballista, Block / Wall, Brace, Last Stand and the Heavy rule grant it; the Juggernaut twist keeps it below 25 % HP.
+// Uptime <= 75 % (loadout caps; tools/balsim.js measures it).
+const poiseFor = (p, t) => { p.poiseT = Math.max(p.poiseT || 0, G.t + t); };
+const poised = p => !!p && ((p.poiseT || 0) > G.t || !!p.buffs.brace || !!p.buffs.laststand || !!p.guard || (suitTwist(p, 'juggernaut') && p.hp < p.maxHp * 0.25));
+// the hero's movement direction as a world angle (stick / WASD), or null when standing still
+function moveAngle(p) { const m = typeof IN !== 'undefined' && IN.move; if (!m || !m.mag) return null; return Math.atan2(m.y - m.x, m.x + m.y); }
+// held M2 guards (Heater Block 70 %, Tower Wall 100 %): a frontal arc around the aim while M2 is held and stamina lasts (no stamina
+// regen meanwhile); the hero moves at g.speed. Wall also stops shots (hurtPlayer refuses the hit, the shot dies). The Sanctuary
+// grip: Block inside a Consecrate zone restores 2 % HP a second.
+function startGuard(p, o) { p.guard = { kind: o.kind, cut: o.cut, arc: o.arc, speed: o.speed, drain: o.drain, t0: G.t }; sfx('shield'); }
+function updateGuard(p, dt, held) {
+  const g = p.guard; if (!g) return;
+  if ((!held && G.t - g.t0 > 0.05) || p.st <= 0 || p.dead || p.dash) { p.guard = null; return; }
+  p.st = Math.max(0, p.st - g.drain * dt);
+  if (p.grip === 'grip_sanctuary' && G.zones.some(z => z.kind === 'consecrate' && !z.dead && dist(z.x, z.y, p.x, p.y) < z.r)) p.hp = Math.min(p.maxHp, p.hp + p.maxHp * 0.02 * dt);
+}
+const guardCut = (p, sx, sy) => { const g = p.guard; if (!g || sx == null || sy == null) return 0; return Math.abs(angDiff(p.aim, Math.atan2(sy - p.y, sx - p.x))) <= g.arc / 2 ? g.cut : 0; };
+// decoys and images (G.decoys; one cap of 3 with summons, images 1): a non-boss enemy within 8 tiles that is nearer a decoy than
+// the hero targets the decoy (updateEnemies hands its parts the decoy as `p`); a blow an enemy aims at a decoy the hero is not
+// standing on is absorbed (hurtPlayer) and costs the decoy one of its 2 hits. An image (Mirror Image) also shoots arcane bolts.
+// The Shade twist: a decoy pops into 2 Marks on every foe within 2.5 tiles. Drawn as hero after-images (fx ghost) until the
+// art lane gives decoys a look of their own.
+const DECOY = { cap: 3, images: 1, hits: 2, aggro: 8, boltCd: 0.8 };
+function spawnDecoy(x, y, life, o = {}) {
+  const L = G.decoys || (G.decoys = []);
+  if (o.image) { const im = L.filter(d => d.image && !d.dead); if (im.length >= DECOY.images) im[0].dead = true; }
+  const live = L.filter(d => !d.dead); if (live.length >= DECOY.cap) live[0].dead = true;
+  const d = { x, y, r: 0.3, z: G.player ? G.player.z : 0, t: 0, life, hits: DECOY.hits, image: !!o.image, bolt: o.bolt || 0, boltT: 0.3, ghostT: 0, map: G.map, buffs: {}, dead: false };
+  L.push(d); burst(x, y, 1, 10, ['#d8c8ff', '#ffffff'], 2);
+  return d;
+}
+function decoyPop(d) {
+  if (d.dead) return; d.dead = true;
+  if (suitTwist(G.player, 'shade')) for (const e of G.enemies) if (!e.dead && dist(e.x, e.y, d.x, d.y) < 2.5) markEnemy(e, 2);
+  burst(d.x, d.y, 1, 14, ['#d8c8ff', '#8a7aaa'], 2.5); fx({ type: 'ring', x: d.x, y: d.y, r: 1, col: '#d8c8ff', life: 0.3 });
+}
+function updateDecoys(dt) {
+  const L = G.decoys; if (!L || !L.length) return;
+  const p = G.player;
+  for (const d of L) {
+    if (d.dead) continue;
+    if (d.map !== G.map) { d.dead = true; continue; }
+    d.t += dt; if (d.t >= d.life || d.hits <= 0) { decoyPop(d); continue; }
+    d.ghostT -= dt;
+    if (d.ghostT <= 0 && p && p.spr) { d.ghostT = 0.2; fx({ type: 'ghost', x: d.x, y: d.y, z: d.z, life: 0.24, spr: currentPlayerSprite(p), col: d.image ? '#d8c8ff' : '#8a7aaa' }); }
+    if (d.image && d.bolt) {
+      d.boltT -= dt; if (d.boltT > 0) continue; d.boltT = DECOY.boltCd;
+      const e = nearestEnemy(d.x, d.y, 8, null); if (!e) continue;
+      const c = { skill: 'mirrorimage', el: 'arcane', slot: 'f', ctx: newCtx('arcane'), noCharge: true, image: true };
+      withCast(c, () => spawnProj({ x: d.x, y: d.y, z: d.z + 1.4, ang: Math.atan2(e.y - d.y, e.x - d.x), speed: 10, r: 0.3, dmg: d.bolt, life: 0.9, kind: 'arcane', col: '#d8c8ff' }));
+    }
+  }
+  G.decoys = L.filter(d => !d.dead);
+}
+const summonCount = () => (G.decoys ? G.decoys.filter(d => !d.dead).length : 0);
+// the decoy an enemy targets (the nearest within DECOY.aggro, if nearer than the hero), or null; Taunt and bosses ignore decoys
+function decoyFor(e, p) {
+  const L = G.decoys; if (!L || !L.length || e.boss || (e.tauntT || 0) > G.t) return null;
+  let best = null, bd = Math.min(DECOY.aggro, dist(e.x, e.y, p.x, p.y));
+  for (const d of L) { if (d.dead || d.map !== G.map) continue; const k = dist(e.x, e.y, d.x, d.y); if (k < bd) { bd = k; best = d; } }
+  return best;
+}
+// cracks (Earthbreaker, Aftershock, Ground Slam, Quake-call): marker zones (seg: outside the zone cap, no tick) that linger 3 s;
+// the Faultline grip makes every live crack erupt again (60, stagger 1) when a call sounds
+const CRACK = { life: 3, r: 0.8, erupt: 60 };
+function crackAt(x, y) { zone({ x, y, r: CRACK.r, life: CRACK.life, seg: true, crack: true, kind: 'crack', col: '#c0a080' }); }
+function crackLine(x, y, a, len) { for (let s = 1; s <= len; s += 1.6) crackAt(x + Math.cos(a) * s, y + Math.sin(a) * s); }
+function crackRing(x, y, r, n) { for (let k = 0; k < n; k++) { const an = k / n * Math.PI * 2 + 0.4; crackAt(x + Math.cos(an) * r * 0.6, y + Math.sin(an) * r * 0.6); } }
+function eruptCracks() {
+  for (const z of G.zones) if (z.crack && !z.dead) { withCast(z.cast, () => hitArea(z.x, z.y, z.r + 0.4, CRACK.erupt, { stagger: 1 })); fx({ type: 'ring', x: z.x, y: z.y, r: z.r + 0.4, col: '#e0c890', life: 0.3 }); }
+}
+// Claws Frenzy: +5 % attack speed per landed hit, 10 stacks (+50 %; the Cornered grip below half HP: 15 = +75 %), gone 1.5 s after the last hit
+const FRENZY = { per: 0.05, cap: 10, decay: 1.5 };
+const frenzyCap = p => (p && p.grip === 'grip_cornered' && p.hp < p.maxHp * 0.5 ? 15 : FRENZY.cap);
+// Arcane Ward (Dreamweave helm): absorbs hits up to its value for 4 s, then (or when broken) pops a 90 arcane nova; the
+// Dreamweave twist: +8 MP per enemy the nova hits
+function arcaneWardPop(p) {
+  if (!p.arcaneWard) return; p.arcaneWard = null;
+  const c = { skill: 'arcaneward', el: 'arcane', slot: 'r', ctx: newCtx('arcane') };
+  let n = 0; withCast(c, () => { n = hitArea(p.x, p.y, 2.4, 90, { knock: 0.5 }); });
+  if (suitTwist(p, 'dreamweave') && n) p.mp = Math.min(p.maxMp, p.mp + 8 * n);
+  fx({ type: 'ring', x: p.x, y: p.y, r: 2.5, col: '#d8c8ff', life: 0.4 }); sfx('arcane');
+}
+// a timed buff ran out: Brace shoves, Last Stand leaves the hero Winded
+function buffEnded(p, id) {
+  if (id === 'brace') { const c = { skill: 'brace', el: 'slash', slot: 'f', ctx: newCtx('slash', 1) }; withCast(c, () => hitArea(p.x, p.y, 2, 60, { knock: 1.2 })); fx({ type: 'ring', x: p.x, y: p.y, r: 2.1, col: '#c0b0a0', life: 0.3 }); sfx('heavy'); }
+  if (id === 'laststand') addBuff(p, 'winded', 3);
 }
 // ===== Hush (The Stopped Hour, rule `stillhour`; docs/design/combat-feel.md) ======================================================
 // A toggle: 30 MP to start (the skill's mp), then 60 MP per REAL second. Ends on a second press, 0 MP, hero death, boss-death
@@ -566,7 +743,7 @@ function updateHush(p, dt) {
   G.timeScale = G.timeScale < goal ? Math.min(goal, G.timeScale + k) : Math.max(goal, G.timeScale - k);
 }
 // temporary buffs stay multiplicative but cap at 1.6x (bless x surge x focus was 2.37x)
-const buffMul = p => Math.min(1.6, (p.buffs.bless ? 1.4 : 1) * (p.buffs.surge ? 1.3 : 1) * (p.buffs.focus ? 1.3 : 1));
+const buffMul = p => Math.min(1.6, (p.buffs.bless ? 1.4 : 1) * (p.buffs.surge ? 1.3 : 1) * (p.buffs.focus ? 1.3 : 1) * (p.buffs.rally ? 1.15 : 1) * (p.buffs.laststand ? 1.3 : 1));
 function addBuff(p, id, t) { p.buffs[id] = { t, max: t }; }
 function healPlayer(p, n) { p.hp = Math.min(p.maxHp, p.hp + n); text(p.x, p.y, p.z + 3, '+' + Math.round(n), '#8fffa8'); }
 function swingWeapon(p, dur, arc, dir) { p.swing = { t: 0, dur, arc, dir: dir || (Math.random() < 0.5 ? 1 : -1) }; }
@@ -657,49 +834,97 @@ function basicAttack(p) {
   const w = weaponOf(p);
   // basic attacks are casts too (skill: null, basic: true) so their hits carry a ctx; they build MP on hit
   const c = { skill: null, basic: true, el: w.element || 'slash', slot: 'lmb', ctx: newCtx(w.element || 'slash') }, combo = p.combo, a0 = p.aim;
-  if (w.hold === 'focus' && p.focusReady) { c.crit = true; p.focusReady = false; p.holdT = 0; }   // Bow Focus: the shot after 0.6 s still crits
-  if (p.nocked > G.t && (w.kind === 'bow' || w.kind === 'staff')) { c.ctx.dmg *= 1.4; c.nock = true; p.nocked = 0; }   // Quiver Nock primes the next shot
+  if (w.hold === 'focus' && p.focusReady) { c.crit = true; p.focusReady = false; p.holdT = 0; }   // Shots Focus: the shot after 0.6 s still crits
+  // Quiver Nock primes the next shot or bolt (the Hedgewall grip: the Halberd's next hit too, +40 % and a 0.6 s pin)
+  const nockable = w.class === 'shots' || w.class === 'foci' || (w.id === 'halberd' && p.grip === 'grip_hedgewall');
+  if (p.nocked > G.t && nockable) { c.ctx.dmg *= 1.4; c.nock = true; p.nocked = 0; }
   withCast(c, () => basicSwing(p, w));
   emitEffects('cast', { p, c, slot: 'lmb', id: null, a: a0, tx: G.mouse.wx, ty: G.mouse.wy, x: p.x, y: p.y, combo });
 }
+// the basic attack by swing template (data.js: the variant's `sw`, else its class's `swing`): blade3 (Sword, Mace: 3 hits, a
+// wide 3rd), thrust3 (Rapier: long narrow thrusts), great2 (Axe, Hammer: 2 heavy hits), reach2 (Halberd: thrust, then a long
+// sweep), shadow4 (Daggers, Claws, Fans: 4 quick cuts), magic (Staff, Wand, Orb bolts), shot (Bow), quarrel (Crossbow: a clip,
+// then a reload), disc (Chakram: out and back). `basic.stagger` (Mace, Hammer) rides on every basic hit.
+const SWING_OF = { sword: 'blade3', staff: 'magic', bow: 'shot', daggers: 'shadow4', unarmed: 'unarmed' };
 function basicSwing(p, w) {
-  const a = p.aim;
-  p.atkT = w.basic.rate / (1 + p.haste);
-  if (w.kind === 'unarmed') {   // §28: a short two-handed shove, the empty hands' only verb
+  const a = p.aim, cl = w.class && WEAPONS[w.class];
+  const sw = w.kind === 'unarmed' ? 'unarmed' : w.sw || (cl && cl.swing) || SWING_OF[w.kind] || 'shot';
+  if (w.frenzy && (p.frenzyT || 0) < G.t) p.frenzy = 0;   // Claws Frenzy decays 1.5 s after the last hit
+  p.atkT = w.basic.rate / (1 + p.haste + (w.frenzy ? (p.frenzy || 0) * FRENZY.per : 0));
+  const st = w.basic.stagger || 0, nock = !!(CAST && CAST.nock);
+  const H = o => { if (st) o.stagger = st; if (nock && sw === 'reach2') o.root = 0.6; return o; };
+  const side = p.combo % 2 ? -1 : 1;
+  if (sw === 'unarmed') {   // §28: a short two-handed shove, the empty hands' only verb
     swingWeapon(p, 0.14, 1.2, 1);
     hitCone(p.x, p.y, a, 1.4, 1.1, w.basic.dmg, { knock: 0.35 });
     fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 1.1, r: 0.9, col: '#f2e6ff', life: 0.14, w: 2, dir: 1 });
     sfx('swing');
-  } else if (w.kind === 'daggers') {   // Shadows: a 4-hit combo, the 4th a crossing double cut
+  } else if (sw === 'shadow4') {   // Shadows: a 4-hit combo, the 4th a crossing double cut
     p.combo = (p.combo + 1) % 4;
-    const big = p.combo === 3;
-    swingWeapon(p, 0.12, big ? 2.0 : 1.4, p.combo % 2 ? -1 : 1);
-    hitCone(p.x, p.y, a, big ? 1.8 : 1.3, big ? 1.5 : 1.3, w.basic.dmg * (big ? 1.5 : 1), { knock: big ? 0.3 : 0.08 });
-    fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: big ? 2 : 1.4, r: big ? 1.5 : 1.3, col: '#d6c8ff', life: 0.14, w: big ? 3 : 2, dir: p.combo % 2 ? -1 : 1 });
+    const big = p.combo === 3, d = p.combo % 2 ? -1 : 1;
+    swingWeapon(p, 0.12, big ? 2.0 : 1.4, d);
+    const n = hitCone(p.x, p.y, a, big ? 1.8 : 1.3, big ? 1.5 : 1.3, w.basic.dmg * (big ? 1.5 : 1), H({ knock: big ? 0.3 : 0.08 }));
+    if (w.frenzy && n) { p.frenzy = Math.min(frenzyCap(p), (p.frenzy || 0) + 1); p.frenzyT = G.t + FRENZY.decay; }
+    fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: big ? 2 : 1.4, r: big ? 1.5 : 1.3, col: w.color || '#d6c8ff', life: 0.14, w: big ? 3 : 2, dir: d });
     sfx('swing');
-  } else if (w.kind === 'sword') {
+  } else if (sw === 'blade3') {
     p.combo = (p.combo + 1) % 3;
-    const big = p.combo === 2;
-    swingWeapon(p, 0.17, big ? 2.6 : 1.9, p.combo % 2 ? -1 : 1);
-    hitCone(p.x, p.y, a, big ? 2.2 : 1.8, big ? 1.75 : 1.5, w.basic.dmg * (big ? 1.6 : 1), { knock: big ? 0.5 : 0.15 });
-    fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: big ? 2.3 : 1.8, r: big ? 1.75 : 1.5, col: big ? '#fff2b0' : '#ffe6a0', life: 0.18, w: big ? 4 : 3, dir: p.combo % 2 ? -1 : 1 });
+    const big = p.combo === 2, d = p.combo % 2 ? -1 : 1;
+    swingWeapon(p, 0.17, big ? 2.6 : 1.9, d);
+    hitCone(p.x, p.y, a, big ? 2.2 : 1.8, big ? 1.75 : 1.5, w.basic.dmg * (big ? 1.6 : 1), H({ knock: big ? 0.5 : 0.15 }));
+    fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: big ? 2.3 : 1.8, r: big ? 1.75 : 1.5, col: big ? '#fff2b0' : '#ffe6a0', life: 0.18, w: big ? 4 : 3, dir: d });
     sfx('swing');
-  } else if (w.kind === 'staff') {
+  } else if (sw === 'thrust3') {   // Rapier: two quick thrusts, then a long double lunge (wide = 2 thrusts)
+    p.combo = (p.combo + 1) % 3;
+    const big = p.combo === 2, len = big ? 2.4 : 2.1;
+    swingWeapon(p, 0.12, 0.6, side);
+    hitLine(p.x, p.y, a, len, big ? 0.6 : 0.42, w.basic.dmg * (big ? 1.6 : 1), H({ knock: big ? 0.35 : 0.1 }));
+    fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: big ? 0.7 : 0.45, r: len, col: '#e8f0ff', life: 0.14, w: big ? 3 : 2, dir: side });
+    sfx('swing');
+  } else if (sw === 'great2') {   // Axe / Hammer: two committed swings, the 2nd wider and heavier
+    p.combo = (p.combo + 1) % 2;
+    const big = p.combo === 1;
+    swingWeapon(p, 0.24, big ? 2.8 : 2.2, big ? -1 : 1);
+    hitCone(p.x, p.y, a, big ? 2.6 : 2.0, big ? 2.1 : 1.9, w.basic.dmg * (big ? 1.4 : 1), H({ knock: big ? 0.6 : 0.3 }));
+    fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: big ? 2.7 : 2.1, r: big ? 2.1 : 1.9, col: w.color || '#ffd0a0', life: 0.22, w: big ? 6 : 5, dir: big ? -1 : 1 });
+    if (big) shake(2);
+    sfx(big ? 'heavy' : 'swing');
+  } else if (sw === 'reach2') {   // Halberd: a long thrust (reach x1.5), then a wide sweep
+    p.combo = (p.combo + 1) % 2;
+    if (p.combo === 0) { swingWeapon(p, 0.16, 0.6, 1); hitLine(p.x, p.y, a, 2.7, 0.5, w.basic.dmg, H({ knock: 0.25 })); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 0.45, r: 2.7, col: '#e8f0ff', life: 0.16, w: 3, dir: 1 }); }
+    else { swingWeapon(p, 0.24, 2.6, -1); hitCone(p.x, p.y, a, 2.4, 2.6, w.basic.dmg * 1.4, H({ knock: 0.5 })); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 2.4, r: 2.6, col: '#e8f0ff', life: 0.22, w: 5, dir: -1 }); }
+    sfx('swing');
+  } else if (sw === 'magic') {   // Staff / Wand / Orb bolts (the Orb's are lightning and Jolt)
     castAnim(p, 0.18);
-    spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a, speed: 10, r: 0.3, dmg: w.basic.dmg, life: 0.9, kind: 'arcane', col: '#9fe8ff' });
-    sfx('arcane');
-  } else {
+    const orb = w.element === 'lightning';
+    spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a, speed: 10, r: 0.3, dmg: w.basic.dmg, life: 0.9, kind: 'arcane', col: orb ? '#fff07a' : w.id === 'staff' ? '#9fe8ff' : '#c7e8ff', jolt: orb ? 2 : 0, pierce: nock ? 1 : 0 });
+    sfx(orb ? 'zap' : 'arcane');
+  } else if (sw === 'quarrel') {   // Crossbow: a clip of 4 bolts (Siegeworks 6) that pierce once, then a 1 s reload
+    const max = p.clipMax || w.clip || 4;
+    if (p.clipFor !== w.id || p.clip == null || p.clip > max) { p.clip = max; p.clipFor = w.id; }
+    castAnim(p, 0.12);
+    spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 20, r: 0.28, dmg: w.basic.dmg, life: 0.6, kind: 'arrow', col: CAST && CAST.crit ? '#fff2b0' : '#f0e0c0', pierce: 1 + (nock ? 1 : 0) });
+    if (--p.clip <= 0) { p.clip = max; p.atkT += (w.reload || 1) / (1 + p.haste); p.reloadT = G.t + p.atkT; }
+    sfx('bow');
+  } else if (sw === 'disc') {   // Chakram: a returning disc, it cuts going out and coming back
+    castAnim(p, 0.14);
+    spawnProj({ x: p.x, y: p.y, z: p.z + 1.4, ang: a, speed: 12, r: 0.35, dmg: w.basic.dmg, life: 0.85, kind: 'arcane', col: CAST && CAST.crit ? '#fff2b0' : '#e7eeff', pierce: 99, ret: 0.4 });
+    sfx('swing');
+  } else {   // shot: the Bow
     castAnim(p, 0.15);
-    spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.25, dmg: w.basic.dmg, life: 0.65, kind: 'arrow', col: CAST && CAST.crit ? '#fff2b0' : '#e7eeff', pierce: CAST && CAST.nock ? 1 : 0 });
+    spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.25, dmg: w.basic.dmg, life: 0.65, kind: 'arrow', col: CAST && CAST.crit ? '#fff2b0' : '#e7eeff', pierce: nock ? 1 : 0 });
     sfx('bow');
   }
 }
-// ===== hold-M1 (weapons-and-skills.md class profile): Staff Channel (tap = bolt, held past the swing rate = a beam at bolt DPS
-// x 1.15), Bow Focus (standing still 0.6 s: the next shot crits), Greatarms Heavy Strike (no live variant in M4a). p.holdCharge 0..1
-// feeds the touch charge ring.
+// ===== hold-M1 (weapons-and-skills.md class profile): Channel (Staff, Orb: tap = bolt, held past the swing rate = a beam at bolt
+// DPS x 1.15; the Orb's drains 6 MP/s and Jolts), Focus (Shots: standing still 0.6 s, the next shot crits), Heavy Strike
+// (Greatarms: held past 0.25 s it charges for up to 1 s with poise; released from 0.5 s it strikes x1.3..x1.8, stagger 2).
+// p.holdCharge 0..1 feeds the touch charge ring. An unpoised hit breaks a channel (hurtPlayer).
 const CHANNEL = { tick: 0.24, mul: 1.15, len: 7.5, w: 0.45 };
+const HEAVY = { start: 0.25, full: 1, min: 0.5, lo: 1.3, hi: 1.8, stagger: 2 };
 function holdAttack(p, dt, held) {
   const w = weaponOf(p);
+  if (w.hold === 'heavy') return heavyHold(p, dt, held, w);
   if (!held || p.dead || !w.hold) { p.holdT = 0; p.holdCharge = w.hold === 'focus' ? p.holdCharge : 0; if (w.hold === 'focus' && (p.moving || p.dead)) { p.holdCharge = 0; p.focusReady = false; } if (p.channel) p.channel = null; return false; }
   p.holdT += dt;
   if (w.hold === 'focus') {
@@ -711,21 +936,52 @@ function holdAttack(p, dt, held) {
     const rate = w.basic.rate / (1 + p.haste);
     p.holdCharge = clamp(p.holdT / rate, 0, 1);
     if (p.holdT < rate) return false;   // a tap is the bolt
+    if (w.drain && p.mp < w.drain * CHANNEL.tick) { p.channel = null; return false; }   // the Orb's beam needs MP: out of it, back to bolts
     const C = p.channel || (p.channel = { t: 0, n: 0 });
     C.t -= dt; if (C.t > 0 || p.dash || castActive(p) || p.rootT > 0) return true;
     C.t = CHANNEL.tick; C.n++;
-    const a = p.aim, c = { skill: null, basic: true, el: w.element, slot: 'lmb', ctx: newCtx(w.element), mpDone: C.n % 2 === 0, channel: true };
+    if (w.drain) p.mp -= w.drain * CHANNEL.tick;
+    const a = p.aim, c = { skill: null, basic: true, el: w.element, slot: 'lmb', ctx: newCtx(w.element), mpDone: !!w.drain || C.n % 2 === 0, channel: true };
     c.ctx.dmg = CHANNEL.mul * CHANNEL.tick / w.basic.rate;   // the beam's DPS = the bolt's x 1.15
-    withCast(c, () => { castAnim(p, CHANNEL.tick); hitLine(p.x, p.y, a, CHANNEL.len, CHANNEL.w, w.basic.dmg, { knock: 0.05 }); fx({ type: 'beam', x: p.x, y: p.y, z: p.z + 1.6, ang: a, len: CHANNEL.len, col: '#9fe8ff', life: CHANNEL.tick }); });
-    if (C.n % 4 === 1) sfx('arcane');
+    const col = w.element === 'lightning' ? '#fff07a' : '#9fe8ff';
+    withCast(c, () => { castAnim(p, CHANNEL.tick); hitLine(p.x, p.y, a, CHANNEL.len, CHANNEL.w, w.basic.dmg, { knock: 0.05, jolt: w.element === 'lightning' ? 2 : 0 }); fx({ type: 'beam', x: p.x, y: p.y, z: p.z + 1.6, ang: a, len: CHANNEL.len, col, life: CHANNEL.tick }); });
+    if (C.n % 4 === 1) sfx(w.element === 'lightning' ? 'zap' : 'arcane');
     return true;
   }
   return false;
 }
+function heavyHold(p, dt, held, w) {
+  if (held && !p.dead) {
+    p.holdT += dt;
+    if (p.holdT < HEAVY.start) { p.holdCharge = 0; return false; }   // a tap: the combo
+    if (!p.heavy) { if (p.atkT > 0 || p.dash || castActive(p) || p.rootT > 0) return true; p.heavy = { t: 0 }; }
+    p.heavy.t += dt; poiseFor(p, 0.1); p.castT = Math.max(p.castT, 0.05);
+    p.holdCharge = clamp(p.heavy.t / HEAVY.full, 0, 1);
+    return true;
+  }
+  p.holdT = 0;
+  const H = p.heavy; p.heavy = null; p.holdCharge = 0;
+  if (H && H.t >= HEAVY.min && !p.dead && !p.dash) heavyStrike(p, w, clamp((H.t - HEAVY.min) / (HEAVY.full - HEAVY.min), 0, 1));
+  return false;
+}
+function heavyStrike(p, w, k) {
+  const a = p.aim, mul = HEAVY.lo + (HEAVY.hi - HEAVY.lo) * k, reach = w.sw === 'reach2' ? 2.9 : 2.4;
+  const c = { skill: null, basic: true, heavy: true, el: w.element || 'slash', slot: 'lmb', ctx: newCtx(w.element || 'slash', HEAVY.stagger) };
+  p.atkT = w.basic.rate / (1 + p.haste);
+  withCast(c, () => {
+    swingWeapon(p, 0.26, 2.8, 1);
+    hitCone(p.x, p.y, a, 2.4, reach, w.basic.dmg * mul, { knock: 0.8, stagger: HEAVY.stagger });
+    fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 2.5, r: reach, col: '#fff0d0', life: 0.28, w: 8, dir: 1 }); shake(3 + 3 * k); sfx('heavy');
+  });
+}
 
+// dashes: opt.hit { dmg, r, knock, ...damageEnemy options } hits each enemy once; opt.carry drags the first non-boss hit along;
+// opt.zoneTrail drops a trail of zone segments; opt.reflect turns enemy shots around mid-dash (updateProjs). The Shadow rule:
+// a dash leaves a decoy (once per 3 s).
 function dashPlayer(p, dx, dy, distance, dur, opt = {}) {
   const l = Math.hypot(dx, dy) || 1;
   p.dash = { vx: dx / l * distance / dur, vy: dy / l * distance / dur, t: dur, opt, hit: new Set(), ghostT: 0, cast: CAST };
+  if (p === G.player && p.classSet === 'shadow' && !((p.decoyIcd || 0) > G.t)) { p.decoyIcd = G.t + 3; spawnDecoy(p.x, p.y, 3); }
 }
 function blinkPlayer(p, a, d) {
   const ox = p.x, oy = p.y;
@@ -744,7 +1000,7 @@ function chainLightning(p, tx, ty) {
   let cur = nearestEnemy(tx, ty, 3, null) || nearestEnemy(p.x, p.y, 7, null);
   const pts = [[p.x, p.y, p.z + 1.6]], hit = new Set();
   if (!cur) { const [ax, ay] = targetIn(p, tx, ty, 5); pts.push([ax, ay, 0.3]); fx({ type: 'lightning', pts, life: 0.25, col: '#bff0ff' }); return; }
-  for (let k = 0; k < 6 + chainBonus(p) && cur; k++) {   // topaz: +1 jump per 2 grades
+  for (let k = 0; k < 6 + chainBonus(p) + (suitTwist(p, 'stormweave') ? 1 : 0) && cur; k++) {   // topaz: +1 jump per 2 grades; Stormweave twist +1
     hit.add(cur); pts.push([cur.x, cur.y, cur.z + 1]);
     const tgt = cur;
     delay(k * 0.05, () => damageEnemy(tgt, 95, { stun: 0.2 }));
@@ -841,12 +1097,15 @@ function unstickPlayer(p, moved, dt, h0) {
 function updatePlayer(p, dt) {
   const m = G.map;
   for (const k in p.cds) if (p.cds[k] > 0) p.cds[k] -= dt;
-  for (const k in p.buffs) { p.buffs[k].t -= dt; if (p.buffs[k].t <= 0) delete p.buffs[k]; }
+  for (const k in p.buffs) { p.buffs[k].t -= dt; if (p.buffs[k].t <= 0) { delete p.buffs[k]; if (!p.dead) buffEnded(p, k); } }
+  if (p.arcaneWard && p.arcaneWard.until <= G.t) arcaneWardPop(p);
+  if (p.fortress && p.fortress.until <= G.t) p.fortress = null;
+  if (p.frenzy && (p.frenzyT || 0) < G.t) p.frenzy = 0;
   p.atkT -= dt; p.invulnT -= dt; p.hurtT -= dt; p.castT -= dt; p.rootT -= dt; p.slowT -= dt; p.spin -= dt; if (p.dreadT > 0) p.dreadT -= dt;
   if (p.dead) return;
   p.hp = Math.min(p.maxHp, p.hp + p.regen * dt + (p.buffs.mend ? p.maxHp * 0.25 / 4 * dt * healMul(p) : 0));
   if (!p.hush) p.mp = Math.min(p.maxMp, p.mp + p.mpRegen * dt);   // Hush stops MP regen
-  p.st = Math.min(p.maxSt, p.st + 22 * dt);
+  if (!p.guard) p.st = Math.min(p.maxSt, p.st + 22 * dt);   // a held guard pauses stamina regen
   updateHush(p, dt);
   if (p.swing) { p.swing.t += dt; if (p.swing.t > p.swing.dur) p.swing = null; }
   if (p.cast) { p.cast.age += dt; if (p.cast.age >= p.cast.dur) p.cast = null; }
@@ -863,8 +1122,10 @@ function updatePlayer(p, dt) {
     if (d.opt.roll && d.ghostT <= 0) { d.ghostT = 0.04; burst(p.x, p.y, p.z, 2, ['#e7e0ff'], 1, { glow: false }); }
     if (d.opt.hit) for (const e of G.enemies) {
       if (e.dead || d.hit.has(e) || e.spawnT > 0) continue;
-      if (dist(p.x, p.y, e.x, e.y) < d.opt.hit.r + e.r) { d.hit.add(e); damageEnemy(e, d.opt.hit.dmg, { knock: d.opt.hit.knock, cast: d.cast }); }
+      if (dist(p.x, p.y, e.x, e.y) < d.opt.hit.r + e.r) { d.hit.add(e); damageEnemy(e, d.opt.hit.dmg, Object.assign({}, d.opt.hit, { cast: d.cast })); if (d.opt.carry && !d.carried && !e.boss && !e.dead && !e.dummy) d.carried = e; }
     }
+    if (d.carried && !d.carried.dead) { const c = d.carried, l = Math.hypot(d.vx, d.vy) || 1; c.x = p.x + d.vx / l * 0.8; c.y = p.y + d.vy / l * 0.8; c.stunT = Math.max(c.stunT, 0.25); }   // a carry (Bull Rush, Bulwark Charge)
+    if (d.opt.zoneTrail) { d.trailT = (d.trailT || 0) - dt; if (d.trailT <= 0) { d.trailT = 0.08; withCast(d.cast, () => zone(Object.assign({ x: p.x, y: p.y, seg: true, col: d.opt.trail || '#bff4ff' }, d.opt.zoneTrail))); } }   // Glide's frost trail
     if (d.t <= 0) { p.dash = null; if (d.opt.onEnd) withCast(d.cast, d.opt.onEnd); }
   } else {
     const mv = typeof IN !== 'undefined' ? IN.move : { x: 0, y: 0, mag: 0 };
@@ -874,7 +1135,7 @@ function updatePlayer(p, dt) {
     if (p.moving) {
       let wx = sx + sy, wy = sy - sx;
       const l = Math.hypot(wx, wy); wx /= l; wy /= l;
-      const sp = mag * p.speed * (p.buffs.sprint ? 1.8 : 1) * (p.buffs.veil ? 1.4 : 1) * (p.slowT > 0 ? 0.6 : 1) * (p.castT > 0 ? 0.75 : 1) * (1 + 0.3 * Math.abs(sy) / Math.hypot(sx, sy));
+      const sp = mag * p.speed * (p.buffs.sprint ? 1.8 : 1) * (p.buffs.veil ? 1.4 : 1) * (p.slowT > 0 ? 0.6 : 1) * (p.castT > 0 ? 0.75 : 1) * (p.guard ? p.guard.speed : 1) * (p.buffs.winded ? 0.8 : 1) * (1 + 0.3 * Math.abs(sy) / Math.hypot(sx, sy));
       const bx = p.x, by = p.y;
       moveEntity(p, wx * sp * dt, wy * sp * dt, h0);
       unstickPlayer(p, Math.abs(p.x - bx) + Math.abs(p.y - by), dt, h0);
@@ -991,11 +1252,12 @@ const INSTANT_SLOTS = ['v', 'rmb'];   // dodge and the off-action never wait for
 // Hold-to-aim (input.js IN.aimMode): 'off' casts on press (M2a); 'hold' / 'always' cast the skill keys on RELEASE so the
 // ground indicator can show while held (IN.aimCasts lists this step's releases). Dodge, the off-action and pockets stay instant.
 function playerActions(p, dt) {
-  if (typeof IN === 'undefined' || G.ui.open || G.state !== 'play' || G.fadeDir > 0) { if (typeof IN !== 'undefined' && IN.clearAimHold) IN.clearAimHold(); holdAttack(p, dt, false); return; }
+  if (typeof IN === 'undefined' || G.ui.open || G.state !== 'play' || G.fadeDir > 0) { if (typeof IN !== 'undefined' && IN.clearAimHold) IN.clearAimHold(); holdAttack(p, dt, false); updateGuard(p, dt, false); return; }
   if (p.dodgeBuf > 0) { p.dodgeBuf -= dt; if (!castActive(p) || p.cast.age >= CANCEL_AFTER) { p.dodgeBuf = 0; useSkill(p, 'v'); } }
   const hold = IN.aimMode && IN.aimMode() !== 'off';
   for (const [a, slot] of SKILL_ACTIONS) if (IN.pressed(a) && (!hold || INSTANT_SLOTS.includes(slot))) useSkill(p, slot);
   if (hold) for (const a of IN.aimCasts) { const sa = SKILL_ACTIONS.find(q => q[0] === a); if (sa) useSkill(p, sa[1]); }
+  updateGuard(p, dt, IN.held('offhand'));   // Block / Wall last while M2 is held (kbm, pad and touch alike)
   if (typeof attackToggle === 'function' && attackToggle()) { if (IN.pressed('attack')) p.autoAtk = !p.autoAtk; } else p.autoAtk = false;
   const atk = IN.held('attack') || p.autoAtk;
   if (!holdAttack(p, dt, atk) && atk) basicAttack(p);
@@ -1007,9 +1269,22 @@ function playerActions(p, dt) {
 function hurtPlayer(dmg, srcX, srcY, el = 'slash', o) {
   const p = G.player;
   if (p.dead || p.invulnT > 0 || (p.dash && p.dash.opt.invuln) || G.state !== 'play') return false;
+  // a decoy draws the blow: an enemy aiming at a decoy (updateEnemies) the hero is not standing on hits the decoy instead
+  const dec = G.aggroDecoy; if (dec && !dec.dead && dist(p.x, p.y, dec.x, dec.y) > 1.2) { dec.hits--; burst(dec.x, dec.y, 1, 6, ['#d8c8ff', '#ffffff'], 2); return false; }
   if (tryParry(p, srcX, srcY, o)) return false;   // a parry window (or Aegis) negates the hit
+  const cut = guardCut(p, srcX, srcY);   // Block 70 % / Wall 100 % from the front
+  if (cut >= 1) { fx({ type: 'ring', x: p.x, y: p.y, r: 0.8, col: '#c8d8f0', life: 0.15 }); sfx('shield'); return false; }
   const r = (p.res && p.res[el]) || 0;
   let d = dmg * (1 - p.def) * (1 - (el === 'arcane' ? r * 0.5 : r)) * (p.buffs.bulwark ? 0.4 : 1) * (p.buffs.ward ? 0.5 : 1) * frand(0.9, 1.1);
+  // M4b guards and suit buffs: one product, floored at 0.4 (Block 0.3, Fortress / Brace 0.7, Taunt / Winter's Veil 0.8, Consecrated Guard 0.75)
+  const inF = p.fortress && p.fortress.until > G.t && dist(p.x, p.y, p.fortress.x, p.fortress.y) < p.fortress.r;
+  const zg = G.zones.reduce((m, z) => (z.guard && !z.dead && dist(z.x, z.y, p.x, p.y) < z.r ? Math.min(m, 1 - z.guard) : m), 1);
+  d *= Math.max(0.4, (1 - cut) * (inF ? 0.7 : 1) * (p.buffs.brace ? 0.7 : 1) * (p.buffs.taunt ? 0.8 : 1) * (p.buffs.wintersveil ? 0.8 : 1) * zg);
+  if (cut > 0) sfx('shield');
+  if (p.arcaneWard) { const a = Math.min(p.arcaneWard.hp, d); p.arcaneWard.hp -= a; d -= a; if (p.arcaneWard.hp <= 0) arcaneWardPop(p); }   // Arcane Ward absorbs first
+  if (!poised(p)) { p.channel = null; if (p.holdT > 0) p.holdT = 0; }   // an unpoised hit breaks a channel
+  heroRetaliate(p, srcX, srcY);
+  if (d <= 0) { p.invulnT = 0.2; return false; }
   p.hp -= d; p.hurtT = 0.25; p.invulnT = 0.2; combatPing(p);
   text(p.x, p.y, p.z + 3, Math.round(d), '#ff5a7a');
   shake(4); sfx('hurt');
@@ -1021,6 +1296,16 @@ function hurtPlayer(dmg, srcX, srcY, el = 'slash', o) {
   return true;
 }
 
+// a melee attacker (the nearest enemy to the blow's source, within 1.5 tiles of it and 2.6 of the hero) meets the hero's cloaks:
+// Static Cloak zaps 45 + Jolt, Briar Mantle 35 thorns (Poison with the Thornwarden twist), Winter's Veil Chills
+function heroRetaliate(p, sx, sy) {
+  if (sx == null || !(p.buffs.staticcloak || p.buffs.briar || p.buffs.wintersveil) || dist(sx, sy, p.x, p.y) > 2.6) return;
+  const e = nearestEnemy(sx, sy, 1.5, null); if (!e) return;
+  const hit = (id, el, dmg, o) => { const c = { skill: id, el, slot: 'f', ctx: newCtx(el), noCharge: true }; withCast(c, () => damageEnemy(e, dmg, Object.assign({ cast: c, nofg: true }, o))); };
+  if (p.buffs.staticcloak) hit('staticcloak', 'lightning', 45, { jolt: 2 });
+  if (p.buffs.briar) hit('briarmantle', 'nature', 35, suitTwist(p, 'thornwarden') ? { poison: 1 } : {});
+  if (p.buffs.wintersveil) hit('wintersveil', 'frost', 15, { slow: 1 });
+}
 // ===== hit tests ===================================================================
 function damageEnemy(e, base, o = {}) {
   if (e.dead || e.spawnT > 0 || e.under) return false;
@@ -1042,6 +1327,11 @@ function damageEnemy(e, base, o = {}) {
   if (!e.dummy) combatPing(p);
   const res = (e.res && e.res[el]) || 0, eff = el === 'arcane' ? res * 0.5 : res;   // arcane ignores half
   dmg *= Math.max(0, 1 - eff) * (el === 'holy' && e.tags && e.tags.includes('gloom') ? 1.5 : 1);
+  // M4b verbs: Marks +4 % each, Rent +15 %, Frostweave twist frost on a Chilled foe +30 %, Thornwarden twist fire on a Poisoned foe +15 %
+  if (e.marks && e.markT > G.t) dmg *= 1 + MARK.per * e.marks;
+  if (hasStatus(e, 'rent')) dmg *= 1 + RENT;
+  if (el === 'frost' && e.slowT > 0 && !o.dot && suitTwist(p, 'frostweave')) dmg *= 1.3;
+  if (el === 'fire' && e.poisonT > 0 && suitTwist(p, 'thornwarden')) dmg *= 1.15;
   let st = o.stagger != null ? o.stagger : cx ? cx.stagger || 0 : sk && SKILLS[sk] ? SKILLS[sk].stagger || 0 : 0;
   if (echo) st *= ECHO.k;
   // +stagger from gear: heavy-strike implicits (on hits that already stagger), holy hits (Halo Hoop), weapon skills (Warrior ring)
@@ -1054,13 +1344,21 @@ function damageEnemy(e, base, o = {}) {
     else if (!e.boss) partsStagger(e, st);
   }
   if (e.parts && e.parts.length || e.mods) dmg = partsHurt(e, dmg, o);   // shield-front, sleepers waking, elite shields
-  const mark = !o.dot && !echo && p.stepMark > G.t ? 0.3 : 0;   // Step: the next hit is a backstab (+30% crit)
+  let mark = !o.dot && !echo && p.stepMark > G.t ? 0.3 : 0;   // Step: the next hit is a backstab (+30% crit)
   if (mark) p.stepMark = 0;
-  let crit = Math.random() < Math.min(capsT().crit, p.crit + mark + (p.critR && p.critR.until > G.t ? p.critR.v : 0));
+  const wv = weaponOf(p);
+  // the Shadows class Backstab: a hit from the rear arc (or under Slink) +30 % crit and a Mark (not on top of Step's)
+  // the rear arc: 120 degrees behind the body's facing, + the backstab implicit's degrees; behindDmg implicits add damage there
+  const behind = !o.dot && !echo && e.faceA != null && Math.abs(angDiff(e.faceA, Math.atan2(p.y - e.y, p.x - e.x))) > Math.PI * 2 / 3 - (S.backstab || 0) * Math.PI / 180;
+  if (behind && S.behindDmg) dmg *= 1 + S.behindDmg;
+  if (!o.dot && !echo && !mark && wv.class === 'shadows' && (p.buffs.slink || behind)) { mark = 0.3; markEnemy(e, 1); }
+  let crit = Math.random() < Math.min(capsT().crit, p.crit + mark + (c && c.critAdd || 0) + (p.critR && p.critR.until > G.t ? p.critR.v : 0));
   if (!o.dot && !echo && ((c && c.crit) || o.crit)) crit = true;   // Bow Focus, Snapshot, the Bow + Quiver grip
-  if (p.buffs.veil && !o.dot && !echo) { crit = true; delete p.buffs.veil; }
-  if (crit) dmg *= 1 + p.critDmg;
+  let stealth = false;
+  if (p.buffs.veil && !o.dot && !echo) { crit = true; stealth = true; delete p.buffs.veil; }
+  if (crit) dmg *= 1 + p.critDmg + (stealth && suitTwist(p, 'stalker') ? 0.5 : 0);   // Stalker twist: +50 % crit damage from stealth
   dmg *= frand(0.9, 1.1);
+  if (e.boss && cx && cx.bossCap) { dmg = Math.min(dmg, Math.max(0, cx.bossCap * e.maxHp - (cx.bossDealt || 0))); cx.bossDealt = (cx.bossDealt || 0) + dmg; if (!(dmg > 0)) return false; }   // Colossus Strike: <= 25 % of a boss's HP per cast
   if (e.boss && typeof bossClampDmg === 'function') { dmg = bossClampDmg(e, dmg); if (!(dmg > 0)) return false; }   // §26.1 boss bars (bosses.js): clamp at the bar's end, invulnerable between bars
   if (e.dummy) { e.hp = e.maxHp; }
   else e.hp -= dmg;
@@ -1095,6 +1393,17 @@ function damageEnemy(e, base, o = {}) {
   if (o.stun) e.stunT = Math.max(e.stunT, o.stun * (cx ? cx.stun : 1) * (e.boss ? 0.25 : 1));
   if (o.freeze) { if (o.stun && e.stunT > 0) applyStatus(e, 'frozen', e.stunT, 'frost'); else e.frozen = o.stun; }
   if (o.slow) applyStatus(e, 'chilled', Math.max(e.slowT, o.slow * 2 * (cx ? cx.slow : 1)), 'frost');
+  if (!o.dot && !echo && !e.dummy) {   // M4b on-hit verbs (marks / poison / root / jolt / rent / taunt), the Fans' Marks, Venom Coat
+    const bas = !c || c.basic;
+    if (o.marks) markEnemy(e, o.marks);
+    if (bas && wv.markAll) markEnemy(e, 1, true);
+    if (o.poison) poisonEnemy(e, o.poison, c);
+    if (bas && p.buffs.venomcoat) poisonEnemy(e, 1, c);
+    if (o.root) rootEnemy(e, o.root);
+    if (o.jolt) applyStatus(e, 'jolted', o.jolt, 'lightning');
+    if (o.rent) applyStatus(e, 'rent', o.rent, 'slash');
+    if (o.taunt && !e.boss) e.tauntT = G.t + o.taunt;
+  }
   if (o.burn && !(echo && e.burnT > 0 && e.burnCast && e.burnCast.src !== 'echo')) { applyStatus(e, 'burning', o.burn * (cx ? cx.burn : 1), 'fire'); e.burnTick = 0.5; e.burnCast = c; }   // an echo Burn never overwrites the hero's own
   const A = HITAGG;
   if (!o.dot) {
@@ -1170,6 +1479,7 @@ function hitLine(x, y, a, len, w, dmg, o = {}) {
 function spawnProj(o) {
   const p = Object.assign({ t: 0, hit: new Set(), pierce: 0, friendly: true, cast: CAST }, o);
   const hero = G.player; if (p.friendly && hero && hero.sum && hero.sum.pierce && p.pierce < 99) p.pierce += hero.sum.pierce;   // +N pierce (bow implicits, ring boon)
+  if (p.friendly && hero && hero.classSet === 'medium' && p.pierce < 99 && !p.reflected) p.pierce += 1;   // the Medium rule: shots pierce +1
   // 6° projectile magnetism on pad / touch (never mouse)
   if (p.friendly && typeof IN !== 'undefined' && IN.assist() && typeof aimAssistCone === 'function' && aimAssistCone() > 0) {
     const tgt = autoTarget(G.player, (o.speed || 10) * (o.life || 1), [Math.cos(o.ang), Math.sin(o.ang)], 6 * Math.PI / 180);
@@ -1187,22 +1497,36 @@ function updateProjs(dt) {
       const tgt = nearestEnemy(p.x, p.y, 7, null);
       if (tgt) { const a = Math.atan2(tgt.y - p.y, tgt.x - p.x), cur = Math.atan2(p.vy, p.vx), na = cur + clamp(angDiff(cur, a), -p.homing * sdt, p.homing * sdt); p.vx = Math.cos(na) * p.speed; p.vy = Math.sin(na) * p.speed; }
     }
+    if (p.ret != null && p.friendly) {   // a returning disc (Chakram): turns back at p.ret s, flies home through everything again
+      const hero = G.player;
+      if (!p.back && p.t >= p.ret) { p.back = true; p.hit = new Set(); p.life = p.t + 2; }
+      if (p.back) { const dd = dist(p.x, p.y, hero.x, hero.y) || 1; if (dd < 0.6) { p.dead = true; continue; } const sp = Math.max(p.speed, 10); p.vx = (hero.x - p.x) / dd * sp; p.vy = (hero.y - p.y) / dd * sp; }
+    }
     p.x += p.vx * sdt; p.y += p.vy * sdt;
     if (p.t > p.life) { p.dead = true; if (p.explode) explodeProj(p); continue; }
     const tx = Math.floor(p.x), ty = Math.floor(p.y), t = typeAt(m, tx, ty);
-    if (p.kind !== 'wave' && t && m.type[ty][tx] === 'pillar') { p.dead = true; if (p.explode) explodeProj(p); burst(p.x, p.y, p.z, 6, [p.col], 2); continue; }
+    if (p.kind !== 'wave' && !p.back && t && m.type[ty][tx] === 'pillar') { p.dead = true; if (p.explode) explodeProj(p); burst(p.x, p.y, p.z, 6, [p.col], 2); continue; }
     if (p.friendly) {
       for (const e of G.enemies) {
         if (e.dead || e.spawnT > 0 || p.hit.has(e)) continue;
         if (dist(p.x, p.y, e.x, e.y) < p.r + e.r) {
           p.hit.add(e);
-          damageEnemy(e, p.dmg, { knock: p.knock || 0.12, slow: p.slow, burn: p.burn, fx: p.x - p.vx, fy: p.y - p.vy, cast: p.cast, nofg: p.hit.size > 1, crit: p.crit, el: p.el && p.reflected ? p.el : undefined });   // pierce: global freeze on the first target only
+          damageEnemy(e, p.dmg, { knock: p.knock || 0.12, slow: p.slow, burn: p.burn, fx: p.x - p.vx, fy: p.y - p.vy, cast: p.cast, nofg: p.hit.size > 1, crit: p.crit, el: p.el && p.reflected ? p.el : undefined,
+            stagger: p.stagger, marks: p.marks, poison: p.poison, root: p.root, jolt: p.jolt, reflected: p.reflected });   // pierce: global freeze on the first target only
+          projOnHit(p, e);
+          if (p.bounce > 0) {   // Ricochet: hop to the nearest foe not yet hit (Lodestar: each hop zaps)
+            const nx = nearestEnemy(e.x, e.y, 4.5, p.hit);
+            if (nx) { p.bounce--; p.ang = Math.atan2(nx.y - e.y, nx.x - e.x); p.vx = Math.cos(p.ang) * p.speed; p.vy = Math.sin(p.ang) * p.speed; p.x = e.x; p.y = e.y; p.t = Math.min(p.t, p.life * 0.4); break; }
+          }
           if (p.pierce-- <= 0) { p.dead = true; if (p.explode) explodeProj(p); break; }
         }
       }
     } else {
       const pl = G.player;
+      if (pl.fortress && pl.fortress.until > G.t && dist(p.x, p.y, pl.fortress.x, pl.fortress.y) < pl.fortress.r && dist(p.src ? p.src.x : p.x, p.src ? p.src.y : p.y, pl.fortress.x, pl.fortress.y) > pl.fortress.r) { p.dead = true; burst(p.x, p.y, p.z, 6, ['#e0e8ff', '#ffffff'], 2); continue; }   // the Fortress dome stops shots from outside
       if (!pl.dead && dist(p.x, p.y, pl.x, pl.y) < p.r + pl.r) {
+        if (pl.dash && pl.dash.opt && pl.dash.opt.reflect) { reflectProj(pl, p, 1); continue; }   // Shield Bash mid-dash turns a shot around
+        if (pl.buffs.bulwark && (suitTwist(pl, 'warden') || (pl.equip.chest && pl.equip.chest.tier >= 2 && lineOf(pl.equip.chest) && lineOf(pl.equip.chest).suit === 'warden') || (typeof hasUnique === 'function' && hasUnique(pl, 'lanternplate')))) { reflectProj(pl, p, suitTwist(pl, 'warden') ? 1 : 0); continue; }   // Bulwark reflects: Warden twist / Warden chest T3+ / Lantern Plate
         if (parryReflect(pl, p)) continue;   // a Buckler parry from T3 turns the shot around
         // an enemy's own shot (p.src) runs its elite on-hit mods (vampiric, frozen) like a melee hit
         if (hurtPlayer(p.dmg, p.x, p.y, p.el) && p.src && p.src.mods) for (const m of p.src.mods) if (ELITE_MODS[m] && ELITE_MODS[m].onHit) ELITE_MODS[m].onHit(p.src, p.dmg);
@@ -1212,6 +1536,14 @@ function updateProjs(dt) {
   }
   G.projs = G.projs.filter(p => !p.dead);
 }
+// a friendly shot's after-hit verbs: Split (two children at x0.6 that skip this target), Grapple's pull, the Lodestar zap
+function projOnHit(p, e) {
+  if (p.split && !p.child) for (const s of [-0.35, 0.35]) { const q = withCastR(p.cast, () => spawnProj({ x: e.x, y: e.y, z: p.z, ang: p.ang + s, speed: p.speed, r: p.r, dmg: p.dmg * 0.6, life: p.life * 0.6, kind: p.kind, col: p.col, child: true })); q.hit.add(e); }
+  if (p.split) p.split = 0;
+  if (p.pull && !e.boss && !e.dummy) { const h = G.player, dd = dist(e.x, e.y, h.x, h.y) || 1, k = Math.max(0, dd - 1.2) * 6.2 * Math.min(1, p.pull); e.kx += (h.x - e.x) / dd * k; e.ky += (h.y - e.y) / dd * k; }
+  if (p.zap && !e.dead) withCast(p.cast, () => damageEnemy(e, p.zap, { el: 'lightning', jolt: 1, nofg: true, cast: p.cast }));
+}
+const withCastR = (c, fn) => { let r; withCast(c, () => { r = fn(); }); return r; };
 function explodeProj(p) {
   hitArea(p.x, p.y, p.explode.r, p.explode.dmg, { burn: p.burn, cast: p.cast });
   fx({ type: 'ring', x: p.x, y: p.y, r: p.explode.r + 0.3, col: p.col, life: 0.3 });
@@ -1224,6 +1556,8 @@ function updateZones(dt) {
   for (const z of G.zones) {
     z.t += dt; z.tickT -= dt;
     if (z.t > z.life) { z.dead = true; continue; }
+    if (z.follow && !z.hostile && G.player) { z.x = G.player.x; z.y = G.player.y; }   // an aura (Caster rule, Sanctuary, Storm Cloak...) rides with the hero
+    if (z.seg) continue;   // marker zones (cracks): no tick of their own
     if (z.hostile) {   // enemy ground zones (parts.js hostileZone): hurt / slow the hero on each tick
       if (z.tickT <= 0) { z.tickT = z.tick || 0.5; if (playerIn({ kind: 'circle', x: z.x, y: z.y, r: z.r })) { if (z.slow) applyStatus(G.player, 'chilled', Math.max(G.player.slowT, 0.8)); if (z.dmg) hurtPlayer(z.dmg, z.x, z.y, z.el || 'nature'); } }
       continue;
@@ -1235,16 +1569,17 @@ function updateZones(dt) {
     }
     if (z.trap) {
       const e = nearestEnemy(z.x, z.y, z.r, null);
-      if (e) { hitArea(z.x, z.y, z.r, z.dmg, { stun: z.stun, cast: z.cast }); fx({ type: 'ring', x: z.x, y: z.y, r: z.r, col: z.col, life: 0.3 }); z.dead = true; sfx('trap'); }
+      if (e) { hitArea(z.x, z.y, z.r, z.dmg, { stun: z.stun, root: z.root, poison: z.root && suitTwist(G.player, 'thornwarden') ? 1 : z.poison, cast: z.cast }); fx({ type: 'ring', x: z.x, y: z.y, r: z.r, col: z.col, life: 0.3 }); z.dead = true; sfx('trap'); }
       continue;
     }
     if (z.tick && z.tickT <= 0) {
       z.tickT = z.tick;
-      hitArea(z.x, z.y, z.r, z.dmg, { slow: z.slow, cast: z.cast });
+      hitArea(z.x, z.y, z.r, z.dmg, { slow: z.slow, jolt: z.jolt, poison: z.poison, marks: z.marks, cast: z.cast });
       if (z.kind === 'rain') for (let k = 0; k < 4; k++) { const a = Math.random() * 6.28, r = Math.sqrt(Math.random()) * z.r; fx({ type: 'arrowfall', x: z.x + Math.cos(a) * r, y: z.y + Math.sin(a) * r, life: 0.18 }); }
     }
   }
   G.zones = G.zones.filter(z => !z.dead);
+  updateDecoys(dt);
 }
 
 // ===== enemies ========================================================================
@@ -1429,6 +1764,13 @@ function cullFar() {
   if (G.projs.some(q => Math.abs(q.x - p.x) > R || Math.abs(q.y - p.y) > R)) G.projs = G.projs.filter(q => dist(q.x, q.y, p.x, p.y) <= R);
   if (G.zones.some(z => Math.abs(z.x - p.x) > R + (z.r || 0) || Math.abs(z.y - p.y) > R + (z.r || 0))) G.zones = G.zones.filter(z => dist(z.x, z.y, p.x, p.y) <= R + (z.r || 0));
 }
+// e.faceA: where the body faces (the Shadows Backstab reads the rear arc): its walk direction, else it turns toward its target at 4 rad/s
+function faceTurn(e, ang, x0, y0, dt) {
+  const mx = e.x - x0, my = e.y - y0;
+  if (mx * mx + my * my > 1e-6) e.faceA = Math.atan2(my, mx);
+  else if (e.faceA == null) e.faceA = ang;
+  else e.faceA += clamp(angDiff(e.faceA, ang), -4 * dt, 4 * dt);
+}
 function updateEnemies(dt) {
   const p = G.player;
   if (typeof updateArena === 'function') updateArena(dt);
@@ -1451,19 +1793,25 @@ function updateEnemies(dt) {
       e.hopV -= 12 * sdt; e.hopZ += e.hopV * sdt;
       if (e.hopZ <= 0) { e.hopZ = 0; e.hopV = 0; e.squash = 0.3; }
     }
-    const edt = sdt * (e.slowT > 0 ? 0.55 : 1);
+    if (e.markT && e.markT <= G.t) { e.marks = 0; e.markT = 0; e.markFans = false; }
+    const edt = sdt * (e.slowT > 0 ? 0.55 : 1) * (e.markFans && e.marks ? Math.max(0.5, 1 - MARK.slow * e.marks) : 1);   // the Fans' Marks slow 10 % each
     e.slowT -= sdt;
     if (e.burnT > 0) { e.burnT -= sdt; e.burnTick -= sdt; if (e.burnTick <= 0) { e.burnTick = 0.5; damageEnemy(e, 14, { dot: true, cast: e.burnCast || null }); if (Math.random() < 0.5) burst(e.x, e.y, e.z + 1, 2, ['#ff9a4a', '#ffd27a'], 1); } if (e.dead) continue; }
+    if (e.poisonT > 0) { e.poisonT -= sdt; e.poisonTick -= sdt; if (e.poisonTick <= 0) { e.poisonTick = POISON.tick; damageEnemy(e, POISON.dmg * (e.poisonN || 1), { dot: true, el: 'nature', cast: e.poisonCast || null }); } if (e.poisonT <= 0) e.poisonN = 0; if (e.dead) continue; }
+    const rx = e.x, ry = e.y, rooted = (e.rootUntil || 0) > G.t;   // Root: the body stays put (it still turns and attacks)
     // knockback
     if (Math.abs(e.kx) + Math.abs(e.ky) > 0.05) { moveEntity(e, e.kx * sdt, e.ky * sdt, tileH(G.map, e.x, e.y)); e.kx *= Math.pow(0.002, sdt); e.ky *= Math.pow(0.002, sdt); }
     WIND.push(e, sdt);   // js/wind.js: emitters push this body (the hero too, once a frame)
-    if (e.stunT > 0) { e.stunT -= sdt; if (e.stunT <= 0) e.frozen = 0; continue; }
+    if (e.stunT > 0) { e.stunT -= sdt; if (e.stunT <= 0) e.frozen = 0; if (rooted) { e.x = rx; e.y = ry; } continue; }
     e.cd -= edt;
-    const d = dist(e.x, e.y, p.x, p.y), ang = Math.atan2(p.y - e.y, p.x - e.x);
+    const dec = e.boss ? null : decoyFor(e, p), T = dec || p;   // a decoy nearer than the hero draws it (Taunt overrides)
+    const d = dist(e.x, e.y, T.x, T.y), ang = Math.atan2(T.y - e.y, T.x - e.x);
     const hidden = !!p.buffs.veil || p.dead || G.state !== 'play';
-    e.face = isoX(p.x, p.y) >= isoX(e.x, e.y) ? 1 : -1;
-    if (e.boss) { bossUpdate(e, edt, d, ang, hidden); continue; }
-    updatePartsEnemy(e, edt, { p, d, ang, hidden, dt: edt });
+    e.face = isoX(T.x, T.y) >= isoX(e.x, e.y) ? 1 : -1;
+    if (e.boss) { bossUpdate(e, edt, d, ang, hidden); faceTurn(e, ang, rx, ry, sdt); continue; }
+    G.aggroDecoy = dec; updatePartsEnemy(e, edt, { p: T, d, ang, hidden, dt: edt }); G.aggroDecoy = null;
+    if (rooted) { e.x = rx; e.y = ry; }
+    faceTurn(e, ang, rx, ry, sdt);
     if (e.squash > 0) e.squash -= sdt;
     if (!e.under) e.z = lerp(e.z, tileH(G.map, e.x, e.y), Math.min(1, sdt * 12));
   }

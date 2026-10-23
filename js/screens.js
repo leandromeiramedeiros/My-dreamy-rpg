@@ -166,9 +166,11 @@ function drawRotateCard(ctx) {
 function drawTitle(ctx) {
   const u = G.ui;
   ctx.fillStyle = '#0b0716'; ctx.globalAlpha = 0.55; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
-  const bob = Math.round(Math.sin(G.t * 1.2) * 2) * 2, logo = titleLogo();
-  if (logo) { ctx.imageSmoothingEnabled = false; ctx.drawImage(logo, 480 - 340, 160 - 40 + bob, 680, 80); } else UI.text(ctx, 'MY DREAMY RPG', 480, 140 + bob, 'heading', UC.gold, 'center');
+  const bob = Math.round(Math.sin(G.t * 1.2) * 2) * 2, logo = titleLogo(), wm = typeof RASTER !== 'undefined' && RASTER.get('wordmark');
+  if (wm) { ctx.imageSmoothingEnabled = false; ctx.drawImage(wm, 480 - wm.width, 108 + bob, wm.width * 2, wm.height * 2); }   // M4b raster wordmark, x2, nearest
+  else if (logo) { ctx.imageSmoothingEnabled = false; ctx.drawImage(logo, 480 - 340, 160 - 40 + bob, 680, 80); } else UI.text(ctx, 'MY DREAMY RPG', 480, 140 + bob, 'heading', UC.gold, 'center');
   UI.text(ctx, 'a high-fantasy dream above the clouds', 480, 216, 'small', UC.dim, 'center');
+  if (u.arenas) { drawArenaList(ctx); return; }   // the ARENAS entry (arenas.js): the mockup arenas, one per line
   if (u.help) { drawHelp(ctx); return; }   // the "?" entry (below): the same overlay as in play, no title controls underneath
   const s = G.save && G.save.player ? { level: G.save.player.level, map: G.save.world && G.save.world.map } : null;
   const sure = u.confirmNew > G.t;
@@ -189,6 +191,7 @@ function drawTitle(ctx) {
     { id: 'continue', label: 'CONTINUE', sub: s ? `Lv ${s.level}  ${(G.world.maps[s.map] || {}).name || ''}` : '', off: !s, fn: () => continueGame(G.save) },
     { id: 'new', label: sure ? 'ERASE SAVE? PRESS AGAIN' : 'NEW DREAM', fn: () => { if (s && !sure) u.confirmNew = G.t + 3; else newGame(); } },
     { id: 'settings', label: 'SETTINGS', fn: () => { u.settings = true; } },
+    { id: 'arenas', label: 'ARENAS', fn: () => { u.arenas = true; UI.focus.set('arena:0', true); } },
   ];
   if (!u.settings) items.forEach((it, i) => {
     const y = 320 + i * 36, w = BOX, x = 480 - w / 2;
@@ -205,6 +208,24 @@ function drawTitle(ctx) {
     UI.sprite(ctx, hr.on ? 'helpHover' : 'help', 928, 480, { scale: 2 });
   }
   if (u.settings) { ctx.fillStyle = '#05030c'; ctx.globalAlpha = 0.5; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1; drawSettingsPanel(ctx, 'title'); }
+  UI.focus.draw(ctx);
+}
+
+// ARENAS (arenas.js): each row reloads the page as ?map=<id> with that arena's reference hero; Esc / BACK returns
+function drawArenaList(ctx) {
+  const u = G.ui, list = arenaList(), x = 100, w = 760, rh = 28, y0 = 118;
+  UI.text(ctx, 'ARENAS', 480, 76, 'heading', UC.gold, 'center');
+  UI.text(ctx, 'mockup arenas: a fresh hero with the reference loadout, no save', 480, 100, 'small', UC.dim, 'center');
+  list.forEach((a, i) => {
+    const y = y0 + i * rh, r = mnRegion(x, y, w, rh - 2, 'arena:' + i, () => { initAudio(); openArenaMap(a.id); }, { def: i === 0 });
+    if (r.on) { ctx.fillStyle = 'rgba(255,211,90,0.12)'; ctx.fillRect(x, y, w, rh - 2); ctx.fillStyle = UC.gold; ctx.fillRect(x, y + rh - 4, w, 2); }
+    UI.text(ctx, a.id, x + 10, y + 6, 'small', r.on ? UC.gold : UC.text);
+    UI.text(ctx, fitText(a.desc, w - 200, 'small'), x + 190, y + 6, 'small', UC.dim);
+  });
+  const by = Math.min(y0 + list.length * rh + 6, 486), br = mnRegion(480 - 80, by, 160, 30, 'arena:back', () => { u.arenas = false; });
+  if (br.on) { ctx.fillStyle = 'rgba(255,211,90,0.12)'; ctx.fillRect(400, by, 160, 30); }
+  UI.text(ctx, 'BACK', 480, by + 7, 'small', br.on ? UC.gold : UC.text, 'center');
+  UI.focus.current();
   UI.focus.draw(ctx);
 }
 

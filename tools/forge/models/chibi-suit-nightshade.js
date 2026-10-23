@@ -11,8 +11,8 @@
 const { mk, flat, gem, cloth, torso, arms, boots, dome, spike, piece, both } = require('./chibi-suit-lib.js');
 const { LEATHER } = require('./chibi-palette.js');
 
-const CLO = ['#585c64', '#54486c', '#503c7c', '#6038a4', '#e0d4f4', '#2c2054'];
-const WRP = ['#5a5e48', '#4e4a42', '#4a3e52', '#3a2a66', '#a8a4cc', '#201844'];
+const CLO = ['#586058', '#2e5a48', '#2a6a50', '#2c8a5c', '#d8f4e4', '#123a2c'];
+const WRP = ['#5a5e48', '#44503c', '#3a5a40', '#2a5e3c', '#a8d0b8', '#10281c'];
 const matsOf = t => ({ cloth: cloth(CLO[t - 1]), wrap: cloth(WRP[t - 1]), leather: LEATHER, metal: mk('#9a9ab8'), vial: gem('#5ae03a'), vial2: gem('#b04aff'), core: flat('#f4ffe0'), glow: flat('#b8ff4a') });
 
 const vialAt = i => ({ x: -3.2 + i * 2.4, y: 3.1 - i * 1.65 });   // a spot on the baldric, below the strap
@@ -24,7 +24,7 @@ function nightshadehelm(t) {
     { bone: 'head', mat: 'wrap', part: 'brim', shape: 'ell', c: [0, 9.4, 3.2], r: [5.4, 1.0, 3.4] });
   if (t >= 2) P.push({ bone: 'head', mat: 'cloth', part: 'tail', shape: 'cap', a: [0, 4.0, -5.4], b: [0, 0.6, -7.6 - (t >= 4 ? 1.4 : 0)], ra: 3.0, rb: 0.9 },
     ...both((s, k) => [{ bone: 'head', mat: 'wrap', part: 'cheek' + s, shape: 'ell', c: [6.0 * k, 3.4, 1.0], r: [1.0, 2.6, 3.2] }]));
-  if (t >= 3) P.push(...[-1, 0, 1].map(x => spike('head', 'vial', 'petal', [x * 2.6, 10.6, 2.6], [x * 4.6, (t >= 4 ? 15.0 : 13.6) - Math.abs(x) * 1.0, 1.4], 1.7, 0.5)),
+  if (t >= 3) P.push(...[-1, 0, 1].map(x => spike('head', 'vial2', 'petal', [x * 2.6, 10.6, 2.6], [x * 4.6, (t >= 4 ? 15.0 : 13.6) - Math.abs(x) * 1.0, 1.4], 1.7, 0.5)),
     { bone: 'head', mat: 'metal', part: 'ring', shape: 'ell', c: [0, 2.6, 6.9], r: [1.2, 0.8, 0.5] },
     ...both((s, k) => [{ bone: 'head', mat: 'metal', part: 'clasp' + s, shape: 'ell', c: [7.0 * k, 3.6, 2.2], r: [0.9, 1.6, 1.6] }]));
   if (t >= 4) P.push({ bone: 'head', mat: 'vial2', part: 'gem', shape: 'ell', c: [0, 9.4, 6.9], r: [1.1, 1.0, 0.6] });

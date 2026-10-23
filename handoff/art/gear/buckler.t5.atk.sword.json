@@ -1,0 +1,74 @@
+{
+ "unit": "buckler.t5",
+ "sheet": "atk.sword",
+ "images": {
+  "front": "buckler.t5.atk.sword_front.png",
+  "back": "buckler.t5.atk.sword_back.png"
+ },
+ "layer": "offhand",
+ "zorder": {
+  "S": 42,
+  "SE": 25,
+  "E": 8,
+  "NE": 2,
+  "N": 7,
+  "NW": 48,
+  "W": 46,
+  "SW": 46
+ },
+ "hides": [],
+ "slot": "offhand",
+ "tier": 5,
+ "class": null,
+ "split": {
+  "rule": "front = pixels where body + this unit differs from the body alone; back = this unit's own pixels hidden behind the body",
+  "body_pixels_lost": 0
+ },
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  6,
+  8
+ ],
+ "anims": {
+  "attack": {
+   "from": 0,
+   "count": 6,
+   "ms": [
+    100,
+    50,
+    50,
+    50,
+    100,
+    50
+   ],
+   "loop": false
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl"
+}

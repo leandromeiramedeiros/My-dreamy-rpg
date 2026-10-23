@@ -1,0 +1,18 @@
+{
+ "id": "rock_dark_00",
+ "kind": "rock_dark",
+ "label": "Dark rock",
+ "size": [
+  14,
+  11
+ ],
+ "origin": [
+  7,
+  10
+ ],
+ "collider_r": 0.28,
+ "shadow": 6,
+ "light": null,
+ "image": "rock_dark_00.png",
+ "frames": null
+}

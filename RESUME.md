@@ -19,6 +19,35 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
   base hero bare (casual clothes only, all gear layered at runtime); held items keep their own outline (client pick B);
   approval is by the client's eye (scores are info).
 
+- M4a merged (PR #10) and live. codex-image is the studio's raster artist, for art outside the forge only (never hero,
+  gear, enemies, item icons). First board (git-ignored, tools/out/art/board.png): title wordmark + dialogue portraits
+  for Pip, Elder Stone, Fox kit, palette-snapped to native size (portraits ~44 px shown x2 in the 88 px slot). Awaiting
+  the client's eye; on approval: ruling into visual-bible.md, a Sonnet lane embeds them as data-URI PNGs (file://).
+
+## M4b Arena cut (2026-10-23, branch `claude/m4b`)
+- **Godot pivot** (client): studio makes no maps; arenas only; human-editable assets; client ports to Godot.
+  Minutes: docs/meetings/2026-10-23-godot-handoff.md. Plan M4b → M9 in PRODUCTION.md. Act I maps tagged `maps-pre-godot`.
+- Lane worktrees start at origin's default branch: every brief begins with `git merge --ff-only claude/m4b`.
+  Director commits each worktree on its branch and merges into claude/m4b; after Gear A + B merge, rerun
+  `node tools/forge/build.js chibi` (js/forge-bank/chibi.js is a generated manifest both touch).
+- Usage pace (client, 2026-10-23): **two lanes at a time**. Gear A suits (finish) and Arenas (part 2) run; when one finishes, resume the
+  next paused lane (SendMessage, full scope) in this order: Skill visuals (render.js), then wave 3 (Elements in the `verbs` arena, Map cut).
+- Enemy forge merged: 20 rigs at 8 dirs incl. 4 bosses (base + moves rigs); perf p95 18.0 ms. enemyart.js still used by
+  ?oldenemy, a pre-load death pop, editor + fx-board. Open: ruins-bestiary-check gloomknight 25 s vs 20 s target.
+- Skills + data merged: all 15 weapons, 6 offhands, 12 suits (36 pieces), 14 grips live; balsim green (under-trials 96).
+  Queued after: Skill visuals lane (render.js): decoy, chakram disc, cracks, frost trail, Fortress dome, consecrate circle,
+  new poses, new skill icons, Codex grip tab.
+- Export merged: handoff/ (tiles vale/pinewood/ruins, props, sheets, palettes, zones.json, manifest), Aseprite round trip
+  411 sheets identical, godot-sample/ (Godot 4.7.2: import, run, web export 0 errors). Rebuild: tools/export/all.js, godot.js.
+- Arenas part 1 merged (12 arenas, ?map=, title list, arena-route). On resume: perf stress, run-arenas, validate-ids;
+  commit the arenas.js generator template into tools/ (it lives in the lane's scratchpad) or make arenas.js the hand-edited
+  source; pack-ruins should use the Ruins commons.
+- Gear B done + merged (follow-ups too). Polish backlog: bow still faint facing E/NE at T1–T4.
+- Merged: Raster embed, Docs pivot rewrite, Gear B (21 lines + follow-ups), Ruins bestiary. Running: wave 1 (Gear A suits, Gear B weapons, Enemy forge, Skills + data, Ruins bestiary),
+  wave 2 (Docs pivot rewrite, Arenas, Export tiles/props/sheets).
+- Wave 3 after merges: Elements in the world (the `verbs` arena), Map cut (Haiku deletes + save v6 + check.js).
+
 ## Next
-1. M4a merged to claude/dreamy-rpg-concept → client plays the slice on the live site (desktop + phone) → their notes.
-2. After all branches merge: purge tools/qa/old from history (filter-repo + force-push; client-approved).
+1. Merge lanes as they report; `node tools/check.js`; wave 3; ship M4b (Pages shows the Arena list).
+2. Client's open questions (minutes end): Godot 4.4 + GDScript/web; hand-edit sprites?; keep Pages; zone brief; install Godot.
+3. After M4b merges: purge tools/qa/old from history (needs `pip install git-filter-repo`; client-approved).

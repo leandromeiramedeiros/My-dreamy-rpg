@@ -1,0 +1,23 @@
+{
+ "id": "lantern",
+ "kind": "lantern",
+ "label": "Lantern",
+ "size": [
+  7,
+  16
+ ],
+ "origin": [
+  3.5,
+  15
+ ],
+ "collider_r": 0.12,
+ "shadow": 3,
+ "light": {
+  "r": 60,
+  "col": "#ffbe73",
+  "a": 0.95,
+  "h": 14
+ },
+ "image": "lantern.png",
+ "frames": null
+}

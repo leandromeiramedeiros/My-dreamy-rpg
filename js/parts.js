@@ -36,25 +36,32 @@
 //              chases, telegraphs a line, then lunges (hits once) — it is also its attack
 //   burrow     { range: 7, vanish: 1.5, wind: 0.6, cd: 4.5, rec: 1, erupt: { r: 2 }, staggerOnSurface: false }
 //              digs in (untargetable), travels under the hero, telegraphs a circle, erupts
-//   teleport   { range: 7, cd: 4, wind: 0.6, near: 2.5, far: 5 }      fades out and reappears around the hero
+//   teleport   { range: 7, cd: 4, wind: 0.6, near: 2.5, far: 5, trigger: range }   fades out and reappears around the hero
+//              (trigger: only blinks when the hero is closer than this: a caster that slips away from melee)
 //   stationary {}                                                     never moves (turrets, totems)
 //   sleep      { wakeRadius: 3, wakeOn: 'proximity' | 'hit', then: 'chase' }   dormant until woken, then `then` moves it
 //              (e.asleep; NOT the engine's distance sleep e.dormant, game.js SLEEP: a part-asleep enemy within 18 tiles
 //              still ticks its parts, so it can wake; a dormant one runs no parts at all until the hero is near)
-//   mimic      { wakeRadius: 1.6, then: 'chase' }                     looks like a chest until the hero is close
+//   mimic      { wakeRadius: 1.6, then: 'chase', as: 'chest' }        looks like a chest (as: 'pillar' -> e.mimicAs, the
+//              render hook for other disguises) until the hero is close
 // attack (1-2): every attack has { range, wind, cd, rec } (rec = the open window after it)
 //   brute      { shape: 'cone' | 'circle', r: 1.8, arc: 1.9, wind: 0.6, cd: 1.5, range: 1.5, strike: 0.15, rec: 0.6,
-//                stopK: 0.65, splat: false (slime-style hop splat instead of a smash) }
-//   shoot      { range: 6, wind: 0.6, cd: 2.1, speed: 5.5, r: 0.35, life: 2.5, n: 1, spread: 0.25, rec: 0.3 }
+//                stopK: 0.65, splat: false (slime-style hop splat instead of a smash), front: 0 (deg: only swings at a hero
+//                inside this arc of its facing e.faceA, set by shield-front; 0 = any direction) }
+//   shoot      { range: 6, wind: 0.6, cd: 2.1, speed: 5.5, r: 0.35, life: 2.5, n: 1, spread: 0.25, rec: 0.3, tele: false,
+//                dread: 0 (s of Dread on the hero when a bolt lands: the Ruins wisp) }
 //   sniper     { range: 9, wind: 1.1, cd: 3.4, speed: 15, w: 0.25, rec: 0.6 }   locked thin line, then a fast bolt
-//   bomber     { range: 6, wind: 0.9, cd: 2.8, r: 1.3, rec: 0.5 }      lobs onto the hero's spot (circle telegraph)
+//   bomber     { range: 6, wind: 0.9, cd: 2.8, r: 1.3, rec: 0.5, col }  lobs onto the hero's spot (circle telegraph)
 //   zone-caster{ kind: 'poison' | 'slow' | 'fire' | 'void', n: 2, r: 1.2, life: 6, tick: 0.5, dmgK: 0.25, range: 7,
 //                wind: 0.8, cd: 6, rec: 0.6 }                         hostile ground zones near the hero
 // support (0-1):
 //   healer     { heal: 0.25 (capped 0.3 of the target's max HP), telegraph: 4, cd: 8, range: 7 }  4 s visible link
 //   aura-buffer{ r: 3, dmg: 1.25, speed: 1.15 }                      allies inside deal more / move faster
-//   summon     { kind: 'slime', n: 2, max: 4, cd: 9, wind: 0.9, range: 9 }
-//   shield-front { arc: 120 (deg), mul: 0.2 }                         hits from the front deal 20 %
+//   summon     { kind: 'slime', n: 2, max: 4, cd: 9, wind: 0.9, range: 9, noXp: true, bound: false }   raised adds give
+//              no XP; bound: they unravel (flee and despawn) when the summoner dies
+//   shield-front { arc: 120 (deg), mul: 0.2, rear: 1 (x damage from behind), turn: 0 (deg/s) }   hits from the front deal
+//              20 %. turn > 0: the shield follows a facing e.faceA that turns toward the hero at `turn` deg/s (held still
+//              while it winds up or strikes), so a hero who circles round reaches its back
 // death and group:
 //   split      { n: 2, type: <row id> }                               children on death (give no XP: their row xp 0)
 //   zone-on-death { kind: 'poison', r: 1.6, life: 4, tick: 0.5, dmgK: 0.3, delay: 0.6 }
@@ -146,7 +153,8 @@ const ENEMY = {};
   for (const k in data) {
     // the five ported ids keep the engine's parts (feel acceptance); ENEMY_DATA may still retune their numbers
     const row = Object.assign({}, data[k]);
-    if (BUILTIN_ROWS[k] && BUILTIN_ROWS[k].parts && BUILTIN_ROWS[k].parts.length) { row.parts = BUILTIN_ROWS[k].parts; row.params = BUILTIN_ROWS[k].params; }
+    // (ownParams: true = the row keeps its own params, merged over the built-in ones per part; the parts list stays built-in)
+    if (BUILTIN_ROWS[k] && BUILTIN_ROWS[k].parts && BUILTIN_ROWS[k].parts.length) { row.parts = BUILTIN_ROWS[k].parts; if (!row.ownParams) row.params = BUILTIN_ROWS[k].params; }
     ENEMY[k] = compileRow(k, row, BUILTIN_ROWS[k]);
   }
   // the Gloam Warden (bosses.js owns its moves); kept as ENEMY.boss for the HUD, bestiary and spawn_boss
@@ -255,7 +263,7 @@ const PARTS = {
     } },
   teleport: { cat: 'move', def: { range: 8, cd: 4, wind: 0.6, near: 2.5, far: 5, rec: 0.4 },
     move(e, P, c) { return c.d > P.far ? { x: Math.cos(c.ang), y: Math.sin(c.ang), k: 0.6 } : { x: 0, y: 0, k: 0 }; },
-    ready: (e, P, c) => c.d < P.range,
+    ready: (e, P, c) => c.d < (P.trigger != null ? P.trigger : P.range),
     begin(e, P) { fx({ type: 'ring', x: e.x, y: e.y, r: 0.9, col: '#c7a8ff', life: P.wind }); e.fadeT = P.wind; return P.wind; },
     fire(e, P, c) {
       for (let k = 0; k < 12; k++) {
@@ -270,17 +278,17 @@ const PARTS = {
     tick(e, P, c) { if (e.asleep && (P.wakeOn !== 'hit' && c.d < P.wakeRadius || e.hp < e.maxHp)) partsWake(e, P); },
     move(e, P, c) { return e.asleep ? null : PARTS[P.then].move(e, e.pp[P.then] || PARTS[P.then].def, c); },
     hurt(e, P) { if (e.asleep) partsWake(e, P); return 1; } },
-  mimic: { cat: 'move', def: { wakeRadius: 1.6, then: 'chase' },
-    spawn(e) { e.asleep = true; e.mimic = true; },
+  mimic: { cat: 'move', def: { wakeRadius: 1.6, then: 'chase', as: 'chest' },
+    spawn(e, P) { e.asleep = true; e.mimic = true; e.mimicAs = P.as || 'chest'; },
     tick(e, P, c) { if (e.asleep && (c.d < P.wakeRadius || e.hp < e.maxHp)) { partsWake(e, P); e.mimic = false; shake(4); sfx('roar'); text(e.x, e.y, e.z + e.hgt + 0.6, 'MIMIC!', '#ff7a5a', true); } },
     move(e, P, c) { return e.asleep ? null : PARTS[P.then].move(e, e.pp[P.then] || PARTS[P.then].def, c); },
     hurt(e, P) { if (e.asleep) { partsWake(e, P); e.mimic = false; } return 1; } },
 
   // ---- attacks
-  brute: { cat: 'attack', def: { shape: 'cone', r: 1.8, arc: 1.9, wind: 0.6, cd: 1.5, range: 1.5, strike: 0.15, rec: 0.6, stopK: 0.65, splat: false },
-    ready: (e, P, c) => c.d < P.range,
+  brute: { cat: 'attack', def: { shape: 'cone', r: 1.8, arc: 1.9, wind: 0.6, cd: 1.5, range: 1.5, strike: 0.15, rec: 0.6, stopK: 0.65, splat: false, front: 0 },
+    ready: (e, P, c) => c.d < P.range && !(P.front > 0 && e.faceA != null && Math.abs(angDiff(e.faceA, c.ang)) > P.front * Math.PI / 360),
     begin(e, P, c) {
-      e.aimA = c.ang;
+      e.aimA = c.ang; if (P.front > 0) e.faceA = c.ang;
       if (P.splat) { tele({ kind: 'circle', x: e.x, y: e.y, r: P.r, life: P.wind, col: '#ff5aa0' }); return P.wind; }
       e.hit = P.shape === 'circle' ? { kind: 'circle', x: e.x, y: e.y, r: P.r } : { kind: 'cone', x: e.x, y: e.y, ang: c.ang, arc: P.arc, r: P.r };
       tele(Object.assign({ life: P.wind, col: '#ff5a3a' }, e.hit));
@@ -298,14 +306,24 @@ const PARTS = {
       shake(P.r > 2 ? 9 : 4); sfx('heavy');
       return ['strike', P.strike];
     } },
-  shoot: { cat: 'attack', def: { range: 6, wind: 0.6, cd: 2.1, speed: 5.5, r: 0.35, life: 2.5, n: 1, spread: 0.25, rec: 0.3, col: '#9ef0ff' },
+  shoot: { cat: 'attack', def: { range: 6, wind: 0.6, cd: 2.1, speed: 5.5, r: 0.35, life: 2.5, n: 1, spread: 0.25, rec: 0.3, col: '#9ef0ff', dread: 0 },
     ready: (e, P, c) => c.d < P.range,
+    // dread: a bolt that lands (it died on the hero while the hero took the hit) leaves Dread (gloom tier 1, js/status.js)
+    tick(e, P) {
+      if (!e.shots || !e.shots.length) return;
+      const pl = G.player;
+      e.shots = e.shots.filter(q => {
+        if (!q.dead) return !q.friendly;   // a parried bolt is the hero's now
+        if (pl.hurtT > 0.15 && dist(q.x, q.y, pl.x, pl.y) < q.r + pl.r + 0.3) { applyStatus(pl, 'dread', Math.max(pl.dreadT || 0, P.dread), 'gloom'); text(pl.x, pl.y, pl.z + 3.4, 'DREAD', '#c070ff'); }
+        return false;
+      });
+    },
     // tele: true = a thin aim line during the wind-up (turrets like the sapling read as idle without it)
     // and the shot then flies along the line shown (an honest telegraph: stepping off it dodges it), like sniper
     begin(e, P, c) { if (P.tele) { e.aimA = c.ang; tele({ kind: 'line', x: e.x, y: e.y, ang: c.ang, len: Math.min(P.range, c.d + 1), w: 0.3, life: P.wind, col: P.col }); } return P.wind; },
     fire(e, P, c) {
       const a0 = P.tele && e.aimA != null ? e.aimA : Math.atan2(c.p.y - e.y, c.p.x - e.x);
-      for (let k = 0; k < P.n; k++) spawnProj({ x: e.x, y: e.y, z: 2.2, ang: a0 + (k - (P.n - 1) / 2) * P.spread, speed: P.speed, r: P.r, dmg: e.def.dmg * e.dm * enemyDmgK(e), el: e.el, life: P.life, kind: 'orb', col: P.col, friendly: false, src: e });
+      for (let k = 0; k < P.n; k++) { const q = spawnProj({ x: e.x, y: e.y, z: 2.2, ang: a0 + (k - (P.n - 1) / 2) * P.spread, speed: P.speed, r: P.r, dmg: e.def.dmg * e.dm * enemyDmgK(e), el: e.el, life: P.life, kind: 'orb', col: P.col, friendly: false, src: e }); if (P.dread > 0) (e.shots || (e.shots = [])).push(q); }
       sfx('arcane'); return null;
     } },
   sniper: { cat: 'attack', def: { range: 9, wind: 1.1, cd: 3.4, speed: 15, w: 0.25, rec: 0.6 },
@@ -316,7 +334,7 @@ const PARTS = {
     ready: (e, P, c) => c.d < P.range,
     begin(e, P, c) {
       const x = c.p.x, y = c.p.y;
-      tele({ kind: 'circle', x, y, r: P.r, life: P.wind, col: '#ff7a3a', onDone: o => {
+      tele({ kind: 'circle', x, y, r: P.r, life: P.wind, col: P.col || '#ff7a3a', onDone: o => {
         if (e.dead) return;
         if (playerIn({ kind: 'circle', x: o.x, y: o.y, r: P.r })) enemyHit(e, e.def.dmg * e.dm, e.el);
         fx({ type: 'ring', x: o.x, y: o.y, r: P.r, col: '#ffb070', life: 0.35 }); burst(o.x, o.y, 0.2, 14, ['#ff9a4a', '#ffd27a'], 3); sfx('boom'); shake(3);
@@ -350,14 +368,23 @@ const PARTS = {
     } },
   'aura-buffer': { cat: 'support', def: { r: 3, dmg: 1.25, speed: 1.15 },
     tick(e, P) { for (const o of partsNear(e, P.r)) { o.auraT = 0.25; o.auraDmg = P.dmg; o.auraSpd = P.speed; } } },
-  summon: { cat: 'support', def: { kind: 'slime', n: 2, max: 4, cd: 9, wind: 0.9, range: 9, rec: 0.5 },
+  summon: { cat: 'support', def: { kind: 'slime', n: 2, max: 4, cd: 9, wind: 0.9, range: 9, rec: 0.5, noXp: true, bound: false },
     ready(e, P, c) { return c.d < P.range && G.enemies.filter(o => o.summoner === e && !o.dead).length < P.max; },
     begin(e, P) { fx({ type: 'ring', x: e.x, y: e.y, r: 1.4, col: '#b36bff', life: P.wind }); return P.wind; },
-    fire(e, P) { for (let k = 0; k < P.n; k++) { const a = k / P.n * 6.28 + Math.random(), s = spawnAt(P.kind, e.x + Math.cos(a) * 1.4, e.y + Math.sin(a) * 1.4, 0.4); if (s) s.summoner = e; } return null; } },
-  'shield-front': { cat: 'support', def: { arc: 120, mul: 0.2 },
+    fire(e, P) { for (let k = 0; k < P.n; k++) { const a = k / P.n * 6.28 + Math.random(), s = spawnAt(P.kind, e.x + Math.cos(a) * 1.4, e.y + Math.sin(a) * 1.4, 0.4); if (s) { s.summoner = e; if (P.noXp) s.noXp = true; if (P.bound) s.bound = true; } } return null; } },
+  'shield-front': { cat: 'support', def: { arc: 120, mul: 0.2, rear: 1, turn: 0 },
+    spawn(e, P) { if (P.turn > 0) e.faceA = Math.atan2(G.player.y - e.y, G.player.x - e.x) || 0; },
+    tick(e, P, c, dt) {
+      if (!(P.turn > 0) || e.asleep || e.state === 'wind' || e.state === 'strike' || c.hidden) return;
+      const k = P.turn * Math.PI / 180 * dt, da = angDiff(e.faceA, c.ang);
+      e.faceA += clamp(da, -k, k);
+    },
     hurt(e, P, dmg, o) {
-      const sx = o.fx != null ? o.fx : G.player.x, sy = o.fy != null ? o.fy : G.player.y, front = e.aimA != null ? e.aimA : Math.atan2(G.player.y - e.y, G.player.x - e.x);
-      if (Math.abs(angDiff(front, Math.atan2(sy - e.y, sx - e.x))) < P.arc / 2) { if (!o.dot) { e.blockT = 0.2; text(e.x, e.y, e.z + e.hgt + 0.3, 'BLOCK', '#cfd6ea'); } return P.mul; }
+      const sx = o.fx != null ? o.fx : G.player.x, sy = o.fy != null ? o.fy : G.player.y;
+      const front = P.turn > 0 && e.faceA != null ? e.faceA : e.aimA != null ? e.aimA : Math.atan2(G.player.y - e.y, G.player.x - e.x);
+      const off = Math.abs(angDiff(front, Math.atan2(sy - e.y, sx - e.x)));
+      if (off < P.arc * Math.PI / 360) { if (!o.dot && !(e.blockT > 0)) { e.blockT = 0.2; text(e.x, e.y, e.z + e.hgt + 0.3, 'BLOCK', '#cfd6ea'); } return P.mul; }
+      if (P.rear > 1 && off > Math.PI * 2 / 3 && !o.dot) return P.rear;   // its back (the rear 120 deg)
       return 1;
     } },
 
@@ -422,7 +449,7 @@ const ELITE_MODS = {
     tick(e) { const p = G.player; if (dist(e.x, e.y, p.x, p.y) < 3) p.dreadT = 0.2; } },
   twin: { name: 'Twin', col: '#ffb0e0',
     spawn(e) {
-      if (e.twinOf) return;
+      if (e.twinOf || e.swarm) return;   // a swarm is already many bodies (its group bookkeeping would break): no linked copy
       e.hp = e.maxHp = Math.round(e.maxHp * 0.5);
       const t = spawnEnemyRaw(e.type, e.x + 1, e.y + 0.5, e.spawnT); initParts(t, e.def);
       t.elite = true; t.mods = e.mods.slice(); t.twinOf = e; t.hp = t.maxHp = e.maxHp; t.dm = e.dm; t.dmgK = e.dmgK;
@@ -446,7 +473,11 @@ function makeElite(e, spec) {
   const mods = Array.isArray(spec) ? spec.filter(k => ELITE_MODS[k]) : ELITE_MODS[spec] ? [spec] : [rollEliteMod()];
   e.elite = true; e.mods = mods;
   e.hp = e.maxHp = Math.round(e.maxHp * ELITE_HP); e.dmgK = (e.dmgK || 1) * ELITE_DMG;
+  // an elite swarm: every member gets the elite HP / damage and the look; the mods (auras, trails) run on the first one only
+  // (members are collected before the mods spawn: Twin links its copy through e.swarm too)
+  const mates = e.swarm ? G.enemies.filter(o => o !== e && o.swarm === e.swarm && !o.dead) : [];
   for (const m of mods) if (ELITE_MODS[m].spawn) ELITE_MODS[m].spawn(e);
+  for (const o of mates) { o.elite = true; o.mods = []; o.hp = o.maxHp = Math.round(o.maxHp * ELITE_HP); o.dmgK = (o.dmgK || 1) * ELITE_DMG; }
   return e;
 }
 
@@ -460,7 +491,8 @@ function partsFlee(e, edt) {
   if (e.fleeT <= 0) { e.dead = true; e.despawned = true; burst(e.x, e.y, 0.5, 10, ['#6a5a8a', '#2a1c38'], 2, { glow: false }); }
 }
 function updatePartsEnemy(e, edt, c) {
-  if (e.summoner && e.summoner.boss && e.summoner.dead) { partsFlee(e, edt); return; }
+  if (e.summoner && e.summoner.dead && (e.summoner.boss || e.bound)) { partsFlee(e, edt); return; }   // a boss's adds, a bound raise (Grave Chanter)
+  if (e.blockT > 0) e.blockT -= edt;
   for (const id of e.parts) { const P = PARTS[id]; if (P.tick) P.tick(e, e.pp[id], c, edt); }
   for (const m of e.mods || []) if (ELITE_MODS[m] && ELITE_MODS[m].tick) ELITE_MODS[m].tick(e, edt);
   if (e.auraT > 0) e.auraT -= edt;

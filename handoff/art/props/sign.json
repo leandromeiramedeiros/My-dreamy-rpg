@@ -1,0 +1,18 @@
+{
+ "id": "sign",
+ "kind": "sign",
+ "label": "Sign",
+ "size": [
+  14,
+  10
+ ],
+ "origin": [
+  7,
+  9
+ ],
+ "collider_r": 0.15,
+ "shadow": 4,
+ "light": null,
+ "image": "sign.png",
+ "frames": null
+}

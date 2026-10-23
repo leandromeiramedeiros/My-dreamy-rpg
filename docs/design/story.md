@@ -1,6 +1,6 @@
 # Story and bosses
 
-Terms: [../GLOSSARY.md](../GLOSSARY.md). Boss rules, phases and fairness: [enemies-bosses.md](enemies-bosses.md). Maps: [world-maps.md](world-maps.md).
+Terms: [../GLOSSARY.md](../GLOSSARY.md). Boss rules, phases and fairness: [enemies-bosses.md](enemies-bosses.md). Zones: [world-brief.md](world-brief.md).
 
 ## Premise
 **Morrow** was the first Dreamwarden. When his daughter **Aerin** died in the waking world, he refused to wake and
@@ -27,6 +27,7 @@ quest done):** you carry the Moonmaw's pearl into the finale; Morrow wakes and A
 * Elder Stone: riddling, speaks of itself in the third person.
 
 ## Beat sheet
+The studio ships these lines and quests as data; where they fire is the client's placement ([world-brief.md](world-brief.md)). Beats keep their zone headings.
 **Vale**
 * Banner: "Whispering Vale: a dream drifting above the clouds."
 * Pip, waking you: "Up. You were sleeping like you meant it."
@@ -90,7 +91,7 @@ everything plus a phase that changes the rules. Every wind-up is at least 0.6 s.
 | Mini-boss | Dungeon, level | Type | Weak / resists | Moves | Counter |
 |---|---|---|---|---|---|
 | Mossjaw | Root Hollow, L5 | beast, nature | weak fire; resists nature | lunge-bite (line 6, 0.6 s wind-up), root-spit (3 circles r1.2), burrow (vanish 1.5 s, erupt circle r2) | Wildfire |
-| The Oathless | Warden Crypt, L12 | armoured knight, gloom | weak holy, pierce; resists slash | shield-wall (blocks the front 2 s: hit its back), cleave, gloom-bolt volley; stagger 6, break 2.5 s | Rupture |
+| The Oathless | Oath Reliquary, L12 | armoured knight, gloom | weak holy, pierce; resists arcane, wind (M4b: no slash resist, it made the sword fight 3.8x the bow's) | shield-wall (blocks the front 2 s: hit its back), cleave, gloom-bolt volley; stagger 6, break 2.5 s | Rupture |
 | Brinemother | Drowned Vault, L18 | amorphous, frost | weak slash; resists pierce | tide-pull (circle r5, pulls), summon 3 jellies, ice-geyser line | Shatter |
 | Slagheart | Forge Deep, L25 | armoured golem, fire | weak frost, stagger; immune Burn | lava-ring (expanding), slam, magma-pool zones | Shatter after Frost (Detonate is useless: it teaches immunity) |
 | The Twin Vigils | Spire gauntlet, L33 | two gloom knights sharing HP | weak holy | mirrored charges, alternating volleys, link-beam (rotating line between them) | Purify; Conduct through a Chilled pair |
@@ -99,7 +100,7 @@ everything plus a phase that changes the rules. Every wind-up is at least 0.6 s.
 * **Old Bramblehorn** (Pinewood, L8): clearing arena with four root pillars; beast, nature; 2 phases (100 / 50%). Stomp (circle r3, 0.9 s wind-up),
   root-grab (line 7 that roots 1.5 s; dodge i-frames or the Root-Crown answer it), trunk-swipe cone. Phase 2 adds root-wall (the arena shrinks) and summons saplings. Stagger 5.
   Counter: Wildfire on the saplings. Drops Root-Crown.
-* **The Gloam Warden** (Ruins, L14): cleave, slam, volley, charge, void rain, adds, enrage at 50%; phase 3 at 20%: pillars fall (arena shrinks) and the volley becomes a spiral.
+* **The Gloam Warden** (Ruins, L14): cleave, slam, volley, charge, void rain, adds, enrage at 50%; phase 3 at 20%: pillars fall (arena shrinks), the volley becomes a spiral and the hall goes dark (move `gloam`: only the lantern's light is safe). Code id `gloamwarden` (the legacy M2a fight stays `boss`).
   Ethereal: resists physical, weak holy. The Lantern Plate answers the volley. Counter: Overload. Drops Warden's Lantern Plate.
 * **Lady Mirelle** (Grotto, L20): flooded ring arena; the water rises in phase 2 (slow zone on the outer ring). Frost; resists frost, weak lightning.
   Tidal wave (wide sweeping line, 1.3 s), pull (circle r6), icicle rain (6 circles), freeze-beam (rotating line). 60%: drowned adds; 25%: the arena halves.
@@ -117,7 +118,7 @@ everything plus a phase that changes the rules. Every wind-up is at least 0.6 s.
   and **the Unwaking Child** (Gloaming Below, L40, gloom; three stolen guardian moves per phase; Mythic chance).
 
 ## BOSS_MOVES library
-Bosses are data in `world.js` built from one move library. Common parameters: `wind` (telegraph s), `dmg`, `el`, `stagger`, `col`.
+Bosses are data (`bosses.js`) built from one move library. Common parameters: `wind` (telegraph s), `dmg`, `el`, `stagger`, `col`.
 * cone (arc, r); circle (r, at self or player); line (len, w); charge (len, speed, hitOnce); volley (n, rings, spiral, speed); rain (count, r, spread);
   ring (expanding r0 to r1, speed); beam (len, rotate, dur); pull (r, force); summon (type, n, pattern); zone (lava, void or slow; cells, life); arenaShrink (pattern id);
   blink (behind or random); mirror (n images); shield (arc, dur); vanish (dur); roar (banner, dur); sequence (list, gaps); random (weights).

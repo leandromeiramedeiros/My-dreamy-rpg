@@ -1,0 +1,78 @@
+GIMP Palette
+Name: Misty Pinewood (pinewood)
+Columns: 7
+#
+185 188 203	sky 0
+207 202 203	sky 1
+226 196 176	sky 2
+239 171 126	sky 3
+243 144  86	sky 4
+238 122  62	sky 5
+220 100  50	sky 6
+196  80  46	sky 7
+168  70  46	sky 8
+110 127 156	mtnFar 0
+ 70  86 118	mtnFar 1
+201 178 176	mtnFar 2
+ 44  60  82	mtnNear 0
+ 24  34  47	mtnNear 1
+127 142 168	mtnNear 2
+125 136 160	cloud 0
+164 175 194	cloud 1
+198 206 219	cloud 2
+226 231 239	cloud 3
+248 250 255	cloud 4
+ 20  28  34	grass 0
+ 29  51  48	grass 1
+ 42  74  44	grass 2
+ 67  99  46	grass 3
+102 130  54	grass 4
+147 162  74	grass 5
+200 184 108	grass 6
+ 46  28  20	path 0
+ 69  41  28	path 1
+ 92  58  38	path 2
+118  76  48	path 3
+144  98  62	path 4
+ 36  22  15	gap
+ 27  30  40	stone 0
+ 44  52  66	stone 1
+ 65  76  92	stone 2
+ 90 101 116	stone 3
+122 128 136	stone 4
+157 154 149	stone 5
+196 185 166	stone 6
+ 20  40  62	water 0
+ 28  58  86	water 1
+ 40  80 110	water 2
+ 56 106 134	water 3
+ 90 144 166	water 4
+148 196 204	water 5
+226 244 242	water 6
+ 42  26  18	wood 0
+ 67  42  28	wood 1
+ 94  60  40	wood 2
+122  80  52	wood 3
+148 102  66	wood 4
+ 17  16  25	earth 0
+ 49  29  51	earth 1
+ 77  39  54	earth 2
+103  67  49	earth 3
+127  88  60	earth 4
+148 110  73	earth 5
+167 134  88	earth 6
+ 19  21  27	under 0
+ 31  34  46	under 1
+ 40  46  65	under 2
+ 49  60  84	under 3
+ 59  76 101	under 4
+ 71  93 117	under 5
+ 83 111 131	under 6
+232 176  74	flowers 0
+242 226 188	flowers 1
+208 112  74	flowers 2
+166 178 200	haze
+ 52  66  31	root
+214 198 192	ambient
+232 238 248	fog
+255 216 184	fog2

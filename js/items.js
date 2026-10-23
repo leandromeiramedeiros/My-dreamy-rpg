@@ -90,12 +90,54 @@ const FAMILY_TIERS = {
   stalker: ['jerkin:Leather Jerkin', 'stalkerjacket', 'nightcoat:Nightstalker Coat', 'shadowweave:Shadowweave Jacket', 'eclipsegarb:Eclipse Garb'],
   knightgreaves: ['ironboots:Iron Boots', 'knightgreaves', 'sungreaves:Sunforged Greaves', 'auroragreaves:Aurora Greaves', 'dawnstriders:Dawnstriders'],
   clothsandals: ['ropesandals:Rope Sandals', 'clothsandals', 'mistwalkers:Mistwalkers', 'skystep:Skystep Sandals', 'cloudsteps:Eternal Cloudsteps'],
-  stalkershoes: ['softshoes:Soft Shoes', 'stalkershoes', 'quietstep:Quietstep Boots', 'shadowstep:Shadowstep Boots', 'eclipsetreads:Eclipse Treads'],
-  // loadout v3 (M4a). Daggers T5 and the offhand tier names are placeholders until the M4b naming pass.
+  stalkershoes: ['softshoes:Soft Shoes', 'stalkershoes', 'quietstep:Quietstep Boots', 'shadowstep:Shadowweave Boots', 'eclipsetreads:Eclipse Treads'],
+  // loadout v3 (M4a), names from the M4b naming pass (docs/design/names.md; base ids never change)
   daggers: ['shiv:Shiv', 'nightfang', 'twineclipse:Twin Eclipse', 'widowskiss:Widow\'s Kiss', 'fangseternal:Fangs Eternal'],
   buckler: ['woodbuckler:Wooden Buckler', 'ironbuckler:Iron Buckler', 'sunbuckler:Sunforged Buckler', 'aurorabuckler:Aurora Buckler', 'bucklereternal:Buckler Eternal'],
-  grimoire: ['worngrimoire:Worn Grimoire', 'dreamgrimoire:Dream Grimoire', 'stargrimoire:Starbound Grimoire', 'nebulacodex:Nebula Codex', 'codexeternal:Codex Eternal'],
+  grimoire: ['worngrimoire:Primer', 'dreamgrimoire:Dreambook', 'stargrimoire:Sun Codex', 'nebulacodex:Aurora Grimoire', 'codexeternal:Book Eternal'],
   quiver: ['leatherquiver:Leather Quiver', 'moonquiver:Moon Quiver', 'silverquiver:Silver Quiver', 'eclipsequiver:Eclipse Quiver', 'quivereternal:Quiver Eternal'],
+  // ---- M4b: every remaining weapon line, shield, companion and suit piece ----
+  rapier: ['tinneedle:Tin Needle', 'moonpoint:Moonpoint', 'silverestoc:Silver Estoc', 'starpoint:Starpoint', 'needleeternal:Needle Eternal'],
+  mace: ['ironcudgel:Iron Cudgel', 'dawnmace:Dawnmace', 'sunwardenmace:Sunwarden Mace', 'auroramaul:Aurora Maul', 'voweternal:Vow Eternal'],
+  axe: ['splittingaxe:Splitting Axe', 'dawnbreaker:Dawnbreaker', 'sunforgedaxe:Sunforged Axe', 'auroracleaver:Aurora Cleaver', 'dawncolossus:Dawn Colossus'],
+  hammer: ['sledge:Sledge', 'sunhammer:Sunhammer', 'mountainmaul:Mountain Maul', 'auroraanvil:Aurora Anvil', 'hammereternal:Hammer Eternal'],
+  halberd: ['pike:Pike', 'dawnglaive:Dawnglaive', 'sunhalberd:Sun Halberd', 'aurorapartisan:Aurora Partisan', 'reacheternal:Reach Eternal'],
+  crossbow: ['handcrossbow:Hand Crossbow', 'dawnarbalest:Dawn Arbalest', 'sunbolt:Sunbolt', 'auroraballista:Aurora Ballista', 'bolteternal:Bolt Eternal'],
+  chakram: ['rim:Rim', 'moonchakram:Moon Chakram', 'silverring:Silverring', 'eclipsering:Eclipse Ring', 'ringeternal:Ring Eternal'],
+  wand: ['birchtwig:Birch Twig', 'hazelwand:Hazel Wand', 'sunsparkwand:Sunspark Wand', 'aurorawand:Aurora Wand', 'sparketernal:Spark Eternal'],
+  orb: ['glassbauble:Glass Bauble', 'starfallorb:Starfall Orb', 'cometorb:Comet Orb', 'nebulasphere:Nebula Sphere', 'orbeternal:Orb Eternal'],
+  claws: ['boneclaws:Bone Claws', 'nightclaws:Nightclaws', 'silvertalon:Silvertalon', 'eclipseclaws:Eclipse Claws', 'clawseternal:Claws Eternal'],
+  fans: ['paperfans:Paper Fans', 'moonfans:Moonfans', 'silverplume:Silverplume', 'eclipsefans:Eclipse Fans', 'fanseternal:Fans Eternal'],
+  heater: ['oakheater:Oak Heater', 'oathheater:Oath Heater', 'sunheater:Sunbright Heater', 'auroraheater:Aurora Heater', 'oatheternal:Oath Eternal'],
+  tower: ['doorshield:Door Shield', 'wardwall:Wardwall', 'sunwall:Sunwall', 'aurorabastion:Aurora Bastion', 'walleternal:Wall Eternal'],
+  warhorn: ['cowhorn:Cow Horn', 'rallyinghorn:Rallying Horn', 'sunhorn:Sunhorn', 'auroraclarion:Aurora Clarion', 'calleternal:Call Eternal'],
+  crusaderhelm: ['pothelm:Pot Helm', 'crusaderhelm:Crusader Helm', 'bellhelm:Bellward Helm', 'aurorahalo:Aurora Halo', 'crownofvows:Crown of Vows'],
+  crusader: ['quiltedgambeson:Quilted Gambeson', 'crusaderhauberk:Crusader Hauberk', 'sunhauberk:Sunsworn Hauberk', 'aurorahauberk:Aurora Hauberk', 'vestmentofdawn:Vestment of Dawn'],
+  crusaderboots: ['hobnails:Hobnail Boots', 'crusadersabatons:Crusader Sabatons', 'sunsabatons:Sunsworn Sabatons', 'aurorasabatons:Aurora Sabatons', 'pilgrimsteps:Pilgrim Steps'],
+  juggernauthelm: ['buckethelm:Bucket Helm', 'juggernauthelm:Juggernaut Helm', 'forgehelm:Forgebrow Helm', 'auroraram:Aurora Ramhelm', 'crownofcinders:Crown of Cinders'],
+  juggernaut: ['scrapplate:Scrap Plate', 'juggernautcuirass:Juggernaut Cuirass', 'forgecuirass:Forgeborn Cuirass', 'auroracuirass:Aurora Cuirass', 'anvilheart:Anvilheart'],
+  juggernautboots: ['ironclogs:Iron Clogs', 'juggernauttreads:Juggernaut Treads', 'forgetreads:Forgeborn Treads', 'auroratreads:Aurora Treads', 'quakestriders:Quakestriders'],
+  dreamweavehelm: ['linencirclet:Linen Circlet', 'dreamcirclet:Dreamweave Circlet', 'starcirclet:Starlit Circlet', 'nebuladiadem:Nebula Diadem', 'crownofdreams:Crown of Dreams'],
+  frostweave: ['woolrobe:Wool Robe', 'frostrobe:Frostweave Robe', 'rimerobe:Rimewoven Robe', 'aurorarime:Aurora Rimecloak', 'wintereternal:Winter Eternal'],
+  frostweaveboots: ['feltslippers:Felt Slippers', 'frostslippers:Frostweave Slippers', 'rimewalkers:Rimewalkers', 'auroraskates:Aurora Skates', 'snowfallsteps:Snowfall Steps'],
+  stormweavehelm: ['canvashood:Canvas Hood', 'stormhood:Stormweave Hood', 'thunderhood:Thundercall Hood', 'aurorastormcowl:Aurora Stormcowl', 'crownofstorms:Crown of Storms'],
+  stormweave: ['oilclothrobe:Oilcloth Robe', 'stormrobe:Stormweave Robe', 'thunderrobe:Thunderwoven Robe', 'aurorastormrobe:Aurora Stormrobe', 'stormeternal:Storm Eternal'],
+  stormweaveboots: ['rushsandals:Rush Sandals', 'stormshoes:Stormweave Shoes', 'sparkheels:Sparkheel Shoes', 'aurorasparkheels:Aurora Sparkheels', 'boltstriders:Boltstriders'],
+  stalkerhelm: ['leathercap:Leather Cap', 'stalkerhood:Stalker Hood', 'nightstalkerhood:Nightstalker Hood', 'shadowweavecowl:Shadowweave Cowl', 'eclipsemask:Eclipse Mask'],
+  thornwarden: ['mosscoat:Moss Coat', 'thorncoat:Thornwarden Coat', 'briarcoat:Briarwoven Coat', 'aurorabriarcoat:Aurora Briarcoat', 'rootseternal:Roots Eternal'],
+  thornwardenboots: ['barkboots:Bark Boots', 'thornboots:Thornwarden Boots', 'briarboots:Briarstep Boots', 'aurorabarkboots:Aurora Barkboots', 'bloomsteps:Bloomsteps'],
+  duelisthelm: ['feathercap:Feather Cap', 'duelisthat:Duelist Hat', 'silverbrim:Silverbrim Hat', 'auroraplume:Aurora Plume', 'crownofblades:Crown of Blades'],
+  duelist: ['swordsmanscoat:Swordsman\'s Coat', 'duelistcoat:Duelist Coat', 'silverthreadcoat:Silverthread Coat', 'auroradoublet:Aurora Doublet', 'bladeeternal:Blade Eternal'],
+  duelistboots: ['cuffedboots:Cuffed Boots', 'duelistboots:Duelist Boots', 'silverspurs:Silverspur Boots', 'auroraspurs:Aurora Spurs', 'lungeeternal:Lunge Eternal'],
+  shadehelm: ['ragcowl:Rag Cowl', 'shadecowl:Shade Cowl', 'duskcowl:Duskwoven Cowl', 'aurorashadecowl:Aurora Shadecowl', 'crownofdusk:Crown of Dusk'],
+  shade: ['ragleathers:Rag Leathers', 'shadeleathers:Shade Leathers', 'duskleathers:Duskwoven Leathers', 'auroraleathers:Aurora Leathers', 'gloameternal:Gloam Eternal'],
+  shadeboots: ['ragwraps:Rag Wraps', 'shadewraps:Shade Wraps', 'duskwraps:Duskwoven Wraps', 'aurorawraps:Aurora Wraps', 'nightfallsteps:Nightfall Steps'],
+  nightshadehelm: ['clothmask:Cloth Mask', 'nightshademask:Nightshade Mask', 'venommask:Venomweave Mask', 'auroramask:Aurora Mask', 'crownofthorns:Crown of Thorns'],
+  nightshade: ['herbvest:Herbalist Vest', 'nightshadevest:Nightshade Vest', 'venomvest:Venomweave Vest', 'auroravest:Aurora Vest', 'blighteternal:Blight Eternal'],
+  nightshadeboots: ['mossshoes:Moss Shoes', 'nightshadesteps:Nightshade Steps', 'venomsteps:Venomweave Steps', 'auroracreepers:Aurora Creepers', 'creepereternal:Creeper Eternal'],
+  miragehelm: ['gauzeveil:Gauze Veil', 'mirageveil:Mirage Veil', 'glassveil:Glasswoven Veil', 'auroraglassveil:Aurora Glassveil', 'crownofmirrors:Crown of Mirrors'],
+  mirage: ['gauzesilks:Gauze Silks', 'miragesilks:Mirage Silks', 'glasssilks:Glasswoven Silks', 'aurorasilks:Aurora Silks', 'mirroreternal:Mirror Eternal'],
+  mirageboots: ['gauzeslippers:Gauze Slippers', 'mirageslippers:Mirage Slippers', 'glassslippers:Glass Slippers', 'auroraslippers:Aurora Slippers', 'shimmereternal:Shimmer Eternal'],
 };
 const BASES = {};
 for (const slot of GEAR_SLOTS) for (const fam of ITEMS[slot]) FAMILY_TIERS[fam.id].forEach((s, tier) => {
@@ -195,7 +237,7 @@ function fmtStat(k, v, sign = true) {
 const ECHO_DROP_LVL = 17, HUSH_DROP_LVL = 13;   // §30 "drops late (Act III+)": Grotto, the Act III band, starts at L17 (§11)
 const UNIQUES = {
   rootcrown: { name: 'Root-Crown', base: 'mossmantle', boss: 'pinewood:bramblehorn', desc: 'Snare and Frost Nova root bosses for 1s.' },
-  lanternplate: { name: 'Warden\'s Lantern Plate', base: 'sunplate', boss: 'ruins:boss', desc: 'Bulwark reflects projectiles.' },
+  lanternplate: { name: 'Warden\'s Lantern Plate', base: 'sunplate', boss: 'ruins:gloamwarden', desc: 'Bulwark reflects projectiles.' },   // the Gloam Warden's first kill (legendary); game.js updateProjs
   tideedge: { name: 'Tide-Edge', base: 'auroraedge', boss: 'grotto:mirelle', desc: 'Dash Strike leaves a frost trail that slows.' },
   cinderstride: { name: 'Cinderstride Boots', base: 'sungreaves', boss: 'caldera:kharzul', desc: 'Boots skill leaves a fire trail; lava immunity 2s.' },
   morrowbane: { name: 'Morrowbane', base: 'dawneternal', boss: 'spire:morrow', mythic: true, desc: 'R ultimate resets on boss phase change.' },
@@ -564,7 +606,7 @@ function starterLoot(p = G.player) {
 // Enemy loot pools (enemydata.js `loot`): a common's item drops re-roll any base in `exclude` (the starter kit's bases, so a
 // slime never drops a duplicate Rusty Blade). Rows naming an unknown pool fall back to the plain table (validate-ids flags them).
 const STARTER_BASES = ['rustyblade', 'ironcap', 'ironmail', 'ironboots'];
-const LOOT_POOLS = { common_vale: { exclude: STARTER_BASES }, common_pinewood: { exclude: STARTER_BASES } };
+const LOOT_POOLS = { common_vale: { exclude: STARTER_BASES }, common_pinewood: { exclude: STARTER_BASES }, common_ruins: { exclude: STARTER_BASES } };
 
 // ===== bag ==========================================================================================
 const BAG_SIZE = 30, MAX_POTIONS = 3;
@@ -619,7 +661,10 @@ function unequipItem(p, key) {
 }
 // ===== pages (the Pages store p.pages = { id: count }, socketed into a companion's `pages`) ===================================
 const pagesOwned = (p, id) => (p.pages && p.pages[id]) || 0;
-const pageName = id => (SKILLS[id] ? SKILLS[id].name : id) + (PAGES[id] && PAGES[id].deck === 'arrow' ? ' Arrow' : ' Page');
+// a deck entry's noun by the first deck it fits (page | arrow | call; a shared entry reads as its first deck)
+const DECK_NOUN = { page: 'Page', arrow: 'Arrow', call: 'Call' };
+const deckOf = id => { const d = PAGES[id] && PAGES[id].deck; return Array.isArray(d) ? d[0] : d === 'both' ? 'page' : d || 'page'; };
+const pageName = id => (SKILLS[id] ? SKILLS[id].name : id) + ' ' + DECK_NOUN[deckOf(id)];
 // a drop: an entry the hero owns none of first (socketed ones count), arrows when a Quiver is worn
 function rollPage(p) {
   const off = p && p.equip && p.equip.offhand, deck = isCompanion(off) ? lineOf(off).deck : null, ids = Object.keys(PAGES);
@@ -630,10 +675,10 @@ function rollPage(p) {
 function pageAdd(p, id, n = 1) { if (!PAGES[id]) return false; (p.pages || (p.pages = {}))[id] = pagesOwned(p, id) + n; return true; }
 // socket page `id` (null = take it out) into slot `si` of companion `it`: '' or the reason
 function socketPage(p, it, si, id) {
-  if (!isCompanion(it)) return 'Only a Grimoire or Quiver holds pages';
+  if (!isCompanion(it)) return 'Only a Grimoire, Quiver or Warhorn holds pages';
   fitPages(it);
   if (si < 0 || si >= it.pages.length) return 'No such page slot';
-  if (id && !pageFits(id, lineOf(it).deck)) return lineOf(it).deck === 'arrow' ? 'That is not an arrow' : 'That is not a page';
+  if (id && !pageFits(id, lineOf(it).deck)) return 'That is not ' + ({ arrow: 'an arrow', call: 'a call' }[lineOf(it).deck] || 'a page');
   if (id && pagesOwned(p, id) <= 0) return 'You have none of those';
   const old = it.pages[si];
   if (old) pageAdd(p, old);
@@ -863,6 +908,7 @@ function wearOnPickup(p, d) {
   if (!d.equip || d.kind !== 'item') return false;
   const it = d.it, key = autoKeysFor(it.slot).find(k => !p.equip[k]);
   if (!key || it.req > p.level) return false;
+  if (key === 'offhand' && offhandFits(it, p.equip.weapon)) return false;   // a shield never auto-wears under a two-hander
   p.equip[key] = it; recalcStats(p, false);
   if (typeof hudNoun === 'function') hudNoun(key);
   burst(p.x, p.y, p.z + 1.2, 18, [rarityCol(it.rarity), '#ffffff', '#ffe6a0'], 2.4);
@@ -1293,13 +1339,15 @@ const isBare = p => !!p && SLOTS.every(k => !p.equip[k]);
 // ?scene=... showcases: a mid-level hero (L16) with rare/epic tier-2 gear of the chosen weapon variant (legacy ids accepted)
 function showcaseKit(p, wfam = 'sword') {
   wfam = FAMILY_TIERS[variantId(wfam)] && item('weapon', variantId(wfam)) ? variantId(wfam) : 'sword';
-  const set = { sword: ['knighthelm', 'warden', 'knightgreaves'], staff: ['arcanecowl', 'dreamweave', 'clothsandals'], bow: ['wardenhood', 'stalker', 'stalkershoes'] }[wfam];
+  const cls = item('weapon', wfam).class;   // the class's natural suit and offhand (every weapon line has a showcase)
+  const set = { blades: ['knighthelm', 'warden', 'knightgreaves'], greatarms: ['juggernauthelm', 'juggernaut', 'juggernautboots'], foci: ['arcanecowl', 'dreamweave', 'clothsandals'],
+    shots: ['wardenhood', 'stalker', 'stalkershoes'], shadows: ['shadehelm', 'shade', 'shadeboots'] }[cls];
   const t2 = f => FAMILY_TIERS[f][2].split(':')[0];
   p.level = 16; p.xp = Math.round(xpToNext(16) * 0.4); p.dust = 140;
   p.equip.weapon = makeItem(t2(wfam), 'epic', 16, { sockets: 2 }); p.equip.weapon.sockets[0] = 'ruby_3';
   ['head', 'chest', 'boots'].forEach((s, i) => { p.equip[s] = makeItem(t2(set[i]), i === 1 ? 'epic' : 'rare', 16, { sockets: 1 }); });
   p.equip.chest.sockets[0] = 'diamond_2'; p.equip.head.sockets[0] = 'topaz_2';
-  const off = { sword: 'sunbuckler', staff: 'stargrimoire', bow: 'silverquiver' }[wfam];
+  const off = { blades: 'sunbuckler', greatarms: 'sunhorn', foci: 'stargrimoire', shots: 'silverquiver', shadows: 'sunbuckler' }[cls];
   if (off) { p.equip.offhand = makeItem(off, 'rare', 16, { sockets: 1 }); if (p.equip.offhand.pages) Object.keys(PAGES).filter(id => pageFits(id, BASES[off].deck)).slice(0, p.equip.offhand.pages.length).forEach((id, i) => { p.equip.offhand.pages[i] = id; }); }
   refillPockets(p);
   recalcStats(p, true);

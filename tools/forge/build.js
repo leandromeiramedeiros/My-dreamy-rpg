@@ -28,7 +28,12 @@ const FORGE = require('./forge.js');
 
 let name, model, gear;                                           // the CLI's rig (main)
 const OUT = path.join(__dirname, 'out'), ROOT = path.join(__dirname, '..', '..');
-const ENEMY_RIGS = ['brambleshaman', 'ogre', 'mountaintroll', 'shadehound'];   // gearless enemy rigs (render.js drawEnemy)
+// gearless enemy rigs (render.js drawEnemy). A boss is split over two rigs (<boss> + <boss>_moves: two bank files under the
+// 160 KB cap, render.js FEN.split); the _moves rig is not an enemy row
+const ENEMY_RIGS = ['brambleshaman', 'ogre', 'mountaintroll', 'shadehound',
+  'dreammoth', 'gloomslime', 'gloomslime_small', 'thornbackboar', 'thornsow', 'mossjaw', 'mossjaw_moves',
+  'bramblehorn', 'bramblehorn_moves', 'sapling', 'wisp', 'gloomknight', 'gravechanter', 'pillarmimic', 'shadelingswarm', 'voidarcher',
+  'oathless', 'oathless_moves', 'gloamwarden', 'gloamwarden_moves'];
 const GAME_RIGS = ['chibi', ...ENEMY_RIGS];                     // rigs whose banks ship in js/forge-bank
 
 const { png, pngSmall, unpng } = require('./png.js');
@@ -106,6 +111,12 @@ function buildSheet(tag, pieces) {
   console.log(`${tag}: ${sh.rows} dirs x ${sh.cols} frames (${sh.frame.join('x')}) in ${ms.toFixed(0)} ms | ${L.colours} colours, ${L.orphans} lone pixels, <= ${tones(model, pieces)} tones per material | sha256 ${sha.slice(0, 16)}`);
   return sh;
 }
+
+// the rig's base units (body, hair) bank one attack sheet per weapon class; the classes outside EAGER_ATK ship in their own lazy
+// file js/forge-bank/<rig>.atk.<class>.js (FORGE_BANK['<rig>.atk.<class>']) that js/forge-rt.js loads when a loadout's weapon is
+// of that class (rig bank: atk = { <class>: '<rig>.atk.<class>' }): the starter bundle (forge-rt.js + <rig>.js) stays small
+const EAGER_ATK = ['none', 'sword'];                              // unarmed (the bare hero, every loadout without a weapon) + the starter weapon
+const lazyAtk = suf => suf.startsWith('atk.') && !EAGER_ATK.includes(suf.slice(4));
 
 // one unit's bank sheets ({ group } or { piece }): [suffix, bake, png] per non-empty sheet of FORGE.bankSplit
 function bakeUnit(m, opt) {
@@ -203,17 +214,20 @@ function main(rig) {
     // bank: every unit (the rig's base groups: body, hair; every piece) split by anim (FORGE.bankSplit: <unit>.core +
     // <unit>.atk.<class>), each an encoded G-buffer sheet; empty sheets (a sword's staff attack) are left out
     const t0 = process.hrtime.bigint(), dir = path.join(OUT, `${name}-bank`), info = FORGE.bankInfo(model);
-    const js = { model: info, loadouts: gear.loadouts, sheets: {} }, bank = { model: info, sheets: {} }, lines = {}, lineOf = {}, sizes = [];
+    const js = { model: info, loadouts: gear.loadouts, sheets: {} }, bank = { model: info, sheets: {} }, lines = {}, lineOf = {}, atkOf = {}, patkOf = {}, sizes = [];
     fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
     const units = [...info.base.map(id => ({ id, line: name, opt: { group: id } })),
       ...Object.keys(gear.pieces).map(id => ({ id, line: lineFileOf(id, gear.pieces[id]), opt: { piece: gear.pieces[id] } }))];
     for (const u of units) {
       if (u.line !== name) lineOf[u.id] = u.line;
       for (const [suf, b, buf] of bakeUnit(model, u.opt)) {
-        const key = `${u.id}.${suf}`;
-        fs.writeFileSync(path.join(dir, `${key}.png`), buf); sizes.push({ key, line: u.line, bytes: buf.length });
+        // a piece's lazy attack sheets (every class outside EAGER_ATK) ship in its own <line>.atk file (js/forge-rt.js loads it with
+        // the weapon class), which keeps each piece-tier file under the 160 KB cap
+        const key = `${u.id}.${suf}`, lz = GAME_RIGS.includes(name) && lazyAtk(suf), line = lz ? (u.line === name ? `${name}.atk.${suf.slice(4)}` : `${u.line}.atk`) : u.line;
+        if (line !== u.line) { if (u.line === name) atkOf[suf.slice(4)] = line; else patkOf[u.line] = line; }
+        fs.writeFileSync(path.join(dir, `${key}.png`), buf); sizes.push({ key, line, bytes: buf.length });
         js.sheets[key] = { src: 'data:image/png;base64,' + buf.toString('base64'), meta: b.meta };
-        (lines[u.line] = lines[u.line] || {})[key] = { png: buf.toString('base64'), meta: b.meta };
+        (lines[line] = lines[line] || {})[key] = { png: buf.toString('base64'), meta: b.meta };
         const back = unpng(buf); bank.sheets[key] = { w: back.w, rgba: back.rgba, meta: b.meta };
       }
     }
@@ -228,7 +242,7 @@ function main(rig) {
     // drop loads only its tier. Committed (Pages serves the repo): unchanged bytes are not rewritten, and only files whose
     // source is gone are deleted
     if (GAME_RIGS.includes(name)) {
-      const { kb, cnt } = writeBanks(lines, line => line === name ? { model: info, lines: lineOf, loadouts: gear.loadouts } : {});
+      const { kb, cnt } = writeBanks(lines, line => line === name ? { model: info, lines: lineOf, atk: atkOf, patk: patkOf, eager: EAGER_ATK, loadouts: gear.loadouts } : {});
       const rtf = path.join(ROOT, 'js', 'forge-rt.js'), rt = fs.existsSync(rtf) ? fs.statSync(rtf).size : 0;
       const gearKb = Object.entries(kb).filter(([l]) => l !== name), topLine = gearKb.reduce((p, e) => e[1] > p[1] ? e : p, ['', 0]);
       console.log(`js/forge-bank: ${Object.keys(kb).length} files (written ${cnt.written}, unchanged ${cnt.unchanged}, deleted ${cnt.deleted}) | ${name}.js ${(kb[name] / 1024).toFixed(0)} KB, largest piece file ${topLine[0]}.js ${(topLine[1] / 1024).toFixed(1)} KB | starter bundle (forge-rt.js + ${name}.js): ${((rt + kb[name]) / 1024).toFixed(0)} KB`);

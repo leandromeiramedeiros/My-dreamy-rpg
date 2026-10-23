@@ -118,4 +118,56 @@ function anims(o = {}) {
   return A;
 }
 
-module.exports = { bones, anims, SIDES, sheetAnims: ['idle', 'walk', 'attack', 'hit', 'death'] };
+// ---- ENEMY ADDITIONS (M4b enemy forge): extra anims for the burrowers and bosses (boar, Thornsow, Mossjaw) ---------------
+// more(o) -> { burrow, erupt, howl, idle4, walk4 }, the same o as anims(o):
+//   burrow 2 frames (the burrow part's wind: render.js plays f0 -> f1 over it): front paws dig, the snout goes down, the
+//          haunches rise -> deeper, the whole body pitched into the hole (the dirt mound takes over once e.under)
+//   erupt  2 frames (the rec after an eruption): bursting up out of the ground, reared, legs tucked -> landing
+//   howl   1 frame (a boss summon): sat back on the haunches, the head thrown up, the jaws wide
+//   idle4 / walk4: 4-frame idle (breathing 0, 1, 1, 0 with the tail swing) and 4-frame trot for boss-scale bodies (the bank cap)
+function more(o = {}) {
+  const k = o.k || 1, st = o.stride || 1, off = v => v.map(x => x * k);
+  return {
+    burrow: {
+      frames: 2, ms: [300, 300],
+      pose: f => [
+        merge(legs([-0.9, 0.9, -0.6], [0.3, 0.4, 0.2], [-0.35, 0.5, -0.1], [-0.35, 0.5, -0.1]), tail(0.6, 0.2),
+          { hips: { off: off([0, -0.4, 0.4]), rot: [0.3, 0, 0] }, neck: { rot: [0.6, 0, 0] }, head: { rot: [0.35, 0, 0] }, jaw: { rot: [0.25, 0, 0] } }),
+        merge(legs([0.3, 0.6, 0.2], [-0.8, 0.8, -0.5], [-0.6, 0.8, -0.2], [-0.6, 0.8, -0.2]), tail(0.9, -0.2),
+          { hips: { off: off([0, -2.0, 0.8]), rot: [0.5, 0, 0] }, neck: { rot: [0.7, 0, 0] }, head: { rot: [0.4, 0, 0] }, jaw: { rot: [0.3, 0, 0] } }),
+      ][f],
+    },
+    erupt: {
+      frames: 2, ms: [250, 300],
+      pose: f => [
+        merge(legs([-1.1, 1.2, -0.4], [-0.9, 1.1, -0.4], [0.4, 0.2, 0.3], [0.5, 0.2, 0.3]), tail(0.1, 0),
+          { hips: { off: off([0, 3.0, 0.4]), rot: [-0.45, 0, 0] }, neck: { rot: [-0.3, 0, 0] }, head: { rot: [-0.1, 0, 0] }, jaw: { rot: [0.6, 0, 0] } }),
+        merge(legs([-0.3, 0.35, -0.2], [-0.2, 0.35, -0.2], [-0.25, 0.4, -0.1], [-0.2, 0.4, -0.1]), tail(0.5, 0.1),
+          { hips: { off: off([0, -1.0, 0.3]), rot: [0.1, 0, 0] }, neck: { rot: [0.2, 0, 0] }, head: { rot: [-0.05, 0, 0] }, jaw: { rot: [0.15, 0, 0] } }),
+      ][f],
+    },
+    howl: {
+      frames: 1, ms: [600],
+      pose: () => merge(legs([-0.25, 0.2, 0], [-0.25, 0.2, 0], [-0.9, 1.4, -0.5], [-0.9, 1.4, -0.5]), tail(-0.1, 0),
+        { hips: { off: off([0, -1.8, -0.4]), rot: [-0.45, 0, 0] }, neck: { rot: [-0.55, 0, 0] }, head: { rot: [-0.45, 0, 0] }, jaw: { rot: [0.7, 0, 0] } }),
+    },
+    idle4: {
+      frames: 4, ms: [300, 300, 300, 300],
+      pose: f => { const d = [0, 1, 1, 0][f], s = [0, 0.15, -0.05, -0.15][f];
+        return merge(legs(Z, Z, Z, Z), tail(0.35, s), { chest: { off: off([0, -0.4 * d, 0]) }, neck: { rot: [0.06 * d, 0, 0] }, head: { rot: [-0.06 * d, 0, 0] }, jaw: { rot: [0.04 + 0.06 * d, 0, 0] } }); },
+    },
+    walk4: {
+      frames: 4, ms: [150, 150, 150, 150],
+      pose: f => {
+        const ph = q => (f / 4 + q) * 2 * Math.PI;
+        const front = q => { const p = ph(q), sw = -0.5 * st * Math.cos(p), lift = Math.max(0, Math.sin(p)); return [sw, 0.85 * st * lift, -0.45 * lift]; };
+        const back = q => { const p = ph(q), sw = -0.45 * st * Math.cos(p), lift = Math.max(0, Math.sin(p)); return [sw - 0.25 * lift, 0.5 * lift, 0.3 * lift]; };
+        const bob = [0.6, -0.3, 0.6, -0.3][f];
+        return merge(legs(front(0), front(0.5), back(0.5), back(0)), tail(0.5, [0.12, -0.04, -0.12, 0.04][f]),
+          { hips: { off: off([0, bob, 0]), rot: [[0.04, -0.03, 0.04, -0.03][f], 0, 0] }, neck: { rot: [0.12, 0, 0] }, head: { rot: [-0.08 + 0.05 * bob, 0, 0] } });
+      },
+    },
+  };
+}
+
+module.exports = { bones, anims, more, SIDES, sheetAnims: ['idle', 'walk', 'attack', 'hit', 'death'] };

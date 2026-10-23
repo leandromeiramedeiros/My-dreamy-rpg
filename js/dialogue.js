@@ -2,6 +2,9 @@
 // Narrative data: story dialogue, bestiary lore and side quests. Source of truth: docs/design/story.md.
 // Classic script (no modules). Every line is <= 12 words; boss lines keyed boss_<name>_<beat>.
 
+// speaker -> RASTER id (js/art-raster.js): these speakers get the dialogue panel with a raster portrait (hud.js drawSay)
+const PORTRAIT = { 'Pip': 'pip', 'Elder Stone': 'elderstone', 'Fox kit': 'foxkit' };
+
 // ---------------------------------------------------------------- DIALOGUE
 const DIALOGUE = {
   // Whispering Vale
@@ -26,6 +29,9 @@ const DIALOGUE = {
   ruins_pillars: { speaker: 'Pip', lines: ["Don't read the names on the pillars."] },
   boss_warden_intro: { speaker: 'The Gloam Warden', lines: ['I guarded his sleep. I do not guard it well.'] },
   boss_warden_death: { speaker: 'The Gloam Warden', lines: ['He dreamed a girl. Did you meet her?'], drops: 'lanternplate' },
+  // the Act II guardian under its contract id (bosses: gloamwarden); boss_warden_* stay for the legacy M2a fight (boss)
+  boss_gloamwarden_intro: { speaker: 'The Gloam Warden', lines: ['I guarded his sleep. I do not guard it well.'] },
+  boss_gloamwarden_death: { speaker: 'The Gloam Warden', lines: ['He dreamed a girl. Did you meet her?'], drops: 'lanternplate' },
 
   // Sunken Grotto
   grotto_banner: { banner: 'Sunken Grotto', sub: 'the tide forgot to leave' },
@@ -82,6 +88,15 @@ const BESTIARY_LORE = {
   vigils: { lore: 'Twin Vigils. One voice, two shadows, no sleep.', lore2: 'Two knights, one heart, both guarding a dream.' },
   sorrel_echo: { lore: "Sorrel's Echo. Copies you. Try being unpredictable.", lore2: 'Sorrel woke him once. Then was exiled for it.' },
   unwaking_child: { lore: 'A small shadow with stolen moves. Be kind.', lore2: "Aerin's shadow. Still missing its owner, I think." },
+
+  gloamwarden: { lore: 'The Gloam Warden. Old, loyal, and very tired.', lore2: 'It guarded a dream, and the dream had a name.' },
+
+  // Gloomspire Ruins commons (wisp above)
+  gloomknight: { lore: 'Gloom Knight. All shield in front. Go round.' },
+  gravechanter: { lore: 'Grave Chanter. Sings the dead up. Interrupt the choir.' },
+  pillarmimic: { lore: 'That pillar breathed. Pillars do not breathe.' },
+  shadelingswarm: { lore: 'Shadelings. Lots of little nobodies. Swing wide.' },
+  voidarcher: { lore: 'Void Archer. If you see the line, move.' },
 
   // Other planned enemies
   shaman: { lore: 'Bramble Shaman. Chanting at the dark. Rude, but brave.' }

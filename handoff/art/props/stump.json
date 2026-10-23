@@ -1,0 +1,18 @@
+{
+ "id": "stump",
+ "kind": "stump",
+ "label": "Stump",
+ "size": [
+  16,
+  13
+ ],
+ "origin": [
+  8,
+  12
+ ],
+ "collider_r": 0.3,
+ "shadow": 6,
+ "light": null,
+ "image": "stump.png",
+ "frames": null
+}

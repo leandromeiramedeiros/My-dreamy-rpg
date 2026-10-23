@@ -48,16 +48,16 @@ A companion is a deck. Its action cycles or primes, its spell fires the active e
 
 * Pages, arrows and calls are items. Capacity by companion tier: 2/3/4/5/6/6.
 * They are socketed in the bag, stack by id, and sort into a "Pages" tab.
-* They are re-homed cast functions (zero new casts), about 40 in all: mage ~18, ranger ~10, warrior ~8, 4 shared.
+* Pages are re-homed cast functions; arrows (7) and calls (4) are new casts; about 40 entries in all: mage ~18, ranger ~10, warrior ~8, 4 shared.
 * The Elder Stone sells one per zone. More turn up at lore tablets, vaults and bosses.
 
 ## Grips
 A Grip is a named pairing. It is an `EFFECTS` row (`src:'grip'`), matched by tags, never by slot checks.
 Each is a Codex discovery, shown as a glint and an aura. About 14:
 Sword+Buckler Vanguard; Daggers+Daggers Twin Fangs; Wand+Orb Twin Stars; Staff+Grimoire Archmage;
-Bow+Quiver Hunter; Axe+Warhorn Warband; Rapier+Fans Dancer; Mace+Heater Sanctuary; Hammer+Warhorn Faultline;
-Chakram+Orb Orbit; Claws+Buckler Cornered; Sword+Grimoire Spellblade; Halberd+Quiver Pike Square;
-Crossbow+Quiver Arbalest. Colliding names get a naming pass in M4b.
+Bow+Quiver Fletcher; Axe+Warhorn Warband; Rapier+Fans Dancer; Mace+Heater Sanctuary; Hammer+Warhorn Faultline;
+Chakram+Orb Lodestar; Claws+Buckler Cornered; Sword+Grimoire Spellblade; Halberd+Quiver Hedgewall;
+Crossbow+Quiver Siegeworks (the M4b naming pass replaced the colliding Hunter, Orbit, Pike Square and Arbalest).
 * The Combo Codex tab sits beside the Bestiary and reveals a Grip on its first trigger.
 
 ## Unlocks and ranks

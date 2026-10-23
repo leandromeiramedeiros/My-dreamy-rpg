@@ -65,7 +65,7 @@ Shatter, Wildfire, Conduct, Overload, Purify, Rupture, Detonate, Drift. Each has
   * Never gate main progress on a specced element: a world source within 20 tiles or Dream Oil from the Stone.
     The audit fails any main route that needs a `via`.
   * One of the five secrets per map is an elemental secret (skill-only).
-  * 3 verb puzzles per big map (1 in the Vale, 0 in arenas). One new verb per section. Nothing is a trap.
+  * 3 verb puzzles per zone (1 in the Vale; the `verbs` arena tests them). One new verb per section. Nothing is a trap.
   * Lasting states persist; transient ones reset.
 
 ## Placement by zone

@@ -582,7 +582,7 @@ const FORGE = (function () {
   function rigOf(rig) {
     if (RIGS[rig]) return RIGS[rig];
     return (RIGS[rig] = loadLine(rig).then(data => {
-      const R = { bank: { model: data.model, sheets: {} }, lines: data.lines || {}, loaded: {} };
+      const R = { bank: { model: data.model, sheets: {} }, lines: data.lines || {}, atk: data.atk || {}, patk: data.patk || {}, eager: data.eager || [], loaded: {} };
       addSheets(R, data); R.loaded[rig] = true; RIGS[rig] = Promise.resolve(R); RIGS[rig].R = R; return R;
     }));
   }
@@ -631,7 +631,11 @@ const FORGE = (function () {
     const key = keyOf(rig, loadout); if (PREP.has(key)) return PREP.get(key);
     const R = await rigOf(rig), ps = pieceRefs(loadout);
     await Promise.all([...new Set(ps.map(p => R.lines[p.id]).filter(l => l && !R.loaded[l]))].map(l => loadLine(l).then(d => { addSheets(R, d); R.loaded[l] = true; })));
-    const P = prepare(R.bank, loadout), real = new Set(layoutOf(P).layout.map(e => e[2])), used = new Set(P.layers.map(l => l.u));
+    let P = prepare(R.bank, loadout);
+    // the weapon class's attack sheets are lazy: the base units' (body, hair) in <rig>.atk.<class>, each worn piece's in <line>.atk
+    const lazy = !R.eager.includes(P.cls), al = [R.atk[P.cls], ...(lazy ? ps.map(p => R.patk[R.lines[p.id]]) : [])].filter((f, i, a) => f && !R.loaded[f] && a.indexOf(f) === i);
+    if (al.length) { await Promise.all(al.map(f => loadLine(f).then(d => { addSheets(R, d); R.loaded[f] = true; }))); P = prepare(R.bank, loadout); }
+    const real = new Set(layoutOf(P).layout.map(e => e[2])), used = new Set(P.layers.map(l => l.u));
     if (P.smear) used.add(P.smear);
     const jobs = [];
     for (const u of used) for (const s of u.sheets) if (!s.meta.anims || s.meta.anims.some(a => real.has(a))) { const j = decode(s); if (j) jobs.push(j); }

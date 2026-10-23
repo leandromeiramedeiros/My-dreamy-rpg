@@ -1,0 +1,118 @@
+{
+ "unit": "sword.t4",
+ "sheet": "core",
+ "images": {
+  "front": "sword.t4_front.png",
+  "back": "sword.t4_back.png"
+ },
+ "layer": "weapon",
+ "zorder": {
+  "S": 24,
+  "SE": 40,
+  "E": 40,
+  "NE": 28,
+  "N": 3,
+  "NW": 1,
+  "W": 2,
+  "SW": 4
+ },
+ "hides": [],
+ "slot": "weapon",
+ "tier": 4,
+ "class": "sword",
+ "split": {
+  "rule": "front = pixels where body + this unit differs from the body alone; back = this unit's own pixels hidden behind the body",
+  "body_pixels_lost": 0
+ },
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  19,
+  8
+ ],
+ "anims": {
+  "idle": {
+   "from": 0,
+   "count": 6,
+   "ms": [
+    200,
+    200,
+    400,
+    200,
+    200,
+    400
+   ],
+   "loop": true
+  },
+  "walk": {
+   "from": 6,
+   "count": 6,
+   "ms": [
+    100,
+    100,
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": true
+  },
+  "cast": {
+   "from": 12,
+   "count": 4,
+   "ms": [
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  },
+  "dash": {
+   "from": 16,
+   "count": 2,
+   "ms": [
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  },
+  "hit": {
+   "from": 18,
+   "count": 1,
+   "ms": [
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl"
+}

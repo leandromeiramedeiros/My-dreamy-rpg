@@ -167,16 +167,16 @@ function knightgreaves(t) {
   return piece('knightgreaves', 'boots', t, { bias: 0.3, mats, prims: P });
 }
 
-// ---- off hand: the shield's face looks out to the left-front, raised square-on to block when hit -----------------------
-const heater = (top, cut) => [[0, 1, 0, top], [0.75, -0.66, 0, cut], [-0.75, -0.66, 0, cut]];
-function shield(t) {
+// ---- off hand: the heater shield's face looks out to the left-front, raised square-on to block when hit -----------------------
+const heaterClip = (top, cut) => [[0, 1, 0, top], [0.75, -0.66, 0, cut], [-0.75, -0.66, 0, cut]];
+function heater(t) {
   const mats = { face: [WOOD, metal(METAL[1]), CLOTH[2], CLOTH[3], metal(METAL[4]), metal(METAL[5])][t - 1], rim: t === 1 ? METAL[0] : t === 2 ? metal(MAIL) : GOLD, gem: t === 6 ? HOLYG : SAPPHIRE, core: CORE, gold: GOLD, glow: flatOf(GLOW.holy) };
   const P = [], stamps = [];
   if (t === 1) P.push({ bone: 'offhand', mat: 'face', part: 'shield', shape: 'ell', c: [0, 0.3, 0.9], r: [2.8, 2.8, 0.5] },
     { bone: 'offhand', mat: 'rim', part: 'rim', shape: 'ell', c: [0, 0.3, 0.72], r: [3.15, 3.15, 0.42] },
     { bone: 'offhand', mat: 'rim', part: 'shield', shape: 'ell', c: [0, 0.3, 1.35], r: [0.95, 0.95, 0.55] });
-  else if (t <= 3) { P.push({ bone: 'offhand', mat: 'face', part: 'shield', shape: 'ell', c: [0, 0.6, 0.9], r: [3.3, 4.4, 0.55], clip: heater(3.2, 2.4) },
-      { bone: 'offhand', mat: 'rim', part: 'rim', shape: 'ell', c: [0, 0.6, 0.72], r: [3.7, 4.9, 0.45], clip: heater(3.55, 2.85) });
+  else if (t <= 3) { P.push({ bone: 'offhand', mat: 'face', part: 'shield', shape: 'ell', c: [0, 0.6, 0.9], r: [3.3, 4.4, 0.55], clip: heaterClip(3.2, 2.4) },
+      { bone: 'offhand', mat: 'rim', part: 'rim', shape: 'ell', c: [0, 0.6, 0.72], r: [3.7, 4.9, 0.45], clip: heaterClip(3.55, 2.85) });
     if (t === 3) P.push({ bone: 'offhand', mat: 'gold', part: 'rim', shape: 'ell', c: [0, 0.6, 1.15], r: [0.7, 3.7, 0.4] }, { bone: 'offhand', mat: 'gold', part: 'rim', shape: 'ell', c: [0, 1.2, 1.5], r: [1.9, 1.9, 0.75] });   // T3: a gold boss on the face
   }
   else if (t === 4) P.push({ bone: 'offhand', mat: 'face', part: 'shield', shape: 'ell', c: [0, 0.2, 0.95], r: [3.4, 5.3, 0.6], clip: [[0, 1, 0, 3.8], [0.8, -0.6, 0, 2.6], [-0.8, -0.6, 0, 2.6]] },
@@ -197,7 +197,7 @@ function shield(t) {
     ...[0, 45, 90, 135, 180, 225, 270, 315].map(d => { const a = d * Math.PI / 180;
       return { bone: 'offhand', mat: 'gold', part: 'rim', shape: 'cap', a: [3.2 * Math.cos(a), 0.4 + 3.2 * Math.sin(a), 0.9], b: [4.6 * Math.cos(a), 0.4 + 4.6 * Math.sin(a), 0.85], ra: 0.7, rb: 0.15 }; }));
   if (t === 3) stamps.push({ bone: 'offhand', at: [0, 1.2, 1.45], n: [0, 0, 1], facing: 0.2, on: 'face', px: CROSS });
-  return piece('shield', 'offhand', t, { mats, prims: P, stamps }, {
+  return piece('heater', 'offhand', t, { mats, prims: P, stamps }, {
     pose: a => ({ offhand: a === 'hit' ? { aim: [0, 1, 0.2], roll: [0.25, 0, 0.97] } : a === 'dash' ? { aim: [0.1, 1, -0.2], roll: [0.9, 0, -0.4] } : { aim: [0.15, 1, 0.1], roll: [0.75, 0, 0.66] } }),
   });
 }
@@ -269,12 +269,12 @@ function cape(t) {
 }
 
 const pieces = {};
-for (const t of TIERS) for (const fn of [knighthelm, warden, knightgreaves, sword, shield, cape]) { const p = fn(t); pieces[p.id] = p; }
+for (const t of TIERS) for (const fn of [knighthelm, warden, knightgreaves, sword, heater, cape]) { const p = fn(t); pieces[p.id] = p; }
 // the other lines of this rig: models/chibi-<line>.js each export { pieces }
-for (const f of ['chibi-buckler.js', 'chibi-staff.js', 'chibi-grimoire.js']) if (require('fs').existsSync(require('path').join(__dirname, f))) Object.assign(pieces, require('./' + f).pieces);
+for (const f of require('fs').readdirSync(__dirname).sort()) if (/^chibi-[a-z]+\.js$/.test(f) && !['chibi-gear.js', 'chibi-palette.js', 'chibi-wpal.js'].includes(f)) Object.assign(pieces, require('./' + f).pieces);   // weapon, shield and companion lines (suits: chibi-suit-*.js, loaded by their own lane)
 // the other 11 suits: models/chibi-suit-<suit>.js each export { pieces } (chibi-suit-lib.js: the suit table and shared shells)
 for (const f of require('fs').readdirSync(__dirname).filter(f => /^chibi-suit-.+\.js$/.test(f)).sort()) { const m = require('./' + f); if (m.pieces) Object.assign(pieces, m.pieces); }
-const set = t => ['knighthelm', 'warden', 'knightgreaves', 'sword', 'shield', 'cape'].map(f => `${f}.t${t}`);
+const set = t => ['knighthelm', 'warden', 'knightgreaves', 'sword', 'heater', 'cape'].map(f => `${f}.t${t}`);
 const loadouts = { bare: [], squire: set(1), footman: set(2), knight: set(3), paladin: set(4), radiant: set(5) };
 // one board loadout per suit tier (head, chest, boots): crusader1 .. crusader6, for every suit piece that exists
 for (const [suit, fams] of Object.entries(require('./chibi-suit-lib.js').SUITS)) for (const t of [1, 2, 3, 4, 5, 6]) { const ids = fams.map(f => `${f}.t${t}`).filter(id => pieces[id]); if (ids.length) loadouts[suit + t] = ids; }

@@ -76,7 +76,7 @@ module.exports = {
   tones: [0.8, 0.3, -0.3],
   outline: '#0c0714', innerLine: 2.0,
   pixel: { normalSteps: 0 },
-  flatDepth: true, bankSheets: { die: ['hit', 'death'] },
+  flatDepth: true, bankSheets: { mv: ['walk'], die: ['hit', 'death'] },   // M4b: walk out of core (core 35.8 -> <= 30 KB)
   bones, layers, anims: Q.anims({ k: SC }), sheetAnims: Q.sheetAnims,
   sockets: {
     head: sock('head', [0, 4.0, 0]), chest: sock('chest', [0, 1.0, 0]), maw: sock('jaw', [0, 0, 3.0]),

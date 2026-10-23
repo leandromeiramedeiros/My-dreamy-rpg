@@ -1786,6 +1786,70 @@ const PAD_STUB = () => {
     });
     check('M4a rebind: Shift alone refused for play actions; an ambiguous chord (Shift+F over F) and a same-context key are rejected, never swapped; the list shows chords as the bar does (▲Q), the long form stays SHIFT+Q',
       rb.shift === 'false:shift' && rb.amb === 'false:skillF:chord' && rb.clash === 'false:skillQ' && rb.chordOk === true && rb.label === 'SHIFT+Q' && rb.row === '▲Q' && /▲R/.test(rb.rowR) && rb.after === 'KeyR', rb);
+    // -- M4b: one kit per class (every weapon class, the Heater / Tower / Warhorn and five new suits): on keyboard + mouse each of
+    //    Q / Shift+Q / M2 / E / Shift+E / R / F / V fires its slot and the slot's skill casts (useSkill true) with no page error;
+    //    the touch wheel fires the same 8 on one kit; holds: Heater Block (M2), Axe Heavy Strike (M1), Orb drain, Crossbow clip
+    const KITS = {
+      blades: ['dawnmace', 'oathheater', 'crusaderhelm', 'crusaderhauberk', 'crusadersabatons'],
+      greatarms: ['dawnbreaker', 'rallyinghorn', 'juggernauthelm', 'juggernautcuirass', 'juggernauttreads'],
+      shots: ['dawnarbalest', 'moonquiver', 'stormhood', 'stormrobe', 'stormshoes'],
+      foci: ['starfallorb', 'wardwall', 'duelisthat', 'duelistcoat', 'duelistboots'],
+      shadows: ['moonfans', 'ironbuckler', 'mirageveil', 'miragesilks', 'mirageslippers'],
+      chakram: ['moonchakram', 'dreamgrimoire', 'nightshademask', 'nightshadevest', 'nightshadesteps'],
+      rapier: ['moonpoint', 'ironbuckler', 'shadecowl', 'shadeleathers', 'shadewraps'],
+    };
+    await iev(() => {
+      window.__keep = { equip: Object.assign({}, G.player.equip), level: G.player.level };
+      window.__ok = [];
+      const u = window.useSkill; window.useSkill = function (pp, slot) { const r = u(pp, slot); window.__ok.push(slot + (r ? '' : '!')); return r; };
+      window.__kit = bases => { const p = G.player, L = Math.max(20, p.level); p.level = L; const sl = ['weapon', 'offhand', 'head', 'chest', 'boots'];
+        bases.forEach((b, i) => { const it = makeItem(b, 'rare', L, { sockets: 0 }); if (isCompanion(it) && it.pages && !it.pages.some(Boolean)) it.pages[0] = Object.keys(PAGES).find(id => pageFits(id, lineOf(it).deck)); p.equip[sl[i]] = it; }); recalcStats(p); deckClamp(p); return sl.map(s => p.equip[s] && p.equip[s].base).join(); };
+    });
+    const K8 = ['q', 'qu', 'rmb', 'e', 'eu', 'r', 'f', 'v'], kitRes = {}, kitIds = {};
+    for (const [k, bases] of Object.entries(KITS)) {
+      const eq = await iev(b => __kit(b), bases);
+      kitIds[k] = await iev(S => S.map(s => slotSkill(G.player, s) || '-').join(' '), K8);
+      const miss = [];
+      for (const s of K8) {
+        await iev(() => { __prep(); window.__ok.length = 0; G.player.x = Math.floor(G.player.x) + 0.5; }); await wait(40);
+        if (s === 'rmb') { await ip.mouse.down({ button: 'right' }); await wait(60); await ip.mouse.up({ button: 'right' }); }
+        else if (s === 'qu' || s === 'eu') { await ip.keyboard.down('ShiftLeft'); await wait(30); await ip.keyboard.press(s === 'qu' ? 'KeyQ' : 'KeyE'); await wait(30); await ip.keyboard.up('ShiftLeft'); }
+        else await ip.keyboard.press(KBM[s]);
+        await wait(140);
+        const ok = await iev(() => window.__ok.slice());
+        if (ok[0] !== s) miss.push(s + ':' + ok.join('/'));
+      }
+      kitRes[k] = { eq, miss };
+    }
+    const kitBad = Object.entries(kitRes).filter(([, r]) => r.miss.length || r.eq.split(',').some(x => !x));
+    check('M4b kbm: seven kits (every weapon class, Heater / Tower / Warhorn / Grimoire / Quiver / Buckler, eight new suits): Q ▲Q RMB E ▲E R F V each cast their skill', kitBad.length === 0, { kitRes, kitIds });
+    const idsDiffer = new Set(Object.values(kitIds)).size === Object.keys(kitIds).length && Object.values(kitIds).every(s => !s.includes('-'));
+    check('M4b slots: every kit maps 8 distinct, live skills (head R / chest F / boots V from the suit)', idsDiffer, kitIds);
+    // touch: the 8 on the Warhorn kit
+    await iev(b => __kit(b), KITS.greatarms);
+    await iev(() => { __tp('pointerdown', 9, 5, 5); __tp('pointerup', 9, 5, 5); }); await wait(150);
+    const tk = [];
+    for (const s of K8) {
+      await iev(() => { __prep(); window.__ok.length = 0; TOUCH.page = 0; }); await wait(40);
+      await iev(b => { const q = __bt(b); if (q) { __tp('pointerdown', 20, q.x, q.y); __tp('pointerup', 20, q.x, q.y); } }, s);
+      await wait(220);
+      const ok = await iev(() => window.__ok.slice()); if (ok[0] !== s) tk.push(s + ':' + ok.join('/'));
+    }
+    check('M4b touch: the Warhorn kit fires Q ▲Q M2 E ▲E R F V from the wheel', tk.length === 0, tk);
+    await ip.mouse.move(600, 300); await wait(60);
+    // holds: Heater Block while M2 is held; Axe Heavy Strike charge; Orb drain; Crossbow clip + reload
+    const holds = {};
+    await iev(b => __kit(b), KITS.blades); await iev(() => __prep()); await ip.mouse.down({ button: 'right' }); await wait(350);
+    holds.block = await iev(() => !!(G.player.guard && G.player.guard.kind)); await ip.mouse.up({ button: 'right' }); await wait(150); holds.blockEnd = await iev(() => !G.player.guard);
+    await iev(b => __kit(b), KITS.greatarms); await iev(() => __prep()); await ip.mouse.down(); await wait(1400);
+    holds.heavy = await iev(() => +(G.player.holdCharge || 0).toFixed(2)); await ip.mouse.up(); await wait(200);
+    await iev(b => __kit(b), KITS.foci); await iev(() => { __prep(); G.player.mp = G.player.maxMp; window.__mp0 = G.player.mp; }); await ip.mouse.down(); await wait(1500);
+    holds.drain = await iev(() => Math.round(window.__mp0 - G.player.mp)); holds.channel = await iev(() => !!G.player.channel); await ip.mouse.up(); await wait(150);
+    await iev(b => __kit(b), KITS.shots); await iev(() => { __prep(); const p = G.player; p.clip = null; const log = []; for (let k = 0; k < p.clipMax; k++) { p.atkT = 0; p.cast = null; log.push([p.clip, !!p.dash, p.rootT, castActive(p), p.dead, weaponOf(p).id].join(':')); basicAttack(p); } window.__clip = { clip: p.clip, max: p.clipMax, grip: p.grip, reload: +(p.atkT).toFixed(2), log }; });
+    holds.clip = await iev(() => window.__clip);
+    check('M4b holds: Heater Block holds with M2 and ends on release; Axe Heavy Strike charges; Orb channel drains MP; Crossbow + Quiver (Siegeworks) reloads after a clip of 6',
+      holds.block && holds.blockEnd && holds.heavy > 0.3 && (holds.drain > 0 || holds.channel) && holds.clip.max === 6 && holds.clip.grip === 'grip_siegeworks' && holds.clip.clip === 6 && holds.clip.reload >= 0.6, holds);
+    await iev(() => { const p = G.player; p.equip = Object.assign({}, window.__keep.equip); p.level = window.__keep.level; recalcStats(p); deckClamp(p); __prep(); });
     // -- shots: the HUD bar, the bag
     await iev(() => { __prep(); const p = G.player; p.hp = p.maxHp; p.ult = 100; p.cds = { sunslash: 1.4 }; p.cdm = Object.assign(p.cdm || {}, { sunslash: 3 }); G.banner = null; G.msg = null; });
     await ip.mouse.move(600, 300); await wait(400);

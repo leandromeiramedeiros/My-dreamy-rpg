@@ -1,7 +1,7 @@
 # Enemies and bosses
 
 Terms: [../GLOSSARY.md](../GLOSSARY.md). Story and boss lore: [story.md](story.md). Elements: [elements-statuses.md](elements-statuses.md).
-Zones: [world-maps.md](world-maps.md). Targets: [balance.md](balance.md).
+Zones (the client's placement brief): [world-brief.md](world-brief.md). Mockup arenas: [arenas.md](arenas.md). Targets: [balance.md](balance.md).
 
 ## Rules for new enemies
 * A new enemy must add a verb. Palette swaps are banned. A zone variant counts as half an enemy (at most 2 per zone).
@@ -17,6 +17,7 @@ Zones: [world-maps.md](world-maps.md). Targets: [balance.md](balance.md).
 | Death and group | split, zone-on-death, swarm (counts as one for XP and loot) |
 
 ## Commons by zone
+This list is the client's brief for what each zone holds; the studio tests each zone's grammar in its `pack-<zone>` arena.
 * Vale: Dream Moth.
 * Pinewood: Gloom Slime, Shade Hound, Bramble Shaman, Ogre, Thornback Boar, Mountain Troll.
 * Ruins: Wisp, Gloom Knight, Grave Chanter, Pillar Mimic, Shadeling Swarm, Void Archer.
@@ -79,7 +80,7 @@ Mirelle, Kharzul, Morrow), 2 optional (Sorrel's Echo, Unwaking Child). Lore: [st
 * Kharzul takes at most two of Cinderheart's mechanics (never the brazier charge); the rest go to other bosses as cunning forms.
 * Morrow: P1 sword-knight, P2 dream-warp (void tiles), P3 giant form with starfall; Pip's Dawn Burst ends it.
 * Vault bosses are built cheaply from common rows at boss scale with 2 elite modifiers.
-* Death in an inline arena respawns at the nearest shrine and the arena resets.
+* Each boss has one `boss-<id>` mockup arena with the shape it needs; death in an arena respawns at its shrine and the arena resets.
 
 ## Gear loop at the boss door
 * The door shows "Recommended ilvl N, yours M": information, never a lock.

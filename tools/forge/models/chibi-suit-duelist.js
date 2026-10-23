@@ -19,7 +19,7 @@ const matsOf = t => ({ coat: cloth(COAT[t - 1]), cape: cloth(CAPE[t - 1]), plume
 function duelisthelm(t) {
   const M = t === 6, mats = matsOf(t), P = [], stamps = [];
   P.push(...dome('coat', 'hat', { k: 1.05, ky: 1.06 }),
-    { bone: 'head', mat: 'coat', part: 'brim', shape: 'ell', c: [0, 9.4, 1.2], r: [8.2, 0.9, 6.8] });
+    { bone: 'head', mat: 'leather', part: 'brim', shape: 'ell', c: [0, 8.6, 1.0], r: [10.6, 1.0, 8.8] });
   if (t >= 2) P.push(spike('head', 'plume', 'plume', [-4.6, 10.6, -0.4], [-6.4, 14.4, -5.6], 1.6, 0.5));
   if (t >= 3) P.push({ bone: 'head', mat: 'gold', part: 'band', shape: 'ell', c: [0, 10.2, 0.8], r: [6.0, 0.8, 5.4] },
     spike('head', 'plume', 'plume', [-4.6, 10.6, -0.4], [-8.4, 12.4, -4.2], 1.3, 0.5));

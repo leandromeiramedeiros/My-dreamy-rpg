@@ -35,16 +35,29 @@ then `node tools/forge/build.js chibi` (same input gives byte-identical output; 
 then `js/forge-bank/chibi.js` (body + hair) and `js/forge-bank/<line>.t<N>.js` (one file per tier, `FORGE_BANK`, lazily inserted `<script>`)
 then `js/forge-rt.js` (engine copied from forge.js by build.js): `FORGE.sheet(rig, loadout)` once per loadout change, time-sliced over 3 frames, last 6 loadouts cached; `FORGE.frame` per draw
 then render.js `drawPlayer` / `drawEnemy` / `drawNpc`: one `drawImage` per frame.
+The **export stage** runs beside the bank stage: `tools/export/art.js` writes PNG sheets + JSON sidecars + `.gpl` palettes to `handoff/art/`
+(`build.js --split-body` makes the `_front`/`_back` pieces, `--normals` the normal sheets) and `tools/export/embed.js` turns PNGs on disk into the generated
+`js/*.js` the JS build reads. Layout, sidecar and manifest rules: [asset-pipeline.md](asset-pipeline.md).
 * Each unit (body, hair, gear piece) ships as a core sheet (every anim except attacks) plus one atk sheet per weapon class;
   only the equipped HAND class's atk sheet is decoded.
 * Layering at runtime is a depth resolve of baked pieces (nearest layer wins, inner line between parts on a depth jump).
 * Held items keep their own outline (client ruling 2026-10-22, `ownOutline: { weapon, offhand }`): wherever a weapon, shield or companion is in front of another unit, its edge gets the outline colour. Armour, helm and cape do not, so faces stay clean.
 * Budgets (CPU ×4 phone proxy): first full-loadout sheet ≤ 120 ms; cached frame ≤ 0.05 ms; bag paper doll one direction ≤ 12 ms.
 * Size caps per shipped sheet: helm, chest, boots ≤ 64 KB; cape ≤ 36 KB; other pieces ≤ 30 KB. One line bank file per tier ≤ 160 KB. Starter bundle ≤ 400 KB.
-* Sockets exported: handR, handL, head, chest, cast, tip, capeTop, capeHem. Also a 1-bit rim mask with a facing hint (`FORGE.rim`) and a bbox.
+* Sockets exported: handR, handL, head, chest, cast, tip, capeTop, capeHem. Also a 1-bit rim mask with a facing hint (`FORGE.rim`) and a bbox;
+  in the handoff package the rim mask becomes an optional normal sheet ([asset-pipeline.md](asset-pipeline.md)).
 * Approval gate: the client's eye on the chibi board and tier strips (quality bar: the first chibi knight's 5 tiers). Checks: sha256 stable, 0 lone pixels, runtime equals offline byte for byte.
 * Tools: `build.js`, `forge.js`, `tiers.js` (gear-line checks), `tools/forge-rt-check.js`, `icons.js` (24x24 item icons from the same models at a fixed 3/4 pose),
   `board.js`, `preview.html` (dressing room). The `hero` rig is a regression fixture for one milestone; `ref` is retired.
+
+## Tiles and world art
+The studio makes no zone maps; it makes reusable tile and prop assets for the client's Godot build ([asset-pipeline.md](asset-pipeline.md)).
+* Per zone: a blob-47 terrain atlas plus 4 plain variants (ground without speckle), a cliff atlas, a coast skirt and a 4-frame water sheet, 16 px cells.
+* Cliffs: 3-band strata, base occlusion, overhang lip, baked wedge shadows; at least 3 strata and visible thickness on every edge.
+* Coasts: raised north and west band, 3-band skirt (lobes, roots, alpha fade).
+* Hue-shifted 7-step ramps per zone palette. Trees: trunk and canopy as separate PNGs, canopy over the hero with fade; 16 ground-decal kinds per zone.
+* Pixel art props of 24 px or less are hand-written ASCII; larger ones are frozen from procedural code (`tools/freeze*.js`).
+* The ground is rasterised from `js/maps.js` with the noise pinned to a fixed seed; that code stays until the exporter has consumed it.
 
 ## Gear scope
 12 suits x 3 pieces x 6 tiers; 15 weapon lines + 3 shields + 3 companions = 21 lines x 6 tiers. Icons come from the forge.
@@ -63,3 +76,11 @@ then render.js `drawPlayer` / `drawEnemy` / `drawNpc`: one `drawImage` per frame
 * 24x24 hand-shaded in `ICONS.skill`, `item`, `gem`, `misc` and `frame`. Skill icons have an element-coloured frame.
   Item icons show rarity with a frame border, glow and gem dots.
 * Misc icons: potion, Dream Dust, Socket Rune, chest, XP, gold key, shrine, lore tablet.
+
+## Raster art (outside the forge)
+* Client ruling 2026-10-23: the artist (`codex-image` skill) paints raster art **outside the forge only**: the title wordmark,
+  dialogue portraits, splash and key art. Never the hero, gear, enemies, bosses or item icons (those are forge-only).
+* Every raster piece is palette-snapped and shipped at native size (portraits ~44 px, drawn x2 in the 88 px dialogue slot;
+  wordmark 240x52), embedded as data-URI PNGs in `js/art-raster.js` (`RASTER`), so `file://` still works. Sources live in the
+  git-ignored `tools/out/art/`.
+

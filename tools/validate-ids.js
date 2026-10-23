@@ -209,6 +209,14 @@ function main() {
   }
   for (const [from, to] of Object.entries(VARIANT_RENAME || {})) if (!variantRows.some((r) => r.id === to)) fail(F.data, 'VARIANT_RENAME', from, `target "${to}"`);
   for (const id of Object.keys(FAMILY_TIERS || {})) if (!Object.values(ITEMS).some((l) => l.some((f) => f.id === id))) fail(F.items, 'FAMILY_TIERS', id, 'live family in ITEMS');
+  // M4b: every tier base id is unique across all families (and never a trinket base / origin ring id), names never blank
+  const tierSeen = new Map(), trinketSet = new Set([...(get('TRINKET_BASES') || []).map((t) => t.id), ...(get('ORIGIN_RINGS') || []).map((o) => o.id)]);
+  for (const [fam, L] of Object.entries(FAMILY_TIERS || {})) for (const row of L) {
+    const [bid, nm] = String(row).split(':');
+    if (tierSeen.has(bid)) fail(F.items, 'FAMILY_TIERS duplicate base', bid, `${fam} and ${tierSeen.get(bid)}`); else tierSeen.set(bid, fam);
+    if (trinketSet.has(bid)) fail(F.items, 'FAMILY_TIERS base', bid, 'collides with a trinket base / origin ring id');
+    if (nm !== undefined && !nm.trim()) fail(F.items, 'FAMILY_TIERS name', bid, 'non-empty');
+  }
 
   // ---- IMPLICITS and FLAVOR versus base ids (and unique / trinket base / origin ring ids for FLAVOR)
   const trinketIds = [...(TRINKET_BASES || []).map((t) => t.id), ...(ORIGIN_RINGS || []).map((o) => o.id)];
@@ -387,7 +395,7 @@ function main() {
       } else {
         if (!r.action || !r.spell || !r.ult) fail(F.data, 'loadout', w, 'an offhand line has action (M2) + spell (E) + ult (Shift+E)');
         need(w + '.action', r.action); need(w + '.ult', r.ult);
-        if (r.role === 'companion') { if (r.hands !== 0 || !['page', 'arrow'].includes(r.deck)) fail(F.data, 'companion', w, 'hands 0 + deck page | arrow'); }
+        if (r.role === 'companion') { if (r.hands !== 0 || !['page', 'arrow', 'call'].includes(r.deck)) fail(F.data, 'companion', w, 'hands 0 + deck page | arrow | call'); }
         else if (r.role === 'shield') { if (r.hands !== 1) fail(F.data, 'shield', w, 'hands 1'); need(w + '.spell', r.spell); }
         else fail(F.data, 'offhand role', w, `shield | companion (got ${r.role})`);
       }
@@ -408,7 +416,8 @@ function main() {
     if (PAGE_CAP.length !== 6 || PAGE_CAP[0] !== 2 || PAGE_CAP[4] !== 6 || PAGE_CAP.some((n, i) => i && n < PAGE_CAP[i - 1]) || Math.max(...PAGE_CAP) > 6) fail(F.data, 'PAGE_CAP', JSON.stringify(PAGE_CAP), '2..6 by tier, non-decreasing');
     for (const [id, pg] of Object.entries(PAGES)) {
       if (!skillIds.has(id)) fail(F.data, 'PAGES', id, 'SKILLS entry');
-      if (!['page', 'arrow', 'both'].includes(pg.deck)) fail(F.data, 'PAGES', id, `deck page | arrow | both (got ${pg.deck})`);
+      const dk = Array.isArray(pg.deck) ? pg.deck : [pg.deck];   // M4b: one deck, 'both' (page + arrow) or a list of decks
+      if (!dk.length || !dk.every((d) => ['page', 'arrow', 'call', 'both'].includes(d))) fail(F.data, 'PAGES', id, `deck page | arrow | call | both | [list] (got ${pg.deck})`);
     }
     for (const deck of ['page', 'arrow']) {
       const n = Object.values(PAGES).filter((p) => p.deck === deck || p.deck === 'both').length;

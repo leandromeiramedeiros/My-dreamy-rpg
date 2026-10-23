@@ -1,0 +1,118 @@
+{
+ "unit": "buckler.t6",
+ "sheet": "core",
+ "images": {
+  "front": "buckler.t6_front.png",
+  "back": "buckler.t6_back.png"
+ },
+ "layer": "offhand",
+ "zorder": {
+  "S": 46,
+  "SE": 28,
+  "E": 10,
+  "NE": 1,
+  "N": 6,
+  "NW": 42,
+  "W": 48,
+  "SW": 51
+ },
+ "hides": [],
+ "slot": "offhand",
+ "tier": 6,
+ "class": null,
+ "split": {
+  "rule": "front = pixels where body + this unit differs from the body alone; back = this unit's own pixels hidden behind the body",
+  "body_pixels_lost": 0
+ },
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  19,
+  8
+ ],
+ "anims": {
+  "idle": {
+   "from": 0,
+   "count": 6,
+   "ms": [
+    200,
+    200,
+    400,
+    200,
+    200,
+    400
+   ],
+   "loop": true
+  },
+  "walk": {
+   "from": 6,
+   "count": 6,
+   "ms": [
+    100,
+    100,
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": true
+  },
+  "cast": {
+   "from": 12,
+   "count": 4,
+   "ms": [
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  },
+  "dash": {
+   "from": 16,
+   "count": 2,
+   "ms": [
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  },
+  "hit": {
+   "from": 18,
+   "count": 1,
+   "ms": [
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl"
+}

@@ -27,7 +27,7 @@ All bonuses add into one sum per stat, which is multiplied once. Buffs are multi
 
 ## Elder Stone
 Hub object. It tempers, imbues, combines gems, sells one page per zone, brews Dream Oil, re-rolls an Origin once,
-and trades fish ([world-maps.md](world-maps.md)).
+and trades fish ([world-brief.md](world-brief.md)).
 
 ## Modes
 * Normal is the only difficulty. After the ending, NG+ offers: enemies x1.6, Mythic rolls everywhere, corrupted elites,
