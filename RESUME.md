@@ -30,8 +30,10 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
 - Lane worktrees start at origin's default branch: every brief begins with `git merge --ff-only claude/m4b`.
   Director commits each worktree on its branch and merges into claude/m4b; after Gear A + B merge, rerun
   `node tools/forge/build.js chibi` (js/forge-bank/chibi.js is a generated manifest both touch).
-- Usage pace (client, 2026-10-23): **two lanes at a time**. Enemy forge (finish) and Arenas (part 2) run; when one finishes, resume the
-  next paused lane (SendMessage, full scope) in this order: Gear A suits (then rebuild chibi in claude/m4b; knighthelm.t4/t5 219.6 KB > 160 cap to fix).
+- Usage pace (client, 2026-10-23): **two lanes at a time**. Gear A suits (finish) and Arenas (part 2) run; when one finishes, resume the
+  next paused lane (SendMessage, full scope) in this order: Skill visuals (render.js), then wave 3 (Elements in the `verbs` arena, Map cut).
+- Enemy forge merged: 20 rigs at 8 dirs incl. 4 bosses (base + moves rigs); perf p95 18.0 ms. enemyart.js still used by
+  ?oldenemy, a pre-load death pop, editor + fx-board. Open: ruins-bestiary-check gloomknight 25 s vs 20 s target.
 - Skills + data merged: all 15 weapons, 6 offhands, 12 suits (36 pieces), 14 grips live; balsim green (under-trials 96).
   Queued after: Skill visuals lane (render.js): decoy, chakram disc, cracks, frost trail, Fortress dome, consecrate circle,
   new poses, new skill icons, Codex grip tab.
