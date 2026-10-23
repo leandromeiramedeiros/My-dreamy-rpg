@@ -63,3 +63,11 @@ then render.js `drawPlayer` / `drawEnemy` / `drawNpc`: one `drawImage` per frame
 * 24x24 hand-shaded in `ICONS.skill`, `item`, `gem`, `misc` and `frame`. Skill icons have an element-coloured frame.
   Item icons show rarity with a frame border, glow and gem dots.
 * Misc icons: potion, Dream Dust, Socket Rune, chest, XP, gold key, shrine, lore tablet.
+
+## Raster art (outside the forge)
+* Client ruling 2026-10-23: the artist (`codex-image` skill) paints raster art **outside the forge only**: the title wordmark,
+  dialogue portraits, splash and key art. Never the hero, gear, enemies, bosses or item icons (those are forge-only).
+* Every raster piece is palette-snapped and shipped at native size (portraits ~44 px, drawn x2 in the 88 px dialogue slot;
+  wordmark 240x52), embedded as data-URI PNGs in `js/art-raster.js` (`RASTER`), so `file://` still works. Sources live in the
+  git-ignored `tools/out/art/`.
+

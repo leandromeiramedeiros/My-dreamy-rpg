@@ -15,9 +15,8 @@ warp-fade, perf under load.
 | Milestone | State |
 |---|---|
 | M1 foundation, inventory, loot · M2a HUD/input/feel · M2b Act I slice · M3 items v2, hit feel, boss phases, Echo, opening, world art G1–G3, phone perf | **LIVE** |
-| M3 hot-fix: Act I progression bugs, Turbo bot, seeded runs, Story difficulty removed (balance waits for M4a) | in progress |
-| **M4a** foundations on a vertical slice (Vale + Pinewood) | next |
-| **M4b** full content rollout + Act II Ruins + elements in the world | planned |
+| M3 hot-fix · M4a foundations on a vertical slice (Vale + Pinewood) | **LIVE** |
+| **M4b** full content rollout + Act II Ruins + elements in the world | **in progress** (branch `claude/m4b`) |
 | M5 Act III Grotto · M6 Act IV Caldera · M7 Finale Spire + endings + NG+ · M8 polish, timed runs | planned (re-scoped after M4b) |
 
 ## M4a — prove the vision on Vale + Pinewood (~5 weeks, 5 lanes in parallel)
@@ -32,19 +31,23 @@ warp-fade, perf under load.
 Order: Cleanup and Forge start first; Loadout starts when the hot-fix frees game.js; Lighting takes render.js after
 Forge exports rim masks. Gate: the client approves the forge-vs-reference board and plays the slice on desktop and phone.
 
-## M4b — full rollout (~8 weeks)
-| Lane | Model | Acceptance |
-|---|---|---|
-| Gear art A: suits | Sonnet | 12 suits × 3 pieces × 6 tiers, board-approved |
-| Gear art B: weapons, shields, companions | Sonnet | 21 lines × 6 tiers; icons from the forge; rarity FX strip per line |
-| Enemy forge | Sonnet (commons) + Opus (bosses) | 29 commons + 12 bosses at 8 dirs (amorphous/swarm 1); js/enemyart.js retired |
-| Skills content | Opus (new mechanics) + Sonnet (data) + Haiku (names) | 21 lines × 3 skills, ~40 pages/arrows/calls, 14 grips; ≤ 36 new casts; balsim loop green |
-| Act II Ruins | Sonnet (level) | Ruins maps, Broken Stair, 3 verb puzzles, elite pockets; bot clean |
-| Elements in the world | Opus | receivers, object states, ice/grass tiles, Pip's charge, Dream Oil, Opal, world puzzles |
-| Balance + QA | Opus + Haiku | balsim red flags green; `run-big.js` all devices to the end of Act II |
+## M4b — full rollout (lanes run in their own git worktrees; the director merges)
+| Wave | Lane | Model | Owns | Acceptance |
+|---|---|---|---|---|
+| 1 | Raster art embed | Sonnet | js/art-raster.js (new), index.html script tag, hud.js dialogue portrait, screens.js drawTitle, dialogue.js portrait ids | wordmark + 3 portraits drawn crisp at x2; `file://` works; palette-lint green |
+| 1 | Gear art A: suits | Sonnet | tools/forge/models/chibi-suit-*.js, suit loadouts in chibi-gear.js, generated suit line banks | 12 suits × 3 pieces × 6 tiers; tier strips per suit; lint + sha256 stable |
+| 1 | Gear art B: weapons, shields, companions | Sonnet | tools/forge/models/chibi-<line>.js (new lines), the line list in chibi-gear.js, js/icons.js forge icons | 21 lines × 6 tiers; icons from the forge |
+| 1 | Enemy forge | Opus | tools/forge/models/<enemy>.js, ENEMY_RIGS (build.js), render.js forge-enemy block only | every Act I + Ruins enemy and boss at 8 dirs (amorphous 1); enemyart.js unused in play |
+| 1 | Skills + data | Opus | js/data.js, items.js, itemdata.js, game.js (casts), input.js, balsim.js | every line and suit live; 21 lines × 3 skills; pages/arrows/calls; 14 Grips; tier names; balsim parity ±15 % |
+| 1 | Ruins bestiary | Opus | js/enemydata.js, parts.js, bosses.js | 6 Ruins commons + Oathless + Gloam Warden playable in a test arena |
+| 2 | Act II Ruins level | Opus | tools/maps/recipes/ruins.js, generated js/world.js, dialogue.js Ruins lines | Ruins map per world-maps.md; Broken Stair; 3 verb puzzles; bot clean to the end of Act II |
+| 2 | Elements in the world | Opus | js/elements-world.js (new), maps.js hooks, render.js tile hooks | receivers, object states, ice/grass tiles, Pip's charge, Dream Oil, Opal |
+| 3 | Balance + QA | Opus + Haiku | tools/balsim.js, tools/qa/*, perf scenes | balsim red flags green; run-big all devices to the end of Act II; perf p95 ≤ 20 ms on every zone |
+Piece ids: chest = suit id; new heads `<suit>helm`, new boots `<suit>boots`; weapon/shield/companion lines = their variant id.
 Gate: 100 % forge sprites in play; phone p95 ≤ 20 ms on every zone; docs current; ships to Pages.
 
 ## Client rulings (latest first)
+* 2026-10-23 — Raster art board approved: the artist (`codex-image`) paints art outside the forge only (wordmark, dialogue portraits, key art); see visual-bible.md.
 * 2026-10-22 (later) — Hero art pivot: back to the first chibi, fully deterministic forge (volumes only, no hand-drawn parts); SlyNyrd `ref` rig and ref-based gear lines retired; all gear layered at runtime.
 * 2026-10-22 — Loadout v3 "Lead/Support" (no hero skills; everything from equipment); shields offhand-only; 2H + worn
   companion; Grimoire/Quiver/Warhorn decks; R head · F chest · V boots; 32 px hero; 8 dirs for every facing creature;

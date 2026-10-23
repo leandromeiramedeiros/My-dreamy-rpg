@@ -737,6 +737,7 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Die sheet | A unit's hit and death anims in their own sheet | `<unit>.die` | — | M4a |
 | Flat depth | Forge option: one depth value per body part, for smaller banks | `flatDepth` | — | M4a |
 | FORGE_FX | Forge table of tier and rarity effects per item line (geometry per tier, palette, rim light and emitters per rarity) | `FORGE_FX` | — | M4a |
+| Raster art | Painted art outside the forge (wordmark, dialogue portraits, key art), embedded as data-URI PNGs | `js/art-raster.js` (`RASTER`) | forge art | M4b |
 | Lane | One parallel work stream | — | — | live |
 | Milestone | Delivery step: M1 to M8 | — | — | live |
 | `ref` rig | Hero-frame skeleton: 32 px body in a 48 px frame | — | — | M4a |
