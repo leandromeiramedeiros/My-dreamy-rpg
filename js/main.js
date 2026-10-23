@@ -380,6 +380,7 @@ function handleInput() {
   if (G.state === 'title') {
     menuNav();
     if (G.ui.settings) { if (IN.pressed('back') || IN.pressed('pause')) { G.ui.settings = false; used(); return; } }
+    if (G.ui.arenas) { if (IN.pressed('back') || IN.pressed('pause')) { G.ui.arenas = false; used(); return; } }   // the title's ARENAS list (arenas.js)
     if (G.ui.help) { if (IN.pressed('back') || IN.pressed('help') || IN.pressed('pause')) { G.ui.help = false; used(); return; } }   // the title's "?" help (R3 #8)
     if (IN.pressed('accept') || IN.pressed('interact') || (IN.pressed('pause') && IN.device === 'pad' && !G.ui.settings)) { initAudio(); if (!UI.focus.accept()) { if (!G.ui.settings) titleDefault(); } used(); }
     return;
@@ -463,7 +464,7 @@ async function boot() {
   if (PHONE) PART.cap = 300;   // §26.4 step 4: the phone particle cap (game.js pool: 600 on desktop; PART.budget still sheds below it)
   await loadSprites();
   buildArt(); initPost();
-  G.world = loadWorld();
+  G.world = mergeArenas(loadWorld(), PARAMS.get('map'));   // arenas.js: ?map=<arena id> adds that mockup arena to a copy of the world
   for (const id in G.world.maps) THEME_OF[id] = G.world.maps[id].theme;
   buildCustomSprites(G.world.sprites);
   applyTuning(G.world.tuning);
@@ -479,6 +480,7 @@ async function boot() {
   if (scene) showcaseKit(G.player, wf || 'sword');
   else if (wf) { G.player.equip.weapon = makeItem(FAMILY_TIERS[wf][0].split(':')[0], 'common', 1, { sockets: 0 }); recalcStats(G.player, true); }
   if (scene === 'inventory') sampleBag(G.player);
+  { const ar = !scene && G.world.maps[PARAMS.get('map')]; if (ar && ar.loadout) applyArenaKit(G.player, ar.loadout, { weapon: wf, tier: PARAMS.get('tier') }); }   // an arena's reference hero (?weapon= / ?tier= override)
   let start = PARAMS.get('map') || G.world.start;
   if ((scene === 'arena' || scene === 'boss') && G.world.maps.ruins) start = 'ruins';
   if (!G.world.maps[start]) start = Object.keys(G.world.maps)[0];
