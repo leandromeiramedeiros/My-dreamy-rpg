@@ -34,6 +34,8 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
   await idPage.waitForFunction(() => window.__ready === true, null, { timeout: 120000 });
   let ids = await idPage.evaluate(() => arenaIds()); await idPage.close();
   const only = process.argv.slice(2).filter(a => !a.startsWith('-')); if (only.length) ids = ids.filter(i => only.includes(i));
+  // the `verbs` arena needs real element hits: tools/qa/verbs-check.js walks it (run below)
+  const verbs = ids.includes('verbs'); ids = ids.filter(i => i !== 'verbs');
 
   for (const id of ids) {
     const t0 = Date.now(), f0 = fails;
@@ -191,6 +193,11 @@ const check = (name, ok, info) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name
     await page.close();
   }
   await br.close(); srv.close();
+  if (verbs) {
+    const t0 = Date.now(), r = require('child_process').spawnSync(process.execPath, [path.join(__dirname, 'qa', 'verbs-check.js'), '--no-shots'], { stdio: ['ignore', 'pipe', 'inherit'], encoding: 'utf8' });
+    if (r.status !== 0) { fails++; console.log(String(r.stdout || '').split(/\r?\n/).filter(l => /FAIL/.test(l)).join('\n')); }
+    table.push({ id: 'verbs', size: '32x32', level: '-', result: r.status === 0 ? 'PASS' : 'FAIL', s: ((Date.now() - t0) / 1000).toFixed(1) });
+  }
   console.log('\narena        size   lvl  result  time');
   for (const r of table) console.log(`${r.id.padEnd(16)}${r.size.padEnd(7)}${String(r.level).padEnd(5)}${r.result.padEnd(8)}${r.s}s`);
   console.log(`\n${fails ? fails + ' CHECK(S) FAILED' : 'all arena checks passed'}  (shots: ${path.relative(ROOT, SHOTS)}/<id>.png)`);
