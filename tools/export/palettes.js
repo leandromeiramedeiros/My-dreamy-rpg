@@ -39,7 +39,7 @@ function writePalettes(outRoot, zones, forgePal) {
   };
   for (const [k, sw] of Object.entries(mats)) put(`material_${k}.gpl`, gpl(`material ${k}`, sw, 5));
   // ui: the UI colour table's literal in js/ui.js
-  const src = fs.readFileSync(path.join(ROOT, 'js', 'ui.js'), 'utf8'), m = src.match(/const C = Object\.assign\(\{([\s\S]*?)\}, \(ART\(\)[\s\S]*?\{([^}]*)\}\);/);
+  const src = fs.readFileSync(path.join(__dirname, 'lib', 'ui.js'), 'utf8'), m = src.match(/const C = Object\.assign\(\{([\s\S]*?)\}, \(ART\(\)[\s\S]*?\{([^}]*)\}\);/);
   const ui = [];
   for (const part of m ? [m[1], m[2]] : []) for (const [, k, c] of part.matchAll(/(\w+):\s*'(#[0-9a-fA-F]{6})'/g)) ui.push([k, c]);
   put('ui.gpl', gpl('ui (js/ui.js)', ui, 8));

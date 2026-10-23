@@ -22,7 +22,7 @@ Lanes: Forge, Loadout, Lighting, Wind, Gear art (A suits, B weapons), Enemy forg
 | [wind.md](wind.md) | wind field, `WIND.sample`, emitters, push per resistance | Wind, Lighting |
 | [world-brief.md](world-brief.md) | placement brief per zone: sections, pacing, secrets, set pieces, opening timeline; data in `handoff/data/zones.json` | Docs, Arenas (the client builds from it) |
 | [arenas.md](arenas.md) | mockup arenas: ids, sizes, authoring rules, what each asserts | Arenas, Balance and QA |
-| [hud-ui.md](hud-ui.md) | HUD layout, screens, touch wheel, aiming, `js/ui.js` | Loadout (UI), Docs |
+| [hud-ui.md](hud-ui.md) | HUD layout, screens, touch wheel, aiming, `js-final:js/ui.js` | Loadout (UI), Docs |
 | [controls.md](controls.md) | input abstraction, hotkeys on three devices, focus model, accessibility | Loadout, Docs |
 | [audio.md](audio.md) | music motifs, zone palette, engine, SFX recipes, mixing | Audio work, Export |
 | [story.md](story.md) | premise, endings, beat sheet, boss lore and moves, `BOSS_MOVES` | Enemy forge, Docs |

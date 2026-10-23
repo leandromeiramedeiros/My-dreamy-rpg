@@ -50,6 +50,6 @@ A Legendary weapon unique rolled on the finder's own weapon variant. The rule re
   MP bar shimmer. Phone: tint only. See [audio.md](audio.md).
 * Engineering: every real-time timer is audited. Saves never store Hush as active. Pause freezes both clocks.
 * Balance gate: at most +20% boss-fight DPS in balsim.
-* Tests (`tools/play.js`): enemy 0.25x, elite 0.375x, boss 0.5x, hero unchanged; MP -30 then -60/s, ends at 0 MP, cooldown 3 s;
+* Tests (`js-final:tools/play.js`): enemy 0.25x, elite 0.375x, boss 0.5x, hero unchanged; MP -30 then -60/s, ends at 0 MP, cooldown 3 s;
   a hero projectile slows once it leaves the hand; Dreamveil + Hush = 0.25, not 0.0875; a wind phase and a DoT tick advance
   at 0.25x; boss-death slow-mo ends Hush.

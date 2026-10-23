@@ -37,7 +37,7 @@ Boss music is vertical layers in sync: A pad and bass (phase 1), B percussion (o
 Phase changes crossfade stems on the next bar with `stinger('phase')` on the beat. Each guardian has its own key and a 1-bar signature rhythm.
 Morrow's fight is the lullaby itself, with stem D becoming Pip's theme at the sacrifice.
 
-## Engine (`js/audio.js`, `js/music.js`, `js/sfxdata.js`)
+## Engine (`js-final:js/audio.js`, `js-final:js/music.js`, `js-final:js/sfxdata.js`)
 * Clock: a scheduler every 25 ms with 120 ms lookahead on `AC.currentTime` (200 ms on phones). Notes are never timed with `setTimeout` or rAF.
   Global tempo and bar position, so stingers and transitions quantize to beat or bar.
 * Data: `MUSIC = { zone: { bpm, key, bars, layers: { pad, bass, lead, perc, extra }, intensity } }`. A pattern is one string per 16-step bar

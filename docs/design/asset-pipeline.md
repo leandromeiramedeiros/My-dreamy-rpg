@@ -80,7 +80,7 @@ Per zone, 32x16 isometric diamond cells (Godot TileSet shape Isometric), rasteri
 * `tools/export/audio.js` renders every motif, zone loop and SFX recipe through `OfflineAudioContext` to `handoff/audio/*.ogg`
   plus `sfx.json` (recipe, bus, pan rule). Source: [audio.md](audio.md).
 * `tools/export/data.js` emits `handoff/data/*.json` and `.csv` one way from the JS tables. The JS stays the source of truth;
-  `tools/validate-ids.js` checks the export round-trips every id.
+  `js-final:tools/validate-ids.js` checked the export round-trips every id (web build, retired).
 
 ## Naming and tree
 snake_case ids equal the game ids (`validate-ids` checks them).
@@ -93,9 +93,7 @@ snake_case ids equal the game ids (`validate-ids` checks them).
 * After handoff the client edits PNGs freely (the manifest protects hand edits); the forge is a tool in the package he may rerun, piece by piece.
 
 ## Embed step
-`file://` taints a canvas fed by an `<img>` PNG, so every pixel-read asset ships to the JS build as a data-URI inside a classic script.
-`tools/export/embed.js` (folds in `tools/freeze.js` and `tools/raster-embed.js`) turns the PNG files on disk into generated `js/*.js`
-(`js/art-raster.js` today), so the JS build and Godot read the same files.
+Retired with the web build: the data-URI embed step (`js-final:tools/freeze.js`, `js-final:tools/raster-embed.js`, generated `js-final:js/art-raster.js`). Godot reads the PNG files in `handoff/art/` directly.
 
 ## Determinism
 The forge gate stays: sha256 stable, 0 lone pixels, runtime equals offline byte for byte. The Dressing room stays.

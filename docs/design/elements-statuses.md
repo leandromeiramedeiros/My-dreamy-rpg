@@ -1,6 +1,6 @@
 # Elements, statuses, reactions, world verbs
 
-Terms: [../GLOSSARY.md](../GLOSSARY.md). Code: `js/status.js`. Looks: [lighting-status-fx.md](lighting-status-fx.md). Wind: [wind.md](wind.md).
+Terms: [../GLOSSARY.md](../GLOSSARY.md). Code: `js-final:js/status.js`. Looks: [lighting-status-fx.md](lighting-status-fx.md). Wind: [wind.md](wind.md).
 
 ## Elements
 Nine hero elements: slash, pierce, fire, frost, lightning, nature, arcane, holy, wind (story name Breath; short tag `Wi`).
@@ -51,7 +51,7 @@ Shatter, Wildfire, Conduct, Overload, Purify, Rupture, Detonate, Drift. Each has
 ## Wiring
 * Radiant gems, per-element Dream Oil (60 s coat, build x0.3; made at the Elder Stone for Dust), the Opal and consumables.
   Gems: [items.md](items.md).
-* Dream Oil (`DREAM_OIL` in `js/itemdata.js`, `buyOil` in `js/items.js`): bought oil coats at once (`p.oil = {el, until}`);
+* Dream Oil (`DREAM_OIL` in `js-final:js/itemdata.js`, `buyOil` in `js-final:js/items.js`): bought oil coats at once (`p.oil = {el, until}`);
   there is no carried stock until the Stone panel and the Belt (M5). The Elder Stone object cycles its `oils` on Interact.
   Basic hits only. A coat adds its element to world hits at w 0.3, and runs a small ladder on enemies:
   25 x 0.3 per hit, tier 1 at 50, decay 20/s after 1.5 s.
@@ -68,7 +68,7 @@ Shatter, Wildfire, Conduct, Overload, Purify, Rupture, Detonate, Drift. Each has
   Arenas never save (SAVE_ON is off there); lasting states will use that key when the map path saves them.
 
 ## World verbs
-Code: `js/elements-world.js` (`EW`), art in `js/render.js` (`verbArt`, `drawPatches`). Test: `tools/qa/verbs-check.js`.
+Code: `js-final:js/elements-world.js` (`EW`), art in `js-final:js/render.js` (`verbArt`, `drawPatches`). Test: `js-final:tools/qa/verbs-check.js`.
 * Receivers: `el:{accept, build, oil}`, hit through `hitReceivers(x, y, r, el, w)`. States change with `setState`.
   Conditions: `object_state`, `element_hit`. Tile patches: `tilePatch{tiles, life}` with `dirtyChunk` (at most 4 chunks).
 * The `RX` table holds, per type and per state: `el` (what it accepts and the build it needs), `to`, `life` and `back`

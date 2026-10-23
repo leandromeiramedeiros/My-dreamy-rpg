@@ -10,7 +10,7 @@
 //   B  resolve: any stack of G-buffers -> RGBA: nearest layer wins per pixel, a dark line where one part sits in front of
 //      another, stray-pixel cleanup, palette lookup (a tier or rarity = a palette swap), outline.
 // render() = A for every layer of a loadout + B. compose() runs B on baked sheets, so the game's composite of a loadout
-// equals the offline render pixel for pixel. The game runs B from js/forge-rt.js: build.js copies the <rt> blocks below
+// equals the offline render pixel for pixel. The game runs B from tools/forge/runtime/forge-rt.js: build.js copies the <rt> blocks below
 // into it (tools/forge-rt-check.js checks they match and that the browser's frames equal render()).
 //
 //   FORGE.render(model, { dir, anim, frame, pieces })  -> { w, h, rgba, sockets, anim }
@@ -433,7 +433,7 @@ const FORGE = (function () {
     return G;
   }
 
-  // <rt> (this block and the other <rt> blocks are copied into js/forge-rt.js by build.js: the game runs this same code)
+  // <rt> (this block and the other <rt> blocks are copied into tools/forge/runtime/forge-rt.js by build.js: the game runs this same code)
   // ---- stage B: resolve a stack of G-buffers ---------------------------------------------------------------------
   // The stack is gathered into per-pixel winners (nearest layer wins; a later layer wins a tie), then cleaned up inside
   // the covered bounding box only. All scratch arrays are reused (no allocation per frame: the runtime composes a whole

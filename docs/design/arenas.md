@@ -4,12 +4,12 @@ Terms: [../GLOSSARY.md](../GLOSSARY.md). The studio makes no zones; every system
 The client's zones: [world-brief.md](world-brief.md). Ship gate: [balance.md](balance.md). Budgets: [lighting-status-fx.md](lighting-status-fx.md).
 
 ## What an arena is
-* One hand-written file `js/arenas.js` (`ARENAS`): map records of the same shape the engine always loaded, each at most 32x32:
+* One hand-written file `js-final:js/arenas.js` (`ARENAS`): map records of the same shape the engine always loaded, each at most 32x32:
   ASCII tile rows, an object list, a trigger list, and a `theme` (a zone id, for palette and lighting). No generator.
 * Reached from the title screen "Arena" list and by `?map=<arena id>`. The same engine runs it: every trigger action and the inline
   arena (`G.arena`: gates, pillars, never-sleep) work unchanged.
 * The arena build is the playable reference; GitHub Pages shows the Arena list until handoff and comes down then. The JS build stays in the repo.
-* The Arenas lane owns `js/arenas.js`, `tools/arena-route.js` and `tools/qa/run-arenas.js`.
+* The Arenas lane owns `js-final:js/arenas.js`, `js-final:tools/arena-route.js` and `js-final:tools/qa/run-arenas.js`.
 
 ## The arenas
 | Arena id | Size | Tests |
@@ -36,7 +36,7 @@ The client's zones: [world-brief.md](world-brief.md). Ship gate: [balance.md](ba
 * Every arena has a `theme` so palette and lighting are tested in the look the client will see.
 * Keep a record readable in a diff: no row wider than 32 characters, no more than about 40 objects (`stress` excepted).
 
-## What each arena asserts (`tools/arena-route.js`)
+## What each arena asserts (`js-final:tools/arena-route.js`)
 The route enters every arena, fires every trigger card, clears every pack, kills every boss with the fairness asserts, and saves
 screenshots to `tools/shots/arenas/`.
 * `dummies`: damage numbers show WEAK, RESIST and IMMUNE per archetype; every weapon class hits a dummy at 2, 4 and 8 tiles.
@@ -45,14 +45,14 @@ screenshots to `tools/shots/arenas/`.
 * `boss-<id>`: wind-ups of at least 0.55 to 0.6 s (`bossFairness`), no unwarned lethal hit, phases fire at their HP bars, the loot drops,
   the arena resets on death, a screenshot per telegraph.
 * `verbs`: each Receiver reacts to its element once and only once; Tile patches expire; a source exists within 20 tiles of every puzzle.
-  Checked by `tools/qa/verbs-check.js` (arena-route has no walk for it: the cards need element hits, not a teleport).
-* `stress`: phone p95 at most 20.0 ms, desktop at most 16.7 ms (`tools/perf.js`).
+  Checked by `js-final:tools/qa/verbs-check.js` (arena-route has no walk for it: the cards need element hits, not a teleport).
+* `stress`: phone p95 at most 20.0 ms, desktop at most 16.7 ms (`js-final:tools/perf.js`).
 * `touch`: the wheel, aim modes and pockets work; the chest, dialogue and shrine are reachable by thumb.
 
 ## The Bot in arenas
-`tools/qa/run-arenas.js kbm|pad|touch` fights each `pack-*` and `boss-*` with reference gear per band. `--god` stays blocker-only.
+`js-final:tools/qa/run-arenas.js kbm|pad|touch` fights each `pack-*` and `boss-*` with reference gear per band. `--god` stays blocker-only.
 Targets: Bot wins 6 of 6 at reference gear and 3 to 4 of 6 one tier lower ([balance.md](balance.md)).
 
 ## Saves
 An unknown map id or checkpoint in a save goes to the `dummies` arena start. Fog and trigger state of a missing map are dropped.
-`tools/save-migrate.js` carries a Vale and Pinewood save fixture that proves it.
+`js-final:tools/save-migrate.js` carries a Vale and Pinewood save fixture that proves it.

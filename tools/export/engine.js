@@ -1,5 +1,5 @@
 'use strict';
-// tools/export/engine.js -- the game's own pure code (js/util.js + js/maps.js) loaded headless in a node vm, so the exporters
+// tools/export/engine.js -- the game's own pure code (lib/util.js + lib/maps.js, copied from the retired web build, tag js-final) loaded headless in a node vm, so the exporters
 // rasterise with the engine's ramps, themes and ground grammar (no DOM: ImageData and makeCanvas are stubbed; a "canvas" is
 // just { width, height, img }). Usage: const E = require('./engine.js')(); E.THEMES, E.rasterRect(...), E.topColor(...).
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -13,7 +13,7 @@ function canvasStub() {
 function makeEngine() {
   const ctx = { ImageData, console, location: { search: '' }, document: { createElement: canvasStub } };
   vm.createContext(ctx);
-  for (const f of ['util.js', 'maps.js']) vm.runInContext(fs.readFileSync(path.join(ROOT, 'js', f), 'utf8'), ctx, { filename: f });
+  for (const f of ['util.js', 'maps.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, 'lib', f), 'utf8'), ctx, { filename: f });
   // top-level const / class bindings live in the script scope: lift the ones the exporters need onto the context
   const consts = ['THEMES', 'TPRI', 'N8', 'SLAB', 'ZS', 'TILE_TYPES', 'BAYER2'];
   vm.runInContext(`globalThis.__E = { ${consts.map(n => `${n}: typeof ${n} !== 'undefined' ? ${n} : undefined`).join(', ')},

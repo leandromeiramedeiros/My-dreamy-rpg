@@ -5,7 +5,7 @@ Ruling and reasons: [meetings/2026-10-23-godot-handoff.md](meetings/2026-10-23-g
 
 The studio ships the game minus the world (systems, tables, sprites, audio) tested in mockup arenas ([design/arenas.md](design/arenas.md)).
 The studio ports the game code to GDScript in **M10** ([PRODUCTION.md](PRODUCTION.md)) into a playable project in `godot/`; this file is that port's contract.
-The client builds every zone in Godot ([design/world-brief.md](design/world-brief.md)) in `godot/zones/`. The JS build is the reference implementation until M10 ships.
+The client builds every zone in Godot ([design/world-brief.md](design/world-brief.md)) in `godot/zones/`. The JS build (tag `js-final`) is the reference implementation until M10 ships.
 
 ## Engine and settings
 * Godot **4.7.2**, **GDScript**. The client wants **web (HTML5) builds**, which rules out C# (no supported web export in Godot 4). Renderer: Compatibility (web and phone).
@@ -13,7 +13,7 @@ The client builds every zone in Godot ([design/world-brief.md](design/world-brie
   Godot `Resource`s (`res://data/**/*.tres`) seeded once from the JSON export and then edited in the Inspector and the Data table dock
   (editor-first authoring, [PRODUCTION.md](PRODUCTION.md) M10).
   Zone content lives in `res://data/zones.json` ([design/world-brief.md](design/world-brief.md)).
-* The GitHub Pages build comes down at handoff. The JS build stays in the repo as the reference implementation only.
+* The GitHub Pages build comes down at handoff. The JS build is retired from the tree (tag `js-final`, reference checkout `.claude/worktrees/js-reference`) and stays the reference implementation only.
 * Viewport 480x270, window stretch mode `canvas_items`, aspect `keep`, nearest-neighbour filtering, integer scale. The HUD is 960x540.
 * 60 fps. Particle hard cap about 600. Phone p95 at most 20.0 ms, desktop 16.7 ms ([design/lighting-status-fx.md](design/lighting-status-fx.md)).
 
@@ -24,7 +24,7 @@ res://data/       *.json from handoff/data/
 res://audio/      OGG + sfx.json
 res://scenes/{hero,enemies,bosses,props,triggers,ui}
 res://zones/<zone>/   the client's maps (no studio lane touches them)
-res://arenas/     the studio's mockup arenas (same ids as js/arenas.js)
+res://arenas/     the studio's mockup arenas (same ids as js-final:js/arenas.js)
 res://scripts/{autoload,systems,ai,boss}
 ```
 
