@@ -102,6 +102,12 @@ Gate: golden vectors match; balsim parity ±2 % between JS and Godot; the Godot 
 web export runs with 0 errors (no web or phone perf target, client ruling); desktop p95 ≤ 16.7 ms on `stress`; the client plays the arenas in Godot (desktop + phone web) and approves.
 
 ## Client rulings (latest first)
+* 2026-10-23 — **Equip look = Terraria + "Weapons Out", in 8 directions.** Every worn piece is its own layer on the hero
+  at runtime (head, chest, legs/boots, cape, trinkets); the held weapon and offhand are always visible (idle, walk, attack),
+  drawn as one item sprite attached to the hand socket and rotated per frame by the socket angle (swing, thrust, aim),
+  sheathed/carried poses per weapon class. A new weapon = one sprite + a grip point + a swing style in its ItemData.
+* 2026-10-23 — **Hero base model: hands off.** The base reads off for a female hero; the client has plans. Don't change it.
+* 2026-10-23 — **Game title "Karea's Dream"; the hero Aerin is renamed Karea.** New private repo `Kareas-Dream`, fresh history; this repo archived.
 * 2026-10-23 — **Port to Godot now; delete the web build.** No arenas-only web version. The studio works in Godot from now on; arenas only for testing; every other map is the client's.
 * 2026-10-23 — **Scope change.** The client runs the Godot side: he builds every map and expands the story. The game runs
   7 to 10 hours, early game to late game, following the story (two endings, NG+). The studio focuses on items, effects,
