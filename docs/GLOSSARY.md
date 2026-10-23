@@ -4,7 +4,7 @@ Purpose: one name per thing, for every conversation, doc, commit and line of UI 
 **Rule: use the Term column exactly. Names in "Not" are wrong or retired; correct them to the Term.**
 
 Precedence: client rulings and `docs/meetings/2026-10-22-studio-experts.md` > code display names and ids > other docs.
-Status: **live** (in the build now) · **M4a** (vertical slice: Vale + Pinewood) · **M4b** (full rollout) · **later** (no milestone assigned) · **retired** (final table only).
+Status: **live** (in the build now) · **M4a** (vertical slice: Vale + Pinewood) · **M4b** (full rollout) · **client** (the client's build, in Godot) · **later** (no milestone assigned) · **retired** (final table only).
 A dash in "Code id" means no code id yet. Retired terms live only in the last section.
 
 ## 1. Controls and hotkeys
@@ -638,7 +638,6 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 ## 16. Maps, zones, sections and set pieces
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
-| Big map | One of the eight zone maps | — | — | live |
 | Bramblehorn's Clearing | Boss arena in Pinewood | — | — | live |
 | Brazier | Lightable world object | — | — | live |
 | Broken Stair | Ruins set piece | — | — | M4b |
@@ -646,7 +645,7 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Dream Arena | Vale section reached by bridge | — | — | live |
 | Dreamer's bed | Start shrine in the Vale | — | — | live |
 | Dreamer's Cairn | Tall Vale stack, levels 4, 9, 14 | — | — | live |
-| Drifting Isles | Eighth big map | — | — | later |
+| Drifting Isles | Eighth zone, optional | — | — | later |
 | Drop-down ledge | One-way ledge you step off to a lower level | — | — | live |
 | Drowned Vault | Vault section | — | — | later |
 | Elite pocket | A small elite encounter (2 to 3 per map near the boss) that guarantees a Rare of at least boss ilvl minus 2 on first clear | — | — | M4b |
@@ -655,23 +654,25 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Gloomspire Ruins | Zone 3; Act II | — | — | M4b |
 | Hawk's Rest | Pinewood vantage, height 16 | — | — | live |
 | Misty Pinewood | Zone 2; Act I | — | — | live |
+| Mockup arena | Hand-written test map of at most 32x32 tiles in which the studio tests systems, enemies and bosses; the studio makes no zone maps | `js/arenas.js` (`ARENAS`) | test map; arena map | M4b |
 | Moon Pond | Vale section behind a key gate | — | — | live |
 | Morrow's Throne | Final map | — | — | later |
 | Pip's Lanterns | Vale bridge section | — | — | live |
+| Placement brief | Per-zone checklist for the client: sections, hooks, pacing numbers, encounter slots, secrets, set pieces, signature moment (no coordinates); data in `zones.json` | `docs/design/world-brief.md`, `handoff/data/zones.json` | level design; map spec | M4b |
 | Rift | Portal between maps; `home` and `next` | `home` `next` | Portal; Warp door (different term) | live |
-| Rim Walk | Set piece | — | — | later |
+| Rim Walk | Set piece | — | — | client |
 | Root Hollow | Pinewood vault section; Mossjaw's den | `rootHollow` | — | live |
 | Root ladder | Ladder object that climbs between levels | — | — | live |
-| Section | Named part of a big map (outer, under, vault, arena) | — | — | live |
+| Section | Named part of a zone (outer, under, vault, arena) | — | — | live |
 | Set piece | Tall hand-built landmark or vantage | — | — | live |
 | Sleepless Spire | Zone 6 | — | — | later |
 | Stone's Crown | Vale summit | — | — | live |
 | Sunken Grotto | Zone 4 | — | — | later |
-| Tide Well | Set piece | — | — | later |
+| Tide Well | Set piece | — | — | client |
 | Vantage | A high viewpoint set piece, e.g. Hawk's Rest | `vantage` | — | live |
 | Warden Crypt | Vault section | — | — | M4b |
 | Whispering Vale | Zone 1, the hub | — | — | live |
-| Zone | One big map of the world | — | — | live |
+| Zone | One of the eight areas of the world; the client builds each in Godot | — | Big map (retired) | live |
 
 ## 17. World objects and verbs
 | Term | Meaning | Code id | Not | Status |
@@ -745,21 +746,31 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Rim mask | Forge export: an 8-way outward-normal mask per sprite that the runtime tints by the dominant light | — | — | M4a |
 | Save version | Save format: v4 live, v5 with Loadout v3 | `SAVE_VERSION` | — | live |
 | Side-by-side board | Reference vs forge approval board (M4a gate) | — | — | M4a |
-| Slice (vertical) | M4a scope: Vale and Pinewood | — | — | M4a |
 | Socket (forge) | Attachment point on the rig: handR, handL, head, chest, cast, weaponTip, offhandTip | — | — | M4a |
 | Wind field | Runtime wind: `WIND.sample`, emitters (vector, radial, pull, blast, zone) | `js/wind.js` | — | M4a |
+| Handoff package | The folder of everything the studio delivers for the client's Godot port: art, tiles, data, audio, docs | `handoff/` | export folder | M4b |
+| Sidecar | JSON beside each sheet PNG: cell, origin, dirs, anims, sockets, layer, zorder, palette | `<sheet>.json` | metadata file | M4b |
+| Terrain set | Godot TileSet terrain ("Match Corners and Sides") filled from a blob-47 template | `terrain_<name>.png` | autotile | M4b |
+| Blob-47 template | The standard 12x4 layout of the 47 neighbour configurations of a terrain, plus 4 plain variants | `blob47` | wang tileset | M4b |
+| Depth split | A gear piece exported as two sheets, drawn under and over the body | `_front` `_back` | layer split | M4b |
+| Export manifest | Per-file sha256 list; a file whose hash differs was hand-edited and is skipped on rerun | `handoff/art/manifest.json` | export log | M4b |
+| Godot pivot | Client ruling 2026-10-23: the studio makes no maps; the client builds every zone and ports the game to Godot | — | Godot port-ready rules (dropped, now reversed) | M4b |
 
 ## 20. Retired terms
 | Retired term | Replaced by | Code id | Retired by | Status |
 |---|---|---|---|---|
+| Big map | Zone (the client builds it in Godot) | — | Godot pivot 2026-10-23 | retired |
 | Changeover | removed (OFFHAND is the second weapon) | — | meeting 4.6 | retired |
 | Character skills 1 / 2 / 3 | Pages (re-homed casts) | `CHAR_SKILLS` | meeting 4.6 | retired |
 | Dream Tomes | removed (pages replace them) | — | meeting 4.6 | retired |
+| Dreamy Editor | removed; the client builds zones in Godot (`editor.html`, `js/editor.js` deleted) | — | Godot pivot 2026-10-23 | retired |
 | HUD skill bar (old) | Skill bar (4 groups of 3) | — | meeting 4.7 | retired |
+| Level lane | Arenas lane (mockup arenas) and Export lane (tiles); Docs lane (placement brief) | — | Godot pivot 2026-10-23 | retired |
 | Modifier slots | removed (second form replaces them) | — | meeting 4.5 | retired |
 | Potion slot | Pockets | `potion` | meeting 4.6 | retired |
 | Q / E / R rune alternates | Pages | — | meeting 4.6 | retired |
 | Shift dodge | Boots key (V) | `dodge` | client ruling 1 | retired |
+| Slice (vertical) | Mockup arenas (the M4a Vale and Pinewood scope is gone with the Act I maps) | — | Godot pivot 2026-10-23 | retired |
 | Spellbook (hand weapon) | Grimoire (companion); Wand takes the Foci 1H seat | `spellbook` | meeting 4.3 | retired |
 | Two weapon slots | HAND and OFFHAND | — | meeting 4.6 | retired |
 | Story difficulty | Removed; Normal is the only difficulty | `difficulty` | client 2026-10-22 | retired |

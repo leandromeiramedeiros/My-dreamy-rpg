@@ -1,6 +1,6 @@
 # Story and bosses
 
-Terms: [../GLOSSARY.md](../GLOSSARY.md). Boss rules, phases and fairness: [enemies-bosses.md](enemies-bosses.md). Maps: [world-maps.md](world-maps.md).
+Terms: [../GLOSSARY.md](../GLOSSARY.md). Boss rules, phases and fairness: [enemies-bosses.md](enemies-bosses.md). Zones: [world-brief.md](world-brief.md).
 
 ## Premise
 **Morrow** was the first Dreamwarden. When his daughter **Aerin** died in the waking world, he refused to wake and
@@ -27,6 +27,7 @@ quest done):** you carry the Moonmaw's pearl into the finale; Morrow wakes and A
 * Elder Stone: riddling, speaks of itself in the third person.
 
 ## Beat sheet
+The studio ships these lines and quests as data; where they fire is the client's placement ([world-brief.md](world-brief.md)). Beats keep their zone headings.
 **Vale**
 * Banner: "Whispering Vale: a dream drifting above the clouds."
 * Pip, waking you: "Up. You were sleeping like you meant it."
@@ -117,7 +118,7 @@ everything plus a phase that changes the rules. Every wind-up is at least 0.6 s.
   and **the Unwaking Child** (Gloaming Below, L40, gloom; three stolen guardian moves per phase; Mythic chance).
 
 ## BOSS_MOVES library
-Bosses are data in `world.js` built from one move library. Common parameters: `wind` (telegraph s), `dmg`, `el`, `stagger`, `col`.
+Bosses are data (`bosses.js`) built from one move library. Common parameters: `wind` (telegraph s), `dmg`, `el`, `stagger`, `col`.
 * cone (arc, r); circle (r, at self or player); line (len, w); charge (len, speed, hitOnce); volley (n, rings, spiral, speed); rain (count, r, spread);
   ring (expanding r0 to r1, speed); beam (len, rotate, dur); pull (r, force); summon (type, n, pattern); zone (lava, void or slow; cells, life); arenaShrink (pattern id);
   blink (behind or random); mirror (n images); shield (arc, dur); vanish (dur); roar (banner, dur); sequence (list, gaps); random (weights).

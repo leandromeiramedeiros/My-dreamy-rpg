@@ -49,6 +49,7 @@ Each fails the gate.
 * Hush adds at most 20% boss-fight DPS; Echo adds 25 to 30% for an element-focused build ([combat-feel.md](combat-feel.md)).
 
 ## Ship gate
-`node tools/check.js` runs: smoke, `tools/play.js`, `tools/act1-route.js`, `tools/validate-ids.js`, `tools/maps/engine-check.js`,
-`tools/perf.js` and `tools/qa/run-big.js kbm all`.
-Perf budgets: phone p95 at most 20.0 ms, desktop at most 16.7 ms.
+`node tools/check.js` runs: smoke (balsim + save-migrate), `tools/play.js`, `tools/arena-route.js`, `tools/validate-ids.js` (including the data-export round trip),
+`tools/perf.js` and `tools/qa/run-arenas.js kbm|pad|touch`. Arenas: [arenas.md](arenas.md).
+Perf budgets, measured on the `stress` arena: phone p95 at most 20.0 ms, desktop at most 16.7 ms.
+The Bot fights each `pack-*` and `boss-*` arena with reference gear per band; `--god` stays blocker-only.
