@@ -7,6 +7,7 @@ Rows marked **planned** do not exist yet; the Export lane creates them. `handoff
 during the studio's milestones (a file whose hash differs from `art/manifest.json` is skipped on rerun; `--force` overwrites).
 After handoff, edit freely: the client edits sprites, gear, tiles and props by hand (how-to: [asset-pipeline.md](../docs/design/asset-pipeline.md)). Target: Godot 4.7.2, GDScript, web builds.
 GitHub Pages comes down at handoff; the JS build stays in the repo as the reference only.
+In M10 the studio ports the game code to GDScript: `godot/` becomes the playable Godot project, built from this package.
 
 | Path | Contents | Status |
 |---|---|---|

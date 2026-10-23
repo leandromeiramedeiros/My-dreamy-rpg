@@ -5,7 +5,8 @@ A milestone ships when its PR merges there.
 
 Design source: `docs/design/INDEX.md` (one lean file per system). M4 vision: `docs/meetings/2026-10-22-studio-experts.md`.
 **Godot pivot (2026-10-23):** the studio builds the game minus the world (systems, tables, sprites, audio), tested in
-mockup arenas; the client builds every zone in Godot. Deliverable: the `handoff/` package + the JS reference build.
+mockup arenas; the client builds every zone in Godot. Deliverable: the `handoff/` package + the JS reference build,
+then (M10) the studio ports the game code to GDScript: a playable Godot project in `godot/`, where the client builds his zones.
 Plan: `docs/meetings/2026-10-23-godot-handoff.md`. Act I maps tagged `maps-pre-godot`, then removed.
 
 ## Ship gate
@@ -21,7 +22,8 @@ Known flakes: play.js warp-fade, perf under load.
 | M1 foundation, inventory, loot · M2a HUD/input/feel · M2b Act I slice · M3 items v2, hit feel, boss phases, Echo, opening, world art G1–G3, phone perf | **LIVE** |
 | M3 hot-fix · M4a foundations on a vertical slice (Vale + Pinewood) | **LIVE** |
 | **M4b Arena cut** — wave 1 content (gear, enemy forge, skills, Ruins bestiary), mockup arenas, tile/prop export start, map deletes, docs | **in progress** (branch `claude/m4b`) |
-| M5 Systems + Godot import proof · M6 Bestiary · M7 Bosses · M8 UI, audio, feel · M9 Export and handoff | planned (minutes §6) |
+| M5 Systems + Godot import proof + port spike · M6 Bestiary · M7 Bosses · M8 UI, audio, feel · M9 Export and handoff | planned (minutes §6) |
+| **M10 Godot port** — the studio rewrites the game code in GDScript; a playable Godot 4.7.2 project (`godot/`), web build | planned (see below) |
 
 ## M4a — prove the vision on Vale + Pinewood (~5 weeks, 5 lanes in parallel)
 | Lane | Model | Owns | Acceptance |
@@ -52,7 +54,32 @@ Forge exports rim masks. Gate: the client approves the forge-vs-reference board 
 Piece ids: chest = suit id; new heads `<suit>helm`, new boots `<suit>boots`; weapon/shield/companion lines = their variant id.
 Gate: check.js green on arenas; 100 % forge sprites; phone p95 ≤ 20 ms on `stress`; Pages shows the Arena list.
 
+## M10 — Godot port (client ruling 2026-10-23; ~5 to 7 weeks, lanes in worktrees)
+The studio rewrites the game code in GDScript and hands the client a **playable Godot project** (`godot/`, Godot 4.7.2,
+GL Compatibility, web export). Contract: `docs/PORTING.md` (folder tree, autoloads, what ports 1:1, trigger vocabulary).
+* **When:** after M9. Systems, tables and art are frozen by then, so nothing is ported twice. The risk is found early by the
+  **port spike** in M5: hero movement, one weapon line's hand action and spell, damage and one status ladder, one enemy
+  (Ogre) in `godot-sample/`, matched against golden vectors from the JS build.
+* **Data, not code:** every number is read from the exported JSON (`handoff/data/`); GDScript holds only the maths.
+* **Arenas only:** the studio rebuilds the mockup arenas as Godot scenes (`godot/arenas/`, the same ids as `js/arenas.js`)
+  to test the port. It never makes zones: the client builds them in `godot/zones/`, which no lane touches.
+* **After M10** the Godot project is the game: the JS build freezes as the reference, and later gameplay work happens in GDScript.
+
+| Lane | Model | Owns | Acceptance |
+|---|---|---|---|
+| Core | Opus | autoloads `Data`, `Save` (v6 + migrate), `Game`; project settings; scene tree | loads every `handoff/data` table; save round-trip with JS fixtures |
+| Combat | Opus | hero, Loadout v3, casts, `Effects`, `Status` (ladders, 8 reactions), elements in the world, `Wind` | golden vectors from the JS build match (damage, builds, reactions, EFFECTS rows) |
+| Bestiary + bosses | Opus | enemy parts state machine, elites, bosses (`BOSS_MOVES` as Resources) | Godot bot clears every `pack-*` and `boss-*` arena per band |
+| Render + feel | Opus | layered `AnimatedSprite2D` hero, `Light2D` + normal sheets, rim shader, VFX, hit feel | 8 dirs × every anim; p95 ≤ 20 ms on `stress` in the web build |
+| UI + input | Sonnet | HUD, every menu, touch wheel, pad, rebind | the play.js UI checks ported; kbm, pad and touch route |
+| Audio | Sonnet | `Audio` autoload, buses, music director, `handoff/audio/*.ogg` | every SFX and motif fires |
+| Arenas + QA | Sonnet | `godot/arenas/*.tscn`, headless GDScript test runner, `check.js` step `godot` | every arena loads; the suite runs headless |
+
+Gate: golden vectors match; balsim parity ±2 % between JS and Godot; the Godot bot wins every arena it wins in JS;
+web export with 0 errors; phone p95 ≤ 20 ms on `stress`; the client plays the arenas in Godot (desktop + phone web) and approves.
+
 ## Client rulings (latest first)
+* 2026-10-23 — **The studio ports the game code to GDScript** (M10): the client gets a playable Godot project and builds his zones in it. Reverses "the client ports the game".
 * 2026-10-23 — Every sprite sheet must open and edit cleanly in **Aseprite** (client owns 1.3.18); the studio may use Aseprite's CLI as a tool.
 * 2026-10-23 (answers) — Godot **4.7.2**, GDScript, **web builds** wanted. The client will hand-edit **both** sprites/gear and tiles/props (every sheet, incl. `_front`/`_back` gear splits, must be edit-friendly). GitHub Pages **comes down at handoff**. Zone names, hooks and pacing **stay** as his build targets but must be **easy to change**: they live in editable data (`handoff/data/zones.json`), never hard-coded.
 * 2026-10-23 (later) — **Godot pivot.** The studio no longer makes maps: the client builds every map himself in Godot. Act I maps are scrapped. The studio makes weapons, systems, gameplay, enemies, bosses, UI, and tests them only in tiny mockup arenas. When the game is finished the client ports it to Godot, so every asset (sprite sheets, map tiles, props) must be human-editable files. Map assets are remade only as reusable Godot tile/prop assets. This reverses the old "Godot port-ready rules" drop. Minutes: `docs/meetings/2026-10-23-godot-handoff.md`.

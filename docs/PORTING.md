@@ -4,7 +4,8 @@ Terms: [GLOSSARY.md](GLOSSARY.md). Status: skeleton (M4b). Sections marked **fil
 Ruling and reasons: [meetings/2026-10-23-godot-handoff.md](meetings/2026-10-23-godot-handoff.md). Package layout: [../handoff/README.md](../handoff/README.md).
 
 The studio ships the game minus the world (systems, tables, sprites, audio) tested in mockup arenas ([design/arenas.md](design/arenas.md)).
-The client builds every zone in Godot ([design/world-brief.md](design/world-brief.md)) and ports the game. The JS build is the reference implementation.
+The studio ports the game code to GDScript in **M10** ([PRODUCTION.md](PRODUCTION.md)) into a playable project in `godot/`; this file is that port's contract.
+The client builds every zone in Godot ([design/world-brief.md](design/world-brief.md)) in `godot/zones/`. The JS build is the reference implementation until M10 ships.
 
 ## Engine and settings
 * Godot **4.7.2**, **GDScript**. The client wants **web (HTML5) builds**, which rules out C# (no supported web export in Godot 4). Renderer: Compatibility (web and phone).
@@ -20,7 +21,8 @@ res://art/        copied from handoff/art/
 res://data/       *.json from handoff/data/
 res://audio/      OGG + sfx.json
 res://scenes/{hero,enemies,bosses,props,triggers,ui}
-res://zones/<zone>/   the client's maps
+res://zones/<zone>/   the client's maps (no studio lane touches them)
+res://arenas/     the studio's mockup arenas (same ids as js/arenas.js)
 res://scripts/{autoload,systems,ai,boss}
 ```
 

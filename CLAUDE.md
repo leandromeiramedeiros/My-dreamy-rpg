@@ -35,7 +35,8 @@ Known flakes: play.js warp-fade, perf under load.
 
 ## Godot pivot (client ruling 2026-10-23)
 The studio never makes maps: test only in mockup arenas (`js/arenas.js`). Every asset ships human-editable (PNG + JSON
-sidecar, see `docs/design/asset-pipeline.md`) for the client's Godot port.
+sidecar, see `docs/design/asset-pipeline.md`). In M10 the studio ports the game code to GDScript (`godot/`); the
+client builds his zones in `godot/zones/`, which no lane touches.
 
 ## Glossary (enforced)
 `docs/GLOSSARY.md` holds the canonical name of every game term.

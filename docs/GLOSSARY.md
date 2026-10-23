@@ -886,7 +886,10 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Zone record | One editable zone entry (name, theme, palette, terrains, cliff/coast/water files) | `handoff/data/zones.json` | — | M4b |
 | Depth split | A gear piece exported as two sheets, drawn under and over the body | `_front` `_back` | layer split | M4b |
 | Export manifest | Per-file sha256 list; a file whose hash differs was hand-edited and is skipped on rerun | `handoff/art/manifest.json` | export log | M4b |
-| Godot pivot | Client ruling 2026-10-23: the studio makes no maps; the client builds every zone and ports the game to Godot | — | Godot port-ready rules (dropped, now reversed) | M4b |
+| Godot pivot | Client ruling 2026-10-23: the studio makes no maps; the client builds every zone in Godot | — | Godot port-ready rules (dropped, now reversed) | M4b |
+| Godot port | M10: the studio rewrites the game code in GDScript into the playable Godot project | `godot/` | GDScript rewrite | later |
+| Port spike | M5 proof of the Godot port: hero movement, one line's hand action and spell, one status ladder, the Ogre, checked against golden vectors | `godot-sample/` | — | later |
+| Golden vector | A recorded input and output of a JS function (damage, build, reaction, roll) that the GDScript port must reproduce | — | — | later |
 
 ## 20. Retired terms
 | Retired term | Replaced by | Code id | Retired by | Status |
