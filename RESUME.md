@@ -58,6 +58,13 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
 - Wave 3 after merges: Elements in the world (the `verbs` arena), Map cut (Haiku deletes + save v6 + check.js).
 
 ## Next
+000. **New repo "Karea's Dream"** (client 2026-10-23; game title Karea's Dream, hero Aerin renamed Karea, private repo).
+     After the Godot core + delete lanes merge into claude/m4b: push every branch and tag to origin, archive
+     leandromeiramedeiros/My-dreamy-rpg (read-only); create private repo `Kareas-Dream` in
+     C:/Users/leandro/Documents/Projects/Git/Kareas-Dream with fresh history: godot/, tools/ (forge, export, godot,
+     aseprite, docs-lint), docs/ (design, GLOSSARY, PORTING, PRODUCTION, booklet; no meetings), CLAUDE.md, RESUME.md,
+     README.md, .gitignore (Godot: .godot/, build/). Rename Aerin -> Karea in docs + glossary. Copy the memory folder.
+     Switch the session to the new folder.
 00. **2026-10-23: Godot now.** Web build retired (tag `js-final`, reference checkout `.claude/worktrees/js-reference`).
     Running: Godot core lane, web-build delete lane, Booklet. Parked: `wip/export-v2-depth`, `wip/qa-forge-fixes`,
     raster board files in `.claude/worktrees/agent-a33649a46d6b8a5c5/tools/out/art/world-board/`.
