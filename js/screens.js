@@ -166,11 +166,11 @@ function drawRotateCard(ctx) {
 function drawTitle(ctx) {
   const u = G.ui;
   ctx.fillStyle = '#0b0716'; ctx.globalAlpha = 0.55; ctx.fillRect(0, 0, DW, DH); ctx.globalAlpha = 1;
+  if (u.arenas) { drawArenaList(ctx); return; }   // the ARENAS entry (arenas.js): the mockup arenas, one per line; no logo behind the list
   const bob = Math.round(Math.sin(G.t * 1.2) * 2) * 2, logo = titleLogo(), wm = typeof RASTER !== 'undefined' && RASTER.get('wordmark');
   if (wm) { ctx.imageSmoothingEnabled = false; ctx.drawImage(wm, 480 - wm.width, 108 + bob, wm.width * 2, wm.height * 2); }   // M4b raster wordmark, x2, nearest
   else if (logo) { ctx.imageSmoothingEnabled = false; ctx.drawImage(logo, 480 - 340, 160 - 40 + bob, 680, 80); } else UI.text(ctx, 'MY DREAMY RPG', 480, 140 + bob, 'heading', UC.gold, 'center');
   UI.text(ctx, 'a high-fantasy dream above the clouds', 480, 216, 'small', UC.dim, 'center');
-  if (u.arenas) { drawArenaList(ctx); return; }   // the ARENAS entry (arenas.js): the mockup arenas, one per line
   if (u.help) { drawHelp(ctx); return; }   // the "?" entry (below): the same overlay as in play, no title controls underneath
   const s = G.save && G.save.player ? { level: G.save.player.level, map: G.save.world && G.save.world.map } : null;
   const sure = u.confirmNew > G.t;
@@ -213,7 +213,7 @@ function drawTitle(ctx) {
 
 // ARENAS (arenas.js): each row reloads the page as ?map=<id> with that arena's reference hero; Esc / BACK returns
 function drawArenaList(ctx) {
-  const u = G.ui, list = arenaList(), x = 100, w = 760, rh = 28, y0 = 118;
+  const u = G.ui, list = arenaList(), x = 100, w = 760, rh = 26, y0 = 116;
   UI.text(ctx, 'ARENAS', 480, 76, 'heading', UC.gold, 'center');
   UI.text(ctx, 'mockup arenas: a fresh hero with the reference loadout, no save', 480, 100, 'small', UC.dim, 'center');
   list.forEach((a, i) => {
@@ -222,7 +222,7 @@ function drawArenaList(ctx) {
     UI.text(ctx, a.id, x + 10, y + 6, 'small', r.on ? UC.gold : UC.text);
     UI.text(ctx, fitText(a.desc, w - 200, 'small'), x + 190, y + 6, 'small', UC.dim);
   });
-  const by = Math.min(y0 + list.length * rh + 6, 486), br = mnRegion(480 - 80, by, 160, 30, 'arena:back', () => { u.arenas = false; });
+  const by = Math.min(y0 + list.length * rh + 6, 490), br = mnRegion(480 - 80, by, 160, 30, 'arena:back', () => { u.arenas = false; });
   if (br.on) { ctx.fillStyle = 'rgba(255,211,90,0.12)'; ctx.fillRect(400, by, 160, 30); }
   UI.text(ctx, 'BACK', 480, by + 7, 'small', br.on ? UC.gold : UC.text, 'center');
   UI.focus.current();
