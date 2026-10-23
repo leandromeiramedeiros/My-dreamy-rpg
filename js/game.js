@@ -996,7 +996,7 @@ function blinkPlayer(p, a, d) {
 function chainLightning(p, tx, ty) {
   let cur = nearestEnemy(tx, ty, 3, null) || nearestEnemy(p.x, p.y, 7, null);
   const pts = [[p.x, p.y, p.z + 1.6]], hit = new Set();
-  if (!cur) { const [ax, ay] = targetIn(p, tx, ty, 5); pts.push([ax, ay, 0.3]); fx({ type: 'lightning', pts, life: 0.25, col: '#bff0ff' }); return; }
+  if (!cur) { const [ax, ay] = targetIn(p, tx, ty, 5); pts.push([ax, ay, 0.3]); fx({ type: 'lightning', pts, life: 0.25, col: '#bff0ff' }); if (typeof EW !== 'undefined') EW.fromHit(ax, ay, 0.8, {}); return; }
   for (let k = 0; k < 6 + chainBonus(p) + (suitTwist(p, 'stormweave') ? 1 : 0) && cur; k++) {   // topaz: +1 jump per 2 grades; Stormweave twist +1
     hit.add(cur); pts.push([cur.x, cur.y, cur.z + 1]);
     const tgt = cur;
@@ -1122,7 +1122,7 @@ function updatePlayer(p, dt) {
       if (dist(p.x, p.y, e.x, e.y) < d.opt.hit.r + e.r) { d.hit.add(e); damageEnemy(e, d.opt.hit.dmg, Object.assign({}, d.opt.hit, { cast: d.cast })); if (d.opt.carry && !d.carried && !e.boss && !e.dead && !e.dummy) d.carried = e; }
     }
     if (d.carried && !d.carried.dead) { const c = d.carried, l = Math.hypot(d.vx, d.vy) || 1; c.x = p.x + d.vx / l * 0.8; c.y = p.y + d.vy / l * 0.8; c.stunT = Math.max(c.stunT, 0.25); }   // a carry (Bull Rush, Bulwark Charge)
-    if (d.opt.zoneTrail) { d.trailT = (d.trailT || 0) - dt; if (d.trailT <= 0) { d.trailT = 0.08; withCast(d.cast, () => zone(Object.assign({ x: p.x, y: p.y, seg: true, col: d.opt.trail || '#bff4ff' }, d.opt.zoneTrail))); } }   // Glide's frost trail
+    if (d.opt.zoneTrail) { d.trailT = (d.trailT || 0) - dt; if (d.trailT <= 0) { d.trailT = 0.08; withCast(d.cast, () => { const z = zone(Object.assign({ x: p.x, y: p.y, seg: true, trail: true, col: d.opt.trail || '#bff4ff' }, d.opt.zoneTrail)); z.grp = d.trailGrp || (d.trailGrp = { hit: new Map() }); if (typeof EW !== 'undefined' && z.kind === 'frost') EW.tilePatch({ kind: 'rime', tiles: [[Math.floor(p.x), Math.floor(p.y)]], life: z.life }); }); } }   // Glide's frost trail
     if (d.t <= 0) { p.dash = null; if (d.opt.onEnd) withCast(d.cast, d.opt.onEnd); }
   } else {
     const mv = typeof IN !== 'undefined' ? IN.move : { x: 0, y: 0, mag: 0 };
@@ -1396,6 +1396,7 @@ function damageEnemy(e, base, o = {}) {
     if (bas && wv.markAll) markEnemy(e, 1, true);
     if (o.poison) poisonEnemy(e, o.poison, c);
     if (bas && p.buffs.venomcoat) poisonEnemy(e, 1, c);
+    if (bas && p.oil && p.oil.until > G.t && typeof EW !== 'undefined') EW.oilHit(e, p.oil.el);   // Dream Oil coat: the oil element's build x0.3
     if (o.root) rootEnemy(e, o.root);
     if (o.jolt) applyStatus(e, 'jolted', o.jolt, 'lightning');
     if (o.rent) applyStatus(e, 'rent', o.rent, 'slash');
@@ -1449,6 +1450,7 @@ function hitArea(x, y, r, dmg, o = {}) {
   const A = aggBegin();   // one global freeze + shake per cast (aggEnd)
   for (const e of G.enemies.slice()) if (!e.dead && dist(x, y, e.x, e.y) < r + e.r) { if (damageEnemy(e, dmg, Object.assign({ fx: x, fy: y }, o))) n++; }
   aggEnd(A);
+  if (typeof EW !== 'undefined') EW.fromHit(x, y, r, o);   // elements in the world: Receivers, grass fire, ice (elements-world.js)
   return n;
 }
 function hitCone(x, y, a, arc, r, dmg, o = {}) {
@@ -1463,6 +1465,7 @@ function hitCone(x, y, a, arc, r, dmg, o = {}) {
     if (damageEnemy(e, dmg, o)) n++;
   }
   aggEnd(A);   // the flat 0.035 s melee hitstop is gone: hitlag() scales it by r (R2)
+  if (typeof EW !== 'undefined') EW.fromHit(x, y, r, o, { a, arc });
   return n;
 }
 function hitLine(x, y, a, len, w, dmg, o = {}) {
@@ -1470,6 +1473,7 @@ function hitLine(x, y, a, len, w, dmg, o = {}) {
   const ex = x + Math.cos(a) * len, ey = y + Math.sin(a) * len, A = aggBegin();
   for (const e of G.enemies.slice()) if (!e.dead && segDist(e.x, e.y, x, y, ex, ey) < w + e.r) damageEnemy(e, dmg, o);
   aggEnd(A);
+  if (typeof EW !== 'undefined') EW.fromHit(x, y, w, o, { a, len });
 }
 
 // ===== projectiles ===================================================================
@@ -1504,6 +1508,7 @@ function updateProjs(dt) {
     const tx = Math.floor(p.x), ty = Math.floor(p.y), t = typeAt(m, tx, ty);
     if (p.kind !== 'wave' && !p.back && t && m.type[ty][tx] === 'pillar') { p.dead = true; if (p.explode) explodeProj(p); burst(p.x, p.y, p.z, 6, [p.col], 2); continue; }
     if (p.friendly) {
+      if (typeof EW !== 'undefined' && EW.proj(p)) { p.dead = true; if (p.explode) explodeProj(p); burst(p.x, p.y, p.z, 6, [p.col], 2); continue; }   // a Receiver took the shot (a solid one stops it)
       for (const e of G.enemies) {
         if (e.dead || e.spawnT > 0 || p.hit.has(e)) continue;
         if (dist(p.x, p.y, e.x, e.y) < p.r + e.r) {
@@ -1554,6 +1559,7 @@ function updateZones(dt) {
     z.t += dt; z.tickT -= dt;
     if (z.t > z.life) { z.dead = true; continue; }
     if (z.follow && !z.hostile && G.player) { z.x = G.player.x; z.y = G.player.y; }   // an aura (Caster rule, Sanctuary, Storm Cloak...) rides with the hero
+    if (z.trail) { trailTick(z); continue; }   // Glide's frost trail: segments tick as one trail (one hit per body per 0.5 s)
     if (z.seg) continue;   // marker zones (cracks): no tick of their own
     if (z.hostile) {   // enemy ground zones (parts.js hostileZone): hurt / slow the hero on each tick
       if (z.tickT <= 0) { z.tickT = z.tick || 0.5; if (playerIn({ kind: 'circle', x: z.x, y: z.y, r: z.r })) { if (z.slow) applyStatus(G.player, 'chilled', Math.max(G.player.slowT, 0.8)); if (z.dmg) hurtPlayer(z.dmg, z.x, z.y, z.el || 'nature'); } }
@@ -1577,6 +1583,22 @@ function updateZones(dt) {
   }
   G.zones = G.zones.filter(z => !z.dead);
   updateDecoys(dt);
+}
+
+// a trail segment (z.seg + z.trail: Glide's frost trail, dashPlayer opt.zoneTrail): the segments of one dash share z.grp, so a body
+// standing in several overlapping segments is hit once per tick; each hit Chills (slow) through hitArea's usual on-hit path
+function trailTick(z) {
+  if (z.tickT > 0) return;
+  z.tickT = z.tick || 0.5;
+  const g = z.grp || (z.grp = { hit: new Map() }), A = aggBegin();
+  for (const e of G.enemies.slice()) {
+    if (e.dead || dist(z.x, z.y, e.x, e.y) >= z.r + e.r) continue;
+    if (G.t - (g.hit.get(e) || -9) < (z.tick || 0.5) - 1e-3) continue;
+    g.hit.set(e, G.t);
+    damageEnemy(e, z.dmg || 0, { fx: z.x, fy: z.y, slow: z.slow, cast: z.cast });
+  }
+  aggEnd(A);
+  if (typeof EW !== 'undefined') EW.fromHit(z.x, z.y, z.r, { cast: z.cast });   // frost on Receivers and water under the trail
 }
 
 // ===== enemies ========================================================================
@@ -2002,7 +2024,8 @@ function updatePip(dt) {
 }
 function pipLight() {
   const P = G.pip; if (!P || !G.player || G.player.dead) return null;
-  return { sx: isoX(P.x, P.y), sy: isoY(P.x, P.y, P.z), r: 40 + 4 * Math.sin(G.t * 3.1), col: '#ffd9a0', a: 0.75 };
+  const ch = typeof EW !== 'undefined' && EW.pipCol();   // carrying a world charge: Pip glows in its element
+  return { sx: isoX(P.x, P.y), sy: isoY(P.x, P.y, P.z), r: (ch ? 52 : 40) + 4 * Math.sin(G.t * 3.1), col: ch || '#ffd9a0', a: ch ? 0.9 : 0.75 };
 }
 // ===== retries: once-per-save presentation, and the objective from progress (QA m1 / m2) =====================
 // G.prog.once['zone:<map>' | 'dlg:<id>' | 'dlg:<map>:<card>' | 'banner:<map>:<card>'] = 1: zone banners (main.js
@@ -2083,6 +2106,7 @@ function updateTriggers(dt) {
   const m = G.map, T = G.trig; if (!T) return;
   T.t += dt;
   updatePip(dt); if (G.player) hudWatch(G.player);
+  if (typeof EW !== 'undefined') EW.update(dt);   // elements in the world: Receiver timers, grass fire, patches, Pip's charge, Dream Oil
   updateWarp(dt);
   updateDiscovery(m, T);
   let prev = -1;
@@ -2113,6 +2137,7 @@ function triggerCondition(tr) {
     case 'enemy_killed': return (G.kills[w.enemy || 'any'] || 0) >= (+w.count || 1);
     case 'boss_hp_below': return !!(G.boss && !G.boss.dead && G.boss.hp / G.boss.maxHp * 100 < +w.pct);
     case 'player_hp_below': return p.hp / p.maxHp * 100 < +w.pct;
+    case 'object_state': case 'element_hit': return typeof EW !== 'undefined' && EW.condition(tr, w);   // elements-world.js
   }
   return false;
 }
@@ -2170,6 +2195,8 @@ function runAction(a) {
     case 'checkpoint': { const has = v => v != null && v !== ''; setCheckpoint(has(a.x) ? +a.x : p.x, has(a.y) ? +a.y : p.y, a.text); break; }
     case 'loot': lootAction(a); break;
     case 'vantage': if (typeof startVantage === 'function') startVantage(a); break;   // §29 G3 the vantage reveal (screens.js)
+    case 'oil': if (typeof EW !== 'undefined') EW.coat(p, a.el || 'fire', a.dur); break;   // a free Dream Oil coat (arenas, tests)
+    case 'setState': if (typeof EW !== 'undefined') EW.setState(a.id, a.state); break;   // a Receiver to a named state
   }
 }
 // x/y given: scatter around that point; otherwise somewhere on the island away from the player
