@@ -30,7 +30,11 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
 - Lane worktrees start at origin's default branch: every brief begins with `git merge --ff-only claude/m4b`.
   Director commits each worktree on its branch and merges into claude/m4b; after Gear A + B merge, rerun
   `node tools/forge/build.js chibi` (js/forge-bank/chibi.js is a generated manifest both touch).
-- Usage pace (client, 2026-10-23): **two lanes at a time**. Map cut and Elements (the `verbs` arena; also fixes Glide's
+- Usage window reset (2026-10-23 ~10:40): full speed. Running: Map cut, Elements, Export v2 (runtime layering: colour +
+  depth sheet per piece, Godot layering shader), Raster world-art board (codex-image: Vale terrains, 4 props, 12 skill +
+  8 item icons, forge-anchored prompts; client approves by eye before rollout), Balance + QA.
+- M10 Godot port planned (studio ports to GDScript, `godot/`); no Godot web/phone perf work (client).
+- (old) Usage pace (client, 2026-10-23): **two lanes at a time**. Map cut and Elements (the `verbs` arena; also fixes Glide's
   frost trail) run; next: Balance + QA (touch bot, gloomknight, polish backlog). Elements must `git merge claude/m4b`
   after Map cut merges (both touch arenas.js / game.js in different places).
 - Skill visuals merged: decoys, chakram disc, cracks, frost trail, consecrate, Fortress dome, held poses, 79 skill icons,

@@ -80,7 +80,7 @@ web export runs with 0 errors (no web or phone perf target, client ruling); desk
 
 ## Client rulings (latest first)
 * 2026-10-23 — **Runtime layering:** no `_front`/`_back` split; every gear piece is one colour + one depth sheet, layered per pixel at runtime (JS and Godot). Export v2 lane.
-* 2026-10-23 — **The artist paints the world art and skill icons:** `codex-image` makes tiles, props, trees, decals and skill icons (current ones judged ugly); a sample board first, for the client's eye. Hero, gear, enemies and bosses stay forge-made.
+* 2026-10-23 — **The artist paints the world art and skill icons:** `codex-image` makes tiles, props, trees, decals, skill icons and item icons (current ones judged ugly); every prompt anchored on forge references for visual constancy; a sample board first, for the client's eye. Hero, gear, enemies and bosses stay forge-made.
 * 2026-10-23 — **No web optimisation for the Godot build**: the web export must run, but there is no web/phone perf target or tuning work.
 * 2026-10-23 — **The studio ports the game code to GDScript** (M10): the client gets a playable Godot project and builds his zones in it. Reverses "the client ports the game".
 * 2026-10-23 — Every sprite sheet must open and edit cleanly in **Aseprite** (client owns 1.3.18); the studio may use Aseprite's CLI as a tool.

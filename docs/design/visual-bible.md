@@ -80,8 +80,10 @@ The studio makes no zone maps; it makes reusable tile and prop assets for the cl
 ## Raster art (outside the forge)
 * Client ruling 2026-10-23: the artist (`codex-image` skill) paints raster art **outside the forge**: the title wordmark,
   dialogue portraits, splash and key art, and (client ruling 2026-10-23, later) **world tiles, props, trees, decals and skill
-  icons**, which replace the procedural ones once the client approves a sample board. The hero, gear, enemies and bosses stay
-  forge-only (they need the forge's depth data for runtime layering); item icons stay forge-made.
+  icons and item icons**, which replace the current ones once the client approves a sample board. The hero, gear, enemies and
+  bosses stay forge-only (they need the forge's depth data for runtime layering).
+* Every `codex-image` prompt is anchored on forge references (hero, gear, enemy renders; for an item icon, the forge render of
+  that item) and asks to match their palette, outline weight, shading and pixel density, so raster and forge art stay one style.
 * Every raster piece is palette-snapped and shipped at native size (portraits ~44 px, drawn x2 in the 88 px dialogue slot;
   wordmark 240x52), embedded as data-URI PNGs in `js/art-raster.js` (`RASTER`), so `file://` still works. Sources live in the
   git-ignored `tools/out/art/`.
