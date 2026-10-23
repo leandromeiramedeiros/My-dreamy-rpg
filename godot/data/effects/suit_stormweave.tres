@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_jh54n"]
+
+[resource]
+script = ExtResource("1_jh54n")
+id = &"suit_stormweave"
+display_name = "Stormweave twist"
+hint = "Conduct jumps +1 (Chain Lightning +1 jump)"
+source = "suit"
+if_tags = PackedStringArray()
+tags = PackedStringArray()
+todo = "Inline engine check at chainLightning (no bus event).
+Live while three stormweave pieces are worn."

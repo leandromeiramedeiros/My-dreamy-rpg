@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_tbnpr"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_ylcyh"]
+
+[sub_resource type="Resource" id="Resource_bs32g"]
+script = ExtResource("2_ylcyh")
+display_name = "Mending"
+roll = Vector2(1, 1.5)
+
+[sub_resource type="Resource" id="Resource_we5gl"]
+script = ExtResource("2_ylcyh")
+display_name = "Renewing"
+roll = Vector2(2, 2.5)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_75kco"]
+script = ExtResource("2_ylcyh")
+display_name = "Undying"
+roll = Vector2(3, 4)
+item_level = 28
+
+[resource]
+script = ExtResource("1_tbnpr")
+id = &"regen"
+kind = "suffix"
+tiers = Array[ExtResource("2_ylcyh")]([SubResource("Resource_bs32g"), SubResource("Resource_we5gl"), SubResource("Resource_75kco")])

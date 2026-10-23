@@ -1,0 +1,9 @@
+GIMP Palette
+Name: material gold
+Columns: 5
+#
+ 90  54   8	gold 0
+154 100  20	gold 1
+216 160  48	gold 2
+240 200  88	gold 3
+255 244 192	gold 4

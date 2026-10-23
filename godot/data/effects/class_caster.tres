@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_80li7"]
+
+[resource]
+script = ExtResource("1_80li7")
+id = &"class_caster"
+display_name = "Caster rule"
+hint = "Zones you create near you follow you"
+source = "class"
+if_tags = PackedStringArray()
+icd = 0.0
+tags = PackedStringArray()
+todo = "Inline engine check at zone (no bus event).
+Live while three caster pieces are worn."

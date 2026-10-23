@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="LootTable" format=3]
+
+[ext_resource type="Resource" path="res://data/loot/class_normal.tres" id="1_s6jm2"]
+[ext_resource type="Script" path="res://scripts/data/loot_table.gd" id="2_2sl26"]
+
+[resource]
+script = ExtResource("2_2sl26")
+id = &"common_ruins"
+base_table = ExtResource("1_s6jm2")
+rarity_weights = PackedFloat32Array(62, 29, 7.5, 1.5, 0, 0)
+item_chance = 0.24
+extra_item_weights = PackedFloat32Array()
+gem_chance = 0.08
+gem_level_bonus = PackedInt32Array()
+potion_chance = 0.06
+exclude_bases = PackedStringArray("rustyblade", "ironcap", "ironmail", "ironboots")

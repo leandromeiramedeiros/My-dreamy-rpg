@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Resource" path="res://data/loot/class_normal.tres" id="1_f5jfp"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="2_s20qs"]
+
+[resource]
+script = ExtResource("2_s20qs")
+id = &"slime"
+display_name = "Gloom slime"
+hp = 540.0
+damage = 32.0
+radius = 0.38
+height = 1.8
+element = "gloom"
+damage_type = "gloom"
+resists = Dictionary[StringName, float]({
+&"pierce": 0.25,
+&"slash": -0.5
+})
+tags = PackedStringArray("amorphous", "gloom")
+xp = 0.13
+attacks = PackedStringArray("brute")
+part_params = {
+"brute": {
+"cd": 1.1,
+"r": 1.15,
+"range": 1.0,
+"rec": 0.4,
+"shape": "circle",
+"splat": true,
+"stopK": 0.8,
+"wind": 0.55
+},
+"chase": {
+"hop": 1.8
+}
+}
+loot = ExtResource("1_f5jfp")
+blood = Color(0.54509807, 0.4862745, 0.9647059, 1)
+todo = "Behaviour: parts [\"chase\",\"brute\"] run by parts.js (part runtime); the Bestiary lane makes them components.
+No forge sheet in handoff/art/enemies yet."

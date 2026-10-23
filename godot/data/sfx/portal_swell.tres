@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_a0hns"]
+
+[resource]
+script = ExtResource("1_a0hns")
+id = &"portal_swell"
+pitch_vary = 0.03
+priority = 3
+caption = "[portal opening]"
+recipe = {
+"layers": [{
+"dur": 0.6,
+"f0": 400.0,
+"f1": 4000.0,
+"filter": {
+"freq": 1200.0,
+"q": 1.0,
+"type": "bandpass"
+},
+"gain": 0.05,
+"osc": "noise"
+}, {
+"delay": 0.6,
+"dur": 0.6,
+"f0": 1200.0,
+"f1": 300.0,
+"gain": 0.04,
+"osc": "sine"
+}]
+}

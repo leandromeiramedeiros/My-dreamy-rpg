@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_adgy2"]
+
+[resource]
+script = ExtResource("1_adgy2")
+id = &"dmg_frost"
+pitch_vary = 0.06
+priority = 2
+caption = "[frost damage]"
+recipe = {
+"layers": [{
+"dur": 0.25,
+"f0": 2600.0,
+"f1": 1800.0,
+"gain": 0.05,
+"osc": "sine"
+}, {
+"delay": 0.04,
+"dur": 0.12,
+"f0": 3800.0,
+"f1": 3200.0,
+"gain": 0.02,
+"osc": "triangle"
+}]
+}

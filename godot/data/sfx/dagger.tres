@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_ja7ea"]
+
+[resource]
+script = ExtResource("1_ja7ea")
+id = &"dagger"
+pitch_vary = 0.06
+priority = 2
+caption = "[dagger]"
+recipe = {
+"layers": [{
+"dur": 0.02,
+"f0": 3500.0,
+"f1": 2000.0,
+"filter": {
+"freq": 3500.0,
+"q": 3.0,
+"type": "bandpass"
+},
+"gain": 0.07,
+"osc": "noise"
+}, {
+"delay": 0.02,
+"dur": 0.02,
+"f0": 3500.0,
+"f1": 2000.0,
+"filter": {
+"freq": 3500.0,
+"q": 3.0,
+"type": "bandpass"
+},
+"gain": 0.07,
+"osc": "noise"
+}]
+}

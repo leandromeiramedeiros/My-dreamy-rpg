@@ -1,0 +1,18 @@
+{
+ "id": "tree_dead_00",
+ "kind": "tree_dead",
+ "label": "Dead tree",
+ "size": [
+  30,
+  46
+ ],
+ "origin": [
+  15,
+  45
+ ],
+ "collider_r": 0.3,
+ "shadow": 8,
+ "light": null,
+ "image": "tree_dead_00.png",
+ "frames": null
+}

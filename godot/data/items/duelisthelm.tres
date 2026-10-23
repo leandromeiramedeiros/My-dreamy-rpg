@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/taunt.tres" id="1_cejnc"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_fdk38"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_u2yo0"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_2sg1v"]
+
+[sub_resource type="Resource" id="Resource_pyhu7"]
+script = ExtResource("4_2sg1v")
+base_id = &"feathercap"
+display_name = "Feather Cap"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_74odn"]
+script = ExtResource("4_2sg1v")
+base_id = &"duelisthat"
+display_name = "Duelist Hat"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_6rvim"]
+script = ExtResource("4_2sg1v")
+base_id = &"silverbrim"
+display_name = "Silverbrim Hat"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_5ejno"]
+script = ExtResource("4_2sg1v")
+base_id = &"auroraplume"
+display_name = "Aurora Plume"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_gawbx"]
+script = ExtResource("4_2sg1v")
+base_id = &"crownofblades"
+display_name = "Crown of Blades"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_u2yo0")
+id = &"duelisthelm"
+display_name = "Duelist Hat"
+description = "+3% crit chance, +4% crit damage."
+kind = "armour"
+slot = "head"
+item_class = &"medium"
+suit = &"duelist"
+hands = 0
+element = "slash"
+tiers = Array[ExtResource("4_2sg1v")]([SubResource("Resource_pyhu7"), SubResource("Resource_74odn"), SubResource("Resource_6rvim"), SubResource("Resource_5ejno"), SubResource("Resource_gawbx")])
+active = ExtResource("1_cejnc")
+stats = Dictionary[StringName, float]({
+&"crit": 0.03,
+&"critDmg": 0.04
+})
+color = Color(0.7529412, 0.3529412, 0.41568628, 1)
+attack_pose = "none"
+todo = "Suit Duelist (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ReactionData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/reaction_data.gd" id="1_i75yp"]
+
+[resource]
+script = ExtResource("1_i75yp")
+id = &"overload"
+display_name = "Overload"
+trigger_elements = PackedStringArray("arcane")
+on_statuses = PackedStringArray("shocked")
+damage_type = &"arcane"
+effect_text = "Arcane on Shocked: extra damage and a cooldown cut."
+todo = "No JS implementation (design only, elements-statuses.md); the Status lane builds it."

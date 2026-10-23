@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_omtyr"]
+
+[resource]
+script = ExtResource("1_omtyr")
+id = &"class_shadow"
+display_name = "Shadow rule"
+hint = "Dashes leave a decoy (once per 3 s)"
+source = "class"
+if_tags = PackedStringArray()
+icd = 0.0
+tags = PackedStringArray()
+todo = "Inline engine check at dashPlayer (no bus event).
+Live while three shadow pieces are worn."

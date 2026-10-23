@@ -1,0 +1,18 @@
+{
+ "id": "chest",
+ "kind": "chest",
+ "label": "Treasure chest (tier: wood/silver/gold)",
+ "size": [
+  14,
+  10
+ ],
+ "origin": [
+  7,
+  9
+ ],
+ "collider_r": 0.3,
+ "shadow": 6,
+ "light": null,
+ "image": "chest.png",
+ "frames": null
+}

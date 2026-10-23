@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_rxa5q"]
+
+[resource]
+script = ExtResource("1_rxa5q")
+id = &"roar"
+pitch_vary = 0.06
+priority = 3
+caption = "[roar]"
+recipe = {
+"layers": [{
+"dur": 1.0,
+"f0": 120.0,
+"f1": 40.0,
+"gain": 0.1,
+"osc": "saw"
+}, {
+"dur": 1.0,
+"f0": 400.0,
+"f1": 80.0,
+"filter": {
+"freq": 400.0,
+"q": 1.0,
+"type": "bandpass"
+},
+"gain": 0.08,
+"osc": "noise"
+}]
+}

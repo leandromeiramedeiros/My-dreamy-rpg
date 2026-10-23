@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_qpdmk"]
+
+[resource]
+script = ExtResource("1_qpdmk")
+id = &"chargeOnKill"
+display_name = "Gathered Light"
+hint = "Kills grant 2 charge"
+source = "trinket"
+when_event = "kill"
+if_tags = PackedStringArray()
+do_action = &"chargeOnKill"
+do_params = {
+"major": {
+"chargeOnKill": 2.0
+},
+"minor": {
+"chargeOnKill": 1.0
+}
+}
+icd = 0.0
+tags = PackedStringArray("kill", "ultimate")
+todo = "Boon numbers: minor {\"chargeOnKill\":1}, major {\"chargeOnKill\":2}
+JS:
+do: do(c, v, p) { p.ult = Math.min(100, p.ult + (v.chargeOnKill || 0)); }"

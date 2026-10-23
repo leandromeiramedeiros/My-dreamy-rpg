@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/tumble.tres" id="1_rlvop"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_6h8s5"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_d5sdp"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_2lgls"]
+
+[sub_resource type="Resource" id="Resource_tgodg"]
+script = ExtResource("4_2lgls")
+base_id = &"softshoes"
+display_name = "Soft Shoes"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_vyv0u"]
+script = ExtResource("4_2lgls")
+base_id = &"stalkershoes"
+display_name = "Stalker Shoes"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_6d7jq"]
+script = ExtResource("4_2lgls")
+base_id = &"quietstep"
+display_name = "Quietstep Boots"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_w3qga"]
+script = ExtResource("4_2lgls")
+base_id = &"shadowstep"
+display_name = "Shadowweave Boots"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_v4yvf"]
+script = ExtResource("4_2lgls")
+base_id = &"eclipsetreads"
+display_name = "Eclipse Treads"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_d5sdp")
+id = &"stalkershoes"
+display_name = "Stalker Shoes"
+description = "+12% move speed."
+kind = "armour"
+slot = "boots"
+item_class = &"medium"
+suit = &"stalker"
+hands = 0
+element = "pierce"
+tiers = Array[ExtResource("4_2lgls")]([SubResource("Resource_tgodg"), SubResource("Resource_vyv0u"), SubResource("Resource_6d7jq"), SubResource("Resource_w3qga"), SubResource("Resource_v4yvf")])
+active = ExtResource("1_rlvop")
+stats = Dictionary[StringName, float]({
+&"speed": 0.45
+})
+color = Color(0.47843137, 0.3137255, 0.21960784, 1)
+attack_pose = "none"
+todo = "Suit Stalker (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."

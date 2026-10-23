@@ -1,0 +1,80 @@
+GIMP Palette
+Name: Whispering Vale (vale)
+Columns: 7
+#
+ 20  18  56	sky 0
+ 34  29  85	sky 1
+ 58  46 122	sky 2
+ 93  63 152	sky 3
+138  82 170	sky 4
+185 104 176	sky 5
+224 138 180	sky 6
+246 178 176	sky 7
+255 214 184	sky 8
+142 127 200	mtnFar 0
+ 90  76 148	mtnFar 1
+231 169 192	mtnFar 2
+106  90 168	mtnNear 0
+ 60  47 112	mtnNear 1
+201 138 184	mtnNear 2
+205 187 232	snow
+108  90 160	cloud 0
+156 134 200	cloud 1
+214 178 216	cloud 2
+251 217 228	cloud 3
+255 255 255	cloud 4
+ 34  40  74	grass 0
+ 31  74  82	grass 1
+ 44 107  88	grass 2
+ 71 146  94	grass 3
+116 184 106	grass 4
+166 212 126	grass 5
+224 234 164	grass 6
+106  98 144	path 0
+143 134 176	path 1
+173 164 204	path 2
+203 196 228	path 3
+230 224 244	path 4
+ 74  66 104	gap
+ 33  31  45	stone 0
+ 58  53  86	stone 1
+ 84  71 126	stone 2
+111  89 165	stone 3
+167 124 185	stone 4
+203 161 199	stone 5
+221 197 209	stone 6
+ 26  47 106	water 0
+ 32  67 138	water 1
+ 42  90 168	water 2
+ 58 124 196	water 3
+ 90 168 220	water 4
+154 223 240	water 5
+232 251 255	water 6
+ 62  40  52	wood 0
+ 94  61  64	wood 1
+128  89  79	wood 2
+168 122  92	wood 3
+201 154 112	wood 4
+ 26  25  36	earth 0
+ 51  41  66	earth 1
+ 84  55  96	earth 2
+126  68 126	earth 3
+153  82 133	earth 4
+171 104 134	earth 5
+183 133 142	earth 6
+ 19  19  27	under 0
+ 32  29  48	under 1
+ 46  37  68	under 2
+ 61  45  88	under 3
+ 84  55 106	under 4
+110  65 122	under 5
+136  78 136	under 6
+246 166 200	flowers 0
+255 241 247	flowers 1
+255 224 138	flowers 2
+159 216 255	flowers 3
+198 168 222	haze
+ 61  90  74	root
+203 191 236	ambient
+246 236 255	fog
+255 214 236	fog2

@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/ogre.tres" id="1_jby1m"]
+[ext_resource type="Resource" path="res://data/loot/class_normal.tres" id="2_yy5ac"]
+[ext_resource type="Texture2D" path="res://art/enemies/ogre_n.png" id="3_ks3i0"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4_kl5r6"]
+
+[resource]
+script = ExtResource("4_kl5r6")
+id = &"sapling"
+display_name = "Sapling"
+hp = 170.0
+speed = 0.0
+damage = 15.0
+radius = 0.3
+element = "nature"
+damage_type = "pierce"
+stagger = 1.0
+resists = Dictionary[StringName, float]({
+&"fire": -0.5,
+&"nature": 0.5
+})
+tags = PackedStringArray("plant", "child")
+xp = 0.0
+movement = "stationary"
+attacks = PackedStringArray("shoot")
+part_params = {
+"shoot": {
+"cd": 3.2,
+"col": "#a6f08a",
+"range": 7.0,
+"speed": 6.0,
+"tele": true,
+"wind": 0.8
+}
+}
+loot = ExtResource("2_yy5ac")
+frames = ExtResource("1_jby1m")
+normal_map = ExtResource("3_ks3i0")
+scale = 0.55
+blood = Color(0.78039217, 0.65882355, 1, 1)
+origin = Vector2(40, 72)
+todo = "Behaviour: parts [\"stationary\",\"shoot\"] run by parts.js (part runtime); the Bestiary lane makes them components."

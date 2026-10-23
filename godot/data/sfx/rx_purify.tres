@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_n7y1e"]
+
+[resource]
+script = ExtResource("1_n7y1e")
+id = &"rx_purify"
+pitch_vary = 0.03
+priority = 3
+caption = "[purify reaction]"
+recipe = {
+"layers": [{
+"dur": 0.6,
+"f0": 1047.0,
+"f1": 1047.0,
+"gain": 0.05,
+"osc": "sine"
+}, {
+"delay": 0.05,
+"dur": 0.6,
+"f0": 1319.0,
+"f1": 1319.0,
+"gain": 0.04,
+"osc": "sine"
+}]
+}

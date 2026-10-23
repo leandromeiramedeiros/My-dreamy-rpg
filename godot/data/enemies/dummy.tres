@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/hero/body.tres" id="1_6p5k0"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="2_5k7dd"]
+
+[resource]
+script = ExtResource("2_5k7dd")
+id = &"dummy"
+display_name = "Training dummy"
+hp = 9999.0
+speed = 0.0
+damage = 0.0
+radius = 0.35
+tags = PackedStringArray()
+xp = 0.0
+dummy = true
+movement = "none"
+attacks = PackedStringArray()
+frames = ExtResource("1_6p5k0")
+tint = Color(0.90588236, 0.7882353, 0.627451, 1)
+blood = Color(0.90588236, 0.7882353, 0.627451, 1)
+origin = Vector2(26, 49)
+todo = "Behaviour: parts [] run by parts.js (part runtime); the Bestiary lane makes them components."

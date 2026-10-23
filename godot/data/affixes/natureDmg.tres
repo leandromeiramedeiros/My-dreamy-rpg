@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_gwijm"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_3lnbs"]
+
+[sub_resource type="Resource" id="Resource_pluw2"]
+script = ExtResource("2_3lnbs")
+display_name = "Mossy"
+roll = Vector2(0.04, 0.06)
+
+[sub_resource type="Resource" id="Resource_kepxi"]
+script = ExtResource("2_3lnbs")
+display_name = "Verdant"
+roll = Vector2(0.08, 0.1)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_jvpi5"]
+script = ExtResource("2_3lnbs")
+display_name = "Overgrown"
+roll = Vector2(0.12, 0.15)
+item_level = 28
+
+[resource]
+script = ExtResource("1_gwijm")
+id = &"natureDmg"
+tiers = Array[ExtResource("2_3lnbs")]([SubResource("Resource_pluw2"), SubResource("Resource_kepxi"), SubResource("Resource_jvpi5")])

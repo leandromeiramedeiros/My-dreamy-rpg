@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_shkxl"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="2_xmcd6"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_g5646"]
+
+[sub_resource type="Resource" id="Resource_6vsa1"]
+script = ExtResource("2_xmcd6")
+at = "target"
+cast_range = 7.0
+radius = 1.6
+damage = 120.0
+knockback = 0.2
+
+[sub_resource type="Resource" id="Resource_634tc"]
+script = ExtResource("2_xmcd6")
+at = "target"
+cast_range = 7.0
+radius = 1.8
+delay = 1.2
+damage = 330.0
+stun = 0.6
+
+[resource]
+script = ExtResource("3_g5646")
+id = &"deathmark"
+display_name = "Death Mark"
+description = "ULTIMATE — mark a spot: a cut now, a killing burst 1.2 s later."
+element = "pierce"
+kind = "ultimate"
+cooldown = 14.0
+mp_cost = 50.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_shkxl")]([SubResource("Resource_6vsa1"), SubResource("Resource_634tc")])
+aim_shape = "circle"
+aim_range = 7.0
+aim_radius = 1.6
+hit_weight = 2.0
+color = Color(0.7254902, 0.65882355, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a, tx, ty) {
+      [tx, ty] = targetIn(p, tx, ty, 7);
+      hitArea(tx, ty, 1.6, 120, { knock: 0.2 }); fx({ type: 'marker', x: tx, y: ty, r: 1.6, col: '#b9a8ff', life: 1.2 });
+      delay(1.2, () => { hitArea(tx, ty, 1.8, 330, { stun: 0.6 }); fx({ type: 'ring', x: tx, y: ty, r: 1.9, col: '#d6c8ff', life: 0.4 }); burst(tx, ty, 0, 30, ['#ffffff', '#b9a8ff'], 4); shake(6); sfx('boom'); });
+    }"

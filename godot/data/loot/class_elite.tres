@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LootTable" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/loot_table.gd" id="1_ousua"]
+
+[resource]
+script = ExtResource("1_ousua")
+id = &"class_elite"
+rarity_weights = PackedFloat32Array(18, 44, 30, 8, 0, 0)
+item_rolls = 1
+item_chance = 0.5
+extra_item_weights = PackedFloat32Array()
+gem_chance = 0.4
+gem_level_bonus = PackedInt32Array()
+potion_chance = 0.3
+exclude_bases = PackedStringArray()

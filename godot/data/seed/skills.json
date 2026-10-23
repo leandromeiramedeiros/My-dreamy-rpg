@@ -1,0 +1,4370 @@
+{
+ "about": "Seed from the JS reference (tools/godot/seed.js). One-time: edit the .tres in res://data/, not this file.",
+ "rows": [
+  {
+   "id": "sword_action",
+   "display_name": "Dawn Cut",
+   "description": "3-hit, 0.42 s, 8 MP/hit. Parry as off-action; the 3rd hit is wide",
+   "element": "slash",
+   "kind": "action",
+   "cooldown": 0.42,
+   "tags": [
+    "melee"
+   ],
+   "block_mode": "combo",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 103.13,
+     "reach": 1.5,
+     "damage": 50,
+     "knockback": 0.15,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 103.13,
+     "reach": 1.5,
+     "damage": 50,
+     "knockback": 0.15,
+     "stagger": 0,
+     "swing_dir": -1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 126.05,
+     "reach": 1.75,
+     "damage": 80,
+     "knockback": 0.5,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    }
+   ],
+   "color": "#ffcf6a",
+   "aim_shape": "cone",
+   "aim_range": 1.5,
+   "todo": "Basic attack: swing template \"blade3\" from game.js basicSwing (one block per combo hit). Hold-M1 \"none\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "rapier_action",
+   "display_name": "Thrust",
+   "description": "3-hit, 0.42 s, 8 MP/hit. Parry as off-action; the 3rd hit is wide",
+   "element": "pierce",
+   "kind": "action",
+   "cooldown": 0.4,
+   "tags": [
+    "melee"
+   ],
+   "block_mode": "combo",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "cone",
+     "reach": 2.1,
+     "width": 0.42,
+     "damage": 52,
+     "knockback": 0.1,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "reach": 2.1,
+     "width": 0.42,
+     "damage": 52,
+     "knockback": 0.1,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "reach": 2.4,
+     "width": 0.6,
+     "damage": 83.2,
+     "knockback": 0.35,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    }
+   ],
+   "color": "#d8e4ff",
+   "aim_shape": "cone",
+   "aim_range": 2.1,
+   "todo": "Basic attack: swing template \"thrust3\" from game.js basicSwing (one block per combo hit). Hold-M1 \"none\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "mace_action",
+   "display_name": "Knell",
+   "description": "3-hit, 0.42 s, 8 MP/hit. Parry as off-action; the 3rd hit is wide",
+   "element": "slash",
+   "kind": "action",
+   "cooldown": 0.46,
+   "tags": [
+    "melee"
+   ],
+   "block_mode": "combo",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 103.13,
+     "reach": 1.5,
+     "damage": 57,
+     "knockback": 0.15,
+     "stagger": 1,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 103.13,
+     "reach": 1.5,
+     "damage": 57,
+     "knockback": 0.15,
+     "stagger": 1,
+     "swing_dir": -1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 126.05,
+     "reach": 1.75,
+     "damage": 91.2,
+     "knockback": 0.5,
+     "stagger": 1,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    }
+   ],
+   "color": "#f2d27a",
+   "aim_shape": "cone",
+   "aim_range": 1.5,
+   "todo": "Basic attack: swing template \"blade3\" from game.js basicSwing (one block per combo hit). Hold-M1 \"none\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "axe_action",
+   "display_name": "Hew",
+   "description": "2-hit, 0.62 s, 14 MP, hold M1 = Heavy Strike 1 s x1.8. Heavy Strike holds poise; a worn companion supplies the tools",
+   "element": "slash",
+   "kind": "action",
+   "cooldown": 0.62,
+   "tags": [
+    "melee"
+   ],
+   "block_mode": "combo",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 114.59,
+     "reach": 1.9,
+     "damage": 78,
+     "knockback": 0.3,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 148.97,
+     "reach": 2.1,
+     "damage": 109.2,
+     "knockback": 0.6,
+     "stagger": 0,
+     "swing_dir": -1,
+     "hit_weight": 1.5,
+     "anim": "attack"
+    }
+   ],
+   "color": "#ffb070",
+   "aim_shape": "cone",
+   "aim_range": 1.9,
+   "todo": "Basic attack: swing template \"great2\" from game.js basicSwing (one block per combo hit). Hold-M1 \"heavy\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "hammer_action",
+   "display_name": "Pound",
+   "description": "2-hit, 0.62 s, 14 MP, hold M1 = Heavy Strike 1 s x1.8. Heavy Strike holds poise; a worn companion supplies the tools",
+   "element": "slash",
+   "kind": "action",
+   "cooldown": 0.66,
+   "tags": [
+    "melee"
+   ],
+   "block_mode": "combo",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 114.59,
+     "reach": 1.9,
+     "damage": 92,
+     "knockback": 0.3,
+     "stagger": 1,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 148.97,
+     "reach": 2.1,
+     "damage": 128.8,
+     "knockback": 0.6,
+     "stagger": 1,
+     "swing_dir": -1,
+     "hit_weight": 1.5,
+     "anim": "attack"
+    }
+   ],
+   "color": "#e0c890",
+   "aim_shape": "cone",
+   "aim_range": 1.9,
+   "todo": "Basic attack: swing template \"great2\" from game.js basicSwing (one block per combo hit). Hold-M1 \"heavy\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "halberd_action",
+   "display_name": "Reach",
+   "description": "2-hit, 0.62 s, 14 MP, hold M1 = Heavy Strike 1 s x1.8. Heavy Strike holds poise; a worn companion supplies the tools",
+   "element": "pierce",
+   "kind": "action",
+   "cooldown": 0.62,
+   "tags": [
+    "melee"
+   ],
+   "block_mode": "combo",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "cone",
+     "reach": 2.7,
+     "width": 0.5,
+     "damage": 84,
+     "knockback": 0.25,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 137.51,
+     "reach": 2.6,
+     "damage": 117.6,
+     "knockback": 0.5,
+     "stagger": 0,
+     "swing_dir": -1,
+     "hit_weight": 1,
+     "anim": "attack"
+    }
+   ],
+   "color": "#cfd8f0",
+   "aim_shape": "cone",
+   "aim_range": 2.7,
+   "todo": "Basic attack: swing template \"reach2\" from game.js basicSwing (one block per combo hit). Hold-M1 \"heavy\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "bow_action",
+   "display_name": "Moon Arrow",
+   "description": "1 shot, 0.36 s. Focus: still for 0.6 s, next shot crits; Snapshot crits",
+   "element": "pierce",
+   "kind": "action",
+   "cooldown": 0.36,
+   "tags": [
+    "ranged",
+    "projectile"
+   ],
+   "block_mode": "sequence",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 16,
+     "radius": 0.25,
+     "life": 0.65,
+     "pierce": 0,
+     "height": 1.5,
+     "damage": 30,
+     "stagger": 0,
+     "anim": "attack",
+     "proc": 1
+    }
+   ],
+   "color": "#c9d8ff",
+   "aim_shape": "proj",
+   "aim_range": 10.4,
+   "todo": "Basic attack: swing template \"shot\" from game.js basicSwing (one block per combo hit). Hold-M1 \"focus\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "crossbow_action",
+   "display_name": "Bolt",
+   "description": "1 shot, 0.36 s. Focus: still for 0.6 s, next shot crits; Snapshot crits",
+   "element": "pierce",
+   "kind": "action",
+   "cooldown": 0.3,
+   "tags": [
+    "ranged",
+    "projectile"
+   ],
+   "block_mode": "sequence",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 20,
+     "radius": 0.28,
+     "life": 0.6,
+     "pierce": 1,
+     "height": 1.5,
+     "damage": 35,
+     "stagger": 0,
+     "anim": "attack",
+     "proc": 1
+    }
+   ],
+   "color": "#e0d0b0",
+   "aim_shape": "proj",
+   "aim_range": 12,
+   "todo": "Basic attack: swing template \"quarrel\" from game.js basicSwing (one block per combo hit). Hold-M1 \"focus\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "chakram_action",
+   "display_name": "Disc",
+   "description": "1 shot, 0.36 s. Focus: still for 0.6 s, next shot crits; Snapshot crits",
+   "element": "slash",
+   "kind": "action",
+   "cooldown": 0.42,
+   "tags": [
+    "ranged",
+    "projectile"
+   ],
+   "block_mode": "sequence",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 12,
+     "radius": 0.35,
+     "life": 0.85,
+     "pierce": 99,
+     "returns": true,
+     "return_after": 0.4,
+     "height": 1.4,
+     "damage": 19,
+     "stagger": 0,
+     "anim": "attack",
+     "proc": 1
+    }
+   ],
+   "color": "#e7eeff",
+   "aim_shape": "proj",
+   "aim_range": 10.2,
+   "todo": "Basic attack: swing template \"disc\" from game.js basicSwing (one block per combo hit). Hold-M1 \"focus\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "staff_action",
+   "display_name": "Arcane Bolt",
+   "description": "bolt, 0.48 s, builds MP. reactions refund 10 % MP; cantrips are free",
+   "element": "arcane",
+   "kind": "action",
+   "cooldown": 0.48,
+   "tags": [
+    "ranged",
+    "projectile"
+   ],
+   "block_mode": "sequence",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 10,
+     "radius": 0.3,
+     "life": 0.9,
+     "pierce": 0,
+     "height": 1.6,
+     "damage": 32,
+     "stagger": 0,
+     "anim": "attack",
+     "proc": 1
+    }
+   ],
+   "color": "#7fe6ff",
+   "aim_shape": "proj",
+   "aim_range": 9,
+   "todo": "Basic attack: swing template \"magic\" from game.js basicSwing (one block per combo hit). Hold-M1 \"channel\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "wand_action",
+   "display_name": "Spark",
+   "description": "bolt, 0.48 s, builds MP. reactions refund 10 % MP; cantrips are free",
+   "element": "arcane",
+   "kind": "action",
+   "cooldown": 0.42,
+   "tags": [
+    "ranged",
+    "projectile"
+   ],
+   "block_mode": "sequence",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 10,
+     "radius": 0.3,
+     "life": 0.9,
+     "pierce": 0,
+     "height": 1.6,
+     "damage": 31,
+     "stagger": 0,
+     "anim": "attack",
+     "proc": 1
+    }
+   ],
+   "color": "#c7e8ff",
+   "aim_shape": "proj",
+   "aim_range": 9,
+   "todo": "Basic attack: swing template \"magic\" from game.js basicSwing (one block per combo hit). Hold-M1 \"none\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "orb_action",
+   "display_name": "Static Bolt",
+   "description": "bolt, 0.48 s, builds MP. reactions refund 10 % MP; cantrips are free",
+   "element": "lightning",
+   "kind": "action",
+   "cooldown": 0.48,
+   "tags": [
+    "ranged",
+    "projectile"
+   ],
+   "block_mode": "sequence",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 10,
+     "radius": 0.3,
+     "life": 0.9,
+     "pierce": 0,
+     "height": 1.6,
+     "damage": 38,
+     "stagger": 0,
+     "anim": "attack",
+     "proc": 1
+    }
+   ],
+   "color": "#bff0ff",
+   "aim_shape": "proj",
+   "aim_range": 9,
+   "todo": "Basic attack: swing template \"magic\" from game.js basicSwing (one block per combo hit). Hold-M1 \"channel\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "daggers_action",
+   "display_name": "Fang Cut",
+   "description": "4-hit, 0.28 s, 6 MP. Backstab: +30% crit from the rear arc; Marks",
+   "element": "pierce",
+   "kind": "action",
+   "cooldown": 0.28,
+   "tags": [
+    "melee"
+   ],
+   "block_mode": "combo",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 74.48,
+     "reach": 1.3,
+     "damage": 33,
+     "knockback": 0.08,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 74.48,
+     "reach": 1.3,
+     "damage": 33,
+     "knockback": 0.08,
+     "stagger": 0,
+     "swing_dir": -1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 74.48,
+     "reach": 1.3,
+     "damage": 33,
+     "knockback": 0.08,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 103.13,
+     "reach": 1.5,
+     "damage": 49.5,
+     "knockback": 0.3,
+     "stagger": 0,
+     "swing_dir": -1,
+     "hit_weight": 1,
+     "anim": "attack"
+    }
+   ],
+   "color": "#b9a8ff",
+   "aim_shape": "cone",
+   "aim_range": 1.3,
+   "todo": "Basic attack: swing template \"shadow4\" from game.js basicSwing (one block per combo hit). Hold-M1 \"none\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "claws_action",
+   "display_name": "Rake",
+   "description": "4-hit, 0.28 s, 6 MP. Backstab: +30% crit from the rear arc; Marks",
+   "element": "slash",
+   "kind": "action",
+   "cooldown": 0.28,
+   "tags": [
+    "melee"
+   ],
+   "block_mode": "combo",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 74.48,
+     "reach": 1.3,
+     "damage": 19,
+     "knockback": 0.08,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 74.48,
+     "reach": 1.3,
+     "damage": 19,
+     "knockback": 0.08,
+     "stagger": 0,
+     "swing_dir": -1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 74.48,
+     "reach": 1.3,
+     "damage": 19,
+     "knockback": 0.08,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 103.13,
+     "reach": 1.5,
+     "damage": 28.5,
+     "knockback": 0.3,
+     "stagger": 0,
+     "swing_dir": -1,
+     "hit_weight": 1,
+     "anim": "attack"
+    }
+   ],
+   "color": "#e0b0a0",
+   "aim_shape": "cone",
+   "aim_range": 1.3,
+   "todo": "Basic attack: swing template \"shadow4\" from game.js basicSwing (one block per combo hit). Hold-M1 \"none\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "fans_action",
+   "display_name": "Flutter",
+   "description": "4-hit, 0.28 s, 6 MP. Backstab: +30% crit from the rear arc; Marks",
+   "element": "slash",
+   "kind": "action",
+   "cooldown": 0.28,
+   "tags": [
+    "melee"
+   ],
+   "block_mode": "combo",
+   "combo_reset": 1,
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 74.48,
+     "reach": 1.3,
+     "damage": 27,
+     "knockback": 0.08,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 74.48,
+     "reach": 1.3,
+     "damage": 27,
+     "knockback": 0.08,
+     "stagger": 0,
+     "swing_dir": -1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 74.48,
+     "reach": 1.3,
+     "damage": 27,
+     "knockback": 0.08,
+     "stagger": 0,
+     "swing_dir": 1,
+     "hit_weight": 1,
+     "anim": "attack"
+    },
+    {
+     "type": "cone",
+     "arc": 103.13,
+     "reach": 1.5,
+     "damage": 40.5,
+     "knockback": 0.3,
+     "stagger": 0,
+     "swing_dir": -1,
+     "hit_weight": 1,
+     "anim": "attack"
+    }
+   ],
+   "color": "#ffc8e8",
+   "aim_shape": "cone",
+   "aim_range": 1.3,
+   "todo": "Basic attack: swing template \"shadow4\" from game.js basicSwing (one block per combo hit). Hold-M1 \"none\" (game.js holdAttack) is wave 2."
+  },
+  {
+   "id": "sunslash",
+   "display_name": "Sunslash",
+   "description": "Sweep a wide arc of dawnlight in front of you.",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 3,
+   "mp_cost": 18,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 143.24,
+     "reach": 2.1,
+     "damage": 150,
+     "knockback": 0.35
+    }
+   ],
+   "aim_shape": "cone",
+   "aim_range": 2.1,
+   "aim_radius": 0,
+   "aim_arc": 143.24,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#ffcf6a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { swingWeapon(p, 0.26, 2.8); hitCone(p.x, p.y, a, 2.5, 2.1, 150, { knock: 0.35 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 2.6, r: 2.1, col: '#ffd77a', life: 0.28, w: 5 }); sfx('slash'); }"
+  },
+  {
+   "id": "heroic",
+   "display_name": "Heroic Strike",
+   "description": "Lunge forward and smash — stuns for 1s.",
+   "element": "slash",
+   "kind": "page",
+   "cooldown": 5,
+   "mp_cost": 25,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "call"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "distance": 1.4,
+     "duration": 0.12,
+     "iframes": 0
+    },
+    {
+     "type": "cone",
+     "arc": 97.4,
+     "reach": 1.9,
+     "damage": 170,
+     "stun": 1,
+     "knockback": 0.7
+    }
+   ],
+   "aim_shape": "cone",
+   "aim_range": 1.9,
+   "aim_radius": 0,
+   "aim_arc": 97.4,
+   "aim_width": 0,
+   "stagger": 3,
+   "hit_weight": 1.5,
+   "color": "#ffb84a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) {\n      dashPlayer(p, Math.cos(a), Math.sin(a), 1.4, 0.12, { onEnd: () => {\n        swingWeapon(p, 0.2, 2.2); hitCone(p.x, p.y, a, 1.7, 1.9, 170, { stun: 1.0, knock: 0.7 });\n        fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 1.8, r: 1.9, col: '#fff2b0', life: 0.3, w: 7 }); shake(5); sfx('heavy');\n      } });\n    }"
+  },
+  {
+   "id": "dashstrike",
+   "display_name": "Dash Strike",
+   "description": "Dash through enemies, cutting everything in your path.",
+   "element": "slash",
+   "kind": "page",
+   "cooldown": 6,
+   "mp_cost": 25,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "call"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "distance": 3.8,
+     "duration": 0.22,
+     "iframes": 0.22,
+     "hit_radius": 1,
+     "damage": 130,
+     "knockback": 0.3
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 3.8,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 1,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#ffd77a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { dashPlayer(p, Math.cos(a), Math.sin(a), 3.8, 0.22, { trail: '#ffe9a0', hit: { dmg: 130, r: 1.0, knock: 0.3 }, invuln: true }); sfx('dash'); }"
+  },
+  {
+   "id": "whirl",
+   "display_name": "Whirling Blade",
+   "description": "Spin three times, hitting all around you.",
+   "element": "slash",
+   "kind": "page",
+   "cooldown": 7,
+   "mp_cost": 30,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "call"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "radius": 2,
+     "damage": 60,
+     "life": 0,
+     "knockback": 0.25
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#ffe08a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\na zone block repeats 3x in JS (loop)\nJS:\ncast: cast(p) {\n      for (let k = 0; k < 3; k++) delay(k * 0.22, () => {\n        p.spin = 0.22; hitArea(p.x, p.y, 2.0, 60, { knock: 0.25 });\n        fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: k * 2.1, arc: Math.PI * 2, r: 2.0, col: '#ffe9a0', life: 0.22, w: 4 }); sfx('slash');\n      });\n    }"
+  },
+  {
+   "id": "judgement",
+   "display_name": "Radiant Judgement",
+   "description": "ULTIMATE — call a pillar of light: huge damage and a long stun.",
+   "element": "holy",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 6,
+     "radius": 2.5,
+     "damage": 340,
+     "life": 0,
+     "stun": 1.4,
+     "delay": 0.5
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 6,
+   "aim_radius": 2.5,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#fff2b0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a, tx, ty) {\n      [tx, ty] = targetIn(p, tx, ty, 6);\n      fx({ type: 'marker', x: tx, y: ty, r: 2.5, col: '#ffe9a0', life: 0.5 });\n      delay(0.5, () => { hitArea(tx, ty, 2.5, 340, { stun: 1.4 }); fx({ type: 'pillar', x: tx, y: ty, col: '#fff2b0', life: 0.7, r: 2.5 }); burst(tx, ty, 0, 40, ['#fff6d6', '#ffd77a', '#ffffff'], 5); shake(8); sfx('boom'); });\n    }"
+  },
+  {
+   "id": "dawnwave",
+   "display_name": "Dawn Wave",
+   "description": "PAGE — Release a crescent of light that pierces everything.",
+   "element": "holy",
+   "kind": "page",
+   "cooldown": 12,
+   "mp_cost": 45,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page",
+    "arrow",
+    "call"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 9,
+     "radius": 1,
+     "life": 1.2,
+     "damage": 220,
+     "pierce": 99,
+     "color": "#ffe9a0",
+     "knockback": 0.4
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 10.8,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 1,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#ffe9a0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { swingWeapon(p, 0.25, 2.4); spawnProj({ x: p.x, y: p.y, z: p.z + 1.4, ang: a, speed: 9, r: 1.0, dmg: 220, pierce: 99, life: 1.2, kind: 'wave', col: '#ffe9a0', knock: 0.4 }); sfx('wave'); }"
+  },
+  {
+   "id": "firebolt",
+   "display_name": "Firebolt",
+   "description": "Hurl a bolt that explodes and burns.",
+   "element": "fire",
+   "kind": "spell",
+   "cooldown": 2.5,
+   "mp_cost": 18,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 11,
+     "radius": 0.35,
+     "life": 1.2,
+     "damage": 74,
+     "color": "#ff9a4a",
+     "explode_radius": 1.1,
+     "explode_damage": 30,
+     "hit_params": {
+      "burn": 2
+     }
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 13.2,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.35,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#ff8a4a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { castAnim(p); spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a, speed: 11, r: 0.35, dmg: 74, life: 1.2, kind: 'fire', col: '#ff9a4a', burn: 2, explode: { r: 1.1, dmg: 30 } }); sfx('fire'); }"
+  },
+  {
+   "id": "frostshard",
+   "display_name": "Frost Shards",
+   "description": "Fire three piercing shards that slow.",
+   "element": "frost",
+   "kind": "spell",
+   "cooldown": 3,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 12,
+     "radius": 0.3,
+     "life": 0.8,
+     "damage": 68,
+     "pierce": 1,
+     "color": "#bff4ff",
+     "hit_params": {
+      "slow": 2
+     },
+     "count": 3,
+     "spread": 25.21
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 9.6,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.3,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#9fe8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { castAnim(p); for (const o of [-0.22, 0, 0.22]) spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a + o, speed: 12, r: 0.3, dmg: 68, life: 0.8, kind: 'frost', col: '#bff4ff', pierce: 1, slow: 2 }); sfx('frost'); }"
+  },
+  {
+   "id": "barrage",
+   "display_name": "Arcane Barrage",
+   "description": "Five homing missiles seek out foes.",
+   "element": "arcane",
+   "kind": "page",
+   "cooldown": 6,
+   "mp_cost": 30,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 8,
+     "radius": 0.3,
+     "life": 1.8,
+     "damage": 30,
+     "homing": 7,
+     "color": "#d6b0ff",
+     "count": 5
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 14.4,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.3,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#c79bff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { castAnim(p); for (let k = 0; k < 5; k++) delay(k * 0.07, () => spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a + (k - 2) * 0.35, speed: 8, r: 0.3, dmg: 30, life: 1.8, kind: 'arcane', col: '#d6b0ff', homing: 7 })); sfx('arcane'); }"
+  },
+  {
+   "id": "gravity",
+   "display_name": "Gravity Well",
+   "description": "Open a well that drags enemies in and grinds them.",
+   "element": "arcane",
+   "kind": "page",
+   "cooldown": 9,
+   "mp_cost": 35,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 7,
+     "radius": 2.8,
+     "life": 2.6,
+     "tick": 0.25,
+     "damage": 26,
+     "pull": 3.2,
+     "color": "#a07aff",
+     "hit_params": {
+      "kind": "well"
+     }
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 7,
+   "aim_radius": 2.8,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#a07aff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a, tx, ty) { castAnim(p); [tx, ty] = targetIn(p, tx, ty, 7); zone({ x: tx, y: ty, r: 2.8, life: 2.6, tick: 0.25, dmg: 26, pull: 3.2, col: '#a07aff', kind: 'well' }); WIND.cast('well', tx, ty, 0); sfx('arcane'); }"
+  },
+  {
+   "id": "meteor",
+   "display_name": "Meteor",
+   "description": "ULTIMATE — call down a meteor. Massive area damage + burn.",
+   "element": "fire",
+   "kind": "ultimate",
+   "cooldown": 18,
+   "mp_cost": 70,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 7,
+     "radius": 2.7,
+     "damage": 400,
+     "life": 0,
+     "hit_params": {
+      "burn": 4
+     },
+     "knockback": 0.6,
+     "delay": 0.9
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 7,
+   "aim_radius": 2.7,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#ff7a4a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a, tx, ty) {\n      castAnim(p); [tx, ty] = targetIn(p, tx, ty, 7);\n      fx({ type: 'marker', x: tx, y: ty, r: 2.7, col: '#ff8a4a', life: 0.9 });\n      fx({ type: 'meteor', x: tx, y: ty, life: 0.9, col: '#ff9a4a' });\n      delay(0.9, () => { hitArea(tx, ty, 2.7, 400, { burn: 4, knock: 0.6 }); fx({ type: 'ring', x: tx, y: ty, r: 3, col: '#ffb070', life: 0.5 }); burst(tx, ty, 0, 60, ['#ffd27a', '#ff8a4a', '#ff4a3a', '#fff'], 7); shake(10); sfx('boom'); });\n    }"
+  },
+  {
+   "id": "starstorm",
+   "display_name": "Starstorm",
+   "description": "PAGE — A storm of falling stars over an area.",
+   "element": "holy",
+   "kind": "page",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "cast_range": 7,
+     "radius": 1,
+     "damage": 85,
+     "life": 0
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 7,
+   "aim_radius": 2.4,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#bfe8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a, tx, ty) {\n      castAnim(p); [tx, ty] = targetIn(p, tx, ty, 7);\n      fx({ type: 'marker', x: tx, y: ty, r: 2.6, col: '#bfe8ff', life: 2.2 });\n      for (let k = 0; k < 14; k++) delay(0.1 + k * 0.14, () => {\n        const r = Math.sqrt(Math.random()) * 2.4, an = Math.random() * 6.28, sx = tx + Math.cos(an) * r, sy = ty + Math.sin(an) * r;\n        fx({ type: 'meteor', x: sx, y: sy, life: 0.25, col: '#cfeaff', small: true });\n        delay(0.25, () => { hitArea(sx, sy, 1.0, 85, {}); burst(sx, sy, 0, 10, ['#ffffff', '#bfe8ff'], 3); shake(2); });\n      });\n      sfx('arcane');\n    }"
+  },
+  {
+   "id": "multishot",
+   "display_name": "Multishot",
+   "description": "Loose a fan of five arrows.",
+   "element": "pierce",
+   "kind": "spell",
+   "cooldown": 3,
+   "mp_cost": 18,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 15,
+     "radius": 0.25,
+     "life": 0.7,
+     "damage": 38,
+     "color": "#e7eeff"
+    }
+   ],
+   "aim_shape": "cone",
+   "aim_range": 10.5,
+   "aim_radius": 0,
+   "aim_arc": 32.09,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#c9d8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { castAnim(p); for (let k = -2; k <= 2; k++) spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a + k * 0.14, speed: 15, r: 0.25, dmg: 38, life: 0.7, kind: 'arrow', col: '#e7eeff' }); sfx('bow'); }"
+  },
+  {
+   "id": "piercing",
+   "display_name": "Piercing Shot",
+   "description": "A charged arrow that pierces every enemy in a line.",
+   "element": "pierce",
+   "kind": "page",
+   "cooldown": 4,
+   "mp_cost": 22,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "arrow"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 22,
+     "radius": 0.4,
+     "life": 0.6,
+     "damage": 175,
+     "pierce": 99,
+     "color": "#cfe0ff",
+     "hit_params": {
+      "big": true
+     },
+     "knockback": 0.4
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 13.2,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.4,
+   "stagger": 0,
+   "hit_weight": 1.5,
+   "color": "#a6c8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { castAnim(p); spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 22, r: 0.4, dmg: 175, life: 0.6, kind: 'arrow', col: '#cfe0ff', pierce: 99, big: true, knock: 0.4 }); sfx('bow'); shake(2); }"
+  },
+  {
+   "id": "tumble",
+   "display_name": "Tumble",
+   "description": "BOOTS — roll away from your aim; your damage +30% for 1.5 s.",
+   "element": "pierce",
+   "kind": "active",
+   "cooldown": 8,
+   "mp_cost": 0,
+   "stamina_cost": 25,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "distance": 2.8,
+     "duration": 0.2,
+     "iframes": 0.2,
+     "roll": true
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 2.8,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#9ad8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { dashPlayer(p, -Math.cos(a), -Math.sin(a), 2.8, 0.2, { invuln: true, roll: true }); addBuff(p, 'focus', 1.5); WIND.cast('tumble', p.x, p.y, a); sfx('dash'); }"
+  },
+  {
+   "id": "snare",
+   "display_name": "Snare Trap",
+   "description": "Throw a trap that roots and wounds the first enemies to step in.",
+   "element": "nature",
+   "kind": "page",
+   "cooldown": 8,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "arrow"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 5,
+     "radius": 1.4,
+     "life": 8,
+     "damage": 95,
+     "color": "#8fe0a0",
+     "hit_params": {
+      "trap": true,
+      "kind": "trap"
+     },
+     "stun": 2.2
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 5,
+   "aim_radius": 1.4,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#8fe0a0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a, tx, ty) { [tx, ty] = targetIn(p, tx, ty, 5); zone({ x: tx, y: ty, r: 1.4, life: 8, trap: true, dmg: 95, stun: 2.2, col: '#8fe0a0', kind: 'trap' }); sfx('trap'); }"
+  },
+  {
+   "id": "arrowrain",
+   "display_name": "Rain of Arrows",
+   "description": "ULTIMATE — arrows rain down on an area, slowing everything.",
+   "element": "pierce",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 7.5,
+     "radius": 2.4,
+     "life": 3.2,
+     "tick": 0.2,
+     "damage": 32,
+     "color": "#c9d8ff",
+     "hit_params": {
+      "slow": 1,
+      "kind": "rain"
+     }
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 7.5,
+   "aim_radius": 2.4,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#c9d8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a, tx, ty) { castAnim(p); [tx, ty] = targetIn(p, tx, ty, 7.5); zone({ x: tx, y: ty, r: 2.4, life: 3.2, tick: 0.2, dmg: 32, slow: 1, col: '#c9d8ff', kind: 'rain' }); sfx('bow'); }"
+  },
+  {
+   "id": "moonbeam",
+   "display_name": "Moonbeam",
+   "description": "PAGE — Channel a beam of moonlight down a long line.",
+   "element": "holy",
+   "kind": "page",
+   "cooldown": 15,
+   "mp_cost": 55,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page",
+    "arrow"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "cone",
+     "reach": 11,
+     "width": 0.9,
+     "damage": 310,
+     "knockback": 0.5,
+     "delay": 0.35
+    }
+   ],
+   "aim_shape": "line",
+   "aim_range": 11,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.9,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#d8e4ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) {\n      castAnim(p, 0.4); p.rootT = 0.35;\n      fx({ type: 'line', x: p.x, y: p.y, ang: a, len: 11, w: 0.9, col: '#d8e4ff', life: 0.35, tele: true });\n      delay(0.35, () => { hitLine(p.x, p.y, a, 11, 0.9, 310, { knock: 0.5 }); fx({ type: 'beam', x: p.x, y: p.y, z: p.z + 1.5, ang: a, len: 11, col: '#e8f0ff', life: 0.4 }); shake(6); sfx('beam'); });\n    }"
+  },
+  {
+   "id": "bulwark",
+   "display_name": "Bulwark",
+   "description": "CHEST — take 60% less damage for 3.5s and shove foes away.",
+   "element": "slash",
+   "kind": "active",
+   "cooldown": 14,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "radius": 1.7,
+     "damage": 30,
+     "life": 0,
+     "knockback": 1
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 1.7,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 2,
+   "hit_weight": 1,
+   "color": "#a9b4d4",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { addBuff(p, 'bulwark', 3.5); hitArea(p.x, p.y, 1.7, 30, { knock: 1.0 }); fx({ type: 'ring', x: p.x, y: p.y, r: 1.8, col: '#cfe0ff', life: 0.35 }); sfx('shield'); }"
+  },
+  {
+   "id": "manasurge",
+   "display_name": "Mana Surge",
+   "description": "CHEST — restore 120 MP and gain +30% power for 6s.",
+   "element": "arcane",
+   "kind": "active",
+   "cooldown": 18,
+   "mp_cost": 0,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 1.4,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#9c7ae0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { p.mp = Math.min(p.maxMp, p.mp + 120); addBuff(p, 'surge', 6); fx({ type: 'ring', x: p.x, y: p.y, r: 1.4, col: '#c7a8ff', life: 0.5 }); burst(p.x, p.y, p.z + 1, 20, ['#c7a8ff', '#ffffff'], 2); sfx('arcane'); }"
+  },
+  {
+   "id": "shadowveil",
+   "display_name": "Shadow Veil",
+   "description": "CHEST — vanish for 3s (+40% speed); your next hit is a guaranteed critical.",
+   "element": "arcane",
+   "kind": "active",
+   "cooldown": 15,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#6aa77e",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { addBuff(p, 'veil', 3); burst(p.x, p.y, p.z + 1, 20, ['#2f6b4f', '#1a1326', '#8fe0a0'], 2); sfx('dash'); }"
+  },
+  {
+   "id": "warcry",
+   "display_name": "War Cry",
+   "description": "HELMET — a roar that stuns and knocks back nearby enemies.",
+   "element": "slash",
+   "kind": "active",
+   "cooldown": 12,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "call"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "radius": 2.6,
+     "damage": 40,
+     "life": 0,
+     "stun": 1.3,
+     "knockback": 0.9
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2.6,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 2,
+   "hit_weight": 1,
+   "color": "#ffcf6a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { hitArea(p.x, p.y, 2.6, 40, { stun: 1.3, knock: 0.9 }); fx({ type: 'ring', x: p.x, y: p.y, r: 2.7, col: '#ffd77a', life: 0.4 }); shake(4); sfx('shout'); }"
+  },
+  {
+   "id": "frostnova",
+   "display_name": "Frost Nova",
+   "description": "HELMET — freeze all nearby enemies in place for 2s.",
+   "element": "frost",
+   "kind": "active",
+   "cooldown": 12,
+   "mp_cost": 25,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "radius": 2.6,
+     "damage": 60,
+     "life": 0,
+     "stun": 2,
+     "hit_params": {
+      "freeze": true
+     }
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2.6,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#9fe8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { hitArea(p.x, p.y, 2.6, 60, { stun: 2.0, freeze: true }); fx({ type: 'ring', x: p.x, y: p.y, r: 2.7, col: '#bff4ff', life: 0.5 }); burst(p.x, p.y, 0.5, 30, ['#ffffff', '#bff4ff', '#7fd2ff'], 4); sfx('frost'); }"
+  },
+  {
+   "id": "mend",
+   "display_name": "Mend",
+   "description": "HELMET — heal 25% of max HP over 4s.",
+   "element": "nature",
+   "kind": "active",
+   "cooldown": 14,
+   "mp_cost": 25,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#8fe0a0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { addBuff(p, 'mend', 4); sfx('heal'); }"
+  },
+  {
+   "id": "charge",
+   "display_name": "Charge",
+   "description": "BOOTS — charge forward, bowling enemies over.",
+   "element": "slash",
+   "kind": "active",
+   "cooldown": 7,
+   "mp_cost": 0,
+   "stamina_cost": 35,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "distance": 4.2,
+     "duration": 0.26,
+     "iframes": 0.26,
+     "hit_radius": 1,
+     "damage": 60,
+     "knockback": 1
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 4.2,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 1,
+   "stagger": 3,
+   "hit_weight": 1.5,
+   "color": "#b9c2dc",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { dashPlayer(p, Math.cos(a), Math.sin(a), 4.2, 0.26, { trail: '#cfe0ff', hit: { dmg: 60, r: 1.0, knock: 1.0 }, invuln: true }); sfx('dash'); }"
+  },
+  {
+   "id": "blink",
+   "display_name": "Blink",
+   "description": "BOOTS — teleport a short distance toward your aim.",
+   "element": "arcane",
+   "kind": "active",
+   "cooldown": 6,
+   "mp_cost": 0,
+   "stamina_cost": 30,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "dash",
+   "aim_range": 3.6,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#e7c9a0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { blinkPlayer(p, a, 3.6); sfx('blink'); }"
+  },
+  {
+   "id": "sprint",
+   "display_name": "Sprint",
+   "description": "BOOTS — +80% move speed for 3s and shake off slows.",
+   "element": "nature",
+   "kind": "spell",
+   "cooldown": 9,
+   "mp_cost": 0,
+   "stamina_cost": 30,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#c08a5e",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { addBuff(p, 'sprint', 3); p.slowT = 0; burst(p.x, p.y, 0.2, 10, ['#ffffff', '#e7d6c0'], 2); sfx('dash'); }"
+  },
+  {
+   "id": "roll",
+   "display_name": "Roll",
+   "description": "BAREFOOT — a quick roll toward your aim. Boots replace it.",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 1.2,
+   "mp_cost": 0,
+   "stamina_cost": 25,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "distance": 2.4,
+     "duration": 0.22,
+     "iframes": 0.22,
+     "roll": true
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 2.4,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#e7e0ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { dashPlayer(p, Math.cos(a), Math.sin(a), 2.4, 0.22, { invuln: true, roll: true }); sfx('dash'); }"
+  },
+  {
+   "id": "fanknives",
+   "display_name": "Fan of Knives",
+   "description": "Throw a ring of eight piercing knives.",
+   "element": "pierce",
+   "kind": "spell",
+   "cooldown": 4,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 13,
+     "radius": 0.25,
+     "life": 0.4,
+     "damage": 52,
+     "pierce": 1,
+     "color": "#d6c8ff",
+     "count": 8
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 5,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#b9a8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { castAnim(p, 0.15); for (let k = 0; k < 8; k++) spawnProj({ x: p.x, y: p.y, z: p.z + 1.3, ang: a + k * Math.PI / 4, speed: 13, r: 0.25, dmg: 52, life: 0.4, kind: 'arrow', col: '#d6c8ff', pierce: 1 }); sfx('bow'); }"
+  },
+  {
+   "id": "deathmark",
+   "display_name": "Death Mark",
+   "description": "ULTIMATE — mark a spot: a cut now, a killing burst 1.2 s later.",
+   "element": "pierce",
+   "kind": "ultimate",
+   "cooldown": 14,
+   "mp_cost": 50,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 7,
+     "radius": 1.6,
+     "damage": 120,
+     "life": 0,
+     "knockback": 0.2
+    },
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 7,
+     "radius": 1.8,
+     "damage": 330,
+     "life": 0,
+     "stun": 0.6,
+     "delay": 1.2
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 7,
+   "aim_radius": 1.6,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#b9a8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a, tx, ty) {\n      [tx, ty] = targetIn(p, tx, ty, 7);\n      hitArea(tx, ty, 1.6, 120, { knock: 0.2 }); fx({ type: 'marker', x: tx, y: ty, r: 1.6, col: '#b9a8ff', life: 1.2 });\n      delay(1.2, () => { hitArea(tx, ty, 1.8, 330, { stun: 0.6 }); fx({ type: 'ring', x: tx, y: ty, r: 1.9, col: '#d6c8ff', life: 0.4 }); burst(tx, ty, 0, 30, ['#ffffff', '#b9a8ff'], 4); shake(6); sfx('boom'); });\n    }"
+  },
+  {
+   "id": "parry",
+   "display_name": "Parry",
+   "description": "OFF-ACTION — a 0.25 s parry window; a parried hit is negated and the attacker staggered (riposte).",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 1,
+   "mp_cost": 0,
+   "stamina_cost": 12,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#ffe6a0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { startParry(p, PARRY.blades); }\nJS fields: {\"cdKey\":\"parry\",\"off\":true}"
+  },
+  {
+   "id": "parryplus",
+   "display_name": "Parry+",
+   "description": "BUCKLER — a 0.35 s parry window; reflects projectiles from T3.",
+   "element": "slash",
+   "kind": "action",
+   "cooldown": 1,
+   "mp_cost": 0,
+   "stamina_cost": 12,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#c9b48a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { startParry(p, PARRY.buckler, { reflect: offTier(p) >= 2 }); }\nJS fields: {\"cdKey\":\"parry\",\"off\":true}"
+  },
+  {
+   "id": "step",
+   "display_name": "Step",
+   "description": "OFF-ACTION — a 0.6-tile sidestep; your next hit is a backstab (+30% crit).",
+   "element": "pierce",
+   "kind": "spell",
+   "cooldown": 0.8,
+   "mp_cost": 0,
+   "stamina_cost": 10,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "distance": 0.6,
+     "duration": 0.1,
+     "iframes": 0
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 0.6,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#b9a8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { const s = IN && IN.move && IN.move.mag ? 1 : -1, sa = a + s * Math.PI / 2; dashPlayer(p, Math.cos(sa), Math.sin(sa), 0.6, 0.1, {}); p.stepMark = G.t + 2; sfx('dash'); }\nJS fields: {\"off\":true}"
+  },
+  {
+   "id": "snapshot",
+   "display_name": "Snapshot",
+   "description": "OFF-ACTION — a quick shot that always crits.",
+   "element": "pierce",
+   "kind": "spell",
+   "cooldown": 1.5,
+   "mp_cost": 0,
+   "stamina_cost": 10,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 17,
+     "radius": 0.25,
+     "life": 0.6,
+     "damage": 34,
+     "color": "#e7eeff",
+     "hit_params": {
+      "crit": true
+     }
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 10,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.25,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#c9d8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { castAnim(p, 0.12); spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 17, r: 0.25, dmg: 34, life: 0.6, kind: 'arrow', col: '#e7eeff', crit: true }); sfx('bow'); }\nJS fields: {\"off\":true}"
+  },
+  {
+   "id": "ward",
+   "display_name": "Ward",
+   "description": "OFF-ACTION — a 1.5 s mana shield (-50% damage taken) that pops into a nova.",
+   "element": "arcane",
+   "kind": "spell",
+   "cooldown": 4,
+   "mp_cost": 0,
+   "stamina_cost": 15,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "radius": 2.2,
+     "damage": 60,
+     "life": 0,
+     "knockback": 0.5,
+     "delay": 1.5
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2.2,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#9fe8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { addBuff(p, 'ward', 1.5); delay(1.5, () => { hitArea(p.x, p.y, 2.2, 60, { knock: 0.5 }); fx({ type: 'ring', x: p.x, y: p.y, r: 2.3, col: '#9fe8ff', life: 0.35 }); sfx('arcane'); }); }\nJS fields: {\"off\":true}"
+  },
+  {
+   "id": "bash",
+   "display_name": "Bash",
+   "description": "A short shield dash that staggers what it hits.",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 4,
+   "mp_cost": 18,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "distance": 1.4,
+     "duration": 0.12,
+     "iframes": 0
+    },
+    {
+     "type": "cone",
+     "arc": 91.67,
+     "reach": 1.8,
+     "damage": 120,
+     "knockback": 0.8,
+     "stun": 0.4
+    }
+   ],
+   "aim_shape": "cone",
+   "aim_range": 1.8,
+   "aim_radius": 0,
+   "aim_arc": 91.67,
+   "aim_width": 0,
+   "stagger": 2,
+   "hit_weight": 1.5,
+   "color": "#c9b48a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { dashPlayer(p, Math.cos(a), Math.sin(a), 1.4, 0.12, { onEnd: () => { swingWeapon(p, 0.16, 1.6); hitCone(p.x, p.y, a, 1.6, 1.8, 120, { knock: 0.8, stun: 0.4 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 1.6, r: 1.8, col: '#f2e2b8', life: 0.22, w: 6 }); shake(3); sfx('heavy'); } }); }"
+  },
+  {
+   "id": "aegis",
+   "display_name": "Aegis",
+   "description": "ULTIMATE — for 3 s every hit is parried, and each parry restores 10% HP.",
+   "element": "holy",
+   "kind": "ultimate",
+   "cooldown": 12,
+   "mp_cost": 30,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 1.6,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#fff2b0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { addBuff(p, 'aegis', 3); fx({ type: 'ring', x: p.x, y: p.y, r: 1.6, col: '#fff2b0', life: 0.5 }); sfx('shield'); }"
+  },
+  {
+   "id": "turn",
+   "display_name": "Turn",
+   "description": "Turn to the next page and flick a free cantrip.",
+   "element": "arcane",
+   "kind": "action",
+   "cooldown": 0.5,
+   "mp_cost": 0,
+   "stamina_cost": 8,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 11,
+     "radius": 0.3,
+     "life": 0.8,
+     "damage": 22,
+     "color": "#d6b0ff"
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 9,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.3,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#c79bff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { deckNext(p); castAnim(p, 0.12); spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a, speed: 11, r: 0.3, dmg: 22, life: 0.8, kind: 'arcane', col: '#d6b0ff' }); sfx('arcane'); }\nJS fields: {\"off\":true}"
+  },
+  {
+   "id": "nock",
+   "display_name": "Nock",
+   "description": "Nock the next arrow; your next shot hits 40% harder and pierces once.",
+   "element": "pierce",
+   "kind": "action",
+   "cooldown": 0.5,
+   "mp_cost": 0,
+   "stamina_cost": 8,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#a6c8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { deckNext(p); p.nocked = G.t + 4; sfx('bow'); }\nJS fields: {\"off\":true}"
+  },
+  {
+   "id": "chapter",
+   "display_name": "Chapter",
+   "description": "ULTIMATE — read every page in the book over 1.5 s.",
+   "element": "arcane",
+   "kind": "ultimate",
+   "cooldown": 12,
+   "mp_cost": 0,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "circle",
+   "aim_range": 7,
+   "aim_radius": 2.4,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#c79bff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a, tx, ty) { deckAll(p, a, tx, ty); }"
+  },
+  {
+   "id": "quiverstorm",
+   "display_name": "Quiver Storm",
+   "description": "ULTIMATE — loose every arrow in the quiver over 1.5 s.",
+   "element": "pierce",
+   "kind": "ultimate",
+   "cooldown": 12,
+   "mp_cost": 0,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "circle",
+   "aim_range": 7.5,
+   "aim_radius": 2.4,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#a6c8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a, tx, ty) { deckAll(p, a, tx, ty); }"
+  },
+  {
+   "id": "hush",
+   "display_name": "Hush",
+   "description": "Toggle: the world slows to a quarter; you do not. Drains 60 MP/s; hero damage x0.6.",
+   "element": "arcane",
+   "kind": "spell",
+   "cooldown": 3,
+   "mp_cost": 30,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#bcd0ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { hushStart(p); }\nJS fields: {\"toggle\":true}"
+  },
+  {
+   "id": "secondwind",
+   "display_name": "Second Wind",
+   "description": "PAGE — instantly heal 35% of max HP.",
+   "element": "nature",
+   "kind": "page",
+   "cooldown": 25,
+   "mp_cost": 30,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page",
+    "call"
+   ],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#ff8fb0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { healPlayer(p, p.maxHp * 0.35 * healMul(p)); fx({ type: 'ring', x: p.x, y: p.y, r: 1.2, col: '#ffb0c8', life: 0.5 }); burst(p.x, p.y, p.z + 1, 24, ['#ffb0c8', '#ffffff', '#8fe0a0'], 2); sfx('heal'); }"
+  },
+  {
+   "id": "orbit",
+   "display_name": "Arcane Orbit",
+   "description": "PAGE — three orbs circle you for 8s, burning anything they touch.",
+   "element": "arcane",
+   "kind": "page",
+   "cooldown": 16,
+   "mp_cost": 35,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#c79bff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { addBuff(p, 'orbit', 8); sfx('arcane'); }"
+  },
+  {
+   "id": "chain",
+   "display_name": "Chain Lightning",
+   "description": "PAGE — lightning leaps between up to 6 enemies.",
+   "element": "lightning",
+   "kind": "spell",
+   "cooldown": 7,
+   "mp_cost": 30,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "circle",
+   "aim_range": 7,
+   "aim_radius": 3,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#9fe0ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a, tx, ty) { castAnim(p); chainLightning(p, tx, ty); sfx('zap'); }"
+  },
+  {
+   "id": "dreamveil",
+   "display_name": "Dreamveil",
+   "description": "PAGE — bend the dream: enemies move at 35% speed for 4s.",
+   "element": "arcane",
+   "kind": "active",
+   "cooldown": 30,
+   "mp_cost": 40,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 8,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#ffb0e0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { addBuff(p, 'dreamveil', 4); fx({ type: 'ring', x: p.x, y: p.y, r: 8, col: '#ffb0e0', life: 0.8 }); sfx('veil'); }"
+  },
+  {
+   "id": "bless",
+   "display_name": "Blessing of Dawn",
+   "description": "PAGE — +40% damage for 8s.",
+   "element": "holy",
+   "kind": "page",
+   "cooldown": 24,
+   "mp_cost": 30,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page",
+    "call"
+   ],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#ffe08a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { addBuff(p, 'bless', 8); fx({ type: 'pillar', x: p.x, y: p.y, col: '#ffe9a0', life: 0.5, r: 0.8 }); sfx('heal'); }"
+  },
+  {
+   "id": "shootingstar",
+   "display_name": "Shooting Star",
+   "description": "PAGE — a star crashes down at your cursor.",
+   "element": "fire",
+   "kind": "page",
+   "cooldown": 6,
+   "mp_cost": 22,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 7,
+     "radius": 1.6,
+     "damage": 170,
+     "life": 0,
+     "knockback": 0.4,
+     "delay": 0.35
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 7,
+   "aim_radius": 1.6,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#fff2b0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a, tx, ty) {\n      [tx, ty] = targetIn(p, tx, ty, 7);\n      fx({ type: 'meteor', x: tx, y: ty, life: 0.35, col: '#fff2b0', small: true });\n      delay(0.35, () => { hitArea(tx, ty, 1.6, 170, { knock: 0.4 }); fx({ type: 'ring', x: tx, y: ty, r: 1.7, col: '#fff2b0', life: 0.35 }); burst(tx, ty, 0, 24, ['#fff', '#fff2b0', '#ffd77a'], 4); shake(4); sfx('boom'); });\n    }"
+  },
+  {
+   "id": "fleche",
+   "display_name": "Flèche",
+   "description": "Lunge through a line of foes with one long thrust.",
+   "element": "pierce",
+   "kind": "spell",
+   "cooldown": 3,
+   "mp_cost": 18,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "distance": 2.8,
+     "duration": 0.14,
+     "iframes": 0,
+     "hit_radius": 0.8,
+     "damage": 150,
+     "knockback": 0.2
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 2.8,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.8,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#d8e4ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { dashPlayer(p, Math.cos(a), Math.sin(a), 2.8, 0.14, { trail: '#e8f0ff', hit: { dmg: 150, r: 0.8, knock: 0.2 } }); fx({ type: 'line', x: p.x, y: p.y, ang: a, len: 2.8, w: 0.5, col: '#e8f0ff', life: 0.2 }); sfx('dash'); }"
+  },
+  {
+   "id": "perforate",
+   "display_name": "Perforate",
+   "description": "ULTIMATE — six needle thrusts down a line, then a finishing lunge that always crits.",
+   "element": "pierce",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "cone",
+     "reach": 3.2,
+     "width": 0.5,
+     "damage": 35,
+     "knockback": 0.05
+    },
+    {
+     "type": "cone",
+     "reach": 3.6,
+     "width": 0.6,
+     "damage": 110,
+     "knockback": 0.5,
+     "hit_params": {
+      "crit": true
+     },
+     "stagger": 2,
+     "delay": 0.7
+    }
+   ],
+   "aim_shape": "line",
+   "aim_range": 3.2,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.5,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#e8f0ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\na cone block repeats 6x in JS (loop)\nJS:\ncast: cast(p, a) {\n      p.rootT = 0.8;\n      for (let k = 0; k < 6; k++) delay(k * 0.1, () => { swingWeapon(p, 0.08, 0.5, k % 2 ? 1 : -1); hitLine(p.x, p.y, a, 3.2, 0.5, 35, { knock: 0.05 }); fx({ type: 'line', x: p.x, y: p.y, ang: a + (k % 2 ? 0.05 : -0.05), len: 3.2, w: 0.3, col: '#e8f0ff', life: 0.1 }); sfx('swing'); });\n      delay(0.7, () => { hitLine(p.x, p.y, a, 3.6, 0.6, 110, { knock: 0.5, crit: true, stagger: 2 }); fx({ type: 'beam', x: p.x, y: p.y, z: p.z + 1.2, ang: a, len: 3.6, col: '#ffffff', life: 0.2 }); shake(5); sfx('heavy'); });\n    }"
+  },
+  {
+   "id": "crush",
+   "display_name": "Crush",
+   "description": "An overhead blow that crushes guards: stagger 3.",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 3.5,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 91.67,
+     "reach": 1.9,
+     "damage": 165,
+     "knockback": 0.5,
+     "delay": 0.12
+    }
+   ],
+   "aim_shape": "cone",
+   "aim_range": 1.9,
+   "aim_radius": 0,
+   "aim_arc": 91.67,
+   "aim_width": 0,
+   "stagger": 3,
+   "hit_weight": 1.5,
+   "color": "#f2d27a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { swingWeapon(p, 0.22, 1.8, 1); delay(0.12, () => { hitCone(p.x, p.y, a, 1.6, 1.9, 165, { knock: 0.5 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 1.6, r: 1.9, col: '#fff2b0', life: 0.25, w: 7 }); shake(4); sfx('heavy'); }); }"
+  },
+  {
+   "id": "consecrate",
+   "display_name": "Consecrate",
+   "description": "ULTIMATE — hallow the ground around you: a holy burst, then 5 s of searing light.",
+   "element": "holy",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "radius": 3,
+     "damage": 80,
+     "life": 0,
+     "stun": 0.5
+    },
+    {
+     "type": "zone",
+     "at": "self",
+     "radius": 3,
+     "life": 5,
+     "tick": 0.5,
+     "damage": 30,
+     "follow": false,
+     "color": "#fff2b0",
+     "hit_params": {
+      "kind": "consecrate",
+      "sanctuary": false
+     }
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 3,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#fff2b0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) {\n      hitArea(p.x, p.y, 3, 80, { stun: 0.5 }); fx({ type: 'pillar', x: p.x, y: p.y, col: '#fff2b0', life: 0.5, r: 1.4 }); shake(5); sfx('boom');\n      zone({ x: p.x, y: p.y, r: 3, life: 5, tick: 0.5, dmg: 30, col: '#fff2b0', kind: 'consecrate', follow: p.grip === 'grip_sanctuary', sanctuary: p.grip === 'grip_sanctuary' });\n    }"
+  },
+  {
+   "id": "cleave",
+   "display_name": "Cleave",
+   "description": "One full-circle swing that cleaves everything around you.",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 4,
+   "mp_cost": 22,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "radius": 2.4,
+     "damage": 170,
+     "life": 0,
+     "knockback": 0.5
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2.4,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 1,
+   "hit_weight": 1.5,
+   "color": "#ffb070",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { p.spin = 0.3; hitArea(p.x, p.y, 2.4, 170, { knock: 0.5 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: p.aim, arc: Math.PI * 2, r: 2.4, col: '#ffd0a0', life: 0.3, w: 6 }); shake(4); sfx('heavy'); }"
+  },
+  {
+   "id": "colossus",
+   "display_name": "Colossus Strike",
+   "description": "ULTIMATE — wind up (poise), then a world-splitting overhead in a wide cone.",
+   "element": "slash",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 114.59,
+     "reach": 3,
+     "damage": 400,
+     "knockback": 0.9,
+     "delay": 0.6
+    }
+   ],
+   "aim_shape": "cone",
+   "aim_range": 3,
+   "aim_radius": 0,
+   "aim_arc": 114.59,
+   "aim_width": 0,
+   "stagger": 3,
+   "hit_weight": 2,
+   "color": "#ffb070",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) {\n      p.rootT = 0.65; poiseFor(p, 0.7); castAnim(p, 0.6);\n      fx({ type: 'marker', x: p.x + Math.cos(a) * 1.6, y: p.y + Math.sin(a) * 1.6, r: 2, col: '#ffb070', life: 0.6 });\n      delay(0.6, () => { swingWeapon(p, 0.24, 2.4, 1); hitCone(p.x, p.y, a, 2, 3, 400, { knock: 0.9 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 2.1, r: 3, col: '#fff0d0', life: 0.35, w: 9 }); burst(p.x + Math.cos(a) * 2, p.y + Math.sin(a) * 2, 0, 30, ['#ffd0a0', '#ffffff'], 5); shake(9); sfx('boom'); });\n    }"
+  },
+  {
+   "id": "earthbreaker",
+   "display_name": "Earthbreaker",
+   "description": "Split the ground in a line; the cracks stay for 3 s.",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 4.5,
+   "mp_cost": 24,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "cone",
+     "reach": 5.5,
+     "width": 0.8,
+     "damage": 150,
+     "knockback": 0.4
+    }
+   ],
+   "aim_shape": "line",
+   "aim_range": 5.5,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.8,
+   "stagger": 3,
+   "hit_weight": 1.5,
+   "color": "#e0c890",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { swingWeapon(p, 0.2, 1.6, 1); hitLine(p.x, p.y, a, 5.5, 0.8, 150, { knock: 0.4 }); crackLine(p.x, p.y, a, 5.5); fx({ type: 'line', x: p.x, y: p.y, ang: a, len: 5.5, w: 0.8, col: '#e0c890', life: 0.3 }); shake(5); sfx('boom'); }"
+  },
+  {
+   "id": "aftershock",
+   "display_name": "Aftershock",
+   "description": "ULTIMATE — a ground slam, then three aftershocks that keep staggering.",
+   "element": "slash",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "radius": 2.8,
+     "damage": 220,
+     "life": 0,
+     "knockback": 0.7
+    },
+    {
+     "type": "zone",
+     "at": "target",
+     "radius": 3.2,
+     "damage": 70,
+     "life": 0,
+     "stagger": 1,
+     "knockback": 0.3
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 3.2,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 3,
+   "hit_weight": 2,
+   "color": "#e0c890",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) {\n      swingWeapon(p, 0.22, 2.2, 1); hitArea(p.x, p.y, 2.8, 220, { knock: 0.7 }); crackRing(p.x, p.y, 2.4, 4); fx({ type: 'ring', x: p.x, y: p.y, r: 3, col: '#f0d8a0', life: 0.4 }); shake(8); sfx('boom');\n      const x = p.x, y = p.y;\n      for (let k = 1; k <= 3; k++) delay(k * 0.6, () => { hitArea(x, y, 3.2, 70, { stagger: 1, knock: 0.3 }); fx({ type: 'ring', x, y, r: 3.3, col: '#e0c890', life: 0.35 }); shake(4); sfx('heavy'); });\n    }"
+  },
+  {
+   "id": "sweep",
+   "display_name": "Sweep",
+   "description": "A long wheeling sweep that throws foes back on a gust.",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 3.5,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 171.89,
+     "reach": 2.8,
+     "damage": 150,
+     "knockback": 0.7
+    }
+   ],
+   "aim_shape": "cone",
+   "aim_range": 2.8,
+   "aim_radius": 0,
+   "aim_arc": 171.89,
+   "aim_width": 0,
+   "stagger": 1,
+   "hit_weight": 1.5,
+   "color": "#cfd8f0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { swingWeapon(p, 0.26, 3.2); hitCone(p.x, p.y, a, 3, 2.8, 150, { knock: 0.7 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 3, r: 2.8, col: '#e8f0ff', life: 0.3, w: 5 }); WIND.emit({ kind: 'radial', x: p.x, y: p.y, r: 3, force: 2.5, life: 0.5, by: 1 }); sfx('slash'); }"
+  },
+  {
+   "id": "skewer",
+   "display_name": "Skewer",
+   "description": "ULTIMATE — charge with the point down, then drive it through: pins for 1 s.",
+   "element": "pierce",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "distance": 4.5,
+     "duration": 0.25,
+     "iframes": 0.25,
+     "hit_radius": 0.9,
+     "damage": 260,
+     "knockback": 0.3
+    },
+    {
+     "type": "cone",
+     "reach": 3,
+     "width": 0.7,
+     "damage": 140,
+     "hit_params": {
+      "root": 1
+     },
+     "knockback": 0.2
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 4.5,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.9,
+   "stagger": 3,
+   "hit_weight": 2,
+   "color": "#cfd8f0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) {\n      dashPlayer(p, Math.cos(a), Math.sin(a), 4.5, 0.25, { trail: '#e8f0ff', hit: { dmg: 260, r: 0.9, knock: 0.3 }, invuln: true, onEnd: () => {\n        hitLine(p.x, p.y, a, 3, 0.7, 140, { root: 1, knock: 0.2 }); fx({ type: 'beam', x: p.x, y: p.y, z: p.z + 1.2, ang: a, len: 3, col: '#ffffff', life: 0.25 }); shake(6); sfx('heavy');\n      } }); sfx('dash');\n    }"
+  },
+  {
+   "id": "piercingbolt",
+   "display_name": "Piercing Bolt",
+   "description": "A heavy bolt that pierces every enemy in a line and pins them for 0.6 s.",
+   "element": "pierce",
+   "kind": "spell",
+   "cooldown": 3.5,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 24,
+     "radius": 0.4,
+     "life": 0.6,
+     "damage": 120,
+     "pierce": 99,
+     "color": "#f0e0c0",
+     "hit_params": {
+      "big": true,
+      "root": 0.6
+     },
+     "knockback": 0.3
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 14,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.4,
+   "stagger": 0,
+   "hit_weight": 1.5,
+   "color": "#e0d0b0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { castAnim(p); spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 24, r: 0.4, dmg: 120, life: 0.6, kind: 'arrow', col: '#f0e0c0', pierce: 99, big: true, knock: 0.3, root: 0.6 }); sfx('bow'); shake(2); }"
+  },
+  {
+   "id": "ballista",
+   "display_name": "Ballista",
+   "description": "ULTIMATE — brace for 1.2 s, then one siege bolt down a long line (at most 25% of a boss's HP).",
+   "element": "pierce",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "cone",
+     "reach": 14,
+     "width": 0.7,
+     "damage": 340,
+     "knockback": 0.8,
+     "delay": 1.2
+    }
+   ],
+   "aim_shape": "line",
+   "aim_range": 14,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.7,
+   "stagger": 3,
+   "hit_weight": 2,
+   "color": "#f0e0c0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) {\n      p.rootT = 1.2; castAnim(p, 1.2); poiseFor(p, 1.2);\n      fx({ type: 'line', x: p.x, y: p.y, ang: a, len: 14, w: 0.7, col: '#f0e0c0', life: 1.2, tele: true });\n      delay(1.2, () => { if (CAST && CAST.ctx) CAST.ctx.bossCap = 0.25; hitLine(p.x, p.y, a, 14, 0.7, 340, { knock: 0.8 }); fx({ type: 'beam', x: p.x, y: p.y, z: p.z + 1.5, ang: a, len: 14, col: '#fff6e0', life: 0.35 }); shake(9); sfx('beam'); });\n    }"
+  },
+  {
+   "id": "ricochet",
+   "display_name": "Ricochet",
+   "description": "A disc that bounces between foes: 4 hits (6 with the Lodestar grip).",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 3,
+   "mp_cost": 18,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 13,
+     "radius": 0.35,
+     "life": 0.9,
+     "damage": 40,
+     "color": "#e7eeff",
+     "hit_params": {
+      "bounce": 5,
+      "zap": 30
+     }
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 10,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.35,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#e7eeff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { castAnim(p, 0.15); const lode = p.grip === 'grip_lodestar'; spawnProj({ x: p.x, y: p.y, z: p.z + 1.4, ang: a, speed: 13, r: 0.35, dmg: 40, life: 0.9, kind: 'arcane', col: '#e7eeff', bounce: lode ? 5 : 3, zap: lode ? 30 : 0 }); sfx('swing'); }"
+  },
+  {
+   "id": "guillotine",
+   "display_name": "Guillotine",
+   "description": "ULTIMATE — a great disc carves out and back through everything, slowing it.",
+   "element": "slash",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 11,
+     "radius": 1.1,
+     "life": 1.3,
+     "damage": 200,
+     "pierce": 99,
+     "color": "#ffffff",
+     "returns": true,
+     "return_after": 0.65,
+     "hit_params": {
+      "slow": 2
+     },
+     "knockback": 0.3
+    }
+   ],
+   "aim_shape": "line",
+   "aim_range": 7,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 1.1,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#ffffff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { castAnim(p, 0.3); spawnProj({ x: p.x, y: p.y, z: p.z + 1.4, ang: a, speed: 11, r: 1.1, dmg: 200, life: 1.3, kind: 'wave', col: '#ffffff', pierce: 99, ret: 0.65, slow: 2, knock: 0.3 }); shake(3); sfx('wave'); }"
+  },
+  {
+   "id": "runebinding",
+   "display_name": "Rune of Binding",
+   "description": "ULTIMATE — a rune roots everything inside for 2.5 s, then bursts.",
+   "element": "arcane",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 7,
+     "radius": 2.6,
+     "damage": 60,
+     "life": 0,
+     "hit_params": {
+      "root": 2.5
+     }
+    },
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 7,
+     "radius": 2.6,
+     "damage": 300,
+     "life": 0,
+     "knockback": 0.3,
+     "delay": 1.2
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 7,
+   "aim_radius": 2.6,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#c7e8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a, tx, ty) {\n      castAnim(p); [tx, ty] = targetIn(p, tx, ty, 7);\n      hitArea(tx, ty, 2.6, 60, { root: 2.5 }); fx({ type: 'marker', x: tx, y: ty, r: 2.6, col: '#c7e8ff', life: 1.2 }); sfx('arcane');\n      delay(1.2, () => { hitArea(tx, ty, 2.6, 300, { knock: 0.3 }); fx({ type: 'ring', x: tx, y: ty, r: 2.8, col: '#e0f0ff', life: 0.4 }); burst(tx, ty, 0, 36, ['#ffffff', '#c7e8ff', '#9a44ff'], 4); shake(7); sfx('boom'); });\n    }"
+  },
+  {
+   "id": "tempest",
+   "display_name": "Tempest",
+   "description": "ULTIMATE — a storm wheels around you for 4 s, jolting and shoving foes.",
+   "element": "lightning",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "radius": 3.2,
+     "life": 4,
+     "tick": 0.4,
+     "damage": 40,
+     "follow": true,
+     "color": "#bff0ff",
+     "hit_params": {
+      "jolt": 2,
+      "kind": "storm"
+     }
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 3.2,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#bff0ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { castAnim(p); zone({ x: p.x, y: p.y, r: 3.2, life: 4, tick: 0.4, dmg: 40, jolt: 2, col: '#bff0ff', kind: 'storm', follow: true }); WIND.emit({ kind: 'radial', x: p.x, y: p.y, r: 3.4, force: 2, life: 1, by: 1 }); sfx('zap'); }"
+  },
+  {
+   "id": "rend",
+   "display_name": "Rend",
+   "description": "Three raking cuts; the target is Rent (+15% damage taken) for 4 s.",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 3,
+   "mp_cost": 18,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 103.13,
+     "reach": 1.6,
+     "damage": 55,
+     "knockback": 0.08,
+     "hit_params": {
+      "rent": 4
+     }
+    }
+   ],
+   "aim_shape": "cone",
+   "aim_range": 1.6,
+   "aim_radius": 0,
+   "aim_arc": 103.13,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#e0b0a0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\na cone block repeats 3x in JS (loop)\nJS:\ncast: cast(p, a) { for (let k = 0; k < 3; k++) delay(k * 0.1, () => { swingWeapon(p, 0.09, 1.6, k % 2 ? 1 : -1); hitCone(p.x, p.y, a, 1.8, 1.6, 55, { knock: 0.08, rent: 4 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 1.8, r: 1.6, col: '#ffb0a0', life: 0.12, w: 2, dir: k % 2 ? 1 : -1 }); sfx('swing'); }); }"
+  },
+  {
+   "id": "savage",
+   "display_name": "Savage",
+   "description": "ULTIMATE — pounce on the target and maul it eight times; Frenzy maxes.",
+   "element": "slash",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "duration": 0.16,
+     "iframes": 0.16
+    },
+    {
+     "type": "zone",
+     "at": "self",
+     "cast_range": 5,
+     "radius": 1.6,
+     "damage": 48,
+     "life": 0,
+     "knockback": 0.05
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 5,
+   "aim_radius": 1.6,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#ff9080",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\na zone block repeats 8x in JS (loop)\nJS:\ncast: cast(p, a, tx, ty) {\n      [tx, ty] = targetIn(p, tx, ty, 5); const d = dist(p.x, p.y, tx, ty), an = Math.atan2(ty - p.y, tx - p.x);\n      dashPlayer(p, Math.cos(an), Math.sin(an), Math.max(0.2, d - 0.6), 0.16, { invuln: true, trail: '#ff9080', onEnd: () => {\n        p.frenzy = frenzyCap(p); p.frenzyT = G.t + 1.5;\n        for (let k = 0; k < 8; k++) delay(k * 0.12, () => { swingWeapon(p, 0.1, 1.6, k % 2 ? 1 : -1); hitArea(p.x, p.y, 1.6, 48, { knock: 0.05 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a + k, arc: 1.6, r: 1.6, col: '#ffb0a0', life: 0.12, w: 3 }); sfx('swing'); });\n      } }); sfx('dash');\n    }"
+  },
+  {
+   "id": "veildance",
+   "display_name": "Veil Dance",
+   "description": "Dance through foes on a gust: each is cut and Marked.",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 3.5,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "distance": 3,
+     "duration": 0.25,
+     "iframes": 0.25,
+     "hit_radius": 1.1,
+     "damage": 120,
+     "knockback": 0.2
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 3,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 1.1,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#ffc8e8",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { dashPlayer(p, Math.cos(a), Math.sin(a), 3, 0.25, { invuln: true, trail: '#ffc8e8', hit: { dmg: 120, r: 1.1, knock: 0.2, marks: 1 } }); WIND.emit({ kind: 'vector', x: p.x, y: p.y, dir: a, r: 3.2, force: 2.5, life: 0.5, arc: 1.2, by: 1 }); sfx('dash'); }"
+  },
+  {
+   "id": "thousandpetals",
+   "display_name": "Thousand Petals",
+   "description": "ULTIMATE — a storm of blade-petals wheels with you for 3 s, Marking all it cuts.",
+   "element": "slash",
+   "kind": "ultimate",
+   "cooldown": 16,
+   "mp_cost": 60,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "radius": 3,
+     "life": 3,
+     "tick": 0.25,
+     "damage": 30,
+     "follow": true,
+     "color": "#ffc8e8",
+     "hit_params": {
+      "marks": 1,
+      "kind": "petals"
+     }
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 3,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#ffc8e8",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { zone({ x: p.x, y: p.y, r: 3, life: 3, tick: 0.25, dmg: 30, marks: 1, col: '#ffc8e8', kind: 'petals', follow: true }); burst(p.x, p.y, p.z + 1, 30, ['#ffc8e8', '#ffffff'], 3); sfx('wave'); }"
+  },
+  {
+   "id": "block",
+   "display_name": "Block",
+   "description": "HOLD — block 70% of hits from the front (poise); drains stamina.",
+   "element": "slash",
+   "kind": "action",
+   "cooldown": 0.3,
+   "mp_cost": 0,
+   "stamina_cost": 6,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#a8b8d8",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.guard {\"kind\":\"block\",\"cut\":0.7,\"arc\":2.1,\"speed\":0.7,\"drain\":10}\nno starter block covers CT.guard (buff / guard): wave 2\nJS:\ncast: cast(p) { startGuard(p, o); }\nJS fields: {\"off\":true}"
+  },
+  {
+   "id": "shieldbash",
+   "display_name": "Shield Bash",
+   "description": "Drive the shield forward; shots that meet it mid-dash fly back.",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 4,
+   "mp_cost": 18,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "distance": 2.2,
+     "duration": 0.18,
+     "iframes": 0.18,
+     "hit_radius": 1,
+     "damage": 120,
+     "knockback": 0.8
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 2.2,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 1,
+   "stagger": 2,
+   "hit_weight": 1.5,
+   "color": "#a8b8d8",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { dashPlayer(p, Math.cos(a), Math.sin(a), 2.2, 0.18, { trail: '#c8d8f0', hit: { dmg: 120, r: 1, knock: 0.8 }, reflect: true, invuln: true }); sfx('shield'); }"
+  },
+  {
+   "id": "bulwarkcharge",
+   "display_name": "Bulwark Charge",
+   "description": "ULTIMATE — charge behind the shield, carrying the first foe, and slam it down.",
+   "element": "slash",
+   "kind": "ultimate",
+   "cooldown": 14,
+   "mp_cost": 30,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "distance": 5,
+     "duration": 0.35,
+     "iframes": 0.35,
+     "hit_radius": 1,
+     "damage": 60,
+     "knockback": 0.2,
+     "carry": true
+    },
+    {
+     "type": "zone",
+     "at": "self",
+     "cast_range": 5,
+     "radius": 1.8,
+     "damage": 220,
+     "life": 0,
+     "stun": 1,
+     "knockback": 0.8
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 5,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 1,
+   "stagger": 3,
+   "hit_weight": 2,
+   "color": "#a8b8d8",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) {\n      dashPlayer(p, Math.cos(a), Math.sin(a), 5, 0.35, { trail: '#c8d8f0', hit: { dmg: 60, r: 1, knock: 0.2 }, carry: true, invuln: true, onEnd: () => {\n        hitArea(p.x + Math.cos(a) * 0.8, p.y + Math.sin(a) * 0.8, 1.8, 220, { stun: 1, knock: 0.8 }); fx({ type: 'ring', x: p.x, y: p.y, r: 2, col: '#e0e8ff', life: 0.35 }); shake(7); sfx('boom');\n      } }); sfx('dash');\n    }"
+  },
+  {
+   "id": "wall",
+   "display_name": "Wall",
+   "description": "HOLD — stop everything from the front, shots included; you move at half speed.",
+   "element": "slash",
+   "kind": "action",
+   "cooldown": 0.3,
+   "mp_cost": 0,
+   "stamina_cost": 6,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#8898b8",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.guard {\"kind\":\"wall\",\"cut\":1,\"arc\":2.1,\"speed\":0.5,\"drain\":8}\nno starter block covers CT.guard (buff / guard): wave 2\nJS:\ncast: cast(p) { startGuard(p, o); }\nJS fields: {\"off\":true}"
+  },
+  {
+   "id": "shove",
+   "display_name": "Shove",
+   "description": "Heave the wall forward: a gust that hurls a line of foes back.",
+   "element": "slash",
+   "kind": "spell",
+   "cooldown": 4,
+   "mp_cost": 18,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 80.21,
+     "reach": 3,
+     "damage": 80,
+     "knockback": 1.6
+    }
+   ],
+   "aim_shape": "cone",
+   "aim_range": 3,
+   "aim_radius": 0,
+   "aim_arc": 80.21,
+   "aim_width": 0,
+   "stagger": 2,
+   "hit_weight": 1.5,
+   "color": "#8898b8",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { swingWeapon(p, 0.2, 1.4, 1); hitCone(p.x, p.y, a, 1.4, 3, 80, { knock: 1.6 }); WIND.emit({ kind: 'vector', x: p.x, y: p.y, dir: a, r: 3.5, force: 4, life: 0.6, arc: 1, by: 1 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 1.4, r: 3, col: '#c8d8f0', life: 0.25, w: 6 }); shake(4); sfx('heavy'); }"
+  },
+  {
+   "id": "fortress",
+   "display_name": "Fortress",
+   "description": "ULTIMATE — raise a dome for 4 s: enemy shots break on it, and you take 30% less inside.",
+   "element": "holy",
+   "kind": "ultimate",
+   "cooldown": 14,
+   "mp_cost": 30,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2.6,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#e0e8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { p.fortress = { x: p.x, y: p.y, r: 2.6, until: G.t + 4 }; addBuff(p, 'fortress', 4); fx({ type: 'ring', x: p.x, y: p.y, r: 2.6, col: '#e0e8ff', life: 4 }); sfx('shield'); }"
+  },
+  {
+   "id": "bellow",
+   "display_name": "Bellow",
+   "description": "Turn to the next call and bellow: a guard-breaking roar (stagger 2).",
+   "element": "slash",
+   "kind": "action",
+   "cooldown": 1.2,
+   "mp_cost": 0,
+   "stamina_cost": 12,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "cone",
+     "arc": 91.67,
+     "reach": 2.4,
+     "damage": 30,
+     "knockback": 0.4,
+     "hit_params": {
+      "guardBreak": true
+     }
+    }
+   ],
+   "aim_shape": "cone",
+   "aim_range": 2.4,
+   "aim_radius": 0,
+   "aim_arc": 91.67,
+   "aim_width": 0,
+   "stagger": 2,
+   "hit_weight": 1,
+   "color": "#e0b070",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p, a) { deckNext(p); hitCone(p.x, p.y, a, 1.6, 2.4, 30, { knock: 0.4, guardBreak: true }); fx({ type: 'ring', x: p.x, y: p.y, r: 1.6, col: '#ffd890', life: 0.25 }); sfx('shout'); }\nJS fields: {\"off\":true}"
+  },
+  {
+   "id": "laststand",
+   "display_name": "Last Stand",
+   "description": "ULTIMATE — 4 s of poise and +30% damage; then Winded (-20% speed) for 3 s.",
+   "element": "slash",
+   "kind": "ultimate",
+   "cooldown": 14,
+   "mp_cost": 0,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 2,
+   "color": "#ffd890",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { addBuff(p, 'laststand', 4); poiseFor(p, 4); fx({ type: 'pillar', x: p.x, y: p.y, col: '#ffd890', life: 0.5, r: 1 }); shake(4); sfx('shout'); }"
+  },
+  {
+   "id": "rally",
+   "display_name": "Rally",
+   "description": "CALL — heal 12% and +15% damage for 6 s.",
+   "element": "holy",
+   "kind": "page",
+   "cooldown": 18,
+   "mp_cost": 25,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "call"
+   ],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#ffd890",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.buff {\"buff\":\"rally\",\"t\":6,\"heal\":0.12,\"col\":\"#ffd890\",\"sfx\":\"shout\"}\nno starter block covers CT.buff (buff / guard): wave 2\nJS:\ncast: cast(p) {\n    addBuff(p, o.buff, o.t);\n    if (o.heal) healPlayer(p, p.maxHp * o.heal * healMul(p));\n    if (o.nova) hitArea(p.x, p.y, o.nova.r, o.nova.dmg, o.nova.hit || {});\n    fx({ type: 'ring', x: p.x, y: p.y, r: o.nova ? o.nova.r + 0.2 : 1.4, col: o.col, life: 0.4 });\n    burst(p.x, p.y, p.z + 1, 14, [o.col, '#ffffff'], 2); sfx(o.sfx || 'shield');\n  }"
+  },
+  {
+   "id": "taunt",
+   "display_name": "Taunt",
+   "description": "HELMET / CALL — every foe nearby turns on you; you take 20% less for 3 s.",
+   "element": "slash",
+   "kind": "active",
+   "cooldown": 12,
+   "mp_cost": 15,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "call"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "cast_range": 6,
+     "radius": 4.5,
+     "damage": 25,
+     "life": 0,
+     "delay": 0,
+     "color": "#ff8a9a",
+     "hit_params": {
+      "taunt": 3
+     }
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 4.5,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 1,
+   "hit_weight": 1,
+   "color": "#c05a6a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.nova {\"r\":4.5,\"dmg\":25,\"hit\":{\"taunt\":3},\"buff\":[\"taunt\",3],\"col\":\"#ff8a9a\"}\nJS:\ncast: cast(p, a, tx, ty) {\n    const [x, y] = ctAt(p, o, tx, ty);\n    const go = () => {\n      const n = hitArea(x, y, o.r, o.dmg, o.hit || {});\n      fx({ type: 'ring', x, y, r: o.r + 0.2, col: o.col, life: 0.4 }); burst(x, y, 0.4, 18, [o.col, '#ffffff'], 3);\n      if (o.zone) zone(Object.assign({ x, y, col: o.col }, o.zone));\n      if (o.cracks) crackRing(x, y, o.r, o.cracks);\n      if (o.wind) WIND.emit(Object.assign({ x, y, dir: a, by: 1 }, o.wind));\n      if (o.after) o.after(p, x, y, n);\n      if (o.shake) shake(o.shake);\n    };\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.swing) swingWeapon(p, 0.2, o.swing); else castAnim(p);\n    if (o.delay) { fx({ type: 'marker', x, y, r: o.r, col: o.col, life: o.delay }); delay(o.delay, go); } else go();\n    sfx(o.sfx || 'shout');\n  }"
+  },
+  {
+   "id": "quakecall",
+   "display_name": "Quake-call",
+   "description": "CALL — the ground answers the horn: a quake that leaves cracks.",
+   "element": "slash",
+   "kind": "page",
+   "cooldown": 12,
+   "mp_cost": 25,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "call"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "cast_range": 6,
+     "radius": 2.6,
+     "damage": 110,
+     "life": 0,
+     "delay": 0,
+     "color": "#d0b080",
+     "knockback": 0.5
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2.6,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 2,
+   "hit_weight": 1,
+   "color": "#d0b080",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.nova {\"r\":2.6,\"dmg\":110,\"hit\":{\"knock\":0.5},\"cracks\":3,\"col\":\"#d0b080\",\"sfx\":\"boom\",\"shake\":5}\nJS:\ncast: cast(p, a, tx, ty) {\n    const [x, y] = ctAt(p, o, tx, ty);\n    const go = () => {\n      const n = hitArea(x, y, o.r, o.dmg, o.hit || {});\n      fx({ type: 'ring', x, y, r: o.r + 0.2, col: o.col, life: 0.4 }); burst(x, y, 0.4, 18, [o.col, '#ffffff'], 3);\n      if (o.zone) zone(Object.assign({ x, y, col: o.col }, o.zone));\n      if (o.cracks) crackRing(x, y, o.r, o.cracks);\n      if (o.wind) WIND.emit(Object.assign({ x, y, dir: a, by: 1 }, o.wind));\n      if (o.after) o.after(p, x, y, n);\n      if (o.shake) shake(o.shake);\n    };\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.swing) swingWeapon(p, 0.2, o.swing); else castAnim(p);\n    if (o.delay) { fx({ type: 'marker', x, y, r: o.r, col: o.col, life: o.delay }); delay(o.delay, go); } else go();\n    sfx(o.sfx || 'shout');\n  }"
+  },
+  {
+   "id": "stand",
+   "display_name": "Stand",
+   "description": "CALL — Brace: poise and 30% less damage for 3 s, then a shove.",
+   "element": "slash",
+   "kind": "page",
+   "cooldown": 14,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "call"
+   ],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#b0a090",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.buff {\"buff\":\"brace\",\"t\":3,\"col\":\"#b0a090\"}\nno starter block covers CT.buff (buff / guard): wave 2\nJS:\ncast: cast(p) {\n    addBuff(p, o.buff, o.t);\n    if (o.heal) healPlayer(p, p.maxHp * o.heal * healMul(p));\n    if (o.nova) hitArea(p.x, p.y, o.nova.r, o.nova.dmg, o.nova.hit || {});\n    fx({ type: 'ring', x: p.x, y: p.y, r: o.nova ? o.nova.r + 0.2 : 1.4, col: o.col, life: 0.4 });\n    burst(p.x, p.y, p.z + 1, 14, [o.col, '#ffffff'], 2); sfx(o.sfx || 'shield');\n  }"
+  },
+  {
+   "id": "venomarrow",
+   "display_name": "Venom",
+   "description": "ARROW — a barbed arrow that Poisons.",
+   "element": "nature",
+   "kind": "page",
+   "cooldown": 6,
+   "mp_cost": 22,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "arrow"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 16,
+     "radius": 0.3,
+     "life": 0.75,
+     "damage": 55,
+     "pierce": 0,
+     "hit_params": {
+      "col": "#b0f0a0",
+      "poison": 1
+     }
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 12,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.3,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#8fe07a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.arrow {\"dmg\":55,\"col\":\"#b0f0a0\",\"poison\":1}\nJS:\ncast: cast(p, a) {\n    castAnim(p);\n    spawnProj(Object.assign({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.3, life: 0.75, kind: 'arrow' }, o));\n    sfx('bow');\n  }"
+  },
+  {
+   "id": "firearrow",
+   "display_name": "Fire",
+   "description": "ARROW — a burning arrow that bursts on impact.",
+   "element": "fire",
+   "kind": "page",
+   "cooldown": 6,
+   "mp_cost": 22,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "arrow"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 16,
+     "radius": 0.3,
+     "life": 0.75,
+     "damage": 45,
+     "pierce": 0,
+     "hit_params": {
+      "col": "#ffb070",
+      "burn": 1.5,
+      "explode": {
+       "r": 1,
+       "dmg": 25
+      }
+     }
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 12,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.3,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#ff9a4a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.arrow {\"dmg\":45,\"col\":\"#ffb070\",\"burn\":1.5,\"explode\":{\"r\":1,\"dmg\":25}}\nJS:\ncast: cast(p, a) {\n    castAnim(p);\n    spawnProj(Object.assign({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.3, life: 0.75, kind: 'arrow' }, o));\n    sfx('bow');\n  }"
+  },
+  {
+   "id": "frostarrow",
+   "display_name": "Frost",
+   "description": "ARROW — an icy arrow that Chills.",
+   "element": "frost",
+   "kind": "page",
+   "cooldown": 6,
+   "mp_cost": 22,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "arrow"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 16,
+     "radius": 0.3,
+     "life": 0.75,
+     "damage": 65,
+     "pierce": 1,
+     "hit_params": {
+      "col": "#d0f4ff",
+      "slow": 2
+     }
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 12,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.3,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#9fe8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.arrow {\"dmg\":65,\"col\":\"#d0f4ff\",\"slow\":2,\"pierce\":1}\nJS:\ncast: cast(p, a) {\n    castAnim(p);\n    spawnProj(Object.assign({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.3, life: 0.75, kind: 'arrow' }, o));\n    sfx('bow');\n  }"
+  },
+  {
+   "id": "bolaarrow",
+   "display_name": "Bola",
+   "description": "ARROW — a weighted bola that roots for 1.5 s.",
+   "element": "nature",
+   "kind": "page",
+   "cooldown": 8,
+   "mp_cost": 22,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "arrow"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 13,
+     "radius": 0.3,
+     "life": 0.75,
+     "damage": 55,
+     "pierce": 0,
+     "hit_params": {
+      "col": "#a0e0b0",
+      "root": 1.5
+     }
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 10,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.35,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#8fe0a0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.arrow {\"dmg\":55,\"col\":\"#a0e0b0\",\"root\":1.5,\"speed\":13}\nJS:\ncast: cast(p, a) {\n    castAnim(p);\n    spawnProj(Object.assign({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.3, life: 0.75, kind: 'arrow' }, o));\n    sfx('bow');\n  }"
+  },
+  {
+   "id": "grapplearrow",
+   "display_name": "Grapple",
+   "description": "ARROW — a hooked line that drags the target to you.",
+   "element": "pierce",
+   "kind": "page",
+   "cooldown": 8,
+   "mp_cost": 22,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "arrow"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 16,
+     "radius": 0.3,
+     "life": 0.75,
+     "damage": 55,
+     "pierce": 0,
+     "hit_params": {
+      "col": "#e0d0b0",
+      "pull": 1.2
+     }
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 10,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.3,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#d0c0a0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.arrow {\"dmg\":55,\"col\":\"#e0d0b0\",\"pull\":1.2}\nJS:\ncast: cast(p, a) {\n    castAnim(p);\n    spawnProj(Object.assign({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.3, life: 0.75, kind: 'arrow' }, o));\n    sfx('bow');\n  }"
+  },
+  {
+   "id": "splitarrow",
+   "display_name": "Split",
+   "description": "ARROW — splits in two on its first hit.",
+   "element": "pierce",
+   "kind": "page",
+   "cooldown": 6,
+   "mp_cost": 22,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "arrow"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 16,
+     "radius": 0.3,
+     "life": 0.75,
+     "damage": 55,
+     "pierce": 0,
+     "hit_params": {
+      "col": "#e7eeff",
+      "split": 2
+     }
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 12,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.3,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#c9d8ff",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.arrow {\"dmg\":55,\"col\":\"#e7eeff\",\"split\":2}\nJS:\ncast: cast(p, a) {\n    castAnim(p);\n    spawnProj(Object.assign({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.3, life: 0.75, kind: 'arrow' }, o));\n    sfx('bow');\n  }"
+  },
+  {
+   "id": "explosivearrow",
+   "display_name": "Blast",
+   "description": "ARROW — a powder arrow: a wide blast where it lands.",
+   "element": "fire",
+   "kind": "page",
+   "cooldown": 8,
+   "mp_cost": 26,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "arrow"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "projectile",
+     "speed": 16,
+     "radius": 0.3,
+     "life": 0.75,
+     "damage": 45,
+     "pierce": 0,
+     "hit_params": {
+      "col": "#ff9a6a",
+      "explode": {
+       "r": 1.6,
+       "dmg": 70
+      }
+     },
+     "knockback": 0.6
+    }
+   ],
+   "aim_shape": "proj",
+   "aim_range": 12,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.3,
+   "stagger": 0,
+   "hit_weight": 1.5,
+   "color": "#ff7a4a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.arrow {\"dmg\":45,\"col\":\"#ff9a6a\",\"explode\":{\"r\":1.6,\"dmg\":70},\"knock\":0.6}\nJS:\ncast: cast(p, a) {\n    castAnim(p);\n    spawnProj(Object.assign({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.3, life: 0.75, kind: 'arrow' }, o));\n    sfx('bow');\n  }"
+  },
+  {
+   "id": "stormcall",
+   "display_name": "Stormcall",
+   "description": "HELMET / PAGE — call a storm on the aim: 3 s of strikes that Jolt.",
+   "element": "lightning",
+   "kind": "active",
+   "cooldown": 10,
+   "mp_cost": 30,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 7,
+     "radius": 2.2,
+     "damage": 45,
+     "life": 3,
+     "tick": 0.5,
+     "follow": false,
+     "color": "#e8f080"
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 7,
+   "aim_radius": 2.2,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#d8e870",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.zone {\"at\":\"target\",\"range\":7,\"z\":{\"r\":2.2,\"life\":3,\"tick\":0.5,\"dmg\":45,\"jolt\":2,\"kind\":\"storm\"},\"col\":\"#e8f080\",\"sfx\":\"zap\"}\nJS:\ncast: cast(p, a, tx, ty) {\n    const [x, y] = ctAt(p, o, tx, ty);\n    castAnim(p);\n    zone(Object.assign({ x, y, col: o.col, follow: !!o.follow }, o.z));\n    fx({ type: 'ring', x, y, r: o.z.r + 0.2, col: o.col, life: 0.4 }); sfx(o.sfx || 'arcane');\n  }"
+  },
+  {
+   "id": "toxinflask",
+   "display_name": "Toxin Flask",
+   "description": "HELMET / PAGE — lob a flask: it bursts into a Poison cloud for 4 s.",
+   "element": "nature",
+   "kind": "active",
+   "cooldown": 10,
+   "mp_cost": 25,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 6,
+     "radius": 1.8,
+     "damage": 40,
+     "life": 0,
+     "delay": 0.45,
+     "color": "#8fe07a",
+     "hit_params": {
+      "poison": 2
+     }
+    },
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 6,
+     "radius": 1.8,
+     "damage": 10,
+     "life": 4,
+     "tick": 0.5,
+     "delay": 0.45,
+     "color": "#8fe07a"
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 6,
+   "aim_radius": 1.8,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#8fe07a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.nova {\"at\":\"target\",\"range\":6,\"delay\":0.45,\"r\":1.8,\"dmg\":40,\"hit\":{\"poison\":2},\"zone\":{\"r\":1.8,\"life\":4,\"tick\":0.5,\"dmg\":10,\"poison\":1,\"kind\":\"toxin\"},\"col\":\"#8fe07a\",\"sfx\":\"trap\"}\nJS:\ncast: cast(p, a, tx, ty) {\n    const [x, y] = ctAt(p, o, tx, ty);\n    const go = () => {\n      const n = hitArea(x, y, o.r, o.dmg, o.hit || {});\n      fx({ type: 'ring', x, y, r: o.r + 0.2, col: o.col, life: 0.4 }); burst(x, y, 0.4, 18, [o.col, '#ffffff'], 3);\n      if (o.zone) zone(Object.assign({ x, y, col: o.col }, o.zone));\n      if (o.cracks) crackRing(x, y, o.r, o.cracks);\n      if (o.wind) WIND.emit(Object.assign({ x, y, dir: a, by: 1 }, o.wind));\n      if (o.after) o.after(p, x, y, n);\n      if (o.shake) shake(o.shake);\n    };\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.swing) swingWeapon(p, 0.2, o.swing); else castAnim(p);\n    if (o.delay) { fx({ type: 'marker', x, y, r: o.r, col: o.col, life: o.delay }); delay(o.delay, go); } else go();\n    sfx(o.sfx || 'shout');\n  }"
+  },
+  {
+   "id": "judgementbell",
+   "display_name": "Judgement Bell",
+   "description": "HELMET / PAGE — a bell of judgement tolls: holy burst, 0.8 s stun.",
+   "element": "holy",
+   "kind": "active",
+   "cooldown": 12,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [
+    "page"
+   ],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "cast_range": 6,
+     "radius": 2.8,
+     "damage": 90,
+     "life": 0,
+     "delay": 0,
+     "color": "#fff2b0",
+     "stun": 0.8
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2.8,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 2,
+   "hit_weight": 1,
+   "color": "#fff2b0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.nova {\"r\":2.8,\"dmg\":90,\"hit\":{\"stun\":0.8},\"col\":\"#fff2b0\",\"sfx\":\"shout\"}\nJS:\ncast: cast(p, a, tx, ty) {\n    const [x, y] = ctAt(p, o, tx, ty);\n    const go = () => {\n      const n = hitArea(x, y, o.r, o.dmg, o.hit || {});\n      fx({ type: 'ring', x, y, r: o.r + 0.2, col: o.col, life: 0.4 }); burst(x, y, 0.4, 18, [o.col, '#ffffff'], 3);\n      if (o.zone) zone(Object.assign({ x, y, col: o.col }, o.zone));\n      if (o.cracks) crackRing(x, y, o.r, o.cracks);\n      if (o.wind) WIND.emit(Object.assign({ x, y, dir: a, by: 1 }, o.wind));\n      if (o.after) o.after(p, x, y, n);\n      if (o.shake) shake(o.shake);\n    };\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.swing) swingWeapon(p, 0.2, o.swing); else castAnim(p);\n    if (o.delay) { fx({ type: 'marker', x, y, r: o.r, col: o.col, life: o.delay }); delay(o.delay, go); } else go();\n    sfx(o.sfx || 'shout');\n  }"
+  },
+  {
+   "id": "consecratedguard",
+   "display_name": "Consecrated Guard",
+   "description": "CHEST — a holy circle follows you for 5 s: foes inside burn, you take 25% less.",
+   "element": "holy",
+   "kind": "active",
+   "cooldown": 14,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "cast_range": 6,
+     "radius": 2.2,
+     "damage": 20,
+     "life": 5,
+     "tick": 0.5,
+     "follow": true,
+     "color": "#fff2b0"
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2.2,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#fff2b0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.zone {\"follow\":true,\"z\":{\"r\":2.2,\"life\":5,\"tick\":0.5,\"dmg\":20,\"kind\":\"consecrate\",\"guard\":0.25},\"col\":\"#fff2b0\",\"sfx\":\"heal\"}\nJS:\ncast: cast(p, a, tx, ty) {\n    const [x, y] = ctAt(p, o, tx, ty);\n    castAnim(p);\n    zone(Object.assign({ x, y, col: o.col, follow: !!o.follow }, o.z));\n    fx({ type: 'ring', x, y, r: o.z.r + 0.2, col: o.col, life: 0.4 }); sfx(o.sfx || 'arcane');\n  }"
+  },
+  {
+   "id": "vault",
+   "display_name": "Vault",
+   "description": "BOOTS — leap toward your aim and land in a holy burst.",
+   "element": "holy",
+   "kind": "active",
+   "cooldown": 7,
+   "mp_cost": 0,
+   "stamina_cost": 30,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "direction": "aim",
+     "distance": 3.4,
+     "duration": 0.3,
+     "iframes": 0.3,
+     "blink": false,
+     "roll": false,
+     "carry": false
+    },
+    {
+     "type": "zone",
+     "at": "self",
+     "radius": 1.6,
+     "damage": 50,
+     "life": 0,
+     "delay": 0.3,
+     "stagger": 1,
+     "knockback": 0.4
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 3.4,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#f2e2b0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.dash {\"dist\":3.4,\"dur\":0.3,\"iframes\":0.3,\"land\":{\"r\":1.6,\"dmg\":50,\"hit\":{\"stagger\":1,\"knock\":0.4}},\"col\":\"#fff2b0\"}\nJS:\ncast: cast(p, a) {\n    let d = a;\n    if (o.dir === 'back') d = a + Math.PI;\n    else if (o.dir === 'side') { const m = moveAngle(p); d = m != null ? m : a + Math.PI / 2; }\n    else if (o.dir === 'move') { const m = moveAngle(p); if (m != null) d = m; }\n    const x0 = p.x, y0 = p.y;\n    if (o.decoy) spawnDecoy(x0, y0, o.decoy);\n    const end = () => {\n      if (o.land) { hitArea(p.x, p.y, o.land.r, o.land.dmg, o.land.hit || {}); fx({ type: 'ring', x: p.x, y: p.y, r: o.land.r + 0.2, col: o.col, life: 0.3 }); shake(3); }\n      if (o.originZone) zone(Object.assign({ x: x0, y: y0, col: o.col }, o.originZone));\n      if (o.after) o.after(p, x0, y0);\n    };\n    p.invulnT = Math.max(p.invulnT, o.iframes || 0.25);   // every boots skill keeps >= 0.25 s of i-frames (armour-suits.md)\n    if (o.blink) { blinkPlayer(p, d, o.dist); p.invulnT = Math.max(p.invulnT, o.iframes || 0.25); end(); }\n    else dashPlayer(p, Math.cos(d), Math.sin(d), o.dist, o.dur || 0.25, { invuln: true, trail: o.trail === false ? null : o.col, roll: !!o.roll, hit: o.hit || null, carry: !!o.carry, zoneTrail: o.zoneTrail || null, reflect: !!o.reflect, onEnd: end });\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.wind) WIND.emit(Object.assign({ x: p.x, y: p.y, dir: d, by: 1 }, o.wind));\n    sfx(o.sfx || 'dash');\n  }"
+  },
+  {
+   "id": "brace",
+   "display_name": "Brace",
+   "description": "CHEST — poise and 30% less damage for 3 s, then shove everything away.",
+   "element": "slash",
+   "kind": "active",
+   "cooldown": 14,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#9a8878",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.buff {\"buff\":\"brace\",\"t\":3,\"col\":\"#c0b0a0\"}\nno starter block covers CT.buff (buff / guard): wave 2\nJS:\ncast: cast(p) {\n    addBuff(p, o.buff, o.t);\n    if (o.heal) healPlayer(p, p.maxHp * o.heal * healMul(p));\n    if (o.nova) hitArea(p.x, p.y, o.nova.r, o.nova.dmg, o.nova.hit || {});\n    fx({ type: 'ring', x: p.x, y: p.y, r: o.nova ? o.nova.r + 0.2 : 1.4, col: o.col, life: 0.4 });\n    burst(p.x, p.y, p.z + 1, 14, [o.col, '#ffffff'], 2); sfx(o.sfx || 'shield');\n  }"
+  },
+  {
+   "id": "groundslam",
+   "display_name": "Ground Slam",
+   "description": "HELMET — slam the ground: stagger 2, and cracks that linger 3 s.",
+   "element": "slash",
+   "kind": "active",
+   "cooldown": 12,
+   "mp_cost": 25,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "cast_range": 6,
+     "radius": 2.6,
+     "damage": 110,
+     "life": 0,
+     "delay": 0,
+     "color": "#c0a890",
+     "knockback": 0.5
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2.6,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 2,
+   "hit_weight": 1,
+   "color": "#a89888",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.nova {\"r\":2.6,\"dmg\":110,\"hit\":{\"knock\":0.5},\"cracks\":3,\"col\":\"#c0a890\",\"sfx\":\"boom\",\"shake\":5}\nJS:\ncast: cast(p, a, tx, ty) {\n    const [x, y] = ctAt(p, o, tx, ty);\n    const go = () => {\n      const n = hitArea(x, y, o.r, o.dmg, o.hit || {});\n      fx({ type: 'ring', x, y, r: o.r + 0.2, col: o.col, life: 0.4 }); burst(x, y, 0.4, 18, [o.col, '#ffffff'], 3);\n      if (o.zone) zone(Object.assign({ x, y, col: o.col }, o.zone));\n      if (o.cracks) crackRing(x, y, o.r, o.cracks);\n      if (o.wind) WIND.emit(Object.assign({ x, y, dir: a, by: 1 }, o.wind));\n      if (o.after) o.after(p, x, y, n);\n      if (o.shake) shake(o.shake);\n    };\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.swing) swingWeapon(p, 0.2, o.swing); else castAnim(p);\n    if (o.delay) { fx({ type: 'marker', x, y, r: o.r, col: o.col, life: o.delay }); delay(o.delay, go); } else go();\n    sfx(o.sfx || 'shout');\n  }"
+  },
+  {
+   "id": "bullrush",
+   "display_name": "Bull Rush",
+   "description": "BOOTS — rush forward carrying the first foe you meet.",
+   "element": "slash",
+   "kind": "active",
+   "cooldown": 7,
+   "mp_cost": 0,
+   "stamina_cost": 32,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "direction": "aim",
+     "distance": 3.8,
+     "duration": 0.3,
+     "iframes": 0.25,
+     "blink": false,
+     "roll": false,
+     "carry": true,
+     "hit_radius": 1,
+     "damage": 50,
+     "knockback": 0.6
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 3.8,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 1,
+   "stagger": 2,
+   "hit_weight": 1,
+   "color": "#8a7868",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.dash {\"dist\":3.8,\"dur\":0.3,\"carry\":true,\"hit\":{\"dmg\":50,\"r\":1,\"knock\":0.6},\"col\":\"#c0b0a0\"}\nJS:\ncast: cast(p, a) {\n    let d = a;\n    if (o.dir === 'back') d = a + Math.PI;\n    else if (o.dir === 'side') { const m = moveAngle(p); d = m != null ? m : a + Math.PI / 2; }\n    else if (o.dir === 'move') { const m = moveAngle(p); if (m != null) d = m; }\n    const x0 = p.x, y0 = p.y;\n    if (o.decoy) spawnDecoy(x0, y0, o.decoy);\n    const end = () => {\n      if (o.land) { hitArea(p.x, p.y, o.land.r, o.land.dmg, o.land.hit || {}); fx({ type: 'ring', x: p.x, y: p.y, r: o.land.r + 0.2, col: o.col, life: 0.3 }); shake(3); }\n      if (o.originZone) zone(Object.assign({ x: x0, y: y0, col: o.col }, o.originZone));\n      if (o.after) o.after(p, x0, y0);\n    };\n    p.invulnT = Math.max(p.invulnT, o.iframes || 0.25);   // every boots skill keeps >= 0.25 s of i-frames (armour-suits.md)\n    if (o.blink) { blinkPlayer(p, d, o.dist); p.invulnT = Math.max(p.invulnT, o.iframes || 0.25); end(); }\n    else dashPlayer(p, Math.cos(d), Math.sin(d), o.dist, o.dur || 0.25, { invuln: true, trail: o.trail === false ? null : o.col, roll: !!o.roll, hit: o.hit || null, carry: !!o.carry, zoneTrail: o.zoneTrail || null, reflect: !!o.reflect, onEnd: end });\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.wind) WIND.emit(Object.assign({ x: p.x, y: p.y, dir: d, by: 1 }, o.wind));\n    sfx(o.sfx || 'dash');\n  }"
+  },
+  {
+   "id": "arcaneward",
+   "display_name": "Arcane Ward",
+   "description": "HELMET — a shield worth 25% of max HP for 4 s; it pops into a nova.",
+   "element": "arcane",
+   "kind": "active",
+   "cooldown": 14,
+   "mp_cost": 25,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2.4,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#b8a0f0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { p.arcaneWard = { hp: p.maxHp * 0.25, until: G.t + 4 }; fx({ type: 'ring', x: p.x, y: p.y, r: 1.2, col: '#d8c8ff', life: 0.5 }); sfx('arcane'); }"
+  },
+  {
+   "id": "wintersveil",
+   "display_name": "Winter's Veil",
+   "description": "CHEST — a frost veil for 5 s: you take 20% less and attackers are Chilled.",
+   "element": "frost",
+   "kind": "active",
+   "cooldown": 15,
+   "mp_cost": 25,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2.2,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#9fd8f0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.buff {\"buff\":\"wintersveil\",\"t\":5,\"nova\":{\"r\":2.2,\"dmg\":40,\"hit\":{\"slow\":1}},\"col\":\"#bff4ff\",\"sfx\":\"frost\"}\nno starter block covers CT.buff (buff / guard): wave 2\nJS:\ncast: cast(p) {\n    addBuff(p, o.buff, o.t);\n    if (o.heal) healPlayer(p, p.maxHp * o.heal * healMul(p));\n    if (o.nova) hitArea(p.x, p.y, o.nova.r, o.nova.dmg, o.nova.hit || {});\n    fx({ type: 'ring', x: p.x, y: p.y, r: o.nova ? o.nova.r + 0.2 : 1.4, col: o.col, life: 0.4 });\n    burst(p.x, p.y, p.z + 1, 14, [o.col, '#ffffff'], 2); sfx(o.sfx || 'shield');\n  }"
+  },
+  {
+   "id": "glide",
+   "display_name": "Glide",
+   "description": "BOOTS — skate toward your aim, leaving a frost trail that Chills.",
+   "element": "frost",
+   "kind": "active",
+   "cooldown": 6,
+   "mp_cost": 0,
+   "stamina_cost": 28,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "direction": "move",
+     "distance": 3.6,
+     "duration": 0.3,
+     "iframes": 0.25,
+     "blink": false,
+     "roll": false,
+     "carry": false
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 3.6,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#bfe8f8",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.dash {\"dir\":\"move\",\"dist\":3.6,\"dur\":0.3,\"zoneTrail\":{\"r\":0.7,\"life\":2.5,\"tick\":0.5,\"dmg\":12,\"slow\":0.6,\"kind\":\"frost\"},\"col\":\"#bff4ff\",\"sfx\":\"frost\"}\nJS:\ncast: cast(p, a) {\n    let d = a;\n    if (o.dir === 'back') d = a + Math.PI;\n    else if (o.dir === 'side') { const m = moveAngle(p); d = m != null ? m : a + Math.PI / 2; }\n    else if (o.dir === 'move') { const m = moveAngle(p); if (m != null) d = m; }\n    const x0 = p.x, y0 = p.y;\n    if (o.decoy) spawnDecoy(x0, y0, o.decoy);\n    const end = () => {\n      if (o.land) { hitArea(p.x, p.y, o.land.r, o.land.dmg, o.land.hit || {}); fx({ type: 'ring', x: p.x, y: p.y, r: o.land.r + 0.2, col: o.col, life: 0.3 }); shake(3); }\n      if (o.originZone) zone(Object.assign({ x: x0, y: y0, col: o.col }, o.originZone));\n      if (o.after) o.after(p, x0, y0);\n    };\n    p.invulnT = Math.max(p.invulnT, o.iframes || 0.25);   // every boots skill keeps >= 0.25 s of i-frames (armour-suits.md)\n    if (o.blink) { blinkPlayer(p, d, o.dist); p.invulnT = Math.max(p.invulnT, o.iframes || 0.25); end(); }\n    else dashPlayer(p, Math.cos(d), Math.sin(d), o.dist, o.dur || 0.25, { invuln: true, trail: o.trail === false ? null : o.col, roll: !!o.roll, hit: o.hit || null, carry: !!o.carry, zoneTrail: o.zoneTrail || null, reflect: !!o.reflect, onEnd: end });\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.wind) WIND.emit(Object.assign({ x: p.x, y: p.y, dir: d, by: 1 }, o.wind));\n    sfx(o.sfx || 'dash');\n  }"
+  },
+  {
+   "id": "staticcloak",
+   "display_name": "Static Cloak",
+   "description": "CHEST — for 6 s, every hit you take zaps the attacker and Jolts it.",
+   "element": "lightning",
+   "kind": "active",
+   "cooldown": 14,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#c8d860",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.buff {\"buff\":\"staticcloak\",\"t\":6,\"col\":\"#f0f080\",\"sfx\":\"zap\"}\nno starter block covers CT.buff (buff / guard): wave 2\nJS:\ncast: cast(p) {\n    addBuff(p, o.buff, o.t);\n    if (o.heal) healPlayer(p, p.maxHp * o.heal * healMul(p));\n    if (o.nova) hitArea(p.x, p.y, o.nova.r, o.nova.dmg, o.nova.hit || {});\n    fx({ type: 'ring', x: p.x, y: p.y, r: o.nova ? o.nova.r + 0.2 : 1.4, col: o.col, life: 0.4 });\n    burst(p.x, p.y, p.z + 1, 14, [o.col, '#ffffff'], 2); sfx(o.sfx || 'shield');\n  }"
+  },
+  {
+   "id": "flashstep",
+   "display_name": "Flash Step",
+   "description": "BOOTS — a lightning line: dash through foes, Jolting each.",
+   "element": "lightning",
+   "kind": "active",
+   "cooldown": 6,
+   "mp_cost": 0,
+   "stamina_cost": 28,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "direction": "aim",
+     "distance": 4,
+     "duration": 0.14,
+     "iframes": 0.3,
+     "blink": false,
+     "roll": false,
+     "carry": false,
+     "hit_radius": 0.9,
+     "damage": 30,
+     "knockback": 0.1
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 4,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0.9,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#e0f080",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.dash {\"dist\":4,\"dur\":0.14,\"iframes\":0.3,\"hit\":{\"dmg\":30,\"r\":0.9,\"knock\":0.1,\"jolt\":2},\"col\":\"#f0f080\",\"sfx\":\"zap\"}\nJS:\ncast: cast(p, a) {\n    let d = a;\n    if (o.dir === 'back') d = a + Math.PI;\n    else if (o.dir === 'side') { const m = moveAngle(p); d = m != null ? m : a + Math.PI / 2; }\n    else if (o.dir === 'move') { const m = moveAngle(p); if (m != null) d = m; }\n    const x0 = p.x, y0 = p.y;\n    if (o.decoy) spawnDecoy(x0, y0, o.decoy);\n    const end = () => {\n      if (o.land) { hitArea(p.x, p.y, o.land.r, o.land.dmg, o.land.hit || {}); fx({ type: 'ring', x: p.x, y: p.y, r: o.land.r + 0.2, col: o.col, life: 0.3 }); shake(3); }\n      if (o.originZone) zone(Object.assign({ x: x0, y: y0, col: o.col }, o.originZone));\n      if (o.after) o.after(p, x0, y0);\n    };\n    p.invulnT = Math.max(p.invulnT, o.iframes || 0.25);   // every boots skill keeps >= 0.25 s of i-frames (armour-suits.md)\n    if (o.blink) { blinkPlayer(p, d, o.dist); p.invulnT = Math.max(p.invulnT, o.iframes || 0.25); end(); }\n    else dashPlayer(p, Math.cos(d), Math.sin(d), o.dist, o.dur || 0.25, { invuln: true, trail: o.trail === false ? null : o.col, roll: !!o.roll, hit: o.hit || null, carry: !!o.carry, zoneTrail: o.zoneTrail || null, reflect: !!o.reflect, onEnd: end });\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.wind) WIND.emit(Object.assign({ x: p.x, y: p.y, dir: d, by: 1 }, o.wind));\n    sfx(o.sfx || 'dash');\n  }"
+  },
+  {
+   "id": "huntersmark",
+   "display_name": "Hunter's Mark",
+   "description": "HELMET — Mark every foe around the aim twice (+4% damage taken per Mark).",
+   "element": "pierce",
+   "kind": "active",
+   "cooldown": 10,
+   "mp_cost": 15,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "target",
+     "cast_range": 8,
+     "radius": 2.4,
+     "damage": 20,
+     "life": 0,
+     "delay": 0,
+     "color": "#ffd0a0",
+     "hit_params": {
+      "marks": 2
+     }
+    }
+   ],
+   "aim_shape": "circle",
+   "aim_range": 8,
+   "aim_radius": 2.4,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#a07050",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.nova {\"at\":\"target\",\"range\":8,\"r\":2.4,\"dmg\":20,\"hit\":{\"marks\":2},\"col\":\"#ffd0a0\",\"sfx\":\"bow\"}\nJS:\ncast: cast(p, a, tx, ty) {\n    const [x, y] = ctAt(p, o, tx, ty);\n    const go = () => {\n      const n = hitArea(x, y, o.r, o.dmg, o.hit || {});\n      fx({ type: 'ring', x, y, r: o.r + 0.2, col: o.col, life: 0.4 }); burst(x, y, 0.4, 18, [o.col, '#ffffff'], 3);\n      if (o.zone) zone(Object.assign({ x, y, col: o.col }, o.zone));\n      if (o.cracks) crackRing(x, y, o.r, o.cracks);\n      if (o.wind) WIND.emit(Object.assign({ x, y, dir: a, by: 1 }, o.wind));\n      if (o.after) o.after(p, x, y, n);\n      if (o.shake) shake(o.shake);\n    };\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.swing) swingWeapon(p, 0.2, o.swing); else castAnim(p);\n    if (o.delay) { fx({ type: 'marker', x, y, r: o.r, col: o.col, life: o.delay }); delay(o.delay, go); } else go();\n    sfx(o.sfx || 'shout');\n  }"
+  },
+  {
+   "id": "briarmantle",
+   "display_name": "Briar Mantle",
+   "description": "CHEST — thorns for 6 s: melee attackers take nature damage back.",
+   "element": "nature",
+   "kind": "active",
+   "cooldown": 14,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#5f9a6e",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.buff {\"buff\":\"briar\",\"t\":6,\"col\":\"#8fe0a0\",\"sfx\":\"trap\"}\nno starter block covers CT.buff (buff / guard): wave 2\nJS:\ncast: cast(p) {\n    addBuff(p, o.buff, o.t);\n    if (o.heal) healPlayer(p, p.maxHp * o.heal * healMul(p));\n    if (o.nova) hitArea(p.x, p.y, o.nova.r, o.nova.dmg, o.nova.hit || {});\n    fx({ type: 'ring', x: p.x, y: p.y, r: o.nova ? o.nova.r + 0.2 : 1.4, col: o.col, life: 0.4 });\n    burst(p.x, p.y, p.z + 1, 14, [o.col, '#ffffff'], 2); sfx(o.sfx || 'shield');\n  }"
+  },
+  {
+   "id": "rootvault",
+   "display_name": "Root Vault",
+   "description": "BOOTS — vault back from your aim, leaving a snare where you stood.",
+   "element": "nature",
+   "kind": "active",
+   "cooldown": 7,
+   "mp_cost": 0,
+   "stamina_cost": 28,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "direction": "back",
+     "distance": 3,
+     "duration": 0.28,
+     "iframes": 0.25,
+     "blink": false,
+     "roll": true,
+     "carry": false
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 3,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#4f8a5e",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.dash {\"dir\":\"back\",\"dist\":3,\"dur\":0.28,\"roll\":true,\"originZone\":{\"r\":1.4,\"life\":6,\"trap\":true,\"dmg\":40,\"root\":1.5,\"kind\":\"trap\"},\"col\":\"#8fe0a0\"}\nJS:\ncast: cast(p, a) {\n    let d = a;\n    if (o.dir === 'back') d = a + Math.PI;\n    else if (o.dir === 'side') { const m = moveAngle(p); d = m != null ? m : a + Math.PI / 2; }\n    else if (o.dir === 'move') { const m = moveAngle(p); if (m != null) d = m; }\n    const x0 = p.x, y0 = p.y;\n    if (o.decoy) spawnDecoy(x0, y0, o.decoy);\n    const end = () => {\n      if (o.land) { hitArea(p.x, p.y, o.land.r, o.land.dmg, o.land.hit || {}); fx({ type: 'ring', x: p.x, y: p.y, r: o.land.r + 0.2, col: o.col, life: 0.3 }); shake(3); }\n      if (o.originZone) zone(Object.assign({ x: x0, y: y0, col: o.col }, o.originZone));\n      if (o.after) o.after(p, x0, y0);\n    };\n    p.invulnT = Math.max(p.invulnT, o.iframes || 0.25);   // every boots skill keeps >= 0.25 s of i-frames (armour-suits.md)\n    if (o.blink) { blinkPlayer(p, d, o.dist); p.invulnT = Math.max(p.invulnT, o.iframes || 0.25); end(); }\n    else dashPlayer(p, Math.cos(d), Math.sin(d), o.dist, o.dur || 0.25, { invuln: true, trail: o.trail === false ? null : o.col, roll: !!o.roll, hit: o.hit || null, carry: !!o.carry, zoneTrail: o.zoneTrail || null, reflect: !!o.reflect, onEnd: end });\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.wind) WIND.emit(Object.assign({ x: p.x, y: p.y, dir: d, by: 1 }, o.wind));\n    sfx(o.sfx || 'dash');\n  }"
+  },
+  {
+   "id": "engarde",
+   "display_name": "En Garde",
+   "description": "CHEST — a long 0.5 s parry window (shares the 1 s parry ICD).",
+   "element": "slash",
+   "kind": "active",
+   "cooldown": 6,
+   "mp_cost": 10,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#b04a5a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { startParry(p, 0.5); p.cds.parry = Math.max(p.cds.parry || 0, 1); }"
+  },
+  {
+   "id": "sidestep",
+   "display_name": "Side-step",
+   "description": "BOOTS — a quick side-step along your movement (cd 3).",
+   "element": "slash",
+   "kind": "active",
+   "cooldown": 3,
+   "mp_cost": 0,
+   "stamina_cost": 20,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "direction": "side",
+     "distance": 2.2,
+     "duration": 0.25,
+     "iframes": 0.25,
+     "blink": false,
+     "roll": false,
+     "carry": false
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 2.2,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#8a3a4a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.dash {\"dir\":\"side\",\"dist\":2.2,\"dur\":0.25,\"col\":\"#ffb0c0\"}\nJS:\ncast: cast(p, a) {\n    let d = a;\n    if (o.dir === 'back') d = a + Math.PI;\n    else if (o.dir === 'side') { const m = moveAngle(p); d = m != null ? m : a + Math.PI / 2; }\n    else if (o.dir === 'move') { const m = moveAngle(p); if (m != null) d = m; }\n    const x0 = p.x, y0 = p.y;\n    if (o.decoy) spawnDecoy(x0, y0, o.decoy);\n    const end = () => {\n      if (o.land) { hitArea(p.x, p.y, o.land.r, o.land.dmg, o.land.hit || {}); fx({ type: 'ring', x: p.x, y: p.y, r: o.land.r + 0.2, col: o.col, life: 0.3 }); shake(3); }\n      if (o.originZone) zone(Object.assign({ x: x0, y: y0, col: o.col }, o.originZone));\n      if (o.after) o.after(p, x0, y0);\n    };\n    p.invulnT = Math.max(p.invulnT, o.iframes || 0.25);   // every boots skill keeps >= 0.25 s of i-frames (armour-suits.md)\n    if (o.blink) { blinkPlayer(p, d, o.dist); p.invulnT = Math.max(p.invulnT, o.iframes || 0.25); end(); }\n    else dashPlayer(p, Math.cos(d), Math.sin(d), o.dist, o.dur || 0.25, { invuln: true, trail: o.trail === false ? null : o.col, roll: !!o.roll, hit: o.hit || null, carry: !!o.carry, zoneTrail: o.zoneTrail || null, reflect: !!o.reflect, onEnd: end });\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.wind) WIND.emit(Object.assign({ x: p.x, y: p.y, dir: d, by: 1 }, o.wind));\n    sfx(o.sfx || 'dash');\n  }"
+  },
+  {
+   "id": "fadestep",
+   "display_name": "Fade Step",
+   "description": "CHEST — step into shadow: 2 s unseen, the next hit crits.",
+   "element": "arcane",
+   "kind": "active",
+   "cooldown": 14,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "direction": "aim",
+     "distance": 2.5,
+     "duration": 0.25,
+     "iframes": 0.25,
+     "blink": false,
+     "roll": false,
+     "carry": false
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 2.5,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#5a4a7a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.dash {\"dist\":2.5,\"dur\":0.25,\"buff\":[\"veil\",2],\"col\":\"#8a7aaa\"}\nJS:\ncast: cast(p, a) {\n    let d = a;\n    if (o.dir === 'back') d = a + Math.PI;\n    else if (o.dir === 'side') { const m = moveAngle(p); d = m != null ? m : a + Math.PI / 2; }\n    else if (o.dir === 'move') { const m = moveAngle(p); if (m != null) d = m; }\n    const x0 = p.x, y0 = p.y;\n    if (o.decoy) spawnDecoy(x0, y0, o.decoy);\n    const end = () => {\n      if (o.land) { hitArea(p.x, p.y, o.land.r, o.land.dmg, o.land.hit || {}); fx({ type: 'ring', x: p.x, y: p.y, r: o.land.r + 0.2, col: o.col, life: 0.3 }); shake(3); }\n      if (o.originZone) zone(Object.assign({ x: x0, y: y0, col: o.col }, o.originZone));\n      if (o.after) o.after(p, x0, y0);\n    };\n    p.invulnT = Math.max(p.invulnT, o.iframes || 0.25);   // every boots skill keeps >= 0.25 s of i-frames (armour-suits.md)\n    if (o.blink) { blinkPlayer(p, d, o.dist); p.invulnT = Math.max(p.invulnT, o.iframes || 0.25); end(); }\n    else dashPlayer(p, Math.cos(d), Math.sin(d), o.dist, o.dur || 0.25, { invuln: true, trail: o.trail === false ? null : o.col, roll: !!o.roll, hit: o.hit || null, carry: !!o.carry, zoneTrail: o.zoneTrail || null, reflect: !!o.reflect, onEnd: end });\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.wind) WIND.emit(Object.assign({ x: p.x, y: p.y, dir: d, by: 1 }, o.wind));\n    sfx(o.sfx || 'dash');\n  }"
+  },
+  {
+   "id": "smokebomb",
+   "display_name": "Smoke Bomb",
+   "description": "HELMET — a smoke burst: foes Chilled and you unseen for 1.5 s.",
+   "element": "nature",
+   "kind": "active",
+   "cooldown": 12,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "zone",
+     "at": "self",
+     "cast_range": 6,
+     "radius": 2.6,
+     "damage": 30,
+     "life": 0,
+     "delay": 0,
+     "color": "#8a7aaa",
+     "hit_params": {
+      "slow": 1
+     }
+    }
+   ],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 2.6,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#6a5a8a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.nova {\"r\":2.6,\"dmg\":30,\"hit\":{\"slow\":1},\"buff\":[\"veil\",1.5],\"col\":\"#8a7aaa\",\"sfx\":\"veil\"}\nJS:\ncast: cast(p, a, tx, ty) {\n    const [x, y] = ctAt(p, o, tx, ty);\n    const go = () => {\n      const n = hitArea(x, y, o.r, o.dmg, o.hit || {});\n      fx({ type: 'ring', x, y, r: o.r + 0.2, col: o.col, life: 0.4 }); burst(x, y, 0.4, 18, [o.col, '#ffffff'], 3);\n      if (o.zone) zone(Object.assign({ x, y, col: o.col }, o.zone));\n      if (o.cracks) crackRing(x, y, o.r, o.cracks);\n      if (o.wind) WIND.emit(Object.assign({ x, y, dir: a, by: 1 }, o.wind));\n      if (o.after) o.after(p, x, y, n);\n      if (o.shake) shake(o.shake);\n    };\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.swing) swingWeapon(p, 0.2, o.swing); else castAnim(p);\n    if (o.delay) { fx({ type: 'marker', x, y, r: o.r, col: o.col, life: o.delay }); delay(o.delay, go); } else go();\n    sfx(o.sfx || 'shout');\n  }"
+  },
+  {
+   "id": "shadowstep",
+   "display_name": "Shadowstep",
+   "description": "BOOTS — dash away and leave a decoy where you stood.",
+   "element": "arcane",
+   "kind": "active",
+   "cooldown": 6,
+   "mp_cost": 0,
+   "stamina_cost": 28,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "direction": "aim",
+     "distance": 3.4,
+     "duration": 0.26,
+     "iframes": 0.25,
+     "blink": false,
+     "roll": false,
+     "carry": false
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 3.4,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#4a3a6a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.dash {\"dist\":3.4,\"dur\":0.26,\"decoy\":3,\"col\":\"#8a7aaa\"}\nJS:\ncast: cast(p, a) {\n    let d = a;\n    if (o.dir === 'back') d = a + Math.PI;\n    else if (o.dir === 'side') { const m = moveAngle(p); d = m != null ? m : a + Math.PI / 2; }\n    else if (o.dir === 'move') { const m = moveAngle(p); if (m != null) d = m; }\n    const x0 = p.x, y0 = p.y;\n    if (o.decoy) spawnDecoy(x0, y0, o.decoy);\n    const end = () => {\n      if (o.land) { hitArea(p.x, p.y, o.land.r, o.land.dmg, o.land.hit || {}); fx({ type: 'ring', x: p.x, y: p.y, r: o.land.r + 0.2, col: o.col, life: 0.3 }); shake(3); }\n      if (o.originZone) zone(Object.assign({ x: x0, y: y0, col: o.col }, o.originZone));\n      if (o.after) o.after(p, x0, y0);\n    };\n    p.invulnT = Math.max(p.invulnT, o.iframes || 0.25);   // every boots skill keeps >= 0.25 s of i-frames (armour-suits.md)\n    if (o.blink) { blinkPlayer(p, d, o.dist); p.invulnT = Math.max(p.invulnT, o.iframes || 0.25); end(); }\n    else dashPlayer(p, Math.cos(d), Math.sin(d), o.dist, o.dur || 0.25, { invuln: true, trail: o.trail === false ? null : o.col, roll: !!o.roll, hit: o.hit || null, carry: !!o.carry, zoneTrail: o.zoneTrail || null, reflect: !!o.reflect, onEnd: end });\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.wind) WIND.emit(Object.assign({ x: p.x, y: p.y, dir: d, by: 1 }, o.wind));\n    sfx(o.sfx || 'dash');\n  }"
+  },
+  {
+   "id": "venomcoat",
+   "display_name": "Venom Coat",
+   "description": "CHEST — for 8 s every hit you land Poisons.",
+   "element": "nature",
+   "kind": "active",
+   "cooldown": 15,
+   "mp_cost": 20,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#5a7a4a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.buff {\"buff\":\"venomcoat\",\"t\":8,\"col\":\"#8fe07a\",\"sfx\":\"trap\"}\nno starter block covers CT.buff (buff / guard): wave 2\nJS:\ncast: cast(p) {\n    addBuff(p, o.buff, o.t);\n    if (o.heal) healPlayer(p, p.maxHp * o.heal * healMul(p));\n    if (o.nova) hitArea(p.x, p.y, o.nova.r, o.nova.dmg, o.nova.hit || {});\n    fx({ type: 'ring', x: p.x, y: p.y, r: o.nova ? o.nova.r + 0.2 : 1.4, col: o.col, life: 0.4 });\n    burst(p.x, p.y, p.z + 1, 14, [o.col, '#ffffff'], 2); sfx(o.sfx || 'shield');\n  }"
+  },
+  {
+   "id": "slink",
+   "display_name": "Slink",
+   "description": "BOOTS — slink low: for 2 s you backstab from any angle.",
+   "element": "nature",
+   "kind": "active",
+   "cooldown": 6,
+   "mp_cost": 0,
+   "stamina_cost": 26,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "direction": "aim",
+     "distance": 3,
+     "duration": 0.26,
+     "iframes": 0.25,
+     "blink": false,
+     "roll": false,
+     "carry": false
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 3,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#4a6a3a",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.dash {\"dist\":3,\"dur\":0.26,\"buff\":[\"slink\",2],\"col\":\"#8fe07a\"}\nJS:\ncast: cast(p, a) {\n    let d = a;\n    if (o.dir === 'back') d = a + Math.PI;\n    else if (o.dir === 'side') { const m = moveAngle(p); d = m != null ? m : a + Math.PI / 2; }\n    else if (o.dir === 'move') { const m = moveAngle(p); if (m != null) d = m; }\n    const x0 = p.x, y0 = p.y;\n    if (o.decoy) spawnDecoy(x0, y0, o.decoy);\n    const end = () => {\n      if (o.land) { hitArea(p.x, p.y, o.land.r, o.land.dmg, o.land.hit || {}); fx({ type: 'ring', x: p.x, y: p.y, r: o.land.r + 0.2, col: o.col, life: 0.3 }); shake(3); }\n      if (o.originZone) zone(Object.assign({ x: x0, y: y0, col: o.col }, o.originZone));\n      if (o.after) o.after(p, x0, y0);\n    };\n    p.invulnT = Math.max(p.invulnT, o.iframes || 0.25);   // every boots skill keeps >= 0.25 s of i-frames (armour-suits.md)\n    if (o.blink) { blinkPlayer(p, d, o.dist); p.invulnT = Math.max(p.invulnT, o.iframes || 0.25); end(); }\n    else dashPlayer(p, Math.cos(d), Math.sin(d), o.dist, o.dur || 0.25, { invuln: true, trail: o.trail === false ? null : o.col, roll: !!o.roll, hit: o.hit || null, carry: !!o.carry, zoneTrail: o.zoneTrail || null, reflect: !!o.reflect, onEnd: end });\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.wind) WIND.emit(Object.assign({ x: p.x, y: p.y, dir: d, by: 1 }, o.wind));\n    sfx(o.sfx || 'dash');\n  }"
+  },
+  {
+   "id": "mirrorimage",
+   "display_name": "Mirror Image",
+   "description": "CHEST — an image of you for 6 s: it draws foes and shoots arcane bolts.",
+   "element": "arcane",
+   "kind": "active",
+   "cooldown": 16,
+   "mp_cost": 30,
+   "stamina_cost": 0,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [],
+   "aim_shape": "self",
+   "aim_range": 0,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#b898e0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\nJS:\ncast: cast(p) { const tw = suitTwist(p, 'mirage'); spawnDecoy(p.x + Math.cos(p.aim + 1.6) * 1.2, p.y + Math.sin(p.aim + 1.6) * 1.2, tw ? 10 : 6, { image: true, bolt: tw ? 45 : 30 }); sfx('blink'); }"
+  },
+  {
+   "id": "phase",
+   "display_name": "Phase",
+   "description": "BOOTS — phase straight through enemies toward your aim.",
+   "element": "arcane",
+   "kind": "active",
+   "cooldown": 6,
+   "mp_cost": 0,
+   "stamina_cost": 26,
+   "tags": [],
+   "decks": [],
+   "block_mode": "sequence",
+   "blocks": [
+    {
+     "type": "dash",
+     "direction": "aim",
+     "distance": 3.4,
+     "duration": 0.3,
+     "iframes": 0.35,
+     "blink": false,
+     "roll": false,
+     "carry": false
+    }
+   ],
+   "aim_shape": "dash",
+   "aim_range": 3.4,
+   "aim_radius": 0,
+   "aim_arc": 0,
+   "aim_width": 0,
+   "stagger": 0,
+   "hit_weight": 1,
+   "color": "#a888d0",
+   "todo": "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.\ntemplate CT.dash {\"dist\":3.4,\"dur\":0.3,\"iframes\":0.35,\"col\":\"#d8c8ff\",\"sfx\":\"blink\"}\nJS:\ncast: cast(p, a) {\n    let d = a;\n    if (o.dir === 'back') d = a + Math.PI;\n    else if (o.dir === 'side') { const m = moveAngle(p); d = m != null ? m : a + Math.PI / 2; }\n    else if (o.dir === 'move') { const m = moveAngle(p); if (m != null) d = m; }\n    const x0 = p.x, y0 = p.y;\n    if (o.decoy) spawnDecoy(x0, y0, o.decoy);\n    const end = () => {\n      if (o.land) { hitArea(p.x, p.y, o.land.r, o.land.dmg, o.land.hit || {}); fx({ type: 'ring', x: p.x, y: p.y, r: o.land.r + 0.2, col: o.col, life: 0.3 }); shake(3); }\n      if (o.originZone) zone(Object.assign({ x: x0, y: y0, col: o.col }, o.originZone));\n      if (o.after) o.after(p, x0, y0);\n    };\n    p.invulnT = Math.max(p.invulnT, o.iframes || 0.25);   // every boots skill keeps >= 0.25 s of i-frames (armour-suits.md)\n    if (o.blink) { blinkPlayer(p, d, o.dist); p.invulnT = Math.max(p.invulnT, o.iframes || 0.25); end(); }\n    else dashPlayer(p, Math.cos(d), Math.sin(d), o.dist, o.dur || 0.25, { invuln: true, trail: o.trail === false ? null : o.col, roll: !!o.roll, hit: o.hit || null, carry: !!o.carry, zoneTrail: o.zoneTrail || null, reflect: !!o.reflect, onEnd: end });\n    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);\n    if (o.wind) WIND.emit(Object.assign({ x: p.x, y: p.y, dir: d, by: 1 }, o.wind));\n    sfx(o.sfx || 'dash');\n  }"
+  },
+  {
+   "id": "cast",
+   "display_name": "cast",
+   "kind": "spell",
+   "blocks": [],
+   "todo": "No SKILLS row in JS (spell of grimoire): built in game.js. Wave 2."
+  },
+  {
+   "id": "loose",
+   "display_name": "loose",
+   "kind": "spell",
+   "blocks": [],
+   "todo": "No SKILLS row in JS (spell of quiver): built in game.js. Wave 2."
+  },
+  {
+   "id": "call",
+   "display_name": "call",
+   "kind": "spell",
+   "blocks": [],
+   "todo": "No SKILLS row in JS (spell of warhorn): built in game.js. Wave 2."
+  }
+ ]
+}

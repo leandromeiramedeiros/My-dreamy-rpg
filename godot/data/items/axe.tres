@@ -1,0 +1,67 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/axe_action.tres" id="1_xtbti"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_vglkm"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_bnklj"]
+[ext_resource type="Resource" path="res://data/skills/cleave.tres" id="4_7yj5o"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_wpw41"]
+[ext_resource type="Resource" path="res://data/skills/colossus.tres" id="6_hc5u8"]
+
+[sub_resource type="Resource" id="Resource_kmguq"]
+script = ExtResource("5_wpw41")
+base_id = &"splittingaxe"
+display_name = "Splitting Axe"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_sqfa7"]
+script = ExtResource("5_wpw41")
+base_id = &"dawnbreaker"
+display_name = "Dawnbreaker"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_j1ls0"]
+script = ExtResource("5_wpw41")
+base_id = &"sunforgedaxe"
+display_name = "Sunforged Axe"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_cgm3f"]
+script = ExtResource("5_wpw41")
+base_id = &"auroracleaver"
+display_name = "Aurora Cleaver"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_mgcat"]
+script = ExtResource("5_wpw41")
+base_id = &"dawncolossus"
+display_name = "Dawn Colossus"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_bnklj")
+id = &"axe"
+display_name = "Axe"
+description = "A two-handed axe. Wide, committed swings that cleave a crowd."
+item_class = &"greatarms"
+hands = 2
+element = "slash"
+tiers = Array[ExtResource("5_wpw41")]([SubResource("Resource_kmguq"), SubResource("Resource_sqfa7"), SubResource("Resource_j1ls0"), SubResource("Resource_cgm3f"), SubResource("Resource_mgcat")])
+action = ExtResource("1_xtbti")
+spell = ExtResource("4_7yj5o")
+ultimate = ExtResource("6_hc5u8")
+mp_on_hit = 14.0
+hold = &"heavy"
+stats = Dictionary[StringName, float]({
+&"dmg": 78.0
+})
+flags = {
+"kind": "sword",
+"legacy": "dawnbreaker",
+"off_action": ""
+}
+color = Color(1, 0.6901961, 0.4392157, 1)
+carry_pose = "shoulder"
+todo = "Line name (T2 base): Dawnbreaker. Class passive: Heavy Strike holds poise; a worn companion supplies the tools. Off-action in OFFHAND: none."

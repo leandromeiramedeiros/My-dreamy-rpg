@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_oufdg"]
+
+[resource]
+script = ExtResource("1_oufdg")
+id = &"pinned"
+display_name = "Pinned"
+element = "pierce"
+tier = 2
+reacts_with = PackedStringArray()
+tint = Color(0.6666667, 0.7058824, 0.8, 1)
+tint_alpha = 0.24
+pose = "still"

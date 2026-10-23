@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_bqp3b"]
+
+[resource]
+script = ExtResource("1_bqp3b")
+id = &"mpOnR"
+display_name = "Quiet Reserve"
+hint = "R restores 20 MP"
+source = "trinket"
+when_event = "ultimate"
+if_tags = PackedStringArray()
+do_action = &"mpOnR"
+do_params = {
+"major": {
+"mpOnR": 20.0
+},
+"minor": {
+"mpOnR": 10.0
+}
+}
+tags = PackedStringArray("ultimate", "mp")
+todo = "Boon numbers: minor {\"mpOnR\":10}, major {\"mpOnR\":20}
+JS:
+do: do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + (v.mpOnR || 0)); }"

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_w5og3"]
+
+[resource]
+script = ExtResource("1_w5og3")
+id = &"jolted"
+display_name = "Jolted"
+element = "lightning"
+reacts_with = PackedStringArray("wind")
+tint = Color(1, 0.9411765, 0.47843137, 1)
+tint_alpha = 0.16
+motif_rate = 4.0

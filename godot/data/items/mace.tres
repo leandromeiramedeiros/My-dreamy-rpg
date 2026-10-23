@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/mace_action.tres" id="1_xil6r"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_1jp7e"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_7h8gc"]
+[ext_resource type="Resource" path="res://data/skills/crush.tres" id="4_rn7od"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_l3x5k"]
+[ext_resource type="Resource" path="res://data/skills/consecrate.tres" id="6_bihbf"]
+
+[sub_resource type="Resource" id="Resource_y57hx"]
+script = ExtResource("5_l3x5k")
+base_id = &"ironcudgel"
+display_name = "Iron Cudgel"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_xixg1"]
+script = ExtResource("5_l3x5k")
+base_id = &"dawnmace"
+display_name = "Dawnmace"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_vhesb"]
+script = ExtResource("5_l3x5k")
+base_id = &"sunwardenmace"
+display_name = "Sunwarden Mace"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_05fyg"]
+script = ExtResource("5_l3x5k")
+base_id = &"auroramaul"
+display_name = "Aurora Maul"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_wevs4"]
+script = ExtResource("5_l3x5k")
+base_id = &"voweternal"
+display_name = "Vow Eternal"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_7h8gc")
+id = &"mace"
+display_name = "Mace"
+description = "A flanged mace that rings like a bell. Every hit staggers."
+item_class = &"blades"
+element = "slash"
+tiers = Array[ExtResource("5_l3x5k")]([SubResource("Resource_y57hx"), SubResource("Resource_xixg1"), SubResource("Resource_vhesb"), SubResource("Resource_05fyg"), SubResource("Resource_wevs4")])
+action = ExtResource("1_xil6r")
+spell = ExtResource("4_rn7od")
+ultimate = ExtResource("6_bihbf")
+mp_on_hit = 8.0
+stats = Dictionary[StringName, float]({
+&"dmg": 57.0
+})
+flags = {
+"kind": "sword",
+"off_action": "parry"
+}
+color = Color(0.9490196, 0.8235294, 0.47843137, 1)
+todo = "Line name (T2 base): Dawnmace. Class passive: Parry as off-action; the 3rd hit is wide. Off-action in OFFHAND: parry."

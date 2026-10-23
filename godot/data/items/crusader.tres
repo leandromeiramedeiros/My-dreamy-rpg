@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/consecratedguard.tres" id="1_tjr4o"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_jxkif"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_0ocmo"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_50lcr"]
+
+[sub_resource type="Resource" id="Resource_g2uss"]
+script = ExtResource("4_50lcr")
+base_id = &"quiltedgambeson"
+display_name = "Quilted Gambeson"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_5y8f5"]
+script = ExtResource("4_50lcr")
+base_id = &"crusaderhauberk"
+display_name = "Crusader Hauberk"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_ochfk"]
+script = ExtResource("4_50lcr")
+base_id = &"sunhauberk"
+display_name = "Sunsworn Hauberk"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_y4oyw"]
+script = ExtResource("4_50lcr")
+base_id = &"aurorahauberk"
+display_name = "Aurora Hauberk"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_kpg4v"]
+script = ExtResource("4_50lcr")
+base_id = &"vestmentofdawn"
+display_name = "Vestment of Dawn"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_0ocmo")
+id = &"crusader"
+display_name = "Crusader Hauberk"
+description = "+18% defence, +240 HP."
+kind = "armour"
+slot = "chest"
+item_class = &"heavy"
+suit = &"crusader"
+hands = 0
+element = "holy"
+tiers = Array[ExtResource("4_50lcr")]([SubResource("Resource_g2uss"), SubResource("Resource_5y8f5"), SubResource("Resource_ochfk"), SubResource("Resource_y4oyw"), SubResource("Resource_kpg4v")])
+active = ExtResource("1_tjr4o")
+stats = Dictionary[StringName, float]({
+&"def": 0.18,
+&"hp": 240.0
+})
+resists = Dictionary[StringName, float]({
+&"holy": 0.1,
+&"lightning": -0.25,
+&"pierce": 0.25,
+&"slash": 0.25
+})
+color = Color(0.9098039, 0.84705883, 0.65882355, 1)
+attack_pose = "none"
+todo = "Suit Crusader (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."

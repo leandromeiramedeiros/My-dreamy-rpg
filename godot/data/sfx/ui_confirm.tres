@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_oyx4q"]
+
+[resource]
+script = ExtResource("1_oyx4q")
+id = &"ui_confirm"
+bus = "ui"
+recipe = {
+"layers": [{
+"dur": 0.12,
+"f0": 880.0,
+"f1": 880.0,
+"gain": 0.06,
+"osc": "sine"
+}, {
+"delay": 0.03,
+"dur": 0.12,
+"f0": 1320.0,
+"f1": 1320.0,
+"gain": 0.05,
+"osc": "sine"
+}]
+}

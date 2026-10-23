@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_fpyrq"]
+
+[resource]
+script = ExtResource("1_fpyrq")
+id = &"chargedSwing"
+display_name = "Quickened Wrath"
+hint = "Charged swings 0.25 s faster"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"chargeTime": 0.25
+},
+"minor": {
+"chargeTime": 0.12
+}
+}
+tags = PackedStringArray("melee", "charge")
+data_only = true
+todo = "Boon numbers: minor {\"chargeTime\":0.12}, major {\"chargeTime\":0.25}"

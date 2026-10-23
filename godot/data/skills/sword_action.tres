@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_p26un"]
+[ext_resource type="Script" path="res://scripts/data/cone_block.gd" id="2_t1pbn"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_w1a8p"]
+
+[sub_resource type="Resource" id="Resource_jewso"]
+script = ExtResource("2_t1pbn")
+arc = 103.13
+damage = 50.0
+knockback = 0.15
+
+[sub_resource type="Resource" id="Resource_n4uum"]
+script = ExtResource("2_t1pbn")
+arc = 103.13
+swing_dir = -1
+damage = 50.0
+knockback = 0.15
+
+[sub_resource type="Resource" id="Resource_enked"]
+script = ExtResource("2_t1pbn")
+reach = 1.75
+arc = 126.05
+damage = 80.0
+knockback = 0.5
+
+[resource]
+script = ExtResource("3_w1a8p")
+id = &"sword_action"
+display_name = "Dawn Cut"
+description = "3-hit, 0.42 s, 8 MP/hit. Parry as off-action; the 3rd hit is wide"
+element = "slash"
+kind = "action"
+cooldown = 0.42
+tags = PackedStringArray("melee")
+decks = PackedStringArray()
+block_mode = "combo"
+blocks = Array[ExtResource("1_p26un")]([SubResource("Resource_jewso"), SubResource("Resource_n4uum"), SubResource("Resource_enked")])
+aim_shape = "cone"
+aim_range = 1.5
+color = Color(1, 0.8117647, 0.41568628, 1)
+todo = "Basic attack: swing template \"blade3\" from game.js basicSwing (one block per combo hit). Hold-M1 \"none\" (game.js holdAttack) is wave 2."

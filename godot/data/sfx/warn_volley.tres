@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_lofvk"]
+
+[resource]
+script = ExtResource("1_lofvk")
+id = &"warn_volley"
+priority = 3
+caption = "[boss wind-up]"
+recipe = {
+"layers": [{
+"dur": 0.04,
+"f0": 1500.0,
+"f1": 1500.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.1,
+"dur": 0.04,
+"f0": 1500.0,
+"f1": 1500.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.2,
+"dur": 0.04,
+"f0": 1500.0,
+"f1": 1500.0,
+"gain": 0.05,
+"osc": "triangle"
+}]
+}

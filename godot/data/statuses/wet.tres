@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_oeex6"]
+
+[resource]
+script = ExtResource("1_oeex6")
+id = &"wet"
+display_name = "Wet"
+element = "water"
+reacts_with = PackedStringArray("lightning", "frost")
+rule = "From water; ended by fire or 2 s of wind (Dry)."
+tint = Color(0.22745098, 0.47843137, 0.84705883, 1)
+overlay = &"wet"
+overlay_alpha = 0.7
+motif_rate = 4.0
+socket = "head"

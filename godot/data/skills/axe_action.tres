@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_qrrkg"]
+[ext_resource type="Script" path="res://scripts/data/cone_block.gd" id="2_w7u3v"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_hepyl"]
+
+[sub_resource type="Resource" id="Resource_ngucr"]
+script = ExtResource("2_w7u3v")
+reach = 1.9
+arc = 114.59
+damage = 78.0
+knockback = 0.3
+
+[sub_resource type="Resource" id="Resource_oqont"]
+script = ExtResource("2_w7u3v")
+reach = 2.1
+arc = 148.97
+swing_dir = -1
+damage = 109.2
+knockback = 0.6
+hit_weight = 1.5
+
+[resource]
+script = ExtResource("3_hepyl")
+id = &"axe_action"
+display_name = "Hew"
+description = "2-hit, 0.62 s, 14 MP, hold M1 = Heavy Strike 1 s x1.8. Heavy Strike holds poise; a worn companion supplies the tools"
+element = "slash"
+kind = "action"
+cooldown = 0.62
+tags = PackedStringArray("melee")
+decks = PackedStringArray()
+block_mode = "combo"
+blocks = Array[ExtResource("1_qrrkg")]([SubResource("Resource_ngucr"), SubResource("Resource_oqont")])
+aim_shape = "cone"
+aim_range = 1.9
+color = Color(1, 0.6901961, 0.4392157, 1)
+todo = "Basic attack: swing template \"great2\" from game.js basicSwing (one block per combo hit). Hold-M1 \"heavy\" (game.js holdAttack) is wave 2."

@@ -1,0 +1,154 @@
+[gd_resource type="Resource" script_class="BossData" format=3]
+
+[ext_resource type="Resource" path="res://data/loot/boss_boss.tres" id="1_3mnxk"]
+[ext_resource type="Script" path="res://scripts/data/boss_move.gd" id="2_t7dny"]
+[ext_resource type="Script" path="res://scripts/data/boss_phase.gd" id="3_yt0t1"]
+[ext_resource type="Script" path="res://scripts/data/boss_data.gd" id="4_7yehw"]
+
+[sub_resource type="Resource" id="Resource_lko75"]
+script = ExtResource("2_t7dny")
+id = &"cleave"
+wind = 0.85
+open = 0.55
+cooldown = 0.9
+hit = "big"
+damage_pct = 0.72
+range_band = "near"
+params = {
+"arc": 2.0,
+"legacy": true,
+"r": 3.6
+}
+todo = "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_20yjx"]
+script = ExtResource("2_t7dny")
+id = &"slam"
+wind = 1.1
+open = 0.6
+cooldown = 0.8
+hit = "big"
+damage_pct = 0.56
+element = "gloom"
+range_band = "near"
+params = {
+"at": "self",
+"hitstop": 0.08,
+"legacy": true,
+"r": 3.4
+}
+todo = "Move type \"circle\" runs in bosses.js BOSS_MOVES.circle (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_qdkl5"]
+script = ExtResource("2_t7dny")
+id = &"volley"
+damage_pct = 0.04
+element = "arcane"
+params = {
+"delay": 0.35,
+"dur": 1.8,
+"gap": 0.45,
+"legacy": true,
+"life": 3.2,
+"n": 16.0,
+"rings": 3.0,
+"rot": 0.2,
+"scale": "none",
+"speed": 4.6
+}
+todo = "Move type \"volley\" runs in bosses.js BOSS_MOVES.volley (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_no12p"]
+script = ExtResource("2_t7dny")
+id = &"charge"
+wind = 0.75
+open = 0.6
+cooldown = 0.8
+hit = "big"
+damage_pct = 0.72
+range_band = "far"
+params = {
+"dur": 0.5,
+"legacy": true,
+"len": 8.0,
+"scale": "wind",
+"speed": 15.0,
+"w": 1.1
+}
+todo = "Move type \"charge\" runs in bosses.js BOSS_MOVES.charge (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_ldi0x"]
+script = ExtResource("2_t7dny")
+id = &"voidrain"
+wind = 1.0
+cooldown = 0.6
+element = "gloom"
+params = {
+"count": 6.0,
+"dur": 1.5,
+"r": 1.3,
+"scale": "none",
+"spread": [1.0, 4.0]
+}
+todo = "Move type \"rain\" runs in bosses.js BOSS_MOVES.rain (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_swm0t"]
+script = ExtResource("3_yt0t1")
+moves = Dictionary[StringName, float]({
+&"charge": 2.0,
+&"cleave": 2.0,
+&"slam": 1.0,
+&"volley": 1.0
+})
+
+[sub_resource type="Resource" id="Resource_shhq7"]
+script = ExtResource("3_yt0t1")
+hp_below = 0.5
+moves = Dictionary[StringName, float]({
+&"charge": 2.0,
+&"cleave": 2.0,
+&"slam": 1.0,
+&"voidrain": 2.0,
+&"volley": 1.0
+})
+wind_mul = 0.8
+cooldown_mul = 0.75
+speed_mul = 1.35
+on_enter = Array[Dictionary]([{
+"adds": [["slime", 0.4, 3.5], ["wisp", 1.97, 3.5], ["slime", 3.54, 3.5], ["wisp", 5.11, 3.5]],
+"cd": 0.5,
+"dur": 1.6,
+"ring": 6.0,
+"text": "The Warden calls upon the nightmare!",
+"type": "roar"
+}])
+
+[resource]
+script = ExtResource("4_7yehw")
+kind = "guardian"
+level = 17
+stagger_max = 4.8
+bars = false
+moves = Array[ExtResource("2_t7dny")]([SubResource("Resource_lko75"), SubResource("Resource_20yjx"), SubResource("Resource_qdkl5"), SubResource("Resource_no12p"), SubResource("Resource_ldi0x")])
+phases = Array[ExtResource("3_yt0t1")]([SubResource("Resource_swm0t"), SubResource("Resource_shhq7")])
+id = &"boss"
+display_name = "The Gloam Warden"
+hp = 25970.0
+speed = 1.6
+damage = 0.0
+radius = 0.95
+height = 9.0
+element = "gloom"
+damage_type = "gloom"
+resists = Dictionary[StringName, float]({
+&"arcane": 0.5,
+&"gloom": 0.5,
+&"holy": -0.5
+})
+tags = PackedStringArray("gloom", "ethereal")
+xp = 1.0
+attacks = PackedStringArray()
+loot = ExtResource("1_3mnxk")
+blood = Color(0.78039217, 0.54509807, 1, 1)
+todo = "Boss AI: bosses.js (move picker, fairness floors, bars); the Bosses lane ports it.
+JS loot key: "

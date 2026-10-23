@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_vb73p"]
+
+[resource]
+script = ExtResource("1_vb73p")
+id = &"originMystic"
+display_name = "Dream Tithe"
+hint = "+10% MP on hit"
+source = "trinket"
+if_tags = PackedStringArray()
+stats = {
+"mpOnHit": "mpOnHit"
+}
+tags = PackedStringArray("mp")

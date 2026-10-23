@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_4yspb"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_v2fge"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_xjn4v"]
+
+[resource]
+script = ExtResource("2_v2fge")
+id = &"flask"
+display_name = "Mana Flask"
+description = "Restore 50% of max MP."
+kind = "consumable"
+slot = "pocket"
+hands = 0
+flags = {
+"max": 2.0
+}
+color = Color(0.49803922, 0.6901961, 1, 1)
+attack_pose = "none"
+todo = "Pocket consumable; its use is game.js usePocket (wave 2: a SkillData)."

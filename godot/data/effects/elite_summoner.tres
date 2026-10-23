@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_1s0ed"]
+
+[resource]
+script = ExtResource("1_1s0ed")
+id = &"elite_summoner"
+display_name = "Summoner"
+hint = "Elite modifier"
+source = "elite"
+if_tags = PackedStringArray()
+do_action = &"elite_summoner"
+do_params = {
+"color": "#b36bff",
+"damage_mult": 1.25,
+"hp_mult": 3.2,
+"rare": false
+}
+icd = 0.0
+tags = PackedStringArray()
+todo = "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.
+JS:
+tick: tick(e, dt) {
+      e.eSumT = (e.eSumT == null ? 4 : e.eSumT) - dt;
+      if (e.eSumT > 0) return; e.eSumT = 8;
+      if (G.enemies.filter(o => o.summoner === e && !o.dead).length >= 4) return;
+      const kind = ENEMY.dreammoth ? 'dreammoth' : 'slime';
+      fx({ type: 'ring', x: e.x, y: e.y, r: 1.4, col: '#b36bff', life: 0.5 });
+      const s = spawnAt(kind, e.x + 1, e.y, 0.6); if (s) { s.summoner = e; s.noXp = true; }
+    }"

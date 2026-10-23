@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_210pb"]
+
+[resource]
+script = ExtResource("1_210pb")
+id = &"fish_bite"
+pitch_vary = 0.03
+priority = 2
+caption = "[fish bites]"
+recipe = {
+"layers": [{
+"dur": 0.03,
+"f0": 1400.0,
+"f1": 1400.0,
+"gain": 0.04,
+"osc": "square"
+}, {
+"delay": 0.12,
+"dur": 0.03,
+"f0": 1400.0,
+"f1": 1400.0,
+"gain": 0.04,
+"osc": "square"
+}]
+}

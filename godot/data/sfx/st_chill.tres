@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_0dxk1"]
+
+[resource]
+script = ExtResource("1_0dxk1")
+id = &"st_chill"
+pitch_vary = 0.06
+caption = "[chilled]"
+recipe = {
+"layers": [{
+"dur": 0.2,
+"f0": 2400.0,
+"f1": 3000.0,
+"gain": 0.03,
+"osc": "sine"
+}]
+}

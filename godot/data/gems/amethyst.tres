@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="GemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/gem_data.gd" id="1_6wyx7"]
+
+[resource]
+script = ExtResource("1_6wyx7")
+id = &"amethyst"
+display_name = "Amethyst"
+color = Color(0.7058824, 0.41568628, 1, 1)
+element = "arcane"
+grade_names = PackedStringArray("Chipped", "Clear", "Radiant")
+armour_stats = Array[Dictionary]([{
+"power": 0.01,
+"resArcane": 0.015,
+"resGloom": 0.015
+}, {
+"power": 0.02,
+"resArcane": 0.03,
+"resGloom": 0.03
+}, {
+"power": 0.04,
+"resArcane": 0.05,
+"resGloom": 0.05
+}])
+weapon_stats = Array[Dictionary]([{
+"skillDmg": 0.04
+}, {
+"skillDmg": 0.08
+}, {
+"skillDmg": 0.14
+}])
+amp = "Arcane skills"

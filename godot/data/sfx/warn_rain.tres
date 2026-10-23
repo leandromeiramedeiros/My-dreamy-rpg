@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_3f07f"]
+
+[resource]
+script = ExtResource("1_3f07f")
+id = &"warn_rain"
+priority = 3
+caption = "[boss wind-up]"
+recipe = {
+"layers": [{
+"dur": 0.02,
+"f0": 3000.0,
+"f1": 3000.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.05,
+"dur": 0.02,
+"f0": 3000.0,
+"f1": 3000.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.1,
+"dur": 0.02,
+"f0": 3000.0,
+"f1": 3000.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.15,
+"dur": 0.02,
+"f0": 3000.0,
+"f1": 3000.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.2,
+"dur": 0.02,
+"f0": 3000.0,
+"f1": 3000.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.25,
+"dur": 0.02,
+"f0": 3000.0,
+"f1": 3000.0,
+"gain": 0.05,
+"osc": "triangle"
+}]
+}

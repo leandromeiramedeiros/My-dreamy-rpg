@@ -1,0 +1,18 @@
+{
+ "id": "rock_02",
+ "kind": "rock",
+ "label": "Rock",
+ "size": [
+  18,
+  12
+ ],
+ "origin": [
+  9,
+  11
+ ],
+ "collider_r": 0.28,
+ "shadow": 6,
+ "light": null,
+ "image": "rock_02.png",
+ "frames": null
+}

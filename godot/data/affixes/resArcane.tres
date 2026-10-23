@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_lpslk"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_eqg5j"]
+
+[sub_resource type="Resource" id="Resource_xti80"]
+script = ExtResource("2_eqg5j")
+display_name = "Warded"
+roll = Vector2(0.06, 0.08)
+
+[sub_resource type="Resource" id="Resource_0s7uq"]
+script = ExtResource("2_eqg5j")
+display_name = "Hardened"
+roll = Vector2(0.1, 0.14)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_64nb5"]
+script = ExtResource("2_eqg5j")
+display_name = "Unyielding"
+roll = Vector2(0.17, 0.2)
+item_level = 28
+
+[resource]
+script = ExtResource("1_lpslk")
+id = &"resArcane"
+kind = "suffix"
+tiers = Array[ExtResource("2_eqg5j")]([SubResource("Resource_xti80"), SubResource("Resource_0s7uq"), SubResource("Resource_64nb5")])

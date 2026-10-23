@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_84ky6"]
+
+[resource]
+script = ExtResource("1_84ky6")
+id = &"en_golem_grind"
+pitch_vary = 0.1
+caption = "[golem]"
+recipe = {
+"layers": [{
+"dur": 0.5,
+"f0": 500.0,
+"f1": 900.0,
+"filter": {
+"freq": 700.0,
+"q": 2.0,
+"type": "bandpass"
+},
+"gain": 0.06,
+"osc": "noise"
+}]
+}

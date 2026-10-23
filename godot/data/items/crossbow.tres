@@ -1,0 +1,71 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/crossbow_action.tres" id="1_cnaun"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_jrcau"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_d03cf"]
+[ext_resource type="Resource" path="res://data/skills/piercingbolt.tres" id="4_qk4lr"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_rrj6p"]
+[ext_resource type="Resource" path="res://data/skills/ballista.tres" id="6_ige64"]
+
+[sub_resource type="Resource" id="Resource_1gfhn"]
+script = ExtResource("5_rrj6p")
+base_id = &"handcrossbow"
+display_name = "Hand Crossbow"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_kkqx7"]
+script = ExtResource("5_rrj6p")
+base_id = &"dawnarbalest"
+display_name = "Dawn Arbalest"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_6q4wf"]
+script = ExtResource("5_rrj6p")
+base_id = &"sunbolt"
+display_name = "Sunbolt"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_w65os"]
+script = ExtResource("5_rrj6p")
+base_id = &"auroraballista"
+display_name = "Aurora Ballista"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_rl2wb"]
+script = ExtResource("5_rrj6p")
+base_id = &"bolteternal"
+display_name = "Bolt Eternal"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_d03cf")
+id = &"crossbow"
+display_name = "Crossbow"
+description = "A four-bolt clip, then a one-second reload. Bolts pierce once."
+item_class = &"shots"
+hands = 2
+element = "pierce"
+tiers = Array[ExtResource("5_rrj6p")]([SubResource("Resource_1gfhn"), SubResource("Resource_kkqx7"), SubResource("Resource_6q4wf"), SubResource("Resource_w65os"), SubResource("Resource_rl2wb")])
+action = ExtResource("1_cnaun")
+spell = ExtResource("4_qk4lr")
+ultimate = ExtResource("6_ige64")
+mp_on_hit = 7.0
+hold = &"focus"
+stats = Dictionary[StringName, float]({
+&"dmg": 35.0
+})
+flags = {
+"clip": 4.0,
+"kind": "bow",
+"off_action": "snapshot",
+"reload": 1.0,
+"sw": "quarrel"
+}
+color = Color(0.8784314, 0.8156863, 0.6901961, 1)
+attack_pose = "bow"
+swing_style = "aim"
+carry_pose = "aim"
+todo = "Line name (T2 base): Dawn Arbalest. Class passive: Focus: still for 0.6 s, next shot crits; Snapshot crits. Off-action in OFFHAND: snapshot."

@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/dreamveil.tres" id="1_e4xfh"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_w1pkq"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_52c84"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_xfdr4"]
+
+[sub_resource type="Resource" id="Resource_oeyvv"]
+script = ExtResource("4_xfdr4")
+base_id = &"gauzeveil"
+display_name = "Gauze Veil"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_da21v"]
+script = ExtResource("4_xfdr4")
+base_id = &"mirageveil"
+display_name = "Mirage Veil"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_jewk0"]
+script = ExtResource("4_xfdr4")
+base_id = &"glassveil"
+display_name = "Glasswoven Veil"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_ufuhl"]
+script = ExtResource("4_xfdr4")
+base_id = &"auroraglassveil"
+display_name = "Aurora Glassveil"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_hwtye"]
+script = ExtResource("4_xfdr4")
+base_id = &"crownofmirrors"
+display_name = "Crown of Mirrors"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_52c84")
+id = &"miragehelm"
+display_name = "Mirage Veil"
+description = "+5% crit chance, 3% shorter cooldowns."
+kind = "armour"
+slot = "head"
+item_class = &"shadow"
+suit = &"mirage"
+hands = 0
+element = "arcane"
+tiers = Array[ExtResource("4_xfdr4")]([SubResource("Resource_oeyvv"), SubResource("Resource_da21v"), SubResource("Resource_jewk0"), SubResource("Resource_ufuhl"), SubResource("Resource_hwtye")])
+active = ExtResource("1_e4xfh")
+stats = Dictionary[StringName, float]({
+&"cdr": 0.03,
+&"crit": 0.05
+})
+color = Color(0.78431374, 0.65882355, 0.9411765, 1)
+attack_pose = "none"
+todo = "Suit Mirage (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."

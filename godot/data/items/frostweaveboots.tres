@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/glide.tres" id="1_mq38f"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_peyay"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_huqty"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_eadr4"]
+
+[sub_resource type="Resource" id="Resource_5vuk7"]
+script = ExtResource("4_eadr4")
+base_id = &"feltslippers"
+display_name = "Felt Slippers"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_owgps"]
+script = ExtResource("4_eadr4")
+base_id = &"frostslippers"
+display_name = "Frostweave Slippers"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_hab46"]
+script = ExtResource("4_eadr4")
+base_id = &"rimewalkers"
+display_name = "Rimewalkers"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_e2sem"]
+script = ExtResource("4_eadr4")
+base_id = &"auroraskates"
+display_name = "Aurora Skates"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_giqw1"]
+script = ExtResource("4_eadr4")
+base_id = &"snowfallsteps"
+display_name = "Snowfall Steps"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_huqty")
+id = &"frostweaveboots"
+display_name = "Frostweave Slippers"
+description = "+2 MP/s, +3% move speed."
+kind = "armour"
+slot = "boots"
+item_class = &"caster"
+suit = &"frostweave"
+hands = 0
+element = "frost"
+tiers = Array[ExtResource("4_eadr4")]([SubResource("Resource_5vuk7"), SubResource("Resource_owgps"), SubResource("Resource_hab46"), SubResource("Resource_e2sem"), SubResource("Resource_giqw1")])
+active = ExtResource("1_mq38f")
+stats = Dictionary[StringName, float]({
+&"mpRegen": 2.0,
+&"speed": 0.1
+})
+color = Color(0.7490196, 0.9098039, 0.972549, 1)
+attack_pose = "none"
+todo = "Suit Frostweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."

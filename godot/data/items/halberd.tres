@@ -1,0 +1,67 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/halberd_action.tres" id="1_f0u6k"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_bgl1u"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_10v6p"]
+[ext_resource type="Resource" path="res://data/skills/sweep.tres" id="4_2t70l"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_eooye"]
+[ext_resource type="Resource" path="res://data/skills/skewer.tres" id="6_e4s0r"]
+
+[sub_resource type="Resource" id="Resource_3nqxx"]
+script = ExtResource("5_eooye")
+base_id = &"pike"
+display_name = "Pike"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_7if0l"]
+script = ExtResource("5_eooye")
+base_id = &"dawnglaive"
+display_name = "Dawnglaive"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_g35fr"]
+script = ExtResource("5_eooye")
+base_id = &"sunhalberd"
+display_name = "Sun Halberd"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_jge7m"]
+script = ExtResource("5_eooye")
+base_id = &"aurorapartisan"
+display_name = "Aurora Partisan"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_6vdox"]
+script = ExtResource("5_eooye")
+base_id = &"reacheternal"
+display_name = "Reach Eternal"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_10v6p")
+id = &"halberd"
+display_name = "Halberd"
+description = "A long polearm: half again the reach of a sword. Thrust, then sweep."
+item_class = &"greatarms"
+hands = 2
+element = "pierce"
+tiers = Array[ExtResource("5_eooye")]([SubResource("Resource_3nqxx"), SubResource("Resource_7if0l"), SubResource("Resource_g35fr"), SubResource("Resource_jge7m"), SubResource("Resource_6vdox")])
+action = ExtResource("1_f0u6k")
+spell = ExtResource("4_2t70l")
+ultimate = ExtResource("6_e4s0r")
+mp_on_hit = 14.0
+hold = &"heavy"
+stats = Dictionary[StringName, float]({
+&"dmg": 84.0
+})
+flags = {
+"kind": "sword",
+"off_action": "",
+"sw": "reach2"
+}
+color = Color(0.8117647, 0.84705883, 0.9411765, 1)
+swing_style = "thrust"
+todo = "Line name (T2 base): Dawnglaive. Class passive: Heavy Strike holds poise; a worn companion supplies the tools. Off-action in OFFHAND: none."

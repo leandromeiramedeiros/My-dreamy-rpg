@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_2wtcu"]
+
+[resource]
+script = ExtResource("1_2wtcu")
+id = &"step_metal"
+pitch_vary = 0.08
+priority = 0
+recipe = {
+"layers": [{
+"dur": 0.05,
+"f0": 3200.0,
+"f1": 3000.0,
+"gain": 0.015,
+"osc": "sine"
+}]
+}

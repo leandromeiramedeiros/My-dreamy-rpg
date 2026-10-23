@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_ofa5f"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_bhaep"]
+
+[sub_resource type="Resource" id="Resource_gsoos"]
+script = ExtResource("2_bhaep")
+display_name = "Crackling"
+roll = Vector2(0.04, 0.06)
+
+[sub_resource type="Resource" id="Resource_pjj40"]
+script = ExtResource("2_bhaep")
+display_name = "Thundering"
+roll = Vector2(0.08, 0.1)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_usm72"]
+script = ExtResource("2_bhaep")
+display_name = "Stormborn"
+roll = Vector2(0.12, 0.15)
+item_level = 28
+
+[resource]
+script = ExtResource("1_ofa5f")
+id = &"lightningDmg"
+tiers = Array[ExtResource("2_bhaep")]([SubResource("Resource_gsoos"), SubResource("Resource_pjj40"), SubResource("Resource_usm72")])

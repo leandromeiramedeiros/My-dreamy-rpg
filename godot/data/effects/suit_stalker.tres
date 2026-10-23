@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_iypql"]
+
+[resource]
+script = ExtResource("1_iypql")
+id = &"suit_stalker"
+display_name = "Stalker twist"
+hint = "A hit from stealth deals +50% crit damage"
+source = "suit"
+if_tags = PackedStringArray()
+tags = PackedStringArray()
+todo = "Inline engine check at damageEnemy (no bus event).
+Live while three stalker pieces are worn."

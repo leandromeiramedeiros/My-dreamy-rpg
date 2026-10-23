@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/wand_action.tres" id="1_wson7"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_4ylmf"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_jt6xl"]
+[ext_resource type="Resource" path="res://data/skills/frostshard.tres" id="4_fsvws"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_rtaib"]
+[ext_resource type="Resource" path="res://data/skills/runebinding.tres" id="6_3ufle"]
+
+[sub_resource type="Resource" id="Resource_eab00"]
+script = ExtResource("5_rtaib")
+base_id = &"birchtwig"
+display_name = "Birch Twig"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_kxaxo"]
+script = ExtResource("5_rtaib")
+base_id = &"hazelwand"
+display_name = "Hazel Wand"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_rykhc"]
+script = ExtResource("5_rtaib")
+base_id = &"sunsparkwand"
+display_name = "Sunspark Wand"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_ncd3h"]
+script = ExtResource("5_rtaib")
+base_id = &"aurorawand"
+display_name = "Aurora Wand"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_rcrys"]
+script = ExtResource("5_rtaib")
+base_id = &"sparketernal"
+display_name = "Spark Eternal"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_jt6xl")
+id = &"wand"
+display_name = "Wand"
+description = "A light focus for the hand. Quick bolts, frost shards and a binding rune."
+item_class = &"foci"
+element = "arcane"
+tiers = Array[ExtResource("5_rtaib")]([SubResource("Resource_eab00"), SubResource("Resource_kxaxo"), SubResource("Resource_rykhc"), SubResource("Resource_ncd3h"), SubResource("Resource_rcrys")])
+action = ExtResource("1_wson7")
+spell = ExtResource("4_fsvws")
+ultimate = ExtResource("6_3ufle")
+mp_on_hit = 9.0
+stats = Dictionary[StringName, float]({
+&"dmg": 31.0
+})
+flags = {
+"kind": "staff",
+"off_action": "ward"
+}
+color = Color(0.78039217, 0.9098039, 1, 1)
+attack_pose = "staff"
+swing_style = "cast"
+todo = "Line name (T2 base): Hazel Wand. Class passive: reactions refund 10 % MP; cantrips are free. Off-action in OFFHAND: ward."

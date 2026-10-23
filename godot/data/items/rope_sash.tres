@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_mo6lx"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_3uj7i"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_sdti5"]
+
+[sub_resource type="Resource" id="Resource_hcrcv"]
+script = ExtResource("3_sdti5")
+base_id = &"rope_sash"
+display_name = "Rope Sash"
+
+[resource]
+script = ExtResource("2_3uj7i")
+id = &"rope_sash"
+display_name = "Rope Sash"
+description = "+1 potion charge"
+kind = "trinket"
+slot = "belt"
+hands = 0
+tiers = Array[ExtResource("3_sdti5")]([SubResource("Resource_hcrcv")])
+stats = Dictionary[StringName, float]({
+&"potionCharge": 1.0
+})
+attack_pose = "none"
+todo = "Boon rolled at drop (BOONS belt)."

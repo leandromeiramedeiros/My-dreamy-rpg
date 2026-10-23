@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_gdk8m"]
+
+[resource]
+script = ExtResource("1_gdk8m")
+id = &"critAfterR"
+display_name = "Sharpened Dusk"
+hint = "+5% crit chance for 6 s after R"
+source = "trinket"
+when_event = "ultimate"
+if_tags = PackedStringArray()
+do_action = &"critAfterR"
+do_params = {
+"major": {
+"crit": 0.05
+},
+"minor": {
+"crit": 0.03
+}
+}
+tags = PackedStringArray("ultimate", "crit")
+todo = "Boon numbers: minor {\"crit\":0.03}, major {\"crit\":0.05}
+JS:
+do: do(c, v, p) { p.critR = { v: v.crit || 0, until: G.t + 6 }; }"

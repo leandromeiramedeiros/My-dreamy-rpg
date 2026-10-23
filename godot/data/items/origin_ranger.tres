@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_v6tvd"]
+[ext_resource type="Resource" path="res://data/effects/originRanger.tres" id="2_ucnfk"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_lag5h"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_epe5l"]
+
+[sub_resource type="Resource" id="Resource_6gu6r"]
+script = ExtResource("4_epe5l")
+base_id = &"origin_ranger"
+display_name = "Ring of the Trail"
+
+[resource]
+script = ExtResource("3_lag5h")
+id = &"origin_ranger"
+display_name = "Ring of the Trail"
+description = "+10% crit damage"
+kind = "trinket"
+slot = "ring"
+hands = 0
+tiers = Array[ExtResource("4_epe5l")]([SubResource("Resource_6gu6r")])
+passives = Array[ExtResource("1_v6tvd")]([ExtResource("2_ucnfk")])
+attack_pose = "none"
+todo = "Origin ring (Ranger)."

@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_ht7dk"]
+[ext_resource type="Script" path="res://scripts/data/projectile_block.gd" id="2_85qlw"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_o0n2e"]
+
+[sub_resource type="Resource" id="Resource_bhyw7"]
+script = ExtResource("2_85qlw")
+speed = 16.0
+life = 0.75
+damage = 45.0
+hit_params = {
+"burn": 1.5,
+"col": "#ffb070",
+"explode": {
+"dmg": 25.0,
+"r": 1.0
+}
+}
+
+[resource]
+script = ExtResource("3_o0n2e")
+id = &"firearrow"
+display_name = "Fire"
+description = "ARROW — a burning arrow that bursts on impact."
+element = "fire"
+kind = "page"
+cooldown = 6.0
+mp_cost = 22.0
+tags = PackedStringArray()
+decks = PackedStringArray("arrow")
+blocks = Array[ExtResource("1_ht7dk")]([SubResource("Resource_bhyw7")])
+aim_shape = "proj"
+aim_range = 12.0
+aim_width = 0.3
+color = Color(1, 0.6039216, 0.2901961, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+template CT.arrow {\"dmg\":45,\"col\":\"#ffb070\",\"burn\":1.5,\"explode\":{\"r\":1,\"dmg\":25}}
+JS:
+cast: cast(p, a) {
+    castAnim(p);
+    spawnProj(Object.assign({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.3, life: 0.75, kind: 'arrow' }, o));
+    sfx('bow');
+  }"

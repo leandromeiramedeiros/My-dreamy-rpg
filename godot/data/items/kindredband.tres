@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_47axl"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_3kpf4"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_uk01f"]
+
+[sub_resource type="Resource" id="Resource_e71p7"]
+script = ExtResource("3_uk01f")
+base_id = &"kindredband"
+display_name = "Kindred Band"
+required_level = 16
+
+[resource]
+script = ExtResource("2_3kpf4")
+id = &"kindredband"
+display_name = "Kindred Band"
+description = "Ring resonance bonus doubles when both rings match."
+kind = "trinket"
+slot = "ring"
+hands = 0
+tiers = Array[ExtResource("3_uk01f")]([SubResource("Resource_e71p7")])
+stats = Dictionary[StringName, float]({
+&"power": 0.02
+})
+flags = {
+"rule": {
+"resonanceMul": 2.0
+}
+}
+attack_pose = "none"
+todo = "Unique rule (JS `rule`): {\"resonanceMul\":2}. Wave 2: an Effect."

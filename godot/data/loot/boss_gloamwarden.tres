@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="LootTable" format=3]
+
+[ext_resource type="Resource" path="res://data/loot/class_boss.tres" id="1_wm7bi"]
+[ext_resource type="Script" path="res://scripts/data/loot_table.gd" id="2_a46jk"]
+[ext_resource type="Resource" path="res://data/items/unique_lanternplate.tres" id="3_u3yfu"]
+
+[resource]
+script = ExtResource("2_a46jk")
+id = &"boss_gloamwarden"
+base_table = ExtResource("1_wm7bi")
+rarity_weights = PackedFloat32Array(0, 0, 65, 35, 0, 0)
+item_rolls = 2
+item_chance = 1.0
+extra_item_weights = PackedFloat32Array(18, 44, 30, 8, 0, 0)
+gem_rolls = 2
+gem_level_bonus = PackedInt32Array(4, 0)
+potion_chance = 1.0
+unique = ExtResource("3_u3yfu")
+exclude_bases = PackedStringArray()

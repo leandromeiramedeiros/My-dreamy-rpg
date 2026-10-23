@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_o8muu"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="2_xrm4w"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_isds3"]
+
+[sub_resource type="Resource" id="Resource_ndant"]
+script = ExtResource("2_xrm4w")
+radius = 2.6
+damage = 40.0
+knockback = 0.9
+stun = 1.3
+
+[resource]
+script = ExtResource("3_isds3")
+id = &"warcry"
+display_name = "War Cry"
+description = "HELMET — a roar that stuns and knocks back nearby enemies."
+element = "slash"
+kind = "active"
+cooldown = 12.0
+mp_cost = 20.0
+tags = PackedStringArray()
+decks = PackedStringArray("call")
+blocks = Array[ExtResource("1_o8muu")]([SubResource("Resource_ndant")])
+aim_radius = 2.6
+stagger = 2.0
+color = Color(1, 0.8117647, 0.41568628, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { hitArea(p.x, p.y, 2.6, 40, { stun: 1.3, knock: 0.9 }); fx({ type: 'ring', x: p.x, y: p.y, r: 2.7, col: '#ffd77a', life: 0.4 }); shake(4); sfx('shout'); }"

@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/staticcloak.tres" id="1_vewgy"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_tf707"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_p15ip"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_d0qie"]
+
+[sub_resource type="Resource" id="Resource_70bhm"]
+script = ExtResource("4_d0qie")
+base_id = &"oilclothrobe"
+display_name = "Oilcloth Robe"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_vg4w3"]
+script = ExtResource("4_d0qie")
+base_id = &"stormrobe"
+display_name = "Stormweave Robe"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_yxv51"]
+script = ExtResource("4_d0qie")
+base_id = &"thunderrobe"
+display_name = "Thunderwoven Robe"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_fvhqs"]
+script = ExtResource("4_d0qie")
+base_id = &"aurorastormrobe"
+display_name = "Aurora Stormrobe"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_g3a5v"]
+script = ExtResource("4_d0qie")
+base_id = &"stormeternal"
+display_name = "Storm Eternal"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_p15ip")
+id = &"stormweave"
+display_name = "Stormweave Robe"
+description = "+18% power, +100 MP, +4% lightning damage."
+kind = "armour"
+slot = "chest"
+item_class = &"caster"
+suit = &"stormweave"
+hands = 0
+element = "lightning"
+tiers = Array[ExtResource("4_d0qie")]([SubResource("Resource_70bhm"), SubResource("Resource_vg4w3"), SubResource("Resource_yxv51"), SubResource("Resource_fvhqs"), SubResource("Resource_g3a5v")])
+active = ExtResource("1_vewgy")
+stats = Dictionary[StringName, float]({
+&"lightningDmg": 0.04,
+&"mp": 100.0,
+&"mpRegen": 4.0,
+&"power": 0.18
+})
+resists = Dictionary[StringName, float]({
+&"arcane": 0.25,
+&"lightning": 0.1,
+&"pierce": -0.25,
+&"slash": -0.25
+})
+color = Color(0.78431374, 0.84705883, 0.3764706, 1)
+attack_pose = "none"
+todo = "Suit Stormweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."

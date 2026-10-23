@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_esx63"]
+
+[resource]
+script = ExtResource("1_esx63")
+id = &"skillDmgFull"
+display_name = "Full Charge"
+hint = "+8% skill damage while charge is full"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"skillDmg": 0.08
+},
+"minor": {
+"skillDmg": 0.04
+}
+}
+stats = {
+"skillDmg": "skillDmgFull"
+}
+tags = PackedStringArray("ultimate")
+todo = "Boon numbers: minor {\"skillDmg\":0.04}, major {\"skillDmg\":0.08}"

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_3gp2p"]
+
+[resource]
+script = ExtResource("1_3gp2p")
+id = &"holyPower"
+display_name = "Halo Hoop"
+hint = "+15% holy damage; holy hits stagger more"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"holyDmg": 0.15,
+"stagger": 1.0
+},
+"minor": {
+"holyDmg": 0.08,
+"stagger": 0.5
+}
+}
+stats = {
+"holyDmg": "holyDmg",
+"stagger": "holyStagger"
+}
+tags = PackedStringArray("holy")
+todo = "Boon numbers: minor {\"holyDmg\":0.08,\"stagger\":0.5}, major {\"holyDmg\":0.15,\"stagger\":1}"

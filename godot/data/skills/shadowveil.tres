@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_35dax"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_yjpb2"]
+
+[resource]
+script = ExtResource("2_yjpb2")
+id = &"shadowveil"
+display_name = "Shadow Veil"
+description = "CHEST — vanish for 3s (+40% speed); your next hit is a guaranteed critical."
+element = "arcane"
+kind = "active"
+cooldown = 15.0
+mp_cost = 20.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+color = Color(0.41568628, 0.654902, 0.49411765, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { addBuff(p, 'veil', 3); burst(p.x, p.y, p.z + 1, 20, ['#2f6b4f', '#1a1326', '#8fe0a0'], 2); sfx('dash'); }"

@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_s4m1i"]
+
+[resource]
+script = ExtResource("1_s4m1i")
+id = &"boom"
+pitch_vary = 0.06
+priority = 3
+caption = "[explosion]"
+recipe = {
+"layers": [{
+"dur": 0.6,
+"f0": 300.0,
+"f1": 40.0,
+"filter": {
+"freq": 600.0,
+"q": 0.7,
+"type": "lowpass"
+},
+"gain": 0.18,
+"osc": "noise"
+}, {
+"dur": 0.5,
+"f0": 90.0,
+"f1": 30.0,
+"gain": 0.15,
+"osc": "sine"
+}]
+}

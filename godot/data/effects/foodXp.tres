@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_lmvvw"]
+
+[resource]
+script = ExtResource("1_lmvvw")
+id = &"foodXp"
+display_name = "Shared Meal"
+hint = "+10% XP from food"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"foodXp": 0.1
+},
+"minor": {
+"foodXp": 0.05
+}
+}
+tags = PackedStringArray("food")
+data_only = true
+todo = "Boon numbers: minor {\"foodXp\":0.05}, major {\"foodXp\":0.1}"

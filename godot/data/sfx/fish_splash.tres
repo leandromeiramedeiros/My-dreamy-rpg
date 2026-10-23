@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_8jgax"]
+
+[resource]
+script = ExtResource("1_8jgax")
+id = &"fish_splash"
+pitch_vary = 0.03
+priority = 2
+caption = "[catch]"
+recipe = {
+"layers": [{
+"dur": 0.35,
+"f0": 3000.0,
+"f1": 800.0,
+"filter": {
+"freq": 1500.0,
+"q": 0.8,
+"type": "bandpass"
+},
+"gain": 0.07,
+"osc": "noise"
+}]
+}

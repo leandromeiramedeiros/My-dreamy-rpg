@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/staff_action.tres" id="1_6myyu"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_81waa"]
+[ext_resource type="Resource" path="res://data/effects/unique_echo.tres" id="3_esf0u"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="4_hrgki"]
+[ext_resource type="Resource" path="res://data/skills/firebolt.tres" id="5_v0mgw"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="6_2rixt"]
+[ext_resource type="JSON" path="res://art/gear/staff.t4.json" id="7_drb2d"]
+[ext_resource type="Resource" path="res://data/skills/meteor.tres" id="8_3suy0"]
+
+[sub_resource type="Resource" id="Resource_n0ela"]
+script = ExtResource("6_2rixt")
+base_id = &"nebulasceptre"
+display_name = "Nebula Sceptre"
+required_level = 24
+multiplier = 2.1
+sheet = ExtResource("7_drb2d")
+
+[resource]
+script = ExtResource("4_hrgki")
+id = &"unique_echo"
+display_name = "Twice-Told"
+description = "A spirit of you repeats your hand action and Q spell a breath later (never ultimates, pages or the offhand), retyped to your strongest element."
+item_class = &"foci"
+hands = 2
+element = "arcane"
+tiers = Array[ExtResource("6_2rixt")]([SubResource("Resource_n0ela")])
+action = ExtResource("1_6myyu")
+spell = ExtResource("5_v0mgw")
+ultimate = ExtResource("8_3suy0")
+passives = Array[ExtResource("2_81waa")]([ExtResource("3_esf0u")])
+flags = {
+"anyWeapon": true,
+"base": "nebulasceptre",
+"boss": "",
+"late": 17.0,
+"mythic": false
+}
+attack_pose = "staff"
+todo = "Named legendary: a rule hook on its base line (JS hasUnique/hasRule checks). Wave 2: the rule as an Effect."

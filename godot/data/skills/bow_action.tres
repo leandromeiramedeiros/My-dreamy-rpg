@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_n0x7f"]
+[ext_resource type="Script" path="res://scripts/data/projectile_block.gd" id="2_i1qh0"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_ck5s8"]
+
+[sub_resource type="Resource" id="Resource_d65e6"]
+script = ExtResource("2_i1qh0")
+speed = 16.0
+radius = 0.25
+life = 0.65
+damage = 30.0
+
+[resource]
+script = ExtResource("3_ck5s8")
+id = &"bow_action"
+display_name = "Moon Arrow"
+description = "1 shot, 0.36 s. Focus: still for 0.6 s, next shot crits; Snapshot crits"
+element = "pierce"
+kind = "action"
+cooldown = 0.36
+tags = PackedStringArray("ranged", "projectile")
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_n0x7f")]([SubResource("Resource_d65e6")])
+aim_shape = "proj"
+aim_range = 10.4
+color = Color(0.7882353, 0.84705883, 1, 1)
+todo = "Basic attack: swing template \"shot\" from game.js basicSwing (one block per combo hit). Hold-M1 \"focus\" (game.js holdAttack) is wave 2."

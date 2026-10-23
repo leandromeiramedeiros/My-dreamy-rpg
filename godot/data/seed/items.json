@@ -1,0 +1,4344 @@
+{
+ "about": "Seed from the JS reference (tools/godot/seed.js). One-time: edit the .tres in res://data/, not this file.",
+ "rows": [
+  {
+   "id": "sword",
+   "display_name": "Sword",
+   "description": "Sword forged from the first light of morning. Close-range, cleaving combos.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "blades",
+   "hands": 1,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "rustyblade",
+     "display_name": "Rusty Blade",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": "res://art/gear/sword.t1.json"
+    },
+    {
+     "base_id": "dawnblade",
+     "display_name": "Dawnblade",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": "res://art/gear/sword.t2.json"
+    },
+    {
+     "base_id": "sunforged",
+     "display_name": "Sunforged Blade",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": "res://art/gear/sword.t3.json"
+    },
+    {
+     "base_id": "auroraedge",
+     "display_name": "Aurora Edge",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": "res://art/gear/sword.t4.json"
+    },
+    {
+     "base_id": "dawneternal",
+     "display_name": "Dawn Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": "res://art/gear/sword.t5.json"
+    }
+   ],
+   "action": "sword_action",
+   "spell": "sunslash",
+   "ultimate": "judgement",
+   "mp_on_hit": 8,
+   "hold": "",
+   "stats": {
+    "dmg": 50
+   },
+   "flags": {
+    "kind": "sword",
+    "legacy": "dawnblade",
+    "off_action": "parry"
+   },
+   "color": "#ffcf6a",
+   "attack_pose": "sword",
+   "swing_style": "swing",
+   "carry_pose": "upright",
+   "todo": "Line name (T2 base): Dawnblade. Class passive: Parry as off-action; the 3rd hit is wide. Off-action in OFFHAND: parry."
+  },
+  {
+   "id": "rapier",
+   "display_name": "Rapier",
+   "description": "A duelist's needle. Long, narrow thrusts; a parry ripostes for a sure crit.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "blades",
+   "hands": 1,
+   "element": "pierce",
+   "tiers": [
+    {
+     "base_id": "tinneedle",
+     "display_name": "Tin Needle",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "moonpoint",
+     "display_name": "Moonpoint",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "silverestoc",
+     "display_name": "Silver Estoc",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "starpoint",
+     "display_name": "Starpoint",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "needleeternal",
+     "display_name": "Needle Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "rapier_action",
+   "spell": "fleche",
+   "ultimate": "perforate",
+   "mp_on_hit": 8,
+   "hold": "",
+   "stats": {
+    "dmg": 52
+   },
+   "flags": {
+    "riposte": true,
+    "sw": "thrust3",
+    "kind": "sword",
+    "off_action": "parry"
+   },
+   "color": "#d8e4ff",
+   "attack_pose": "sword",
+   "swing_style": "thrust",
+   "carry_pose": "upright",
+   "todo": "Line name (T2 base): Moonpoint. Class passive: Parry as off-action; the 3rd hit is wide. Off-action in OFFHAND: parry."
+  },
+  {
+   "id": "mace",
+   "display_name": "Mace",
+   "description": "A flanged mace that rings like a bell. Every hit staggers.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "blades",
+   "hands": 1,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "ironcudgel",
+     "display_name": "Iron Cudgel",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "dawnmace",
+     "display_name": "Dawnmace",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "sunwardenmace",
+     "display_name": "Sunwarden Mace",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroramaul",
+     "display_name": "Aurora Maul",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "voweternal",
+     "display_name": "Vow Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "mace_action",
+   "spell": "crush",
+   "ultimate": "consecrate",
+   "mp_on_hit": 8,
+   "hold": "",
+   "stats": {
+    "dmg": 57
+   },
+   "flags": {
+    "kind": "sword",
+    "off_action": "parry"
+   },
+   "color": "#f2d27a",
+   "attack_pose": "sword",
+   "swing_style": "swing",
+   "carry_pose": "upright",
+   "todo": "Line name (T2 base): Dawnmace. Class passive: Parry as off-action; the 3rd hit is wide. Off-action in OFFHAND: parry."
+  },
+  {
+   "id": "axe",
+   "display_name": "Axe",
+   "description": "A two-handed axe. Wide, committed swings that cleave a crowd.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "greatarms",
+   "hands": 2,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "splittingaxe",
+     "display_name": "Splitting Axe",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "dawnbreaker",
+     "display_name": "Dawnbreaker",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "sunforgedaxe",
+     "display_name": "Sunforged Axe",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroracleaver",
+     "display_name": "Aurora Cleaver",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "dawncolossus",
+     "display_name": "Dawn Colossus",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "axe_action",
+   "spell": "cleave",
+   "ultimate": "colossus",
+   "mp_on_hit": 14,
+   "hold": "heavy",
+   "stats": {
+    "dmg": 78
+   },
+   "flags": {
+    "kind": "sword",
+    "legacy": "dawnbreaker",
+    "off_action": ""
+   },
+   "color": "#ffb070",
+   "attack_pose": "sword",
+   "swing_style": "swing",
+   "carry_pose": "shoulder",
+   "todo": "Line name (T2 base): Dawnbreaker. Class passive: Heavy Strike holds poise; a worn companion supplies the tools. Off-action in OFFHAND: none."
+  },
+  {
+   "id": "hammer",
+   "display_name": "Hammer",
+   "description": "A maul that cracks the ground. Slow, staggering blows.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "greatarms",
+   "hands": 2,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "sledge",
+     "display_name": "Sledge",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "sunhammer",
+     "display_name": "Sunhammer",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "mountainmaul",
+     "display_name": "Mountain Maul",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroraanvil",
+     "display_name": "Aurora Anvil",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "hammereternal",
+     "display_name": "Hammer Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "hammer_action",
+   "spell": "earthbreaker",
+   "ultimate": "aftershock",
+   "mp_on_hit": 14,
+   "hold": "heavy",
+   "stats": {
+    "dmg": 92
+   },
+   "flags": {
+    "kind": "sword",
+    "off_action": ""
+   },
+   "color": "#e0c890",
+   "attack_pose": "sword",
+   "swing_style": "swing",
+   "carry_pose": "shoulder",
+   "todo": "Line name (T2 base): Sunhammer. Class passive: Heavy Strike holds poise; a worn companion supplies the tools. Off-action in OFFHAND: none."
+  },
+  {
+   "id": "halberd",
+   "display_name": "Halberd",
+   "description": "A long polearm: half again the reach of a sword. Thrust, then sweep.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "greatarms",
+   "hands": 2,
+   "element": "pierce",
+   "tiers": [
+    {
+     "base_id": "pike",
+     "display_name": "Pike",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "dawnglaive",
+     "display_name": "Dawnglaive",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "sunhalberd",
+     "display_name": "Sun Halberd",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorapartisan",
+     "display_name": "Aurora Partisan",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "reacheternal",
+     "display_name": "Reach Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "halberd_action",
+   "spell": "sweep",
+   "ultimate": "skewer",
+   "mp_on_hit": 14,
+   "hold": "heavy",
+   "stats": {
+    "dmg": 84
+   },
+   "flags": {
+    "sw": "reach2",
+    "kind": "sword",
+    "off_action": ""
+   },
+   "color": "#cfd8f0",
+   "attack_pose": "sword",
+   "swing_style": "thrust",
+   "carry_pose": "upright",
+   "todo": "Line name (T2 base): Dawnglaive. Class passive: Heavy Strike holds poise; a worn companion supplies the tools. Off-action in OFFHAND: none."
+  },
+  {
+   "id": "bow",
+   "display_name": "Bow",
+   "description": "Strung with moonlight. Fast shots, traps and evasive tumbles.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "shots",
+   "hands": 2,
+   "element": "pierce",
+   "tiers": [
+    {
+     "base_id": "hunterbow",
+     "display_name": "Hunter's Bow",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "moonbow",
+     "display_name": "Moonbow",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "silverwing",
+     "display_name": "Silverwing Bow",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "eclipsebow",
+     "display_name": "Eclipse Longbow",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "mooneternal",
+     "display_name": "Moon Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "bow_action",
+   "spell": "multishot",
+   "ultimate": "arrowrain",
+   "mp_on_hit": 7,
+   "hold": "focus",
+   "stats": {
+    "dmg": 30
+   },
+   "flags": {
+    "kind": "bow",
+    "legacy": "moonbow",
+    "off_action": "snapshot"
+   },
+   "color": "#c9d8ff",
+   "attack_pose": "bow",
+   "swing_style": "aim",
+   "carry_pose": "aim",
+   "todo": "Line name (T2 base): Moonbow. Class passive: Focus: still for 0.6 s, next shot crits; Snapshot crits. Off-action in OFFHAND: snapshot."
+  },
+  {
+   "id": "crossbow",
+   "display_name": "Crossbow",
+   "description": "A four-bolt clip, then a one-second reload. Bolts pierce once.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "shots",
+   "hands": 2,
+   "element": "pierce",
+   "tiers": [
+    {
+     "base_id": "handcrossbow",
+     "display_name": "Hand Crossbow",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "dawnarbalest",
+     "display_name": "Dawn Arbalest",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "sunbolt",
+     "display_name": "Sunbolt",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroraballista",
+     "display_name": "Aurora Ballista",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "bolteternal",
+     "display_name": "Bolt Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "crossbow_action",
+   "spell": "piercingbolt",
+   "ultimate": "ballista",
+   "mp_on_hit": 7,
+   "hold": "focus",
+   "stats": {
+    "dmg": 35
+   },
+   "flags": {
+    "clip": 4,
+    "reload": 1,
+    "sw": "quarrel",
+    "kind": "bow",
+    "off_action": "snapshot"
+   },
+   "color": "#e0d0b0",
+   "attack_pose": "bow",
+   "swing_style": "aim",
+   "carry_pose": "aim",
+   "todo": "Line name (T2 base): Dawn Arbalest. Class passive: Focus: still for 0.6 s, next shot crits; Snapshot crits. Off-action in OFFHAND: snapshot."
+  },
+  {
+   "id": "chakram",
+   "display_name": "Chakram",
+   "description": "A returning disc: it cuts going out and coming back. The one-handed shot.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "shots",
+   "hands": 1,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "rim",
+     "display_name": "Rim",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "moonchakram",
+     "display_name": "Moon Chakram",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "silverring",
+     "display_name": "Silverring",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "eclipsering",
+     "display_name": "Eclipse Ring",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "ringeternal",
+     "display_name": "Ring Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "chakram_action",
+   "spell": "ricochet",
+   "ultimate": "guillotine",
+   "mp_on_hit": 7,
+   "hold": "focus",
+   "stats": {
+    "dmg": 19
+   },
+   "flags": {
+    "sw": "disc",
+    "kind": "chakram",
+    "off_action": "snapshot"
+   },
+   "color": "#e7eeff",
+   "attack_pose": "none",
+   "swing_style": "aim",
+   "carry_pose": "float",
+   "todo": "Line name (T2 base): Moon Chakram. Class passive: Focus: still for 0.6 s, next shot crits; Snapshot crits. Off-action in OFFHAND: snapshot."
+  },
+  {
+   "id": "staff",
+   "display_name": "Staff",
+   "description": "A staff that remembers the night sky. Ranged spells and huge area damage.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "foci",
+   "hands": 2,
+   "element": "arcane",
+   "tiers": [
+    {
+     "base_id": "willowwand",
+     "display_name": "Willow Wand",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": "res://art/gear/staff.t1.json"
+    },
+    {
+     "base_id": "starfall",
+     "display_name": "Starfall Staff",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": "res://art/gear/staff.t2.json"
+    },
+    {
+     "base_id": "cometrod",
+     "display_name": "Comet Rod",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": "res://art/gear/staff.t3.json"
+    },
+    {
+     "base_id": "nebulasceptre",
+     "display_name": "Nebula Sceptre",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": "res://art/gear/staff.t4.json"
+    },
+    {
+     "base_id": "nighteternal",
+     "display_name": "Night Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": "res://art/gear/staff.t5.json"
+    }
+   ],
+   "action": "staff_action",
+   "spell": "firebolt",
+   "ultimate": "meteor",
+   "mp_on_hit": 9,
+   "hold": "channel",
+   "stats": {
+    "dmg": 32
+   },
+   "flags": {
+    "kind": "staff",
+    "legacy": "starfall",
+    "off_action": "ward"
+   },
+   "color": "#7fe6ff",
+   "attack_pose": "staff",
+   "swing_style": "cast",
+   "carry_pose": "upright",
+   "todo": "Line name (T2 base): Starfall Staff. Class passive: reactions refund 10 % MP; cantrips are free. Off-action in OFFHAND: ward."
+  },
+  {
+   "id": "wand",
+   "display_name": "Wand",
+   "description": "A light focus for the hand. Quick bolts, frost shards and a binding rune.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "foci",
+   "hands": 1,
+   "element": "arcane",
+   "tiers": [
+    {
+     "base_id": "birchtwig",
+     "display_name": "Birch Twig",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "hazelwand",
+     "display_name": "Hazel Wand",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "sunsparkwand",
+     "display_name": "Sunspark Wand",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorawand",
+     "display_name": "Aurora Wand",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "sparketernal",
+     "display_name": "Spark Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "wand_action",
+   "spell": "frostshard",
+   "ultimate": "runebinding",
+   "mp_on_hit": 9,
+   "hold": "",
+   "stats": {
+    "dmg": 31
+   },
+   "flags": {
+    "kind": "staff",
+    "off_action": "ward"
+   },
+   "color": "#c7e8ff",
+   "attack_pose": "staff",
+   "swing_style": "cast",
+   "carry_pose": "upright",
+   "todo": "Line name (T2 base): Hazel Wand. Class passive: reactions refund 10 % MP; cantrips are free. Off-action in OFFHAND: ward."
+  },
+  {
+   "id": "orb",
+   "display_name": "Orb",
+   "description": "A storm in glass. Hold to channel a beam that drains 6 MP a second.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "foci",
+   "hands": 1,
+   "element": "lightning",
+   "tiers": [
+    {
+     "base_id": "glassbauble",
+     "display_name": "Glass Bauble",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "starfallorb",
+     "display_name": "Starfall Orb",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "cometorb",
+     "display_name": "Comet Orb",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "nebulasphere",
+     "display_name": "Nebula Sphere",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "orbeternal",
+     "display_name": "Orb Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "orb_action",
+   "spell": "chain",
+   "ultimate": "tempest",
+   "mp_on_hit": 9,
+   "hold": "channel",
+   "stats": {
+    "dmg": 38
+   },
+   "flags": {
+    "drain": 6,
+    "kind": "staff",
+    "off_action": "ward"
+   },
+   "color": "#bff0ff",
+   "attack_pose": "staff",
+   "swing_style": "cast",
+   "carry_pose": "float",
+   "todo": "Line name (T2 base): Starfall Orb. Class passive: reactions refund 10 % MP; cantrips are free. Off-action in OFFHAND: ward."
+  },
+  {
+   "id": "daggers",
+   "display_name": "Daggers",
+   "description": "A pair of night-forged fangs. Four quick cuts; circle to the rear.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "shadows",
+   "hands": 1,
+   "element": "pierce",
+   "tiers": [
+    {
+     "base_id": "shiv",
+     "display_name": "Shiv",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "nightfang",
+     "display_name": "Nightfang",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "twineclipse",
+     "display_name": "Twin Eclipse",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "widowskiss",
+     "display_name": "Widow's Kiss",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "fangseternal",
+     "display_name": "Fangs Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "daggers_action",
+   "spell": "fanknives",
+   "ultimate": "deathmark",
+   "mp_on_hit": 6,
+   "hold": "",
+   "stats": {
+    "dmg": 33
+   },
+   "flags": {
+    "kind": "daggers",
+    "legacy": "nightfang",
+    "art": "sword",
+    "off_action": "step"
+   },
+   "color": "#b9a8ff",
+   "attack_pose": "sword",
+   "swing_style": "swing",
+   "carry_pose": "upright",
+   "todo": "Line name (T2 base): Nightfang. Class passive: Backstab: +30% crit from the rear arc; Marks. Off-action in OFFHAND: step."
+  },
+  {
+   "id": "claws",
+   "display_name": "Claws",
+   "description": "Frenzy: every hit is 5 % faster than the last (up to +50 %), gone after 1.5 s.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "shadows",
+   "hands": 1,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "boneclaws",
+     "display_name": "Bone Claws",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "nightclaws",
+     "display_name": "Nightclaws",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "silvertalon",
+     "display_name": "Silvertalon",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "eclipseclaws",
+     "display_name": "Eclipse Claws",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "clawseternal",
+     "display_name": "Claws Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "claws_action",
+   "spell": "rend",
+   "ultimate": "savage",
+   "mp_on_hit": 6,
+   "hold": "",
+   "stats": {
+    "dmg": 19
+   },
+   "flags": {
+    "frenzy": true,
+    "kind": "daggers",
+    "off_action": "step"
+   },
+   "color": "#e0b0a0",
+   "attack_pose": "sword",
+   "swing_style": "swing",
+   "carry_pose": "upright",
+   "todo": "Line name (T2 base): Nightclaws. Class passive: Backstab: +30% crit from the rear arc; Marks. Off-action in OFFHAND: step."
+  },
+  {
+   "id": "fans",
+   "display_name": "Fans",
+   "description": "Paper and moonlight. Every hit leaves a Mark, and each Mark slows by 10 %.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "shadows",
+   "hands": 1,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "paperfans",
+     "display_name": "Paper Fans",
+     "required_level": 1,
+     "multiplier": 0.7,
+     "sheet": ""
+    },
+    {
+     "base_id": "moonfans",
+     "display_name": "Moonfans",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "silverplume",
+     "display_name": "Silverplume",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "eclipsefans",
+     "display_name": "Eclipse Fans",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": ""
+    },
+    {
+     "base_id": "fanseternal",
+     "display_name": "Fans Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": ""
+    }
+   ],
+   "action": "fans_action",
+   "spell": "veildance",
+   "ultimate": "thousandpetals",
+   "mp_on_hit": 6,
+   "hold": "",
+   "stats": {
+    "dmg": 27
+   },
+   "flags": {
+    "markAll": true,
+    "kind": "daggers",
+    "off_action": "step"
+   },
+   "color": "#ffc8e8",
+   "attack_pose": "sword",
+   "swing_style": "swing",
+   "carry_pose": "upright",
+   "todo": "Line name (T2 base): Moonfans. Class passive: Backstab: +30% crit from the rear arc; Marks. Off-action in OFFHAND: step."
+  },
+  {
+   "id": "buckler",
+   "display_name": "Buckler",
+   "description": "A small round shield. Parry, bash, and hold the line.",
+   "kind": "shield",
+   "slot": "offhand",
+   "item_class": "shields",
+   "hands": 1,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "woodbuckler",
+     "display_name": "Wooden Buckler",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": "res://art/gear/buckler.t1.json"
+    },
+    {
+     "base_id": "ironbuckler",
+     "display_name": "Iron Buckler",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": "res://art/gear/buckler.t2.json"
+    },
+    {
+     "base_id": "sunbuckler",
+     "display_name": "Sunforged Buckler",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": "res://art/gear/buckler.t3.json"
+    },
+    {
+     "base_id": "aurorabuckler",
+     "display_name": "Aurora Buckler",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": "res://art/gear/buckler.t4.json"
+    },
+    {
+     "base_id": "bucklereternal",
+     "display_name": "Buckler Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": "res://art/gear/buckler.t5.json"
+    }
+   ],
+   "action": "parryplus",
+   "spell": "bash",
+   "ultimate": "aegis",
+   "deck": "",
+   "stats": {
+    "def": 0.08,
+    "hp": 60
+   },
+   "color": "#c9b48a",
+   "attack_pose": "none",
+   "swing_style": "thrust",
+   "carry_pose": "braced",
+   "todo": "Line name (T2 base): Iron Buckler."
+  },
+  {
+   "id": "heater",
+   "display_name": "Heater",
+   "description": "A knight's shield. Hold to block 70 % from the front; bash through a volley.",
+   "kind": "shield",
+   "slot": "offhand",
+   "item_class": "shields",
+   "hands": 1,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "oakheater",
+     "display_name": "Oak Heater",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "oathheater",
+     "display_name": "Oath Heater",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "sunheater",
+     "display_name": "Sunbright Heater",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroraheater",
+     "display_name": "Aurora Heater",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "oatheternal",
+     "display_name": "Oath Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "action": "block",
+   "spell": "shieldbash",
+   "ultimate": "bulwarkcharge",
+   "deck": "",
+   "stats": {
+    "def": 0.1,
+    "hp": 80
+   },
+   "color": "#a8b8d8",
+   "attack_pose": "none",
+   "swing_style": "thrust",
+   "carry_pose": "braced",
+   "todo": "Line name (T2 base): Oath Heater."
+  },
+  {
+   "id": "tower",
+   "display_name": "Tower",
+   "description": "A wall you carry. Hold to stop everything in front; slow, and very safe.",
+   "kind": "shield",
+   "slot": "offhand",
+   "item_class": "shields",
+   "hands": 1,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "doorshield",
+     "display_name": "Door Shield",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "wardwall",
+     "display_name": "Wardwall",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "sunwall",
+     "display_name": "Sunwall",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorabastion",
+     "display_name": "Aurora Bastion",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "walleternal",
+     "display_name": "Wall Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "action": "wall",
+   "spell": "shove",
+   "ultimate": "fortress",
+   "deck": "",
+   "stats": {
+    "def": 0.12,
+    "hp": 110
+   },
+   "color": "#8898b8",
+   "attack_pose": "none",
+   "swing_style": "thrust",
+   "carry_pose": "braced",
+   "todo": "Line name (T2 base): Wardwall."
+  },
+  {
+   "id": "grimoire",
+   "display_name": "Grimoire",
+   "description": "A book of dream pages. Turn the page, cast it, or read the whole chapter.",
+   "kind": "companion",
+   "slot": "offhand",
+   "item_class": "companions",
+   "hands": 0,
+   "element": "arcane",
+   "tiers": [
+    {
+     "base_id": "worngrimoire",
+     "display_name": "Primer",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": "res://art/gear/grimoire.t1.json"
+    },
+    {
+     "base_id": "dreamgrimoire",
+     "display_name": "Dreambook",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": "res://art/gear/grimoire.t2.json"
+    },
+    {
+     "base_id": "stargrimoire",
+     "display_name": "Sun Codex",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": "res://art/gear/grimoire.t3.json"
+    },
+    {
+     "base_id": "nebulacodex",
+     "display_name": "Aurora Grimoire",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": "res://art/gear/grimoire.t4.json"
+    },
+    {
+     "base_id": "codexeternal",
+     "display_name": "Book Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": "res://art/gear/grimoire.t5.json"
+    }
+   ],
+   "action": "turn",
+   "spell": "cast",
+   "ultimate": "chapter",
+   "deck": "page",
+   "stats": {
+    "mp": 40,
+    "mpRegen": 1
+   },
+   "color": "#c79bff",
+   "attack_pose": "none",
+   "swing_style": "none",
+   "carry_pose": "float",
+   "todo": "Line name (T2 base): Dreambook."
+  },
+  {
+   "id": "quiver",
+   "display_name": "Quiver",
+   "description": "A quiver of special arrows. Nock one, loose it, or empty the quiver.",
+   "kind": "companion",
+   "slot": "offhand",
+   "item_class": "companions",
+   "hands": 0,
+   "element": "pierce",
+   "tiers": [
+    {
+     "base_id": "leatherquiver",
+     "display_name": "Leather Quiver",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "moonquiver",
+     "display_name": "Moon Quiver",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "silverquiver",
+     "display_name": "Silver Quiver",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "eclipsequiver",
+     "display_name": "Eclipse Quiver",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "quivereternal",
+     "display_name": "Quiver Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "action": "nock",
+   "spell": "loose",
+   "ultimate": "quiverstorm",
+   "deck": "arrow",
+   "stats": {
+    "crit": 0.04,
+    "haste": 0.04
+   },
+   "color": "#a6c8ff",
+   "attack_pose": "none",
+   "swing_style": "none",
+   "carry_pose": "float",
+   "todo": "Line name (T2 base): Moon Quiver."
+  },
+  {
+   "id": "warhorn",
+   "display_name": "Warhorn",
+   "description": "A horn of battle calls. Bellow to break a guard, sound the call, or make a Last Stand.",
+   "kind": "companion",
+   "slot": "offhand",
+   "item_class": "companions",
+   "hands": 0,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "cowhorn",
+     "display_name": "Cow Horn",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "rallyinghorn",
+     "display_name": "Rallying Horn",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "sunhorn",
+     "display_name": "Sunhorn",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroraclarion",
+     "display_name": "Aurora Clarion",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "calleternal",
+     "display_name": "Call Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "action": "bellow",
+   "spell": "call",
+   "ultimate": "laststand",
+   "deck": "call",
+   "stats": {
+    "hp": 60,
+    "def": 0.04
+   },
+   "color": "#e0b070",
+   "attack_pose": "none",
+   "swing_style": "none",
+   "carry_pose": "float",
+   "todo": "Line name (T2 base): Rallying Horn."
+  },
+  {
+   "id": "knighthelm",
+   "display_name": "Knight Helm",
+   "description": "+8% defence.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "heavy",
+   "suit": "warden",
+   "hands": 0,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "ironcap",
+     "display_name": "Iron Cap",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": "res://art/gear/knighthelm.t1.json"
+    },
+    {
+     "base_id": "knighthelm",
+     "display_name": "Knight Helm",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": "res://art/gear/knighthelm.t2.json"
+    },
+    {
+     "base_id": "sunguard",
+     "display_name": "Sunguard Helm",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": "res://art/gear/knighthelm.t3.json"
+    },
+    {
+     "base_id": "auroravisor",
+     "display_name": "Aurora Visor",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": "res://art/gear/knighthelm.t4.json"
+    },
+    {
+     "base_id": "crownofdawn",
+     "display_name": "Crown of Dawn",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": "res://art/gear/knighthelm.t5.json"
+    }
+   ],
+   "active": "warcry",
+   "stats": {
+    "def": 0.08
+   },
+   "resists": {},
+   "color": "#cfd6ea",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Warden (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."
+  },
+  {
+   "id": "warden",
+   "display_name": "Knight Plate",
+   "description": "+20% defence, +220 HP.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "heavy",
+   "suit": "warden",
+   "hands": 0,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "ironmail",
+     "display_name": "Iron Mail",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": "res://art/gear/warden.t1.json"
+    },
+    {
+     "base_id": "knightplate",
+     "display_name": "Knight Plate",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": "res://art/gear/warden.t2.json"
+    },
+    {
+     "base_id": "sunplate",
+     "display_name": "Sunforged Plate",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": "res://art/gear/warden.t3.json"
+    },
+    {
+     "base_id": "auroraplate",
+     "display_name": "Aurora Plate",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": "res://art/gear/warden.t4.json"
+    },
+    {
+     "base_id": "dawnaegis",
+     "display_name": "Aegis of Dawn",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": "res://art/gear/warden.t5.json"
+    }
+   ],
+   "active": "bulwark",
+   "stats": {
+    "def": 0.2,
+    "hp": 220
+   },
+   "resists": {
+    "slash": 0.25,
+    "pierce": 0.25,
+    "lightning": -0.25
+   },
+   "color": "#a9b4d4",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Warden (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."
+  },
+  {
+   "id": "knightgreaves",
+   "display_name": "Knight Greaves",
+   "description": "+5% defence.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "heavy",
+   "suit": "warden",
+   "hands": 0,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "ironboots",
+     "display_name": "Iron Boots",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": "res://art/gear/knightgreaves.t1.json"
+    },
+    {
+     "base_id": "knightgreaves",
+     "display_name": "Knight Greaves",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": "res://art/gear/knightgreaves.t2.json"
+    },
+    {
+     "base_id": "sungreaves",
+     "display_name": "Sunforged Greaves",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": "res://art/gear/knightgreaves.t3.json"
+    },
+    {
+     "base_id": "auroragreaves",
+     "display_name": "Aurora Greaves",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": "res://art/gear/knightgreaves.t4.json"
+    },
+    {
+     "base_id": "dawnstriders",
+     "display_name": "Dawnstriders",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": "res://art/gear/knightgreaves.t5.json"
+    }
+   ],
+   "active": "charge",
+   "stats": {
+    "def": 0.05
+   },
+   "resists": {},
+   "color": "#b9c2dc",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Warden (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."
+  },
+  {
+   "id": "crusaderhelm",
+   "display_name": "Crusader Helm",
+   "description": "+6% defence, +5% holy damage.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "heavy",
+   "suit": "crusader",
+   "hands": 0,
+   "element": "holy",
+   "tiers": [
+    {
+     "base_id": "pothelm",
+     "display_name": "Pot Helm",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "crusaderhelm",
+     "display_name": "Crusader Helm",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "bellhelm",
+     "display_name": "Bellward Helm",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorahalo",
+     "display_name": "Aurora Halo",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "crownofvows",
+     "display_name": "Crown of Vows",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "judgementbell",
+   "stats": {
+    "def": 0.06,
+    "holyDmg": 0.05
+   },
+   "resists": {},
+   "color": "#f2e2b0",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Crusader (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."
+  },
+  {
+   "id": "crusader",
+   "display_name": "Crusader Hauberk",
+   "description": "+18% defence, +240 HP.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "heavy",
+   "suit": "crusader",
+   "hands": 0,
+   "element": "holy",
+   "tiers": [
+    {
+     "base_id": "quiltedgambeson",
+     "display_name": "Quilted Gambeson",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "crusaderhauberk",
+     "display_name": "Crusader Hauberk",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "sunhauberk",
+     "display_name": "Sunsworn Hauberk",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorahauberk",
+     "display_name": "Aurora Hauberk",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "vestmentofdawn",
+     "display_name": "Vestment of Dawn",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "consecratedguard",
+   "stats": {
+    "def": 0.18,
+    "hp": 240
+   },
+   "resists": {
+    "slash": 0.25,
+    "pierce": 0.25,
+    "lightning": -0.25,
+    "holy": 0.1
+   },
+   "color": "#e8d8a8",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Crusader (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."
+  },
+  {
+   "id": "crusaderboots",
+   "display_name": "Crusader Sabatons",
+   "description": "+4% defence, +1 HP/s.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "heavy",
+   "suit": "crusader",
+   "hands": 0,
+   "element": "holy",
+   "tiers": [
+    {
+     "base_id": "hobnails",
+     "display_name": "Hobnail Boots",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "crusadersabatons",
+     "display_name": "Crusader Sabatons",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "sunsabatons",
+     "display_name": "Sunsworn Sabatons",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorasabatons",
+     "display_name": "Aurora Sabatons",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "pilgrimsteps",
+     "display_name": "Pilgrim Steps",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "vault",
+   "stats": {
+    "def": 0.04,
+    "regen": 1
+   },
+   "resists": {},
+   "color": "#e0d0a0",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Crusader (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."
+  },
+  {
+   "id": "juggernauthelm",
+   "display_name": "Juggernaut Helm",
+   "description": "+7% defence, +20 HP.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "heavy",
+   "suit": "juggernaut",
+   "hands": 0,
+   "element": "fire",
+   "tiers": [
+    {
+     "base_id": "buckethelm",
+     "display_name": "Bucket Helm",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "juggernauthelm",
+     "display_name": "Juggernaut Helm",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "forgehelm",
+     "display_name": "Forgebrow Helm",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroraram",
+     "display_name": "Aurora Ramhelm",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "crownofcinders",
+     "display_name": "Crown of Cinders",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "groundslam",
+   "stats": {
+    "def": 0.07,
+    "hp": 20
+   },
+   "resists": {},
+   "color": "#a89888",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Juggernaut (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."
+  },
+  {
+   "id": "juggernaut",
+   "display_name": "Juggernaut Cuirass",
+   "description": "+16% defence, +300 HP.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "heavy",
+   "suit": "juggernaut",
+   "hands": 0,
+   "element": "fire",
+   "tiers": [
+    {
+     "base_id": "scrapplate",
+     "display_name": "Scrap Plate",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "juggernautcuirass",
+     "display_name": "Juggernaut Cuirass",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "forgecuirass",
+     "display_name": "Forgeborn Cuirass",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroracuirass",
+     "display_name": "Aurora Cuirass",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "anvilheart",
+     "display_name": "Anvilheart",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "brace",
+   "stats": {
+    "def": 0.16,
+    "hp": 300
+   },
+   "resists": {
+    "slash": 0.25,
+    "pierce": 0.25,
+    "lightning": -0.25,
+    "fire": 0.1
+   },
+   "color": "#9a8878",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Juggernaut (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."
+  },
+  {
+   "id": "juggernautboots",
+   "display_name": "Juggernaut Treads",
+   "description": "+4% defence, +30 HP.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "heavy",
+   "suit": "juggernaut",
+   "hands": 0,
+   "element": "fire",
+   "tiers": [
+    {
+     "base_id": "ironclogs",
+     "display_name": "Iron Clogs",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "juggernauttreads",
+     "display_name": "Juggernaut Treads",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "forgetreads",
+     "display_name": "Forgeborn Treads",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroratreads",
+     "display_name": "Aurora Treads",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "quakestriders",
+     "display_name": "Quakestriders",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "bullrush",
+   "stats": {
+    "def": 0.04,
+    "hp": 30
+   },
+   "resists": {},
+   "color": "#8a7868",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Juggernaut (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."
+  },
+  {
+   "id": "dreamweavehelm",
+   "display_name": "Dreamweave Circlet",
+   "description": "+8% power, +40 MP.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "caster",
+   "suit": "dreamweave",
+   "hands": 0,
+   "element": "arcane",
+   "tiers": [
+    {
+     "base_id": "linencirclet",
+     "display_name": "Linen Circlet",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "dreamcirclet",
+     "display_name": "Dreamweave Circlet",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "starcirclet",
+     "display_name": "Starlit Circlet",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "nebuladiadem",
+     "display_name": "Nebula Diadem",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "crownofdreams",
+     "display_name": "Crown of Dreams",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "arcaneward",
+   "stats": {
+    "power": 0.08,
+    "mp": 40
+   },
+   "resists": {},
+   "color": "#b8a0f0",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Dreamweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."
+  },
+  {
+   "id": "dreamweave",
+   "display_name": "Dreamweave Robe",
+   "description": "+25% power, +120 MP.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "caster",
+   "suit": "dreamweave",
+   "hands": 0,
+   "element": "arcane",
+   "tiers": [
+    {
+     "base_id": "linenrobe",
+     "display_name": "Linen Robe",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "dreamrobe",
+     "display_name": "Dreamweave Robe",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "starwoven",
+     "display_name": "Starwoven Robe",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "nebularobe",
+     "display_name": "Nebula Vestments",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "dreamshroud",
+     "display_name": "Eternal Dreamshroud",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "manasurge",
+   "stats": {
+    "power": 0.25,
+    "mp": 120,
+    "mpRegen": 5
+   },
+   "resists": {
+    "arcane": 0.25,
+    "slash": -0.25,
+    "pierce": -0.25
+   },
+   "color": "#9c7ae0",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Dreamweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."
+  },
+  {
+   "id": "clothsandals",
+   "display_name": "Cloud Sandals",
+   "description": "+3 MP/s.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "caster",
+   "suit": "dreamweave",
+   "hands": 0,
+   "element": "arcane",
+   "tiers": [
+    {
+     "base_id": "ropesandals",
+     "display_name": "Rope Sandals",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "clothsandals",
+     "display_name": "Cloud Sandals",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "mistwalkers",
+     "display_name": "Mistwalkers",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "skystep",
+     "display_name": "Skystep Sandals",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "cloudsteps",
+     "display_name": "Eternal Cloudsteps",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "blink",
+   "stats": {
+    "mpRegen": 3
+   },
+   "resists": {},
+   "color": "#e7c9a0",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Dreamweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."
+  },
+  {
+   "id": "arcanecowl",
+   "display_name": "Arcane Cowl",
+   "description": "+10% power.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "caster",
+   "suit": "frostweave",
+   "hands": 0,
+   "element": "frost",
+   "tiers": [
+    {
+     "base_id": "novicehood",
+     "display_name": "Novice Hood",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "arcanecowl",
+     "display_name": "Arcane Cowl",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "starweave",
+     "display_name": "Starweave Cowl",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "astralcirclet",
+     "display_name": "Astral Circlet",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "crownofstars",
+     "display_name": "Crown of Stars",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "frostnova",
+   "stats": {
+    "power": 0.1
+   },
+   "resists": {},
+   "color": "#9c7ae0",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Frostweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."
+  },
+  {
+   "id": "frostweave",
+   "display_name": "Frostweave Robe",
+   "description": "+22% power, +100 MP, +6% frost damage.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "caster",
+   "suit": "frostweave",
+   "hands": 0,
+   "element": "frost",
+   "tiers": [
+    {
+     "base_id": "woolrobe",
+     "display_name": "Wool Robe",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "frostrobe",
+     "display_name": "Frostweave Robe",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "rimerobe",
+     "display_name": "Rimewoven Robe",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorarime",
+     "display_name": "Aurora Rimecloak",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "wintereternal",
+     "display_name": "Winter Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "wintersveil",
+   "stats": {
+    "power": 0.22,
+    "mp": 100,
+    "mpRegen": 4,
+    "frostDmg": 0.06
+   },
+   "resists": {
+    "arcane": 0.25,
+    "slash": -0.25,
+    "pierce": -0.25,
+    "frost": 0.1
+   },
+   "color": "#9fd8f0",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Frostweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."
+  },
+  {
+   "id": "frostweaveboots",
+   "display_name": "Frostweave Slippers",
+   "description": "+2 MP/s, +3% move speed.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "caster",
+   "suit": "frostweave",
+   "hands": 0,
+   "element": "frost",
+   "tiers": [
+    {
+     "base_id": "feltslippers",
+     "display_name": "Felt Slippers",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "frostslippers",
+     "display_name": "Frostweave Slippers",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "rimewalkers",
+     "display_name": "Rimewalkers",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroraskates",
+     "display_name": "Aurora Skates",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "snowfallsteps",
+     "display_name": "Snowfall Steps",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "glide",
+   "stats": {
+    "mpRegen": 2,
+    "speed": 0.1
+   },
+   "resists": {},
+   "color": "#bfe8f8",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Frostweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."
+  },
+  {
+   "id": "stormweavehelm",
+   "display_name": "Stormweave Hood",
+   "description": "+8% power, +3% crit chance.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "caster",
+   "suit": "stormweave",
+   "hands": 0,
+   "element": "lightning",
+   "tiers": [
+    {
+     "base_id": "canvashood",
+     "display_name": "Canvas Hood",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "stormhood",
+     "display_name": "Stormweave Hood",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "thunderhood",
+     "display_name": "Thundercall Hood",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorastormcowl",
+     "display_name": "Aurora Stormcowl",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "crownofstorms",
+     "display_name": "Crown of Storms",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "stormcall",
+   "stats": {
+    "power": 0.08,
+    "crit": 0.03
+   },
+   "resists": {},
+   "color": "#d8e870",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Stormweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."
+  },
+  {
+   "id": "stormweave",
+   "display_name": "Stormweave Robe",
+   "description": "+18% power, +100 MP, +4% lightning damage.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "caster",
+   "suit": "stormweave",
+   "hands": 0,
+   "element": "lightning",
+   "tiers": [
+    {
+     "base_id": "oilclothrobe",
+     "display_name": "Oilcloth Robe",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "stormrobe",
+     "display_name": "Stormweave Robe",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "thunderrobe",
+     "display_name": "Thunderwoven Robe",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorastormrobe",
+     "display_name": "Aurora Stormrobe",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "stormeternal",
+     "display_name": "Storm Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "staticcloak",
+   "stats": {
+    "power": 0.18,
+    "mp": 100,
+    "mpRegen": 4,
+    "lightningDmg": 0.04
+   },
+   "resists": {
+    "arcane": 0.25,
+    "slash": -0.25,
+    "pierce": -0.25,
+    "lightning": 0.1
+   },
+   "color": "#c8d860",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Stormweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."
+  },
+  {
+   "id": "stormweaveboots",
+   "display_name": "Stormweave Shoes",
+   "description": "+2 MP/s, +4% attack speed.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "caster",
+   "suit": "stormweave",
+   "hands": 0,
+   "element": "lightning",
+   "tiers": [
+    {
+     "base_id": "rushsandals",
+     "display_name": "Rush Sandals",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "stormshoes",
+     "display_name": "Stormweave Shoes",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "sparkheels",
+     "display_name": "Sparkheel Shoes",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorasparkheels",
+     "display_name": "Aurora Sparkheels",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "boltstriders",
+     "display_name": "Boltstriders",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "flashstep",
+   "stats": {
+    "mpRegen": 2,
+    "haste": 0.04
+   },
+   "resists": {},
+   "color": "#e0f080",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Stormweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."
+  },
+  {
+   "id": "stalkerhelm",
+   "display_name": "Stalker Hood",
+   "description": "+5% crit chance.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "medium",
+   "suit": "stalker",
+   "hands": 0,
+   "element": "pierce",
+   "tiers": [
+    {
+     "base_id": "leathercap",
+     "display_name": "Leather Cap",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "stalkerhood",
+     "display_name": "Stalker Hood",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "nightstalkerhood",
+     "display_name": "Nightstalker Hood",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "shadowweavecowl",
+     "display_name": "Shadowweave Cowl",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "eclipsemask",
+     "display_name": "Eclipse Mask",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "huntersmark",
+   "stats": {
+    "crit": 0.05
+   },
+   "resists": {},
+   "color": "#a07050",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Stalker (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."
+  },
+  {
+   "id": "stalker",
+   "display_name": "Stalker Jacket",
+   "description": "+18% crit, +15% attack speed.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "medium",
+   "suit": "stalker",
+   "hands": 0,
+   "element": "pierce",
+   "tiers": [
+    {
+     "base_id": "jerkin",
+     "display_name": "Leather Jerkin",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "stalkerjacket",
+     "display_name": "Stalker Jacket",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "nightcoat",
+     "display_name": "Nightstalker Coat",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "shadowweave",
+     "display_name": "Shadowweave Jacket",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "eclipsegarb",
+     "display_name": "Eclipse Garb",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "shadowveil",
+   "stats": {
+    "crit": 0.18,
+    "haste": 0.15
+   },
+   "resists": {
+    "pierce": 0.25,
+    "fire": -0.25
+   },
+   "color": "#c08a5e",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Stalker (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."
+  },
+  {
+   "id": "stalkershoes",
+   "display_name": "Stalker Shoes",
+   "description": "+12% move speed.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "medium",
+   "suit": "stalker",
+   "hands": 0,
+   "element": "pierce",
+   "tiers": [
+    {
+     "base_id": "softshoes",
+     "display_name": "Soft Shoes",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "stalkershoes",
+     "display_name": "Stalker Shoes",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "quietstep",
+     "display_name": "Quietstep Boots",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "shadowstep",
+     "display_name": "Shadowweave Boots",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "eclipsetreads",
+     "display_name": "Eclipse Treads",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "tumble",
+   "stats": {
+    "speed": 0.45
+   },
+   "resists": {},
+   "color": "#7a5038",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Stalker (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."
+  },
+  {
+   "id": "wardenhood",
+   "display_name": "Warden Hood",
+   "description": "+5 HP/s regeneration.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "medium",
+   "suit": "thornwarden",
+   "hands": 0,
+   "element": "nature",
+   "tiers": [
+    {
+     "base_id": "rangercap",
+     "display_name": "Ranger Cap",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "wardenhood",
+     "display_name": "Warden Hood",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "mossmantle",
+     "display_name": "Mossmantle Hood",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "thornwarden",
+     "display_name": "Thornwarden Hood",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "crownofroots",
+     "display_name": "Crown of Roots",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "mend",
+   "stats": {
+    "regen": 5
+   },
+   "resists": {},
+   "color": "#6aa77e",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Thornwarden (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."
+  },
+  {
+   "id": "thornwarden",
+   "display_name": "Thornwarden Coat",
+   "description": "+12% crit, +10% attack speed, +4 HP/s.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "medium",
+   "suit": "thornwarden",
+   "hands": 0,
+   "element": "nature",
+   "tiers": [
+    {
+     "base_id": "mosscoat",
+     "display_name": "Moss Coat",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "thorncoat",
+     "display_name": "Thornwarden Coat",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "briarcoat",
+     "display_name": "Briarwoven Coat",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorabriarcoat",
+     "display_name": "Aurora Briarcoat",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "rootseternal",
+     "display_name": "Roots Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "briarmantle",
+   "stats": {
+    "crit": 0.12,
+    "haste": 0.1,
+    "regen": 4
+   },
+   "resists": {
+    "pierce": 0.25,
+    "fire": -0.25,
+    "nature": 0.1
+   },
+   "color": "#5f9a6e",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Thornwarden (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."
+  },
+  {
+   "id": "thornwardenboots",
+   "display_name": "Thornwarden Boots",
+   "description": "+8% move speed, +2 HP/s.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "medium",
+   "suit": "thornwarden",
+   "hands": 0,
+   "element": "nature",
+   "tiers": [
+    {
+     "base_id": "barkboots",
+     "display_name": "Bark Boots",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "thornboots",
+     "display_name": "Thornwarden Boots",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "briarboots",
+     "display_name": "Briarstep Boots",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorabarkboots",
+     "display_name": "Aurora Barkboots",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "bloomsteps",
+     "display_name": "Bloomsteps",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "rootvault",
+   "stats": {
+    "speed": 0.3,
+    "regen": 2
+   },
+   "resists": {},
+   "color": "#4f8a5e",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Thornwarden (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."
+  },
+  {
+   "id": "duelisthelm",
+   "display_name": "Duelist Hat",
+   "description": "+3% crit chance, +4% crit damage.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "medium",
+   "suit": "duelist",
+   "hands": 0,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "feathercap",
+     "display_name": "Feather Cap",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "duelisthat",
+     "display_name": "Duelist Hat",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "silverbrim",
+     "display_name": "Silverbrim Hat",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroraplume",
+     "display_name": "Aurora Plume",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "crownofblades",
+     "display_name": "Crown of Blades",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "taunt",
+   "stats": {
+    "crit": 0.03,
+    "critDmg": 0.04
+   },
+   "resists": {},
+   "color": "#c05a6a",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Duelist (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."
+  },
+  {
+   "id": "duelist",
+   "display_name": "Duelist Coat",
+   "description": "+6% crit, +6% attack speed, +4% crit damage.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "medium",
+   "suit": "duelist",
+   "hands": 0,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "swordsmanscoat",
+     "display_name": "Swordsman's Coat",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "duelistcoat",
+     "display_name": "Duelist Coat",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "silverthreadcoat",
+     "display_name": "Silverthread Coat",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroradoublet",
+     "display_name": "Aurora Doublet",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "bladeeternal",
+     "display_name": "Blade Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "engarde",
+   "stats": {
+    "crit": 0.06,
+    "haste": 0.06,
+    "critDmg": 0.04
+   },
+   "resists": {
+    "pierce": 0.25,
+    "fire": -0.25,
+    "slash": 0.1
+   },
+   "color": "#b04a5a",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Duelist (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."
+  },
+  {
+   "id": "duelistboots",
+   "display_name": "Duelist Boots",
+   "description": "+9% move speed, +2% attack speed.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "medium",
+   "suit": "duelist",
+   "hands": 0,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "cuffedboots",
+     "display_name": "Cuffed Boots",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "duelistboots",
+     "display_name": "Duelist Boots",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "silverspurs",
+     "display_name": "Silverspur Boots",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroraspurs",
+     "display_name": "Aurora Spurs",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "lungeeternal",
+     "display_name": "Lunge Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "sidestep",
+   "stats": {
+    "speed": 0.35,
+    "haste": 0.02
+   },
+   "resists": {},
+   "color": "#8a3a4a",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Duelist (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."
+  },
+  {
+   "id": "shadehelm",
+   "display_name": "Shade Cowl",
+   "description": "+6% crit chance.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "shadow",
+   "suit": "shade",
+   "hands": 0,
+   "element": "gloom",
+   "tiers": [
+    {
+     "base_id": "ragcowl",
+     "display_name": "Rag Cowl",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "shadecowl",
+     "display_name": "Shade Cowl",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "duskcowl",
+     "display_name": "Duskwoven Cowl",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorashadecowl",
+     "display_name": "Aurora Shadecowl",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "crownofdusk",
+     "display_name": "Crown of Dusk",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "smokebomb",
+   "stats": {
+    "crit": 0.06
+   },
+   "resists": {},
+   "color": "#6a5a8a",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Shade (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."
+  },
+  {
+   "id": "shade",
+   "display_name": "Shade Leathers",
+   "description": "+14% crit, +8% move speed, +8% attack speed.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "shadow",
+   "suit": "shade",
+   "hands": 0,
+   "element": "gloom",
+   "tiers": [
+    {
+     "base_id": "ragleathers",
+     "display_name": "Rag Leathers",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "shadeleathers",
+     "display_name": "Shade Leathers",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "duskleathers",
+     "display_name": "Duskwoven Leathers",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroraleathers",
+     "display_name": "Aurora Leathers",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "gloameternal",
+     "display_name": "Gloam Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "fadestep",
+   "stats": {
+    "crit": 0.14,
+    "speed": 0.3,
+    "haste": 0.08
+   },
+   "resists": {
+    "pierce": 0.25,
+    "nature": -0.25,
+    "gloom": 0.1
+   },
+   "color": "#5a4a7a",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Shade (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."
+  },
+  {
+   "id": "shadeboots",
+   "display_name": "Shade Wraps",
+   "description": "+13% move speed.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "shadow",
+   "suit": "shade",
+   "hands": 0,
+   "element": "gloom",
+   "tiers": [
+    {
+     "base_id": "ragwraps",
+     "display_name": "Rag Wraps",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "shadewraps",
+     "display_name": "Shade Wraps",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "duskwraps",
+     "display_name": "Duskwoven Wraps",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorawraps",
+     "display_name": "Aurora Wraps",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "nightfallsteps",
+     "display_name": "Nightfall Steps",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "shadowstep",
+   "stats": {
+    "speed": 0.5
+   },
+   "resists": {},
+   "color": "#4a3a6a",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Shade (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."
+  },
+  {
+   "id": "nightshadehelm",
+   "display_name": "Nightshade Mask",
+   "description": "+5% crit chance, +5% status chance.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "shadow",
+   "suit": "nightshade",
+   "hands": 0,
+   "element": "nature",
+   "tiers": [
+    {
+     "base_id": "clothmask",
+     "display_name": "Cloth Mask",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "nightshademask",
+     "display_name": "Nightshade Mask",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "venommask",
+     "display_name": "Venomweave Mask",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroramask",
+     "display_name": "Aurora Mask",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "crownofthorns",
+     "display_name": "Crown of Thorns",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "toxinflask",
+   "stats": {
+    "crit": 0.05,
+    "statusChance": 0.05
+   },
+   "resists": {},
+   "color": "#6a8a5a",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Nightshade (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."
+  },
+  {
+   "id": "nightshade",
+   "display_name": "Nightshade Vest",
+   "description": "+12% crit, +7% move speed, +8% nature damage.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "shadow",
+   "suit": "nightshade",
+   "hands": 0,
+   "element": "nature",
+   "tiers": [
+    {
+     "base_id": "herbvest",
+     "display_name": "Herbalist Vest",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "nightshadevest",
+     "display_name": "Nightshade Vest",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "venomvest",
+     "display_name": "Venomweave Vest",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroravest",
+     "display_name": "Aurora Vest",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "blighteternal",
+     "display_name": "Blight Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "venomcoat",
+   "stats": {
+    "crit": 0.12,
+    "speed": 0.25,
+    "natureDmg": 0.08
+   },
+   "resists": {
+    "pierce": 0.25,
+    "nature": -0.15
+   },
+   "color": "#5a7a4a",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Nightshade (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."
+  },
+  {
+   "id": "nightshadeboots",
+   "display_name": "Nightshade Steps",
+   "description": "+12% move speed, +2% crit chance.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "shadow",
+   "suit": "nightshade",
+   "hands": 0,
+   "element": "nature",
+   "tiers": [
+    {
+     "base_id": "mossshoes",
+     "display_name": "Moss Shoes",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "nightshadesteps",
+     "display_name": "Nightshade Steps",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "venomsteps",
+     "display_name": "Venomweave Steps",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroracreepers",
+     "display_name": "Aurora Creepers",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "creepereternal",
+     "display_name": "Creeper Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "slink",
+   "stats": {
+    "speed": 0.45,
+    "crit": 0.02
+   },
+   "resists": {},
+   "color": "#4a6a3a",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Nightshade (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."
+  },
+  {
+   "id": "miragehelm",
+   "display_name": "Mirage Veil",
+   "description": "+5% crit chance, 3% shorter cooldowns.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "shadow",
+   "suit": "mirage",
+   "hands": 0,
+   "element": "arcane",
+   "tiers": [
+    {
+     "base_id": "gauzeveil",
+     "display_name": "Gauze Veil",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "mirageveil",
+     "display_name": "Mirage Veil",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "glassveil",
+     "display_name": "Glasswoven Veil",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroraglassveil",
+     "display_name": "Aurora Glassveil",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "crownofmirrors",
+     "display_name": "Crown of Mirrors",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "dreamveil",
+   "stats": {
+    "crit": 0.05,
+    "cdr": 0.03
+   },
+   "resists": {},
+   "color": "#c8a8f0",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Mirage (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."
+  },
+  {
+   "id": "mirage",
+   "display_name": "Mirage Silks",
+   "description": "+12% crit, +7% move speed, +8% arcane damage.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "shadow",
+   "suit": "mirage",
+   "hands": 0,
+   "element": "arcane",
+   "tiers": [
+    {
+     "base_id": "gauzesilks",
+     "display_name": "Gauze Silks",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "miragesilks",
+     "display_name": "Mirage Silks",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "glasssilks",
+     "display_name": "Glasswoven Silks",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "aurorasilks",
+     "display_name": "Aurora Silks",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "mirroreternal",
+     "display_name": "Mirror Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "mirrorimage",
+   "stats": {
+    "crit": 0.12,
+    "speed": 0.25,
+    "arcaneDmg": 0.08
+   },
+   "resists": {
+    "pierce": 0.25,
+    "nature": -0.25,
+    "arcane": 0.1
+   },
+   "color": "#b898e0",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Mirage (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."
+  },
+  {
+   "id": "mirageboots",
+   "display_name": "Mirage Slippers",
+   "description": "+12% move speed, 2% shorter cooldowns.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "shadow",
+   "suit": "mirage",
+   "hands": 0,
+   "element": "arcane",
+   "tiers": [
+    {
+     "base_id": "gauzeslippers",
+     "display_name": "Gauze Slippers",
+     "required_level": 1,
+     "multiplier": 0.6,
+     "sheet": ""
+    },
+    {
+     "base_id": "mirageslippers",
+     "display_name": "Mirage Slippers",
+     "required_level": 8,
+     "multiplier": 1,
+     "sheet": ""
+    },
+    {
+     "base_id": "glassslippers",
+     "display_name": "Glass Slippers",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    },
+    {
+     "base_id": "auroraslippers",
+     "display_name": "Aurora Slippers",
+     "required_level": 24,
+     "multiplier": 1.5,
+     "sheet": ""
+    },
+    {
+     "base_id": "shimmereternal",
+     "display_name": "Shimmer Eternal",
+     "required_level": 32,
+     "multiplier": 1.8,
+     "sheet": ""
+    }
+   ],
+   "active": "phase",
+   "stats": {
+    "speed": 0.45,
+    "cdr": 0.02
+   },
+   "resists": {},
+   "color": "#a888d0",
+   "attack_pose": "none",
+   "passives": [],
+   "todo": "Suit Mirage (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."
+  },
+  {
+   "id": "tarnished_band",
+   "display_name": "Tarnished Band",
+   "kind": "trinket",
+   "slot": "ring",
+   "hands": 0,
+   "element": "none",
+   "stats": {
+    "power": 0.02
+   },
+   "tiers": [
+    {
+     "base_id": "tarnished_band",
+     "display_name": "Tarnished Band",
+     "required_level": 1,
+     "multiplier": 1
+    }
+   ],
+   "description": "+2% power",
+   "attack_pose": "none",
+   "todo": "Boon rolled at drop (BOONS ring)."
+  },
+  {
+   "id": "dreamsilver_band",
+   "display_name": "Dreamsilver Band",
+   "kind": "trinket",
+   "slot": "ring",
+   "hands": 0,
+   "element": "none",
+   "stats": {
+    "power": 0.04
+   },
+   "tiers": [
+    {
+     "base_id": "dreamsilver_band",
+     "display_name": "Dreamsilver Band",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "description": "+4% power",
+   "attack_pose": "none",
+   "todo": "Boon rolled at drop (BOONS ring)."
+  },
+  {
+   "id": "starmetal_band",
+   "display_name": "Starmetal Band",
+   "kind": "trinket",
+   "slot": "ring",
+   "hands": 0,
+   "element": "none",
+   "stats": {
+    "power": 0.06
+   },
+   "tiers": [
+    {
+     "base_id": "starmetal_band",
+     "display_name": "Starmetal Band",
+     "required_level": 32,
+     "multiplier": 1
+    }
+   ],
+   "description": "+6% power",
+   "attack_pose": "none",
+   "todo": "Boon rolled at drop (BOONS ring)."
+  },
+  {
+   "id": "lantern_charm",
+   "display_name": "Lantern Charm",
+   "kind": "trinket",
+   "slot": "amulet",
+   "hands": 0,
+   "element": "none",
+   "stats": {
+    "chargeSpeed": 0.03
+   },
+   "tiers": [
+    {
+     "base_id": "lantern_charm",
+     "display_name": "Lantern Charm",
+     "required_level": 1,
+     "multiplier": 1
+    }
+   ],
+   "description": "+3% charge rate",
+   "attack_pose": "none",
+   "todo": "Boon rolled at drop (BOONS amulet)."
+  },
+  {
+   "id": "dreamglass_pendant",
+   "display_name": "Dreamglass Pendant",
+   "kind": "trinket",
+   "slot": "amulet",
+   "hands": 0,
+   "element": "none",
+   "stats": {
+    "chargeSpeed": 0.05
+   },
+   "tiers": [
+    {
+     "base_id": "dreamglass_pendant",
+     "display_name": "Dreamglass Pendant",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "description": "+5% charge rate",
+   "attack_pose": "none",
+   "todo": "Boon rolled at drop (BOONS amulet)."
+  },
+  {
+   "id": "starhollow_amulet",
+   "display_name": "Starhollow Amulet",
+   "kind": "trinket",
+   "slot": "amulet",
+   "hands": 0,
+   "element": "none",
+   "stats": {
+    "chargeSpeed": 0.08
+   },
+   "tiers": [
+    {
+     "base_id": "starhollow_amulet",
+     "display_name": "Starhollow Amulet",
+     "required_level": 32,
+     "multiplier": 1
+    }
+   ],
+   "description": "+8% charge rate",
+   "attack_pose": "none",
+   "todo": "Boon rolled at drop (BOONS amulet)."
+  },
+  {
+   "id": "rope_sash",
+   "display_name": "Rope Sash",
+   "kind": "trinket",
+   "slot": "belt",
+   "hands": 0,
+   "element": "none",
+   "stats": {
+    "potionCharge": 1
+   },
+   "tiers": [
+    {
+     "base_id": "rope_sash",
+     "display_name": "Rope Sash",
+     "required_level": 1,
+     "multiplier": 1
+    }
+   ],
+   "description": "+1 potion charge",
+   "attack_pose": "none",
+   "todo": "Boon rolled at drop (BOONS belt)."
+  },
+  {
+   "id": "mistwoven_belt",
+   "display_name": "Mistwoven Belt",
+   "kind": "trinket",
+   "slot": "belt",
+   "hands": 0,
+   "element": "none",
+   "stats": {
+    "potionCharge": 1
+   },
+   "tiers": [
+    {
+     "base_id": "mistwoven_belt",
+     "display_name": "Mistwoven Belt",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "description": "+1 potion charge",
+   "attack_pose": "none",
+   "todo": "Boon rolled at drop (BOONS belt)."
+  },
+  {
+   "id": "moonlit_girdle",
+   "display_name": "Moonlit Girdle",
+   "kind": "trinket",
+   "slot": "belt",
+   "hands": 0,
+   "element": "none",
+   "stats": {
+    "potionCharge": 1
+   },
+   "tiers": [
+    {
+     "base_id": "moonlit_girdle",
+     "display_name": "Moonlit Girdle",
+     "required_level": 32,
+     "multiplier": 1
+    }
+   ],
+   "description": "+1 potion charge",
+   "attack_pose": "none",
+   "todo": "Boon rolled at drop (BOONS belt)."
+  },
+  {
+   "id": "origin_knight",
+   "display_name": "Ring of the Shield",
+   "kind": "trinket",
+   "slot": "ring",
+   "hands": 0,
+   "element": "none",
+   "description": "+10% defence",
+   "passives": [
+    "originKnight"
+   ],
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "origin_knight",
+     "display_name": "Ring of the Shield",
+     "required_level": 1,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Origin ring (Knight)."
+  },
+  {
+   "id": "origin_mystic",
+   "display_name": "Ring of the Dream",
+   "kind": "trinket",
+   "slot": "ring",
+   "hands": 0,
+   "element": "none",
+   "description": "+10% MP on hit",
+   "passives": [
+    "originMystic"
+   ],
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "origin_mystic",
+     "display_name": "Ring of the Dream",
+     "required_level": 1,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Origin ring (Mystic)."
+  },
+  {
+   "id": "origin_ranger",
+   "display_name": "Ring of the Trail",
+   "kind": "trinket",
+   "slot": "ring",
+   "hands": 0,
+   "element": "none",
+   "description": "+10% crit damage",
+   "passives": [
+    "originRanger"
+   ],
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "origin_ranger",
+     "display_name": "Ring of the Trail",
+     "required_level": 1,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Origin ring (Ranger)."
+  },
+  {
+   "id": "origin_thief",
+   "display_name": "Ring of the Unseen",
+   "kind": "trinket",
+   "slot": "ring",
+   "hands": 0,
+   "element": "none",
+   "description": "+10% damage from behind",
+   "passives": [
+    "originThief"
+   ],
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "origin_thief",
+     "display_name": "Ring of the Unseen",
+     "required_level": 1,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Origin ring (Thief)."
+  },
+  {
+   "id": "origin_warrior",
+   "display_name": "Ring of the Vow",
+   "kind": "trinket",
+   "slot": "ring",
+   "hands": 0,
+   "element": "none",
+   "description": "+1 stagger on weapon skills",
+   "passives": [
+    "originWarrior"
+   ],
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "origin_warrior",
+     "display_name": "Ring of the Vow",
+     "required_level": 1,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Origin ring (Warrior)."
+  },
+  {
+   "id": "pipslantern",
+   "display_name": "Pip's Lantern",
+   "kind": "trinket",
+   "slot": "amulet",
+   "hands": 0,
+   "element": "none",
+   "description": "Your ultimate casts twice, each at half power.",
+   "stats": {
+    "chargeSpeed": 0.05
+   },
+   "flags": {
+    "rule": {
+     "ult": "double",
+     "powerMul": 0.5
+    }
+   },
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "pipslantern",
+     "display_name": "Pip's Lantern",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Unique rule (JS `rule`): {\"ult\":\"double\",\"powerMul\":0.5}. Wave 2: an Effect."
+  },
+  {
+   "id": "drownedcompass",
+   "display_name": "Drowned Compass",
+   "kind": "trinket",
+   "slot": "amulet",
+   "hands": 0,
+   "element": "none",
+   "description": "R reveals hidden chests in the room.",
+   "stats": {
+    "fishLuck": 0.03
+   },
+   "flags": {
+    "rule": {
+     "ultRevealsChests": true
+    }
+   },
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "drownedcompass",
+     "display_name": "Drowned Compass",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Unique rule (JS `rule`): {\"ultRevealsChests\":true}. Wave 2: an Effect."
+  },
+  {
+   "id": "ashensignet",
+   "display_name": "Ashen Signet",
+   "kind": "trinket",
+   "slot": "ring",
+   "hands": 0,
+   "element": "none",
+   "description": "Burn ticks spread Burn to one nearby foe.",
+   "stats": {
+    "fireDmg": 0.03
+   },
+   "flags": {
+    "rule": {
+     "burnSpreads": 1
+    }
+   },
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "ashensignet",
+     "display_name": "Ashen Signet",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Unique rule (JS `rule`): {\"burnSpreads\":1}. Wave 2: an Effect."
+  },
+  {
+   "id": "kindredband",
+   "display_name": "Kindred Band",
+   "kind": "trinket",
+   "slot": "ring",
+   "hands": 0,
+   "element": "none",
+   "description": "Ring resonance bonus doubles when both rings match.",
+   "stats": {
+    "power": 0.02
+   },
+   "flags": {
+    "rule": {
+     "resonanceMul": 2
+    }
+   },
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "kindredband",
+     "display_name": "Kindred Band",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Unique rule (JS `rule`): {\"resonanceMul\":2}. Wave 2: an Effect."
+  },
+  {
+   "id": "cindersash",
+   "display_name": "Cinder Sash",
+   "kind": "trinket",
+   "slot": "belt",
+   "hands": 0,
+   "element": "none",
+   "description": "Potions leave an ember that burns nearby foes.",
+   "stats": {
+    "potionCharge": 1
+   },
+   "flags": {
+    "rule": {
+     "potionEmber": true
+    }
+   },
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "cindersash",
+     "display_name": "Cinder Sash",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Unique rule (JS `rule`): {\"potionEmber\":true}. Wave 2: an Effect."
+  },
+  {
+   "id": "quietgirdle",
+   "display_name": "Girdle of Quiet Dusk",
+   "kind": "trinket",
+   "slot": "belt",
+   "hands": 0,
+   "element": "none",
+   "description": "Potions refill on every boss phase change.",
+   "stats": {
+    "potionCharge": 1
+   },
+   "flags": {
+    "rule": {
+     "potionsRefillOnPhase": true
+    }
+   },
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "quietgirdle",
+     "display_name": "Girdle of Quiet Dusk",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Unique rule (JS `rule`): {\"potionsRefillOnPhase\":true}. Wave 2: an Effect."
+  },
+  {
+   "id": "cometband",
+   "display_name": "Comet Band",
+   "kind": "trinket",
+   "slot": "ring",
+   "hands": 0,
+   "element": "none",
+   "description": "Projectiles curve toward Marked enemies.",
+   "stats": {
+    "statusChance": 0.04
+   },
+   "flags": {
+    "rule": {
+     "projCurveToMarked": true
+    }
+   },
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "cometband",
+     "display_name": "Comet Band",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Unique rule (JS `rule`): {\"projCurveToMarked\":true}. Wave 2: an Effect."
+  },
+  {
+   "id": "tidewovenclasp",
+   "display_name": "Tidewoven Clasp",
+   "kind": "trinket",
+   "slot": "belt",
+   "hands": 0,
+   "element": "none",
+   "description": "Zone skills follow you as you move.",
+   "stats": {
+    "mpRegen": 0.5
+   },
+   "flags": {
+    "rule": {
+     "zoneFollows": true
+    }
+   },
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "tidewovenclasp",
+     "display_name": "Tidewoven Clasp",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Unique rule (JS `rule`): {\"zoneFollows\":true}. Wave 2: an Effect."
+  },
+  {
+   "id": "afterimagependant",
+   "display_name": "Afterimage Pendant",
+   "kind": "trinket",
+   "slot": "amulet",
+   "hands": 0,
+   "element": "none",
+   "description": "Dashes leave an image that recasts your last skill once.",
+   "stats": {
+    "speed": 0.1
+   },
+   "flags": {
+    "rule": {
+     "dashImageRecasts": 1
+    }
+   },
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "afterimagependant",
+     "display_name": "Afterimage Pendant",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Unique rule (JS `rule`): {\"dashImageRecasts\":1}. Wave 2: an Effect."
+  },
+  {
+   "id": "summonersthread",
+   "display_name": "Summoner's Thread",
+   "kind": "trinket",
+   "slot": "ring",
+   "hands": 0,
+   "element": "none",
+   "description": "Summons fire your basic attack.",
+   "stats": {
+    "power": 0.02
+   },
+   "flags": {
+    "rule": {
+     "summonsFireBasic": true
+    }
+   },
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "summonersthread",
+     "display_name": "Summoner's Thread",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Unique rule (JS `rule`): {\"summonsFireBasic\":true}. Wave 2: an Effect."
+  },
+  {
+   "id": "hollowbell",
+   "display_name": "Hollow Bell",
+   "kind": "trinket",
+   "slot": "belt",
+   "hands": 0,
+   "element": "none",
+   "description": "Novas fire a second time at your aim point.",
+   "stats": {
+    "cdr": 0.02
+   },
+   "flags": {
+    "rule": {
+     "novaFiresTwice": true
+    }
+   },
+   "attack_pose": "none",
+   "tiers": [
+    {
+     "base_id": "hollowbell",
+     "display_name": "Hollow Bell",
+     "required_level": 16,
+     "multiplier": 1
+    }
+   ],
+   "todo": "Unique rule (JS `rule`): {\"novaFiresTwice\":true}. Wave 2: an Effect."
+  },
+  {
+   "id": "potion",
+   "display_name": "Health Potion",
+   "description": "Heal 40% of max HP.",
+   "kind": "consumable",
+   "slot": "pocket",
+   "hands": 0,
+   "element": "none",
+   "color": "#ff6a8a",
+   "attack_pose": "none",
+   "flags": {},
+   "todo": "Pocket consumable; its use is game.js usePocket (wave 2: a SkillData)."
+  },
+  {
+   "id": "flask",
+   "display_name": "Mana Flask",
+   "description": "Restore 50% of max MP.",
+   "kind": "consumable",
+   "slot": "pocket",
+   "hands": 0,
+   "element": "none",
+   "color": "#7fb0ff",
+   "attack_pose": "none",
+   "flags": {
+    "max": 2
+   },
+   "todo": "Pocket consumable; its use is game.js usePocket (wave 2: a SkillData)."
+  },
+  {
+   "id": "bomb",
+   "display_name": "Fire Bomb",
+   "description": "Throw a bomb that bursts into flame at your aim.",
+   "kind": "consumable",
+   "slot": "pocket",
+   "hands": 0,
+   "element": "none",
+   "color": "#ff8a4a",
+   "attack_pose": "none",
+   "flags": {
+    "max": 3
+   },
+   "todo": "Pocket consumable; its use is game.js usePocket (wave 2: a SkillData)."
+  },
+  {
+   "id": "unique_rootcrown",
+   "display_name": "Root-Crown",
+   "description": "Snare and Frost Nova root bosses for 1s.",
+   "kind": "armour",
+   "slot": "head",
+   "item_class": "medium",
+   "hands": 0,
+   "element": "nature",
+   "tiers": [
+    {
+     "base_id": "mossmantle",
+     "display_name": "Mossmantle Hood",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": ""
+    }
+   ],
+   "active": "mend",
+   "attack_pose": "none",
+   "flags": {
+    "base": "mossmantle",
+    "boss": "pinewood:bramblehorn",
+    "mythic": false,
+    "anyWeapon": false
+   },
+   "passives": [],
+   "todo": "Named legendary: a rule hook on its base line (JS hasUnique/hasRule checks). Wave 2: the rule as an Effect."
+  },
+  {
+   "id": "unique_lanternplate",
+   "display_name": "Warden's Lantern Plate",
+   "description": "Bulwark reflects projectiles.",
+   "kind": "armour",
+   "slot": "chest",
+   "item_class": "heavy",
+   "hands": 0,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "sunplate",
+     "display_name": "Sunforged Plate",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": "res://art/gear/warden.t3.json"
+    }
+   ],
+   "active": "bulwark",
+   "attack_pose": "none",
+   "flags": {
+    "base": "sunplate",
+    "boss": "ruins:gloamwarden",
+    "mythic": false,
+    "anyWeapon": false
+   },
+   "passives": [],
+   "todo": "Named legendary: a rule hook on its base line (JS hasUnique/hasRule checks). Wave 2: the rule as an Effect."
+  },
+  {
+   "id": "unique_tideedge",
+   "display_name": "Tide-Edge",
+   "description": "Dash Strike leaves a frost trail that slows.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "blades",
+   "hands": 1,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "auroraedge",
+     "display_name": "Aurora Edge",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": "res://art/gear/sword.t4.json"
+    }
+   ],
+   "action": "sword_action",
+   "spell": "sunslash",
+   "ultimate": "judgement",
+   "attack_pose": "sword",
+   "flags": {
+    "base": "auroraedge",
+    "boss": "grotto:mirelle",
+    "mythic": false,
+    "anyWeapon": false
+   },
+   "passives": [],
+   "todo": "Named legendary: a rule hook on its base line (JS hasUnique/hasRule checks). Wave 2: the rule as an Effect."
+  },
+  {
+   "id": "unique_cinderstride",
+   "display_name": "Cinderstride Boots",
+   "description": "Boots skill leaves a fire trail; lava immunity 2s.",
+   "kind": "armour",
+   "slot": "boots",
+   "item_class": "heavy",
+   "hands": 0,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "sungreaves",
+     "display_name": "Sunforged Greaves",
+     "required_level": 16,
+     "multiplier": 1.25,
+     "sheet": "res://art/gear/knightgreaves.t3.json"
+    }
+   ],
+   "active": "charge",
+   "attack_pose": "none",
+   "flags": {
+    "base": "sungreaves",
+    "boss": "caldera:kharzul",
+    "mythic": false,
+    "anyWeapon": false
+   },
+   "passives": [],
+   "todo": "Named legendary: a rule hook on its base line (JS hasUnique/hasRule checks). Wave 2: the rule as an Effect."
+  },
+  {
+   "id": "unique_morrowbane",
+   "display_name": "Morrowbane",
+   "description": "R ultimate resets on boss phase change.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "blades",
+   "hands": 1,
+   "element": "slash",
+   "tiers": [
+    {
+     "base_id": "dawneternal",
+     "display_name": "Dawn Eternal",
+     "required_level": 32,
+     "multiplier": 2.8,
+     "sheet": "res://art/gear/sword.t5.json"
+    }
+   ],
+   "action": "sword_action",
+   "spell": "sunslash",
+   "ultimate": "judgement",
+   "attack_pose": "sword",
+   "flags": {
+    "base": "dawneternal",
+    "boss": "spire:morrow",
+    "mythic": true,
+    "anyWeapon": false
+   },
+   "passives": [],
+   "todo": "Named legendary: a rule hook on its base line (JS hasUnique/hasRule checks). Wave 2: the rule as an Effect."
+  },
+  {
+   "id": "unique_echo",
+   "display_name": "Twice-Told",
+   "description": "A spirit of you repeats your hand action and Q spell a breath later (never ultimates, pages or the offhand), retyped to your strongest element.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "foci",
+   "hands": 2,
+   "element": "arcane",
+   "tiers": [
+    {
+     "base_id": "nebulasceptre",
+     "display_name": "Nebula Sceptre",
+     "required_level": 24,
+     "multiplier": 2.1,
+     "sheet": "res://art/gear/staff.t4.json"
+    }
+   ],
+   "action": "staff_action",
+   "spell": "firebolt",
+   "ultimate": "meteor",
+   "attack_pose": "staff",
+   "flags": {
+    "base": "nebulasceptre",
+    "boss": "",
+    "mythic": false,
+    "anyWeapon": true,
+    "late": 17
+   },
+   "passives": [
+    "unique_echo"
+   ],
+   "todo": "Named legendary: a rule hook on its base line (JS hasUnique/hasRule checks). Wave 2: the rule as an Effect."
+  },
+  {
+   "id": "unique_stillhour",
+   "display_name": "The Stopped Hour",
+   "description": "Its spell becomes Hush: the world slows to a quarter while you do not.",
+   "kind": "weapon",
+   "slot": "hand",
+   "item_class": "foci",
+   "hands": 2,
+   "element": "arcane",
+   "tiers": [
+    {
+     "base_id": "cometrod",
+     "display_name": "Comet Rod",
+     "required_level": 16,
+     "multiplier": 1.5,
+     "sheet": "res://art/gear/staff.t3.json"
+    }
+   ],
+   "action": "staff_action",
+   "spell": "firebolt",
+   "ultimate": "meteor",
+   "attack_pose": "staff",
+   "flags": {
+    "base": "cometrod",
+    "boss": "",
+    "mythic": false,
+    "anyWeapon": true,
+    "late": 13
+   },
+   "passives": [],
+   "todo": "Named legendary: a rule hook on its base line (JS hasUnique/hasRule checks). Wave 2: the rule as an Effect."
+  }
+ ]
+}

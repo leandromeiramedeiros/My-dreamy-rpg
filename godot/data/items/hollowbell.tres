@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_hb63p"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_brg5y"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_t04s8"]
+
+[sub_resource type="Resource" id="Resource_osxwr"]
+script = ExtResource("3_t04s8")
+base_id = &"hollowbell"
+display_name = "Hollow Bell"
+required_level = 16
+
+[resource]
+script = ExtResource("2_brg5y")
+id = &"hollowbell"
+display_name = "Hollow Bell"
+description = "Novas fire a second time at your aim point."
+kind = "trinket"
+slot = "belt"
+hands = 0
+tiers = Array[ExtResource("3_t04s8")]([SubResource("Resource_osxwr")])
+stats = Dictionary[StringName, float]({
+&"cdr": 0.02
+})
+flags = {
+"rule": {
+"novaFiresTwice": true
+}
+}
+attack_pose = "none"
+todo = "Unique rule (JS `rule`): {\"novaFiresTwice\":true}. Wave 2: an Effect."

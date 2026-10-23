@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_2xh14"]
+
+[resource]
+script = ExtResource("1_2xh14")
+id = &"burning"
+display_name = "Burning"
+duration = 3.0
+reacts_with = PackedStringArray("frost", "holy", "wind")
+tint = Color(1, 0.47843137, 0.16470589, 1)
+tint_alpha = 0.22
+overlay = &"char"
+overlay_alpha = 0.3
+motif_rate = 5.0
+light_color = Color(1, 0.5411765, 0.22745098, 1)
+light_radius = 24.0
+light_alpha = 0.3
+light_mode = "flicker"

@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/mountaintroll.tres" id="1_bi0pb"]
+[ext_resource type="Resource" path="res://data/loot/common_pinewood.tres" id="2_amlfq"]
+[ext_resource type="Texture2D" path="res://art/enemies/mountaintroll_n.png" id="3_1cl1s"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4_de3ms"]
+
+[resource]
+script = ExtResource("4_de3ms")
+id = &"gnarlbrute"
+display_name = "Gnarlroot Brute"
+hp = 520.0
+speed = 1.6
+damage = 70.0
+element = "nature"
+stagger = 3.0
+resists = Dictionary[StringName, float]({
+&"fire": -0.5,
+&"slash": 0.25
+})
+tags = PackedStringArray("brute")
+xp = 0.72
+attacks = PackedStringArray("brute")
+part_params = {
+"brute": {
+"cd": 2.0,
+"open": 1.1,
+"r": 2.2,
+"range": 1.8,
+"shape": "circle",
+"wind": 0.85
+}
+}
+loot = ExtResource("2_amlfq")
+frames = ExtResource("1_bi0pb")
+normal_map = ExtResource("3_1cl1s")
+scale = 0.95
+blood = Color(0.78039217, 0.65882355, 1, 1)
+origin = Vector2(40, 68)
+todo = "Behaviour: parts [\"chase\",\"brute\"] run by parts.js (part runtime); the Bestiary lane makes them components."

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LootTable" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/loot_table.gd" id="1_1q76w"]
+
+[resource]
+script = ExtResource("1_1q76w")
+id = &"class_chest"
+rarity_weights = PackedFloat32Array(20, 46, 27, 7, 0, 0)
+item_rolls = 2
+extra_item_weights = PackedFloat32Array()
+gem_chance = 0.7
+gem_level_bonus = PackedInt32Array()
+potion_chance = 1.0
+page_chance = 0.3
+exclude_bases = PackedStringArray()

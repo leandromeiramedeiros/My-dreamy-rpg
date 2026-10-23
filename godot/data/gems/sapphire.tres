@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="GemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/gem_data.gd" id="1_bt2xd"]
+
+[resource]
+script = ExtResource("1_bt2xd")
+id = &"sapphire"
+display_name = "Sapphire"
+color = Color(0.2901961, 0.54901963, 1, 1)
+element = "frost"
+grade_names = PackedStringArray("Chipped", "Clear", "Radiant")
+armour_stats = Array[Dictionary]([{
+"mp": 20.0,
+"mpRegen": 0.5,
+"resFrost": 0.02
+}, {
+"mp": 55.0,
+"mpRegen": 1.5,
+"resFrost": 0.04
+}, {
+"mp": 110.0,
+"mpRegen": 3.0,
+"resFrost": 0.07
+}])
+weapon_stats = Array[Dictionary]([{
+"cdr": 0.02
+}, {
+"cdr": 0.05
+}, {
+"cdr": 0.08
+}])
+amp = "Frost skills"

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ReactionData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/reaction_data.gd" id="1_hhsiu"]
+
+[resource]
+script = ExtResource("1_hhsiu")
+id = &"shatter"
+display_name = "Shatter"
+trigger_elements = PackedStringArray("slash", "pierce")
+on_statuses = PackedStringArray("frozen")
+damage_type = &"shatter"
+effect_text = "Physical hit on Frozen: an AoE of damage type shatter."
+todo = "No JS implementation (design only, elements-statuses.md); the Status lane builds it."

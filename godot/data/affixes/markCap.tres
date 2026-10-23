@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_lb8y6"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_68hn4"]
+
+[sub_resource type="Resource" id="Resource_bt4ja"]
+script = ExtResource("2_68hn4")
+display_name = "Tethered"
+roll = Vector2(1, 1)
+
+[sub_resource type="Resource" id="Resource_gvbq4"]
+script = ExtResource("2_68hn4")
+display_name = "Bound"
+roll = Vector2(2, 2)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_cc55v"]
+script = ExtResource("2_68hn4")
+display_name = "Fettered"
+roll = Vector2(3, 3)
+item_level = 28
+
+[resource]
+script = ExtResource("1_lb8y6")
+id = &"markCap"
+tiers = Array[ExtResource("2_68hn4")]([SubResource("Resource_bt4ja"), SubResource("Resource_gvbq4"), SubResource("Resource_cc55v")])

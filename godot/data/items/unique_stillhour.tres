@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/staff_action.tres" id="1_p4mdt"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_xa312"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_7mnyk"]
+[ext_resource type="Resource" path="res://data/skills/firebolt.tres" id="4_qyalt"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_oldua"]
+[ext_resource type="JSON" path="res://art/gear/staff.t3.json" id="6_vve2n"]
+[ext_resource type="Resource" path="res://data/skills/meteor.tres" id="7_1kthg"]
+
+[sub_resource type="Resource" id="Resource_aitm1"]
+script = ExtResource("5_oldua")
+base_id = &"cometrod"
+display_name = "Comet Rod"
+required_level = 16
+multiplier = 1.5
+sheet = ExtResource("6_vve2n")
+
+[resource]
+script = ExtResource("3_7mnyk")
+id = &"unique_stillhour"
+display_name = "The Stopped Hour"
+description = "Its spell becomes Hush: the world slows to a quarter while you do not."
+item_class = &"foci"
+hands = 2
+element = "arcane"
+tiers = Array[ExtResource("5_oldua")]([SubResource("Resource_aitm1")])
+action = ExtResource("1_p4mdt")
+spell = ExtResource("4_qyalt")
+ultimate = ExtResource("7_1kthg")
+flags = {
+"anyWeapon": true,
+"base": "cometrod",
+"boss": "",
+"late": 13.0,
+"mythic": false
+}
+attack_pose = "staff"
+todo = "Named legendary: a rule hook on its base line (JS hasUnique/hasRule checks). Wave 2: the rule as an Effect."

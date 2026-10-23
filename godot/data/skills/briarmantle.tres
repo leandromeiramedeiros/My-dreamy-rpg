@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_s16x6"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_cvbgl"]
+
+[resource]
+script = ExtResource("2_cvbgl")
+id = &"briarmantle"
+display_name = "Briar Mantle"
+description = "CHEST — thorns for 6 s: melee attackers take nature damage back."
+element = "nature"
+kind = "active"
+cooldown = 14.0
+mp_cost = 20.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+color = Color(0.37254903, 0.6039216, 0.43137255, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+template CT.buff {\"buff\":\"briar\",\"t\":6,\"col\":\"#8fe0a0\",\"sfx\":\"trap\"}
+no starter block covers CT.buff (buff / guard): wave 2
+JS:
+cast: cast(p) {
+    addBuff(p, o.buff, o.t);
+    if (o.heal) healPlayer(p, p.maxHp * o.heal * healMul(p));
+    if (o.nova) hitArea(p.x, p.y, o.nova.r, o.nova.dmg, o.nova.hit || {});
+    fx({ type: 'ring', x: p.x, y: p.y, r: o.nova ? o.nova.r + 0.2 : 1.4, col: o.col, life: 0.4 });
+    burst(p.x, p.y, p.z + 1, 14, [o.col, '#ffffff'], 2); sfx(o.sfx || 'shield');
+  }"

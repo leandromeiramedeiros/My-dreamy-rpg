@@ -1,0 +1,523 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/systems/arena.gd" id="1_fdg5s"]
+[ext_resource type="Resource" path="res://data/items/sword.tres" id="2_26013"]
+[ext_resource type="Resource" path="res://data/items/buckler.tres" id="3_fajkm"]
+[ext_resource type="Resource" path="res://data/items/knighthelm.tres" id="4_xaxn8"]
+[ext_resource type="Resource" path="res://data/items/warden.tres" id="5_iu0o3"]
+[ext_resource type="Resource" path="res://data/items/knightgreaves.tres" id="6_op4af"]
+[ext_resource type="TileSet" path="res://art/tiles/ruins/ruins_tileset.tres" id="7_po6ip"]
+[ext_resource type="PackedScene" path="res://scenes/hero/hero.tscn" id="8_wcsjf"]
+[ext_resource type="PackedScene" path="res://scenes/props/prop.tscn" id="9_qksfd"]
+[ext_resource type="JSON" path="res://art/props/lantern_blue.json" id="10_4vmai"]
+[ext_resource type="JSON" path="res://art/props/crystal_violet.json" id="11_ojsrc"]
+[ext_resource type="JSON" path="res://art/props/chest.json" id="12_kr765"]
+[ext_resource type="JSON" path="res://art/props/shrine.json" id="13_h0ybf"]
+
+[node name="PackRuins" type="Node2D" unique_id=967622633]
+script = ExtResource("1_fdg5s")
+arena_id = &"pack-ruins"
+arena_name = "Ruins pack arena"
+description = "Ruins commons: wisps, knights, archers, a chanter, a swarm, a gloomed knight elite with a mimic (L14)"
+objective = "Clear three packs, take the key"
+zone = &"ruins"
+level_range = Vector2i(10, 17)
+kit_hand = ExtResource("2_26013")
+kit_offhand = ExtResource("3_fajkm")
+kit_head = ExtResource("4_xaxn8")
+kit_chest = ExtResource("5_iu0o3")
+kit_boots = ExtResource("6_op4af")
+kit_tier = 1
+hero_level = 14
+triggers = Array[Dictionary]([{
+"actions": [{
+"sub": "Three packs, an elite, a key",
+"title": "Ruins pack arena",
+"type": "banner"
+}, {
+"text": "Pull the lever to open the way",
+"type": "objective"
+}],
+"id": "in",
+"name": "Enter",
+"when": {
+"type": "map_enter"
+}
+}, {
+"actions": [{
+"sub": "",
+"title": "Pack 1 / 3",
+"type": "banner"
+}, {
+"text": "Clear pack 1",
+"type": "objective"
+}, {
+"count": 3.0,
+"enemy": "wisp",
+"radius": 3.6,
+"type": "spawn",
+"x": 14.0,
+"y": 17.5
+}, {
+"count": 1.0,
+"enemy": "gloomknight",
+"radius": 3.6,
+"type": "spawn",
+"x": 14.0,
+"y": 17.5
+}],
+"id": "p1_go",
+"name": "Pack 1",
+"when": {
+"r": 2.4,
+"type": "enter_area",
+"x": 11.5,
+"y": 17.8
+}
+}, {
+"actions": [{
+"pct": 25.0,
+"type": "heal"
+}, {
+"id": "gate_b",
+"type": "openGate"
+}, {
+"text": "Go east to pack 2",
+"type": "objective"
+}, {
+"text": "The east gate opens",
+"type": "message"
+}],
+"id": "p1_clear",
+"name": "Pack 1 cleared",
+"requires": ["p1_go"],
+"when": {
+"type": "all_enemies_dead"
+}
+}, {
+"actions": [{
+"sub": "",
+"title": "Pack 2 / 3",
+"type": "banner"
+}, {
+"text": "Clear pack 2",
+"type": "objective"
+}, {
+"count": 2.0,
+"enemy": "voidarcher",
+"radius": 3.6,
+"type": "spawn",
+"x": 25.0,
+"y": 17.5
+}, {
+"count": 1.0,
+"enemy": "shadelingswarm",
+"radius": 3.6,
+"type": "spawn",
+"x": 25.0,
+"y": 17.5
+}, {
+"count": 1.0,
+"enemy": "gravechanter",
+"radius": 3.6,
+"type": "spawn",
+"x": 25.0,
+"y": 17.5
+}],
+"id": "p2_go",
+"name": "Pack 2",
+"when": {
+"r": 1.9,
+"type": "enter_area",
+"x": 21.5,
+"y": 17.8
+}
+}, {
+"actions": [{
+"pct": 25.0,
+"type": "heal"
+}, {
+"id": "gate_c",
+"type": "openGate"
+}, {
+"text": "Go north to the elite",
+"type": "objective"
+}, {
+"text": "The north gate opens",
+"type": "message"
+}],
+"id": "p2_clear",
+"name": "Pack 2 cleared",
+"requires": ["p2_go"],
+"when": {
+"type": "all_enemies_dead"
+}
+}, {
+"actions": [{
+"sub": "",
+"title": "The elite guards a key",
+"type": "banner"
+}, {
+"text": "Defeat the elite and its pack",
+"type": "objective"
+}, {
+"count": 1.0,
+"elite": "gloomed",
+"enemy": "gloomknight",
+"radius": 3.6,
+"type": "spawn",
+"x": 25.0,
+"y": 5.5
+}, {
+"count": 1.0,
+"enemy": "pillarmimic",
+"radius": 3.6,
+"type": "spawn",
+"x": 25.0,
+"y": 5.5
+}, {
+"count": 2.0,
+"enemy": "wisp",
+"radius": 3.6,
+"type": "spawn",
+"x": 25.0,
+"y": 5.5
+}],
+"id": "p3_go",
+"name": "Pack 3 and the elite",
+"when": {
+"r": 2.0,
+"type": "enter_area",
+"x": 28.5,
+"y": 9.5
+}
+}, {
+"actions": [{
+"pct": 25.0,
+"type": "heal"
+}, {
+"count": 1.0,
+"item": "key_pack_ruins",
+"rarity": "rare",
+"type": "loot",
+"x": 25.0,
+"y": 5.5
+}, {
+"text": "Take the key to the sealed door",
+"type": "objective"
+}, {
+"text": "The elite drops a key",
+"type": "message"
+}],
+"id": "p3_clear",
+"name": "Elite down",
+"requires": ["p3_go"],
+"when": {
+"type": "all_enemies_dead"
+}
+}, {
+"actions": [{
+"sub": "Ruins pack arena",
+"title": "Pack arena cleared",
+"type": "banner"
+}, {
+"text": "Open the chests",
+"type": "objective"
+}, {
+"pct": 100.0,
+"type": "heal"
+}],
+"id": "done",
+"name": "Chamber",
+"when": {
+"r": 3.0,
+"type": "enter_area",
+"x": 9.5,
+"y": 5.5
+}
+}])
+objects = Array[Dictionary]([{
+"gate": "gate_a",
+"id": "lever_a",
+"label": "lever",
+"t": "lever",
+"x": 5.5,
+"y": 16.5
+}, {
+"ang": 0.0,
+"id": "gate_a",
+"len": 3.2,
+"t": "gate",
+"x": 8.0,
+"y": 17.5
+}, {
+"ang": 0.0,
+"id": "gate_b",
+"len": 3.2,
+"t": "gate",
+"x": 19.0,
+"y": 17.5
+}, {
+"ang": 1.5708,
+"id": "gate_c",
+"len": 3.2,
+"t": "gate",
+"x": 28.5,
+"y": 12.0
+}, {
+"ang": 0.0,
+"id": "door_key",
+"key": "key_pack_ruins",
+"label": "sealed door",
+"len": 3.2,
+"t": "keydoor",
+"x": 19.0,
+"y": 5.5
+}])
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=1904243719]
+tile_map_data = PackedByteArray("AAAcABQAAAABAAAAAAAWABQAAAABAAAAAAAPABQAAAABAAAAAAALABQAAAADAAAAAAAcAA8AAAAAAAAAAAAWAA8AAAAAAAAAAAAPAA8AAAACAAAAAAALAA8AAAACAAAAAAAcAAgAAAADAAAAAAAWAAgAAAACAAAAAAAKAAgAAAAAAAAAAAAEAAgAAAAAAAAAAAAcAAMAAAAAAAAAAAAWAAMAAAADAAAAAAAKAAMAAAAAAAAAAAAEAAMAAAACAAAAAAAdABUABQAEAAAAAAAcABUABQACAAMAAAAbABUABQAEAAEAAAAaABUABQACAAIAAAAZABUABQACAAIAAAAYABUABQACAAIAAAAXABUABQAGAAEAAAAWABUABQACAAMAAAAVABUABQAEAAEAAAAQABUABQAEAAAAAAAPABUABQACAAMAAAAOABUABQAEAAEAAAANABUABQACAAIAAAAMABUABQAGAAEAAAALABUABQACAAMAAAAKABUABQAEAAEAAAAdABQABQAAAAEAAAAbABQABQADAAEAAAAaABQABQADAAQAAAAZABQABQACAAEAAAAYABQABQADAAQAAAAXABQABQABAAEAAAAVABQABQAFAAEAAAAQABQABQAAAAEAAAAOABQABQADAAEAAAANABQABQACAAEAAAAMABQABQABAAEAAAAKABQABQAFAAEAAAAFABQABQADAAIAAAAEABQABQACAAIAAAADABQABQACAAIAAAACABQABQACAAIAAAAdABMABQAFAAEAAAAcABMABQACAAIAAAAbABMABQALAAIAAAAaABMABQACAAEAAAAZABMABQADAAQAAAAYABMABQACAAEAAAAXABMABQAHAAMAAAAWABMABQACAAIAAAAVABMABQAHAAIAAAAQABMABQAFAAEAAAAPABMABQACAAIAAAAOABMABQALAAIAAAANABMABQACAAEAAAAMABMABQAHAAMAAAALABMABQACAAIAAAAKABMABQAHAAIAAAAFABMABQADAAEAAAAEABMABQACAAEAAAADABMABQADAAQAAAACABMABQAHAAMAAAAdABIABQADAAEAAAAcABIABQACAAQAAAAbABIABQACAAEAAAAaABIABQAAAAQAAAAZABIABQAAAAQAAAAYABIABQABAAQAAAAXABIABQABAAQAAAAWABIABQACAAEAAAAVABIABQAHAAMAAAAUABIABQACAAIAAAARABIABQADAAIAAAAQABIABQALAAIAAAAPABIABQACAAEAAAAOABIABQABAAQAAAANABIABQADAAQAAAAMABIABQAAAAQAAAALABIABQACAAEAAAAKABIABQAHAAMAAAAJABIABQACAAIAAAAGABIABQADAAIAAAAFABIABQALAAIAAAAEABIABQACAAEAAAADABIABQAAAAQAAAACABIABQAHAAMAAAAdABEABQADAAEAAAAcABEABQACAAEAAAAbABEABQACAAEAAAAaABEABQACAAQAAAAZABEABQACAAEAAAAYABEABQAAAAQAAAAXABEABQAAAAQAAAAWABEABQAAAAQAAAAVABEABQACAAEAAAAUABEABQAHAAMAAAATABEABQACAAIAAAASABEABQACAAIAAAARABEABQALAAIAAAAQABEABQAAAAQAAAAPABEABQADAAQAAAAOABEABQAAAAQAAAANABEABQAAAAQAAAAMABEABQAAAAQAAAALABEABQAAAAQAAAAKABEABQAAAAQAAAAJABEABQAHAAMAAAAIABEABQACAAIAAAAHABEABQACAAIAAAAGABEABQALAAIAAAAFABEABQADAAQAAAAEABEABQAAAAQAAAADABEABQABAAQAAAACABEABQAHAAMAAAAdABAABQAJAAEAAAAcABAABQACAAAAAAAbABAABQAJAAMAAAAaABAABQAAAAQAAAAZABAABQACAAEAAAAYABAABQAAAAQAAAAXABAABQAKAAMAAAAWABAABQACAAAAAAAVABAABQAJAAMAAAARABAABQADAAEAAAAQABAABQAKAAMAAAAPABAABQACAAAAAAAOABAABQAJAAMAAAANABAABQACAAQAAAAMABAABQAKAAMAAAALABAABQACAAAAAAAKABAABQAJAAMAAAAGABAABQADAAEAAAAFABAABQABAAQAAAAEABAABQACAAEAAAADABAABQADAAQAAAACABAABQAHAAMAAAAdAA8ABQAAAAEAAAAbAA8ABQADAAEAAAAaAA8ABQAAAAQAAAAZAA8ABQACAAEAAAAYAA8ABQABAAQAAAAXAA8ABQABAAEAAAAVAA8ABQAFAAEAAAAQAA8ABQAAAAEAAAAOAA8ABQADAAEAAAANAA8ABQABAAQAAAAMAA8ABQABAAEAAAAKAA8ABQAFAAEAAAAdAA4ABQAFAAEAAAAcAA4ABQACAAIAAAAbAA4ABQALAAIAAAAaAA4ABQAAAAQAAAAZAA4ABQAAAAQAAAAYAA4ABQADAAQAAAAXAA4ABQAHAAMAAAAWAA4ABQACAAIAAAAVAA4ABQAHAAIAAAAQAA4ABQAFAAEAAAAPAA4ABQACAAIAAAAOAA4ABQALAAIAAAANAA4ABQACAAQAAAAMAA4ABQAHAAMAAAALAA4ABQACAAIAAAAKAA4ABQAHAAIAAAAdAA0ABQADAAEAAAAcAA0ABQACAAEAAAAcAAwABQAFAAEAAAAcAAsABQAFAAEAAAAdAAoABQADAAIAAAAcAAoABQAHAAIAAAAbAAoABQACAAIAAAAdAAkABQAJAAEAAAAcAAkABQACAAAAAAAbAAkABQAFAAMAAAAaAAkABQACAAIAAAAZAAkABQACAAIAAAAYAAkABQACAAIAAAAXAAkABQAGAAEAAAAWAAkABQACAAMAAAAVAAkABQAEAAEAAAAQAAkABQADAAIAAAAPAAkABQACAAIAAAAOAAkABQACAAIAAAANAAkABQACAAIAAAAMAAkABQACAAIAAAALAAkABQAGAAEAAAAKAAkABQACAAMAAAAJAAkABQAEAAEAAAAIAAkABQACAAIAAAAHAAkABQACAAIAAAAGAAkABQACAAIAAAAFAAkABQAGAAEAAAAEAAkABQACAAMAAAADAAkABQAEAAEAAAACAAkABQACAAIAAAAdAAgABQAAAAEAAAAbAAgABQADAAEAAAAaAAgABQACAAEAAAAZAAgABQADAAQAAAAYAAgABQACAAEAAAAXAAgABQABAAEAAAAVAAgABQAFAAEAAAAQAAgABQADAAEAAAAPAAgABQAAAAQAAAAOAAgABQACAAEAAAANAAgABQACAAEAAAAMAAgABQAAAAQAAAALAAgABQABAAEAAAAJAAgABQADAAEAAAAIAAgABQACAAEAAAAHAAgABQACAAEAAAAGAAgABQAAAAQAAAAFAAgABQABAAEAAAADAAgABQADAAEAAAACAAgABQAHAAMAAAAdAAcABQAFAAEAAAAcAAcABQACAAIAAAAbAAcABQALAAIAAAAaAAcABQABAAQAAAAZAAcABQACAAEAAAAYAAcABQACAAQAAAAXAAcABQAHAAMAAAAWAAcABQACAAIAAAAVAAcABQAHAAIAAAAQAAcABQADAAEAAAAPAAcABQAAAAQAAAAOAAcABQACAAQAAAANAAcABQAAAAQAAAAMAAcABQACAAEAAAALAAcABQAHAAMAAAAKAAcABQACAAIAAAAJAAcABQALAAIAAAAIAAcABQACAAQAAAAHAAcABQADAAQAAAAGAAcABQACAAQAAAAFAAcABQAHAAMAAAAEAAcABQACAAIAAAADAAcABQALAAIAAAACAAcABQAHAAMAAAAdAAYABQADAAEAAAAcAAYABQACAAQAAAAbAAYABQACAAEAAAAaAAYABQACAAEAAAAZAAYABQADAAQAAAAYAAYABQAAAAQAAAAXAAYABQACAAEAAAAWAAYABQABAAQAAAAVAAYABQAHAAMAAAAUAAYABQACAAIAAAARAAYABQADAAIAAAAQAAYABQALAAIAAAAPAAYABQABAAQAAAAOAAYABQACAAEAAAANAAYABQACAAEAAAAMAAYABQACAAQAAAALAAYABQABAAQAAAAKAAYABQACAAEAAAAJAAYABQACAAEAAAAIAAYABQAAAAQAAAAHAAYABQACAAQAAAAGAAYABQACAAEAAAAFAAYABQAAAAQAAAAEAAYABQAAAAQAAAADAAYABQAAAAQAAAACAAYABQAHAAMAAAAdAAUABQADAAEAAAAcAAUABQAAAAQAAAAbAAUABQAAAAQAAAAaAAUABQACAAEAAAAZAAUABQAAAAQAAAAYAAUABQACAAQAAAAXAAUABQACAAEAAAAWAAUABQACAAEAAAAVAAUABQADAAQAAAAUAAUABQAHAAMAAAATAAUABQACAAIAAAASAAUABQACAAIAAAARAAUABQALAAIAAAAQAAUABQACAAEAAAAPAAUABQAAAAQAAAAOAAUABQAAAAQAAAANAAUABQACAAEAAAAMAAUABQAAAAQAAAALAAUABQADAAQAAAAKAAUABQAAAAQAAAAJAAUABQADAAQAAAAIAAUABQACAAQAAAAHAAUABQAAAAQAAAAGAAUABQACAAEAAAAFAAUABQABAAQAAAAEAAUABQACAAEAAAADAAUABQACAAEAAAACAAUABQAHAAMAAAAdAAQABQAJAAEAAAAcAAQABQACAAAAAAAbAAQABQAJAAMAAAAaAAQABQACAAQAAAAZAAQABQABAAQAAAAYAAQABQACAAEAAAAXAAQABQAKAAMAAAAWAAQABQACAAAAAAAVAAQABQAJAAMAAAARAAQABQADAAEAAAAQAAQABQABAAQAAAAPAAQABQACAAQAAAAOAAQABQAAAAQAAAANAAQABQACAAEAAAAMAAQABQACAAEAAAALAAQABQAKAAMAAAAKAAQABQACAAAAAAAJAAQABQAJAAMAAAAIAAQABQACAAEAAAAHAAQABQAAAAQAAAAGAAQABQAAAAQAAAAFAAQABQAKAAMAAAAEAAQABQACAAAAAAADAAQABQAJAAMAAAACAAQABQAHAAMAAAAdAAMABQAAAAEAAAAbAAMABQADAAEAAAAaAAMABQACAAQAAAAZAAMABQAAAAQAAAAYAAMABQACAAEAAAAXAAMABQABAAEAAAAVAAMABQAFAAEAAAAQAAMABQADAAEAAAAPAAMABQADAAQAAAAOAAMABQACAAEAAAANAAMABQAAAAQAAAAMAAMABQACAAEAAAALAAMABQABAAEAAAAJAAMABQADAAEAAAAIAAMABQACAAQAAAAHAAMABQADAAQAAAAGAAMABQACAAEAAAAFAAMABQABAAEAAAADAAMABQADAAEAAAACAAMABQAHAAMAAAAdAAIABQAFAAEAAAAcAAIABQACAAIAAAAbAAIABQALAAIAAAAaAAIABQACAAEAAAAZAAIABQACAAQAAAAYAAIABQABAAQAAAAXAAIABQAHAAMAAAAWAAIABQACAAIAAAAVAAIABQAHAAIAAAAQAAIABQADAAEAAAAPAAIABQADAAQAAAAOAAIABQACAAQAAAANAAIABQACAAQAAAAMAAIABQAAAAQAAAALAAIABQAHAAMAAAAKAAIABQACAAIAAAAJAAIABQALAAIAAAAIAAIABQADAAQAAAAHAAIABQAAAAQAAAAGAAIABQAAAAQAAAAFAAIABQAHAAMAAAAEAAIABQACAAIAAAADAAIABQALAAIAAAACAAIABQAHAAMAAAA=")
+tile_set = ExtResource("7_po6ip")
+
+[node name="Entities" type="Node2D" parent="." unique_id=298846494]
+y_sort_enabled = true
+
+[node name="Columns" type="TileMapLayer" parent="Entities" unique_id=2097153583]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAEAAMACQAPAAAAAAAKAAMACQAPAAAAAAAWAAMACQAPAAAAAAAcAAMACQAPAAAAAAAEAAgACQAPAAAAAAAKAAgACQAPAAAAAAAWAAgACQAPAAAAAAAcAAgACQAPAAAAAAALAA8ACQAPAAAAAAAPAA8ACQAPAAAAAAAWAA8ACQAPAAAAAAAcAA8ACQAPAAAAAAALABQACQAPAAAAAAAPABQACQAPAAAAAAAWABQACQAPAAAAAAAcABQACQAPAAAAAAA=")
+tile_set = ExtResource("7_po6ip")
+
+[node name="Hero" parent="Entities" unique_id=236018537 instance=ExtResource("8_wcsjf")]
+position = Vector2(-224, 176)
+
+[node name="LanternBlue_1" parent="Entities" unique_id=1396831413 instance=ExtResource("9_qksfd")]
+position = Vector2(-208, 140.8)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 1.8,
+"y": 15.8
+}
+
+[node name="LanternBlue_2" parent="Entities" unique_id=390522922 instance=ExtResource("9_qksfd")]
+position = Vector2(-224, 209.6)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 5.6,
+"y": 20.6
+}
+
+[node name="LanternBlue_3" parent="Entities" unique_id=608001575 instance=ExtResource("9_qksfd")]
+position = Vector2(-48, 188.8)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 9.8,
+"y": 13.8
+}
+
+[node name="LanternBlue_4" parent="Entities" unique_id=832324367 instance=ExtResource("9_qksfd")]
+position = Vector2(57.59999, 241.6)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 16.4,
+"y": 13.8
+}
+
+[node name="LanternBlue_5" parent="Entities" unique_id=645649273 instance=ExtResource("9_qksfd")]
+position = Vector2(-169.59999, 249.6)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 9.8,
+"y": 21.4
+}
+
+[node name="LanternBlue_6" parent="Entities" unique_id=192293730 instance=ExtResource("9_qksfd")]
+position = Vector2(-64, 302.4)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 16.4,
+"y": 21.4
+}
+
+[node name="LanternBlue_7" parent="Entities" unique_id=682994411 instance=ExtResource("9_qksfd")]
+position = Vector2(127.999985, 276.8)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 20.8,
+"y": 13.8
+}
+
+[node name="LanternBlue_8" parent="Entities" unique_id=601109297 instance=ExtResource("9_qksfd")]
+position = Vector2(265.59998, 345.6)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 29.4,
+"y": 13.8
+}
+
+[node name="LanternBlue_9" parent="Entities" unique_id=1522966248 instance=ExtResource("9_qksfd")]
+position = Vector2(6.399994, 337.59998)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 20.8,
+"y": 21.4
+}
+
+[node name="LanternBlue_10" parent="Entities" unique_id=900232749 instance=ExtResource("9_qksfd")]
+position = Vector2(144, 406.4)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 29.4,
+"y": 21.4
+}
+
+[node name="LanternBlue_11" parent="Entities" unique_id=1306714174 instance=ExtResource("9_qksfd")]
+position = Vector2(320, 180.79999)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 20.8,
+"y": 1.8
+}
+
+[node name="LanternBlue_12" parent="Entities" unique_id=1030586862 instance=ExtResource("9_qksfd")]
+position = Vector2(457.6, 249.59999)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 29.4,
+"y": 1.8
+}
+
+[node name="LanternBlue_13" parent="Entities" unique_id=1898673281 instance=ExtResource("9_qksfd")]
+position = Vector2(198.4, 241.59999)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 20.8,
+"y": 9.4
+}
+
+[node name="LanternBlue_14" parent="Entities" unique_id=1011758043 instance=ExtResource("9_qksfd")]
+position = Vector2(336, 310.4)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 29.4,
+"y": 9.4
+}
+
+[node name="LanternBlue_15" parent="Entities" unique_id=1242477719 instance=ExtResource("9_qksfd")]
+position = Vector2(16, 28.8)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 1.8,
+"y": 1.8
+}
+
+[node name="LanternBlue_16" parent="Entities" unique_id=273526659 instance=ExtResource("9_qksfd")]
+position = Vector2(246.40001, 144)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 16.2,
+"y": 1.8
+}
+
+[node name="LanternBlue_17" parent="Entities" unique_id=987234698 instance=ExtResource("9_qksfd")]
+position = Vector2(-105.59999, 89.6)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 1.8,
+"y": 9.4
+}
+
+[node name="LanternBlue_18" parent="Entities" unique_id=1137165816 instance=ExtResource("9_qksfd")]
+position = Vector2(124.80002, 204.8)
+sidecar = ExtResource("10_4vmai")
+object_data = {
+"t": "lantern_blue",
+"x": 16.2,
+"y": 9.4
+}
+
+[node name="CrystalViolet_19" parent="Entities" unique_id=352956818 instance=ExtResource("9_qksfd")]
+position = Vector2(14.399994, 216.8)
+sidecar = ExtResource("11_ojsrc")
+object_data = {
+"t": "crystal_violet",
+"x": 13.5,
+"y": 13.6
+}
+
+[node name="CrystalViolet_20" parent="Entities" unique_id=1468169687 instance=ExtResource("9_qksfd")]
+position = Vector2(198.4, 308.8)
+sidecar = ExtResource("11_ojsrc")
+object_data = {
+"t": "crystal_violet",
+"x": 25.0,
+"y": 13.6
+}
+
+[node name="CrystalViolet_21" parent="Entities" unique_id=1107303280 instance=ExtResource("9_qksfd")]
+position = Vector2(262.4, 276.8)
+sidecar = ExtResource("11_ojsrc")
+object_data = {
+"t": "crystal_violet",
+"x": 25.0,
+"y": 9.6
+}
+
+[node name="CrystalViolet_22" parent="Entities" unique_id=1332184687 instance=ExtResource("9_qksfd")]
+position = Vector2(64, 112)
+sidecar = ExtResource("11_ojsrc")
+object_data = {
+"t": "crystal_violet",
+"x": 8.5,
+"y": 5.5
+}
+
+[node name="Chest_23" parent="Entities" unique_id=408453425 instance=ExtResource("9_qksfd")]
+position = Vector2(94.4, 80.8)
+sidecar = ExtResource("12_kr765")
+object_data = {
+"label": "pack-reward-wood",
+"t": "chest",
+"tier": "wood",
+"x": 7.5,
+"y": 2.6
+}
+
+[node name="Chest_24" parent="Entities" unique_id=206701916 instance=ExtResource("9_qksfd")]
+position = Vector2(1.6000061, 127.2)
+sidecar = ExtResource("12_kr765")
+object_data = {
+"label": "pack-reward-silver",
+"t": "chest",
+"tier": "silver",
+"x": 7.5,
+"y": 8.4
+}
+
+[node name="Shrine_25" parent="Entities" unique_id=1315005304 instance=ExtResource("9_qksfd")]
+position = Vector2(112, 168)
+sidecar = ExtResource("13_h0ybf")
+object_data = {
+"id": "shrine_ruins",
+"label": "checkpoint",
+"name": "Arena shrine",
+"t": "shrine",
+"x": 13.5,
+"y": 7.5
+}

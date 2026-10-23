@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/rootvault.tres" id="1_e5p74"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_edclv"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_onfyn"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_8vc2b"]
+
+[sub_resource type="Resource" id="Resource_5m0c0"]
+script = ExtResource("4_8vc2b")
+base_id = &"barkboots"
+display_name = "Bark Boots"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_1ch1v"]
+script = ExtResource("4_8vc2b")
+base_id = &"thornboots"
+display_name = "Thornwarden Boots"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_wxbre"]
+script = ExtResource("4_8vc2b")
+base_id = &"briarboots"
+display_name = "Briarstep Boots"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_ycfub"]
+script = ExtResource("4_8vc2b")
+base_id = &"aurorabarkboots"
+display_name = "Aurora Barkboots"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_v2rw7"]
+script = ExtResource("4_8vc2b")
+base_id = &"bloomsteps"
+display_name = "Bloomsteps"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_onfyn")
+id = &"thornwardenboots"
+display_name = "Thornwarden Boots"
+description = "+8% move speed, +2 HP/s."
+kind = "armour"
+slot = "boots"
+item_class = &"medium"
+suit = &"thornwarden"
+hands = 0
+element = "nature"
+tiers = Array[ExtResource("4_8vc2b")]([SubResource("Resource_5m0c0"), SubResource("Resource_1ch1v"), SubResource("Resource_wxbre"), SubResource("Resource_ycfub"), SubResource("Resource_v2rw7")])
+active = ExtResource("1_e5p74")
+stats = Dictionary[StringName, float]({
+&"regen": 2.0,
+&"speed": 0.3
+})
+color = Color(0.30980393, 0.5411765, 0.36862746, 1)
+attack_pose = "none"
+todo = "Suit Thornwarden (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."

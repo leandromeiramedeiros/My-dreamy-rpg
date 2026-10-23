@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_rx5xd"]
+
+[resource]
+script = ExtResource("1_rx5xd")
+id = &"twohand_charge"
+pitch_vary = 0.06
+priority = 2
+caption = "[charging]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 500.0,
+"f1": 2400.0,
+"filter": {
+"freq": 800.0,
+"q": 1.0,
+"type": "bandpass"
+},
+"gain": 0.04,
+"osc": "noise"
+}]
+}

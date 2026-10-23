@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_uwgeh"]
+
+[resource]
+script = ExtResource("1_uwgeh")
+id = &"shield"
+pitch_vary = 0.06
+priority = 2
+caption = "[shield]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 400.0,
+"f1": 600.0,
+"gain": 0.06,
+"osc": "triangle"
+}]
+}

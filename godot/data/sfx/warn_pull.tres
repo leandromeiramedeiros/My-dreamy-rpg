@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_oy2m0"]
+
+[resource]
+script = ExtResource("1_oy2m0")
+id = &"warn_pull"
+priority = 3
+caption = "[boss pull]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 300.0,
+"f1": 900.0,
+"filter": {
+"freq": 200.0,
+"q": 0.7,
+"type": "highpass"
+},
+"gain": 0.07,
+"osc": "sine"
+}]
+}

@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_orh0m"]
+[ext_resource type="Script" path="res://scripts/data/projectile_block.gd" id="2_esyad"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_jyyng"]
+
+[sub_resource type="Resource" id="Resource_o2o5r"]
+script = ExtResource("2_esyad")
+speed = 17.0
+radius = 0.25
+life = 0.6
+color = Color(0.90588236, 0.93333334, 1, 1)
+damage = 34.0
+hit_params = {
+"crit": true
+}
+
+[resource]
+script = ExtResource("3_jyyng")
+id = &"snapshot"
+display_name = "Snapshot"
+description = "OFF-ACTION — a quick shot that always crits."
+element = "pierce"
+cooldown = 1.5
+stamina_cost = 10.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_orh0m")]([SubResource("Resource_o2o5r")])
+aim_shape = "proj"
+aim_range = 10.0
+aim_width = 0.25
+color = Color(0.7882353, 0.84705883, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) { castAnim(p, 0.12); spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 17, r: 0.25, dmg: 34, life: 0.6, kind: 'arrow', col: '#e7eeff', crit: true }); sfx('bow'); }
+JS fields: {\"off\":true}"

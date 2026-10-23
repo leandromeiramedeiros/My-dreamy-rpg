@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="GameRules" format=3]
+
+[ext_resource type="Resource" path="res://data/fx/death_fade.tres" id="1_1e7pv"]
+[ext_resource type="Resource" path="res://data/fx/hit_light.tres" id="2_03nt4"]
+[ext_resource type="Script" path="res://scripts/data/game_rules.gd" id="3_e6ii1"]
+
+[resource]
+script = ExtResource("3_e6ii1")
+default_hit_fx = ExtResource("2_03nt4")
+default_death_fx = ExtResource("1_1e7pv")

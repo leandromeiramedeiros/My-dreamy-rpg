@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Resource" path="res://data/loot/common_pinewood.tres" id="1_scebx"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="2_gbihb"]
+
+[resource]
+script = ExtResource("2_gbihb")
+id = &"wisp"
+display_name = "Wisp"
+hp = 235.0
+speed = 1.9
+damage = 34.0
+radius = 0.32
+height = 3.2
+element = "arcane"
+damage_type = "arcane"
+stagger = 1.0
+resists = Dictionary[StringName, float]({
+&"arcane": 0.5,
+&"holy": -0.5,
+&"lightning": -0.5,
+&"pierce": 0.5,
+&"slash": 0.5,
+&"wind": -0.5
+})
+tags = PackedStringArray("ethereal", "flying")
+xp = 0.09
+movement = "kite"
+attacks = PackedStringArray("shoot")
+part_params = {
+"kite": {
+"far": 5.6,
+"near": 3.2,
+"strafe": 1.0
+},
+"shoot": {
+"cd": 2.6,
+"col": "#b89cff",
+"dread": 3.0,
+"r": 0.3,
+"range": 6.5,
+"speed": 4.6,
+"tele": true,
+"wind": 0.7
+}
+}
+loot = ExtResource("1_scebx")
+blood = Color(0.61960787, 0.9411765, 1, 1)
+todo = "Behaviour: parts [\"kite\",\"shoot\"] run by parts.js (part runtime); the Bestiary lane makes them components.
+No forge sheet in handoff/art/enemies yet."

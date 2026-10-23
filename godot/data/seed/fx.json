@@ -1,0 +1,77 @@
+{
+ "about": "Seed from the JS reference (tools/godot/seed.js). One-time: edit the .tres in res://data/, not this file.",
+ "rows": [
+  {
+   "id": "hit_flash",
+   "display_name": "Hit flash",
+   "layers": [
+    {
+     "type": "tint",
+     "color": "#ffffff",
+     "strength": 0.85,
+     "life": 0.09,
+     "fade": true
+    }
+   ]
+  },
+  {
+   "id": "hit_light",
+   "display_name": "Light hit",
+   "layers": [
+    {
+     "type": "tint",
+     "color": "#ffffff",
+     "strength": 0.85,
+     "life": 0.09,
+     "fade": true
+    },
+    {
+     "type": "shake",
+     "amplitude": 1,
+     "frequency": 30,
+     "life": 0.08
+    },
+    {
+     "type": "hitstop",
+     "life": 0.03
+    }
+   ]
+  },
+  {
+   "id": "hit_heavy",
+   "display_name": "Heavy hit",
+   "layers": [
+    {
+     "type": "tint",
+     "color": "#fff2b0",
+     "strength": 0.9,
+     "life": 0.12,
+     "fade": true
+    },
+    {
+     "type": "shake",
+     "amplitude": 3,
+     "frequency": 28,
+     "life": 0.15
+    },
+    {
+     "type": "hitstop",
+     "life": 0.06
+    }
+   ]
+  },
+  {
+   "id": "death_fade",
+   "display_name": "Death fade",
+   "layers": [
+    {
+     "type": "tint",
+     "color": "#2a1c38",
+     "strength": 0.7,
+     "life": 0.4,
+     "fade": false
+    }
+   ]
+  }
+ ]
+}

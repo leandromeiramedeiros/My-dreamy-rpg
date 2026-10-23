@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_u85na"]
+
+[resource]
+script = ExtResource("1_u85na")
+id = &"hit"
+pitch_vary = 0.06
+priority = 2
+caption = "[hit]"
+recipe = {
+"layers": [{
+"dur": 0.08,
+"f0": 220.0,
+"f1": 90.0,
+"gain": 0.04,
+"osc": "square"
+}]
+}

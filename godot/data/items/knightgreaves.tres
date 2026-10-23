@@ -1,0 +1,69 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/charge.tres" id="1_aggbr"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_ansay"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_kwej3"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_4q3co"]
+[ext_resource type="JSON" path="res://art/gear/knightgreaves.t1.json" id="5_b1dae"]
+[ext_resource type="JSON" path="res://art/gear/knightgreaves.t2.json" id="6_yknl1"]
+[ext_resource type="JSON" path="res://art/gear/knightgreaves.t3.json" id="7_xr5fm"]
+[ext_resource type="JSON" path="res://art/gear/knightgreaves.t4.json" id="8_2ile2"]
+[ext_resource type="JSON" path="res://art/gear/knightgreaves.t5.json" id="9_xn8pk"]
+
+[sub_resource type="Resource" id="Resource_wbkjh"]
+script = ExtResource("4_4q3co")
+base_id = &"ironboots"
+display_name = "Iron Boots"
+multiplier = 0.6
+sheet = ExtResource("5_b1dae")
+
+[sub_resource type="Resource" id="Resource_iw8uw"]
+script = ExtResource("4_4q3co")
+base_id = &"knightgreaves"
+display_name = "Knight Greaves"
+required_level = 8
+sheet = ExtResource("6_yknl1")
+
+[sub_resource type="Resource" id="Resource_rdqwb"]
+script = ExtResource("4_4q3co")
+base_id = &"sungreaves"
+display_name = "Sunforged Greaves"
+required_level = 16
+multiplier = 1.25
+sheet = ExtResource("7_xr5fm")
+
+[sub_resource type="Resource" id="Resource_7jb6n"]
+script = ExtResource("4_4q3co")
+base_id = &"auroragreaves"
+display_name = "Aurora Greaves"
+required_level = 24
+multiplier = 1.5
+sheet = ExtResource("8_2ile2")
+
+[sub_resource type="Resource" id="Resource_8hp3g"]
+script = ExtResource("4_4q3co")
+base_id = &"dawnstriders"
+display_name = "Dawnstriders"
+required_level = 32
+multiplier = 1.8
+sheet = ExtResource("9_xn8pk")
+
+[resource]
+script = ExtResource("3_kwej3")
+id = &"knightgreaves"
+display_name = "Knight Greaves"
+description = "+5% defence."
+kind = "armour"
+slot = "boots"
+item_class = &"heavy"
+suit = &"warden"
+hands = 0
+element = "slash"
+tiers = Array[ExtResource("4_4q3co")]([SubResource("Resource_wbkjh"), SubResource("Resource_iw8uw"), SubResource("Resource_rdqwb"), SubResource("Resource_7jb6n"), SubResource("Resource_8hp3g")])
+active = ExtResource("1_aggbr")
+stats = Dictionary[StringName, float]({
+&"def": 0.05
+})
+color = Color(0.7254902, 0.7607843, 0.8627451, 1)
+attack_pose = "none"
+todo = "Suit Warden (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."

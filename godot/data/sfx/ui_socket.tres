@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_os7k7"]
+
+[resource]
+script = ExtResource("1_os7k7")
+id = &"ui_socket"
+bus = "ui"
+recipe = {
+"layers": [{
+"dur": 0.25,
+"f0": 2200.0,
+"f1": 2100.0,
+"filter": {
+"freq": 1200.0,
+"q": 0.7,
+"type": "highpass"
+},
+"gain": 0.06,
+"osc": "sine"
+}]
+}

@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_75nyw"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="2_bqnwn"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_ebixf"]
+
+[sub_resource type="Resource" id="Resource_iqf2l"]
+script = ExtResource("2_bqnwn")
+damage = 60.0
+knockback = 0.25
+
+[resource]
+script = ExtResource("3_ebixf")
+id = &"whirl"
+display_name = "Whirling Blade"
+description = "Spin three times, hitting all around you."
+element = "slash"
+kind = "page"
+cooldown = 7.0
+mp_cost = 30.0
+tags = PackedStringArray()
+decks = PackedStringArray("call")
+blocks = Array[ExtResource("1_75nyw")]([SubResource("Resource_iqf2l")])
+aim_radius = 2.0
+color = Color(1, 0.8784314, 0.5411765, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+a zone block repeats 3x in JS (loop)
+JS:
+cast: cast(p) {
+      for (let k = 0; k < 3; k++) delay(k * 0.22, () => {
+        p.spin = 0.22; hitArea(p.x, p.y, 2.0, 60, { knock: 0.25 });
+        fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: k * 2.1, arc: Math.PI * 2, r: 2.0, col: '#ffe9a0', life: 0.22, w: 4 }); sfx('slash');
+      });
+    }"

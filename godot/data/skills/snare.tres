@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_fr2fj"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="2_ghcb7"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_1nnjn"]
+
+[sub_resource type="Resource" id="Resource_vaudo"]
+script = ExtResource("2_ghcb7")
+at = "target"
+cast_range = 5.0
+radius = 1.4
+life = 8.0
+color = Color(0.56078434, 0.8784314, 0.627451, 1)
+damage = 95.0
+stun = 2.2
+hit_params = {
+"kind": "trap",
+"trap": true
+}
+
+[resource]
+script = ExtResource("3_1nnjn")
+id = &"snare"
+display_name = "Snare Trap"
+description = "Throw a trap that roots and wounds the first enemies to step in."
+element = "nature"
+kind = "page"
+cooldown = 8.0
+mp_cost = 20.0
+tags = PackedStringArray()
+decks = PackedStringArray("arrow")
+blocks = Array[ExtResource("1_fr2fj")]([SubResource("Resource_vaudo")])
+aim_shape = "circle"
+aim_range = 5.0
+aim_radius = 1.4
+color = Color(0.56078434, 0.8784314, 0.627451, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a, tx, ty) { [tx, ty] = targetIn(p, tx, ty, 5); zone({ x: tx, y: ty, r: 1.4, life: 8, trap: true, dmg: 95, stun: 2.2, col: '#8fe0a0', kind: 'trap' }); sfx('trap'); }"

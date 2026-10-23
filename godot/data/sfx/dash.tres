@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_g8y6i"]
+
+[resource]
+script = ExtResource("1_g8y6i")
+id = &"dash"
+pitch_vary = 0.06
+priority = 2
+caption = "[dash]"
+recipe = {
+"layers": [{
+"dur": 0.18,
+"f0": 600.0,
+"f1": 2400.0,
+"filter": {
+"freq": 600.0,
+"q": 1.2,
+"type": "bandpass"
+},
+"gain": 0.06,
+"osc": "noise"
+}]
+}

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_fsltd"]
+
+[resource]
+script = ExtResource("1_fsltd")
+id = &"projPierce"
+display_name = "Piercing Thought"
+hint = "Projectiles +1 pierce"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"pierce": 2.0
+},
+"minor": {
+"pierce": 1.0
+}
+}
+stats = {
+"pierce": "pierce"
+}
+tags = PackedStringArray("projectile")
+todo = "Boon numbers: minor {\"pierce\":1}, major {\"pierce\":2}"

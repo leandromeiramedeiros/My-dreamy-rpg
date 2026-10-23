@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_6x7o5"]
+[ext_resource type="Script" path="res://scripts/data/cone_block.gd" id="2_bre60"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_022yj"]
+
+[sub_resource type="Resource" id="Resource_rpb8b"]
+script = ExtResource("2_bre60")
+reach = 3.0
+arc = 114.59
+delay = 0.6
+damage = 400.0
+knockback = 0.9
+
+[resource]
+script = ExtResource("3_022yj")
+id = &"colossus"
+display_name = "Colossus Strike"
+description = "ULTIMATE — wind up (poise), then a world-splitting overhead in a wide cone."
+element = "slash"
+kind = "ultimate"
+cooldown = 16.0
+mp_cost = 60.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_6x7o5")]([SubResource("Resource_rpb8b")])
+aim_shape = "cone"
+aim_range = 3.0
+aim_arc = 114.59
+stagger = 3.0
+hit_weight = 2.0
+color = Color(1, 0.6901961, 0.4392157, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) {
+      p.rootT = 0.65; poiseFor(p, 0.7); castAnim(p, 0.6);
+      fx({ type: 'marker', x: p.x + Math.cos(a) * 1.6, y: p.y + Math.sin(a) * 1.6, r: 2, col: '#ffb070', life: 0.6 });
+      delay(0.6, () => { swingWeapon(p, 0.24, 2.4, 1); hitCone(p.x, p.y, a, 2, 3, 400, { knock: 0.9 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 2.1, r: 3, col: '#fff0d0', life: 0.35, w: 9 }); burst(p.x + Math.cos(a) * 2, p.y + Math.sin(a) * 2, 0, 30, ['#ffd0a0', '#ffffff'], 5); shake(9); sfx('boom'); });
+    }"

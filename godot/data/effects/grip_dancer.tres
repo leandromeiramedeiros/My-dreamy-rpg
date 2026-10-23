@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_q02ou"]
+
+[resource]
+script = ExtResource("1_q02ou")
+id = &"grip_dancer"
+display_name = "Dancer"
+hint = "Step shares Parry's cooldown: every Step opens a parry window."
+source = "grip"
+if_tags = PackedStringArray()
+tags = PackedStringArray()

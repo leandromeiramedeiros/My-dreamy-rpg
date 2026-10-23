@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="GemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/gem_data.gd" id="1_yvh7y"]
+
+[resource]
+script = ExtResource("1_yvh7y")
+id = &"topaz"
+display_name = "Topaz"
+color = Color(1, 0.78431374, 0.22745098, 1)
+element = "lightning"
+grade_names = PackedStringArray("Chipped", "Clear", "Radiant")
+armour_stats = Array[Dictionary]([{
+"crit": 0.01,
+"resLightning": 0.02
+}, {
+"crit": 0.03,
+"resLightning": 0.04
+}, {
+"crit": 0.06,
+"resLightning": 0.07
+}])
+weapon_stats = Array[Dictionary]([{
+"critDmg": 0.04
+}, {
+"critDmg": 0.08
+}, {
+"critDmg": 0.14
+}])
+amp = "Lightning skills, +chain"

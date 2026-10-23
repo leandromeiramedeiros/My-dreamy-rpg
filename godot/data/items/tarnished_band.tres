@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_bx41k"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_ofyxp"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_uwypu"]
+
+[sub_resource type="Resource" id="Resource_ffv83"]
+script = ExtResource("3_uwypu")
+base_id = &"tarnished_band"
+display_name = "Tarnished Band"
+
+[resource]
+script = ExtResource("2_ofyxp")
+id = &"tarnished_band"
+display_name = "Tarnished Band"
+description = "+2% power"
+kind = "trinket"
+slot = "ring"
+hands = 0
+tiers = Array[ExtResource("3_uwypu")]([SubResource("Resource_ffv83")])
+stats = Dictionary[StringName, float]({
+&"power": 0.02
+})
+attack_pose = "none"
+todo = "Boon rolled at drop (BOONS ring)."

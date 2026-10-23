@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_0sqlm"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_xnjhb"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_87bff"]
+
+[sub_resource type="Resource" id="Resource_xgyt2"]
+script = ExtResource("3_87bff")
+base_id = &"drownedcompass"
+display_name = "Drowned Compass"
+required_level = 16
+
+[resource]
+script = ExtResource("2_xnjhb")
+id = &"drownedcompass"
+display_name = "Drowned Compass"
+description = "R reveals hidden chests in the room."
+kind = "trinket"
+slot = "amulet"
+hands = 0
+tiers = Array[ExtResource("3_87bff")]([SubResource("Resource_xgyt2")])
+stats = Dictionary[StringName, float]({
+&"fishLuck": 0.03
+})
+flags = {
+"rule": {
+"ultRevealsChests": true
+}
+}
+attack_pose = "none"
+todo = "Unique rule (JS `rule`): {\"ultRevealsChests\":true}. Wave 2: an Effect."

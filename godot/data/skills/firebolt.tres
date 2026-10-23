@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_0dhbs"]
+[ext_resource type="Script" path="res://scripts/data/projectile_block.gd" id="2_cc2xi"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_7bjpg"]
+
+[sub_resource type="Resource" id="Resource_e5eo5"]
+script = ExtResource("2_cc2xi")
+speed = 11.0
+radius = 0.35
+life = 1.2
+explode_radius = 1.1
+explode_damage = 30.0
+color = Color(1, 0.6039216, 0.2901961, 1)
+damage = 74.0
+hit_params = {
+"burn": 2.0
+}
+
+[resource]
+script = ExtResource("3_7bjpg")
+id = &"firebolt"
+display_name = "Firebolt"
+description = "Hurl a bolt that explodes and burns."
+element = "fire"
+cooldown = 2.5
+mp_cost = 18.0
+tags = PackedStringArray()
+decks = PackedStringArray("page")
+blocks = Array[ExtResource("1_0dhbs")]([SubResource("Resource_e5eo5")])
+aim_shape = "proj"
+aim_range = 13.2
+aim_width = 0.35
+color = Color(1, 0.5411765, 0.2901961, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) { castAnim(p); spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a, speed: 11, r: 0.35, dmg: 74, life: 1.2, kind: 'fire', col: '#ff9a4a', burn: 2, explode: { r: 1.1, dmg: 30 } }); sfx('fire'); }"

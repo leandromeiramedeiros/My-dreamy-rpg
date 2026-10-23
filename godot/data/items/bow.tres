@@ -1,0 +1,69 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/bow_action.tres" id="1_3oevh"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_d8ibt"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_5kfph"]
+[ext_resource type="Resource" path="res://data/skills/multishot.tres" id="4_ivkct"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_6qk82"]
+[ext_resource type="Resource" path="res://data/skills/arrowrain.tres" id="6_twhil"]
+
+[sub_resource type="Resource" id="Resource_gtnbq"]
+script = ExtResource("5_6qk82")
+base_id = &"hunterbow"
+display_name = "Hunter's Bow"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_tu347"]
+script = ExtResource("5_6qk82")
+base_id = &"moonbow"
+display_name = "Moonbow"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_v7syt"]
+script = ExtResource("5_6qk82")
+base_id = &"silverwing"
+display_name = "Silverwing Bow"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_b60nd"]
+script = ExtResource("5_6qk82")
+base_id = &"eclipsebow"
+display_name = "Eclipse Longbow"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_p1o42"]
+script = ExtResource("5_6qk82")
+base_id = &"mooneternal"
+display_name = "Moon Eternal"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_5kfph")
+id = &"bow"
+display_name = "Bow"
+description = "Strung with moonlight. Fast shots, traps and evasive tumbles."
+item_class = &"shots"
+hands = 2
+element = "pierce"
+tiers = Array[ExtResource("5_6qk82")]([SubResource("Resource_gtnbq"), SubResource("Resource_tu347"), SubResource("Resource_v7syt"), SubResource("Resource_b60nd"), SubResource("Resource_p1o42")])
+action = ExtResource("1_3oevh")
+spell = ExtResource("4_ivkct")
+ultimate = ExtResource("6_twhil")
+mp_on_hit = 7.0
+hold = &"focus"
+stats = Dictionary[StringName, float]({
+&"dmg": 30.0
+})
+flags = {
+"kind": "bow",
+"legacy": "moonbow",
+"off_action": "snapshot"
+}
+color = Color(0.7882353, 0.84705883, 1, 1)
+attack_pose = "bow"
+swing_style = "aim"
+carry_pose = "aim"
+todo = "Line name (T2 base): Moonbow. Class passive: Focus: still for 0.6 s, next shot crits; Snapshot crits. Off-action in OFFHAND: snapshot."

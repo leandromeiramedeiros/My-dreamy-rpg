@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_yiqxj"]
+
+[resource]
+script = ExtResource("1_yiqxj")
+id = &"originWarrior"
+display_name = "Vow of Iron"
+hint = "+1 stagger on weapon skills"
+source = "trinket"
+if_tags = PackedStringArray()
+stats = {
+"stagger": "weaponStagger"
+}
+tags = PackedStringArray("weapon", "stagger")

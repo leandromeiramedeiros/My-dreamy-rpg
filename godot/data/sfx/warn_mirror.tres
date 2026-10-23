@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_85tfl"]
+
+[resource]
+script = ExtResource("1_85tfl")
+id = &"warn_mirror"
+priority = 3
+caption = "[mirror images]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 1046.0,
+"f1": 1046.0,
+"filter": {
+"freq": 1046.0,
+"q": 4.0,
+"type": "bandpass"
+},
+"gain": 0.05,
+"osc": "sine"
+}]
+}

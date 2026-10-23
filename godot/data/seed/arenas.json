@@ -1,0 +1,6600 @@
+{
+ "about": "Mockup arenas from js/arenas.js (tag js-final), written by tools/godot/arenas.js. Studio tests only.",
+ "rows": [
+  {
+   "id": "dummies",
+   "name": "Dummies",
+   "sub": "Arena: training",
+   "desc": "Nine dummies, weapon racks (sword, staff, bow, daggers), tier plates T1-T5",
+   "theme": "vale",
+   "W": 24,
+   "H": 16,
+   "tiles": [
+    "........................",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    "........................"
+   ],
+   "heights": [
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+   ],
+   "start": {
+    "x": 4,
+    "y": 8
+   },
+   "objects": [
+    {
+     "t": "sign",
+     "x": 4,
+     "y": 2.4,
+     "label": "sword rack"
+    },
+    {
+     "t": "brazier",
+     "x": 2.9,
+     "y": 2.4
+    },
+    {
+     "t": "sign",
+     "x": 8,
+     "y": 2.4,
+     "label": "staff rack"
+    },
+    {
+     "t": "brazier",
+     "x": 6.9,
+     "y": 2.4
+    },
+    {
+     "t": "sign",
+     "x": 12,
+     "y": 2.4,
+     "label": "bow rack"
+    },
+    {
+     "t": "brazier",
+     "x": 10.9,
+     "y": 2.4
+    },
+    {
+     "t": "sign",
+     "x": 16,
+     "y": 2.4,
+     "label": "daggers rack"
+    },
+    {
+     "t": "brazier",
+     "x": 14.9,
+     "y": 2.4
+    },
+    {
+     "t": "mushroom",
+     "x": 4,
+     "y": 13.3
+    },
+    {
+     "t": "sign",
+     "x": 4,
+     "y": 14.2,
+     "label": "T1"
+    },
+    {
+     "t": "mushroom",
+     "x": 7.2,
+     "y": 13.3
+    },
+    {
+     "t": "sign",
+     "x": 7.2,
+     "y": 14.2,
+     "label": "T2"
+    },
+    {
+     "t": "mushroom",
+     "x": 10.4,
+     "y": 13.3
+    },
+    {
+     "t": "sign",
+     "x": 10.4,
+     "y": 14.2,
+     "label": "T3"
+    },
+    {
+     "t": "mushroom",
+     "x": 13.600000000000001,
+     "y": 13.3
+    },
+    {
+     "t": "sign",
+     "x": 13.600000000000001,
+     "y": 14.2,
+     "label": "T4"
+    },
+    {
+     "t": "mushroom",
+     "x": 16.8,
+     "y": 13.3
+    },
+    {
+     "t": "sign",
+     "x": 16.8,
+     "y": 14.2,
+     "label": "T5"
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_dummies",
+     "x": 2.5,
+     "y": 8,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    },
+    {
+     "t": "chest",
+     "x": 21,
+     "y": 2.6,
+     "tier": "wood",
+     "label": "dummies-chest"
+    },
+    {
+     "t": "lantern",
+     "x": 2,
+     "y": 2
+    },
+    {
+     "t": "lantern",
+     "x": 22,
+     "y": 2
+    },
+    {
+     "t": "lantern",
+     "x": 2,
+     "y": 14
+    },
+    {
+     "t": "lantern",
+     "x": 22,
+     "y": 14
+    }
+   ],
+   "triggers": [
+    {
+     "id": "rack_sword",
+     "name": "sword rack",
+     "when": {
+      "type": "enter_area",
+      "x": 4,
+      "y": 3.1,
+      "r": 0.9
+     },
+     "once": false,
+     "cooldown": 1.5,
+     "actions": [
+      {
+       "type": "kit",
+       "weapon": "sword"
+      },
+      {
+       "type": "message",
+       "text": "Reference sword kit"
+      }
+     ]
+    },
+    {
+     "id": "rack_staff",
+     "name": "staff rack",
+     "when": {
+      "type": "enter_area",
+      "x": 8,
+      "y": 3.1,
+      "r": 0.9
+     },
+     "once": false,
+     "cooldown": 1.5,
+     "actions": [
+      {
+       "type": "kit",
+       "weapon": "staff"
+      },
+      {
+       "type": "message",
+       "text": "Reference staff kit"
+      }
+     ]
+    },
+    {
+     "id": "rack_bow",
+     "name": "bow rack",
+     "when": {
+      "type": "enter_area",
+      "x": 12,
+      "y": 3.1,
+      "r": 0.9
+     },
+     "once": false,
+     "cooldown": 1.5,
+     "actions": [
+      {
+       "type": "kit",
+       "weapon": "bow"
+      },
+      {
+       "type": "message",
+       "text": "Reference bow kit"
+      }
+     ]
+    },
+    {
+     "id": "rack_daggers",
+     "name": "daggers rack",
+     "when": {
+      "type": "enter_area",
+      "x": 16,
+      "y": 3.1,
+      "r": 0.9
+     },
+     "once": false,
+     "cooldown": 1.5,
+     "actions": [
+      {
+       "type": "kit",
+       "weapon": "daggers"
+      },
+      {
+       "type": "message",
+       "text": "Reference daggers kit"
+      }
+     ]
+    },
+    {
+     "id": "tier_1",
+     "name": "Tier 1 plate",
+     "when": {
+      "type": "enter_area",
+      "x": 4,
+      "y": 12.6,
+      "r": 0.9
+     },
+     "once": false,
+     "cooldown": 1.5,
+     "actions": [
+      {
+       "type": "kit",
+       "tier": 0
+      },
+      {
+       "type": "message",
+       "text": "Tier 1 kit (current weapon line)"
+      }
+     ]
+    },
+    {
+     "id": "tier_2",
+     "name": "Tier 2 plate",
+     "when": {
+      "type": "enter_area",
+      "x": 7.2,
+      "y": 12.6,
+      "r": 0.9
+     },
+     "once": false,
+     "cooldown": 1.5,
+     "actions": [
+      {
+       "type": "kit",
+       "tier": 1
+      },
+      {
+       "type": "message",
+       "text": "Tier 2 kit (current weapon line)"
+      }
+     ]
+    },
+    {
+     "id": "tier_3",
+     "name": "Tier 3 plate",
+     "when": {
+      "type": "enter_area",
+      "x": 10.4,
+      "y": 12.6,
+      "r": 0.9
+     },
+     "once": false,
+     "cooldown": 1.5,
+     "actions": [
+      {
+       "type": "kit",
+       "tier": 2
+      },
+      {
+       "type": "message",
+       "text": "Tier 3 kit (current weapon line)"
+      }
+     ]
+    },
+    {
+     "id": "tier_4",
+     "name": "Tier 4 plate",
+     "when": {
+      "type": "enter_area",
+      "x": 13.600000000000001,
+      "y": 12.6,
+      "r": 0.9
+     },
+     "once": false,
+     "cooldown": 1.5,
+     "actions": [
+      {
+       "type": "kit",
+       "tier": 3
+      },
+      {
+       "type": "message",
+       "text": "Tier 4 kit (current weapon line)"
+      }
+     ]
+    },
+    {
+     "id": "tier_5",
+     "name": "Tier 5 plate",
+     "when": {
+      "type": "enter_area",
+      "x": 16.8,
+      "y": 12.6,
+      "r": 0.9
+     },
+     "once": false,
+     "cooldown": 1.5,
+     "actions": [
+      {
+       "type": "kit",
+       "tier": 4
+      },
+      {
+       "type": "message",
+       "text": "Tier 5 kit (current weapon line)"
+      }
+     ]
+    },
+    {
+     "id": "in",
+     "name": "Enter",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Dummies",
+       "sub": "Racks pick the weapon line, plates the tier"
+      },
+      {
+       "type": "objective",
+       "text": "Hit the dummies; step on a rack or a plate to re-kit"
+      },
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 12,
+       "y": 5,
+       "radius": 0,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 16,
+       "y": 5,
+       "radius": 0,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 20,
+       "y": 5,
+       "radius": 0,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 12,
+       "y": 8,
+       "radius": 0,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 16,
+       "y": 8,
+       "radius": 0,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 20,
+       "y": 8,
+       "radius": 0,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 12,
+       "y": 11,
+       "radius": 0,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 16,
+       "y": 11,
+       "radius": 0,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 20,
+       "y": 11,
+       "radius": 0,
+       "instant": true
+      }
+     ]
+    }
+   ],
+   "objective": "Hit things",
+   "level": [
+    6,
+    12
+   ],
+   "boss": null,
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 1,
+    "level": 8
+   },
+   "spawns": [
+    {
+     "type": "spawn",
+     "enemy": "dummy",
+     "count": 1,
+     "x": 12,
+     "y": 5,
+     "radius": 0,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dummy",
+     "count": 1,
+     "x": 16,
+     "y": 5,
+     "radius": 0,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dummy",
+     "count": 1,
+     "x": 20,
+     "y": 5,
+     "radius": 0,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dummy",
+     "count": 1,
+     "x": 12,
+     "y": 8,
+     "radius": 0,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dummy",
+     "count": 1,
+     "x": 16,
+     "y": 8,
+     "radius": 0,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dummy",
+     "count": 1,
+     "x": 20,
+     "y": 8,
+     "radius": 0,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dummy",
+     "count": 1,
+     "x": 12,
+     "y": 11,
+     "radius": 0,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dummy",
+     "count": 1,
+     "x": 16,
+     "y": 11,
+     "radius": 0,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dummy",
+     "count": 1,
+     "x": 20,
+     "y": 11,
+     "radius": 0,
+     "instant": true
+    }
+   ]
+  },
+  {
+   "id": "pack-vale",
+   "name": "Vale pack arena",
+   "sub": "Arena: pack",
+   "desc": "Vale: slimes, hounds, a shielded ogre elite (L4)",
+   "theme": "vale",
+   "W": 32,
+   "H": 24,
+   "tiles": [
+    "................................",
+    ".ggggggggggggggggg..ggggggggggg.",
+    ".ggggggggggggggggg..ggggggggggg.",
+    ".gggcgggggcggggggg..ggcgggggcgg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".ggggggggggggggggg..ggggggggggg.",
+    ".gggcgggggcggggggg..ggcgggggcgg.",
+    ".ggggggggggggggggg..ggggggggggg.",
+    ".ggggggggggggggggg..ggggggggggg.",
+    "...........................ggg..",
+    "...........................ggg..",
+    ".........ggggggggg..ggggggggggg.",
+    ".........ggggggggg..ggggggggggg.",
+    ".gggggg..ggcgggcgg..ggcgggggcgg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggg..ggggggggg..ggggggggggg.",
+    ".gggggg..ggcgggcgg..ggcgggggcgg.",
+    ".gggggg..ggggggggg..ggggggggggg.",
+    ".........ggggggggg..ggggggggggg.",
+    "................................"
+   ],
+   "heights": [
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000"
+   ],
+   "start": {
+    "x": 3.5,
+    "y": 18.5
+   },
+   "objects": [
+    {
+     "t": "lever",
+     "id": "lever_a",
+     "x": 5.5,
+     "y": 16.5,
+     "gate": "gate_a",
+     "label": "lever"
+    },
+    {
+     "t": "gate",
+     "id": "gate_a",
+     "x": 8,
+     "y": 17.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "gate",
+     "id": "gate_b",
+     "x": 19,
+     "y": 17.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "gate",
+     "id": "gate_c",
+     "x": 28.5,
+     "y": 12,
+     "ang": 1.5708,
+     "len": 3.2
+    },
+    {
+     "t": "keydoor",
+     "id": "door_key",
+     "x": 19,
+     "y": 5.5,
+     "ang": 0,
+     "len": 3.2,
+     "key": "key_pack_vale",
+     "label": "sealed door"
+    },
+    {
+     "t": "lantern",
+     "x": 1.8,
+     "y": 15.8
+    },
+    {
+     "t": "lantern",
+     "x": 5.6,
+     "y": 20.6
+    },
+    {
+     "t": "lantern",
+     "x": 9.8,
+     "y": 13.8
+    },
+    {
+     "t": "lantern",
+     "x": 16.4,
+     "y": 13.8
+    },
+    {
+     "t": "lantern",
+     "x": 9.8,
+     "y": 21.4
+    },
+    {
+     "t": "lantern",
+     "x": 16.4,
+     "y": 21.4
+    },
+    {
+     "t": "lantern",
+     "x": 20.8,
+     "y": 13.8
+    },
+    {
+     "t": "lantern",
+     "x": 29.4,
+     "y": 13.8
+    },
+    {
+     "t": "lantern",
+     "x": 20.8,
+     "y": 21.4
+    },
+    {
+     "t": "lantern",
+     "x": 29.4,
+     "y": 21.4
+    },
+    {
+     "t": "lantern",
+     "x": 20.8,
+     "y": 1.8
+    },
+    {
+     "t": "lantern",
+     "x": 29.4,
+     "y": 1.8
+    },
+    {
+     "t": "lantern",
+     "x": 20.8,
+     "y": 9.4
+    },
+    {
+     "t": "lantern",
+     "x": 29.4,
+     "y": 9.4
+    },
+    {
+     "t": "lantern",
+     "x": 1.8,
+     "y": 1.8
+    },
+    {
+     "t": "lantern",
+     "x": 16.2,
+     "y": 1.8
+    },
+    {
+     "t": "lantern",
+     "x": 1.8,
+     "y": 9.4
+    },
+    {
+     "t": "lantern",
+     "x": 16.2,
+     "y": 9.4
+    },
+    {
+     "t": "crystal",
+     "x": 13.5,
+     "y": 13.6
+    },
+    {
+     "t": "crystal",
+     "x": 25,
+     "y": 13.6
+    },
+    {
+     "t": "crystal",
+     "x": 25,
+     "y": 9.6
+    },
+    {
+     "t": "crystal",
+     "x": 8.5,
+     "y": 5.5
+    },
+    {
+     "t": "chest",
+     "x": 7.5,
+     "y": 2.6,
+     "tier": "wood",
+     "label": "pack-reward-wood"
+    },
+    {
+     "t": "chest",
+     "x": 7.5,
+     "y": 8.4,
+     "tier": "silver",
+     "label": "pack-reward-silver"
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_vale",
+     "x": 13.5,
+     "y": 7.5,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "in",
+     "name": "Enter",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Vale pack arena",
+       "sub": "Three packs, an elite, a key"
+      },
+      {
+       "type": "objective",
+       "text": "Pull the lever to open the way"
+      }
+     ]
+    },
+    {
+     "id": "p1_go",
+     "name": "Pack 1",
+     "when": {
+      "type": "enter_area",
+      "x": 11.5,
+      "y": 17.8,
+      "r": 2.4
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack 1 / 3",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Clear pack 1"
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 4,
+       "x": 14,
+       "y": 17.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p1_clear",
+     "name": "Pack 1 cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p1_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "openGate",
+       "id": "gate_b"
+      },
+      {
+       "type": "objective",
+       "text": "Go east to pack 2"
+      },
+      {
+       "type": "message",
+       "text": "The east gate opens"
+      }
+     ]
+    },
+    {
+     "id": "p2_go",
+     "name": "Pack 2",
+     "when": {
+      "type": "enter_area",
+      "x": 21.5,
+      "y": 17.8,
+      "r": 1.9
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack 2 / 3",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Clear pack 2"
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 3,
+       "x": 25,
+       "y": 17.5,
+       "radius": 3.6
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 2,
+       "x": 25,
+       "y": 17.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p2_clear",
+     "name": "Pack 2 cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p2_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "openGate",
+       "id": "gate_c"
+      },
+      {
+       "type": "objective",
+       "text": "Go north to the elite"
+      },
+      {
+       "type": "message",
+       "text": "The north gate opens"
+      }
+     ]
+    },
+    {
+     "id": "p3_go",
+     "name": "Pack 3 and the elite",
+     "when": {
+      "type": "enter_area",
+      "x": 28.5,
+      "y": 9.5,
+      "r": 2
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "The elite guards a key",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the elite and its pack"
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 1,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6,
+       "elite": "shielded"
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 2,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p3_clear",
+     "name": "Elite down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p3_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "loot",
+       "rarity": "rare",
+       "count": 1,
+       "item": "key_pack_vale",
+       "x": 25,
+       "y": 5.5
+      },
+      {
+       "type": "objective",
+       "text": "Take the key to the sealed door"
+      },
+      {
+       "type": "message",
+       "text": "The elite drops a key"
+      }
+     ]
+    },
+    {
+     "id": "done",
+     "name": "Chamber",
+     "when": {
+      "type": "enter_area",
+      "x": 9.5,
+      "y": 5.5,
+      "r": 3
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack arena cleared",
+       "sub": "Vale pack arena"
+      },
+      {
+       "type": "objective",
+       "text": "Open the chests"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      }
+     ]
+    }
+   ],
+   "objective": "Clear three packs, take the key",
+   "level": [
+    1,
+    6
+   ],
+   "boss": null,
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 0,
+    "level": 4
+   },
+   "spawns": []
+  },
+  {
+   "id": "pack-pinewood",
+   "name": "Pinewood pack arena",
+   "sub": "Arena: pack",
+   "desc": "Pinewood: boars, ogre, shaman, a burning gnarlbrute elite (L8)",
+   "theme": "forest",
+   "W": 32,
+   "H": 24,
+   "tiles": [
+    "................................",
+    ".ggggggggggggggggg..ggggggggggg.",
+    ".ggggggggggggggggg..ggggggggggg.",
+    ".gggcgggggcggggggg..ggcgggggcgg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".ggggggggggggggggg..ggggggggggg.",
+    ".gggcgggggcggggggg..ggcgggggcgg.",
+    ".ggggggggggggggggg..ggggggggggg.",
+    ".ggggggggggggggggg..ggggggggggg.",
+    "...........................ggg..",
+    "...........................ggg..",
+    ".........ggggggggg..ggggggggggg.",
+    ".........ggggggggg..ggggggggggg.",
+    ".gggggg..ggcgggcgg..ggcgggggcgg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggg..ggggggggg..ggggggggggg.",
+    ".gggggg..ggcgggcgg..ggcgggggcgg.",
+    ".gggggg..ggggggggg..ggggggggggg.",
+    ".........ggggggggg..ggggggggggg.",
+    "................................"
+   ],
+   "heights": [
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000"
+   ],
+   "start": {
+    "x": 3.5,
+    "y": 18.5
+   },
+   "objects": [
+    {
+     "t": "lever",
+     "id": "lever_a",
+     "x": 5.5,
+     "y": 16.5,
+     "gate": "gate_a",
+     "label": "lever"
+    },
+    {
+     "t": "gate",
+     "id": "gate_a",
+     "x": 8,
+     "y": 17.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "gate",
+     "id": "gate_b",
+     "x": 19,
+     "y": 17.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "gate",
+     "id": "gate_c",
+     "x": 28.5,
+     "y": 12,
+     "ang": 1.5708,
+     "len": 3.2
+    },
+    {
+     "t": "keydoor",
+     "id": "door_key",
+     "x": 19,
+     "y": 5.5,
+     "ang": 0,
+     "len": 3.2,
+     "key": "key_pack_pinewood",
+     "label": "sealed door"
+    },
+    {
+     "t": "lantern",
+     "x": 1.8,
+     "y": 15.8
+    },
+    {
+     "t": "lantern",
+     "x": 5.6,
+     "y": 20.6
+    },
+    {
+     "t": "lantern",
+     "x": 9.8,
+     "y": 13.8
+    },
+    {
+     "t": "lantern",
+     "x": 16.4,
+     "y": 13.8
+    },
+    {
+     "t": "lantern",
+     "x": 9.8,
+     "y": 21.4
+    },
+    {
+     "t": "lantern",
+     "x": 16.4,
+     "y": 21.4
+    },
+    {
+     "t": "lantern",
+     "x": 20.8,
+     "y": 13.8
+    },
+    {
+     "t": "lantern",
+     "x": 29.4,
+     "y": 13.8
+    },
+    {
+     "t": "lantern",
+     "x": 20.8,
+     "y": 21.4
+    },
+    {
+     "t": "lantern",
+     "x": 29.4,
+     "y": 21.4
+    },
+    {
+     "t": "lantern",
+     "x": 20.8,
+     "y": 1.8
+    },
+    {
+     "t": "lantern",
+     "x": 29.4,
+     "y": 1.8
+    },
+    {
+     "t": "lantern",
+     "x": 20.8,
+     "y": 9.4
+    },
+    {
+     "t": "lantern",
+     "x": 29.4,
+     "y": 9.4
+    },
+    {
+     "t": "lantern",
+     "x": 1.8,
+     "y": 1.8
+    },
+    {
+     "t": "lantern",
+     "x": 16.2,
+     "y": 1.8
+    },
+    {
+     "t": "lantern",
+     "x": 1.8,
+     "y": 9.4
+    },
+    {
+     "t": "lantern",
+     "x": 16.2,
+     "y": 9.4
+    },
+    {
+     "t": "mushroom",
+     "x": 13.5,
+     "y": 13.6
+    },
+    {
+     "t": "mushroom",
+     "x": 25,
+     "y": 13.6
+    },
+    {
+     "t": "mushroom",
+     "x": 25,
+     "y": 9.6
+    },
+    {
+     "t": "mushroom",
+     "x": 8.5,
+     "y": 5.5
+    },
+    {
+     "t": "chest",
+     "x": 7.5,
+     "y": 2.6,
+     "tier": "wood",
+     "label": "pack-reward-wood"
+    },
+    {
+     "t": "chest",
+     "x": 7.5,
+     "y": 8.4,
+     "tier": "silver",
+     "label": "pack-reward-silver"
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_pinewood",
+     "x": 13.5,
+     "y": 7.5,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "in",
+     "name": "Enter",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pinewood pack arena",
+       "sub": "Three packs, an elite, a key"
+      },
+      {
+       "type": "objective",
+       "text": "Pull the lever to open the way"
+      }
+     ]
+    },
+    {
+     "id": "p1_go",
+     "name": "Pack 1",
+     "when": {
+      "type": "enter_area",
+      "x": 11.5,
+      "y": 17.8,
+      "r": 2.4
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack 1 / 3",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Clear pack 1"
+      },
+      {
+       "type": "spawn",
+       "enemy": "thornbackboar",
+       "count": 2,
+       "x": 14,
+       "y": 17.5,
+       "radius": 3.6
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 1,
+       "x": 14,
+       "y": 17.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p1_clear",
+     "name": "Pack 1 cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p1_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "openGate",
+       "id": "gate_b"
+      },
+      {
+       "type": "objective",
+       "text": "Go east to pack 2"
+      },
+      {
+       "type": "message",
+       "text": "The east gate opens"
+      }
+     ]
+    },
+    {
+     "id": "p2_go",
+     "name": "Pack 2",
+     "when": {
+      "type": "enter_area",
+      "x": 21.5,
+      "y": 17.8,
+      "r": 1.9
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack 2 / 3",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Clear pack 2"
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 1,
+       "x": 25,
+       "y": 17.5,
+       "radius": 3.6
+      },
+      {
+       "type": "spawn",
+       "enemy": "brambleshaman",
+       "count": 1,
+       "x": 25,
+       "y": 17.5,
+       "radius": 3.6
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 2,
+       "x": 25,
+       "y": 17.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p2_clear",
+     "name": "Pack 2 cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p2_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "openGate",
+       "id": "gate_c"
+      },
+      {
+       "type": "objective",
+       "text": "Go north to the elite"
+      },
+      {
+       "type": "message",
+       "text": "The north gate opens"
+      }
+     ]
+    },
+    {
+     "id": "p3_go",
+     "name": "Pack 3 and the elite",
+     "when": {
+      "type": "enter_area",
+      "x": 28.5,
+      "y": 9.5,
+      "r": 2
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "The elite guards a key",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the elite and its pack"
+      },
+      {
+       "type": "spawn",
+       "enemy": "gnarlbrute",
+       "count": 1,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6,
+       "elite": "burning"
+      },
+      {
+       "type": "spawn",
+       "enemy": "brambleshaman",
+       "count": 2,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p3_clear",
+     "name": "Elite down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p3_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "loot",
+       "rarity": "rare",
+       "count": 1,
+       "item": "key_pack_pinewood",
+       "x": 25,
+       "y": 5.5
+      },
+      {
+       "type": "objective",
+       "text": "Take the key to the sealed door"
+      },
+      {
+       "type": "message",
+       "text": "The elite drops a key"
+      }
+     ]
+    },
+    {
+     "id": "done",
+     "name": "Chamber",
+     "when": {
+      "type": "enter_area",
+      "x": 9.5,
+      "y": 5.5,
+      "r": 3
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack arena cleared",
+       "sub": "Pinewood pack arena"
+      },
+      {
+       "type": "objective",
+       "text": "Open the chests"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      }
+     ]
+    }
+   ],
+   "objective": "Clear three packs, take the key",
+   "level": [
+    6,
+    12
+   ],
+   "boss": null,
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 1,
+    "level": 8
+   },
+   "spawns": []
+  },
+  {
+   "id": "pack-ruins",
+   "name": "Ruins pack arena",
+   "sub": "Arena: pack",
+   "desc": "Ruins commons: wisps, knights, archers, a chanter, a swarm, a gloomed knight elite with a mimic (L14)",
+   "theme": "ruins",
+   "W": 32,
+   "H": 24,
+   "tiles": [
+    "................................",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxcxxxxxcxxxxxxx..xxcxxxxxcxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxcxxxxxcxxxxxxx..xxcxxxxxcxx.",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    "...........................xxx..",
+    "...........................xxx..",
+    ".........xxxxxxxxx..xxxxxxxxxxx.",
+    ".........xxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxxxx..xxcxxxcxx..xxcxxxxxcxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxx..xxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxxxx..xxcxxxcxx..xxcxxxxxcxx.",
+    ".xxxxxx..xxxxxxxxx..xxxxxxxxxxx.",
+    ".........xxxxxxxxx..xxxxxxxxxxx.",
+    "................................"
+   ],
+   "heights": [
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000"
+   ],
+   "start": {
+    "x": 3.5,
+    "y": 18.5
+   },
+   "objects": [
+    {
+     "t": "lever",
+     "id": "lever_a",
+     "x": 5.5,
+     "y": 16.5,
+     "gate": "gate_a",
+     "label": "lever"
+    },
+    {
+     "t": "gate",
+     "id": "gate_a",
+     "x": 8,
+     "y": 17.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "gate",
+     "id": "gate_b",
+     "x": 19,
+     "y": 17.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "gate",
+     "id": "gate_c",
+     "x": 28.5,
+     "y": 12,
+     "ang": 1.5708,
+     "len": 3.2
+    },
+    {
+     "t": "keydoor",
+     "id": "door_key",
+     "x": 19,
+     "y": 5.5,
+     "ang": 0,
+     "len": 3.2,
+     "key": "key_pack_ruins",
+     "label": "sealed door"
+    },
+    {
+     "t": "lantern_blue",
+     "x": 1.8,
+     "y": 15.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 5.6,
+     "y": 20.6
+    },
+    {
+     "t": "lantern_blue",
+     "x": 9.8,
+     "y": 13.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 16.4,
+     "y": 13.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 9.8,
+     "y": 21.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 16.4,
+     "y": 21.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 20.8,
+     "y": 13.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.4,
+     "y": 13.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 20.8,
+     "y": 21.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.4,
+     "y": 21.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 20.8,
+     "y": 1.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.4,
+     "y": 1.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 20.8,
+     "y": 9.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.4,
+     "y": 9.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 1.8,
+     "y": 1.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 16.2,
+     "y": 1.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 1.8,
+     "y": 9.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 16.2,
+     "y": 9.4
+    },
+    {
+     "t": "crystal_violet",
+     "x": 13.5,
+     "y": 13.6
+    },
+    {
+     "t": "crystal_violet",
+     "x": 25,
+     "y": 13.6
+    },
+    {
+     "t": "crystal_violet",
+     "x": 25,
+     "y": 9.6
+    },
+    {
+     "t": "crystal_violet",
+     "x": 8.5,
+     "y": 5.5
+    },
+    {
+     "t": "chest",
+     "x": 7.5,
+     "y": 2.6,
+     "tier": "wood",
+     "label": "pack-reward-wood"
+    },
+    {
+     "t": "chest",
+     "x": 7.5,
+     "y": 8.4,
+     "tier": "silver",
+     "label": "pack-reward-silver"
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_ruins",
+     "x": 13.5,
+     "y": 7.5,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "in",
+     "name": "Enter",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Ruins pack arena",
+       "sub": "Three packs, an elite, a key"
+      },
+      {
+       "type": "objective",
+       "text": "Pull the lever to open the way"
+      }
+     ]
+    },
+    {
+     "id": "p1_go",
+     "name": "Pack 1",
+     "when": {
+      "type": "enter_area",
+      "x": 11.5,
+      "y": 17.8,
+      "r": 2.4
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack 1 / 3",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Clear pack 1"
+      },
+      {
+       "type": "spawn",
+       "enemy": "wisp",
+       "count": 3,
+       "x": 14,
+       "y": 17.5,
+       "radius": 3.6
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomknight",
+       "count": 1,
+       "x": 14,
+       "y": 17.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p1_clear",
+     "name": "Pack 1 cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p1_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "openGate",
+       "id": "gate_b"
+      },
+      {
+       "type": "objective",
+       "text": "Go east to pack 2"
+      },
+      {
+       "type": "message",
+       "text": "The east gate opens"
+      }
+     ]
+    },
+    {
+     "id": "p2_go",
+     "name": "Pack 2",
+     "when": {
+      "type": "enter_area",
+      "x": 21.5,
+      "y": 17.8,
+      "r": 1.9
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack 2 / 3",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Clear pack 2"
+      },
+      {
+       "type": "spawn",
+       "enemy": "voidarcher",
+       "count": 2,
+       "x": 25,
+       "y": 17.5,
+       "radius": 3.6
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadelingswarm",
+       "count": 1,
+       "x": 25,
+       "y": 17.5,
+       "radius": 3.6
+      },
+      {
+       "type": "spawn",
+       "enemy": "gravechanter",
+       "count": 1,
+       "x": 25,
+       "y": 17.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p2_clear",
+     "name": "Pack 2 cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p2_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "openGate",
+       "id": "gate_c"
+      },
+      {
+       "type": "objective",
+       "text": "Go north to the elite"
+      },
+      {
+       "type": "message",
+       "text": "The north gate opens"
+      }
+     ]
+    },
+    {
+     "id": "p3_go",
+     "name": "Pack 3 and the elite",
+     "when": {
+      "type": "enter_area",
+      "x": 28.5,
+      "y": 9.5,
+      "r": 2
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "The elite guards a key",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the elite and its pack"
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomknight",
+       "count": 1,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6,
+       "elite": "gloomed"
+      },
+      {
+       "type": "spawn",
+       "enemy": "pillarmimic",
+       "count": 1,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6
+      },
+      {
+       "type": "spawn",
+       "enemy": "wisp",
+       "count": 2,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p3_clear",
+     "name": "Elite down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p3_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "loot",
+       "rarity": "rare",
+       "count": 1,
+       "item": "key_pack_ruins",
+       "x": 25,
+       "y": 5.5
+      },
+      {
+       "type": "objective",
+       "text": "Take the key to the sealed door"
+      },
+      {
+       "type": "message",
+       "text": "The elite drops a key"
+      }
+     ]
+    },
+    {
+     "id": "done",
+     "name": "Chamber",
+     "when": {
+      "type": "enter_area",
+      "x": 9.5,
+      "y": 5.5,
+      "r": 3
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack arena cleared",
+       "sub": "Ruins pack arena"
+      },
+      {
+       "type": "objective",
+       "text": "Open the chests"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      }
+     ]
+    }
+   ],
+   "objective": "Clear three packs, take the key",
+   "level": [
+    10,
+    17
+   ],
+   "boss": null,
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 1,
+    "level": 14
+   },
+   "spawns": []
+  },
+  {
+   "id": "pack-grotto",
+   "name": "Grotto pack arena",
+   "sub": "Arena: pack",
+   "desc": "Grotto (placeholder packs): slimes, hounds, a frozen thornsow elite (L16)",
+   "theme": "forest",
+   "W": 32,
+   "H": 24,
+   "tiles": [
+    "................................",
+    ".ggggggggggggggggg..ggggggggggg.",
+    ".ggggggggggggggggg..ggggggggggg.",
+    ".gggcgggggcggggggg..ggcgggggcgg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".ggggggggggggggggg..ggggggggggg.",
+    ".gggcgggggcggggggg..ggcgggggcgg.",
+    ".ggggggggggggggggg..ggggggggggg.",
+    ".ggggggggggggggggg..ggggggggggg.",
+    "...........................ggg..",
+    "...........................ggg..",
+    ".........ggggggggg..ggggggggggg.",
+    ".........ggggggggg..ggggggggggg.",
+    ".gggggg..ggcgggcgg..ggcgggggcgg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggg..ggggggggg..ggggggggggg.",
+    ".gggggg..ggcgggcgg..ggcgggggcgg.",
+    ".gggggg..ggggggggg..ggggggggggg.",
+    ".........ggggggggg..ggggggggggg.",
+    "................................"
+   ],
+   "heights": [
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000"
+   ],
+   "start": {
+    "x": 3.5,
+    "y": 18.5
+   },
+   "objects": [
+    {
+     "t": "lever",
+     "id": "lever_a",
+     "x": 5.5,
+     "y": 16.5,
+     "gate": "gate_a",
+     "label": "lever"
+    },
+    {
+     "t": "gate",
+     "id": "gate_a",
+     "x": 8,
+     "y": 17.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "gate",
+     "id": "gate_b",
+     "x": 19,
+     "y": 17.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "gate",
+     "id": "gate_c",
+     "x": 28.5,
+     "y": 12,
+     "ang": 1.5708,
+     "len": 3.2
+    },
+    {
+     "t": "keydoor",
+     "id": "door_key",
+     "x": 19,
+     "y": 5.5,
+     "ang": 0,
+     "len": 3.2,
+     "key": "key_pack_grotto",
+     "label": "sealed door"
+    },
+    {
+     "t": "lantern",
+     "x": 1.8,
+     "y": 15.8
+    },
+    {
+     "t": "lantern",
+     "x": 5.6,
+     "y": 20.6
+    },
+    {
+     "t": "lantern",
+     "x": 9.8,
+     "y": 13.8
+    },
+    {
+     "t": "lantern",
+     "x": 16.4,
+     "y": 13.8
+    },
+    {
+     "t": "lantern",
+     "x": 9.8,
+     "y": 21.4
+    },
+    {
+     "t": "lantern",
+     "x": 16.4,
+     "y": 21.4
+    },
+    {
+     "t": "lantern",
+     "x": 20.8,
+     "y": 13.8
+    },
+    {
+     "t": "lantern",
+     "x": 29.4,
+     "y": 13.8
+    },
+    {
+     "t": "lantern",
+     "x": 20.8,
+     "y": 21.4
+    },
+    {
+     "t": "lantern",
+     "x": 29.4,
+     "y": 21.4
+    },
+    {
+     "t": "lantern",
+     "x": 20.8,
+     "y": 1.8
+    },
+    {
+     "t": "lantern",
+     "x": 29.4,
+     "y": 1.8
+    },
+    {
+     "t": "lantern",
+     "x": 20.8,
+     "y": 9.4
+    },
+    {
+     "t": "lantern",
+     "x": 29.4,
+     "y": 9.4
+    },
+    {
+     "t": "lantern",
+     "x": 1.8,
+     "y": 1.8
+    },
+    {
+     "t": "lantern",
+     "x": 16.2,
+     "y": 1.8
+    },
+    {
+     "t": "lantern",
+     "x": 1.8,
+     "y": 9.4
+    },
+    {
+     "t": "lantern",
+     "x": 16.2,
+     "y": 9.4
+    },
+    {
+     "t": "mushroom",
+     "x": 13.5,
+     "y": 13.6
+    },
+    {
+     "t": "mushroom",
+     "x": 25,
+     "y": 13.6
+    },
+    {
+     "t": "mushroom",
+     "x": 25,
+     "y": 9.6
+    },
+    {
+     "t": "mushroom",
+     "x": 8.5,
+     "y": 5.5
+    },
+    {
+     "t": "chest",
+     "x": 7.5,
+     "y": 2.6,
+     "tier": "wood",
+     "label": "pack-reward-wood"
+    },
+    {
+     "t": "chest",
+     "x": 7.5,
+     "y": 8.4,
+     "tier": "silver",
+     "label": "pack-reward-silver"
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_grotto",
+     "x": 13.5,
+     "y": 7.5,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "in",
+     "name": "Enter",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Grotto pack arena",
+       "sub": "Three packs, an elite, a key"
+      },
+      {
+       "type": "objective",
+       "text": "Pull the lever to open the way"
+      }
+     ]
+    },
+    {
+     "id": "p1_go",
+     "name": "Pack 1",
+     "when": {
+      "type": "enter_area",
+      "x": 11.5,
+      "y": 17.8,
+      "r": 2.4
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack 1 / 3",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Clear pack 1"
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 5,
+       "x": 14,
+       "y": 17.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p1_clear",
+     "name": "Pack 1 cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p1_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "openGate",
+       "id": "gate_b"
+      },
+      {
+       "type": "objective",
+       "text": "Go east to pack 2"
+      },
+      {
+       "type": "message",
+       "text": "The east gate opens"
+      }
+     ]
+    },
+    {
+     "id": "p2_go",
+     "name": "Pack 2",
+     "when": {
+      "type": "enter_area",
+      "x": 21.5,
+      "y": 17.8,
+      "r": 1.9
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack 2 / 3",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Clear pack 2"
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 4,
+       "x": 25,
+       "y": 17.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p2_clear",
+     "name": "Pack 2 cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p2_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "openGate",
+       "id": "gate_c"
+      },
+      {
+       "type": "objective",
+       "text": "Go north to the elite"
+      },
+      {
+       "type": "message",
+       "text": "The north gate opens"
+      }
+     ]
+    },
+    {
+     "id": "p3_go",
+     "name": "Pack 3 and the elite",
+     "when": {
+      "type": "enter_area",
+      "x": 28.5,
+      "y": 9.5,
+      "r": 2
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "The elite guards a key",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the elite and its pack"
+      },
+      {
+       "type": "spawn",
+       "enemy": "thornsow",
+       "count": 1,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6,
+       "elite": "frozen"
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 2,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p3_clear",
+     "name": "Elite down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p3_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "loot",
+       "rarity": "rare",
+       "count": 1,
+       "item": "key_pack_grotto",
+       "x": 25,
+       "y": 5.5
+      },
+      {
+       "type": "objective",
+       "text": "Take the key to the sealed door"
+      },
+      {
+       "type": "message",
+       "text": "The elite drops a key"
+      }
+     ]
+    },
+    {
+     "id": "done",
+     "name": "Chamber",
+     "when": {
+      "type": "enter_area",
+      "x": 9.5,
+      "y": 5.5,
+      "r": 3
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack arena cleared",
+       "sub": "Grotto pack arena"
+      },
+      {
+       "type": "objective",
+       "text": "Open the chests"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      }
+     ]
+    }
+   ],
+   "objective": "Clear three packs, take the key",
+   "level": [
+    14,
+    20
+   ],
+   "boss": null,
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 2,
+    "level": 16
+   },
+   "spawns": []
+  },
+  {
+   "id": "pack-caldera",
+   "name": "Caldera pack arena",
+   "sub": "Arena: pack",
+   "desc": "Caldera (placeholder packs): hounds, moths, ogres, a burning troll elite (L24)",
+   "theme": "ruins",
+   "W": 32,
+   "H": 24,
+   "tiles": [
+    "................................",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxcxxxxxcxxxxxxx..xxcxxxxxcxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxcxxxxxcxxxxxxx..xxcxxxxxcxx.",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    "...........................xxx..",
+    "...........................xxx..",
+    ".........xxxxxxxxx..xxxxxxxxxxx.",
+    ".........xxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxxxx..xxcxxxcxx..xxcxxxxxcxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxx..xxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxxxx..xxcxxxcxx..xxcxxxxxcxx.",
+    ".xxxxxx..xxxxxxxxx..xxxxxxxxxxx.",
+    ".........xxxxxxxxx..xxxxxxxxxxx.",
+    "................................"
+   ],
+   "heights": [
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000"
+   ],
+   "start": {
+    "x": 3.5,
+    "y": 18.5
+   },
+   "objects": [
+    {
+     "t": "lever",
+     "id": "lever_a",
+     "x": 5.5,
+     "y": 16.5,
+     "gate": "gate_a",
+     "label": "lever"
+    },
+    {
+     "t": "gate",
+     "id": "gate_a",
+     "x": 8,
+     "y": 17.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "gate",
+     "id": "gate_b",
+     "x": 19,
+     "y": 17.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "gate",
+     "id": "gate_c",
+     "x": 28.5,
+     "y": 12,
+     "ang": 1.5708,
+     "len": 3.2
+    },
+    {
+     "t": "keydoor",
+     "id": "door_key",
+     "x": 19,
+     "y": 5.5,
+     "ang": 0,
+     "len": 3.2,
+     "key": "key_pack_caldera",
+     "label": "sealed door"
+    },
+    {
+     "t": "lantern_blue",
+     "x": 1.8,
+     "y": 15.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 5.6,
+     "y": 20.6
+    },
+    {
+     "t": "lantern_blue",
+     "x": 9.8,
+     "y": 13.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 16.4,
+     "y": 13.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 9.8,
+     "y": 21.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 16.4,
+     "y": 21.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 20.8,
+     "y": 13.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.4,
+     "y": 13.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 20.8,
+     "y": 21.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.4,
+     "y": 21.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 20.8,
+     "y": 1.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.4,
+     "y": 1.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 20.8,
+     "y": 9.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.4,
+     "y": 9.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 1.8,
+     "y": 1.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 16.2,
+     "y": 1.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 1.8,
+     "y": 9.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 16.2,
+     "y": 9.4
+    },
+    {
+     "t": "crystal_violet",
+     "x": 13.5,
+     "y": 13.6
+    },
+    {
+     "t": "crystal_violet",
+     "x": 25,
+     "y": 13.6
+    },
+    {
+     "t": "crystal_violet",
+     "x": 25,
+     "y": 9.6
+    },
+    {
+     "t": "crystal_violet",
+     "x": 8.5,
+     "y": 5.5
+    },
+    {
+     "t": "chest",
+     "x": 7.5,
+     "y": 2.6,
+     "tier": "wood",
+     "label": "pack-reward-wood"
+    },
+    {
+     "t": "chest",
+     "x": 7.5,
+     "y": 8.4,
+     "tier": "silver",
+     "label": "pack-reward-silver"
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_caldera",
+     "x": 13.5,
+     "y": 7.5,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "in",
+     "name": "Enter",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Caldera pack arena",
+       "sub": "Three packs, an elite, a key"
+      },
+      {
+       "type": "objective",
+       "text": "Pull the lever to open the way"
+      }
+     ]
+    },
+    {
+     "id": "p1_go",
+     "name": "Pack 1",
+     "when": {
+      "type": "enter_area",
+      "x": 11.5,
+      "y": 17.8,
+      "r": 2.4
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack 1 / 3",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Clear pack 1"
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 3,
+       "x": 14,
+       "y": 17.5,
+       "radius": 3.6
+      },
+      {
+       "type": "spawn",
+       "enemy": "dreammoth",
+       "count": 2,
+       "x": 14,
+       "y": 17.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p1_clear",
+     "name": "Pack 1 cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p1_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "openGate",
+       "id": "gate_b"
+      },
+      {
+       "type": "objective",
+       "text": "Go east to pack 2"
+      },
+      {
+       "type": "message",
+       "text": "The east gate opens"
+      }
+     ]
+    },
+    {
+     "id": "p2_go",
+     "name": "Pack 2",
+     "when": {
+      "type": "enter_area",
+      "x": 21.5,
+      "y": 17.8,
+      "r": 1.9
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack 2 / 3",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Clear pack 2"
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 2,
+       "x": 25,
+       "y": 17.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p2_clear",
+     "name": "Pack 2 cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p2_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "openGate",
+       "id": "gate_c"
+      },
+      {
+       "type": "objective",
+       "text": "Go north to the elite"
+      },
+      {
+       "type": "message",
+       "text": "The north gate opens"
+      }
+     ]
+    },
+    {
+     "id": "p3_go",
+     "name": "Pack 3 and the elite",
+     "when": {
+      "type": "enter_area",
+      "x": 28.5,
+      "y": 9.5,
+      "r": 2
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "The elite guards a key",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the elite and its pack"
+      },
+      {
+       "type": "spawn",
+       "enemy": "mountaintroll",
+       "count": 1,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6,
+       "elite": "burning"
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 1,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p3_clear",
+     "name": "Elite down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p3_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "loot",
+       "rarity": "rare",
+       "count": 1,
+       "item": "key_pack_caldera",
+       "x": 25,
+       "y": 5.5
+      },
+      {
+       "type": "objective",
+       "text": "Take the key to the sealed door"
+      },
+      {
+       "type": "message",
+       "text": "The elite drops a key"
+      }
+     ]
+    },
+    {
+     "id": "done",
+     "name": "Chamber",
+     "when": {
+      "type": "enter_area",
+      "x": 9.5,
+      "y": 5.5,
+      "r": 3
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack arena cleared",
+       "sub": "Caldera pack arena"
+      },
+      {
+       "type": "objective",
+       "text": "Open the chests"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      }
+     ]
+    }
+   ],
+   "objective": "Clear three packs, take the key",
+   "level": [
+    20,
+    28
+   ],
+   "boss": null,
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 3,
+    "level": 24
+   },
+   "spawns": []
+  },
+  {
+   "id": "pack-spire",
+   "name": "Spire pack arena",
+   "sub": "Arena: pack",
+   "desc": "Spire (placeholder packs): moths, shamans, hounds, a storm gnarlbrute elite (L30)",
+   "theme": "ruins",
+   "W": 32,
+   "H": 24,
+   "tiles": [
+    "................................",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxcxxxxxcxxxxxxx..xxcxxxxxcxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxcxxxxxcxxxxxxx..xxcxxxxxcxx.",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxx..xxxxxxxxxxx.",
+    "...........................xxx..",
+    "...........................xxx..",
+    ".........xxxxxxxxx..xxxxxxxxxxx.",
+    ".........xxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxxxx..xxcxxxcxx..xxcxxxxxcxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxx..xxxxxxxxx..xxxxxxxxxxx.",
+    ".xxxxxx..xxcxxxcxx..xxcxxxxxcxx.",
+    ".xxxxxx..xxxxxxxxx..xxxxxxxxxxx.",
+    ".........xxxxxxxxx..xxxxxxxxxxx.",
+    "................................"
+   ],
+   "heights": [
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000"
+   ],
+   "start": {
+    "x": 3.5,
+    "y": 18.5
+   },
+   "objects": [
+    {
+     "t": "lever",
+     "id": "lever_a",
+     "x": 5.5,
+     "y": 16.5,
+     "gate": "gate_a",
+     "label": "lever"
+    },
+    {
+     "t": "gate",
+     "id": "gate_a",
+     "x": 8,
+     "y": 17.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "gate",
+     "id": "gate_b",
+     "x": 19,
+     "y": 17.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "gate",
+     "id": "gate_c",
+     "x": 28.5,
+     "y": 12,
+     "ang": 1.5708,
+     "len": 3.2
+    },
+    {
+     "t": "keydoor",
+     "id": "door_key",
+     "x": 19,
+     "y": 5.5,
+     "ang": 0,
+     "len": 3.2,
+     "key": "key_pack_spire",
+     "label": "sealed door"
+    },
+    {
+     "t": "lantern_blue",
+     "x": 1.8,
+     "y": 15.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 5.6,
+     "y": 20.6
+    },
+    {
+     "t": "lantern_blue",
+     "x": 9.8,
+     "y": 13.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 16.4,
+     "y": 13.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 9.8,
+     "y": 21.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 16.4,
+     "y": 21.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 20.8,
+     "y": 13.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.4,
+     "y": 13.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 20.8,
+     "y": 21.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.4,
+     "y": 21.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 20.8,
+     "y": 1.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.4,
+     "y": 1.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 20.8,
+     "y": 9.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 29.4,
+     "y": 9.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 1.8,
+     "y": 1.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 16.2,
+     "y": 1.8
+    },
+    {
+     "t": "lantern_blue",
+     "x": 1.8,
+     "y": 9.4
+    },
+    {
+     "t": "lantern_blue",
+     "x": 16.2,
+     "y": 9.4
+    },
+    {
+     "t": "crystal_violet",
+     "x": 13.5,
+     "y": 13.6
+    },
+    {
+     "t": "crystal_violet",
+     "x": 25,
+     "y": 13.6
+    },
+    {
+     "t": "crystal_violet",
+     "x": 25,
+     "y": 9.6
+    },
+    {
+     "t": "crystal_violet",
+     "x": 8.5,
+     "y": 5.5
+    },
+    {
+     "t": "chest",
+     "x": 7.5,
+     "y": 2.6,
+     "tier": "wood",
+     "label": "pack-reward-wood"
+    },
+    {
+     "t": "chest",
+     "x": 7.5,
+     "y": 8.4,
+     "tier": "silver",
+     "label": "pack-reward-silver"
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_spire",
+     "x": 13.5,
+     "y": 7.5,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "in",
+     "name": "Enter",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Spire pack arena",
+       "sub": "Three packs, an elite, a key"
+      },
+      {
+       "type": "objective",
+       "text": "Pull the lever to open the way"
+      }
+     ]
+    },
+    {
+     "id": "p1_go",
+     "name": "Pack 1",
+     "when": {
+      "type": "enter_area",
+      "x": 11.5,
+      "y": 17.8,
+      "r": 2.4
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack 1 / 3",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Clear pack 1"
+      },
+      {
+       "type": "spawn",
+       "enemy": "dreammoth",
+       "count": 4,
+       "x": 14,
+       "y": 17.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p1_clear",
+     "name": "Pack 1 cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p1_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "openGate",
+       "id": "gate_b"
+      },
+      {
+       "type": "objective",
+       "text": "Go east to pack 2"
+      },
+      {
+       "type": "message",
+       "text": "The east gate opens"
+      }
+     ]
+    },
+    {
+     "id": "p2_go",
+     "name": "Pack 2",
+     "when": {
+      "type": "enter_area",
+      "x": 21.5,
+      "y": 17.8,
+      "r": 1.9
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack 2 / 3",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Clear pack 2"
+      },
+      {
+       "type": "spawn",
+       "enemy": "brambleshaman",
+       "count": 2,
+       "x": 25,
+       "y": 17.5,
+       "radius": 3.6
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 2,
+       "x": 25,
+       "y": 17.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p2_clear",
+     "name": "Pack 2 cleared",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p2_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "openGate",
+       "id": "gate_c"
+      },
+      {
+       "type": "objective",
+       "text": "Go north to the elite"
+      },
+      {
+       "type": "message",
+       "text": "The north gate opens"
+      }
+     ]
+    },
+    {
+     "id": "p3_go",
+     "name": "Pack 3 and the elite",
+     "when": {
+      "type": "enter_area",
+      "x": 28.5,
+      "y": 9.5,
+      "r": 2
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "The elite guards a key",
+       "sub": ""
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the elite and its pack"
+      },
+      {
+       "type": "spawn",
+       "enemy": "gnarlbrute",
+       "count": 1,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6,
+       "elite": "storm"
+      },
+      {
+       "type": "spawn",
+       "enemy": "dreammoth",
+       "count": 2,
+       "x": 25,
+       "y": 5.5,
+       "radius": 3.6
+      }
+     ]
+    },
+    {
+     "id": "p3_clear",
+     "name": "Elite down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "p3_go"
+     ],
+     "actions": [
+      {
+       "type": "heal",
+       "pct": 25
+      },
+      {
+       "type": "loot",
+       "rarity": "rare",
+       "count": 1,
+       "item": "key_pack_spire",
+       "x": 25,
+       "y": 5.5
+      },
+      {
+       "type": "objective",
+       "text": "Take the key to the sealed door"
+      },
+      {
+       "type": "message",
+       "text": "The elite drops a key"
+      }
+     ]
+    },
+    {
+     "id": "done",
+     "name": "Chamber",
+     "when": {
+      "type": "enter_area",
+      "x": 9.5,
+      "y": 5.5,
+      "r": 3
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Pack arena cleared",
+       "sub": "Spire pack arena"
+      },
+      {
+       "type": "objective",
+       "text": "Open the chests"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      }
+     ]
+    }
+   ],
+   "objective": "Clear three packs, take the key",
+   "level": [
+    28,
+    36
+   ],
+   "boss": null,
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 3,
+    "level": 30
+   },
+   "spawns": []
+  },
+  {
+   "id": "elite",
+   "name": "Elite pockets",
+   "sub": "Arena: elite modifiers",
+   "desc": "Eight pockets, one elite modifier each, one gate per pocket (L12)",
+   "theme": "vale",
+   "W": 24,
+   "H": 24,
+   "tiles": [
+    "........................",
+    "........................",
+    ".gggg..gggg..gggg..gggg.",
+    ".gggg..gggg..gggg..gggg.",
+    ".gggg..gggg..gggg..gggg.",
+    ".gggg..gggg..gggg..gggg.",
+    ".gggg..gggg..gggg..gggg.",
+    ".gggg..gggg..gggg..gggg.",
+    "..gg....gg....gg....gg..",
+    "..gg....gg....gg....gg..",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    "..gg....gg....gg....gg..",
+    "..gg....gg....gg....gg..",
+    ".gggg..gggg..gggg..gggg.",
+    ".gggg..gggg..gggg..gggg.",
+    ".gggg..gggg..gggg..gggg.",
+    ".gggg..gggg..gggg..gggg.",
+    ".gggg..gggg..gggg..gggg.",
+    ".gggg..gggg..gggg..gggg.",
+    "........................",
+    "........................"
+   ],
+   "heights": [
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+   ],
+   "start": {
+    "x": 11.5,
+    "y": 11
+   },
+   "objects": [
+    {
+     "t": "shrine",
+     "id": "shrine_elite",
+     "x": 11.5,
+     "y": 12.6,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    },
+    {
+     "t": "lantern",
+     "x": 2,
+     "y": 10.6
+    },
+    {
+     "t": "lantern",
+     "x": 21,
+     "y": 10.6
+    },
+    {
+     "t": "lantern",
+     "x": 2,
+     "y": 13.4
+    },
+    {
+     "t": "lantern",
+     "x": 21,
+     "y": 13.4
+    },
+    {
+     "t": "lantern",
+     "x": 11.5,
+     "y": 10.5
+    },
+    {
+     "t": "gate",
+     "id": "gate_p0",
+     "x": 3,
+     "y": 9,
+     "ang": 1.5708,
+     "len": 2.4,
+     "open": true
+    },
+    {
+     "t": "brazier",
+     "x": 1.7,
+     "y": 2.7
+    },
+    {
+     "t": "sign",
+     "x": 3,
+     "y": 7.4,
+     "label": "shielded"
+    },
+    {
+     "t": "gate",
+     "id": "gate_p1",
+     "x": 9,
+     "y": 9,
+     "ang": 1.5708,
+     "len": 2.4,
+     "open": true
+    },
+    {
+     "t": "crystal",
+     "x": 7.7,
+     "y": 2.7
+    },
+    {
+     "t": "sign",
+     "x": 9,
+     "y": 7.4,
+     "label": "storm"
+    },
+    {
+     "t": "gate",
+     "id": "gate_p2",
+     "x": 15,
+     "y": 9,
+     "ang": 1.5708,
+     "len": 2.4,
+     "open": true
+    },
+    {
+     "t": "brazier",
+     "x": 13.7,
+     "y": 2.7
+    },
+    {
+     "t": "sign",
+     "x": 15,
+     "y": 7.4,
+     "label": "burning"
+    },
+    {
+     "t": "gate",
+     "id": "gate_p3",
+     "x": 21,
+     "y": 9,
+     "ang": 1.5708,
+     "len": 2.4,
+     "open": true
+    },
+    {
+     "t": "crystal",
+     "x": 19.7,
+     "y": 2.7
+    },
+    {
+     "t": "sign",
+     "x": 21,
+     "y": 7.4,
+     "label": "frozen"
+    },
+    {
+     "t": "gate",
+     "id": "gate_p4",
+     "x": 3,
+     "y": 15,
+     "ang": 1.5708,
+     "len": 2.4,
+     "open": true
+    },
+    {
+     "t": "brazier",
+     "x": 1.7,
+     "y": 21.3
+    },
+    {
+     "t": "sign",
+     "x": 3,
+     "y": 16.6,
+     "label": "gloomed"
+    },
+    {
+     "t": "gate",
+     "id": "gate_p5",
+     "x": 9,
+     "y": 15,
+     "ang": 1.5708,
+     "len": 2.4,
+     "open": true
+    },
+    {
+     "t": "crystal",
+     "x": 7.7,
+     "y": 21.3
+    },
+    {
+     "t": "sign",
+     "x": 9,
+     "y": 16.6,
+     "label": "twin"
+    },
+    {
+     "t": "gate",
+     "id": "gate_p6",
+     "x": 15,
+     "y": 15,
+     "ang": 1.5708,
+     "len": 2.4,
+     "open": true
+    },
+    {
+     "t": "brazier",
+     "x": 13.7,
+     "y": 21.3
+    },
+    {
+     "t": "sign",
+     "x": 15,
+     "y": 16.6,
+     "label": "vampiric"
+    },
+    {
+     "t": "gate",
+     "id": "gate_p7",
+     "x": 21,
+     "y": 15,
+     "ang": 1.5708,
+     "len": 2.4,
+     "open": true
+    },
+    {
+     "t": "crystal",
+     "x": 19.7,
+     "y": 21.3
+    },
+    {
+     "t": "sign",
+     "x": 21,
+     "y": 16.6,
+     "label": "summoner"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "go_p0",
+     "name": "shielded ogre",
+     "when": {
+      "type": "enter_area",
+      "x": 3,
+      "y": 5,
+      "r": 1.8
+     },
+     "actions": [
+      {
+       "type": "closeGate",
+       "id": "gate_p0"
+      },
+      {
+       "type": "banner",
+       "title": "SHIELDED ELITE",
+       "sub": "ogre"
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the shielded ogre"
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 1,
+       "x": 3,
+       "y": 3.4,
+       "radius": 0.8,
+       "elite": "shielded"
+      }
+     ]
+    },
+    {
+     "id": "done_p0",
+     "name": "shielded down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "go_p0"
+     ],
+     "actions": [
+      {
+       "type": "openGate",
+       "id": "gate_p0"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "objective",
+       "text": "Pick the next pocket"
+      },
+      {
+       "type": "message",
+       "text": "shielded elite down. Gate open"
+      }
+     ]
+    },
+    {
+     "id": "go_p1",
+     "name": "storm shadehound",
+     "when": {
+      "type": "enter_area",
+      "x": 9,
+      "y": 5,
+      "r": 1.8
+     },
+     "actions": [
+      {
+       "type": "closeGate",
+       "id": "gate_p1"
+      },
+      {
+       "type": "banner",
+       "title": "STORM ELITE",
+       "sub": "shadehound"
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the storm shadehound"
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 1,
+       "x": 9,
+       "y": 3.4,
+       "radius": 0.8,
+       "elite": "storm"
+      }
+     ]
+    },
+    {
+     "id": "done_p1",
+     "name": "storm down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "go_p1"
+     ],
+     "actions": [
+      {
+       "type": "openGate",
+       "id": "gate_p1"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "objective",
+       "text": "Pick the next pocket"
+      },
+      {
+       "type": "message",
+       "text": "storm elite down. Gate open"
+      }
+     ]
+    },
+    {
+     "id": "go_p2",
+     "name": "burning thornbackboar",
+     "when": {
+      "type": "enter_area",
+      "x": 15,
+      "y": 5,
+      "r": 1.8
+     },
+     "actions": [
+      {
+       "type": "closeGate",
+       "id": "gate_p2"
+      },
+      {
+       "type": "banner",
+       "title": "BURNING ELITE",
+       "sub": "thornbackboar"
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the burning thornbackboar"
+      },
+      {
+       "type": "spawn",
+       "enemy": "thornbackboar",
+       "count": 1,
+       "x": 15,
+       "y": 3.4,
+       "radius": 0.8,
+       "elite": "burning"
+      }
+     ]
+    },
+    {
+     "id": "done_p2",
+     "name": "burning down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "go_p2"
+     ],
+     "actions": [
+      {
+       "type": "openGate",
+       "id": "gate_p2"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "objective",
+       "text": "Pick the next pocket"
+      },
+      {
+       "type": "message",
+       "text": "burning elite down. Gate open"
+      }
+     ]
+    },
+    {
+     "id": "go_p3",
+     "name": "frozen gloomslime",
+     "when": {
+      "type": "enter_area",
+      "x": 21,
+      "y": 5,
+      "r": 1.8
+     },
+     "actions": [
+      {
+       "type": "closeGate",
+       "id": "gate_p3"
+      },
+      {
+       "type": "banner",
+       "title": "FROZEN ELITE",
+       "sub": "gloomslime"
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the frozen gloomslime"
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 1,
+       "x": 21,
+       "y": 3.4,
+       "radius": 0.8,
+       "elite": "frozen"
+      }
+     ]
+    },
+    {
+     "id": "done_p3",
+     "name": "frozen down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "go_p3"
+     ],
+     "actions": [
+      {
+       "type": "openGate",
+       "id": "gate_p3"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "objective",
+       "text": "Pick the next pocket"
+      },
+      {
+       "type": "message",
+       "text": "frozen elite down. Gate open"
+      }
+     ]
+    },
+    {
+     "id": "go_p4",
+     "name": "gloomed dreammoth",
+     "when": {
+      "type": "enter_area",
+      "x": 3,
+      "y": 19,
+      "r": 1.8
+     },
+     "actions": [
+      {
+       "type": "closeGate",
+       "id": "gate_p4"
+      },
+      {
+       "type": "banner",
+       "title": "GLOOMED ELITE",
+       "sub": "dreammoth"
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the gloomed dreammoth"
+      },
+      {
+       "type": "spawn",
+       "enemy": "dreammoth",
+       "count": 1,
+       "x": 3,
+       "y": 20.6,
+       "radius": 0.8,
+       "elite": "gloomed"
+      }
+     ]
+    },
+    {
+     "id": "done_p4",
+     "name": "gloomed down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "go_p4"
+     ],
+     "actions": [
+      {
+       "type": "openGate",
+       "id": "gate_p4"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "objective",
+       "text": "Pick the next pocket"
+      },
+      {
+       "type": "message",
+       "text": "gloomed elite down. Gate open"
+      }
+     ]
+    },
+    {
+     "id": "go_p5",
+     "name": "twin shadehound",
+     "when": {
+      "type": "enter_area",
+      "x": 9,
+      "y": 19,
+      "r": 1.8
+     },
+     "actions": [
+      {
+       "type": "closeGate",
+       "id": "gate_p5"
+      },
+      {
+       "type": "banner",
+       "title": "TWIN ELITE",
+       "sub": "shadehound"
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the twin shadehound"
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 1,
+       "x": 9,
+       "y": 20.6,
+       "radius": 0.8,
+       "elite": "twin"
+      }
+     ]
+    },
+    {
+     "id": "done_p5",
+     "name": "twin down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "go_p5"
+     ],
+     "actions": [
+      {
+       "type": "openGate",
+       "id": "gate_p5"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "objective",
+       "text": "Pick the next pocket"
+      },
+      {
+       "type": "message",
+       "text": "twin elite down. Gate open"
+      }
+     ]
+    },
+    {
+     "id": "go_p6",
+     "name": "vampiric ogre",
+     "when": {
+      "type": "enter_area",
+      "x": 15,
+      "y": 19,
+      "r": 1.8
+     },
+     "actions": [
+      {
+       "type": "closeGate",
+       "id": "gate_p6"
+      },
+      {
+       "type": "banner",
+       "title": "VAMPIRIC ELITE",
+       "sub": "ogre"
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the vampiric ogre"
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 1,
+       "x": 15,
+       "y": 20.6,
+       "radius": 0.8,
+       "elite": "vampiric"
+      }
+     ]
+    },
+    {
+     "id": "done_p6",
+     "name": "vampiric down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "go_p6"
+     ],
+     "actions": [
+      {
+       "type": "openGate",
+       "id": "gate_p6"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "objective",
+       "text": "Pick the next pocket"
+      },
+      {
+       "type": "message",
+       "text": "vampiric elite down. Gate open"
+      }
+     ]
+    },
+    {
+     "id": "go_p7",
+     "name": "summoner brambleshaman",
+     "when": {
+      "type": "enter_area",
+      "x": 21,
+      "y": 19,
+      "r": 1.8
+     },
+     "actions": [
+      {
+       "type": "closeGate",
+       "id": "gate_p7"
+      },
+      {
+       "type": "banner",
+       "title": "SUMMONER ELITE",
+       "sub": "brambleshaman"
+      },
+      {
+       "type": "objective",
+       "text": "Defeat the summoner brambleshaman"
+      },
+      {
+       "type": "spawn",
+       "enemy": "brambleshaman",
+       "count": 1,
+       "x": 21,
+       "y": 20.6,
+       "radius": 0.8,
+       "elite": "summoner"
+      }
+     ]
+    },
+    {
+     "id": "done_p7",
+     "name": "summoner down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "go_p7"
+     ],
+     "actions": [
+      {
+       "type": "openGate",
+       "id": "gate_p7"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "objective",
+       "text": "Pick the next pocket"
+      },
+      {
+       "type": "message",
+       "text": "summoner elite down. Gate open"
+      }
+     ]
+    },
+    {
+     "id": "in",
+     "name": "Enter",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Elite arena",
+       "sub": "One modifier per pocket"
+      },
+      {
+       "type": "objective",
+       "text": "Walk into a pocket: its gate closes and the elite wakes"
+      }
+     ]
+    }
+   ],
+   "objective": "One elite per pocket",
+   "level": [
+    8,
+    16
+   ],
+   "boss": null,
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 1,
+    "level": 12
+   },
+   "spawns": []
+  },
+  {
+   "id": "boss-mossjaw",
+   "name": "Mossjaw arena",
+   "sub": "Arena: boss",
+   "desc": "Mossjaw alone on a round floor (L5)",
+   "theme": "forest",
+   "W": 24,
+   "H": 24,
+   "tiles": [
+    "........................",
+    "...........gg...........",
+    ".......gggggggggg.......",
+    "......gggggggggggg......",
+    ".....ggggcggggcgggg.....",
+    "....gggggggggggggggg....",
+    "...gggggggggggggggggg...",
+    "..gggggggggggggggggggg..",
+    "..gggggggggggggggggggg..",
+    "..ggcggggggggggggggcgg..",
+    "..gggggggggggggggggggg..",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    "..gggggggggggggggggggg..",
+    "..ggcggggggggggggggcgg..",
+    "..gggggggggggggggggggg..",
+    "..gggggggggggggggggggg..",
+    "...gggggggggggggggggg...",
+    "....gggggggggggggggg....",
+    ".....ggggcggggcgggg.....",
+    "......gggggggggggg......",
+    ".......gggggggggg.......",
+    "...........gg...........",
+    "........................"
+   ],
+   "heights": [
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+   ],
+   "start": {
+    "x": 11.5,
+    "y": 19.5
+   },
+   "objects": [
+    {
+     "t": "brazier",
+     "x": 21.4,
+     "y": 12
+    },
+    {
+     "t": "crystal",
+     "x": 18.65,
+     "y": 18.65
+    },
+    {
+     "t": "brazier",
+     "x": 12,
+     "y": 21.4
+    },
+    {
+     "t": "crystal",
+     "x": 5.35,
+     "y": 18.65
+    },
+    {
+     "t": "brazier",
+     "x": 2.6,
+     "y": 12
+    },
+    {
+     "t": "crystal",
+     "x": 5.35,
+     "y": 5.35
+    },
+    {
+     "t": "brazier",
+     "x": 12,
+     "y": 2.6
+    },
+    {
+     "t": "crystal",
+     "x": 18.65,
+     "y": 5.35
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_mossjaw",
+     "x": 11.5,
+     "y": 21.4,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "intro",
+     "name": "Boss intro",
+     "when": {
+      "type": "timer",
+      "seconds": 2.5,
+      "after": "map"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Mossjaw",
+       "sub": "The moss hound",
+       "boss": true
+      },
+      {
+       "type": "objective",
+       "text": "Defeat Mossjaw"
+      },
+      {
+       "type": "spawn",
+       "enemy": "mossjaw",
+       "count": 1,
+       "x": 11.5,
+       "y": 8.5,
+       "radius": 0.5
+      }
+     ]
+    },
+    {
+     "id": "dead",
+     "name": "Boss down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "intro"
+     ],
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Victory",
+       "sub": "Mossjaw falls"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "loot",
+       "rarity": "rare",
+       "count": 2,
+       "x": 11.5,
+       "y": 12
+      },
+      {
+       "type": "objective",
+       "text": "Done. Reload for another run"
+      }
+     ]
+    }
+   ],
+   "objective": "Defeat Mossjaw",
+   "level": [
+    4,
+    8
+   ],
+   "boss": "mossjaw",
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 0,
+    "level": 5
+   },
+   "spawns": []
+  },
+  {
+   "id": "boss-bramblehorn",
+   "name": "Bramblehorn arena",
+   "sub": "Arena: boss",
+   "desc": "Bramblehorn alone on a round floor (L8)",
+   "theme": "forest",
+   "W": 24,
+   "H": 24,
+   "tiles": [
+    "........................",
+    "...........gg...........",
+    ".......gggggggggg.......",
+    "......gggggggggggg......",
+    ".....ggggcggggcgggg.....",
+    "....gggggggggggggggg....",
+    "...gggggggggggggggggg...",
+    "..gggggggggggggggggggg..",
+    "..gggggggggggggggggggg..",
+    "..ggcggggggggggggggcgg..",
+    "..gggggggggggggggggggg..",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    "..gggggggggggggggggggg..",
+    "..ggcggggggggggggggcgg..",
+    "..gggggggggggggggggggg..",
+    "..gggggggggggggggggggg..",
+    "...gggggggggggggggggg...",
+    "....gggggggggggggggg....",
+    ".....ggggcggggcgggg.....",
+    "......gggggggggggg......",
+    ".......gggggggggg.......",
+    "...........gg...........",
+    "........................"
+   ],
+   "heights": [
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+   ],
+   "start": {
+    "x": 11.5,
+    "y": 19.5
+   },
+   "objects": [
+    {
+     "t": "brazier",
+     "x": 21.4,
+     "y": 12
+    },
+    {
+     "t": "crystal",
+     "x": 18.65,
+     "y": 18.65
+    },
+    {
+     "t": "brazier",
+     "x": 12,
+     "y": 21.4
+    },
+    {
+     "t": "crystal",
+     "x": 5.35,
+     "y": 18.65
+    },
+    {
+     "t": "brazier",
+     "x": 2.6,
+     "y": 12
+    },
+    {
+     "t": "crystal",
+     "x": 5.35,
+     "y": 5.35
+    },
+    {
+     "t": "brazier",
+     "x": 12,
+     "y": 2.6
+    },
+    {
+     "t": "crystal",
+     "x": 18.65,
+     "y": 5.35
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_bramblehorn",
+     "x": 11.5,
+     "y": 21.4,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "intro",
+     "name": "Boss intro",
+     "when": {
+      "type": "timer",
+      "seconds": 2.5,
+      "after": "map"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Bramblehorn",
+       "sub": "The thorn stag",
+       "boss": true
+      },
+      {
+       "type": "objective",
+       "text": "Defeat Bramblehorn"
+      },
+      {
+       "type": "spawn",
+       "enemy": "bramblehorn",
+       "count": 1,
+       "x": 11.5,
+       "y": 8.5,
+       "radius": 0.5
+      }
+     ]
+    },
+    {
+     "id": "dead",
+     "name": "Boss down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "intro"
+     ],
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Victory",
+       "sub": "Bramblehorn falls"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "loot",
+       "rarity": "rare",
+       "count": 2,
+       "x": 11.5,
+       "y": 12
+      },
+      {
+       "type": "objective",
+       "text": "Done. Reload for another run"
+      }
+     ]
+    }
+   ],
+   "objective": "Defeat Bramblehorn",
+   "level": [
+    6,
+    12
+   ],
+   "boss": "bramblehorn",
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 1,
+    "level": 8
+   },
+   "spawns": []
+  },
+  {
+   "id": "boss-oathless",
+   "name": "The Oathless arena",
+   "sub": "Arena: boss",
+   "desc": "The Oathless alone on a ruined round floor (L12)",
+   "theme": "ruins",
+   "W": 24,
+   "H": 24,
+   "tiles": [
+    "........................",
+    "...........xx...........",
+    ".......xxxxxxxxxx.......",
+    "......xxxxxxxxxxxx......",
+    ".....xxxxcxxxxcxxxx.....",
+    "....xxxxxxxxxxxxxxxx....",
+    "...xxxxxxxxxxxxxxxxxx...",
+    "..xxxxxxxxxxxxxxxxxxxx..",
+    "..xxxxxxxxxxxxxxxxxxxx..",
+    "..xxcxxxxxxxxxxxxxxcxx..",
+    "..xxxxxxxxxxxxxxxxxxxx..",
+    ".xxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxx.",
+    "..xxxxxxxxxxxxxxxxxxxx..",
+    "..xxcxxxxxxxxxxxxxxcxx..",
+    "..xxxxxxxxxxxxxxxxxxxx..",
+    "..xxxxxxxxxxxxxxxxxxxx..",
+    "...xxxxxxxxxxxxxxxxxx...",
+    "....xxxxxxxxxxxxxxxx....",
+    ".....xxxxcxxxxcxxxx.....",
+    "......xxxxxxxxxxxx......",
+    ".......xxxxxxxxxx.......",
+    "...........xx...........",
+    "........................"
+   ],
+   "heights": [
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+   ],
+   "start": {
+    "x": 11.5,
+    "y": 19.5
+   },
+   "objects": [
+    {
+     "t": "brazier",
+     "x": 21.4,
+     "y": 12
+    },
+    {
+     "t": "crystal",
+     "x": 18.65,
+     "y": 18.65
+    },
+    {
+     "t": "brazier",
+     "x": 12,
+     "y": 21.4
+    },
+    {
+     "t": "crystal",
+     "x": 5.35,
+     "y": 18.65
+    },
+    {
+     "t": "brazier",
+     "x": 2.6,
+     "y": 12
+    },
+    {
+     "t": "crystal",
+     "x": 5.35,
+     "y": 5.35
+    },
+    {
+     "t": "brazier",
+     "x": 12,
+     "y": 2.6
+    },
+    {
+     "t": "crystal",
+     "x": 18.65,
+     "y": 5.35
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_oathless",
+     "x": 11.5,
+     "y": 21.4,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "intro",
+     "name": "Boss intro",
+     "when": {
+      "type": "timer",
+      "seconds": 2.5,
+      "after": "map"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "The Oathless",
+       "sub": "The oath without a reason",
+       "boss": true
+      },
+      {
+       "type": "objective",
+       "text": "Defeat The Oathless"
+      },
+      {
+       "type": "spawn",
+       "enemy": "oathless",
+       "count": 1,
+       "x": 11.5,
+       "y": 8.5,
+       "radius": 0.5
+      }
+     ]
+    },
+    {
+     "id": "dead",
+     "name": "Boss down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "intro"
+     ],
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Victory",
+       "sub": "The Oathless falls"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "loot",
+       "rarity": "rare",
+       "count": 2,
+       "x": 11.5,
+       "y": 12
+      },
+      {
+       "type": "objective",
+       "text": "Done. Reload for another run"
+      }
+     ]
+    }
+   ],
+   "objective": "Defeat The Oathless",
+   "level": [
+    8,
+    16
+   ],
+   "boss": "oathless",
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 1,
+    "level": 12
+   },
+   "spawns": []
+  },
+  {
+   "id": "boss-gloamwarden",
+   "name": "The Gloam Warden arena",
+   "sub": "Arena: boss",
+   "desc": "The Gloam Warden alone on a ruined round floor (L14)",
+   "theme": "ruins",
+   "W": 24,
+   "H": 24,
+   "tiles": [
+    "........................",
+    "...........xx...........",
+    ".......xxxxxxxxxx.......",
+    "......xxxxxxxxxxxx......",
+    ".....xxxxcxxxxcxxxx.....",
+    "....xxxxxxxxxxxxxxxx....",
+    "...xxxxxxxxxxxxxxxxxx...",
+    "..xxxxxxxxxxxxxxxxxxxx..",
+    "..xxxxxxxxxxxxxxxxxxxx..",
+    "..xxcxxxxxxxxxxxxxxcxx..",
+    "..xxxxxxxxxxxxxxxxxxxx..",
+    ".xxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxx.",
+    "..xxxxxxxxxxxxxxxxxxxx..",
+    "..xxcxxxxxxxxxxxxxxcxx..",
+    "..xxxxxxxxxxxxxxxxxxxx..",
+    "..xxxxxxxxxxxxxxxxxxxx..",
+    "...xxxxxxxxxxxxxxxxxx...",
+    "....xxxxxxxxxxxxxxxx....",
+    ".....xxxxcxxxxcxxxx.....",
+    "......xxxxxxxxxxxx......",
+    ".......xxxxxxxxxx.......",
+    "...........xx...........",
+    "........................"
+   ],
+   "heights": [
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+   ],
+   "start": {
+    "x": 11.5,
+    "y": 19.5
+   },
+   "objects": [
+    {
+     "t": "brazier",
+     "x": 21.4,
+     "y": 12
+    },
+    {
+     "t": "crystal",
+     "x": 18.65,
+     "y": 18.65
+    },
+    {
+     "t": "brazier",
+     "x": 12,
+     "y": 21.4
+    },
+    {
+     "t": "crystal",
+     "x": 5.35,
+     "y": 18.65
+    },
+    {
+     "t": "brazier",
+     "x": 2.6,
+     "y": 12
+    },
+    {
+     "t": "crystal",
+     "x": 5.35,
+     "y": 5.35
+    },
+    {
+     "t": "brazier",
+     "x": 12,
+     "y": 2.6
+    },
+    {
+     "t": "crystal",
+     "x": 18.65,
+     "y": 5.35
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_gloamwarden",
+     "x": 11.5,
+     "y": 21.4,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "intro",
+     "name": "Boss intro",
+     "when": {
+      "type": "timer",
+      "seconds": 2.5,
+      "after": "map"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "The Gloam Warden",
+       "sub": "The lantern keeper",
+       "boss": true
+      },
+      {
+       "type": "objective",
+       "text": "Defeat The Gloam Warden"
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloamwarden",
+       "count": 1,
+       "x": 11.5,
+       "y": 8.5,
+       "radius": 0.5
+      }
+     ]
+    },
+    {
+     "id": "dead",
+     "name": "Boss down",
+     "when": {
+      "type": "all_enemies_dead"
+     },
+     "requires": [
+      "intro"
+     ],
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Victory",
+       "sub": "The Gloam Warden falls"
+      },
+      {
+       "type": "heal",
+       "pct": 100
+      },
+      {
+       "type": "loot",
+       "rarity": "rare",
+       "count": 2,
+       "x": 11.5,
+       "y": 12
+      },
+      {
+       "type": "objective",
+       "text": "Done. Reload for another run"
+      }
+     ]
+    }
+   ],
+   "objective": "Defeat The Gloam Warden",
+   "level": [
+    10,
+    18
+   ],
+   "boss": "gloamwarden",
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 1,
+    "level": 14
+   },
+   "spawns": []
+  },
+  {
+   "id": "stress",
+   "name": "Stress arena",
+   "sub": "Arena: perf",
+   "desc": "24 awake bodies, 40 lights, status bodies and tiles (perf)",
+   "theme": "ruins",
+   "W": 32,
+   "H": 32,
+   "tiles": [
+    "................................",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxcxxxxxcxxxxxxcxxxxxcxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxcxxxxxcxxxxxxcxxxxxcxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxcxxxxxcxxxxxxcxxxxxcxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxcxxxxxcxxxxxxcxxxxxcxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    "................................"
+   ],
+   "heights": [
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000"
+   ],
+   "start": {
+    "x": 17,
+    "y": 17
+   },
+   "objects": [
+    {
+     "t": "lantern",
+     "x": 3.5,
+     "y": 3.5
+    },
+    {
+     "t": "crystal",
+     "x": 9.5,
+     "y": 3.5
+    },
+    {
+     "t": "brazier",
+     "x": 15.5,
+     "y": 3.5
+    },
+    {
+     "t": "mushroom",
+     "x": 22,
+     "y": 3.5
+    },
+    {
+     "t": "lantern_blue",
+     "x": 28.5,
+     "y": 3.5
+    },
+    {
+     "t": "crystal_violet",
+     "x": 3.5,
+     "y": 9.5
+    },
+    {
+     "t": "lantern",
+     "x": 9.5,
+     "y": 9.5
+    },
+    {
+     "t": "crystal",
+     "x": 15.5,
+     "y": 9.5
+    },
+    {
+     "t": "brazier",
+     "x": 22,
+     "y": 9.5
+    },
+    {
+     "t": "mushroom",
+     "x": 28.5,
+     "y": 9.5
+    },
+    {
+     "t": "lantern_blue",
+     "x": 3.5,
+     "y": 15.5
+    },
+    {
+     "t": "crystal_violet",
+     "x": 9.5,
+     "y": 15.5
+    },
+    {
+     "t": "lantern",
+     "x": 15.5,
+     "y": 15.5
+    },
+    {
+     "t": "crystal",
+     "x": 22,
+     "y": 15.5
+    },
+    {
+     "t": "brazier",
+     "x": 28.5,
+     "y": 15.5
+    },
+    {
+     "t": "mushroom",
+     "x": 3.5,
+     "y": 22
+    },
+    {
+     "t": "lantern_blue",
+     "x": 9.5,
+     "y": 22
+    },
+    {
+     "t": "crystal_violet",
+     "x": 15.5,
+     "y": 22
+    },
+    {
+     "t": "lantern",
+     "x": 22,
+     "y": 22
+    },
+    {
+     "t": "crystal",
+     "x": 28.5,
+     "y": 22
+    },
+    {
+     "t": "brazier",
+     "x": 3.5,
+     "y": 28.5
+    },
+    {
+     "t": "mushroom",
+     "x": 9.5,
+     "y": 28.5
+    },
+    {
+     "t": "lantern_blue",
+     "x": 15.5,
+     "y": 28.5
+    },
+    {
+     "t": "crystal_violet",
+     "x": 22,
+     "y": 28.5
+    },
+    {
+     "t": "lantern",
+     "x": 28.5,
+     "y": 28.5
+    },
+    {
+     "t": "crystal",
+     "x": 7.5,
+     "y": 6.5
+    },
+    {
+     "t": "brazier",
+     "x": 13.5,
+     "y": 6.5
+    },
+    {
+     "t": "mushroom",
+     "x": 20.5,
+     "y": 6.5
+    },
+    {
+     "t": "lantern_blue",
+     "x": 26.5,
+     "y": 6.5
+    },
+    {
+     "t": "crystal_violet",
+     "x": 7.5,
+     "y": 12.5
+    },
+    {
+     "t": "lantern",
+     "x": 13.5,
+     "y": 12.5
+    },
+    {
+     "t": "crystal",
+     "x": 20.5,
+     "y": 12.5
+    },
+    {
+     "t": "brazier",
+     "x": 26.5,
+     "y": 12.5
+    },
+    {
+     "t": "mushroom",
+     "x": 7.5,
+     "y": 19.5
+    },
+    {
+     "t": "lantern_blue",
+     "x": 13.5,
+     "y": 19.5
+    },
+    {
+     "t": "crystal_violet",
+     "x": 20.5,
+     "y": 19.5
+    },
+    {
+     "t": "lantern",
+     "x": 26.5,
+     "y": 19.5
+    },
+    {
+     "t": "crystal",
+     "x": 7.5,
+     "y": 25.5
+    },
+    {
+     "t": "brazier",
+     "x": 13.5,
+     "y": 25.5
+    },
+    {
+     "t": "mushroom",
+     "x": 20.5,
+     "y": 25.5
+    },
+    {
+     "t": "lantern_blue",
+     "x": 26.5,
+     "y": 25.5
+    }
+   ],
+   "triggers": [
+    {
+     "id": "in",
+     "name": "Swarm",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Stress arena",
+       "sub": "24 bodies, 40 lights, status effects"
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 1,
+       "x": 8.5,
+       "y": 8.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 1,
+       "x": 23.5,
+       "y": 8.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dreammoth",
+       "count": 1,
+       "x": 8.5,
+       "y": 23.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "thornbackboar",
+       "count": 1,
+       "x": 23.5,
+       "y": 23.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 1,
+       "x": 8.5,
+       "y": 8.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "brambleshaman",
+       "count": 1,
+       "x": 23.5,
+       "y": 8.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 1,
+       "x": 8.5,
+       "y": 23.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 1,
+       "x": 23.5,
+       "y": 23.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dreammoth",
+       "count": 1,
+       "x": 8.5,
+       "y": 8.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "thornbackboar",
+       "count": 1,
+       "x": 23.5,
+       "y": 8.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 1,
+       "x": 8.5,
+       "y": 23.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "brambleshaman",
+       "count": 1,
+       "x": 23.5,
+       "y": 23.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 1,
+       "x": 8.5,
+       "y": 8.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 1,
+       "x": 23.5,
+       "y": 8.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dreammoth",
+       "count": 1,
+       "x": 8.5,
+       "y": 23.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "thornbackboar",
+       "count": 1,
+       "x": 23.5,
+       "y": 23.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 1,
+       "x": 8.5,
+       "y": 8.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "brambleshaman",
+       "count": 1,
+       "x": 23.5,
+       "y": 8.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "gloomslime",
+       "count": 1,
+       "x": 8.5,
+       "y": 23.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "shadehound",
+       "count": 1,
+       "x": 23.5,
+       "y": 23.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dreammoth",
+       "count": 1,
+       "x": 8.5,
+       "y": 8.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "thornbackboar",
+       "count": 1,
+       "x": 23.5,
+       "y": 8.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "ogre",
+       "count": 1,
+       "x": 8.5,
+       "y": 23.5,
+       "radius": 3,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "brambleshaman",
+       "count": 1,
+       "x": 23.5,
+       "y": 23.5,
+       "radius": 3,
+       "instant": true
+      }
+     ]
+    },
+    {
+     "id": "status",
+     "name": "Status bodies",
+     "when": {
+      "type": "timer",
+      "seconds": 1.5,
+      "after": "map"
+     },
+     "actions": [
+      {
+       "type": "status",
+       "cycle": [
+        "burning",
+        "chilled",
+        "shocked",
+        "wet",
+        "poisoned",
+        "dread"
+       ],
+       "bodies": 6,
+       "dur": 8,
+       "every": 6,
+       "times": 40,
+       "rings": [
+        {
+         "x": 17,
+         "y": 17,
+         "r": 3.5,
+         "kind": "burning",
+         "dur": 8
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "objective": "Survive (use ?god)",
+   "level": [
+    10,
+    17
+   ],
+   "boss": null,
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 1,
+    "level": 14
+   },
+   "spawns": [
+    {
+     "type": "spawn",
+     "enemy": "gloomslime",
+     "count": 1,
+     "x": 8.5,
+     "y": 8.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "shadehound",
+     "count": 1,
+     "x": 23.5,
+     "y": 8.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dreammoth",
+     "count": 1,
+     "x": 8.5,
+     "y": 23.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "thornbackboar",
+     "count": 1,
+     "x": 23.5,
+     "y": 23.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "ogre",
+     "count": 1,
+     "x": 8.5,
+     "y": 8.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "brambleshaman",
+     "count": 1,
+     "x": 23.5,
+     "y": 8.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "gloomslime",
+     "count": 1,
+     "x": 8.5,
+     "y": 23.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "shadehound",
+     "count": 1,
+     "x": 23.5,
+     "y": 23.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dreammoth",
+     "count": 1,
+     "x": 8.5,
+     "y": 8.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "thornbackboar",
+     "count": 1,
+     "x": 23.5,
+     "y": 8.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "ogre",
+     "count": 1,
+     "x": 8.5,
+     "y": 23.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "brambleshaman",
+     "count": 1,
+     "x": 23.5,
+     "y": 23.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "gloomslime",
+     "count": 1,
+     "x": 8.5,
+     "y": 8.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "shadehound",
+     "count": 1,
+     "x": 23.5,
+     "y": 8.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dreammoth",
+     "count": 1,
+     "x": 8.5,
+     "y": 23.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "thornbackboar",
+     "count": 1,
+     "x": 23.5,
+     "y": 23.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "ogre",
+     "count": 1,
+     "x": 8.5,
+     "y": 8.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "brambleshaman",
+     "count": 1,
+     "x": 23.5,
+     "y": 8.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "gloomslime",
+     "count": 1,
+     "x": 8.5,
+     "y": 23.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "shadehound",
+     "count": 1,
+     "x": 23.5,
+     "y": 23.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dreammoth",
+     "count": 1,
+     "x": 8.5,
+     "y": 8.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "thornbackboar",
+     "count": 1,
+     "x": 23.5,
+     "y": 8.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "ogre",
+     "count": 1,
+     "x": 8.5,
+     "y": 23.5,
+     "radius": 3,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "brambleshaman",
+     "count": 1,
+     "x": 23.5,
+     "y": 23.5,
+     "radius": 3,
+     "instant": true
+    }
+   ]
+  },
+  {
+   "id": "touch",
+   "name": "Touch arena",
+   "sub": "Arena: touch",
+   "desc": "Chest, dialogue, shrine, lever, warp door, two dummies (touch UI)",
+   "theme": "vale",
+   "W": 24,
+   "H": 16,
+   "tiles": [
+    "........................",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggcggggggcggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    ".gggggggggggggggggggggg.",
+    "........................"
+   ],
+   "heights": [
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+   ],
+   "start": {
+    "x": 3.5,
+    "y": 8
+   },
+   "objects": [
+    {
+     "t": "chest",
+     "x": 10.5,
+     "y": 3.5,
+     "tier": "wood",
+     "label": "touch-chest"
+    },
+    {
+     "t": "chest",
+     "x": 20.5,
+     "y": 12.5,
+     "tier": "silver",
+     "label": "touch-chest-silver"
+    },
+    {
+     "t": "tablet",
+     "x": 6.5,
+     "y": 3.5,
+     "title": "Touch test",
+     "label": "tablet",
+     "text": "Tap Interact next to a chest, a tablet, a shrine, a lever or a door."
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_touch",
+     "x": 20.5,
+     "y": 3.5,
+     "name": "Arena shrine",
+     "label": "checkpoint"
+    },
+    {
+     "t": "lever",
+     "id": "lever_touch",
+     "x": 12.5,
+     "y": 12.5,
+     "gate": "gate_touch",
+     "label": "lever"
+    },
+    {
+     "t": "gate",
+     "id": "gate_touch",
+     "x": 17.5,
+     "y": 12.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "warpdoor",
+     "id": "warp_touch",
+     "x": 3.5,
+     "y": 12.6,
+     "to": {
+      "x": 20.5,
+      "y": 5.8
+     },
+     "label": "Warp test"
+    },
+    {
+     "t": "lantern",
+     "x": 2,
+     "y": 2
+    },
+    {
+     "t": "lantern",
+     "x": 22,
+     "y": 2
+    },
+    {
+     "t": "lantern",
+     "x": 2,
+     "y": 14
+    },
+    {
+     "t": "lantern",
+     "x": 22,
+     "y": 14
+    },
+    {
+     "t": "sign",
+     "x": 5.5,
+     "y": 6.2,
+     "label": "sign"
+    }
+   ],
+   "triggers": [
+    {
+     "id": "in",
+     "name": "Enter",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Touch arena",
+       "sub": "Chest, dialogue, shrine, lever, warp"
+      },
+      {
+       "type": "objective",
+       "text": "Try every Interact"
+      },
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 18,
+       "y": 8,
+       "radius": 0,
+       "instant": true
+      },
+      {
+       "type": "spawn",
+       "enemy": "dummy",
+       "count": 1,
+       "x": 20,
+       "y": 10,
+       "radius": 0,
+       "instant": true
+      }
+     ]
+    },
+    {
+     "id": "talk",
+     "name": "Pip speaks",
+     "when": {
+      "type": "enter_area",
+      "x": 6.5,
+      "y": 6.5,
+      "r": 1.8
+     },
+     "actions": [
+      {
+       "type": "dialogue",
+       "speaker": "Pip",
+       "lines": [
+        "This is the touch arena.",
+        "Tap the interact button next to anything that glows."
+       ]
+      }
+     ]
+    }
+   ],
+   "objective": "Try every Interact",
+   "level": [
+    1,
+    6
+   ],
+   "boss": null,
+   "grass": null,
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 0,
+    "level": 4
+   },
+   "spawns": [
+    {
+     "type": "spawn",
+     "enemy": "dummy",
+     "count": 1,
+     "x": 18,
+     "y": 8,
+     "radius": 0,
+     "instant": true
+    },
+    {
+     "type": "spawn",
+     "enemy": "dummy",
+     "count": 1,
+     "x": 20,
+     "y": 10,
+     "radius": 0,
+     "instant": true
+    }
+   ]
+  },
+  {
+   "id": "verbs",
+   "name": "Elements in the world",
+   "sub": "Arena: world verbs",
+   "desc": "All 15 Receivers, grass fire, ice, Pip's charge, Dream Oil, the Opal, 3 element puzzles (L8)",
+   "theme": "vale",
+   "W": 32,
+   "H": 32,
+   "tiles": [
+    "................................",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    ".xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+    "..............xxxx..............",
+    ".ggggggggg.gggggggggg.ggggggggg.",
+    ".ggggggggg.gggggggggg.ggggggggg.",
+    ".ggggggggg.gggggggggg.ggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".ggggggggg.gggggggggg.ggggggggg.",
+    ".ggggggggg.gggggggggg.ggggggggg.",
+    ".ggggggggg.gggggggggg.ggggggggg.",
+    ".ggggggggg.gggggggggg.ggggggggg.",
+    ".wwwwwwwwwwwwwwbbwwwwwwwwwwwwww.",
+    ".wwwwwwwwwwwwwwbbwwwwwwwwwwwwww.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    ".gggggggggggggggggggggggggggggg.",
+    "................................"
+   ],
+   "heights": [
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000",
+    "00000000000000000000000000000000"
+   ],
+   "start": {
+    "x": 15.5,
+    "y": 29
+   },
+   "objects": [
+    {
+     "t": "crystal_wall",
+     "id": "crystal_n",
+     "x": 8.5,
+     "y": 4.5
+    },
+    {
+     "t": "glyph",
+     "id": "glyph_n",
+     "x": 16,
+     "y": 4
+    },
+    {
+     "t": "fogbank",
+     "id": "fog_n",
+     "x": 24.5,
+     "y": 4.5
+    },
+    {
+     "t": "chest",
+     "x": 16,
+     "y": 2,
+     "tier": "gold",
+     "label": "verbs-seal-chest"
+    },
+    {
+     "t": "lantern",
+     "x": 3,
+     "y": 2
+    },
+    {
+     "t": "lantern",
+     "x": 29,
+     "y": 2
+    },
+    {
+     "t": "seal",
+     "id": "seal_c",
+     "x": 16,
+     "y": 10.4
+    },
+    {
+     "t": "gate",
+     "id": "gate_c",
+     "x": 16,
+     "y": 9.5,
+     "ang": 1.5708,
+     "len": 4.2
+    },
+    {
+     "t": "torch",
+     "id": "torch_a",
+     "x": 11.6,
+     "y": 12.2
+    },
+    {
+     "t": "torch",
+     "id": "torch_b",
+     "x": 11.6,
+     "y": 16.8
+    },
+    {
+     "t": "gate",
+     "id": "gate_a",
+     "x": 10.5,
+     "y": 14.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "brazier",
+     "id": "brazier_src",
+     "state": "lit",
+     "x": 14.5,
+     "y": 14.5
+    },
+    {
+     "t": "brazier",
+     "id": "brazier_b",
+     "state": "unlit",
+     "x": 17.5,
+     "y": 11.5
+    },
+    {
+     "t": "conduit",
+     "id": "conduit_a",
+     "x": 19.6,
+     "y": 12.2
+    },
+    {
+     "t": "conduit",
+     "id": "conduit_b",
+     "x": 19.6,
+     "y": 16.8
+    },
+    {
+     "t": "gate",
+     "id": "gate_b",
+     "x": 21.5,
+     "y": 14.5,
+     "ang": 0,
+     "len": 3.2
+    },
+    {
+     "t": "storm_crystal",
+     "id": "storm_m",
+     "x": 17.5,
+     "y": 17.6
+    },
+    {
+     "t": "chest",
+     "x": 5,
+     "y": 12,
+     "tier": "silver",
+     "label": "verbs-torch-chest"
+    },
+    {
+     "t": "lantern",
+     "x": 2,
+     "y": 11
+    },
+    {
+     "t": "chest",
+     "x": 26,
+     "y": 14.5,
+     "tier": "silver",
+     "label": "verbs-conduit-chest"
+    },
+    {
+     "t": "lantern",
+     "x": 29,
+     "y": 11
+    },
+    {
+     "t": "raft",
+     "id": "raft_w",
+     "x": 4.5,
+     "y": 20.6,
+     "to": {
+      "x": 8,
+      "y": 21
+     }
+    },
+    {
+     "t": "seed",
+     "id": "seed_s",
+     "x": 12.5,
+     "y": 22.4,
+     "bridge": [
+      12,
+      20,
+      1,
+      2
+     ]
+    },
+    {
+     "t": "bramble",
+     "id": "bramble_s",
+     "x": 5.5,
+     "y": 25.5
+    },
+    {
+     "t": "shrine",
+     "id": "shrine_verbs",
+     "dawn": true,
+     "x": 13.5,
+     "y": 27.2,
+     "name": "Dawn shrine",
+     "label": "checkpoint"
+    },
+    {
+     "t": "elderstone",
+     "id": "stone_verbs",
+     "x": 18.5,
+     "y": 27.2,
+     "price": 0
+    },
+    {
+     "t": "rime_crystal",
+     "id": "rime_s",
+     "x": 21.5,
+     "y": 24.5
+    },
+    {
+     "t": "vent",
+     "id": "vent_s",
+     "x": 24.5,
+     "y": 27.5
+    },
+    {
+     "t": "windmill",
+     "id": "mill_s",
+     "x": 27.5,
+     "y": 24
+    },
+    {
+     "t": "icewall",
+     "id": "icewall_s",
+     "x": 28.5,
+     "y": 28.4
+    },
+    {
+     "t": "lantern",
+     "x": 2,
+     "y": 30
+    },
+    {
+     "t": "lantern",
+     "x": 30,
+     "y": 30
+    }
+   ],
+   "triggers": [
+    {
+     "id": "in",
+     "name": "Enter",
+     "when": {
+      "type": "map_enter"
+     },
+     "actions": [
+      {
+       "type": "banner",
+       "title": "Elements in the world",
+       "sub": "Pip carries a charge; the Elder Stone gives oil"
+      },
+      {
+       "type": "objective",
+       "text": "Light both torches by the west door"
+      }
+     ]
+    },
+    {
+     "id": "p1_torches",
+     "name": "Both torches lit",
+     "when": {
+      "type": "object_state",
+      "ids": [
+       "torch_a",
+       "torch_b"
+      ],
+      "state": "lit"
+     },
+     "actions": [
+      {
+       "type": "openGate",
+       "id": "gate_a"
+      },
+      {
+       "type": "message",
+       "text": "The west gate opens"
+      },
+      {
+       "type": "loot",
+       "item": "opal_3",
+       "count": 1,
+       "x": 5,
+       "y": 14.5
+      },
+      {
+       "type": "objective",
+       "text": "Wake both conduits by the east door"
+      }
+     ]
+    },
+    {
+     "id": "p2_conduits",
+     "name": "Both conduits live",
+     "when": {
+      "type": "object_state",
+      "ids": [
+       "conduit_a",
+       "conduit_b"
+      ],
+      "state": "live"
+     },
+     "actions": [
+      {
+       "type": "openGate",
+       "id": "gate_b"
+      },
+      {
+       "type": "message",
+       "text": "The east gate opens"
+      },
+      {
+       "type": "objective",
+       "text": "Break the seal on the north gate with holy light"
+      }
+     ]
+    },
+    {
+     "id": "p3_seal",
+     "name": "Holy on the seal",
+     "when": {
+      "type": "element_hit",
+      "id": "seal_c",
+      "el": "holy"
+     },
+     "actions": [
+      {
+       "type": "openGate",
+       "id": "gate_c"
+      },
+      {
+       "type": "message",
+       "text": "The seal breaks; the north gate opens"
+      },
+      {
+       "type": "objective",
+       "text": "Frost the crystal wall, then cut it"
+      }
+     ]
+    }
+   ],
+   "objective": "Light the torches, wake the conduits, break the seal",
+   "level": [
+    6,
+    12
+   ],
+   "boss": null,
+   "grass": [
+    [
+     2,
+     23,
+     7,
+     6
+    ]
+   ],
+   "kit": {
+    "hand": "sword",
+    "offhand": "buckler",
+    "head": "knighthelm",
+    "chest": "warden",
+    "boots": "knightgreaves",
+    "tier": 1,
+    "level": 8
+   },
+   "spawns": []
+  }
+ ]
+}

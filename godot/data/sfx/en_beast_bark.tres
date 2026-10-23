@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_x1m16"]
+
+[resource]
+script = ExtResource("1_x1m16")
+id = &"en_beast_bark"
+pitch_vary = 0.1
+priority = 2
+caption = "[beast lunge]"
+recipe = {
+"layers": [{
+"dur": 0.08,
+"f0": 360.0,
+"f1": 220.0,
+"gain": 0.05,
+"osc": "square"
+}, {
+"delay": 0.12,
+"dur": 0.08,
+"f0": 340.0,
+"f1": 200.0,
+"gain": 0.05,
+"osc": "square"
+}]
+}

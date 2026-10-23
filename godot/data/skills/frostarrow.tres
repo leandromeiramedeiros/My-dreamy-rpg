@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_mbdo8"]
+[ext_resource type="Script" path="res://scripts/data/projectile_block.gd" id="2_m0vwr"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_lgmlw"]
+
+[sub_resource type="Resource" id="Resource_x56r7"]
+script = ExtResource("2_m0vwr")
+speed = 16.0
+life = 0.75
+pierce = 1
+damage = 65.0
+hit_params = {
+"col": "#d0f4ff",
+"slow": 2.0
+}
+
+[resource]
+script = ExtResource("3_lgmlw")
+id = &"frostarrow"
+display_name = "Frost"
+description = "ARROW — an icy arrow that Chills."
+element = "frost"
+kind = "page"
+cooldown = 6.0
+mp_cost = 22.0
+tags = PackedStringArray()
+decks = PackedStringArray("arrow")
+blocks = Array[ExtResource("1_mbdo8")]([SubResource("Resource_x56r7")])
+aim_shape = "proj"
+aim_range = 12.0
+aim_width = 0.3
+color = Color(0.62352943, 0.9098039, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+template CT.arrow {\"dmg\":65,\"col\":\"#d0f4ff\",\"slow\":2,\"pierce\":1}
+JS:
+cast: cast(p, a) {
+    castAnim(p);
+    spawnProj(Object.assign({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 16, r: 0.3, life: 0.75, kind: 'arrow' }, o));
+    sfx('bow');
+  }"

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_dkjaq"]
+
+[resource]
+script = ExtResource("1_dkjaq")
+id = &"st_shock"
+pitch_vary = 0.06
+caption = "[shocked]"
+recipe = {
+"layers": [{
+"dur": 0.06,
+"f0": 120.0,
+"f1": 120.0,
+"filter": {
+"freq": 1200.0,
+"q": 2.0,
+"type": "bandpass"
+},
+"gain": 0.03,
+"osc": "square"
+}]
+}

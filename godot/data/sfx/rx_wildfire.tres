@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_s5tma"]
+
+[resource]
+script = ExtResource("1_s5tma")
+id = &"rx_wildfire"
+pitch_vary = 0.03
+priority = 3
+caption = "[wildfire reaction]"
+recipe = {
+"layers": [{
+"dur": 0.4,
+"f0": 400.0,
+"f1": 2000.0,
+"filter": {
+"freq": 900.0,
+"q": 1.0,
+"type": "bandpass"
+},
+"gain": 0.07,
+"osc": "noise"
+}, {
+"delay": 0.1,
+"dur": 0.2,
+"f0": 392.0,
+"f1": 392.0,
+"gain": 0.05,
+"osc": "sine"
+}, {
+"delay": 0.2,
+"dur": 0.25,
+"f0": 523.0,
+"f1": 523.0,
+"gain": 0.05,
+"osc": "sine"
+}]
+}

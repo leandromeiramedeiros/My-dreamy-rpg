@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_5oprv"]
+
+[resource]
+script = ExtResource("1_5oprv")
+id = &"elite_frozen"
+display_name = "Frozen"
+hint = "Elite modifier"
+source = "elite"
+if_tags = PackedStringArray()
+do_action = &"elite_frozen"
+do_params = {
+"color": "#9fe8ff",
+"damage_mult": 1.25,
+"hp_mult": 3.2,
+"rare": true
+}
+icd = 0.0
+tags = PackedStringArray()
+todo = "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.
+JS:
+tick: tick(e) { const p = G.player; if (dist(e.x, e.y, p.x, p.y) < 2.4) p.slowT = Math.max(p.slowT, 0.2); }
+onHit: onHit() { G.player.slowT = Math.max(G.player.slowT, 1.2); }"

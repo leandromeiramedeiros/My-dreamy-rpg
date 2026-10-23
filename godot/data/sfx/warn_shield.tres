@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_nuc1j"]
+
+[resource]
+script = ExtResource("1_nuc1j")
+id = &"warn_shield"
+priority = 3
+caption = "[boss shield]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 400.0,
+"f1": 800.0,
+"gain": 0.06,
+"osc": "triangle"
+}]
+}

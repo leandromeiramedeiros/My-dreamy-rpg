@@ -1,0 +1,23 @@
+{
+ "id": "mushroom",
+ "kind": "mushroom",
+ "label": "Glow mushroom",
+ "size": [
+  9,
+  7
+ ],
+ "origin": [
+  4.5,
+  6
+ ],
+ "collider_r": 0,
+ "shadow": 0,
+ "light": {
+  "r": 22,
+  "col": "#6fd6ff",
+  "a": 0.8,
+  "h": 3
+ },
+ "image": "mushroom.png",
+ "frames": null
+}

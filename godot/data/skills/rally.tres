@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_8kf35"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_p00cu"]
+
+[resource]
+script = ExtResource("2_p00cu")
+id = &"rally"
+display_name = "Rally"
+description = "CALL — heal 12% and +15% damage for 6 s."
+element = "holy"
+kind = "page"
+cooldown = 18.0
+mp_cost = 25.0
+tags = PackedStringArray()
+decks = PackedStringArray("call")
+color = Color(1, 0.84705883, 0.5647059, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+template CT.buff {\"buff\":\"rally\",\"t\":6,\"heal\":0.12,\"col\":\"#ffd890\",\"sfx\":\"shout\"}
+no starter block covers CT.buff (buff / guard): wave 2
+JS:
+cast: cast(p) {
+    addBuff(p, o.buff, o.t);
+    if (o.heal) healPlayer(p, p.maxHp * o.heal * healMul(p));
+    if (o.nova) hitArea(p.x, p.y, o.nova.r, o.nova.dmg, o.nova.hit || {});
+    fx({ type: 'ring', x: p.x, y: p.y, r: o.nova ? o.nova.r + 0.2 : 1.4, col: o.col, life: 0.4 });
+    burst(p.x, p.y, p.z + 1, 14, [o.col, '#ffffff'], 2); sfx(o.sfx || 'shield');
+  }"

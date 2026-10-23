@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_3x80g"]
+
+[resource]
+script = ExtResource("1_3x80g")
+id = &"grip_twinstars"
+display_name = "Twin Stars"
+hint = "An arcane hit on a Jolted foe takes 2 s off both spells (ICD 4 s)."
+source = "grip"
+when_event = "hit"
+if_tags = PackedStringArray()
+do_action = &"grip_twinstars"
+icd = 4.0
+tags = PackedStringArray()
+todo = "JS:
+do: do(c, v, p) { if (c.el === 'arcane' && c.e.status && c.e.status.jolted && c.e.status.jolted.until > G.t) for (const k of ['q', 'e']) { const id = slotSkill(p, k); if (id && p.cds[id] > 0) p.cds[id] = Math.max(0, p.cds[id] - 2); } }"

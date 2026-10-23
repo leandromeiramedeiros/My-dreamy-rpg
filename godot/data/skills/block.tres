@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_ej632"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_46qax"]
+
+[resource]
+script = ExtResource("2_46qax")
+id = &"block"
+display_name = "Block"
+description = "HOLD — block 70% of hits from the front (poise); drains stamina."
+element = "slash"
+kind = "action"
+cooldown = 0.3
+stamina_cost = 6.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+color = Color(0.65882355, 0.72156864, 0.84705883, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+template CT.guard {\"kind\":\"block\",\"cut\":0.7,\"arc\":2.1,\"speed\":0.7,\"drain\":10}
+no starter block covers CT.guard (buff / guard): wave 2
+JS:
+cast: cast(p) { startGuard(p, o); }
+JS fields: {\"off\":true}"

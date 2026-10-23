@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_j7fx7"]
+
+[resource]
+script = ExtResource("1_j7fx7")
+id = &"salvageDust"
+display_name = "Thrifty Hands"
+hint = "Salvage Dust x1.5"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"salvageDust": 1.5
+},
+"minor": {
+"salvageDust": 1.25
+}
+}
+stats = {
+"salvageDust": "salvageDust"
+}
+tags = PackedStringArray("salvage")
+todo = "Boon numbers: minor {\"salvageDust\":1.25}, major {\"salvageDust\":1.5}"

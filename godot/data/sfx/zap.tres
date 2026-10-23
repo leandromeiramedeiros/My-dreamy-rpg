@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_ymsm1"]
+
+[resource]
+script = ExtResource("1_ymsm1")
+id = &"zap"
+pitch_vary = 0.06
+priority = 2
+caption = "[lightning]"
+recipe = {
+"layers": [{
+"dur": 0.25,
+"f0": 3000.0,
+"f1": 300.0,
+"gain": 0.03,
+"osc": "saw"
+}]
+}

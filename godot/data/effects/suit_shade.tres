@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_n124d"]
+
+[resource]
+script = ExtResource("1_n124d")
+id = &"suit_shade"
+display_name = "Shade twist"
+hint = "A decoy pops into 2 Marks on every foe near it"
+source = "suit"
+if_tags = PackedStringArray()
+tags = PackedStringArray()
+todo = "Inline engine check at updateDecoys (no bus event).
+Live while three shade pieces are worn."

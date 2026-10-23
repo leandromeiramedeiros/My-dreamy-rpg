@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_eqqs8"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_j50fh"]
+
+[resource]
+script = ExtResource("2_j50fh")
+id = &"brace"
+display_name = "Brace"
+description = "CHEST — poise and 30% less damage for 3 s, then shove everything away."
+element = "slash"
+kind = "active"
+cooldown = 14.0
+mp_cost = 20.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+aim_radius = 2.0
+color = Color(0.6039216, 0.53333336, 0.47058824, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+template CT.buff {\"buff\":\"brace\",\"t\":3,\"col\":\"#c0b0a0\"}
+no starter block covers CT.buff (buff / guard): wave 2
+JS:
+cast: cast(p) {
+    addBuff(p, o.buff, o.t);
+    if (o.heal) healPlayer(p, p.maxHp * o.heal * healMul(p));
+    if (o.nova) hitArea(p.x, p.y, o.nova.r, o.nova.dmg, o.nova.hit || {});
+    fx({ type: 'ring', x: p.x, y: p.y, r: o.nova ? o.nova.r + 0.2 : 1.4, col: o.col, life: 0.4 });
+    burst(p.x, p.y, p.z + 1, 14, [o.col, '#ffffff'], 2); sfx(o.sfx || 'shield');
+  }"

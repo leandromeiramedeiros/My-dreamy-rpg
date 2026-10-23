@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_vv1qd"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_1ipal"]
+
+[resource]
+script = ExtResource("2_1ipal")
+id = &"mirrorimage"
+display_name = "Mirror Image"
+description = "CHEST — an image of you for 6 s: it draws foes and shoots arcane bolts."
+element = "arcane"
+kind = "active"
+cooldown = 16.0
+mp_cost = 30.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+color = Color(0.72156864, 0.59607846, 0.8784314, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { const tw = suitTwist(p, 'mirage'); spawnDecoy(p.x + Math.cos(p.aim + 1.6) * 1.2, p.y + Math.sin(p.aim + 1.6) * 1.2, tw ? 10 : 6, { image: true, bolt: tw ? 45 : 30 }); sfx('blink'); }"

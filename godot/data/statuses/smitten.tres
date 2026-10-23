@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_ksk1l"]
+
+[resource]
+script = ExtResource("1_ksk1l")
+id = &"smitten"
+display_name = "Smitten"
+element = "holy"
+reacts_with = PackedStringArray("wind")
+tint = Color(1, 0.9490196, 0.76862746, 1)
+tint_alpha = 0.22
+socket = "head"
+light_color = Color(1, 0.9490196, 0.76862746, 1)
+light_radius = 20.0
+light_alpha = 0.2
+light_mode = "cool"

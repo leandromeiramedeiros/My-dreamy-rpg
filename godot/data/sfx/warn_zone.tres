@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_ea7w7"]
+
+[resource]
+script = ExtResource("1_ea7w7")
+id = &"warn_zone"
+priority = 3
+caption = "[hazard forming]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 200.0,
+"f1": 200.0,
+"filter": {
+"freq": 500.0,
+"q": 1.0,
+"type": "lowpass"
+},
+"gain": 0.07,
+"osc": "noise"
+}]
+}

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_jptec"]
+
+[resource]
+script = ExtResource("1_jptec")
+id = &"elite_burning"
+display_name = "Burning"
+hint = "Elite modifier"
+source = "elite"
+if_tags = PackedStringArray()
+do_action = &"elite_burning"
+do_params = {
+"color": "#ff9a4a",
+"damage_mult": 1.25,
+"hp_mult": 3.2,
+"rare": false
+}
+icd = 0.0
+tags = PackedStringArray()
+todo = "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.
+JS:
+tick: tick(e, dt) {
+      e.eTrailT = (e.eTrailT || 0) - dt;
+      const moved = dist(e.x, e.y, e.lx == null ? e.x : e.lx, e.ly == null ? e.y : e.ly) > 0.6;
+      if (e.eTrailT <= 0 && moved) { e.eTrailT = 0.45; e.lx = e.x; e.ly = e.y; hostileZone(zoneOf('fire', { x: e.x, y: e.y, r: 0.7, life: 2.5, tick: 0.5, dmg: e.def.dmg * e.dm * 0.15 })); }
+    }"

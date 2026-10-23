@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_51pts"]
+
+[resource]
+script = ExtResource("1_51pts")
+id = &"levelup"
+bus = "ui"
+priority = 2
+caption = "[level up]"
+recipe = {
+"layers": [{
+"dur": 0.32,
+"f0": 523.0,
+"f1": 528.0,
+"gain": 0.06,
+"osc": "triangle"
+}, {
+"delay": 0.09,
+"dur": 0.32,
+"f0": 659.0,
+"f1": 666.0,
+"gain": 0.06,
+"osc": "triangle"
+}, {
+"delay": 0.18,
+"dur": 0.32,
+"f0": 784.0,
+"f1": 792.0,
+"gain": 0.06,
+"osc": "triangle"
+}, {
+"delay": 0.27,
+"dur": 0.32,
+"f0": 1047.0,
+"f1": 1058.0,
+"gain": 0.06,
+"osc": "triangle"
+}, {
+"delay": 0.27,
+"dur": 0.6,
+"f0": 1568.0,
+"f1": 2093.0,
+"gain": 0.03,
+"osc": "sine"
+}]
+}

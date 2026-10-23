@@ -1,0 +1,746 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/systems/arena.gd" id="1_pyeg5"]
+[ext_resource type="Resource" path="res://data/items/sword.tres" id="2_vkgas"]
+[ext_resource type="Resource" path="res://data/items/buckler.tres" id="3_wm48x"]
+[ext_resource type="Resource" path="res://data/items/knighthelm.tres" id="4_this0"]
+[ext_resource type="Resource" path="res://data/items/warden.tres" id="5_xpmu2"]
+[ext_resource type="Resource" path="res://data/items/knightgreaves.tres" id="6_rgpvg"]
+[ext_resource type="TileSet" path="res://art/tiles/ruins/ruins_tileset.tres" id="7_miajv"]
+[ext_resource type="PackedScene" path="res://scenes/hero/hero.tscn" id="8_enk7a"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="9_4ubr3"]
+[ext_resource type="Resource" path="res://data/enemies/gloomslime.tres" id="10_a1akm"]
+[ext_resource type="Resource" path="res://data/enemies/shadehound.tres" id="11_brlts"]
+[ext_resource type="Resource" path="res://data/enemies/dreammoth.tres" id="12_j4x7s"]
+[ext_resource type="Resource" path="res://data/enemies/thornbackboar.tres" id="13_q8cli"]
+[ext_resource type="Resource" path="res://data/enemies/ogre.tres" id="14_jymo7"]
+[ext_resource type="Resource" path="res://data/enemies/brambleshaman.tres" id="15_sjgpm"]
+[ext_resource type="PackedScene" path="res://scenes/props/prop.tscn" id="16_6vh2o"]
+[ext_resource type="JSON" path="res://art/props/lantern_blue.json" id="17_ho3wf"]
+[ext_resource type="JSON" path="res://art/props/crystal.json" id="18_srdkg"]
+[ext_resource type="JSON" path="res://art/props/brazier.json" id="19_h7p8m"]
+[ext_resource type="JSON" path="res://art/props/mushroom.json" id="20_upuik"]
+[ext_resource type="JSON" path="res://art/props/crystal_violet.json" id="21_p40qs"]
+
+[node name="Stress" type="Node2D" unique_id=1323079563]
+script = ExtResource("1_pyeg5")
+arena_id = &"stress"
+arena_name = "Stress arena"
+description = "24 awake bodies, 40 lights, status bodies and tiles (perf)"
+objective = "Survive (use ?god)"
+zone = &"ruins"
+level_range = Vector2i(10, 17)
+kit_hand = ExtResource("2_vkgas")
+kit_offhand = ExtResource("3_wm48x")
+kit_head = ExtResource("4_this0")
+kit_chest = ExtResource("5_xpmu2")
+kit_boots = ExtResource("6_rgpvg")
+kit_tier = 1
+hero_level = 14
+triggers = Array[Dictionary]([{
+"actions": [{
+"sub": "24 bodies, 40 lights, status effects",
+"title": "Stress arena",
+"type": "banner"
+}, {
+"count": 1.0,
+"enemy": "gloomslime",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 8.5,
+"y": 8.5
+}, {
+"count": 1.0,
+"enemy": "shadehound",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 23.5,
+"y": 8.5
+}, {
+"count": 1.0,
+"enemy": "dreammoth",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 8.5,
+"y": 23.5
+}, {
+"count": 1.0,
+"enemy": "thornbackboar",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 23.5,
+"y": 23.5
+}, {
+"count": 1.0,
+"enemy": "ogre",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 8.5,
+"y": 8.5
+}, {
+"count": 1.0,
+"enemy": "brambleshaman",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 23.5,
+"y": 8.5
+}, {
+"count": 1.0,
+"enemy": "gloomslime",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 8.5,
+"y": 23.5
+}, {
+"count": 1.0,
+"enemy": "shadehound",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 23.5,
+"y": 23.5
+}, {
+"count": 1.0,
+"enemy": "dreammoth",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 8.5,
+"y": 8.5
+}, {
+"count": 1.0,
+"enemy": "thornbackboar",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 23.5,
+"y": 8.5
+}, {
+"count": 1.0,
+"enemy": "ogre",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 8.5,
+"y": 23.5
+}, {
+"count": 1.0,
+"enemy": "brambleshaman",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 23.5,
+"y": 23.5
+}, {
+"count": 1.0,
+"enemy": "gloomslime",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 8.5,
+"y": 8.5
+}, {
+"count": 1.0,
+"enemy": "shadehound",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 23.5,
+"y": 8.5
+}, {
+"count": 1.0,
+"enemy": "dreammoth",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 8.5,
+"y": 23.5
+}, {
+"count": 1.0,
+"enemy": "thornbackboar",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 23.5,
+"y": 23.5
+}, {
+"count": 1.0,
+"enemy": "ogre",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 8.5,
+"y": 8.5
+}, {
+"count": 1.0,
+"enemy": "brambleshaman",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 23.5,
+"y": 8.5
+}, {
+"count": 1.0,
+"enemy": "gloomslime",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 8.5,
+"y": 23.5
+}, {
+"count": 1.0,
+"enemy": "shadehound",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 23.5,
+"y": 23.5
+}, {
+"count": 1.0,
+"enemy": "dreammoth",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 8.5,
+"y": 8.5
+}, {
+"count": 1.0,
+"enemy": "thornbackboar",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 23.5,
+"y": 8.5
+}, {
+"count": 1.0,
+"enemy": "ogre",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 8.5,
+"y": 23.5
+}, {
+"count": 1.0,
+"enemy": "brambleshaman",
+"instant": true,
+"radius": 3.0,
+"type": "spawn",
+"x": 23.5,
+"y": 23.5
+}],
+"id": "in",
+"name": "Swarm",
+"when": {
+"type": "map_enter"
+}
+}, {
+"actions": [{
+"bodies": 6.0,
+"cycle": ["burning", "chilled", "shocked", "wet", "poisoned", "dread"],
+"dur": 8.0,
+"every": 6.0,
+"rings": [{
+"dur": 8.0,
+"kind": "burning",
+"r": 3.5,
+"x": 17.0,
+"y": 17.0
+}],
+"times": 40.0,
+"type": "status"
+}],
+"id": "status",
+"name": "Status bodies",
+"when": {
+"after": "map",
+"seconds": 1.5,
+"type": "timer"
+}
+}])
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=698745443]
+tile_map_data = PackedByteArray("AAAZABkAAAAAAAAAAAATABkAAAADAAAAAAAMABkAAAADAAAAAAAGABkAAAAAAAAAAAAZABMAAAAAAAAAAAATABMAAAAAAAAAAAAMABMAAAABAAAAAAAGABMAAAACAAAAAAAZAAwAAAAAAAAAAAATAAwAAAACAAAAAAAMAAwAAAAAAAAAAAAGAAwAAAADAAAAAAAZAAYAAAABAAAAAAATAAYAAAACAAAAAAAMAAYAAAADAAAAAAAGAAYAAAABAAAAAAAdAB0ABQADAAIAAAAcAB0ABQACAAIAAAAbAB0ABQACAAIAAAAaAB0ABQACAAIAAAAZAB0ABQACAAIAAAAYAB0ABQACAAIAAAAXAB0ABQACAAIAAAAWAB0ABQACAAIAAAAVAB0ABQACAAIAAAAUAB0ABQACAAIAAAATAB0ABQACAAIAAAASAB0ABQACAAIAAAARAB0ABQACAAIAAAAQAB0ABQACAAIAAAAPAB0ABQACAAIAAAAOAB0ABQACAAIAAAANAB0ABQACAAIAAAAMAB0ABQACAAIAAAALAB0ABQACAAIAAAAKAB0ABQACAAIAAAAJAB0ABQACAAIAAAAIAB0ABQACAAIAAAAHAB0ABQACAAIAAAAGAB0ABQACAAIAAAAFAB0ABQACAAIAAAAEAB0ABQACAAIAAAADAB0ABQACAAIAAAACAB0ABQACAAIAAAAdABwABQADAAEAAAAcABwABQACAAEAAAAbABwABQACAAEAAAAaABwABQAAAAQAAAAZABwABQAAAAQAAAAYABwABQAAAAQAAAAXABwABQACAAQAAAAWABwABQADAAQAAAAVABwABQACAAEAAAAUABwABQABAAQAAAATABwABQADAAQAAAASABwABQADAAQAAAARABwABQACAAEAAAAQABwABQABAAQAAAAPABwABQACAAEAAAAOABwABQACAAQAAAANABwABQAAAAQAAAAMABwABQACAAEAAAALABwABQAAAAQAAAAKABwABQACAAEAAAAJABwABQADAAQAAAAIABwABQACAAQAAAAHABwABQAAAAQAAAAGABwABQACAAEAAAAFABwABQACAAEAAAAEABwABQACAAEAAAADABwABQADAAQAAAACABwABQAHAAMAAAAdABsABQADAAEAAAAcABsABQAAAAQAAAAbABsABQADAAQAAAAaABsABQADAAQAAAAZABsABQACAAEAAAAYABsABQACAAEAAAAXABsABQACAAQAAAAWABsABQACAAEAAAAVABsABQACAAEAAAAUABsABQAAAAQAAAATABsABQACAAEAAAASABsABQACAAEAAAARABsABQADAAQAAAAQABsABQABAAQAAAAPABsABQAAAAQAAAAOABsABQAAAAQAAAANABsABQACAAEAAAAMABsABQABAAQAAAALABsABQACAAQAAAAKABsABQACAAQAAAAJABsABQACAAQAAAAIABsABQAAAAQAAAAHABsABQAAAAQAAAAGABsABQACAAQAAAAFABsABQACAAEAAAAEABsABQACAAEAAAADABsABQACAAQAAAACABsABQAHAAMAAAAdABoABQADAAEAAAAcABoABQAAAAQAAAAbABoABQACAAEAAAAaABoABQAKAAMAAAAZABoABQACAAAAAAAYABoABQAJAAMAAAAXABoABQADAAQAAAAWABoABQACAAQAAAAVABoABQACAAEAAAAUABoABQAKAAMAAAATABoABQACAAAAAAASABoABQAJAAMAAAARABoABQAAAAQAAAAQABoABQABAAQAAAAPABoABQADAAQAAAAOABoABQABAAQAAAANABoABQAKAAMAAAAMABoABQACAAAAAAALABoABQAJAAMAAAAKABoABQACAAEAAAAJABoABQACAAEAAAAIABoABQACAAEAAAAHABoABQAKAAMAAAAGABoABQACAAAAAAAFABoABQAJAAMAAAAEABoABQABAAQAAAADABoABQACAAQAAAACABoABQAHAAMAAAAdABkABQADAAEAAAAcABkABQACAAEAAAAbABkABQACAAEAAAAaABkABQABAAEAAAAYABkABQADAAEAAAAXABkABQABAAQAAAAWABkABQACAAEAAAAVABkABQACAAQAAAAUABkABQABAAEAAAASABkABQADAAEAAAARABkABQABAAQAAAAQABkABQAAAAQAAAAPABkABQAAAAQAAAAOABkABQAAAAQAAAANABkABQABAAEAAAALABkABQADAAEAAAAKABkABQACAAEAAAAJABkABQACAAEAAAAIABkABQACAAQAAAAHABkABQABAAEAAAAFABkABQADAAEAAAAEABkABQADAAQAAAADABkABQABAAQAAAACABkABQAHAAMAAAAdABgABQADAAEAAAAcABgABQAAAAQAAAAbABgABQAAAAQAAAAaABgABQAHAAMAAAAZABgABQACAAIAAAAYABgABQALAAIAAAAXABgABQAAAAQAAAAWABgABQACAAEAAAAVABgABQACAAEAAAAUABgABQAHAAMAAAATABgABQACAAIAAAASABgABQALAAIAAAARABgABQAAAAQAAAAQABgABQACAAEAAAAPABgABQACAAEAAAAOABgABQAAAAQAAAANABgABQAHAAMAAAAMABgABQACAAIAAAALABgABQALAAIAAAAKABgABQAAAAQAAAAJABgABQABAAQAAAAIABgABQABAAQAAAAHABgABQAHAAMAAAAGABgABQACAAIAAAAFABgABQALAAIAAAAEABgABQACAAEAAAADABgABQACAAEAAAACABgABQAHAAMAAAAdABcABQADAAEAAAAcABcABQACAAEAAAAbABcABQADAAQAAAAaABcABQACAAEAAAAZABcABQAAAAQAAAAYABcABQABAAQAAAAXABcABQACAAEAAAAWABcABQABAAQAAAAVABcABQAAAAQAAAAUABcABQAAAAQAAAATABcABQACAAEAAAASABcABQABAAQAAAARABcABQAAAAQAAAAQABcABQAAAAQAAAAPABcABQABAAQAAAAOABcABQAAAAQAAAANABcABQACAAQAAAAMABcABQABAAQAAAALABcABQADAAQAAAAKABcABQAAAAQAAAAJABcABQACAAEAAAAIABcABQAAAAQAAAAHABcABQACAAQAAAAGABcABQADAAQAAAAFABcABQAAAAQAAAAEABcABQACAAEAAAADABcABQAAAAQAAAACABcABQAHAAMAAAAdABYABQADAAEAAAAcABYABQAAAAQAAAAbABYABQACAAEAAAAaABYABQAAAAQAAAAZABYABQAAAAQAAAAYABYABQACAAEAAAAXABYABQAAAAQAAAAWABYABQAAAAQAAAAVABYABQABAAQAAAAUABYABQABAAQAAAATABYABQACAAEAAAASABYABQAAAAQAAAARABYABQAAAAQAAAAQABYABQAAAAQAAAAPABYABQADAAQAAAAOABYABQACAAEAAAANABYABQAAAAQAAAAMABYABQABAAQAAAALABYABQAAAAQAAAAKABYABQACAAEAAAAJABYABQABAAQAAAAIABYABQAAAAQAAAAHABYABQAAAAQAAAAGABYABQACAAEAAAAFABYABQACAAEAAAAEABYABQABAAQAAAADABYABQABAAQAAAACABYABQAHAAMAAAAdABUABQADAAEAAAAcABUABQACAAQAAAAbABUABQADAAQAAAAaABUABQACAAEAAAAZABUABQACAAEAAAAYABUABQABAAQAAAAXABUABQACAAEAAAAWABUABQACAAQAAAAVABUABQACAAQAAAAUABUABQACAAEAAAATABUABQACAAQAAAASABUABQAAAAQAAAARABUABQACAAEAAAAQABUABQAAAAQAAAAPABUABQAAAAQAAAAOABUABQAAAAQAAAANABUABQACAAEAAAAMABUABQAAAAQAAAALABUABQAAAAQAAAAKABUABQAAAAQAAAAJABUABQACAAEAAAAIABUABQACAAEAAAAHABUABQAAAAQAAAAGABUABQAAAAQAAAAFABUABQACAAQAAAAEABUABQAAAAQAAAADABUABQACAAEAAAACABUABQAHAAMAAAAdABQABQADAAEAAAAcABQABQAAAAQAAAAbABQABQAAAAQAAAAaABQABQAKAAMAAAAZABQABQACAAAAAAAYABQABQAJAAMAAAAXABQABQAAAAQAAAAWABQABQACAAEAAAAVABQABQACAAEAAAAUABQABQAKAAMAAAATABQABQACAAAAAAASABQABQAJAAMAAAARABQABQADAAQAAAAQABQABQACAAQAAAAPABQABQACAAEAAAAOABQABQACAAEAAAANABQABQAKAAMAAAAMABQABQACAAAAAAALABQABQAJAAMAAAAKABQABQADAAQAAAAJABQABQAAAAQAAAAIABQABQACAAEAAAAHABQABQAKAAMAAAAGABQABQACAAAAAAAFABQABQAJAAMAAAAEABQABQAAAAQAAAADABQABQAAAAQAAAACABQABQAHAAMAAAAdABMABQADAAEAAAAcABMABQACAAEAAAAbABMABQAAAAQAAAAaABMABQABAAEAAAAYABMABQADAAEAAAAXABMABQAAAAQAAAAWABMABQACAAEAAAAVABMABQAAAAQAAAAUABMABQABAAEAAAASABMABQADAAEAAAARABMABQACAAEAAAAQABMABQAAAAQAAAAPABMABQAAAAQAAAAOABMABQABAAQAAAANABMABQABAAEAAAALABMABQADAAEAAAAKABMABQACAAEAAAAJABMABQACAAEAAAAIABMABQACAAQAAAAHABMABQABAAEAAAAFABMABQADAAEAAAAEABMABQAAAAQAAAADABMABQACAAEAAAACABMABQAHAAMAAAAdABIABQADAAEAAAAcABIABQAAAAQAAAAbABIABQACAAQAAAAaABIABQAHAAMAAAAZABIABQACAAIAAAAYABIABQALAAIAAAAXABIABQACAAEAAAAWABIABQAAAAQAAAAVABIABQACAAEAAAAUABIABQAHAAMAAAATABIABQACAAIAAAASABIABQALAAIAAAARABIABQAAAAQAAAAQABIABQACAAEAAAAPABIABQACAAEAAAAOABIABQAAAAQAAAANABIABQAHAAMAAAAMABIABQACAAIAAAALABIABQALAAIAAAAKABIABQACAAEAAAAJABIABQACAAEAAAAIABIABQACAAEAAAAHABIABQAHAAMAAAAGABIABQACAAIAAAAFABIABQALAAIAAAAEABIABQACAAQAAAADABIABQAAAAQAAAACABIABQAHAAMAAAAdABEABQADAAEAAAAcABEABQAAAAQAAAAbABEABQABAAQAAAAaABEABQACAAEAAAAZABEABQACAAEAAAAYABEABQAAAAQAAAAXABEABQACAAQAAAAWABEABQAAAAQAAAAVABEABQABAAQAAAAUABEABQAAAAQAAAATABEABQAAAAQAAAASABEABQAAAAQAAAARABEABQACAAEAAAAQABEABQACAAQAAAAPABEABQAAAAQAAAAOABEABQACAAEAAAANABEABQACAAEAAAAMABEABQABAAQAAAALABEABQAAAAQAAAAKABEABQAAAAQAAAAJABEABQAAAAQAAAAIABEABQABAAQAAAAHABEABQAAAAQAAAAGABEABQACAAEAAAAFABEABQAAAAQAAAAEABEABQABAAQAAAADABEABQACAAEAAAACABEABQAHAAMAAAAdABAABQADAAEAAAAcABAABQACAAEAAAAbABAABQAAAAQAAAAaABAABQADAAQAAAAZABAABQADAAQAAAAYABAABQABAAQAAAAXABAABQACAAEAAAAWABAABQACAAQAAAAVABAABQACAAQAAAAUABAABQAAAAQAAAATABAABQAAAAQAAAASABAABQACAAEAAAARABAABQACAAEAAAAQABAABQAAAAQAAAAPABAABQACAAEAAAAOABAABQAAAAQAAAANABAABQABAAQAAAAMABAABQADAAQAAAALABAABQADAAQAAAAKABAABQACAAEAAAAJABAABQACAAEAAAAIABAABQAAAAQAAAAHABAABQACAAEAAAAGABAABQAAAAQAAAAFABAABQAAAAQAAAAEABAABQACAAQAAAADABAABQACAAEAAAACABAABQAHAAMAAAAdAA8ABQADAAEAAAAcAA8ABQADAAQAAAAbAA8ABQABAAQAAAAaAA8ABQAAAAQAAAAZAA8ABQACAAEAAAAYAA8ABQAAAAQAAAAXAA8ABQAAAAQAAAAWAA8ABQACAAEAAAAVAA8ABQAAAAQAAAAUAA8ABQACAAEAAAATAA8ABQAAAAQAAAASAA8ABQAAAAQAAAARAA8ABQAAAAQAAAAQAA8ABQABAAQAAAAPAA8ABQACAAEAAAAOAA8ABQADAAQAAAANAA8ABQAAAAQAAAAMAA8ABQAAAAQAAAALAA8ABQAAAAQAAAAKAA8ABQADAAQAAAAJAA8ABQAAAAQAAAAIAA8ABQACAAQAAAAHAA8ABQACAAEAAAAGAA8ABQACAAEAAAAFAA8ABQADAAQAAAAEAA8ABQABAAQAAAADAA8ABQAAAAQAAAACAA8ABQAHAAMAAAAdAA4ABQADAAEAAAAcAA4ABQAAAAQAAAAbAA4ABQAAAAQAAAAaAA4ABQACAAEAAAAZAA4ABQACAAEAAAAYAA4ABQACAAQAAAAXAA4ABQACAAEAAAAWAA4ABQAAAAQAAAAVAA4ABQABAAQAAAAUAA4ABQACAAQAAAATAA4ABQACAAEAAAASAA4ABQAAAAQAAAARAA4ABQACAAQAAAAQAA4ABQACAAQAAAAPAA4ABQACAAEAAAAOAA4ABQABAAQAAAANAA4ABQAAAAQAAAAMAA4ABQADAAQAAAALAA4ABQADAAQAAAAKAA4ABQAAAAQAAAAJAA4ABQAAAAQAAAAIAA4ABQABAAQAAAAHAA4ABQADAAQAAAAGAA4ABQAAAAQAAAAFAA4ABQAAAAQAAAAEAA4ABQAAAAQAAAADAA4ABQABAAQAAAACAA4ABQAHAAMAAAAdAA0ABQADAAEAAAAcAA0ABQACAAEAAAAbAA0ABQAAAAQAAAAaAA0ABQAKAAMAAAAZAA0ABQACAAAAAAAYAA0ABQAJAAMAAAAXAA0ABQADAAQAAAAWAA0ABQAAAAQAAAAVAA0ABQACAAEAAAAUAA0ABQAKAAMAAAATAA0ABQACAAAAAAASAA0ABQAJAAMAAAARAA0ABQADAAQAAAAQAA0ABQABAAQAAAAPAA0ABQADAAQAAAAOAA0ABQADAAQAAAANAA0ABQAKAAMAAAAMAA0ABQACAAAAAAALAA0ABQAJAAMAAAAKAA0ABQACAAEAAAAJAA0ABQACAAQAAAAIAA0ABQABAAQAAAAHAA0ABQAKAAMAAAAGAA0ABQACAAAAAAAFAA0ABQAJAAMAAAAEAA0ABQAAAAQAAAADAA0ABQACAAEAAAACAA0ABQAHAAMAAAAdAAwABQADAAEAAAAcAAwABQAAAAQAAAAbAAwABQAAAAQAAAAaAAwABQABAAEAAAAYAAwABQADAAEAAAAXAAwABQAAAAQAAAAWAAwABQAAAAQAAAAVAAwABQAAAAQAAAAUAAwABQABAAEAAAASAAwABQADAAEAAAARAAwABQACAAQAAAAQAAwABQAAAAQAAAAPAAwABQACAAEAAAAOAAwABQADAAQAAAANAAwABQABAAEAAAALAAwABQADAAEAAAAKAAwABQACAAQAAAAJAAwABQADAAQAAAAIAAwABQADAAQAAAAHAAwABQABAAEAAAAFAAwABQADAAEAAAAEAAwABQAAAAQAAAADAAwABQACAAEAAAACAAwABQAHAAMAAAAdAAsABQADAAEAAAAcAAsABQACAAEAAAAbAAsABQAAAAQAAAAaAAsABQAHAAMAAAAZAAsABQACAAIAAAAYAAsABQALAAIAAAAXAAsABQADAAQAAAAWAAsABQABAAQAAAAVAAsABQABAAQAAAAUAAsABQAHAAMAAAATAAsABQACAAIAAAASAAsABQALAAIAAAARAAsABQAAAAQAAAAQAAsABQACAAQAAAAPAAsABQAAAAQAAAAOAAsABQAAAAQAAAANAAsABQAHAAMAAAAMAAsABQACAAIAAAALAAsABQALAAIAAAAKAAsABQAAAAQAAAAJAAsABQACAAQAAAAIAAsABQACAAEAAAAHAAsABQAHAAMAAAAGAAsABQACAAIAAAAFAAsABQALAAIAAAAEAAsABQACAAQAAAADAAsABQACAAEAAAACAAsABQAHAAMAAAAdAAoABQADAAEAAAAcAAoABQAAAAQAAAAbAAoABQACAAEAAAAaAAoABQACAAQAAAAZAAoABQACAAEAAAAYAAoABQAAAAQAAAAXAAoABQACAAEAAAAWAAoABQABAAQAAAAVAAoABQACAAEAAAAUAAoABQADAAQAAAATAAoABQAAAAQAAAASAAoABQACAAEAAAARAAoABQADAAQAAAAQAAoABQACAAQAAAAPAAoABQACAAEAAAAOAAoABQAAAAQAAAANAAoABQADAAQAAAAMAAoABQACAAEAAAALAAoABQAAAAQAAAAKAAoABQACAAEAAAAJAAoABQAAAAQAAAAIAAoABQACAAEAAAAHAAoABQACAAQAAAAGAAoABQACAAQAAAAFAAoABQACAAEAAAAEAAoABQAAAAQAAAADAAoABQABAAQAAAACAAoABQAHAAMAAAAdAAkABQADAAEAAAAcAAkABQAAAAQAAAAbAAkABQAAAAQAAAAaAAkABQAAAAQAAAAZAAkABQACAAEAAAAYAAkABQACAAEAAAAXAAkABQACAAEAAAAWAAkABQACAAQAAAAVAAkABQACAAEAAAAUAAkABQACAAEAAAATAAkABQABAAQAAAASAAkABQAAAAQAAAARAAkABQACAAEAAAAQAAkABQAAAAQAAAAPAAkABQAAAAQAAAAOAAkABQACAAEAAAANAAkABQADAAQAAAAMAAkABQACAAQAAAALAAkABQAAAAQAAAAKAAkABQABAAQAAAAJAAkABQACAAQAAAAIAAkABQAAAAQAAAAHAAkABQABAAQAAAAGAAkABQABAAQAAAAFAAkABQAAAAQAAAAEAAkABQACAAEAAAADAAkABQACAAEAAAACAAkABQAHAAMAAAAdAAgABQADAAEAAAAcAAgABQACAAEAAAAbAAgABQAAAAQAAAAaAAgABQACAAEAAAAZAAgABQACAAQAAAAYAAgABQACAAQAAAAXAAgABQACAAEAAAAWAAgABQAAAAQAAAAVAAgABQACAAEAAAAUAAgABQAAAAQAAAATAAgABQACAAEAAAASAAgABQACAAEAAAARAAgABQABAAQAAAAQAAgABQAAAAQAAAAPAAgABQABAAQAAAAOAAgABQACAAQAAAANAAgABQACAAEAAAAMAAgABQAAAAQAAAALAAgABQAAAAQAAAAKAAgABQAAAAQAAAAJAAgABQACAAEAAAAIAAgABQAAAAQAAAAHAAgABQAAAAQAAAAGAAgABQABAAQAAAAFAAgABQAAAAQAAAAEAAgABQAAAAQAAAADAAgABQACAAQAAAACAAgABQAHAAMAAAAdAAcABQADAAEAAAAcAAcABQAAAAQAAAAbAAcABQAAAAQAAAAaAAcABQAKAAMAAAAZAAcABQACAAAAAAAYAAcABQAJAAMAAAAXAAcABQACAAEAAAAWAAcABQACAAQAAAAVAAcABQACAAEAAAAUAAcABQAKAAMAAAATAAcABQACAAAAAAASAAcABQAJAAMAAAARAAcABQACAAEAAAAQAAcABQACAAEAAAAPAAcABQABAAQAAAAOAAcABQAAAAQAAAANAAcABQAKAAMAAAAMAAcABQACAAAAAAALAAcABQAJAAMAAAAKAAcABQACAAQAAAAJAAcABQACAAQAAAAIAAcABQAAAAQAAAAHAAcABQAKAAMAAAAGAAcABQACAAAAAAAFAAcABQAJAAMAAAAEAAcABQAAAAQAAAADAAcABQACAAEAAAACAAcABQAHAAMAAAAdAAYABQADAAEAAAAcAAYABQAAAAQAAAAbAAYABQAAAAQAAAAaAAYABQABAAEAAAAYAAYABQADAAEAAAAXAAYABQADAAQAAAAWAAYABQAAAAQAAAAVAAYABQABAAQAAAAUAAYABQABAAEAAAASAAYABQADAAEAAAARAAYABQADAAQAAAAQAAYABQAAAAQAAAAPAAYABQAAAAQAAAAOAAYABQACAAEAAAANAAYABQABAAEAAAALAAYABQADAAEAAAAKAAYABQACAAQAAAAJAAYABQABAAQAAAAIAAYABQAAAAQAAAAHAAYABQABAAEAAAAFAAYABQADAAEAAAAEAAYABQAAAAQAAAADAAYABQAAAAQAAAACAAYABQAHAAMAAAAdAAUABQADAAEAAAAcAAUABQACAAQAAAAbAAUABQACAAEAAAAaAAUABQAHAAMAAAAZAAUABQACAAIAAAAYAAUABQALAAIAAAAXAAUABQACAAQAAAAWAAUABQABAAQAAAAVAAUABQADAAQAAAAUAAUABQAHAAMAAAATAAUABQACAAIAAAASAAUABQALAAIAAAARAAUABQAAAAQAAAAQAAUABQACAAEAAAAPAAUABQACAAQAAAAOAAUABQADAAQAAAANAAUABQAHAAMAAAAMAAUABQACAAIAAAALAAUABQALAAIAAAAKAAUABQACAAEAAAAJAAUABQABAAQAAAAIAAUABQAAAAQAAAAHAAUABQAHAAMAAAAGAAUABQACAAIAAAAFAAUABQALAAIAAAAEAAUABQAAAAQAAAADAAUABQACAAEAAAACAAUABQAHAAMAAAAdAAQABQADAAEAAAAcAAQABQACAAQAAAAbAAQABQAAAAQAAAAaAAQABQABAAQAAAAZAAQABQABAAQAAAAYAAQABQAAAAQAAAAXAAQABQABAAQAAAAWAAQABQACAAEAAAAVAAQABQACAAQAAAAUAAQABQAAAAQAAAATAAQABQAAAAQAAAASAAQABQACAAEAAAARAAQABQADAAQAAAAQAAQABQACAAEAAAAPAAQABQAAAAQAAAAOAAQABQACAAQAAAANAAQABQACAAEAAAAMAAQABQAAAAQAAAALAAQABQAAAAQAAAAKAAQABQAAAAQAAAAJAAQABQAAAAQAAAAIAAQABQACAAQAAAAHAAQABQAAAAQAAAAGAAQABQACAAEAAAAFAAQABQACAAEAAAAEAAQABQACAAQAAAADAAQABQACAAEAAAACAAQABQAHAAMAAAAdAAMABQADAAEAAAAcAAMABQAAAAQAAAAbAAMABQADAAQAAAAaAAMABQABAAQAAAAZAAMABQAAAAQAAAAYAAMABQAAAAQAAAAXAAMABQABAAQAAAAWAAMABQACAAEAAAAVAAMABQAAAAQAAAAUAAMABQAAAAQAAAATAAMABQACAAEAAAASAAMABQAAAAQAAAARAAMABQACAAEAAAAQAAMABQAAAAQAAAAPAAMABQABAAQAAAAOAAMABQAAAAQAAAANAAMABQAAAAQAAAAMAAMABQACAAEAAAALAAMABQAAAAQAAAAKAAMABQACAAQAAAAJAAMABQACAAEAAAAIAAMABQACAAQAAAAHAAMABQACAAQAAAAGAAMABQACAAEAAAAFAAMABQABAAQAAAAEAAMABQACAAEAAAADAAMABQACAAQAAAACAAMABQAHAAMAAAAdAAIABQADAAEAAAAcAAIABQAAAAQAAAAbAAIABQAAAAQAAAAaAAIABQADAAQAAAAZAAIABQACAAEAAAAYAAIABQACAAQAAAAXAAIABQAAAAQAAAAWAAIABQADAAQAAAAVAAIABQAAAAQAAAAUAAIABQACAAEAAAATAAIABQAAAAQAAAASAAIABQACAAEAAAARAAIABQACAAEAAAAQAAIABQACAAEAAAAPAAIABQAAAAQAAAAOAAIABQACAAEAAAANAAIABQACAAEAAAAMAAIABQABAAQAAAALAAIABQABAAQAAAAKAAIABQABAAQAAAAJAAIABQAAAAQAAAAIAAIABQACAAEAAAAHAAIABQADAAQAAAAGAAIABQACAAEAAAAFAAIABQAAAAQAAAAEAAIABQACAAEAAAADAAIABQACAAEAAAACAAIABQAHAAMAAAA=")
+tile_set = ExtResource("7_miajv")
+
+[node name="Entities" type="Node2D" parent="." unique_id=432000495]
+y_sort_enabled = true
+
+[node name="Columns" type="TileMapLayer" parent="Entities" unique_id=1986454590]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAGAAYACQAPAAAAAAAMAAYACQAPAAAAAAATAAYACQAPAAAAAAAZAAYACQAPAAAAAAAGAAwACQAPAAAAAAAMAAwACQAPAAAAAAATAAwACQAPAAAAAAAZAAwACQAPAAAAAAAGABMACQAPAAAAAAAMABMACQAPAAAAAAATABMACQAPAAAAAAAZABMACQAPAAAAAAAGABkACQAPAAAAAAAMABkACQAPAAAAAAATABkACQAPAAAAAAAZABkACQAPAAAAAAA=")
+tile_set = ExtResource("7_miajv")
+
+[node name="Hero" parent="Entities" unique_id=1101799868 instance=ExtResource("8_enk7a")]
+position = Vector2(16, 272)
+
+[node name="Gloomslime_1" parent="Entities" unique_id=2021877510 instance=ExtResource("9_4ubr3")]
+position = Vector2(16, 136)
+data = ExtResource("10_a1akm")
+
+[node name="Shadehound_2" parent="Entities" unique_id=469890033 instance=ExtResource("9_4ubr3")]
+position = Vector2(256, 256)
+data = ExtResource("11_brlts")
+
+[node name="Dreammoth_3" parent="Entities" unique_id=855784458 instance=ExtResource("9_4ubr3")]
+position = Vector2(-224, 256)
+data = ExtResource("12_j4x7s")
+
+[node name="Thornbackboar_4" parent="Entities" unique_id=221931181 instance=ExtResource("9_4ubr3")]
+position = Vector2(16, 376)
+data = ExtResource("13_q8cli")
+
+[node name="Ogre_5" parent="Entities" unique_id=1202617239 instance=ExtResource("9_4ubr3")]
+position = Vector2(16, 136)
+data = ExtResource("14_jymo7")
+
+[node name="Brambleshaman_6" parent="Entities" unique_id=1543598880 instance=ExtResource("9_4ubr3")]
+position = Vector2(256, 256)
+data = ExtResource("15_sjgpm")
+
+[node name="Gloomslime_7" parent="Entities" unique_id=1626578175 instance=ExtResource("9_4ubr3")]
+position = Vector2(-224, 256)
+data = ExtResource("10_a1akm")
+
+[node name="Shadehound_8" parent="Entities" unique_id=759433322 instance=ExtResource("9_4ubr3")]
+position = Vector2(16, 376)
+data = ExtResource("11_brlts")
+
+[node name="Dreammoth_9" parent="Entities" unique_id=2129975289 instance=ExtResource("9_4ubr3")]
+position = Vector2(16, 136)
+data = ExtResource("12_j4x7s")
+
+[node name="Thornbackboar_10" parent="Entities" unique_id=430149089 instance=ExtResource("9_4ubr3")]
+position = Vector2(256, 256)
+data = ExtResource("13_q8cli")
+
+[node name="Ogre_11" parent="Entities" unique_id=908549618 instance=ExtResource("9_4ubr3")]
+position = Vector2(-224, 256)
+data = ExtResource("14_jymo7")
+
+[node name="Brambleshaman_12" parent="Entities" unique_id=1811595865 instance=ExtResource("9_4ubr3")]
+position = Vector2(16, 376)
+data = ExtResource("15_sjgpm")
+
+[node name="Gloomslime_13" parent="Entities" unique_id=1740586857 instance=ExtResource("9_4ubr3")]
+position = Vector2(16, 136)
+data = ExtResource("10_a1akm")
+
+[node name="Shadehound_14" parent="Entities" unique_id=227133109 instance=ExtResource("9_4ubr3")]
+position = Vector2(256, 256)
+data = ExtResource("11_brlts")
+
+[node name="Dreammoth_15" parent="Entities" unique_id=378522313 instance=ExtResource("9_4ubr3")]
+position = Vector2(-224, 256)
+data = ExtResource("12_j4x7s")
+
+[node name="Thornbackboar_16" parent="Entities" unique_id=1536803900 instance=ExtResource("9_4ubr3")]
+position = Vector2(16, 376)
+data = ExtResource("13_q8cli")
+
+[node name="Ogre_17" parent="Entities" unique_id=351380669 instance=ExtResource("9_4ubr3")]
+position = Vector2(16, 136)
+data = ExtResource("14_jymo7")
+
+[node name="Brambleshaman_18" parent="Entities" unique_id=1506744255 instance=ExtResource("9_4ubr3")]
+position = Vector2(256, 256)
+data = ExtResource("15_sjgpm")
+
+[node name="Gloomslime_19" parent="Entities" unique_id=707452659 instance=ExtResource("9_4ubr3")]
+position = Vector2(-224, 256)
+data = ExtResource("10_a1akm")
+
+[node name="Shadehound_20" parent="Entities" unique_id=1618544538 instance=ExtResource("9_4ubr3")]
+position = Vector2(16, 376)
+data = ExtResource("11_brlts")
+
+[node name="Dreammoth_21" parent="Entities" unique_id=1344767675 instance=ExtResource("9_4ubr3")]
+position = Vector2(16, 136)
+data = ExtResource("12_j4x7s")
+
+[node name="Thornbackboar_22" parent="Entities" unique_id=492673922 instance=ExtResource("9_4ubr3")]
+position = Vector2(256, 256)
+data = ExtResource("13_q8cli")
+
+[node name="Ogre_23" parent="Entities" unique_id=1207996126 instance=ExtResource("9_4ubr3")]
+position = Vector2(-224, 256)
+data = ExtResource("14_jymo7")
+
+[node name="Brambleshaman_24" parent="Entities" unique_id=631455418 instance=ExtResource("9_4ubr3")]
+position = Vector2(16, 376)
+data = ExtResource("15_sjgpm")
+
+[node name="Lantern_1" parent="Entities" unique_id=669501701 instance=ExtResource("16_6vh2o")]
+position = Vector2(16, 56)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern",
+"x": 3.5,
+"y": 3.5
+}
+
+[node name="Crystal_2" parent="Entities" unique_id=1835149345 instance=ExtResource("16_6vh2o")]
+position = Vector2(112, 104)
+sidecar = ExtResource("18_srdkg")
+object_data = {
+"t": "crystal",
+"x": 9.5,
+"y": 3.5
+}
+
+[node name="Brazier_3" parent="Entities" unique_id=553245101 instance=ExtResource("16_6vh2o")]
+position = Vector2(208, 152)
+sidecar = ExtResource("19_h7p8m")
+object_data = {
+"t": "brazier",
+"x": 15.5,
+"y": 3.5
+}
+
+[node name="Mushroom_4" parent="Entities" unique_id=1106994925 instance=ExtResource("16_6vh2o")]
+position = Vector2(312, 204)
+sidecar = ExtResource("20_upuik")
+object_data = {
+"t": "mushroom",
+"x": 22.0,
+"y": 3.5
+}
+
+[node name="LanternBlue_5" parent="Entities" unique_id=1229068642 instance=ExtResource("16_6vh2o")]
+position = Vector2(416, 256)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern_blue",
+"x": 28.5,
+"y": 3.5
+}
+
+[node name="CrystalViolet_6" parent="Entities" unique_id=876072292 instance=ExtResource("16_6vh2o")]
+position = Vector2(-80, 104)
+sidecar = ExtResource("21_p40qs")
+object_data = {
+"t": "crystal_violet",
+"x": 3.5,
+"y": 9.5
+}
+
+[node name="Lantern_7" parent="Entities" unique_id=674934338 instance=ExtResource("16_6vh2o")]
+position = Vector2(16, 152)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern",
+"x": 9.5,
+"y": 9.5
+}
+
+[node name="Crystal_8" parent="Entities" unique_id=1831723625 instance=ExtResource("16_6vh2o")]
+position = Vector2(112, 200)
+sidecar = ExtResource("18_srdkg")
+object_data = {
+"t": "crystal",
+"x": 15.5,
+"y": 9.5
+}
+
+[node name="Brazier_9" parent="Entities" unique_id=387117856 instance=ExtResource("16_6vh2o")]
+position = Vector2(216, 252)
+sidecar = ExtResource("19_h7p8m")
+object_data = {
+"t": "brazier",
+"x": 22.0,
+"y": 9.5
+}
+
+[node name="Mushroom_10" parent="Entities" unique_id=1428644270 instance=ExtResource("16_6vh2o")]
+position = Vector2(320, 304)
+sidecar = ExtResource("20_upuik")
+object_data = {
+"t": "mushroom",
+"x": 28.5,
+"y": 9.5
+}
+
+[node name="LanternBlue_11" parent="Entities" unique_id=1063570847 instance=ExtResource("16_6vh2o")]
+position = Vector2(-176, 152)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern_blue",
+"x": 3.5,
+"y": 15.5
+}
+
+[node name="CrystalViolet_12" parent="Entities" unique_id=86639016 instance=ExtResource("16_6vh2o")]
+position = Vector2(-80, 200)
+sidecar = ExtResource("21_p40qs")
+object_data = {
+"t": "crystal_violet",
+"x": 9.5,
+"y": 15.5
+}
+
+[node name="Lantern_13" parent="Entities" unique_id=1487344180 instance=ExtResource("16_6vh2o")]
+position = Vector2(16, 248)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern",
+"x": 15.5,
+"y": 15.5
+}
+
+[node name="Crystal_14" parent="Entities" unique_id=733231825 instance=ExtResource("16_6vh2o")]
+position = Vector2(120, 300)
+sidecar = ExtResource("18_srdkg")
+object_data = {
+"t": "crystal",
+"x": 22.0,
+"y": 15.5
+}
+
+[node name="Brazier_15" parent="Entities" unique_id=2050628010 instance=ExtResource("16_6vh2o")]
+position = Vector2(224, 352)
+sidecar = ExtResource("19_h7p8m")
+object_data = {
+"t": "brazier",
+"x": 28.5,
+"y": 15.5
+}
+
+[node name="Mushroom_16" parent="Entities" unique_id=484502431 instance=ExtResource("16_6vh2o")]
+position = Vector2(-280, 204)
+sidecar = ExtResource("20_upuik")
+object_data = {
+"t": "mushroom",
+"x": 3.5,
+"y": 22.0
+}
+
+[node name="LanternBlue_17" parent="Entities" unique_id=411441196 instance=ExtResource("16_6vh2o")]
+position = Vector2(-184, 252)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern_blue",
+"x": 9.5,
+"y": 22.0
+}
+
+[node name="CrystalViolet_18" parent="Entities" unique_id=1418140618 instance=ExtResource("16_6vh2o")]
+position = Vector2(-88, 300)
+sidecar = ExtResource("21_p40qs")
+object_data = {
+"t": "crystal_violet",
+"x": 15.5,
+"y": 22.0
+}
+
+[node name="Lantern_19" parent="Entities" unique_id=761795509 instance=ExtResource("16_6vh2o")]
+position = Vector2(16, 352)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern",
+"x": 22.0,
+"y": 22.0
+}
+
+[node name="Crystal_20" parent="Entities" unique_id=1108275292 instance=ExtResource("16_6vh2o")]
+position = Vector2(120, 404)
+sidecar = ExtResource("18_srdkg")
+object_data = {
+"t": "crystal",
+"x": 28.5,
+"y": 22.0
+}
+
+[node name="Brazier_21" parent="Entities" unique_id=1707660375 instance=ExtResource("16_6vh2o")]
+position = Vector2(-384, 256)
+sidecar = ExtResource("19_h7p8m")
+object_data = {
+"t": "brazier",
+"x": 3.5,
+"y": 28.5
+}
+
+[node name="Mushroom_22" parent="Entities" unique_id=918613306 instance=ExtResource("16_6vh2o")]
+position = Vector2(-288, 304)
+sidecar = ExtResource("20_upuik")
+object_data = {
+"t": "mushroom",
+"x": 9.5,
+"y": 28.5
+}
+
+[node name="LanternBlue_23" parent="Entities" unique_id=1020621286 instance=ExtResource("16_6vh2o")]
+position = Vector2(-192, 352)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern_blue",
+"x": 15.5,
+"y": 28.5
+}
+
+[node name="CrystalViolet_24" parent="Entities" unique_id=1914927339 instance=ExtResource("16_6vh2o")]
+position = Vector2(-88, 404)
+sidecar = ExtResource("21_p40qs")
+object_data = {
+"t": "crystal_violet",
+"x": 22.0,
+"y": 28.5
+}
+
+[node name="Lantern_25" parent="Entities" unique_id=2042185163 instance=ExtResource("16_6vh2o")]
+position = Vector2(16, 456)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern",
+"x": 28.5,
+"y": 28.5
+}
+
+[node name="Crystal_26" parent="Entities" unique_id=778329534 instance=ExtResource("16_6vh2o")]
+position = Vector2(32, 112)
+sidecar = ExtResource("18_srdkg")
+object_data = {
+"t": "crystal",
+"x": 7.5,
+"y": 6.5
+}
+
+[node name="Brazier_27" parent="Entities" unique_id=1227707104 instance=ExtResource("16_6vh2o")]
+position = Vector2(128, 160)
+sidecar = ExtResource("19_h7p8m")
+object_data = {
+"t": "brazier",
+"x": 13.5,
+"y": 6.5
+}
+
+[node name="Mushroom_28" parent="Entities" unique_id=1920295350 instance=ExtResource("16_6vh2o")]
+position = Vector2(240, 216)
+sidecar = ExtResource("20_upuik")
+object_data = {
+"t": "mushroom",
+"x": 20.5,
+"y": 6.5
+}
+
+[node name="LanternBlue_29" parent="Entities" unique_id=525749229 instance=ExtResource("16_6vh2o")]
+position = Vector2(336, 264)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern_blue",
+"x": 26.5,
+"y": 6.5
+}
+
+[node name="CrystalViolet_30" parent="Entities" unique_id=1523568525 instance=ExtResource("16_6vh2o")]
+position = Vector2(-64, 160)
+sidecar = ExtResource("21_p40qs")
+object_data = {
+"t": "crystal_violet",
+"x": 7.5,
+"y": 12.5
+}
+
+[node name="Lantern_31" parent="Entities" unique_id=1996996385 instance=ExtResource("16_6vh2o")]
+position = Vector2(32, 208)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern",
+"x": 13.5,
+"y": 12.5
+}
+
+[node name="Crystal_32" parent="Entities" unique_id=1603175234 instance=ExtResource("16_6vh2o")]
+position = Vector2(144, 264)
+sidecar = ExtResource("18_srdkg")
+object_data = {
+"t": "crystal",
+"x": 20.5,
+"y": 12.5
+}
+
+[node name="Brazier_33" parent="Entities" unique_id=1615770451 instance=ExtResource("16_6vh2o")]
+position = Vector2(240, 312)
+sidecar = ExtResource("19_h7p8m")
+object_data = {
+"t": "brazier",
+"x": 26.5,
+"y": 12.5
+}
+
+[node name="Mushroom_34" parent="Entities" unique_id=1327522623 instance=ExtResource("16_6vh2o")]
+position = Vector2(-176, 216)
+sidecar = ExtResource("20_upuik")
+object_data = {
+"t": "mushroom",
+"x": 7.5,
+"y": 19.5
+}
+
+[node name="LanternBlue_35" parent="Entities" unique_id=901991313 instance=ExtResource("16_6vh2o")]
+position = Vector2(-80, 264)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern_blue",
+"x": 13.5,
+"y": 19.5
+}
+
+[node name="CrystalViolet_36" parent="Entities" unique_id=1793952960 instance=ExtResource("16_6vh2o")]
+position = Vector2(32, 320)
+sidecar = ExtResource("21_p40qs")
+object_data = {
+"t": "crystal_violet",
+"x": 20.5,
+"y": 19.5
+}
+
+[node name="Lantern_37" parent="Entities" unique_id=1045559937 instance=ExtResource("16_6vh2o")]
+position = Vector2(128, 368)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern",
+"x": 26.5,
+"y": 19.5
+}
+
+[node name="Crystal_38" parent="Entities" unique_id=967089651 instance=ExtResource("16_6vh2o")]
+position = Vector2(-272, 264)
+sidecar = ExtResource("18_srdkg")
+object_data = {
+"t": "crystal",
+"x": 7.5,
+"y": 25.5
+}
+
+[node name="Brazier_39" parent="Entities" unique_id=1038686283 instance=ExtResource("16_6vh2o")]
+position = Vector2(-176, 312)
+sidecar = ExtResource("19_h7p8m")
+object_data = {
+"t": "brazier",
+"x": 13.5,
+"y": 25.5
+}
+
+[node name="Mushroom_40" parent="Entities" unique_id=1466489132 instance=ExtResource("16_6vh2o")]
+position = Vector2(-64, 368)
+sidecar = ExtResource("20_upuik")
+object_data = {
+"t": "mushroom",
+"x": 20.5,
+"y": 25.5
+}
+
+[node name="LanternBlue_41" parent="Entities" unique_id=1481476476 instance=ExtResource("16_6vh2o")]
+position = Vector2(32, 416)
+sidecar = ExtResource("17_ho3wf")
+object_data = {
+"t": "lantern_blue",
+"x": 26.5,
+"y": 25.5
+}

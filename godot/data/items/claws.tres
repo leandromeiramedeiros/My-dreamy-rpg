@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/claws_action.tres" id="1_cdnl6"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_p6fwx"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_nif31"]
+[ext_resource type="Resource" path="res://data/skills/rend.tres" id="4_6axtl"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_nwt6c"]
+[ext_resource type="Resource" path="res://data/skills/savage.tres" id="6_l5ogo"]
+
+[sub_resource type="Resource" id="Resource_7w4uh"]
+script = ExtResource("5_nwt6c")
+base_id = &"boneclaws"
+display_name = "Bone Claws"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_2evjt"]
+script = ExtResource("5_nwt6c")
+base_id = &"nightclaws"
+display_name = "Nightclaws"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_pvrbv"]
+script = ExtResource("5_nwt6c")
+base_id = &"silvertalon"
+display_name = "Silvertalon"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_cdk0s"]
+script = ExtResource("5_nwt6c")
+base_id = &"eclipseclaws"
+display_name = "Eclipse Claws"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_s2rxk"]
+script = ExtResource("5_nwt6c")
+base_id = &"clawseternal"
+display_name = "Claws Eternal"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_nif31")
+id = &"claws"
+display_name = "Claws"
+description = "Frenzy: every hit is 5 % faster than the last (up to +50 %), gone after 1.5 s."
+item_class = &"shadows"
+element = "slash"
+tiers = Array[ExtResource("5_nwt6c")]([SubResource("Resource_7w4uh"), SubResource("Resource_2evjt"), SubResource("Resource_pvrbv"), SubResource("Resource_cdk0s"), SubResource("Resource_s2rxk")])
+action = ExtResource("1_cdnl6")
+spell = ExtResource("4_6axtl")
+ultimate = ExtResource("6_l5ogo")
+mp_on_hit = 6.0
+stats = Dictionary[StringName, float]({
+&"dmg": 19.0
+})
+flags = {
+"frenzy": true,
+"kind": "daggers",
+"off_action": "step"
+}
+color = Color(0.8784314, 0.6901961, 0.627451, 1)
+todo = "Line name (T2 base): Nightclaws. Class passive: Backstab: +30% crit from the rear arc; Marks. Off-action in OFFHAND: step."

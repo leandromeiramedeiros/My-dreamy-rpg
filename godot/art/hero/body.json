@@ -1,0 +1,4313 @@
+{
+ "unit": "body",
+ "sheet": "core",
+ "images": {
+  "color": "body.png",
+  "normal": "body_n.png"
+ },
+ "layer": "body",
+ "zorder": {
+  "S": 0,
+  "SE": 0,
+  "E": 0,
+  "NE": 0,
+  "N": 0,
+  "NW": 0,
+  "W": 0,
+  "SW": 0
+ },
+ "about": "The base layer of the hero paper doll. Draw order per direction: every <unit>_back by zorder, this body, hair and every <unit>_front by zorder.",
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  19,
+  8
+ ],
+ "anims": {
+  "idle": {
+   "from": 0,
+   "count": 6,
+   "ms": [
+    200,
+    200,
+    400,
+    200,
+    200,
+    400
+   ],
+   "loop": true
+  },
+  "walk": {
+   "from": 6,
+   "count": 6,
+   "ms": [
+    100,
+    100,
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": true
+  },
+  "cast": {
+   "from": 12,
+   "count": 4,
+   "ms": [
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  },
+  "dash": {
+   "from": 16,
+   "count": 2,
+   "ms": [
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  },
+  "hit": {
+   "from": 18,
+   "count": 1,
+   "ms": [
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl",
+ "sockets": {
+  "S": {
+   "idle": [
+    {
+     "handR": {
+      "x": 21.2,
+      "y": 40.1,
+      "front": true
+     },
+     "handL": {
+      "x": 30.8,
+      "y": 40.1,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 40.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.2,
+      "y": 40.7,
+      "front": true
+     },
+     "handL": {
+      "x": 30.8,
+      "y": 40.7,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 41.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.2,
+      "y": 41.3,
+      "front": true
+     },
+     "handL": {
+      "x": 30.8,
+      "y": 41.3,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 41.7,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.2,
+      "y": 41.3,
+      "front": true
+     },
+     "handL": {
+      "x": 30.8,
+      "y": 41.3,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 41.7,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.2,
+      "y": 40.7,
+      "front": true
+     },
+     "handL": {
+      "x": 30.8,
+      "y": 40.7,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 41.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.2,
+      "y": 40.1,
+      "front": true
+     },
+     "handL": {
+      "x": 30.8,
+      "y": 40.1,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 40.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 21.3,
+      "y": 36.3,
+      "front": false
+     },
+     "handL": {
+      "x": 30.5,
+      "y": 38.9,
+      "front": true
+     },
+     "head": {
+      "x": 25.6,
+      "y": 22.7,
+      "front": true
+     },
+     "cast": {
+      "x": 25.1,
+      "y": 40.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 36.2,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.3,
+      "y": 38.7,
+      "front": false
+     },
+     "handL": {
+      "x": 30.6,
+      "y": 40.8,
+      "front": true
+     },
+     "head": {
+      "x": 25.7,
+      "y": 24.5,
+      "front": true
+     },
+     "cast": {
+      "x": 25.4,
+      "y": 41.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.2,
+      "y": 39.3,
+      "front": true
+     },
+     "handL": {
+      "x": 30.7,
+      "y": 39.7,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.6,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 41,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.5,
+      "y": 38.9,
+      "front": true
+     },
+     "handL": {
+      "x": 30.7,
+      "y": 36.3,
+      "front": false
+     },
+     "head": {
+      "x": 26.4,
+      "y": 22.7,
+      "front": true
+     },
+     "cast": {
+      "x": 26.9,
+      "y": 40.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 36.2,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.4,
+      "y": 40.8,
+      "front": true
+     },
+     "handL": {
+      "x": 30.7,
+      "y": 38.7,
+      "front": false
+     },
+     "head": {
+      "x": 26.3,
+      "y": 24.5,
+      "front": true
+     },
+     "cast": {
+      "x": 26.6,
+      "y": 41.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.3,
+      "y": 39.7,
+      "front": true
+     },
+     "handL": {
+      "x": 30.8,
+      "y": 39.3,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.6,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 41,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.1,
+      "front": true
+     }
+    }
+   ],
+   "cast": [
+    {
+     "handR": {
+      "x": 22.9,
+      "y": 38.7,
+      "front": true
+     },
+     "handL": {
+      "x": 29.1,
+      "y": 38.7,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 24.2,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 41.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 20.1,
+      "y": 32.6,
+      "front": true
+     },
+     "handL": {
+      "x": 31.9,
+      "y": 32.6,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 21.3,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 39.5,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.2,
+      "y": 38.6,
+      "front": true
+     },
+     "handL": {
+      "x": 30.8,
+      "y": 38.6,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 25.6,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 42.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21,
+      "y": 39.5,
+      "front": true
+     },
+     "handL": {
+      "x": 31,
+      "y": 39.5,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.2,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 41,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "dash": [
+    {
+     "handR": {
+      "x": 21,
+      "y": 38.2,
+      "front": false
+     },
+     "handL": {
+      "x": 31,
+      "y": 38.2,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 27.7,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 45.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 39.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21,
+      "y": 38.2,
+      "front": false
+     },
+     "handL": {
+      "x": 31,
+      "y": 38.2,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 27.7,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 45.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 39.8,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 19.2,
+      "y": 35.6,
+      "front": false
+     },
+     "handL": {
+      "x": 32.6,
+      "y": 35.2,
+      "front": false
+     },
+     "head": {
+      "x": 25.2,
+      "y": 20.8,
+      "front": true
+     },
+     "cast": {
+      "x": 26.7,
+      "y": 38.3,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.8,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SE": {
+   "idle": [
+    {
+     "handR": {
+      "x": 23.2,
+      "y": 41.6,
+      "front": true
+     },
+     "handL": {
+      "x": 29.9,
+      "y": 38.5,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 39.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 23.2,
+      "y": 42.2,
+      "front": true
+     },
+     "handL": {
+      "x": 29.9,
+      "y": 39,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 40.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 23.3,
+      "y": 42.7,
+      "front": true
+     },
+     "handL": {
+      "x": 30,
+      "y": 39.6,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 40.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 23.3,
+      "y": 42.7,
+      "front": true
+     },
+     "handL": {
+      "x": 30,
+      "y": 39.6,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 40.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 23.2,
+      "y": 42.2,
+      "front": true
+     },
+     "handL": {
+      "x": 29.9,
+      "y": 39,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 40.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 23.2,
+      "y": 41.6,
+      "front": true
+     },
+     "handL": {
+      "x": 29.9,
+      "y": 38.5,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 39.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 20.9,
+      "y": 38.2,
+      "front": true
+     },
+     "handL": {
+      "x": 32.3,
+      "y": 36.8,
+      "front": true
+     },
+     "head": {
+      "x": 28,
+      "y": 22.4,
+      "front": true
+     },
+     "cast": {
+      "x": 30.7,
+      "y": 39.3,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 36.2,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.4,
+      "y": 40.5,
+      "front": true
+     },
+     "handL": {
+      "x": 32,
+      "y": 38.7,
+      "front": true
+     },
+     "head": {
+      "x": 28.1,
+      "y": 24.2,
+      "front": true
+     },
+     "cast": {
+      "x": 31,
+      "y": 41,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 23.1,
+      "y": 40.8,
+      "front": true
+     },
+     "handL": {
+      "x": 30.7,
+      "y": 37.9,
+      "front": false
+     },
+     "head": {
+      "x": 28.2,
+      "y": 23.2,
+      "front": true
+     },
+     "cast": {
+      "x": 31.4,
+      "y": 39.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.9,
+      "y": 39.8,
+      "front": true
+     },
+     "handL": {
+      "x": 27.5,
+      "y": 35.1,
+      "front": false
+     },
+     "head": {
+      "x": 28.5,
+      "y": 22.2,
+      "front": true
+     },
+     "cast": {
+      "x": 32,
+      "y": 38.7,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 36.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.5,
+      "y": 41.8,
+      "front": true
+     },
+     "handL": {
+      "x": 28,
+      "y": 37.4,
+      "front": false
+     },
+     "head": {
+      "x": 28.4,
+      "y": 24,
+      "front": true
+     },
+     "cast": {
+      "x": 31.8,
+      "y": 40.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 24,
+      "y": 41.1,
+      "front": true
+     },
+     "handL": {
+      "x": 29.8,
+      "y": 37.7,
+      "front": false
+     },
+     "head": {
+      "x": 28.2,
+      "y": 23.2,
+      "front": true
+     },
+     "cast": {
+      "x": 31.4,
+      "y": 39.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37,
+      "front": true
+     }
+    }
+   ],
+   "cast": [
+    {
+     "handR": {
+      "x": 26.4,
+      "y": 39.2,
+      "front": true
+     },
+     "handL": {
+      "x": 30.8,
+      "y": 37.2,
+      "front": true
+     },
+     "head": {
+      "x": 26.8,
+      "y": 24,
+      "front": true
+     },
+     "cast": {
+      "x": 31.4,
+      "y": 40.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 22.9,
+      "y": 34.3,
+      "front": true
+     },
+     "handL": {
+      "x": 31.2,
+      "y": 30.5,
+      "front": true
+     },
+     "head": {
+      "x": 23.1,
+      "y": 21.9,
+      "front": true
+     },
+     "cast": {
+      "x": 31.1,
+      "y": 38.5,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.6,
+      "y": 39.4,
+      "front": true
+     },
+     "handL": {
+      "x": 33.3,
+      "y": 36.3,
+      "front": true
+     },
+     "head": {
+      "x": 28.5,
+      "y": 25.1,
+      "front": true
+     },
+     "cast": {
+      "x": 31.4,
+      "y": 41.8,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.6,
+      "y": 40.6,
+      "front": true
+     },
+     "handL": {
+      "x": 32.7,
+      "y": 37.2,
+      "front": true
+     },
+     "head": {
+      "x": 26.6,
+      "y": 23.1,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 39.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "dash": [
+    {
+     "handR": {
+      "x": 20.5,
+      "y": 40.3,
+      "front": true
+     },
+     "handL": {
+      "x": 27.6,
+      "y": 36.9,
+      "front": false
+     },
+     "head": {
+      "x": 29.5,
+      "y": 27,
+      "front": true
+     },
+     "cast": {
+      "x": 31.2,
+      "y": 44.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26.2,
+      "y": 39.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 20.5,
+      "y": 40.3,
+      "front": true
+     },
+     "handL": {
+      "x": 27.6,
+      "y": 36.9,
+      "front": false
+     },
+     "head": {
+      "x": 29.5,
+      "y": 27,
+      "front": true
+     },
+     "cast": {
+      "x": 31.2,
+      "y": 44.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26.2,
+      "y": 39.8,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 18.3,
+      "y": 38.4,
+      "front": true
+     },
+     "handL": {
+      "x": 27.2,
+      "y": 33.7,
+      "front": false
+     },
+     "head": {
+      "x": 19.8,
+      "y": 22.2,
+      "front": true
+     },
+     "cast": {
+      "x": 31.2,
+      "y": 37.2,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37.8,
+      "front": true
+     }
+    }
+   ]
+  },
+  "E": {
+   "idle": [
+    {
+     "handR": {
+      "x": 26.7,
+      "y": 42,
+      "front": true
+     },
+     "handL": {
+      "x": 26.7,
+      "y": 37.6,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 33.5,
+      "y": 37.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.8,
+      "y": 42.6,
+      "front": true
+     },
+     "handL": {
+      "x": 26.8,
+      "y": 38.1,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 33.5,
+      "y": 37.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.9,
+      "y": 43.1,
+      "front": true
+     },
+     "handL": {
+      "x": 26.9,
+      "y": 38.6,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 33.5,
+      "y": 38.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.9,
+      "y": 43.1,
+      "front": true
+     },
+     "handL": {
+      "x": 26.9,
+      "y": 38.6,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 33.5,
+      "y": 38.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.8,
+      "y": 42.6,
+      "front": true
+     },
+     "handL": {
+      "x": 26.8,
+      "y": 38.1,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 33.5,
+      "y": 37.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.7,
+      "y": 42,
+      "front": true
+     },
+     "handL": {
+      "x": 26.7,
+      "y": 37.6,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 33.5,
+      "y": 37.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 23.4,
+      "y": 39.7,
+      "front": true
+     },
+     "handL": {
+      "x": 30.4,
+      "y": 34.7,
+      "front": false
+     },
+     "head": {
+      "x": 29.1,
+      "y": 21.4,
+      "front": true
+     },
+     "cast": {
+      "x": 33.6,
+      "y": 37,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 36.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 24.2,
+      "y": 41.7,
+      "front": true
+     },
+     "handL": {
+      "x": 29.8,
+      "y": 36.8,
+      "front": false
+     },
+     "head": {
+      "x": 29.2,
+      "y": 23.1,
+      "front": true
+     },
+     "cast": {
+      "x": 33.6,
+      "y": 38.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.7,
+      "y": 41.3,
+      "front": true
+     },
+     "handL": {
+      "x": 27.9,
+      "y": 36.6,
+      "front": false
+     },
+     "head": {
+      "x": 29.2,
+      "y": 22.1,
+      "front": true
+     },
+     "cast": {
+      "x": 33.6,
+      "y": 37.4,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.4,
+      "y": 39,
+      "front": true
+     },
+     "handL": {
+      "x": 23.4,
+      "y": 35.3,
+      "front": false
+     },
+     "head": {
+      "x": 29.1,
+      "y": 21.1,
+      "front": true
+     },
+     "cast": {
+      "x": 33.6,
+      "y": 36.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 36.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.8,
+      "y": 41.1,
+      "front": true
+     },
+     "handL": {
+      "x": 24.2,
+      "y": 37.3,
+      "front": false
+     },
+     "head": {
+      "x": 29.2,
+      "y": 22.9,
+      "front": true
+     },
+     "cast": {
+      "x": 33.6,
+      "y": 38,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 27.9,
+      "y": 41.1,
+      "front": true
+     },
+     "handL": {
+      "x": 26.7,
+      "y": 36.8,
+      "front": false
+     },
+     "head": {
+      "x": 29.2,
+      "y": 22.1,
+      "front": true
+     },
+     "cast": {
+      "x": 33.6,
+      "y": 37.4,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37,
+      "front": true
+     }
+    }
+   ],
+   "cast": [
+    {
+     "handR": {
+      "x": 29.6,
+      "y": 38.4,
+      "front": true
+     },
+     "handL": {
+      "x": 29.6,
+      "y": 35.5,
+      "front": true
+     },
+     "head": {
+      "x": 27.1,
+      "y": 23.7,
+      "front": true
+     },
+     "cast": {
+      "x": 33.6,
+      "y": 38.4,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 27.5,
+      "y": 34.7,
+      "front": true
+     },
+     "handL": {
+      "x": 27.5,
+      "y": 29.2,
+      "front": true
+     },
+     "head": {
+      "x": 21.9,
+      "y": 23.2,
+      "front": true
+     },
+     "cast": {
+      "x": 33.2,
+      "y": 36.1,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 31.6,
+      "y": 38.2,
+      "front": true
+     },
+     "handL": {
+      "x": 31.6,
+      "y": 33.7,
+      "front": false
+     },
+     "head": {
+      "x": 29.5,
+      "y": 24,
+      "front": true
+     },
+     "cast": {
+      "x": 33.6,
+      "y": 39.3,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.5,
+      "y": 39.8,
+      "front": true
+     },
+     "handL": {
+      "x": 30.5,
+      "y": 35,
+      "front": false
+     },
+     "head": {
+      "x": 26.9,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 33.6,
+      "y": 37.4,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "dash": [
+    {
+     "handR": {
+      "x": 23.3,
+      "y": 41.9,
+      "front": true
+     },
+     "handL": {
+      "x": 23.3,
+      "y": 37.2,
+      "front": false
+     },
+     "head": {
+      "x": 31,
+      "y": 25.3,
+      "front": true
+     },
+     "cast": {
+      "x": 33.3,
+      "y": 42.2,
+      "front": true
+     },
+     "chest": {
+      "x": 26.3,
+      "y": 39.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 23.3,
+      "y": 41.9,
+      "front": true
+     },
+     "handL": {
+      "x": 23.3,
+      "y": 37.2,
+      "front": false
+     },
+     "head": {
+      "x": 31,
+      "y": 25.3,
+      "front": true
+     },
+     "cast": {
+      "x": 33.3,
+      "y": 42.2,
+      "front": true
+     },
+     "chest": {
+      "x": 26.3,
+      "y": 39.7,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 21.9,
+      "y": 40.7,
+      "front": true
+     },
+     "handL": {
+      "x": 21.1,
+      "y": 34.5,
+      "front": false
+     },
+     "head": {
+      "x": 18,
+      "y": 25,
+      "front": true
+     },
+     "cast": {
+      "x": 32.7,
+      "y": 34.9,
+      "front": true
+     },
+     "chest": {
+      "x": 25.8,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ]
+  },
+  "NE": {
+   "idle": [
+    {
+     "handR": {
+      "x": 29.9,
+      "y": 41.1,
+      "front": true
+     },
+     "handL": {
+      "x": 23.2,
+      "y": 38,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 34.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.9,
+      "y": 41.6,
+      "front": true
+     },
+     "handL": {
+      "x": 23.2,
+      "y": 38.5,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 35.1,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30,
+      "y": 42.1,
+      "front": true
+     },
+     "handL": {
+      "x": 23.3,
+      "y": 39,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 35.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30,
+      "y": 42.1,
+      "front": true
+     },
+     "handL": {
+      "x": 23.3,
+      "y": 39,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 35.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.9,
+      "y": 41.6,
+      "front": true
+     },
+     "handL": {
+      "x": 23.2,
+      "y": 38.5,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 35.1,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.9,
+      "y": 41.1,
+      "front": true
+     },
+     "handL": {
+      "x": 23.2,
+      "y": 38,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 34.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 27.5,
+      "y": 39.9,
+      "front": true
+     },
+     "handL": {
+      "x": 25.9,
+      "y": 33.9,
+      "front": false
+     },
+     "head": {
+      "x": 28.5,
+      "y": 20.3,
+      "front": true
+     },
+     "cast": {
+      "x": 32,
+      "y": 34.3,
+      "front": false
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 36.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28,
+      "y": 41.7,
+      "front": true
+     },
+     "handL": {
+      "x": 25.5,
+      "y": 36.1,
+      "front": false
+     },
+     "head": {
+      "x": 28.4,
+      "y": 22.1,
+      "front": true
+     },
+     "cast": {
+      "x": 31.8,
+      "y": 36,
+      "front": false
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.8,
+      "y": 40.4,
+      "front": true
+     },
+     "handL": {
+      "x": 24,
+      "y": 36.6,
+      "front": false
+     },
+     "head": {
+      "x": 28.2,
+      "y": 21.1,
+      "front": true
+     },
+     "cast": {
+      "x": 31.4,
+      "y": 34.9,
+      "front": false
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32.3,
+      "y": 36.9,
+      "front": true
+     },
+     "handL": {
+      "x": 20.9,
+      "y": 36.8,
+      "front": true
+     },
+     "head": {
+      "x": 28,
+      "y": 20.1,
+      "front": true
+     },
+     "cast": {
+      "x": 30.7,
+      "y": 33.7,
+      "front": false
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 36.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32,
+      "y": 39.2,
+      "front": true
+     },
+     "handL": {
+      "x": 21.4,
+      "y": 38.6,
+      "front": false
+     },
+     "head": {
+      "x": 28.1,
+      "y": 21.9,
+      "front": true
+     },
+     "cast": {
+      "x": 31,
+      "y": 35.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.7,
+      "y": 39.8,
+      "front": true
+     },
+     "handL": {
+      "x": 23.1,
+      "y": 37.2,
+      "front": false
+     },
+     "head": {
+      "x": 28.2,
+      "y": 21.1,
+      "front": true
+     },
+     "cast": {
+      "x": 31.4,
+      "y": 34.9,
+      "front": false
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37,
+      "front": true
+     }
+    }
+   ],
+   "cast": [
+    {
+     "handR": {
+      "x": 30.8,
+      "y": 36.8,
+      "front": true
+     },
+     "handL": {
+      "x": 26.4,
+      "y": 34.7,
+      "front": false
+     },
+     "head": {
+      "x": 26.8,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 31.4,
+      "y": 35.8,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 31.2,
+      "y": 33.4,
+      "front": true
+     },
+     "handL": {
+      "x": 22.9,
+      "y": 29.5,
+      "front": true
+     },
+     "head": {
+      "x": 23.1,
+      "y": 24.6,
+      "front": true
+     },
+     "cast": {
+      "x": 31.1,
+      "y": 33.7,
+      "front": false
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 33.3,
+      "y": 35.7,
+      "front": true
+     },
+     "handL": {
+      "x": 26.6,
+      "y": 32.6,
+      "front": false
+     },
+     "head": {
+      "x": 28.5,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 31.4,
+      "y": 36.8,
+      "front": false
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 38.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32.7,
+      "y": 37.6,
+      "front": true
+     },
+     "handL": {
+      "x": 25.6,
+      "y": 34.2,
+      "front": false
+     },
+     "head": {
+      "x": 26.6,
+      "y": 22.5,
+      "front": true
+     },
+     "cast": {
+      "x": 31.3,
+      "y": 34.9,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "dash": [
+    {
+     "handR": {
+      "x": 27.6,
+      "y": 42.1,
+      "front": true
+     },
+     "handL": {
+      "x": 20.5,
+      "y": 38.8,
+      "front": true
+     },
+     "head": {
+      "x": 29.5,
+      "y": 23.7,
+      "front": true
+     },
+     "cast": {
+      "x": 31.2,
+      "y": 39.8,
+      "front": false
+     },
+     "chest": {
+      "x": 26.2,
+      "y": 39.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 27.6,
+      "y": 42.1,
+      "front": true
+     },
+     "handL": {
+      "x": 20.5,
+      "y": 38.8,
+      "front": true
+     },
+     "head": {
+      "x": 29.5,
+      "y": 23.7,
+      "front": true
+     },
+     "cast": {
+      "x": 31.2,
+      "y": 39.8,
+      "front": false
+     },
+     "chest": {
+      "x": 26.2,
+      "y": 39.6,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 27.9,
+      "y": 41.2,
+      "front": true
+     },
+     "handL": {
+      "x": 17.9,
+      "y": 37,
+      "front": true
+     },
+     "head": {
+      "x": 20.9,
+      "y": 27.5,
+      "front": true
+     },
+     "cast": {
+      "x": 30.3,
+      "y": 32.7,
+      "front": false
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 38,
+      "front": true
+     }
+    }
+   ]
+  },
+  "N": {
+   "idle": [
+    {
+     "handR": {
+      "x": 30.8,
+      "y": 39.5,
+      "front": true
+     },
+     "handL": {
+      "x": 21.2,
+      "y": 39.5,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 33.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.8,
+      "y": 39.9,
+      "front": true
+     },
+     "handL": {
+      "x": 21.2,
+      "y": 39.9,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 34.1,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.8,
+      "y": 40.4,
+      "front": false
+     },
+     "handL": {
+      "x": 21.2,
+      "y": 40.4,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 34.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.8,
+      "y": 40.4,
+      "front": false
+     },
+     "handL": {
+      "x": 21.2,
+      "y": 40.4,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 34.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.8,
+      "y": 39.9,
+      "front": true
+     },
+     "handL": {
+      "x": 21.2,
+      "y": 39.9,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 34.1,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.8,
+      "y": 39.5,
+      "front": true
+     },
+     "handL": {
+      "x": 21.2,
+      "y": 39.5,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 33.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 30.7,
+      "y": 38.7,
+      "front": true
+     },
+     "handL": {
+      "x": 21.5,
+      "y": 34.8,
+      "front": false
+     },
+     "head": {
+      "x": 26.4,
+      "y": 19.8,
+      "front": true
+     },
+     "cast": {
+      "x": 26.9,
+      "y": 33,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 36.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.7,
+      "y": 40.4,
+      "front": true
+     },
+     "handL": {
+      "x": 21.4,
+      "y": 37.1,
+      "front": false
+     },
+     "head": {
+      "x": 26.3,
+      "y": 21.5,
+      "front": true
+     },
+     "cast": {
+      "x": 26.6,
+      "y": 34.7,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.8,
+      "y": 38.7,
+      "front": true
+     },
+     "handL": {
+      "x": 21.3,
+      "y": 38,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 20.7,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 33.8,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.5,
+      "y": 34.8,
+      "front": false
+     },
+     "handL": {
+      "x": 21.3,
+      "y": 38.7,
+      "front": true
+     },
+     "head": {
+      "x": 25.6,
+      "y": 19.8,
+      "front": true
+     },
+     "cast": {
+      "x": 25.1,
+      "y": 33,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 36.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.6,
+      "y": 37.1,
+      "front": false
+     },
+     "handL": {
+      "x": 21.3,
+      "y": 40.4,
+      "front": true
+     },
+     "head": {
+      "x": 25.7,
+      "y": 21.5,
+      "front": true
+     },
+     "cast": {
+      "x": 25.4,
+      "y": 34.7,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.7,
+      "y": 38,
+      "front": false
+     },
+     "handL": {
+      "x": 21.2,
+      "y": 38.7,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 20.7,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 33.8,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37,
+      "front": true
+     }
+    }
+   ],
+   "cast": [
+    {
+     "handR": {
+      "x": 29.1,
+      "y": 35.3,
+      "front": false
+     },
+     "handL": {
+      "x": 22.9,
+      "y": 35.3,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 23.2,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 34.8,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 31.9,
+      "y": 31.2,
+      "front": true
+     },
+     "handL": {
+      "x": 20.1,
+      "y": 31.2,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 25.2,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 32.7,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.8,
+      "y": 33.4,
+      "front": false
+     },
+     "handL": {
+      "x": 21.2,
+      "y": 33.4,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.3,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 35.7,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 31,
+      "y": 35.3,
+      "front": false
+     },
+     "handL": {
+      "x": 21,
+      "y": 35.3,
+      "front": false
+     },
+     "head": {
+      "x": 26,
+      "y": 22.4,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 33.9,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "dash": [
+    {
+     "handR": {
+      "x": 31,
+      "y": 40.8,
+      "front": true
+     },
+     "handL": {
+      "x": 21,
+      "y": 40.8,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 38.8,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 39.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 31,
+      "y": 40.8,
+      "front": true
+     },
+     "handL": {
+      "x": 21,
+      "y": 40.8,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23,
+      "front": true
+     },
+     "cast": {
+      "x": 26,
+      "y": 38.8,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 39.6,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 32.8,
+      "y": 39.5,
+      "front": true
+     },
+     "handL": {
+      "x": 19.4,
+      "y": 39.9,
+      "front": true
+     },
+     "head": {
+      "x": 26.8,
+      "y": 28.4,
+      "front": true
+     },
+     "cast": {
+      "x": 25.3,
+      "y": 32,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38,
+      "front": true
+     }
+    }
+   ]
+  },
+  "NW": {
+   "idle": [
+    {
+     "handR": {
+      "x": 28.8,
+      "y": 38,
+      "front": false
+     },
+     "handL": {
+      "x": 22.1,
+      "y": 41.1,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 34.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.8,
+      "y": 38.5,
+      "front": false
+     },
+     "handL": {
+      "x": 22.1,
+      "y": 41.6,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 35.1,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.7,
+      "y": 39,
+      "front": false
+     },
+     "handL": {
+      "x": 22,
+      "y": 42.1,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 35.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.7,
+      "y": 39,
+      "front": false
+     },
+     "handL": {
+      "x": 22,
+      "y": 42.1,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 35.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.8,
+      "y": 38.5,
+      "front": false
+     },
+     "handL": {
+      "x": 22.1,
+      "y": 41.6,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 35.1,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.8,
+      "y": 38,
+      "front": false
+     },
+     "handL": {
+      "x": 22.1,
+      "y": 41.1,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 34.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 31.1,
+      "y": 36.8,
+      "front": true
+     },
+     "handL": {
+      "x": 19.7,
+      "y": 36.9,
+      "front": true
+     },
+     "head": {
+      "x": 24,
+      "y": 20.1,
+      "front": true
+     },
+     "cast": {
+      "x": 21.3,
+      "y": 33.7,
+      "front": false
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 36.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.6,
+      "y": 38.6,
+      "front": false
+     },
+     "handL": {
+      "x": 20,
+      "y": 39.2,
+      "front": true
+     },
+     "head": {
+      "x": 23.9,
+      "y": 21.9,
+      "front": true
+     },
+     "cast": {
+      "x": 21,
+      "y": 35.6,
+      "front": false
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.9,
+      "y": 37.2,
+      "front": false
+     },
+     "handL": {
+      "x": 21.3,
+      "y": 39.8,
+      "front": true
+     },
+     "head": {
+      "x": 23.8,
+      "y": 21.1,
+      "front": true
+     },
+     "cast": {
+      "x": 20.6,
+      "y": 34.9,
+      "front": false
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.1,
+      "y": 33.9,
+      "front": false
+     },
+     "handL": {
+      "x": 24.5,
+      "y": 39.9,
+      "front": true
+     },
+     "head": {
+      "x": 23.5,
+      "y": 20.3,
+      "front": true
+     },
+     "cast": {
+      "x": 20,
+      "y": 34.3,
+      "front": false
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 36.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.5,
+      "y": 36.1,
+      "front": false
+     },
+     "handL": {
+      "x": 24,
+      "y": 41.7,
+      "front": true
+     },
+     "head": {
+      "x": 23.6,
+      "y": 22.1,
+      "front": true
+     },
+     "cast": {
+      "x": 20.2,
+      "y": 36,
+      "front": false
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28,
+      "y": 36.6,
+      "front": false
+     },
+     "handL": {
+      "x": 22.2,
+      "y": 40.4,
+      "front": true
+     },
+     "head": {
+      "x": 23.8,
+      "y": 21.1,
+      "front": true
+     },
+     "cast": {
+      "x": 20.6,
+      "y": 34.9,
+      "front": false
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37,
+      "front": true
+     }
+    }
+   ],
+   "cast": [
+    {
+     "handR": {
+      "x": 25.6,
+      "y": 34.7,
+      "front": false
+     },
+     "handL": {
+      "x": 21.2,
+      "y": 36.8,
+      "front": true
+     },
+     "head": {
+      "x": 25.2,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 20.6,
+      "y": 35.8,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.1,
+      "y": 29.5,
+      "front": true
+     },
+     "handL": {
+      "x": 20.8,
+      "y": 33.4,
+      "front": true
+     },
+     "head": {
+      "x": 28.9,
+      "y": 24.6,
+      "front": true
+     },
+     "cast": {
+      "x": 20.9,
+      "y": 33.7,
+      "front": false
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.4,
+      "y": 32.6,
+      "front": false
+     },
+     "handL": {
+      "x": 18.7,
+      "y": 35.7,
+      "front": true
+     },
+     "head": {
+      "x": 23.5,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 20.6,
+      "y": 36.8,
+      "front": false
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 38.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.4,
+      "y": 34.2,
+      "front": false
+     },
+     "handL": {
+      "x": 19.3,
+      "y": 37.6,
+      "front": true
+     },
+     "head": {
+      "x": 25.4,
+      "y": 22.5,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 34.9,
+      "front": false
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "dash": [
+    {
+     "handR": {
+      "x": 31.5,
+      "y": 38.8,
+      "front": true
+     },
+     "handL": {
+      "x": 24.4,
+      "y": 42.1,
+      "front": true
+     },
+     "head": {
+      "x": 22.5,
+      "y": 23.7,
+      "front": true
+     },
+     "cast": {
+      "x": 20.8,
+      "y": 39.8,
+      "front": false
+     },
+     "chest": {
+      "x": 25.8,
+      "y": 39.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 31.5,
+      "y": 38.8,
+      "front": true
+     },
+     "handL": {
+      "x": 24.4,
+      "y": 42.1,
+      "front": true
+     },
+     "head": {
+      "x": 22.5,
+      "y": 23.7,
+      "front": true
+     },
+     "cast": {
+      "x": 20.8,
+      "y": 39.8,
+      "front": false
+     },
+     "chest": {
+      "x": 25.8,
+      "y": 39.6,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 33.7,
+      "y": 36.7,
+      "front": true
+     },
+     "handL": {
+      "x": 24.8,
+      "y": 41.4,
+      "front": true
+     },
+     "head": {
+      "x": 32.2,
+      "y": 27,
+      "front": true
+     },
+     "cast": {
+      "x": 20.8,
+      "y": 33.2,
+      "front": false
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 38,
+      "front": true
+     }
+    }
+   ]
+  },
+  "W": {
+   "idle": [
+    {
+     "handR": {
+      "x": 25.3,
+      "y": 37.6,
+      "front": false
+     },
+     "handL": {
+      "x": 25.3,
+      "y": 42,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 18.5,
+      "y": 37.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.2,
+      "y": 38.1,
+      "front": false
+     },
+     "handL": {
+      "x": 25.2,
+      "y": 42.6,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 18.5,
+      "y": 37.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.1,
+      "y": 38.6,
+      "front": false
+     },
+     "handL": {
+      "x": 25.1,
+      "y": 43.1,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 18.5,
+      "y": 38.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.1,
+      "y": 38.6,
+      "front": false
+     },
+     "handL": {
+      "x": 25.1,
+      "y": 43.1,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 18.5,
+      "y": 38.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.2,
+      "y": 38.1,
+      "front": false
+     },
+     "handL": {
+      "x": 25.2,
+      "y": 42.6,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 18.5,
+      "y": 37.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.3,
+      "y": 37.6,
+      "front": false
+     },
+     "handL": {
+      "x": 25.3,
+      "y": 42,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 18.5,
+      "y": 37.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 28.6,
+      "y": 35.3,
+      "front": false
+     },
+     "handL": {
+      "x": 21.6,
+      "y": 39,
+      "front": true
+     },
+     "head": {
+      "x": 22.9,
+      "y": 21.1,
+      "front": true
+     },
+     "cast": {
+      "x": 18.4,
+      "y": 36.1,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 36.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 27.8,
+      "y": 37.3,
+      "front": false
+     },
+     "handL": {
+      "x": 22.2,
+      "y": 41.1,
+      "front": true
+     },
+     "head": {
+      "x": 22.8,
+      "y": 22.9,
+      "front": true
+     },
+     "cast": {
+      "x": 18.4,
+      "y": 38,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.3,
+      "y": 36.8,
+      "front": false
+     },
+     "handL": {
+      "x": 24.1,
+      "y": 41.1,
+      "front": true
+     },
+     "head": {
+      "x": 22.8,
+      "y": 22.1,
+      "front": true
+     },
+     "cast": {
+      "x": 18.4,
+      "y": 37.4,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.6,
+      "y": 34.7,
+      "front": false
+     },
+     "handL": {
+      "x": 28.6,
+      "y": 39.7,
+      "front": true
+     },
+     "head": {
+      "x": 22.9,
+      "y": 21.4,
+      "front": true
+     },
+     "cast": {
+      "x": 18.4,
+      "y": 37,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 36.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 22.2,
+      "y": 36.8,
+      "front": false
+     },
+     "handL": {
+      "x": 27.8,
+      "y": 41.7,
+      "front": true
+     },
+     "head": {
+      "x": 22.8,
+      "y": 23.1,
+      "front": true
+     },
+     "cast": {
+      "x": 18.4,
+      "y": 38.6,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 24.1,
+      "y": 36.6,
+      "front": false
+     },
+     "handL": {
+      "x": 25.3,
+      "y": 41.3,
+      "front": true
+     },
+     "head": {
+      "x": 22.8,
+      "y": 22.1,
+      "front": true
+     },
+     "cast": {
+      "x": 18.4,
+      "y": 37.4,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37,
+      "front": true
+     }
+    }
+   ],
+   "cast": [
+    {
+     "handR": {
+      "x": 22.4,
+      "y": 35.5,
+      "front": true
+     },
+     "handL": {
+      "x": 22.4,
+      "y": 38.4,
+      "front": true
+     },
+     "head": {
+      "x": 24.9,
+      "y": 23.7,
+      "front": true
+     },
+     "cast": {
+      "x": 18.4,
+      "y": 38.4,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 24.5,
+      "y": 29.2,
+      "front": true
+     },
+     "handL": {
+      "x": 24.5,
+      "y": 34.7,
+      "front": true
+     },
+     "head": {
+      "x": 30.1,
+      "y": 23.2,
+      "front": true
+     },
+     "cast": {
+      "x": 18.8,
+      "y": 36.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 20.4,
+      "y": 33.7,
+      "front": false
+     },
+     "handL": {
+      "x": 20.4,
+      "y": 38.2,
+      "front": true
+     },
+     "head": {
+      "x": 22.5,
+      "y": 24,
+      "front": true
+     },
+     "cast": {
+      "x": 18.4,
+      "y": 39.3,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.5,
+      "y": 35,
+      "front": false
+     },
+     "handL": {
+      "x": 21.5,
+      "y": 39.8,
+      "front": true
+     },
+     "head": {
+      "x": 25.1,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 18.4,
+      "y": 37.4,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "dash": [
+    {
+     "handR": {
+      "x": 28.7,
+      "y": 37.2,
+      "front": false
+     },
+     "handL": {
+      "x": 28.7,
+      "y": 41.9,
+      "front": true
+     },
+     "head": {
+      "x": 21,
+      "y": 25.3,
+      "front": true
+     },
+     "cast": {
+      "x": 18.7,
+      "y": 42.2,
+      "front": true
+     },
+     "chest": {
+      "x": 25.7,
+      "y": 39.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.7,
+      "y": 37.2,
+      "front": false
+     },
+     "handL": {
+      "x": 28.7,
+      "y": 41.9,
+      "front": true
+     },
+     "head": {
+      "x": 21,
+      "y": 25.3,
+      "front": true
+     },
+     "cast": {
+      "x": 18.7,
+      "y": 42.2,
+      "front": true
+     },
+     "chest": {
+      "x": 25.7,
+      "y": 39.7,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 30.1,
+      "y": 34.4,
+      "front": false
+     },
+     "handL": {
+      "x": 30.9,
+      "y": 40.6,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 24.2,
+      "front": true
+     },
+     "cast": {
+      "x": 19.3,
+      "y": 35.5,
+      "front": true
+     },
+     "chest": {
+      "x": 26.2,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SW": {
+   "idle": [
+    {
+     "handR": {
+      "x": 22.1,
+      "y": 38.5,
+      "front": false
+     },
+     "handL": {
+      "x": 28.8,
+      "y": 41.6,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 39.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 22.1,
+      "y": 39,
+      "front": false
+     },
+     "handL": {
+      "x": 28.8,
+      "y": 42.2,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 40.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 22,
+      "y": 39.6,
+      "front": false
+     },
+     "handL": {
+      "x": 28.7,
+      "y": 42.7,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 40.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 22,
+      "y": 39.6,
+      "front": false
+     },
+     "handL": {
+      "x": 28.7,
+      "y": 42.7,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.8,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 40.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 22.1,
+      "y": 39,
+      "front": false
+     },
+     "handL": {
+      "x": 28.8,
+      "y": 42.2,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 23.3,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 40.1,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 22.1,
+      "y": 38.5,
+      "front": false
+     },
+     "handL": {
+      "x": 28.8,
+      "y": 41.6,
+      "front": true
+     },
+     "head": {
+      "x": 26,
+      "y": 22.8,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 39.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 24.5,
+      "y": 35.1,
+      "front": false
+     },
+     "handL": {
+      "x": 26.1,
+      "y": 39.8,
+      "front": true
+     },
+     "head": {
+      "x": 23.5,
+      "y": 22.2,
+      "front": true
+     },
+     "cast": {
+      "x": 20,
+      "y": 38.7,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 36.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 24,
+      "y": 37.4,
+      "front": false
+     },
+     "handL": {
+      "x": 26.5,
+      "y": 41.8,
+      "front": true
+     },
+     "head": {
+      "x": 23.6,
+      "y": 24,
+      "front": true
+     },
+     "cast": {
+      "x": 20.2,
+      "y": 40.6,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 22.2,
+      "y": 37.7,
+      "front": false
+     },
+     "handL": {
+      "x": 28,
+      "y": 41.1,
+      "front": true
+     },
+     "head": {
+      "x": 23.8,
+      "y": 23.2,
+      "front": true
+     },
+     "cast": {
+      "x": 20.6,
+      "y": 39.9,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 19.7,
+      "y": 36.8,
+      "front": true
+     },
+     "handL": {
+      "x": 31.1,
+      "y": 38.2,
+      "front": true
+     },
+     "head": {
+      "x": 24,
+      "y": 22.4,
+      "front": true
+     },
+     "cast": {
+      "x": 21.3,
+      "y": 39.3,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 36.2,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 20,
+      "y": 38.7,
+      "front": true
+     },
+     "handL": {
+      "x": 30.6,
+      "y": 40.5,
+      "front": true
+     },
+     "head": {
+      "x": 23.9,
+      "y": 24.2,
+      "front": true
+     },
+     "cast": {
+      "x": 21,
+      "y": 41,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.3,
+      "y": 37.9,
+      "front": false
+     },
+     "handL": {
+      "x": 28.9,
+      "y": 40.8,
+      "front": true
+     },
+     "head": {
+      "x": 23.8,
+      "y": 23.2,
+      "front": true
+     },
+     "cast": {
+      "x": 20.6,
+      "y": 39.9,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 37,
+      "front": true
+     }
+    }
+   ],
+   "cast": [
+    {
+     "handR": {
+      "x": 21.2,
+      "y": 37.2,
+      "front": true
+     },
+     "handL": {
+      "x": 25.6,
+      "y": 39.2,
+      "front": true
+     },
+     "head": {
+      "x": 25.2,
+      "y": 24,
+      "front": true
+     },
+     "cast": {
+      "x": 20.6,
+      "y": 40.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 20.8,
+      "y": 30.5,
+      "front": true
+     },
+     "handL": {
+      "x": 29.1,
+      "y": 34.3,
+      "front": true
+     },
+     "head": {
+      "x": 28.9,
+      "y": 21.9,
+      "front": true
+     },
+     "cast": {
+      "x": 20.9,
+      "y": 38.5,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 18.7,
+      "y": 36.3,
+      "front": true
+     },
+     "handL": {
+      "x": 25.4,
+      "y": 39.4,
+      "front": true
+     },
+     "head": {
+      "x": 23.5,
+      "y": 25.1,
+      "front": true
+     },
+     "cast": {
+      "x": 20.6,
+      "y": 41.8,
+      "front": true
+     },
+     "chest": {
+      "x": 25.9,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 19.3,
+      "y": 37.2,
+      "front": true
+     },
+     "handL": {
+      "x": 26.4,
+      "y": 40.6,
+      "front": true
+     },
+     "head": {
+      "x": 25.4,
+      "y": 23.1,
+      "front": true
+     },
+     "cast": {
+      "x": 20.7,
+      "y": 39.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26,
+      "y": 37.9,
+      "front": true
+     }
+    }
+   ],
+   "dash": [
+    {
+     "handR": {
+      "x": 24.4,
+      "y": 36.9,
+      "front": false
+     },
+     "handL": {
+      "x": 31.5,
+      "y": 40.3,
+      "front": true
+     },
+     "head": {
+      "x": 22.5,
+      "y": 27,
+      "front": true
+     },
+     "cast": {
+      "x": 20.8,
+      "y": 44.6,
+      "front": true
+     },
+     "chest": {
+      "x": 25.8,
+      "y": 39.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 24.4,
+      "y": 36.9,
+      "front": false
+     },
+     "handL": {
+      "x": 31.5,
+      "y": 40.3,
+      "front": true
+     },
+     "head": {
+      "x": 22.5,
+      "y": 27,
+      "front": true
+     },
+     "cast": {
+      "x": 20.8,
+      "y": 44.6,
+      "front": true
+     },
+     "chest": {
+      "x": 25.8,
+      "y": 39.8,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 24.1,
+      "y": 34,
+      "front": false
+     },
+     "handL": {
+      "x": 34.1,
+      "y": 38.1,
+      "front": true
+     },
+     "head": {
+      "x": 31.1,
+      "y": 21.7,
+      "front": true
+     },
+     "cast": {
+      "x": 21.7,
+      "y": 37.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 37.8,
+      "front": true
+     }
+    }
+   ]
+  }
+ }
+}

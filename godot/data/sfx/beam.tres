@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_d7gvp"]
+
+[resource]
+script = ExtResource("1_d7gvp")
+id = &"beam"
+pitch_vary = 0.06
+priority = 2
+caption = "[beam]"
+recipe = {
+"layers": [{
+"dur": 0.5,
+"f0": 200.0,
+"f1": 1200.0,
+"gain": 0.04,
+"osc": "saw"
+}]
+}

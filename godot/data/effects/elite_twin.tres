@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_t84ay"]
+
+[resource]
+script = ExtResource("1_t84ay")
+id = &"elite_twin"
+display_name = "Twin"
+hint = "Elite modifier"
+source = "elite"
+if_tags = PackedStringArray()
+do_action = &"elite_twin"
+do_params = {
+"color": "#ffb0e0",
+"damage_mult": 1.25,
+"hp_mult": 3.2,
+"rare": false
+}
+icd = 0.0
+tags = PackedStringArray()
+todo = "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.
+JS:
+spawn: spawn(e) {
+      if (e.twinOf || e.swarm) return;   // a swarm is already many bodies (its group bookkeeping would break): no linked copy
+      e.hp = e.maxHp = Math.round(e.maxHp * 0.5);
+      const t = spawnEnemyRaw(e.type, e.x + 1, e.y + 0.5, e.spawnT); initParts(t, e.def);
+      t.elite = true; t.mods = e.mods.slice(); t.twinOf = e; t.hp = t.maxHp = e.maxHp; t.dm = e.dm; t.dmgK = e.dmgK;
+      e.swarm = t.swarm = { alive: 2, n: 2 };   // linked: XP and loot once, when both are down
+    }"

@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/brambleshaman.tres" id="1_k5dgg"]
+[ext_resource type="Resource" path="res://data/loot/common_pinewood.tres" id="2_46i32"]
+[ext_resource type="Texture2D" path="res://art/enemies/brambleshaman_n.png" id="3_mr1ne"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4_n36bv"]
+
+[resource]
+script = ExtResource("4_n36bv")
+id = &"brambleshaman"
+display_name = "Bramble Shaman"
+hp = 400.0
+speed = 1.8
+damage = 24.0
+element = "nature"
+damage_type = "nature"
+stagger = 1.0
+resists = Dictionary[StringName, float]({
+&"fire": -0.5,
+&"nature": 0.5
+})
+tags = PackedStringArray("caster", "support")
+xp = 0.18
+movement = "kite"
+attacks = PackedStringArray("zone-caster", "healer")
+part_params = {
+"healer": {
+"heal": 0.25,
+"targets": "most_damaged_ally",
+"telegraph": 4.0
+},
+"zone-caster": {
+"kind": "poison",
+"life": 6.0,
+"n": 2.0,
+"r": 1.2
+}
+}
+loot = ExtResource("2_46i32")
+frames = ExtResource("1_k5dgg")
+normal_map = ExtResource("3_mr1ne")
+scale = 0.8
+blood = Color(0.78039217, 0.65882355, 1, 1)
+origin = Vector2(34, 57)
+todo = "Behaviour: parts [\"kite\",\"zone-caster\",\"healer\"] run by parts.js (part runtime); the Bestiary lane makes them components."

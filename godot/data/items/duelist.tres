@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/engarde.tres" id="1_m2qef"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_ak73q"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_ac3qq"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_x2i6q"]
+
+[sub_resource type="Resource" id="Resource_m2byo"]
+script = ExtResource("4_x2i6q")
+base_id = &"swordsmanscoat"
+display_name = "Swordsman's Coat"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_bjoay"]
+script = ExtResource("4_x2i6q")
+base_id = &"duelistcoat"
+display_name = "Duelist Coat"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_swaxc"]
+script = ExtResource("4_x2i6q")
+base_id = &"silverthreadcoat"
+display_name = "Silverthread Coat"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_f6dad"]
+script = ExtResource("4_x2i6q")
+base_id = &"auroradoublet"
+display_name = "Aurora Doublet"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_0qgtl"]
+script = ExtResource("4_x2i6q")
+base_id = &"bladeeternal"
+display_name = "Blade Eternal"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_ac3qq")
+id = &"duelist"
+display_name = "Duelist Coat"
+description = "+6% crit, +6% attack speed, +4% crit damage."
+kind = "armour"
+slot = "chest"
+item_class = &"medium"
+suit = &"duelist"
+hands = 0
+element = "slash"
+tiers = Array[ExtResource("4_x2i6q")]([SubResource("Resource_m2byo"), SubResource("Resource_bjoay"), SubResource("Resource_swaxc"), SubResource("Resource_f6dad"), SubResource("Resource_0qgtl")])
+active = ExtResource("1_m2qef")
+stats = Dictionary[StringName, float]({
+&"crit": 0.06,
+&"critDmg": 0.04,
+&"haste": 0.06
+})
+resists = Dictionary[StringName, float]({
+&"fire": -0.25,
+&"pierce": 0.25,
+&"slash": 0.1
+})
+color = Color(0.6901961, 0.2901961, 0.3529412, 1)
+attack_pose = "none"
+todo = "Suit Duelist (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."

@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_i52iu"]
+
+[resource]
+script = ExtResource("1_i52iu")
+id = &"drop3"
+bus = "ui"
+priority = 2
+caption = "[epic drop]"
+recipe = {
+"layers": [{
+"dur": 0.34,
+"f0": 660.0,
+"f1": 661.0,
+"gain": 0.044,
+"osc": "triangle"
+}, {
+"delay": 0.07,
+"dur": 0.34,
+"f0": 825.0,
+"f1": 826.0,
+"gain": 0.044,
+"osc": "triangle"
+}, {
+"delay": 0.14,
+"dur": 0.34,
+"f0": 1040.0,
+"f1": 1041.0,
+"gain": 0.044,
+"osc": "triangle"
+}]
+}

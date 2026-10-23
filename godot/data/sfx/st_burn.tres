@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_miq7d"]
+
+[resource]
+script = ExtResource("1_miq7d")
+id = &"st_burn"
+pitch_vary = 0.06
+caption = "[burning]"
+recipe = {
+"layers": [{
+"dur": 0.02,
+"f0": 2500.0,
+"f1": 2500.0,
+"filter": {
+"freq": 2000.0,
+"q": 0.7,
+"type": "highpass"
+},
+"gain": 0.04,
+"osc": "noise"
+}, {
+"delay": 0.09,
+"dur": 0.02,
+"f0": 2500.0,
+"f1": 2500.0,
+"filter": {
+"freq": 2000.0,
+"q": 0.7,
+"type": "highpass"
+},
+"gain": 0.03,
+"osc": "noise"
+}]
+}

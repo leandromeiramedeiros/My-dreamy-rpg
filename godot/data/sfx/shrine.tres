@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_wvcxo"]
+
+[resource]
+script = ExtResource("1_wvcxo")
+id = &"shrine"
+pitch_vary = 0.03
+priority = 2
+caption = "[shrine]"
+recipe = {
+"layers": [{
+"dur": 0.9,
+"f0": 523.0,
+"f1": 523.0,
+"gain": 0.04,
+"osc": "triangle"
+}, {
+"dur": 0.9,
+"f0": 659.0,
+"f1": 659.0,
+"gain": 0.035,
+"osc": "triangle"
+}, {
+"dur": 0.9,
+"f0": 784.0,
+"f1": 784.0,
+"gain": 0.03,
+"osc": "triangle"
+}, {
+"delay": 0.2,
+"dur": 0.6,
+"f0": 1500.0,
+"f1": 1200.0,
+"filter": {
+"freq": 1500.0,
+"q": 2.0,
+"type": "bandpass"
+},
+"gain": 0.03,
+"osc": "noise"
+}]
+}

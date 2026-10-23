@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_gseaa"]
+
+[resource]
+script = ExtResource("1_gseaa")
+id = &"suit_nightshade"
+display_name = "Nightshade twist"
+hint = "Poison spreads to two foes nearby on a kill"
+source = "suit"
+when_event = "kill"
+if_tags = PackedStringArray()
+do_action = &"suit_nightshade"
+icd = 0.0
+tags = PackedStringArray()
+todo = "Live while three nightshade pieces are worn.
+JS:
+do: do(c) { const e = c.e; if (!(e.poisonN > 0)) return; const near = new Set([e]); for (let k = 0; k < 2; k++) { const n = nearestEnemy(e.x, e.y, 3, near); if (!n) break; near.add(n); poisonEnemy(n, e.poisonN, c.e.poisonCast); } }"

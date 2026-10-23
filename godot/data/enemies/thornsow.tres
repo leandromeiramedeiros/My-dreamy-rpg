@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/shadehound.tres" id="1_cqqp8"]
+[ext_resource type="Resource" path="res://data/loot/common_pinewood.tres" id="2_o4do5"]
+[ext_resource type="Texture2D" path="res://art/enemies/shadehound_n.png" id="3_vtfed"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4_fls1y"]
+
+[resource]
+script = ExtResource("4_fls1y")
+id = &"thornsow"
+display_name = "Thornsow Matriarch"
+hp = 430.0
+speed = 2.4
+damage = 60.0
+element = "nature"
+damage_type = "pierce"
+stagger = 3.0
+resists = Dictionary[StringName, float]({
+&"fire": -0.5,
+&"nature": 0.5,
+&"slash": 0.25
+})
+tags = PackedStringArray("beast", "armoured")
+xp = 0.6
+movement = "burrow"
+attacks = PackedStringArray("brute")
+support = &"aura-buffer"
+part_params = {
+"aura-buffer": {
+"dmg": 1.2,
+"r": 3.5,
+"speed": 1.1
+},
+"brute": {
+"r": 2.0,
+"range": 1.7,
+"shape": "cone",
+"wind": 0.7
+},
+"burrow": {
+"erupt": {
+"r": 2.2,
+"shape": "circle"
+},
+"staggerOnSurface": true,
+"vanish": 1.4
+}
+}
+loot = ExtResource("2_o4do5")
+frames = ExtResource("1_cqqp8")
+normal_map = ExtResource("3_vtfed")
+scale = 1.55
+blood = Color(0.78039217, 0.65882355, 1, 1)
+origin = Vector2(36, 47)
+todo = "Behaviour: parts [\"burrow\",\"brute\",\"aura-buffer\"] run by parts.js (part runtime); the Bestiary lane makes them components."

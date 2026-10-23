@@ -1,0 +1,25 @@
+{
+ "id": "grass",
+ "kind": "grass",
+ "label": "Tall grass",
+ "size": [
+  9,
+  8
+ ],
+ "origin": [
+  4.5,
+  7
+ ],
+ "collider_r": 0,
+ "shadow": 0,
+ "light": null,
+ "image": "grass.png",
+ "frames": {
+  "count": 2,
+  "cell": [
+   9,
+   8
+  ],
+  "about": "wind frames, left to right"
+ }
+}

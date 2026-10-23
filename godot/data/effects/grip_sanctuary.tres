@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_jq4av"]
+
+[resource]
+script = ExtResource("1_jq4av")
+id = &"grip_sanctuary"
+display_name = "Sanctuary"
+hint = "Consecrate follows you; Block inside it restores 2% HP a second (one zone, no stacking)."
+source = "grip"
+if_tags = PackedStringArray()
+tags = PackedStringArray()

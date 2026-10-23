@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_x24iy"]
+
+[resource]
+script = ExtResource("1_x24iy")
+id = &"dmg_arcane"
+pitch_vary = 0.06
+priority = 2
+caption = "[arcane damage]"
+recipe = {
+"layers": [{
+"dur": 0.25,
+"f0": 500.0,
+"f1": 1100.0,
+"gain": 0.05,
+"osc": "sine"
+}, {
+"dur": 0.25,
+"f0": 707.0,
+"f1": 1556.0,
+"gain": 0.03,
+"osc": "sine"
+}]
+}

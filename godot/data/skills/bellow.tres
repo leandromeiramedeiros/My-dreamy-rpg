@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_eweol"]
+[ext_resource type="Script" path="res://scripts/data/cone_block.gd" id="2_byve4"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_2q8ys"]
+
+[sub_resource type="Resource" id="Resource_8eu0k"]
+script = ExtResource("2_byve4")
+reach = 2.4
+arc = 91.67
+damage = 30.0
+knockback = 0.4
+hit_params = {
+"guardBreak": true
+}
+
+[resource]
+script = ExtResource("3_2q8ys")
+id = &"bellow"
+display_name = "Bellow"
+description = "Turn to the next call and bellow: a guard-breaking roar (stagger 2)."
+element = "slash"
+kind = "action"
+cooldown = 1.2
+stamina_cost = 12.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_eweol")]([SubResource("Resource_8eu0k")])
+aim_shape = "cone"
+aim_range = 2.4
+aim_arc = 91.67
+stagger = 2.0
+color = Color(0.8784314, 0.6901961, 0.4392157, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) { deckNext(p); hitCone(p.x, p.y, a, 1.6, 2.4, 30, { knock: 0.4, guardBreak: true }); fx({ type: 'ring', x: p.x, y: p.y, r: 1.6, col: '#ffd890', life: 0.25 }); sfx('shout'); }
+JS fields: {\"off\":true}"

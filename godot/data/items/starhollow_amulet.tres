@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_1mr7h"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_yw2kh"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_swiir"]
+
+[sub_resource type="Resource" id="Resource_x3ur8"]
+script = ExtResource("3_swiir")
+base_id = &"starhollow_amulet"
+display_name = "Starhollow Amulet"
+required_level = 32
+
+[resource]
+script = ExtResource("2_yw2kh")
+id = &"starhollow_amulet"
+display_name = "Starhollow Amulet"
+description = "+8% charge rate"
+kind = "trinket"
+slot = "amulet"
+hands = 0
+tiers = Array[ExtResource("3_swiir")]([SubResource("Resource_x3ur8")])
+stats = Dictionary[StringName, float]({
+&"chargeSpeed": 0.08
+})
+attack_pose = "none"
+todo = "Boon rolled at drop (BOONS amulet)."

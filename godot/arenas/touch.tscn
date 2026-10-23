@@ -1,0 +1,222 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/systems/arena.gd" id="1_er2sm"]
+[ext_resource type="Resource" path="res://data/items/sword.tres" id="2_bijge"]
+[ext_resource type="Resource" path="res://data/items/buckler.tres" id="3_mh4d4"]
+[ext_resource type="Resource" path="res://data/items/knighthelm.tres" id="4_ht4b6"]
+[ext_resource type="Resource" path="res://data/items/warden.tres" id="5_g4xc7"]
+[ext_resource type="Resource" path="res://data/items/knightgreaves.tres" id="6_06pya"]
+[ext_resource type="TileSet" path="res://art/tiles/vale/vale_tileset.tres" id="7_ubr15"]
+[ext_resource type="PackedScene" path="res://scenes/hero/hero.tscn" id="8_rxm4y"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="9_di7sf"]
+[ext_resource type="Resource" path="res://data/enemies/dummy.tres" id="10_vrg66"]
+[ext_resource type="PackedScene" path="res://scenes/props/prop.tscn" id="11_ml5bn"]
+[ext_resource type="JSON" path="res://art/props/chest.json" id="12_qtu1q"]
+[ext_resource type="JSON" path="res://art/props/tablet.json" id="13_00xhe"]
+[ext_resource type="JSON" path="res://art/props/shrine.json" id="14_msdhg"]
+[ext_resource type="JSON" path="res://art/props/warpdoor.json" id="15_ro0kk"]
+[ext_resource type="JSON" path="res://art/props/lantern.json" id="16_d202o"]
+[ext_resource type="JSON" path="res://art/props/sign.json" id="17_0jgjq"]
+
+[node name="Touch" type="Node2D" unique_id=741274734]
+script = ExtResource("1_er2sm")
+arena_id = &"touch"
+arena_name = "Touch arena"
+description = "Chest, dialogue, shrine, lever, warp door, two dummies (touch UI)"
+objective = "Try every Interact"
+kit_hand = ExtResource("2_bijge")
+kit_offhand = ExtResource("3_mh4d4")
+kit_head = ExtResource("4_ht4b6")
+kit_chest = ExtResource("5_g4xc7")
+kit_boots = ExtResource("6_06pya")
+hero_level = 4
+triggers = Array[Dictionary]([{
+"actions": [{
+"sub": "Chest, dialogue, shrine, lever, warp",
+"title": "Touch arena",
+"type": "banner"
+}, {
+"text": "Try every Interact",
+"type": "objective"
+}, {
+"count": 1.0,
+"enemy": "dummy",
+"instant": true,
+"radius": 0.0,
+"type": "spawn",
+"x": 18.0,
+"y": 8.0
+}, {
+"count": 1.0,
+"enemy": "dummy",
+"instant": true,
+"radius": 0.0,
+"type": "spawn",
+"x": 20.0,
+"y": 10.0
+}],
+"id": "in",
+"name": "Enter",
+"when": {
+"type": "map_enter"
+}
+}, {
+"actions": [{
+"lines": ["This is the touch arena.", "Tap the interact button next to anything that glows."],
+"speaker": "Pip",
+"type": "dialogue"
+}],
+"id": "talk",
+"name": "Pip speaks",
+"when": {
+"r": 1.8,
+"type": "enter_area",
+"x": 6.5,
+"y": 6.5
+}
+}])
+objects = Array[Dictionary]([{
+"gate": "gate_touch",
+"id": "lever_touch",
+"label": "lever",
+"t": "lever",
+"x": 12.5,
+"y": 12.5
+}, {
+"ang": 0.0,
+"id": "gate_touch",
+"len": 3.2,
+"t": "gate",
+"x": 17.5,
+"y": 12.5
+}])
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=1795713890]
+tile_map_data = PackedByteArray("AAAVAA0AAAABAAAAAAAUAA0AAAADAAAAAAATAA0AAAADAAAAAAASAA0AAAAAAAAAAAARAA0AAAAAAAAAAAAQAA0AAAACAAAAAAAPAA0AAAACAAAAAAAOAA0AAAABAAAAAAANAA0AAAACAAAAAAAMAA0AAAABAAAAAAALAA0AAAACAAAAAAAKAA0AAAABAAAAAAAJAA0AAAAAAAAAAAAIAA0AAAAAAAAAAAAHAA0AAAADAAAAAAAGAA0AAAACAAAAAAAFAA0AAAAAAAAAAAAEAA0AAAAAAAAAAAADAA0AAAAAAAAAAAACAA0AAAACAAAAAAAVAAwAAAADAAAAAAAUAAwAAAAAAAAAAAATAAwAAAACAAAAAAASAAwAAAADAAAAAAARAAwAAAAAAAAAAAAQAAwAAAAAAAAAAAAPAAwAAAABAAAAAAAOAAwAAAADAAAAAAANAAwAAAACAAAAAAAMAAwAAAAAAAAAAAALAAwAAAAAAAAAAAAKAAwAAAAAAAAAAAAJAAwAAAAAAAAAAAAIAAwAAAACAAAAAAAHAAwAAAAAAAAAAAAGAAwAAAAAAAAAAAAFAAwAAAAAAAAAAAAEAAwAAAADAAAAAAADAAwAAAAAAAAAAAACAAwAAAAAAAAAAAAVAAsAAAAAAAAAAAAUAAsAAAAAAAAAAAATAAsAAAAAAAAAAAASAAsAAAAAAAAAAAARAAsAAAAAAAAAAAAQAAsAAAAAAAAAAAAPAAsAAAACAAAAAAAOAAsAAAACAAAAAAANAAsAAAACAAAAAAAMAAsAAAACAAAAAAALAAsAAAABAAAAAAAKAAsAAAAAAAAAAAAJAAsAAAAAAAAAAAAIAAsAAAAAAAAAAAAHAAsAAAADAAAAAAAGAAsAAAADAAAAAAAFAAsAAAADAAAAAAAEAAsAAAABAAAAAAADAAsAAAABAAAAAAACAAsAAAAAAAAAAAAVAAoAAAACAAAAAAAUAAoAAAACAAAAAAATAAoAAAAAAAAAAAASAAoAAAADAAAAAAARAAoAAAAAAAAAAAAQAAoAAAAAAAAAAAAPAAoAAAACAAAAAAAOAAoAAAAAAAAAAAANAAoAAAADAAAAAAAMAAoAAAAAAAAAAAALAAoAAAABAAAAAAAKAAoAAAAAAAAAAAAJAAoAAAABAAAAAAAIAAoAAAAAAAAAAAAHAAoAAAADAAAAAAAGAAoAAAADAAAAAAAFAAoAAAAAAAAAAAAEAAoAAAABAAAAAAADAAoAAAACAAAAAAACAAoAAAAAAAAAAAAVAAkAAAABAAAAAAAUAAkAAAAAAAAAAAATAAkAAAAAAAAAAAASAAkAAAADAAAAAAARAAkAAAAAAAAAAAAQAAkAAAABAAAAAAAPAAkAAAADAAAAAAAOAAkAAAAAAAAAAAANAAkAAAAAAAAAAAAMAAkAAAABAAAAAAALAAkAAAABAAAAAAAKAAkAAAAAAAAAAAAJAAkAAAACAAAAAAAIAAkAAAAAAAAAAAAHAAkAAAABAAAAAAAGAAkAAAABAAAAAAAFAAkAAAACAAAAAAAEAAkAAAAAAAAAAAADAAkAAAAAAAAAAAACAAkAAAADAAAAAAAVAAgAAAABAAAAAAAUAAgAAAAAAAAAAAATAAgAAAACAAAAAAASAAgAAAAAAAAAAAARAAgAAAABAAAAAAAQAAgAAAAAAAAAAAAPAAgAAAADAAAAAAAOAAgAAAAAAAAAAAANAAgAAAACAAAAAAAMAAgAAAAAAAAAAAALAAgAAAAAAAAAAAAKAAgAAAACAAAAAAAJAAgAAAAAAAAAAAAIAAgAAAABAAAAAAAHAAgAAAAAAAAAAAAGAAgAAAADAAAAAAAFAAgAAAACAAAAAAAEAAgAAAABAAAAAAADAAgAAAAAAAAAAAACAAgAAAABAAAAAAAVAAcAAAAAAAAAAAAUAAcAAAAAAAAAAAATAAcAAAAAAAAAAAASAAcAAAADAAAAAAARAAcAAAAAAAAAAAAQAAcAAAADAAAAAAAPAAcAAAAAAAAAAAAOAAcAAAAAAAAAAAANAAcAAAABAAAAAAAMAAcAAAABAAAAAAALAAcAAAABAAAAAAAKAAcAAAABAAAAAAAJAAcAAAABAAAAAAAIAAcAAAACAAAAAAAHAAcAAAAAAAAAAAAGAAcAAAAAAAAAAAAFAAcAAAACAAAAAAAEAAcAAAACAAAAAAADAAcAAAAAAAAAAAACAAcAAAAAAAAAAAAVAAYAAAABAAAAAAAUAAYAAAAAAAAAAAATAAYAAAAAAAAAAAASAAYAAAAAAAAAAAARAAYAAAACAAAAAAAQAAYAAAABAAAAAAAPAAYAAAAAAAAAAAAOAAYAAAACAAAAAAANAAYAAAADAAAAAAAMAAYAAAAAAAAAAAALAAYAAAADAAAAAAAKAAYAAAAAAAAAAAAJAAYAAAADAAAAAAAIAAYAAAABAAAAAAAHAAYAAAAAAAAAAAAGAAYAAAADAAAAAAAFAAYAAAABAAAAAAAEAAYAAAAAAAAAAAADAAYAAAACAAAAAAACAAYAAAAAAAAAAAAVAAUAAAADAAAAAAAUAAUAAAAAAAAAAAATAAUAAAACAAAAAAASAAUAAAACAAAAAAARAAUAAAADAAAAAAAQAAUAAAABAAAAAAAPAAUAAAACAAAAAAAOAAUAAAADAAAAAAANAAUAAAAAAAAAAAAMAAUAAAAAAAAAAAALAAUAAAABAAAAAAAKAAUAAAAAAAAAAAAJAAUAAAABAAAAAAAIAAUAAAAAAAAAAAAHAAUAAAACAAAAAAAGAAUAAAAAAAAAAAAFAAUAAAABAAAAAAAEAAUAAAACAAAAAAADAAUAAAACAAAAAAACAAUAAAADAAAAAAAVAAQAAAAAAAAAAAAUAAQAAAACAAAAAAATAAQAAAAAAAAAAAASAAQAAAAAAAAAAAARAAQAAAADAAAAAAAQAAQAAAABAAAAAAAPAAQAAAADAAAAAAAOAAQAAAAAAAAAAAANAAQAAAABAAAAAAAMAAQAAAAAAAAAAAALAAQAAAAAAAAAAAAKAAQAAAAAAAAAAAAJAAQAAAACAAAAAAAIAAQAAAAAAAAAAAAHAAQAAAAAAAAAAAAGAAQAAAAAAAAAAAAFAAQAAAADAAAAAAAEAAQAAAAAAAAAAAADAAQAAAADAAAAAAACAAQAAAAAAAAAAAAVAAMAAAADAAAAAAAUAAMAAAADAAAAAAATAAMAAAAAAAAAAAASAAMAAAAAAAAAAAARAAMAAAADAAAAAAAQAAMAAAAAAAAAAAAPAAMAAAABAAAAAAAOAAMAAAAAAAAAAAANAAMAAAADAAAAAAAMAAMAAAADAAAAAAALAAMAAAAAAAAAAAAKAAMAAAACAAAAAAAJAAMAAAAAAAAAAAAIAAMAAAACAAAAAAAHAAMAAAAAAAAAAAAGAAMAAAAAAAAAAAAFAAMAAAACAAAAAAAEAAMAAAABAAAAAAADAAMAAAACAAAAAAACAAMAAAAAAAAAAAAVAAIAAAAAAAAAAAAUAAIAAAAAAAAAAAATAAIAAAADAAAAAAASAAIAAAAAAAAAAAARAAIAAAAAAAAAAAAQAAIAAAACAAAAAAAPAAIAAAAAAAAAAAAOAAIAAAAAAAAAAAANAAIAAAAAAAAAAAAMAAIAAAABAAAAAAALAAIAAAAAAAAAAAAKAAIAAAAAAAAAAAAJAAIAAAAAAAAAAAAIAAIAAAAAAAAAAAAHAAIAAAAAAAAAAAAGAAIAAAAAAAAAAAAFAAIAAAAAAAAAAAAEAAIAAAABAAAAAAADAAIAAAAAAAAAAAACAAIAAAAAAAAAAAA=")
+tile_set = ExtResource("7_ubr15")
+
+[node name="Entities" type="Node2D" parent="." unique_id=1554878832]
+y_sort_enabled = true
+
+[node name="Columns" type="TileMapLayer" parent="Entities" unique_id=734920136]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAIAAgACQAPAAAAAAAPAAgACQAPAAAAAAA=")
+tile_set = ExtResource("7_ubr15")
+
+[node name="Hero" parent="Entities" unique_id=1939202723 instance=ExtResource("8_rxm4y")]
+position = Vector2(-56, 92)
+
+[node name="Dummy_1" parent="Entities" unique_id=897681646 instance=ExtResource("9_di7sf")]
+position = Vector2(176, 208)
+data = ExtResource("10_vrg66")
+
+[node name="Dummy_2" parent="Entities" unique_id=1732281344 instance=ExtResource("9_di7sf")]
+position = Vector2(176, 240)
+data = ExtResource("10_vrg66")
+
+[node name="Chest_1" parent="Entities" unique_id=1857684500 instance=ExtResource("11_ml5bn")]
+position = Vector2(128, 112)
+sidecar = ExtResource("12_qtu1q")
+object_data = {
+"label": "touch-chest",
+"t": "chest",
+"tier": "wood",
+"x": 10.5,
+"y": 3.5
+}
+
+[node name="Chest_2" parent="Entities" unique_id=441432100 instance=ExtResource("11_ml5bn")]
+position = Vector2(144, 264)
+sidecar = ExtResource("12_qtu1q")
+object_data = {
+"label": "touch-chest-silver",
+"t": "chest",
+"tier": "silver",
+"x": 20.5,
+"y": 12.5
+}
+
+[node name="Tablet_3" parent="Entities" unique_id=2111187229 instance=ExtResource("11_ml5bn")]
+position = Vector2(64, 80)
+sidecar = ExtResource("13_00xhe")
+object_data = {
+"label": "tablet",
+"t": "tablet",
+"text": "Tap Interact next to a chest, a tablet, a shrine, a lever or a door.",
+"title": "Touch test",
+"x": 6.5,
+"y": 3.5
+}
+
+[node name="Shrine_4" parent="Entities" unique_id=95622400 instance=ExtResource("11_ml5bn")]
+position = Vector2(288, 192)
+sidecar = ExtResource("14_msdhg")
+object_data = {
+"id": "shrine_touch",
+"label": "checkpoint",
+"name": "Arena shrine",
+"t": "shrine",
+"x": 20.5,
+"y": 3.5
+}
+
+[node name="Warpdoor_5" parent="Entities" unique_id=1285341768 instance=ExtResource("11_ml5bn")]
+position = Vector2(-129.6, 128.8)
+sidecar = ExtResource("15_ro0kk")
+object_data = {
+"id": "warp_touch",
+"label": "Warp test",
+"t": "warpdoor",
+"to": {
+"x": 20.5,
+"y": 5.8
+},
+"x": 3.5,
+"y": 12.6
+}
+
+[node name="Lantern_6" parent="Entities" unique_id=1870280545 instance=ExtResource("11_ml5bn")]
+position = Vector2(16, 32)
+sidecar = ExtResource("16_d202o")
+object_data = {
+"t": "lantern",
+"x": 2.0,
+"y": 2.0
+}
+
+[node name="Lantern_7" parent="Entities" unique_id=1711389231 instance=ExtResource("11_ml5bn")]
+position = Vector2(336, 192)
+sidecar = ExtResource("16_d202o")
+object_data = {
+"t": "lantern",
+"x": 22.0,
+"y": 2.0
+}
+
+[node name="Lantern_8" parent="Entities" unique_id=1103068153 instance=ExtResource("11_ml5bn")]
+position = Vector2(-176, 128)
+sidecar = ExtResource("16_d202o")
+object_data = {
+"t": "lantern",
+"x": 2.0,
+"y": 14.0
+}
+
+[node name="Lantern_9" parent="Entities" unique_id=1214735197 instance=ExtResource("11_ml5bn")]
+position = Vector2(144, 288)
+sidecar = ExtResource("16_d202o")
+object_data = {
+"t": "lantern",
+"x": 22.0,
+"y": 14.0
+}
+
+[node name="Sign_10" parent="Entities" unique_id=785909858 instance=ExtResource("11_ml5bn")]
+position = Vector2(4.800003, 93.6)
+sidecar = ExtResource("17_0jgjq")
+object_data = {
+"label": "sign",
+"t": "sign",
+"x": 5.5,
+"y": 6.2
+}

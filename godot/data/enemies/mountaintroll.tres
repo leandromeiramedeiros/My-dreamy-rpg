@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/mountaintroll.tres" id="1_f7vua"]
+[ext_resource type="Resource" path="res://data/loot/common_pinewood.tres" id="2_ogapb"]
+[ext_resource type="Texture2D" path="res://art/enemies/mountaintroll_n.png" id="3_213q7"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4_drqql"]
+
+[resource]
+script = ExtResource("4_drqql")
+id = &"mountaintroll"
+display_name = "Mountain Troll"
+hp = 375.0
+speed = 1.4
+damage = 88.0
+stagger = 4.0
+resists = Dictionary[StringName, float]({
+&"frost": -0.5,
+&"pierce": 0.5,
+&"slash": 0.5
+})
+tags = PackedStringArray("brute", "sleeper")
+xp = 0.24
+movement = "sleep"
+attacks = PackedStringArray("brute")
+part_params = {
+"brute": {
+"open": 1.2,
+"r": 2.5,
+"range": 2.0,
+"shape": "circle",
+"wind": 0.9
+},
+"sleep": {
+"wakeOn": "proximity",
+"wakeRadius": 3.0
+}
+}
+loot = ExtResource("2_ogapb")
+frames = ExtResource("1_f7vua")
+normal_map = ExtResource("3_213q7")
+blood = Color(0.78039217, 0.65882355, 1, 1)
+origin = Vector2(40, 68)
+todo = "Behaviour: parts [\"sleep\",\"brute\"] run by parts.js (part runtime); the Bestiary lane makes them components."

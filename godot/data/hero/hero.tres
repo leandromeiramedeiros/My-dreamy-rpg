@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="HeroData" format=3]
+
+[ext_resource type="JSON" path="res://art/hero/body.json" id="1_x7jgs"]
+[ext_resource type="Resource" path="res://data/skills/roll.tres" id="2_0rb1y"]
+[ext_resource type="JSON" path="res://art/hero/hair.json" id="3_bltk8"]
+[ext_resource type="Script" path="res://scripts/data/hero_data.gd" id="4_hcs2x"]
+
+[resource]
+script = ExtResource("4_hcs2x")
+dodge = ExtResource("2_0rb1y")
+body_sheet = ExtResource("1_x7jgs")
+hair_sheet = ExtResource("3_bltk8")

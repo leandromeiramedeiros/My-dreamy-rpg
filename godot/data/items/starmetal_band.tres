@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_dgpno"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_f1s1d"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_c1rua"]
+
+[sub_resource type="Resource" id="Resource_vt8da"]
+script = ExtResource("3_c1rua")
+base_id = &"starmetal_band"
+display_name = "Starmetal Band"
+required_level = 32
+
+[resource]
+script = ExtResource("2_f1s1d")
+id = &"starmetal_band"
+display_name = "Starmetal Band"
+description = "+6% power"
+kind = "trinket"
+slot = "ring"
+hands = 0
+tiers = Array[ExtResource("3_c1rua")]([SubResource("Resource_vt8da")])
+stats = Dictionary[StringName, float]({
+&"power": 0.06
+})
+attack_pose = "none"
+todo = "Boon rolled at drop (BOONS ring)."

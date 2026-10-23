@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_6v63m"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="2_8ojno"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_4qg7v"]
+
+[sub_resource type="Resource" id="Resource_ybbgb"]
+script = ExtResource("2_8ojno")
+radius = 2.4
+damage = 170.0
+knockback = 0.5
+
+[resource]
+script = ExtResource("3_4qg7v")
+id = &"cleave"
+display_name = "Cleave"
+description = "One full-circle swing that cleaves everything around you."
+element = "slash"
+cooldown = 4.0
+mp_cost = 22.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_6v63m")]([SubResource("Resource_ybbgb")])
+aim_radius = 2.4
+stagger = 1.0
+hit_weight = 1.5
+color = Color(1, 0.6901961, 0.4392157, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { p.spin = 0.3; hitArea(p.x, p.y, 2.4, 170, { knock: 0.5 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: p.aim, arc: Math.PI * 2, r: 2.4, col: '#ffd0a0', life: 0.3, w: 6 }); shake(4); sfx('heavy'); }"

@@ -1,0 +1,14 @@
+GIMP Palette
+Name: material gems
+Columns: 5
+#
+ 12  36 112	sapphire 0
+ 30  76 204	sapphire 1
+ 74 140 255	sapphire 2
+184 220 255	sapphire 3
+255 255 255	sapphire 4
+ 74   6  20	ruby 0
+154  20  40	ruby 1
+224  56  76	ruby 2
+255 152 168	ruby 3
+255 255 255	ruby 4

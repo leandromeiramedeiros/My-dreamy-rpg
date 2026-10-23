@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_1r65q"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_ah8er"]
+
+[sub_resource type="Resource" id="Resource_is6cb"]
+script = ExtResource("2_ah8er")
+display_name = "Sharpened"
+roll = Vector2(0.02, 0.03)
+
+[sub_resource type="Resource" id="Resource_whru5"]
+script = ExtResource("2_ah8er")
+display_name = "Honed"
+roll = Vector2(0.04, 0.05)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_1dg02"]
+script = ExtResource("2_ah8er")
+display_name = "Lethal"
+roll = Vector2(0.07, 0.08)
+item_level = 28
+
+[resource]
+script = ExtResource("1_1r65q")
+id = &"crit"
+tiers = Array[ExtResource("2_ah8er")]([SubResource("Resource_is6cb"), SubResource("Resource_whru5"), SubResource("Resource_1dg02")])

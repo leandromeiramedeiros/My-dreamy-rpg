@@ -1,0 +1,1045 @@
+{
+ "about": "Seed from the JS reference (tools/godot/seed.js). One-time: edit the .tres in res://data/, not this file.",
+ "rows": [
+  {
+   "id": "slime",
+   "display_name": "Gloom slime",
+   "hp": 540,
+   "speed": 2,
+   "damage": 32,
+   "radius": 0.38,
+   "height": 1.8,
+   "element": "gloom",
+   "damage_type": "gloom",
+   "stagger": 0,
+   "resists": {
+    "pierce": 0.25,
+    "slash": -0.5
+   },
+   "tags": [
+    "amorphous",
+    "gloom"
+   ],
+   "xp": 0.13,
+   "dummy": false,
+   "movement": "chase",
+   "attacks": [
+    "brute"
+   ],
+   "support": "",
+   "part_params": {
+    "chase": {
+     "hop": 1.8
+    },
+    "brute": {
+     "shape": "circle",
+     "r": 1.15,
+     "range": 1,
+     "wind": 0.55,
+     "cd": 1.1,
+     "rec": 0.4,
+     "splat": true,
+     "stopK": 0.8
+    }
+   },
+   "loot": "class_normal",
+   "frames": "",
+   "normal_map": "",
+   "scale": 1,
+   "blood": "#8b7cf6",
+   "todo": "Behaviour: parts [\"chase\",\"brute\"] run by parts.js (part runtime); the Bestiary lane makes them components.\nNo forge sheet in handoff/art/enemies yet."
+  },
+  {
+   "id": "wisp",
+   "display_name": "Wisp",
+   "hp": 235,
+   "speed": 1.9,
+   "damage": 34,
+   "radius": 0.32,
+   "height": 3.2,
+   "element": "arcane",
+   "damage_type": "arcane",
+   "stagger": 1,
+   "resists": {
+    "slash": 0.5,
+    "pierce": 0.5,
+    "arcane": 0.5,
+    "holy": -0.5,
+    "lightning": -0.5,
+    "wind": -0.5
+   },
+   "tags": [
+    "ethereal",
+    "flying"
+   ],
+   "xp": 0.09,
+   "dummy": false,
+   "movement": "kite",
+   "attacks": [
+    "shoot"
+   ],
+   "support": "",
+   "part_params": {
+    "shoot": {
+     "range": 6.5,
+     "wind": 0.7,
+     "cd": 2.6,
+     "speed": 4.6,
+     "r": 0.3,
+     "tele": true,
+     "col": "#b89cff",
+     "dread": 3
+    },
+    "kite": {
+     "near": 3.2,
+     "far": 5.6,
+     "strafe": 1
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "",
+   "normal_map": "",
+   "scale": 1,
+   "blood": "#9ef0ff",
+   "todo": "Behaviour: parts [\"kite\",\"shoot\"] run by parts.js (part runtime); the Bestiary lane makes them components.\nNo forge sheet in handoff/art/enemies yet."
+  },
+  {
+   "id": "hound",
+   "display_name": "Shade hound",
+   "hp": 465,
+   "speed": 3.2,
+   "damage": 46,
+   "radius": 0.42,
+   "height": 2,
+   "element": "gloom",
+   "damage_type": "slash",
+   "stagger": 0,
+   "resists": {
+    "fire": -0.5
+   },
+   "tags": [
+    "beast",
+    "gloom"
+   ],
+   "xp": 0.185,
+   "dummy": false,
+   "movement": "charge",
+   "attacks": [],
+   "support": "",
+   "part_params": {
+    "charge": {
+     "range": 3.2,
+     "wind": 0.48,
+     "cd": 1.6
+    }
+   },
+   "loot": "class_normal",
+   "frames": "res://art/enemies/shadehound.tres",
+   "normal_map": "res://art/enemies/shadehound_n.png",
+   "origin": [
+    36,
+    47
+   ],
+   "scale": 1,
+   "blood": "#ff6b9a",
+   "todo": "Behaviour: parts [\"charge\"] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "ogre",
+   "display_name": "Ogre",
+   "hp": 515,
+   "speed": 2,
+   "damage": 42,
+   "radius": 0.5,
+   "height": 3,
+   "element": "none",
+   "damage_type": "slash",
+   "stagger": 3,
+   "resists": {
+    "fire": -0.5
+   },
+   "tags": [
+    "beast"
+   ],
+   "xp": 0.2,
+   "dummy": false,
+   "movement": "none",
+   "attacks": [],
+   "support": "",
+   "part_params": {},
+   "loot": "common_pinewood",
+   "frames": "res://art/enemies/ogre.tres",
+   "normal_map": "res://art/enemies/ogre_n.png",
+   "origin": [
+    40,
+    72
+   ],
+   "scale": 1,
+   "blood": "#c8a060",
+   "todo": "Behaviour: parts [] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "troll",
+   "display_name": "Mountain troll",
+   "hp": 1245,
+   "speed": 1.3,
+   "damage": 95,
+   "radius": 0.75,
+   "height": 4,
+   "element": "nature",
+   "damage_type": "slash",
+   "stagger": 0,
+   "resists": {
+    "fire": -0.5,
+    "pierce": 0.5
+   },
+   "tags": [
+    "beast"
+   ],
+   "xp": 1.15,
+   "dummy": false,
+   "movement": "none",
+   "attacks": [],
+   "support": "",
+   "part_params": {},
+   "loot": "class_normal",
+   "frames": "res://art/enemies/mountaintroll.tres",
+   "normal_map": "res://art/enemies/mountaintroll_n.png",
+   "origin": [
+    40,
+    68
+   ],
+   "scale": 1,
+   "blood": "#9ab06a",
+   "todo": "Behaviour: parts [] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "sapling",
+   "display_name": "Sapling",
+   "hp": 170,
+   "speed": 0,
+   "damage": 15,
+   "radius": 0.3,
+   "height": 3,
+   "element": "nature",
+   "damage_type": "pierce",
+   "stagger": 1,
+   "resists": {
+    "fire": -0.5,
+    "nature": 0.5
+   },
+   "tags": [
+    "plant",
+    "child"
+   ],
+   "xp": 0,
+   "dummy": false,
+   "movement": "stationary",
+   "attacks": [
+    "shoot"
+   ],
+   "support": "",
+   "part_params": {
+    "shoot": {
+     "range": 7,
+     "wind": 0.8,
+     "cd": 3.2,
+     "speed": 6,
+     "col": "#a6f08a",
+     "tele": true
+    }
+   },
+   "loot": "class_normal",
+   "frames": "res://art/enemies/ogre.tres",
+   "normal_map": "res://art/enemies/ogre_n.png",
+   "origin": [
+    40,
+    72
+   ],
+   "scale": 0.55,
+   "blood": "#c7a8ff",
+   "todo": "Behaviour: parts [\"stationary\",\"shoot\"] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "dummy",
+   "display_name": "Training dummy",
+   "hp": 9999,
+   "speed": 0,
+   "damage": 0,
+   "radius": 0.35,
+   "height": 3,
+   "element": "none",
+   "damage_type": "slash",
+   "stagger": 0,
+   "resists": {},
+   "tags": [],
+   "xp": 0,
+   "dummy": true,
+   "movement": "none",
+   "attacks": [],
+   "support": "",
+   "part_params": {},
+   "loot": "",
+   "frames": "res://art/hero/body.tres",
+   "normal_map": "",
+   "origin": [
+    26,
+    49
+   ],
+   "scale": 1,
+   "tint": "#e7c9a0",
+   "blood": "#e7c9a0",
+   "todo": "Behaviour: parts [] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "dreammoth",
+   "display_name": "Dream Moth",
+   "hp": 450,
+   "speed": 3,
+   "damage": 20,
+   "radius": 0.42,
+   "height": 3,
+   "element": "arcane",
+   "damage_type": "arcane",
+   "stagger": 1,
+   "resists": {
+    "holy": -0.5
+   },
+   "tags": [
+    "flying",
+    "swarm"
+   ],
+   "xp": 0.08,
+   "dummy": false,
+   "movement": "orbit",
+   "attacks": [
+    "shoot"
+   ],
+   "support": "swarm",
+   "part_params": {
+    "orbit": {
+     "r": 2.6
+    },
+    "shoot": {
+     "range": 4.5,
+     "wind": 0.6,
+     "cd": 2.8,
+     "speed": 4.5,
+     "r": 0.25,
+     "col": "#e8d0ff"
+    },
+    "swarm": {
+     "n": 4,
+     "spread": 1.6,
+     "source": "moth_nest"
+    }
+   },
+   "loot": "common_vale",
+   "frames": "",
+   "normal_map": "",
+   "scale": 1,
+   "blood": "#c7a8ff",
+   "todo": "Behaviour: parts [\"orbit\",\"shoot\",\"swarm\"] run by parts.js (part runtime); the Bestiary lane makes them components.\nLook: JS draws \"wisp\"; no sheet yet.\nNo forge sheet in handoff/art/enemies yet."
+  },
+  {
+   "id": "gloomslime",
+   "display_name": "Gloom Slime",
+   "hp": 520,
+   "speed": 2.2,
+   "damage": 32,
+   "radius": 0.42,
+   "height": 3,
+   "element": "gloom",
+   "damage_type": "gloom",
+   "stagger": 2,
+   "resists": {
+    "slash": -0.5,
+    "pierce": 0.25
+   },
+   "tags": [
+    "amorphous",
+    "gloom"
+   ],
+   "xp": 0.12,
+   "dummy": false,
+   "movement": "chase",
+   "attacks": [
+    "brute"
+   ],
+   "support": "split",
+   "part_params": {
+    "chase": {
+     "hop": 1.8
+    },
+    "brute": {
+     "shape": "circle",
+     "r": 1.15,
+     "range": 1,
+     "wind": 0.55,
+     "cd": 1.1,
+     "rec": 0.4,
+     "splat": true,
+     "stopK": 0.8
+    },
+    "split": {
+     "n": 2,
+     "type": "gloomslime_small"
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "",
+   "normal_map": "",
+   "scale": 1,
+   "blood": "#c7a8ff",
+   "todo": "Behaviour: parts [\"chase\",\"brute\",\"split\"] run by parts.js (part runtime); the Bestiary lane makes them components.\nLook: JS draws \"slime\"; no sheet yet.\nNo forge sheet in handoff/art/enemies yet."
+  },
+  {
+   "id": "gloomslime_small",
+   "display_name": "Gloom Slime (small)",
+   "hp": 115,
+   "speed": 2.6,
+   "damage": 20,
+   "radius": 0.28,
+   "height": 1.3,
+   "element": "gloom",
+   "damage_type": "gloom",
+   "stagger": 1,
+   "resists": {
+    "slash": -0.5,
+    "pierce": 0.25
+   },
+   "tags": [
+    "amorphous",
+    "child",
+    "gloom"
+   ],
+   "xp": 0,
+   "dummy": false,
+   "movement": "chase",
+   "attacks": [
+    "brute"
+   ],
+   "support": "",
+   "part_params": {
+    "chase": {
+     "hop": 1.8
+    },
+    "brute": {
+     "shape": "circle",
+     "r": 0.9,
+     "range": 0.8,
+     "wind": 0.55,
+     "cd": 1.2,
+     "rec": 0.4,
+     "splat": true,
+     "stopK": 0.8
+    }
+   },
+   "loot": "class_normal",
+   "frames": "",
+   "normal_map": "",
+   "scale": 0.7,
+   "blood": "#c7a8ff",
+   "todo": "Behaviour: parts [\"chase\",\"brute\"] run by parts.js (part runtime); the Bestiary lane makes them components.\nLook: JS draws \"slime\"; no sheet yet.\nNo forge sheet in handoff/art/enemies yet."
+  },
+  {
+   "id": "shadehound",
+   "display_name": "Shade Hound",
+   "hp": 320,
+   "speed": 3.4,
+   "damage": 48,
+   "radius": 0.42,
+   "height": 3,
+   "element": "gloom",
+   "damage_type": "slash",
+   "stagger": 1,
+   "resists": {
+    "arcane": 0.5,
+    "holy": -0.5
+   },
+   "tags": [
+    "beast",
+    "gloom"
+   ],
+   "xp": 0.12,
+   "dummy": false,
+   "movement": "charge",
+   "attacks": [],
+   "support": "",
+   "part_params": {
+    "charge": {
+     "range": 4.5,
+     "len": 6,
+     "wind": 0.6,
+     "speed": 12,
+     "dur": 0.5,
+     "cd": 1.8
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "res://art/enemies/shadehound.tres",
+   "normal_map": "res://art/enemies/shadehound_n.png",
+   "origin": [
+    36,
+    47
+   ],
+   "scale": 1,
+   "blood": "#c7a8ff",
+   "todo": "Behaviour: parts [\"charge\"] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "brambleshaman",
+   "display_name": "Bramble Shaman",
+   "hp": 400,
+   "speed": 1.8,
+   "damage": 24,
+   "radius": 0.42,
+   "height": 3,
+   "element": "nature",
+   "damage_type": "nature",
+   "stagger": 1,
+   "resists": {
+    "nature": 0.5,
+    "fire": -0.5
+   },
+   "tags": [
+    "caster",
+    "support"
+   ],
+   "xp": 0.18,
+   "dummy": false,
+   "movement": "kite",
+   "attacks": [
+    "zone-caster",
+    "healer"
+   ],
+   "support": "",
+   "part_params": {
+    "healer": {
+     "heal": 0.25,
+     "telegraph": 4,
+     "targets": "most_damaged_ally"
+    },
+    "zone-caster": {
+     "kind": "poison",
+     "n": 2,
+     "r": 1.2,
+     "life": 6
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "res://art/enemies/brambleshaman.tres",
+   "normal_map": "res://art/enemies/brambleshaman_n.png",
+   "origin": [
+    34,
+    57
+   ],
+   "scale": 0.8,
+   "blood": "#c7a8ff",
+   "todo": "Behaviour: parts [\"kite\",\"zone-caster\",\"healer\"] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "thornbackboar",
+   "display_name": "Thornback Boar",
+   "hp": 375,
+   "speed": 2.6,
+   "damage": 56,
+   "radius": 0.42,
+   "height": 3,
+   "element": "nature",
+   "damage_type": "pierce",
+   "stagger": 3,
+   "resists": {
+    "slash": 0.5,
+    "nature": 0.5,
+    "fire": -0.5
+   },
+   "tags": [
+    "beast",
+    "armoured"
+   ],
+   "xp": 0.14,
+   "dummy": false,
+   "movement": "burrow",
+   "attacks": [
+    "brute"
+   ],
+   "support": "",
+   "part_params": {
+    "burrow": {
+     "vanish": 1.5,
+     "erupt": {
+      "shape": "circle",
+      "r": 2
+     },
+     "staggerOnSurface": true
+    },
+    "brute": {
+     "shape": "cone",
+     "r": 1.8,
+     "range": 1.6
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "res://art/enemies/shadehound.tres",
+   "normal_map": "res://art/enemies/shadehound_n.png",
+   "origin": [
+    36,
+    47
+   ],
+   "scale": 1.25,
+   "blood": "#c7a8ff",
+   "todo": "Behaviour: parts [\"burrow\",\"brute\"] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "mountaintroll",
+   "display_name": "Mountain Troll",
+   "hp": 375,
+   "speed": 1.4,
+   "damage": 88,
+   "radius": 0.42,
+   "height": 3,
+   "element": "none",
+   "damage_type": "slash",
+   "stagger": 4,
+   "resists": {
+    "slash": 0.5,
+    "pierce": 0.5,
+    "frost": -0.5
+   },
+   "tags": [
+    "brute",
+    "sleeper"
+   ],
+   "xp": 0.24,
+   "dummy": false,
+   "movement": "sleep",
+   "attacks": [
+    "brute"
+   ],
+   "support": "",
+   "part_params": {
+    "sleep": {
+     "wakeRadius": 3,
+     "wakeOn": "proximity"
+    },
+    "brute": {
+     "wind": 0.9,
+     "open": 1.2,
+     "shape": "circle",
+     "r": 2.5,
+     "range": 2
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "res://art/enemies/mountaintroll.tres",
+   "normal_map": "res://art/enemies/mountaintroll_n.png",
+   "origin": [
+    40,
+    68
+   ],
+   "scale": 1,
+   "blood": "#c7a8ff",
+   "todo": "Behaviour: parts [\"sleep\",\"brute\"] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "gnarlbrute",
+   "display_name": "Gnarlroot Brute",
+   "hp": 520,
+   "speed": 1.6,
+   "damage": 70,
+   "radius": 0.42,
+   "height": 3,
+   "element": "nature",
+   "damage_type": "slash",
+   "stagger": 3,
+   "resists": {
+    "slash": 0.25,
+    "fire": -0.5
+   },
+   "tags": [
+    "brute"
+   ],
+   "xp": 0.72,
+   "dummy": false,
+   "movement": "chase",
+   "attacks": [
+    "brute"
+   ],
+   "support": "",
+   "part_params": {
+    "brute": {
+     "shape": "circle",
+     "r": 2.2,
+     "range": 1.8,
+     "wind": 0.85,
+     "open": 1.1,
+     "cd": 2
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "res://art/enemies/mountaintroll.tres",
+   "normal_map": "res://art/enemies/mountaintroll_n.png",
+   "origin": [
+    40,
+    68
+   ],
+   "scale": 0.95,
+   "blood": "#c7a8ff",
+   "todo": "Behaviour: parts [\"chase\",\"brute\"] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "thornsow",
+   "display_name": "Thornsow Matriarch",
+   "hp": 430,
+   "speed": 2.4,
+   "damage": 60,
+   "radius": 0.42,
+   "height": 3,
+   "element": "nature",
+   "damage_type": "pierce",
+   "stagger": 3,
+   "resists": {
+    "slash": 0.25,
+    "nature": 0.5,
+    "fire": -0.5
+   },
+   "tags": [
+    "beast",
+    "armoured"
+   ],
+   "xp": 0.6,
+   "dummy": false,
+   "movement": "burrow",
+   "attacks": [
+    "brute"
+   ],
+   "support": "aura-buffer",
+   "part_params": {
+    "burrow": {
+     "vanish": 1.4,
+     "erupt": {
+      "shape": "circle",
+      "r": 2.2
+     },
+     "staggerOnSurface": true
+    },
+    "brute": {
+     "shape": "cone",
+     "r": 2,
+     "range": 1.7,
+     "wind": 0.7
+    },
+    "aura-buffer": {
+     "r": 3.5,
+     "dmg": 1.2,
+     "speed": 1.1
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "res://art/enemies/shadehound.tres",
+   "normal_map": "res://art/enemies/shadehound_n.png",
+   "origin": [
+    36,
+    47
+   ],
+   "scale": 1.55,
+   "blood": "#c7a8ff",
+   "todo": "Behaviour: parts [\"burrow\",\"brute\",\"aura-buffer\"] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "gloomknight",
+   "display_name": "Gloom Knight",
+   "hp": 300,
+   "speed": 1.6,
+   "damage": 54,
+   "radius": 0.45,
+   "height": 3.2,
+   "element": "gloom",
+   "damage_type": "slash",
+   "stagger": 3,
+   "resists": {
+    "slash": 0.5,
+    "wind": 0.5,
+    "arcane": 0.5,
+    "pierce": -0.5,
+    "holy": -0.5
+   },
+   "tags": [
+    "armoured",
+    "gloom"
+   ],
+   "xp": 0.16,
+   "dummy": false,
+   "movement": "chase",
+   "attacks": [
+    "brute"
+   ],
+   "support": "shield-front",
+   "part_params": {
+    "brute": {
+     "shape": "cone",
+     "arc": 100,
+     "r": 2,
+     "range": 1.7,
+     "wind": 0.75,
+     "open": 1,
+     "cd": 1.6,
+     "front": 120
+    },
+    "shield-front": {
+     "arc": 140,
+     "mul": 0.15,
+     "rear": 1.3,
+     "turn": 140
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "res://art/enemies/ogre.tres",
+   "normal_map": "res://art/enemies/ogre_n.png",
+   "origin": [
+    40,
+    72
+   ],
+   "scale": 0.9,
+   "blood": "#8a7ab8",
+   "todo": "Behaviour: parts [\"chase\",\"brute\",\"shield-front\"] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "gravechanter",
+   "display_name": "Grave Chanter",
+   "hp": 500,
+   "speed": 1.6,
+   "damage": 40,
+   "radius": 0.42,
+   "height": 3,
+   "element": "gloom",
+   "damage_type": "gloom",
+   "stagger": 1,
+   "resists": {
+    "arcane": 0.5,
+    "holy": -0.5,
+    "pierce": -0.5
+   },
+   "tags": [
+    "caster",
+    "support",
+    "gloom"
+   ],
+   "xp": 0.16,
+   "dummy": false,
+   "movement": "teleport",
+   "attacks": [
+    "bomber",
+    "summon"
+   ],
+   "support": "",
+   "part_params": {
+    "teleport": {
+     "trigger": 2.8,
+     "near": 5,
+     "far": 7,
+     "cd": 5,
+     "wind": 0.6
+    },
+    "bomber": {
+     "range": 7,
+     "wind": 0.9,
+     "cd": 3.2,
+     "r": 1.4,
+     "col": "#b070ff"
+    },
+    "summon": {
+     "kind": "wisp",
+     "n": 1,
+     "max": 2,
+     "cd": 9,
+     "wind": 1,
+     "range": 9,
+     "bound": true
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "res://art/enemies/brambleshaman.tres",
+   "normal_map": "res://art/enemies/brambleshaman_n.png",
+   "origin": [
+    34,
+    57
+   ],
+   "scale": 0.8,
+   "blood": "#9a7ad0",
+   "todo": "Behaviour: parts [\"teleport\",\"bomber\",\"summon\"] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "pillarmimic",
+   "display_name": "Pillar Mimic",
+   "hp": 480,
+   "speed": 1.3,
+   "damage": 70,
+   "radius": 0.5,
+   "height": 3.6,
+   "element": "gloom",
+   "damage_type": "slash",
+   "stagger": 4,
+   "resists": {
+    "slash": 0.5,
+    "arcane": 0.5,
+    "pierce": -0.5,
+    "holy": -0.5
+   },
+   "tags": [
+    "armoured",
+    "sleeper",
+    "gloom"
+   ],
+   "xp": 0.2,
+   "dummy": false,
+   "movement": "mimic",
+   "attacks": [
+    "brute"
+   ],
+   "support": "",
+   "part_params": {
+    "mimic": {
+     "wakeRadius": 1.8,
+     "as": "pillar",
+     "then": "chase"
+    },
+    "brute": {
+     "shape": "circle",
+     "r": 2,
+     "range": 1.6,
+     "wind": 0.8,
+     "open": 1.2,
+     "cd": 2
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "res://art/enemies/mountaintroll.tres",
+   "normal_map": "res://art/enemies/mountaintroll_n.png",
+   "origin": [
+    40,
+    68
+   ],
+   "scale": 0.8,
+   "blood": "#a89cc0",
+   "todo": "Behaviour: parts [\"mimic\",\"brute\"] run by parts.js (part runtime); the Bestiary lane makes them components."
+  },
+  {
+   "id": "shadelingswarm",
+   "display_name": "Shadeling Swarm",
+   "hp": 760,
+   "speed": 2.8,
+   "damage": 16,
+   "radius": 0.26,
+   "height": 1.3,
+   "element": "gloom",
+   "damage_type": "gloom",
+   "stagger": 1,
+   "resists": {
+    "pierce": 0.5,
+    "holy": -0.5
+   },
+   "tags": [
+    "swarm",
+    "gloom"
+   ],
+   "xp": 0.14,
+   "dummy": false,
+   "movement": "orbit",
+   "attacks": [
+    "brute"
+   ],
+   "support": "swarm",
+   "part_params": {
+    "orbit": {
+     "r": 0.9,
+     "k": 1.4
+    },
+    "brute": {
+     "shape": "circle",
+     "r": 0.9,
+     "range": 1.2,
+     "wind": 0.6,
+     "cd": 1.6,
+     "rec": 0.4,
+     "splat": true
+    },
+    "swarm": {
+     "n": 5,
+     "spread": 1,
+     "knockK": 0.25,
+     "source": "shadow_rift"
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "",
+   "normal_map": "",
+   "scale": 0.5,
+   "blood": "#5a4a7a",
+   "todo": "Behaviour: parts [\"orbit\",\"brute\",\"swarm\"] run by parts.js (part runtime); the Bestiary lane makes them components.\nLook: JS draws \"gloomslime\"; no sheet yet.\nNo forge sheet in handoff/art/enemies yet."
+  },
+  {
+   "id": "voidarcher",
+   "display_name": "Void Archer",
+   "hp": 520,
+   "speed": 2,
+   "damage": 42,
+   "radius": 0.42,
+   "height": 3,
+   "element": "gloom",
+   "damage_type": "gloom",
+   "stagger": 1,
+   "resists": {
+    "arcane": 0.5,
+    "holy": -0.5,
+    "pierce": -0.5
+   },
+   "tags": [
+    "ranged",
+    "gloom"
+   ],
+   "xp": 0.15,
+   "dummy": false,
+   "movement": "kite",
+   "attacks": [
+    "sniper",
+    "shoot"
+   ],
+   "support": "",
+   "part_params": {
+    "kite": {
+     "near": 4,
+     "far": 7.5,
+     "strafe": 0.5
+    },
+    "sniper": {
+     "range": 9,
+     "wind": 1,
+     "cd": 3.4,
+     "speed": 14
+    },
+    "shoot": {
+     "range": 4,
+     "wind": 0.65,
+     "cd": 2.6,
+     "n": 3,
+     "spread": 0.3,
+     "speed": 6,
+     "tele": true,
+     "col": "#c070ff"
+    }
+   },
+   "loot": "common_pinewood",
+   "frames": "res://art/enemies/brambleshaman.tres",
+   "normal_map": "res://art/enemies/brambleshaman_n.png",
+   "origin": [
+    34,
+    57
+   ],
+   "scale": 0.75,
+   "blood": "#7a5ab0",
+   "todo": "Behaviour: parts [\"kite\",\"sniper\",\"shoot\"] run by parts.js (part runtime); the Bestiary lane makes them components."
+  }
+ ]
+}

@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/wall.tres" id="1_k0txv"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_cxqi0"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_g5dlb"]
+[ext_resource type="Resource" path="res://data/skills/shove.tres" id="4_3morv"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_xwk53"]
+[ext_resource type="Resource" path="res://data/skills/fortress.tres" id="6_t5lca"]
+
+[sub_resource type="Resource" id="Resource_8tbd8"]
+script = ExtResource("5_xwk53")
+base_id = &"doorshield"
+display_name = "Door Shield"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_5b7gp"]
+script = ExtResource("5_xwk53")
+base_id = &"wardwall"
+display_name = "Wardwall"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_vc6n5"]
+script = ExtResource("5_xwk53")
+base_id = &"sunwall"
+display_name = "Sunwall"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_m3n86"]
+script = ExtResource("5_xwk53")
+base_id = &"aurorabastion"
+display_name = "Aurora Bastion"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_lixhu"]
+script = ExtResource("5_xwk53")
+base_id = &"walleternal"
+display_name = "Wall Eternal"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_g5dlb")
+id = &"tower"
+display_name = "Tower"
+description = "A wall you carry. Hold to stop everything in front; slow, and very safe."
+kind = "shield"
+slot = "offhand"
+item_class = &"shields"
+element = "slash"
+tiers = Array[ExtResource("5_xwk53")]([SubResource("Resource_8tbd8"), SubResource("Resource_5b7gp"), SubResource("Resource_vc6n5"), SubResource("Resource_m3n86"), SubResource("Resource_lixhu")])
+action = ExtResource("1_k0txv")
+spell = ExtResource("4_3morv")
+ultimate = ExtResource("6_t5lca")
+stats = Dictionary[StringName, float]({
+&"def": 0.12,
+&"hp": 110.0
+})
+color = Color(0.53333336, 0.59607846, 0.72156864, 1)
+attack_pose = "none"
+swing_style = "thrust"
+carry_pose = "braced"
+todo = "Line name (T2 base): Wardwall."

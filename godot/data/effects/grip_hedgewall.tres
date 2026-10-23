@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_nao21"]
+
+[resource]
+script = ExtResource("1_nao21")
+id = &"grip_hedgewall"
+display_name = "Hedgewall"
+hint = "Nock primes the Halberd too: the next hit is +40% and pins for 0.6 s."
+source = "grip"
+if_tags = PackedStringArray()
+tags = PackedStringArray()

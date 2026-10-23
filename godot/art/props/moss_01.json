@@ -1,0 +1,18 @@
+{
+ "id": "moss_01",
+ "kind": "moss",
+ "label": "Moss mound",
+ "size": [
+  20,
+  11
+ ],
+ "origin": [
+  10,
+  10
+ ],
+ "collider_r": 0,
+ "shadow": 7,
+ "light": null,
+ "image": "moss_01.png",
+ "frames": null
+}

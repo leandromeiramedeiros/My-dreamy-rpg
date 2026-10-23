@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Resource" path="res://data/loot/common_pinewood.tres" id="1_bomh2"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="2_igdse"]
+
+[resource]
+script = ExtResource("2_igdse")
+id = &"shadelingswarm"
+display_name = "Shadeling Swarm"
+hp = 760.0
+speed = 2.8
+damage = 16.0
+radius = 0.26
+height = 1.3
+element = "gloom"
+damage_type = "gloom"
+stagger = 1.0
+resists = Dictionary[StringName, float]({
+&"holy": -0.5,
+&"pierce": 0.5
+})
+tags = PackedStringArray("swarm", "gloom")
+xp = 0.14
+movement = "orbit"
+attacks = PackedStringArray("brute")
+support = &"swarm"
+part_params = {
+"brute": {
+"cd": 1.6,
+"r": 0.9,
+"range": 1.2,
+"rec": 0.4,
+"shape": "circle",
+"splat": true,
+"wind": 0.6
+},
+"orbit": {
+"k": 1.4,
+"r": 0.9
+},
+"swarm": {
+"knockK": 0.25,
+"n": 5.0,
+"source": "shadow_rift",
+"spread": 1.0
+}
+}
+loot = ExtResource("1_bomh2")
+scale = 0.5
+blood = Color(0.3529412, 0.2901961, 0.47843137, 1)
+todo = "Behaviour: parts [\"orbit\",\"brute\",\"swarm\"] run by parts.js (part runtime); the Bestiary lane makes them components.
+Look: JS draws \"gloomslime\"; no sheet yet.
+No forge sheet in handoff/art/enemies yet."

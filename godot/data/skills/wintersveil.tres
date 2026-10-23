@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_y33ij"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_1inmv"]
+
+[resource]
+script = ExtResource("2_1inmv")
+id = &"wintersveil"
+display_name = "Winter's Veil"
+description = "CHEST — a frost veil for 5 s: you take 20% less and attackers are Chilled."
+element = "frost"
+kind = "active"
+cooldown = 15.0
+mp_cost = 25.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+aim_radius = 2.2
+color = Color(0.62352943, 0.84705883, 0.9411765, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+template CT.buff {\"buff\":\"wintersveil\",\"t\":5,\"nova\":{\"r\":2.2,\"dmg\":40,\"hit\":{\"slow\":1}},\"col\":\"#bff4ff\",\"sfx\":\"frost\"}
+no starter block covers CT.buff (buff / guard): wave 2
+JS:
+cast: cast(p) {
+    addBuff(p, o.buff, o.t);
+    if (o.heal) healPlayer(p, p.maxHp * o.heal * healMul(p));
+    if (o.nova) hitArea(p.x, p.y, o.nova.r, o.nova.dmg, o.nova.hit || {});
+    fx({ type: 'ring', x: p.x, y: p.y, r: o.nova ? o.nova.r + 0.2 : 1.4, col: o.col, life: 0.4 });
+    burst(p.x, p.y, p.z + 1, 14, [o.col, '#ffffff'], 2); sfx(o.sfx || 'shield');
+  }"

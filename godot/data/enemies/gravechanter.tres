@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/brambleshaman.tres" id="1_xivge"]
+[ext_resource type="Resource" path="res://data/loot/common_pinewood.tres" id="2_pkulx"]
+[ext_resource type="Texture2D" path="res://art/enemies/brambleshaman_n.png" id="3_do6yx"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4_gok87"]
+
+[resource]
+script = ExtResource("4_gok87")
+id = &"gravechanter"
+display_name = "Grave Chanter"
+hp = 500.0
+speed = 1.6
+damage = 40.0
+element = "gloom"
+damage_type = "gloom"
+stagger = 1.0
+resists = Dictionary[StringName, float]({
+&"arcane": 0.5,
+&"holy": -0.5,
+&"pierce": -0.5
+})
+tags = PackedStringArray("caster", "support", "gloom")
+xp = 0.16
+movement = "teleport"
+attacks = PackedStringArray("bomber", "summon")
+part_params = {
+"bomber": {
+"cd": 3.2,
+"col": "#b070ff",
+"r": 1.4,
+"range": 7.0,
+"wind": 0.9
+},
+"summon": {
+"bound": true,
+"cd": 9.0,
+"kind": "wisp",
+"max": 2.0,
+"n": 1.0,
+"range": 9.0,
+"wind": 1.0
+},
+"teleport": {
+"cd": 5.0,
+"far": 7.0,
+"near": 5.0,
+"trigger": 2.8,
+"wind": 0.6
+}
+}
+loot = ExtResource("2_pkulx")
+frames = ExtResource("1_xivge")
+normal_map = ExtResource("3_do6yx")
+scale = 0.8
+blood = Color(0.6039216, 0.47843137, 0.8156863, 1)
+origin = Vector2(34, 57)
+todo = "Behaviour: parts [\"teleport\",\"bomber\",\"summon\"] run by parts.js (part runtime); the Bestiary lane makes them components."

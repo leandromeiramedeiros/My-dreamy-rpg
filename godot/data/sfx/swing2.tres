@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_52wr7"]
+
+[resource]
+script = ExtResource("1_52wr7")
+id = &"swing2"
+pitch_vary = 0.06
+priority = 2
+caption = "[sword swing]"
+recipe = {
+"layers": [{
+"dur": 0.14,
+"f0": 2542.8,
+"f1": 423.80000000000007,
+"filter": {
+"freq": 2500.0,
+"q": 1.2,
+"type": "bandpass"
+},
+"gain": 0.06,
+"osc": "noise"
+}]
+}

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_i7wfu"]
+
+[resource]
+script = ExtResource("1_i7wfu")
+id = &"killHeal"
+display_name = "Gift of Victory"
+hint = "Kill-heal +50%"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"killHeal": 0.5
+},
+"minor": {
+"killHeal": 0.25
+}
+}
+stats = {
+"killHeal": "killHeal"
+}
+tags = PackedStringArray("kill", "heal")
+todo = "Boon numbers: minor {\"killHeal\":0.25}, major {\"killHeal\":0.5}"

@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_fdttr"]
+[ext_resource type="Script" path="res://scripts/data/cone_block.gd" id="2_p7f17"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_gn0i3"]
+
+[sub_resource type="Resource" id="Resource_vwp7e"]
+script = ExtResource("2_p7f17")
+reach = 1.6
+arc = 103.13
+damage = 55.0
+knockback = 0.08
+hit_params = {
+"rent": 4.0
+}
+
+[resource]
+script = ExtResource("3_gn0i3")
+id = &"rend"
+display_name = "Rend"
+description = "Three raking cuts; the target is Rent (+15% damage taken) for 4 s."
+element = "slash"
+cooldown = 3.0
+mp_cost = 18.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_fdttr")]([SubResource("Resource_vwp7e")])
+aim_shape = "cone"
+aim_range = 1.6
+aim_arc = 103.13
+color = Color(0.8784314, 0.6901961, 0.627451, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+a cone block repeats 3x in JS (loop)
+JS:
+cast: cast(p, a) { for (let k = 0; k < 3; k++) delay(k * 0.1, () => { swingWeapon(p, 0.09, 1.6, k % 2 ? 1 : -1); hitCone(p.x, p.y, a, 1.8, 1.6, 55, { knock: 0.08, rent: 4 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 1.8, r: 1.6, col: '#ffb0a0', life: 0.12, w: 2, dir: k % 2 ? 1 : -1 }); sfx('swing'); }); }"

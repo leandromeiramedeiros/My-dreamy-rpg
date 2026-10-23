@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_juio5"]
+
+[resource]
+script = ExtResource("1_juio5")
+id = &"ui_salvage"
+bus = "ui"
+recipe = {
+"layers": [{
+"dur": 0.18,
+"f0": 2500.0,
+"f1": 600.0,
+"filter": {
+"freq": 1500.0,
+"q": 1.0,
+"type": "bandpass"
+},
+"gain": 0.08,
+"osc": "noise"
+}]
+}

@@ -1,0 +1,137 @@
+[gd_resource type="Resource" script_class="BossData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/shadehound.tres" id="1_hqenn"]
+[ext_resource type="Resource" path="res://data/loot/boss_mossjaw.tres" id="2_gt0sr"]
+[ext_resource type="Script" path="res://scripts/data/boss_move.gd" id="3_jf720"]
+[ext_resource type="Texture2D" path="res://art/enemies/shadehound_n.png" id="4_62t2d"]
+[ext_resource type="Script" path="res://scripts/data/boss_phase.gd" id="5_de274"]
+[ext_resource type="Script" path="res://scripts/data/boss_data.gd" id="6_qqvbh"]
+
+[sub_resource type="Resource" id="Resource_jmnab"]
+script = ExtResource("3_jf720")
+id = &"lunge"
+wind = 0.75
+open = 1.2
+cooldown = 0.6
+hit = "big"
+damage_pct = 0.6
+stagger = 1.0
+params = {
+"dash": true,
+"len": 6.0,
+"scale": "wind",
+"w": 0.7
+}
+todo = "Move type \"line\" runs in bosses.js BOSS_MOVES.line (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_w3qd7"]
+script = ExtResource("3_jf720")
+id = &"rootSpit"
+wind = 0.9
+element = "nature"
+params = {
+"at": "player",
+"count": 3.0,
+"r": 1.2
+}
+todo = "Move type \"rain\" runs in bosses.js BOSS_MOVES.rain (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_6lbmt"]
+script = ExtResource("3_jf720")
+id = &"burrow"
+wind = 1.15
+open = 1.2
+cooldown = 0.6
+hit = "big"
+element = "nature"
+params = {
+"dur": 1.5,
+"scale": "wind",
+"then": {
+"at": "self",
+"r": 1.6,
+"type": "circle"
+}
+}
+todo = "Move type \"vanish\" runs in bosses.js BOSS_MOVES.vanish (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_2n26x"]
+script = ExtResource("3_jf720")
+id = &"howl"
+wind = 0.8
+cooldown = 0.8
+hit = "none"
+element = "nature"
+params = {
+"addDmg": 0.7,
+"addHp": 0.8,
+"kind": "shadehound",
+"max": 2.0,
+"n": 2.0,
+"rest": 12.0,
+"why": "QA run-big M3: 12/12 deaths to a 3-hound pile -> 2 alive max, 12 s rest, hounds -20 % HP / -30 % bite, flee on the boss death"
+}
+todo = "Move type \"summon\" runs in bosses.js BOSS_MOVES.summon (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_pah56"]
+script = ExtResource("5_de274")
+moves = Dictionary[StringName, float]({
+&"burrow": 3.0,
+&"lunge": 3.0,
+&"rootSpit": 2.0
+})
+cooldown_mul = 0.75
+
+[sub_resource type="Resource" id="Resource_smh68"]
+script = ExtResource("5_de274")
+hp_below = 0.5
+moves = Dictionary[StringName, float]({
+&"burrow": 3.0,
+&"howl": 8.0,
+&"lunge": 3.0,
+&"rootSpit": 2.0
+})
+wind_mul = 0.85
+cooldown_mul = 0.4
+speed_mul = 1.2
+forms = {
+"lunge": {
+"feint": 0.4
+}
+}
+on_enter = Array[Dictionary]([{
+"banner": "Mossjaw rears up",
+"dur": 1.2,
+"type": "roar"
+}])
+
+[resource]
+script = ExtResource("6_qqvbh")
+level = 5
+zone = &"rootHollow"
+moves = Array[ExtResource("3_jf720")]([SubResource("Resource_jmnab"), SubResource("Resource_w3qd7"), SubResource("Resource_6lbmt"), SubResource("Resource_2n26x")])
+phases = Array[ExtResource("5_de274")]([SubResource("Resource_pah56"), SubResource("Resource_smh68")])
+id = &"mossjaw"
+display_name = "Mossjaw"
+hp = 10000.0
+speed = 2.2
+damage = 0.0
+radius = 0.8
+height = 3.6
+element = "nature"
+damage_type = "nature"
+resists = Dictionary[StringName, float]({
+&"fire": -0.5,
+&"nature": 0.5
+})
+tags = PackedStringArray("beast")
+xp = 0.5
+attacks = PackedStringArray()
+loot = ExtResource("2_gt0sr")
+frames = ExtResource("1_hqenn")
+normal_map = ExtResource("4_62t2d")
+scale = 1.9
+blood = Color(0.47843137, 0.7529412, 0.3764706, 1)
+origin = Vector2(36, 47)
+todo = "Boss AI: bosses.js (move picker, fairness floors, bars); the Bosses lane ports it.
+JS loot key: mossjaw_skill_rune_guaranteed"

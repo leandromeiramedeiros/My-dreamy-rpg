@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_arbm7"]
+
+[resource]
+script = ExtResource("1_arbm7")
+id = &"trap"
+pitch_vary = 0.06
+priority = 2
+caption = "[trap triggered]"
+recipe = {
+"layers": [{
+"dur": 0.1,
+"f0": 800.0,
+"f1": 200.0,
+"gain": 0.04,
+"osc": "square"
+}]
+}

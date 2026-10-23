@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_ufymx"]
+
+[resource]
+script = ExtResource("1_ufymx")
+id = &"dmg_holy"
+pitch_vary = 0.06
+priority = 2
+caption = "[holy damage]"
+recipe = {
+"layers": [{
+"dur": 0.5,
+"f0": 523.0,
+"f1": 523.0,
+"gain": 0.04,
+"osc": "triangle"
+}, {
+"delay": 0.03,
+"dur": 0.5,
+"f0": 659.0,
+"f1": 659.0,
+"gain": 0.035,
+"osc": "triangle"
+}, {
+"delay": 0.06,
+"dur": 0.5,
+"f0": 784.0,
+"f1": 784.0,
+"gain": 0.03,
+"osc": "triangle"
+}]
+}

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_i7v7q"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_aslfa"]
+
+[sub_resource type="Resource" id="Resource_6mbgg"]
+script = ExtResource("2_aslfa")
+display_name = "Patient"
+roll = Vector2(0.02, 0.03)
+
+[sub_resource type="Resource" id="Resource_ba45m"]
+script = ExtResource("2_aslfa")
+display_name = "Steady"
+roll = Vector2(0.04, 0.05)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_gk78y"]
+script = ExtResource("2_aslfa")
+display_name = "Timeless"
+roll = Vector2(0.06, 0.08)
+item_level = 28
+
+[resource]
+script = ExtResource("1_i7v7q")
+id = &"cdr"
+tiers = Array[ExtResource("2_aslfa")]([SubResource("Resource_6mbgg"), SubResource("Resource_ba45m"), SubResource("Resource_gk78y")])

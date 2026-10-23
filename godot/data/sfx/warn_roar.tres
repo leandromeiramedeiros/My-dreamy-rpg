@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_kfu3q"]
+
+[resource]
+script = ExtResource("1_kfu3q")
+id = &"warn_roar"
+priority = 3
+caption = "[boss roar]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 100.0,
+"f1": 50.0,
+"gain": 0.08,
+"osc": "saw"
+}]
+}

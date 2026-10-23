@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_00oem"]
+
+[resource]
+script = ExtResource("1_00oem")
+id = &"cookingDur"
+display_name = "Lasting Supper"
+hint = "Cooking buffs last 15 min"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"cookingDurMin": 15.0
+},
+"minor": {
+"cookingDurMin": 10.0
+}
+}
+tags = PackedStringArray("food")
+data_only = true
+todo = "Boon numbers: minor {\"cookingDurMin\":10}, major {\"cookingDurMin\":15}"

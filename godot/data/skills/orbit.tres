@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_m1cy2"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_4l7a3"]
+
+[resource]
+script = ExtResource("2_4l7a3")
+id = &"orbit"
+display_name = "Arcane Orbit"
+description = "PAGE — three orbs circle you for 8s, burning anything they touch."
+element = "arcane"
+kind = "page"
+cooldown = 16.0
+mp_cost = 35.0
+tags = PackedStringArray()
+decks = PackedStringArray("page")
+color = Color(0.78039217, 0.60784316, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { addBuff(p, 'orbit', 8); sfx('arcane'); }"

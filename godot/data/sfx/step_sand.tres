@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_2q4w2"]
+
+[resource]
+script = ExtResource("1_2q4w2")
+id = &"step_sand"
+pitch_vary = 0.08
+priority = 0
+recipe = {
+"layers": [{
+"dur": 0.14,
+"f0": 700.0,
+"f1": 400.0,
+"filter": {
+"freq": 700.0,
+"q": 0.5,
+"type": "lowpass"
+},
+"gain": 0.02,
+"osc": "noise"
+}]
+}

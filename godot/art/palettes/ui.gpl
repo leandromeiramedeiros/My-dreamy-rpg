@@ -1,0 +1,24 @@
+GIMP Palette
+Name: ui (js/ui.js)
+Columns: 8
+#
+ 21  16  42	bg
+143 123 214	line
+200 182 255	bright
+ 74  61 122	bevel
+ 11   7  22	edge
+243 236 255	text
+159 147 196	dim
+255 211  90	gold
+232  71 108	hp
+255 143 168	hpHi
+ 79 125 240	mp
+154 184 255	mpHi
+227 169  58	st
+255 224 138	stHi
+180 138 255	xp
+255  61 110	danger
+255 227 106	weak
+167 163 184	resist
+ 36  26  62	back
+243 236 255	ghost

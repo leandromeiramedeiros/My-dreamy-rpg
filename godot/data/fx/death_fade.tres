@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/fx_layer.gd" id="1_2caxp"]
+[ext_resource type="Script" path="res://scripts/data/fx_tint.gd" id="2_heo0b"]
+[ext_resource type="Script" path="res://scripts/data/fx_data.gd" id="3_8twx0"]
+
+[sub_resource type="Resource" id="Resource_xjx0i"]
+script = ExtResource("2_heo0b")
+color = Color(0.16470589, 0.10980392, 0.21960784, 1)
+strength = 0.7
+fade = false
+life = 0.4
+
+[resource]
+script = ExtResource("3_8twx0")
+id = &"death_fade"
+display_name = "Death fade"
+layers = Array[ExtResource("1_2caxp")]([SubResource("Resource_xjx0i")])

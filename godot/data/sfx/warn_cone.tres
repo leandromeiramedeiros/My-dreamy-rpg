@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_1nxnk"]
+
+[resource]
+script = ExtResource("1_1nxnk")
+id = &"warn_cone"
+priority = 3
+caption = "[boss wind-up]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 400.0,
+"f1": 2400.0,
+"filter": {
+"freq": 1200.0,
+"q": 1.0,
+"type": "bandpass"
+},
+"gain": 0.08,
+"osc": "noise"
+}]
+}

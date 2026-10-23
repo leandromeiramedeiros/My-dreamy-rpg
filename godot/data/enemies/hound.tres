@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/shadehound.tres" id="1_lpc3y"]
+[ext_resource type="Resource" path="res://data/loot/class_normal.tres" id="2_tc7lo"]
+[ext_resource type="Texture2D" path="res://art/enemies/shadehound_n.png" id="3_5ur50"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4_hwwqc"]
+
+[resource]
+script = ExtResource("4_hwwqc")
+id = &"hound"
+display_name = "Shade hound"
+hp = 465.0
+speed = 3.2
+damage = 46.0
+height = 2.0
+element = "gloom"
+resists = Dictionary[StringName, float]({
+&"fire": -0.5
+})
+tags = PackedStringArray("beast", "gloom")
+xp = 0.185
+movement = "charge"
+attacks = PackedStringArray()
+part_params = {
+"charge": {
+"cd": 1.6,
+"range": 3.2,
+"wind": 0.48
+}
+}
+loot = ExtResource("2_tc7lo")
+frames = ExtResource("1_lpc3y")
+normal_map = ExtResource("3_5ur50")
+blood = Color(1, 0.41960785, 0.6039216, 1)
+origin = Vector2(36, 47)
+todo = "Behaviour: parts [\"charge\"] run by parts.js (part runtime); the Bestiary lane makes them components."

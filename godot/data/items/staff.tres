@@ -1,0 +1,78 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/staff_action.tres" id="1_oxey6"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_clkcn"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_mluem"]
+[ext_resource type="Resource" path="res://data/skills/firebolt.tres" id="4_1nfr2"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_b8mnh"]
+[ext_resource type="JSON" path="res://art/gear/staff.t1.json" id="6_msoi6"]
+[ext_resource type="JSON" path="res://art/gear/staff.t2.json" id="7_kgeu5"]
+[ext_resource type="JSON" path="res://art/gear/staff.t3.json" id="8_tcrrl"]
+[ext_resource type="JSON" path="res://art/gear/staff.t4.json" id="9_gatf3"]
+[ext_resource type="JSON" path="res://art/gear/staff.t5.json" id="10_dflwi"]
+[ext_resource type="Resource" path="res://data/skills/meteor.tres" id="11_658m6"]
+
+[sub_resource type="Resource" id="Resource_fpyr1"]
+script = ExtResource("5_b8mnh")
+base_id = &"willowwand"
+display_name = "Willow Wand"
+multiplier = 0.7
+sheet = ExtResource("6_msoi6")
+
+[sub_resource type="Resource" id="Resource_u6cpd"]
+script = ExtResource("5_b8mnh")
+base_id = &"starfall"
+display_name = "Starfall Staff"
+required_level = 8
+sheet = ExtResource("7_kgeu5")
+
+[sub_resource type="Resource" id="Resource_sch3e"]
+script = ExtResource("5_b8mnh")
+base_id = &"cometrod"
+display_name = "Comet Rod"
+required_level = 16
+multiplier = 1.5
+sheet = ExtResource("8_tcrrl")
+
+[sub_resource type="Resource" id="Resource_3jsff"]
+script = ExtResource("5_b8mnh")
+base_id = &"nebulasceptre"
+display_name = "Nebula Sceptre"
+required_level = 24
+multiplier = 2.1
+sheet = ExtResource("9_gatf3")
+
+[sub_resource type="Resource" id="Resource_6scxb"]
+script = ExtResource("5_b8mnh")
+base_id = &"nighteternal"
+display_name = "Night Eternal"
+required_level = 32
+multiplier = 2.8
+sheet = ExtResource("10_dflwi")
+
+[resource]
+script = ExtResource("3_mluem")
+id = &"staff"
+display_name = "Staff"
+description = "A staff that remembers the night sky. Ranged spells and huge area damage."
+item_class = &"foci"
+hands = 2
+element = "arcane"
+tiers = Array[ExtResource("5_b8mnh")]([SubResource("Resource_fpyr1"), SubResource("Resource_u6cpd"), SubResource("Resource_sch3e"), SubResource("Resource_3jsff"), SubResource("Resource_6scxb")])
+action = ExtResource("1_oxey6")
+spell = ExtResource("4_1nfr2")
+ultimate = ExtResource("11_658m6")
+mp_on_hit = 9.0
+hold = &"channel"
+stats = Dictionary[StringName, float]({
+&"dmg": 32.0
+})
+flags = {
+"kind": "staff",
+"legacy": "starfall",
+"off_action": "ward"
+}
+color = Color(0.49803922, 0.9019608, 1, 1)
+attack_pose = "staff"
+swing_style = "cast"
+todo = "Line name (T2 base): Starfall Staff. Class passive: reactions refund 10 % MP; cantrips are free. Off-action in OFFHAND: ward."

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_wgdwc"]
+
+[resource]
+script = ExtResource("1_wgdwc")
+id = &"potionCleanse"
+display_name = "Cleansing Sash"
+hint = "Potions also cleanse one status"
+source = "trinket"
+when_event = "potion"
+if_tags = PackedStringArray()
+do_action = &"potionCleanse"
+do_params = {
+"major": {
+"potionCleanse": 2.0
+},
+"minor": {
+"potionCleanse": 1.0
+}
+}
+icd = 0.0
+tags = PackedStringArray("potion")
+todo = "Boon numbers: minor {\"potionCleanse\":1}, major {\"potionCleanse\":2}
+JS:
+do: do(c, v, p) { let n = v.potionCleanse || 1; for (const k of ['rootT', 'slowT', 'dreadT']) if (n > 0 && p[k] > 0) { p[k] = 0; n--; } }"

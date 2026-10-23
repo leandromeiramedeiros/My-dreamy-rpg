@@ -1,0 +1,23 @@
+{
+ "id": "crystal_violet",
+ "kind": "crystal_violet",
+ "label": "Violet crystal",
+ "size": [
+  18,
+  24
+ ],
+ "origin": [
+  9,
+  23
+ ],
+ "collider_r": 0.25,
+ "shadow": 0,
+ "light": {
+  "r": 50,
+  "col": "#b36bff",
+  "a": 0.8,
+  "h": 10
+ },
+ "image": "crystal_violet.png",
+ "frames": null
+}

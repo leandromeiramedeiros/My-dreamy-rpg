@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/sword_action.tres" id="1_3th0w"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_cgsp0"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_34y1j"]
+[ext_resource type="Resource" path="res://data/skills/sunslash.tres" id="4_bmts8"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_es21b"]
+[ext_resource type="JSON" path="res://art/gear/sword.t1.json" id="6_8bll2"]
+[ext_resource type="JSON" path="res://art/gear/sword.t2.json" id="7_r1bf5"]
+[ext_resource type="JSON" path="res://art/gear/sword.t3.json" id="8_x1i48"]
+[ext_resource type="JSON" path="res://art/gear/sword.t4.json" id="9_xpsyj"]
+[ext_resource type="JSON" path="res://art/gear/sword.t5.json" id="10_1t326"]
+[ext_resource type="Resource" path="res://data/skills/judgement.tres" id="11_gicoi"]
+
+[sub_resource type="Resource" id="Resource_u1kff"]
+script = ExtResource("5_es21b")
+base_id = &"rustyblade"
+display_name = "Rusty Blade"
+multiplier = 0.7
+sheet = ExtResource("6_8bll2")
+
+[sub_resource type="Resource" id="Resource_ma6vi"]
+script = ExtResource("5_es21b")
+base_id = &"dawnblade"
+display_name = "Dawnblade"
+required_level = 8
+sheet = ExtResource("7_r1bf5")
+
+[sub_resource type="Resource" id="Resource_cp2n2"]
+script = ExtResource("5_es21b")
+base_id = &"sunforged"
+display_name = "Sunforged Blade"
+required_level = 16
+multiplier = 1.5
+sheet = ExtResource("8_x1i48")
+
+[sub_resource type="Resource" id="Resource_envvy"]
+script = ExtResource("5_es21b")
+base_id = &"auroraedge"
+display_name = "Aurora Edge"
+required_level = 24
+multiplier = 2.1
+sheet = ExtResource("9_xpsyj")
+
+[sub_resource type="Resource" id="Resource_ayvkx"]
+script = ExtResource("5_es21b")
+base_id = &"dawneternal"
+display_name = "Dawn Eternal"
+required_level = 32
+multiplier = 2.8
+sheet = ExtResource("10_1t326")
+
+[resource]
+script = ExtResource("3_34y1j")
+id = &"sword"
+display_name = "Sword"
+description = "Sword forged from the first light of morning. Close-range, cleaving combos."
+item_class = &"blades"
+element = "slash"
+tiers = Array[ExtResource("5_es21b")]([SubResource("Resource_u1kff"), SubResource("Resource_ma6vi"), SubResource("Resource_cp2n2"), SubResource("Resource_envvy"), SubResource("Resource_ayvkx")])
+action = ExtResource("1_3th0w")
+spell = ExtResource("4_bmts8")
+ultimate = ExtResource("11_gicoi")
+mp_on_hit = 8.0
+stats = Dictionary[StringName, float]({
+&"dmg": 50.0
+})
+flags = {
+"kind": "sword",
+"legacy": "dawnblade",
+"off_action": "parry"
+}
+color = Color(1, 0.8117647, 0.41568628, 1)
+todo = "Line name (T2 base): Dawnblade. Class passive: Parry as off-action; the 3rd hit is wide. Off-action in OFFHAND: parry."

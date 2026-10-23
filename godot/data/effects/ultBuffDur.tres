@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_68s3g"]
+
+[resource]
+script = ExtResource("1_68s3g")
+id = &"ultBuffDur"
+display_name = "Lingering Dream"
+hint = "R buffs last 2 s longer"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"ultBuffDur": 2.0
+},
+"minor": {
+"ultBuffDur": 1.0
+}
+}
+tags = PackedStringArray("ultimate", "buff")
+data_only = true
+todo = "Boon numbers: minor {\"ultBuffDur\":1}, major {\"ultBuffDur\":2}"

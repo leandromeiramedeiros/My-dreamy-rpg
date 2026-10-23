@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_nt7c5"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="2_7662l"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_k0ykx"]
+
+[sub_resource type="Resource" id="Resource_oxfn7"]
+script = ExtResource("2_7662l")
+radius = 2.8
+color = Color(1, 0.9490196, 0.6901961, 1)
+damage = 90.0
+stun = 0.8
+
+[resource]
+script = ExtResource("3_k0ykx")
+id = &"judgementbell"
+display_name = "Judgement Bell"
+description = "HELMET / PAGE — a bell of judgement tolls: holy burst, 0.8 s stun."
+element = "holy"
+kind = "active"
+cooldown = 12.0
+mp_cost = 20.0
+tags = PackedStringArray()
+decks = PackedStringArray("page")
+blocks = Array[ExtResource("1_nt7c5")]([SubResource("Resource_oxfn7")])
+aim_radius = 2.8
+stagger = 2.0
+color = Color(1, 0.9490196, 0.6901961, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+template CT.nova {\"r\":2.8,\"dmg\":90,\"hit\":{\"stun\":0.8},\"col\":\"#fff2b0\",\"sfx\":\"shout\"}
+JS:
+cast: cast(p, a, tx, ty) {
+    const [x, y] = ctAt(p, o, tx, ty);
+    const go = () => {
+      const n = hitArea(x, y, o.r, o.dmg, o.hit || {});
+      fx({ type: 'ring', x, y, r: o.r + 0.2, col: o.col, life: 0.4 }); burst(x, y, 0.4, 18, [o.col, '#ffffff'], 3);
+      if (o.zone) zone(Object.assign({ x, y, col: o.col }, o.zone));
+      if (o.cracks) crackRing(x, y, o.r, o.cracks);
+      if (o.wind) WIND.emit(Object.assign({ x, y, dir: a, by: 1 }, o.wind));
+      if (o.after) o.after(p, x, y, n);
+      if (o.shake) shake(o.shake);
+    };
+    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);
+    if (o.swing) swingWeapon(p, 0.2, o.swing); else castAnim(p);
+    if (o.delay) { fx({ type: 'marker', x, y, r: o.r, col: o.col, life: o.delay }); delay(o.delay, go); } else go();
+    sfx(o.sfx || 'shout');
+  }"

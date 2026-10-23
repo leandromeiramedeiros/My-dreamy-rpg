@@ -662,12 +662,12 @@ Mythic armour (one per suit family): Shardheart Plate, Gloomspire Vestment, Forg
 ## 12. Characters and NPCs
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
-| Aerin | The hero, the Dreamer | `player` | — | live |
+| Karea | The hero, the Dreamer (client ruling 2026-10-23; the game is Karea's Dream) | `player` | Aerin | live |
 | Gloam | The corruption and its source in the Dream | `gloom` | — | live |
 | Knight | Origin; starter ring Ring of the Shield | `origin_knight` | — | live |
 | Mystic | Origin; starter ring Ring of the Dream | `origin_mystic` | — | live |
 | Origin | Start-class choice; grants a starter ring | — | class (that is a weapon or armour class) | live |
-| Pip | Aerin's lantern spirit companion | — | — | live |
+| Pip | Karea's lantern spirit companion | — | — | live |
 | Ranger | Origin; starter ring Ring of the Trail | `origin_ranger` | — | live |
 | Sorrel | Story character; Sorrel's Echo is an optional boss | — | — | live |
 | Thief | Origin; starter ring Ring of the Unseen | `origin_thief` | — | live |
@@ -756,7 +756,7 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Act II | Gloomspire Ruins | — | — | M4b |
 | Act III | Sunken Grotto | — | — | later |
 | Act IV | Emberfall Caldera | — | — | later |
-| Dawn Burst | Aerin's finishing power in the finale | — | — | later |
+| Dawn Burst | Karea's finishing power in the finale | — | — | later |
 | Dawn Shards | Collected fragments of the dawn from the Wardens | — | — | live |
 | Difficulty mode | Normal (the only difficulty) and NG+ | — | Story difficulty (removed) | live |
 | Finale | Sleepless Spire and Morrow's Throne | — | — | later |
@@ -915,6 +915,11 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | FX preset | M10: a reusable, editable effect (particles, sprite anim, light, trail, tint, decal, shake, hit stop, SFX) dropped into an FX slot | `FxData` | vfx prefab | later |
 | FX slot | M10: a per-event field (spawn, idle, hit, crit, cast, death, pick-up…) on any data resource that holds FX presets | — | — | later |
 | Golden vector | A recorded input and output of a JS function (damage, build, reaction, roll) that the GDScript port must reproduce | — | — | later |
+| Hero doll | M10: the hero's layered look in Godot: worn pieces as layers on the body, the HAND and OFFHAND items as held items; API `equip(slot, item, tier)`, `play(anim, dir)` | `HeroDoll` | paper doll script | M10 wave 1 |
+| Held item | M10, Weapons Out look (client ruling 2026-10-23): the HAND or OFFHAND item drawn as one sprite on the hand socket, always visible, turned per frame | `ItemData.held_sprite` | weapon layer | M10 wave 1 |
+| Data seed | M10: the one-time copy of the JS tables into Godot resources (seed JSON, then `.tres` under `res://data/`); edited `.tres` are kept on rerun | `tools/godot/seed.js` | data export | M10 wave 1 |
+| Arena list | M10: the Godot boot screen for studio testing: one button per mockup arena | `res://scenes/ui/arena_list.tscn` | title screen | M10 wave 1 |
+| Godot gate | M10: the headless check of the Godot project (import, every `.tres` and arena loads, dummies hit test, screenshot) | `tools/godot/check.js` | — | M10 wave 1 |
 
 ## 20. Retired terms
 | Retired term | Replaced by | Code id | Retired by | Status |

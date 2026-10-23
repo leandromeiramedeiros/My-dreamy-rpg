@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_84asq"]
+
+[resource]
+script = ExtResource("1_84asq")
+id = &"rx_detonate"
+pitch_vary = 0.03
+priority = 3
+caption = "[detonate reaction]"
+recipe = {
+"layers": [{
+"dur": 0.6,
+"f0": 160.0,
+"f1": 35.0,
+"gain": 0.16,
+"osc": "sine"
+}, {
+"delay": 0.1,
+"dur": 0.3,
+"f0": 3000.0,
+"f1": 800.0,
+"filter": {
+"freq": 2000.0,
+"q": 1.0,
+"type": "bandpass"
+},
+"gain": 0.05,
+"osc": "noise"
+}]
+}

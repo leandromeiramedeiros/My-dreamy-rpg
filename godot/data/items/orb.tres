@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/orb_action.tres" id="1_s0cxh"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_lamco"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_u8rt8"]
+[ext_resource type="Resource" path="res://data/skills/chain.tres" id="4_whcep"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_yfvi5"]
+[ext_resource type="Resource" path="res://data/skills/tempest.tres" id="6_b5j21"]
+
+[sub_resource type="Resource" id="Resource_chcpk"]
+script = ExtResource("5_yfvi5")
+base_id = &"glassbauble"
+display_name = "Glass Bauble"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_evy1v"]
+script = ExtResource("5_yfvi5")
+base_id = &"starfallorb"
+display_name = "Starfall Orb"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_52roy"]
+script = ExtResource("5_yfvi5")
+base_id = &"cometorb"
+display_name = "Comet Orb"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_86a2b"]
+script = ExtResource("5_yfvi5")
+base_id = &"nebulasphere"
+display_name = "Nebula Sphere"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_1imb5"]
+script = ExtResource("5_yfvi5")
+base_id = &"orbeternal"
+display_name = "Orb Eternal"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_u8rt8")
+id = &"orb"
+display_name = "Orb"
+description = "A storm in glass. Hold to channel a beam that drains 6 MP a second."
+item_class = &"foci"
+element = "lightning"
+tiers = Array[ExtResource("5_yfvi5")]([SubResource("Resource_chcpk"), SubResource("Resource_evy1v"), SubResource("Resource_52roy"), SubResource("Resource_86a2b"), SubResource("Resource_1imb5")])
+action = ExtResource("1_s0cxh")
+spell = ExtResource("4_whcep")
+ultimate = ExtResource("6_b5j21")
+mp_on_hit = 9.0
+hold = &"channel"
+stats = Dictionary[StringName, float]({
+&"dmg": 38.0
+})
+flags = {
+"drain": 6.0,
+"kind": "staff",
+"off_action": "ward"
+}
+color = Color(0.7490196, 0.9411765, 1, 1)
+attack_pose = "staff"
+swing_style = "cast"
+carry_pose = "float"
+todo = "Line name (T2 base): Starfall Orb. Class passive: reactions refund 10 % MP; cantrips are free. Off-action in OFFHAND: ward."

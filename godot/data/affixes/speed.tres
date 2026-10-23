@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_t7602"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_8snxd"]
+
+[sub_resource type="Resource" id="Resource_k1trq"]
+script = ExtResource("2_8snxd")
+display_name = "Lithe"
+roll = Vector2(0.1, 0.14)
+
+[sub_resource type="Resource" id="Resource_f4vcw"]
+script = ExtResource("2_8snxd")
+display_name = "Nimble"
+roll = Vector2(0.2, 0.26)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_jtpbo"]
+script = ExtResource("2_8snxd")
+display_name = "Windborne"
+roll = Vector2(0.3, 0.38)
+item_level = 28
+
+[resource]
+script = ExtResource("1_t7602")
+id = &"speed"
+kind = "suffix"
+tiers = Array[ExtResource("2_8snxd")]([SubResource("Resource_k1trq"), SubResource("Resource_f4vcw"), SubResource("Resource_jtpbo")])

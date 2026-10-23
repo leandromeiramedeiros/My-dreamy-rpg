@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_hn32w"]
+
+[resource]
+script = ExtResource("1_hn32w")
+id = &"bleeding"
+display_name = "Bleeding"
+element = "slash"
+reacts_with = PackedStringArray()
+rule = "Slash tier 1 (elements-statuses.md); no look in JS yet."
+tint = Color(1, 0.2901961, 0.3529412, 1)
+tint_alpha = 0.12

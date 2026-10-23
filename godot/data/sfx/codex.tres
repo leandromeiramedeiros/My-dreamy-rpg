@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_l0hae"]
+
+[resource]
+script = ExtResource("1_l0hae")
+id = &"codex"
+bus = "ui"
+priority = 2
+caption = "[codex entry]"
+recipe = {
+"layers": [{
+"dur": 0.15,
+"f0": 1046.0,
+"f1": 1046.0,
+"gain": 0.05,
+"osc": "sine"
+}, {
+"delay": 0.12,
+"dur": 0.15,
+"f0": 1318.0,
+"f1": 1318.0,
+"gain": 0.05,
+"osc": "sine"
+}, {
+"delay": 0.24,
+"dur": 0.15,
+"f0": 1568.0,
+"f1": 1568.0,
+"gain": 0.05,
+"osc": "sine"
+}, {
+"delay": 0.36,
+"dur": 0.35,
+"f0": 2093.0,
+"f1": 2093.0,
+"gain": 0.05,
+"osc": "sine"
+}]
+}

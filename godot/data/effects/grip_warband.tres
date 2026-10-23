@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_qw4mp"]
+
+[resource]
+script = ExtResource("1_qw4mp")
+id = &"grip_warband"
+display_name = "Warband"
+hint = "Calls Detonate: a call hit on a Burning foe consumes the Burn for damage."
+source = "grip"
+when_event = "hit"
+if_tags = PackedStringArray()
+do_action = &"grip_warband"
+icd = 0.0
+tags = PackedStringArray()
+todo = "JS:
+do: do(c, v, p) { const e = c.e; if (c.cast && c.cast.call && e.burnT > 0 && !e.dead) { const n = Math.ceil(e.burnT / 0.5); e.burnT = 0; damageEnemy(e, 14 * n * 1.5, { dot: true, el: 'fire', cast: c.cast }); fx({ type: 'ring', x: e.x, y: e.y, r: 1, col: '#ff9a4a', life: 0.3 }); } }"

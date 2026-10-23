@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_s8fbw"]
+
+[resource]
+script = ExtResource("1_s8fbw")
+id = &"en_squelch"
+pitch_vary = 0.1
+caption = "[slime]"
+recipe = {
+"layers": [{
+"dur": 0.22,
+"f0": 260.0,
+"f1": 90.0,
+"gain": 0.07,
+"osc": "sine"
+}, {
+"dur": 0.2,
+"f0": 900.0,
+"f1": 300.0,
+"filter": {
+"freq": 900.0,
+"q": 1.0,
+"type": "lowpass"
+},
+"gain": 0.03,
+"osc": "noise"
+}]
+}

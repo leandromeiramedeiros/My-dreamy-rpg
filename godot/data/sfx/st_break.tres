@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_8h55c"]
+
+[resource]
+script = ExtResource("1_8h55c")
+id = &"st_break"
+pitch_vary = 0.03
+priority = 3
+caption = "[stagger break]"
+recipe = {
+"layers": [{
+"dur": 0.5,
+"f0": 2400.0,
+"f1": 2400.0,
+"gain": 0.06,
+"osc": "sine"
+}, {
+"delay": 0.02,
+"dur": 0.4,
+"f0": 3600.0,
+"f1": 3600.0,
+"gain": 0.03,
+"osc": "sine"
+}, {
+"dur": 0.1,
+"f0": 4000.0,
+"f1": 2000.0,
+"filter": {
+"freq": 2500.0,
+"q": 1.0,
+"type": "highpass"
+},
+"gain": 0.05,
+"osc": "noise"
+}]
+}

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_77ck0"]
+
+[resource]
+script = ExtResource("1_77ck0")
+id = &"ablaze"
+display_name = "Ablaze"
+tier = 2
+duration = 4.0
+reacts_with = PackedStringArray("frost", "holy")
+tint = Color(1, 0.3529412, 0.11764706, 1)
+tint_alpha = 0.36
+overlay = &"char"
+overlay_alpha = 0.55
+motif_rate = 9.0
+light_color = Color(1, 0.41568628, 0.15686275, 1)
+light_radius = 28.0
+light_alpha = 0.35
+light_mode = "flicker"

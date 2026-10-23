@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="GemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/gem_data.gd" id="1_jlgd0"]
+
+[resource]
+script = ExtResource("1_jlgd0")
+id = &"diamond"
+display_name = "Diamond"
+color = Color(0.9098039, 0.95686275, 1, 1)
+grade_names = PackedStringArray("Chipped", "Clear", "Radiant")
+armour_stats = Array[Dictionary]([{
+"def": 0.01,
+"resAll": 0.01
+}, {
+"def": 0.03,
+"resAll": 0.02
+}, {
+"def": 0.06,
+"resAll": 0.035
+}])
+weapon_stats = Array[Dictionary]([{
+"crit": 0.005,
+"def": 0.01,
+"haste": 0.01,
+"power": 0.01
+}, {
+"crit": 0.01,
+"def": 0.02,
+"haste": 0.02,
+"power": 0.02
+}, {
+"crit": 0.02,
+"def": 0.04,
+"haste": 0.04,
+"power": 0.04
+}])
+amp = "Ultimate cooldown"

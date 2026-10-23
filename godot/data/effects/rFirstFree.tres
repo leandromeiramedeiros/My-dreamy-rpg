@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_il1h1"]
+
+[resource]
+script = ExtResource("1_il1h1")
+id = &"rFirstFree"
+display_name = "First Dawn"
+hint = "The first R in each fight is free"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"rFirstFree": true
+},
+"minor": {
+"rFirstCost": 0.5
+}
+}
+stats = {
+"rFirstCost": "rFirstCost"
+}
+tags = PackedStringArray("ultimate")
+todo = "Boon numbers: minor {\"rFirstCost\":0.5}, major {\"rFirstFree\":true}"

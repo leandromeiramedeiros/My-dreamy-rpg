@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_40csj"]
+[ext_resource type="Resource" path="res://data/effects/originKnight.tres" id="2_hefw4"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_ft60f"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_ykykf"]
+
+[sub_resource type="Resource" id="Resource_86lrd"]
+script = ExtResource("4_ykykf")
+base_id = &"origin_knight"
+display_name = "Ring of the Shield"
+
+[resource]
+script = ExtResource("3_ft60f")
+id = &"origin_knight"
+display_name = "Ring of the Shield"
+description = "+10% defence"
+kind = "trinket"
+slot = "ring"
+hands = 0
+tiers = Array[ExtResource("4_ykykf")]([SubResource("Resource_86lrd")])
+passives = Array[ExtResource("1_40csj")]([ExtResource("2_hefw4")])
+attack_pose = "none"
+todo = "Origin ring (Knight)."

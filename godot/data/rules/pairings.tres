@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="PairingTable" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/pairing_rule.gd" id="1_63if5"]
+[ext_resource type="Script" path="res://scripts/data/pairing_table.gd" id="2_bgff0"]
+
+[sub_resource type="Resource" id="Resource_qs63c"]
+script = ExtResource("1_63if5")
+offhand = PackedStringArray("sword", "rapier", "mace", "daggers", "claws", "fans")
+hand = PackedStringArray("sword", "rapier", "mace", "daggers", "claws", "fans")
+note = "Melee 1H: any melee 1H (dual wield)"
+
+[sub_resource type="Resource" id="Resource_qxgyb"]
+script = ExtResource("1_63if5")
+offhand = PackedStringArray("wand", "orb", "chakram")
+hand = PackedStringArray("wand", "orb", "chakram")
+note = "Caster 1H and Chakram: Wand, Orb, Chakram"
+
+[sub_resource type="Resource" id="Resource_v6c3r"]
+script = ExtResource("1_63if5")
+offhand = PackedStringArray("buckler")
+hand = PackedStringArray("sword", "rapier", "mace", "daggers", "claws", "fans", "chakram")
+note = "Buckler: any melee 1H, Chakram"
+
+[sub_resource type="Resource" id="Resource_68ye2"]
+script = ExtResource("1_63if5")
+offhand = PackedStringArray("heater")
+hand = PackedStringArray("sword", "mace", "chakram")
+note = "Heater: Sword, Mace, Chakram"
+
+[sub_resource type="Resource" id="Resource_odmco"]
+script = ExtResource("1_63if5")
+offhand = PackedStringArray("tower")
+hand = PackedStringArray("sword", "mace")
+note = "Tower: Sword, Mace"
+
+[sub_resource type="Resource" id="Resource_jgenb"]
+script = ExtResource("1_63if5")
+offhand = PackedStringArray("grimoire")
+hand = PackedStringArray("staff", "wand", "orb", "sword")
+note = "Grimoire: Staff, Wand, Orb, Sword (Spellblade)"
+
+[sub_resource type="Resource" id="Resource_ysv8h"]
+script = ExtResource("1_63if5")
+offhand = PackedStringArray("quiver")
+hand = PackedStringArray("bow", "crossbow")
+note = "Quiver: Bow, Crossbow only"
+
+[sub_resource type="Resource" id="Resource_inkxp"]
+script = ExtResource("1_63if5")
+offhand = PackedStringArray("warhorn")
+hand = PackedStringArray("axe", "hammer", "halberd", "sword", "mace")
+note = "Warhorn: Axe, Hammer, Halberd, Sword, Mace"
+
+[resource]
+script = ExtResource("2_bgff0")
+rules = Array[ExtResource("1_63if5")]([SubResource("Resource_qs63c"), SubResource("Resource_qxgyb"), SubResource("Resource_v6c3r"), SubResource("Resource_68ye2"), SubResource("Resource_odmco"), SubResource("Resource_jgenb"), SubResource("Resource_ysv8h"), SubResource("Resource_inkxp")])

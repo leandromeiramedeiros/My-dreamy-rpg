@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_jt73s"]
+
+[resource]
+script = ExtResource("1_jt73s")
+id = &"flaskRegen"
+display_name = "Slow Mending"
+hint = "Potions heal 3% of max HP per second for 4 s"
+source = "trinket"
+when_event = "potion"
+if_tags = PackedStringArray()
+do_action = &"flaskRegen"
+do_params = {
+"major": {
+"potionRegen": 0.03
+},
+"minor": {
+"potionRegen": 0.01
+}
+}
+icd = 0.0
+tags = PackedStringArray("potion", "heal")
+todo = "Boon numbers: minor {\"potionRegen\":0.01}, major {\"potionRegen\":0.03}
+JS:
+do: do(c, v, p) { for (let k = 1; k <= 4; k++) delay(k, () => { if (!p.dead) healPlayer(p, p.maxHp * (v.potionRegen || 0)); }); }"

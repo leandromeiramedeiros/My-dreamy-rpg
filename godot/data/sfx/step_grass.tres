@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_vflgm"]
+
+[resource]
+script = ExtResource("1_vflgm")
+id = &"step_grass"
+pitch_vary = 0.08
+priority = 0
+recipe = {
+"layers": [{
+"dur": 0.12,
+"f0": 900.0,
+"f1": 500.0,
+"filter": {
+"freq": 900.0,
+"q": 0.5,
+"type": "lowpass"
+},
+"gain": 0.02,
+"osc": "noise"
+}]
+}

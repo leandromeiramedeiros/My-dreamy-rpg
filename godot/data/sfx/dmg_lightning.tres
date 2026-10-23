@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_r7h52"]
+
+[resource]
+script = ExtResource("1_r7h52")
+id = &"dmg_lightning"
+pitch_vary = 0.06
+priority = 2
+caption = "[lightning damage]"
+recipe = {
+"layers": [{
+"dur": 0.01,
+"f0": 2000.0,
+"f1": 200.0,
+"gain": 0.07,
+"osc": "saw"
+}]
+}

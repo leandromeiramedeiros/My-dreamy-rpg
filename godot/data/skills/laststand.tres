@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_cck47"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_rdnob"]
+
+[resource]
+script = ExtResource("2_rdnob")
+id = &"laststand"
+display_name = "Last Stand"
+description = "ULTIMATE — 4 s of poise and +30% damage; then Winded (-20% speed) for 3 s."
+element = "slash"
+kind = "ultimate"
+cooldown = 14.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+aim_radius = 2.0
+hit_weight = 2.0
+color = Color(1, 0.84705883, 0.5647059, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { addBuff(p, 'laststand', 4); poiseFor(p, 4); fx({ type: 'pillar', x: p.x, y: p.y, col: '#ffd890', life: 0.5, r: 1 }); shake(4); sfx('shout'); }"
