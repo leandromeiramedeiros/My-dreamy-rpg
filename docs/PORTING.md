@@ -43,7 +43,8 @@ res://scripts/{autoload,systems,ai,boss}
 ## Data files and schemas (filled in M5/M9)
 `handoff/data/*.json` plus `.csv`, including `zones.json` (hand-edited, see [design/world-brief.md](design/world-brief.md)), exported one way from the JS tables by `tools/export/data.js`: weapons, skill numbers, suits, items,
 affixes, gems, uniques, enemies, parts params, bosses, boss moves, statuses, reactions, EFFECTS rows, dialogue, quests, tier names.
-Behaviour (`cast`, parts, moves) is not exported; it is documented per row below. One schema block per file lands in M5 and is complete in M9.
+Behaviour (`cast`, parts, moves) is not exported as data from JS; in Godot each `cast` is rebuilt as a SkillData of action blocks
+(editor-first authoring, [PRODUCTION.md](PRODUCTION.md) M10), parts and boss moves as component resources; it is documented per row below. One schema block per file lands in M5 and is complete in M9.
 
 ## What ports 1:1 (data in, same maths)
 Stats and caps, items, affixes, gems, uniques, drops, XP, EFFECTS, statuses and the eight reactions, Loadout v3,

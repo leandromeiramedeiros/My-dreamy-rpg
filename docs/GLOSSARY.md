@@ -889,6 +889,7 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Godot pivot | Client ruling 2026-10-23: the studio makes no maps; the client builds every zone in Godot | — | Godot port-ready rules (dropped, now reversed) | M4b |
 | Godot port | M10: the studio rewrites the game code in GDScript into the playable Godot project | `godot/` | GDScript rewrite | later |
 | Port spike | M5 proof of the Godot port: hero movement, one line's hand action and spell, one status ladder, the Ogre, checked against golden vectors | `godot-sample/` | — | later |
+| Action block | M10: one editable step of a Godot skill (projectile, cone, zone, dash, status build, VFX, SFX…); a SkillData is a list of them | `SkillData` | skill node, blueprint node | later |
 | Data table | M10 Godot editor dock: every data table (enemies, items, skills, loot…) as an editable spreadsheet | — | blueprint | later |
 | Editor-first authoring | M10: every game object is a Godot Resource or scene, edited in the Inspector and placed by drag and drop | `.tres` | blueprints | later |
 | Golden vector | A recorded input and output of a JS function (damage, build, reaction, roll) that the GDScript port must reproduce | — | — | later |

@@ -67,6 +67,11 @@ GL Compatibility, web export). Contract: `docs/PORTING.md` (folder tree, autoloa
   (one movement, 1 to 2 attacks, 0 to 1 support) in dropdowns; loot, effects, audio and resists are slots on the resource.
   A **Data table** editor dock shows each table as a spreadsheet (sort, filter, edit in place). Saving a `.tres` while the
   game runs from the editor hot-reloads it into live bodies. The JSON export is only the one-time seed of the resources.
+* **Everything editable, skills included:** items carry look and feel as fields too (shine/glint, particles, VFX, light,
+  audio) beside damage, element, affixes, passives (Effect rows) and granted skills. Skills are **not** ported as code:
+  each `cast` becomes a SkillData built from **action blocks** (projectile, cone, zone, dash, beam, summon, buff, status
+  build, knockback, spawn VFX, play SFX, camera/hit feel…) with timing, numbers, element, VFX, SFX and anim in the
+  Inspector. A skill no block set can express gets a small script slot, listed in PORTING.md as an exception.
 * **Arenas only:** the studio rebuilds the mockup arenas as Godot scenes (`godot/arenas/`, the same ids as `js/arenas.js`)
   to test the port. It never makes zones: the client builds them in `godot/zones/`, which no lane touches.
 * **After M10** the Godot project is the game: the JS build freezes as the reference, and later gameplay work happens in GDScript.
