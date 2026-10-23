@@ -34,6 +34,10 @@ Arena cut, `tools/arena-route.js` and `tools/qa/run-arenas.js` replace act1-rout
 Known flakes: play.js warp-fade, perf under load. Balance is the client's (2026-10-23): balsim red flags and bot win
 rates are report-only; the studio never tunes numbers to targets, only fixes crashes and non-completable arenas.
 
+## Godot now (client ruling 2026-10-23)
+The game is the Godot 4.7.2 project in `godot/` (GDScript, editor-first Resources). The web build is retired: reference
+only at tag `js-final` (`.claude/worktrees/js-reference`), never edited. Studio arenas in Godot are for testing only.
+
 ## Godot pivot (client ruling 2026-10-23)
 The studio never makes maps: test only in mockup arenas (`js/arenas.js`). Every asset ships human-editable (PNG + JSON
 sidecar, see `docs/design/asset-pipeline.md`). In M10 the studio ports the game code to GDScript (`godot/`); the

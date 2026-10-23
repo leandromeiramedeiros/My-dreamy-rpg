@@ -1,5 +1,12 @@
 # Production (director)
 
+> **2026-10-23 — Godot now.** The web build is retired: the studio ports everything to Godot 4.7.2 (`godot/`) now and works
+> only there. The last web build is tag `js-final` (read-only reference checkout: `.claude/worktrees/js-reference`).
+> Arenas exist only for the studio's testing; the client builds every other map from the Booklet and the assets.
+> Lanes: wave 1 = Godot core (skeleton, Resources, data seed, hero, one arena) + web-build delete; wave 2 = combat/skills
+> (action blocks), enemies/bosses, statuses/elements/FX presets, UI, hero doll (runtime layering, branch `wip/export-v2-depth`),
+> audio, Data table dock, art rollout. Parked WIP: `wip/qa-forge-fixes` (bow, Frostweave, Thornsow forge fixes).
+
 Live: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys from `claude/dreamy-rpg-concept` (default branch).
 A milestone ships when its PR merges there.
 
@@ -95,6 +102,7 @@ Gate: golden vectors match; balsim parity ±2 % between JS and Godot; the Godot 
 web export runs with 0 errors (no web or phone perf target, client ruling); desktop p95 ≤ 16.7 ms on `stress`; the client plays the arenas in Godot (desktop + phone web) and approves.
 
 ## Client rulings (latest first)
+* 2026-10-23 — **Port to Godot now; delete the web build.** No arenas-only web version. The studio works in Godot from now on; arenas only for testing; every other map is the client's.
 * 2026-10-23 — **Scope change.** The client runs the Godot side: he builds every map and expands the story. The game runs
   7 to 10 hours, early game to late game, following the story (two endings, NG+). The studio focuses on items, effects,
   gems and socketables, skills and gameplay systems, plus every asset the booklet lists. Balance is **barebones** (sane

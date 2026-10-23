@@ -58,6 +58,9 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
 - Wave 3 after merges: Elements in the world (the `verbs` arena), Map cut (Haiku deletes + save v6 + check.js).
 
 ## Next
+00. **2026-10-23: Godot now.** Web build retired (tag `js-final`, reference checkout `.claude/worktrees/js-reference`).
+    Running: Godot core lane, web-build delete lane, Booklet. Parked: `wip/export-v2-depth`, `wip/qa-forge-fixes`,
+    raster board files in `.claude/worktrees/agent-a33649a46d6b8a5c5/tools/out/art/world-board/`.
 0. Client ruling 2026-10-23: **M10 Godot port** — the studio ports the code to GDScript (`godot/`, playable project, web);
    M5 gains a port spike (hero, one line, one ladder, Ogre vs golden vectors). Plan: PRODUCTION.md "M10".
 1. Merge lanes as they report; `node tools/check.js`; wave 3; ship M4b (Pages shows the Arena list).
