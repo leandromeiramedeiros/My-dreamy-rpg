@@ -294,6 +294,8 @@ function drawScene() {
   for (const e of G.effects) if (e.type === 'aimflash') drawAimIndicator(e.aim, e.from, e.to, { col: e.col, flash: true });
 
   perfMark('decals');
+  // ---- tile patches (elements-world.js: dry grass, scorch, ice, rime, obsidian, vine, raft), under the status tiles ----
+  if (m._ew) drawPatches(ctx, m);
   // ---- world status tiles (status.js: burning grass, ice, wet ground) ----
   if (typeof STATUS !== 'undefined') { STATUS.begin(); STATUS.drawTiles(ctx, lights); }
   perfMark('status.tiles');
@@ -353,6 +355,7 @@ function drawScene() {
   lightsIn(m, camX - RW / 2, camY - RH / 2, camX + RW / 2, camY + RH / 2, lights);
   for (let i = nStatic; i < lights.length; i++) { const L = lights[i]; L.__st = 1; if (L.bloom == null) L.bloom = 1; }   // map lights: stable objects (the light pool keys them); lanterns / torches bloom
   for (const o of viewObjs) if (o.brazier) { lights.push({ sx: isoX(o.x, o.y), sy: isoY(o.x, o.y, o.z) - 14, r: 70 + Math.sin(G.t * 13 + o.x) * 6, col: '#c77bff', a: 0.9, bloom: 1 }); }
+  if (m._ew) rxLights(viewObjs, lights);   // Receivers: the light of their state (lit torch / brazier, live conduit, charged crystals)
   // the hero's light (a lantern in dark sections) is always kept by the light budget; it blooms only as a lantern (dark sections)
   const heroL = p.dead ? null : { sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 10, r: 54 + 46 * look.dark, col: '#ffe6d0', a: 0.28 + 0.55 * look.dark, keep: true, own: p, bloom: look.dark };
   if (heroL) lights.push(heroL);
@@ -2617,4 +2620,120 @@ function bloomBlit(ctx, src, strength, smooth) {
   ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = smooth;
   ctx.globalAlpha = strength; ctx.drawImage(src, 0, 0, RW, RH);
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
+}
+
+
+// ===== elements in the world: Receiver art, Tile patch layer, Receiver lights (elements-world.js) ==================================
+// verbArt(type, state): one cached canvas per (type, state). The shapes are literal ASCII rows (edit them in place; one palette per
+// state over the base palette); the fog bank and the windmill blades are drawn (they need dither / rotation).
+const VERB_ART = {
+  torch: { rows: ['...f...', '..fFf..', '..FyF..', '..fFf..', '.KMMMK.', '.KmMmK.', '..KwK..', '..Kwk..', '..Kwk..', '..Kwk..', '..Kwk..', '..Kwk..', '..Kwk..', '.KKwkK.', '.KssssK', '..KKKK.'],
+    pal: { K: '#1e1428', M: '#7a6a7e', m: '#4a3e52', w: '#8a5a3a', k: '#5a3a28', s: '#5a5470', y: '#3a2a2a' },
+    st: { lit: { f: '#ff6a2a', F: '#ffb04a', y: '#fff0a0' } } },
+  brazier: { rows: ['....f..f....', '...fFffFf...', '..fFyFFyFf..', '.KCCCCCCCCK.', 'KMMMMMMMMMMK', '.KmMMMMMMmK.', '..KmmmmmmK..', '...KmMMmK...', '....KmmK....', '...KmKKmK...', '..Km....mK..', '.KK......KK.'],
+    pal: { K: '#1e1428', M: '#8a7a8a', m: '#5a4a5e', C: '#3a3238' },
+    st: { lit: { f: '#ff5a1e', F: '#ffa040', y: '#fff0a0', C: '#ff8a3a' } } },
+  bramble: { rows: ['....g..G..g...', '..gGgG.GgGg...', '.GgtGgGgtGgG..', 'GgGgKgGgGtGgG.', 'gGtGgGgKgGgGtg', 'GgGgGtgGgGgGgG', '.gGgKgGgtGgGg.', '..GgGgGgGgGg..', '...KdKdKdKd...'],
+    pal: { G: '#8a7a3a', g: '#4a2a2a', t: '#ffe0a8', K: '#1a1418', d: '#3a2a20' }, st: {} },   // olive-brown with pale thorns: reads against the green grass
+  icewall: { rows: ['..KKKKKKKK..', '.KhhhhhhhhK.', 'KhLLLLLLLLhK', 'KhLlLLLLLLhK', 'KhLLlLLLlLhK', 'KhLLLlLLLLhK', 'KhLLLLLLLLhK', 'KhLLLLlLLLhK', 'KhLLLLLlLLhK', 'KhLlLLLLLLhK', 'KhLLlLLLLLhK', 'KhLLLLLLLLhK', 'KhLLLLLLLLhK', 'KDDDDDDDDDDK', '.KKKKKKKKKK.'],
+    pal: { h: '#e8fbff', L: '#9fe8ff', l: '#ffffff', D: '#5fa8d4', K: '#2a5a7a' }, st: {} },
+  seed: { rows: ['...vV.....', '..vVv.V...', '...V.vVv..', '..vVv.V...', '...VvV....', '..V.vV....', '...vVv....', '....V.....', '...vVs....', '....s.....', '...KbbK...', '..KbBBbK..', '.KbBBBBbK.', '.KKKKKKKK.'],
+    pal: { s: '#94cf7f', K: '#2a1c18', b: '#6a4a30', B: '#8a6a48' }, st: { vine: { V: '#3f8b63', v: '#94cf7f' } } },
+  conduit: { rows: ['..KKKK..', '.KcCCcK.', 'KcCyyCcK', '.KcCCcK.', '..KMMK..', '..KmMK..', '..KmMK..', '..KMMK..', '..KmMK..', '..KmMK..', '..KMMK..', '..KmMK..', '.KMMMMK.', 'KMMMMMMK', 'KKKKKKKK'],
+    pal: { K: '#1e1e2a', M: '#6a6a7a', m: '#4a4a5a', c: '#5a5a6a', C: '#7a7a8a', y: '#8a8a9a' }, st: { live: { c: '#c8a000', C: '#ffe630', y: '#ffffff' } } },
+  raft: { rows: ['..KKKKKKKKKKKK..', '.KwWwWwWwWwWwWK.', 'KwWwWwWwWwWwWwWK', 'KWwWwWwWwWwWwWwK', 'KwWwWwWwWwWwWwWK', 'KWwWwWwWwWwWwWwK', '.KrKKKKKKKKKKrK.', '..K..........K..'],
+    pal: { W: '#a07850', w: '#7a5a38', r: '#c8b090', K: '#3a2818' }, st: {} },
+  glyph: { rows: ['.......KK.......', '.....KKggKK.....', '...KKgGggGgKK...', '.KKgGgGGGgGgGKK.', 'KgGgGGgggGGgGgGK', '.KKgGgGGGgGgGKK.', '...KKgGggGgKK...', '.....KKggKK.....', '.......KK.......'],
+    pal: { g: '#5a4a6a', G: '#3a3048', K: '#2a2030' }, st: { lit: { g: '#d6b0ff', G: '#9a44ff', K: '#5a2aa0' } } },
+  seal: { rows: ['...KKKKKK...', '..KSSSSSSK..', '.KSsssssSSK.', 'KSsYYYYYYsSK', 'KSsYyyyyYsSK', 'KSsYyOOyYsSK', 'KSsYyOOyYsSK', 'KSsYyyyyYsSK', 'KSsYYYYYYsSK', 'KSssssssssSK', 'KSSSSSSSSSSK', 'KSsSsSsSsSsK', 'KSSSSSSSSSSK', 'KKKKKKKKKKKK'],
+    pal: { S: '#8a8098', s: '#6a6078', Y: '#ffd75a', y: '#c08a30', O: '#fff2c4', K: '#2a2030' }, st: {} },
+  crystal_wall: { rows: ['.....K....K...', '....KcK..KcK..', '...KcCK..KCcK.', '..KcCCcKKcCCK.', '..KcCwCKKcwCK.', '.KcCCwCcKcCwCK', '.KcCCCwCcCCCcK', 'KcCwCCCcCwCCcK', 'KcCCwCCcCCwCcK', 'KcCCCwCcCCCwcK', 'KcCCCCCcCCCCcK', 'KcCwCCCcCCwCcK', 'KcCCwCCcCCCCcK', 'KcCCCCCcCCCCcK', '.KKKKKKKKKKKK.'],
+    pal: { c: '#3a6aa0', C: '#7fd2ff', w: '#e8fbff', K: '#1a2a4a' }, st: { rimed: { c: '#9fe8ff', C: '#e8fbff', w: '#ffffff', K: '#5fa8d4' } } },
+  vent: { rows: ['...KKKKKK...', '.KKrRRRRrKK.', 'KrRhHHHHhRrK', 'KRhHhhhhHhRK', 'KrRhHHHHhRrK', '.KKrRRRRrKK.', '...KKKKKK...'],
+    pal: { R: '#5a4a48', r: '#3a3030', K: '#1e1418', h: '#ff6a2a', H: '#ffd27a' }, st: { capped: { h: '#2a1c38', H: '#5a4a7a' } } },
+  rime_crystal: { rows: ['....K.....', '...KcK....', '...KCcK.K.', '..KcCwKKcK', '..KCCwCKCK', '.KcCwCCKCK', '.KCCCwCcCK', 'KcCwCCCcCK', 'KCCCwCCcCK', 'KcCCCCcCCK', '.KCCCCcCK.', '..KKKKKKK.'],
+    pal: { c: '#5fd4ff', C: '#bff4ff', w: '#ffffff', K: '#1a3a5a' }, st: { spent: { c: '#3a5a70', C: '#5a7a90', w: '#8aa0b0' } } },
+  storm_crystal: { rows: ['....K.....', '...KcK....', '...KCcK.K.', '..KcCwKKcK', '..KCCwCKCK', '.KcCwCCKCK', '.KCCCwCcCK', 'KcCwCCCcCK', 'KCCCwCCcCK', 'KcCCCCcCCK', '.KCCCCcCK.', '..KKKKKKK.'],
+    pal: { c: '#c8a000', C: '#fff07a', w: '#ffffff', K: '#5a4a10' }, st: { spent: { c: '#5a5030', C: '#7a7050', w: '#9a9070' } } },
+  elderstone: { rows: ['....KKKKK.....', '...KsSSSsK....', '..KsSSSSSsK...', '..KSSmSSSSK...', '.KsSSSSSmSsK..', '.KSSSyySSSSK..', '.KSSyOOySSSK..', '.KSSSyySSSmK..', '.KsSSSSSSSsK..', 'KsSmSSSSSSSsK.', 'KSSSSSmSSSSSK.', 'KsSSSSSSSmSsK.', 'KSSmSSSSSSSSK.', 'KggSSgSSSggSK.', 'KKKKKKKKKKKKK.'],
+    pal: { S: '#8a8a98', s: '#6a6a7a', m: '#4a7a4a', y: '#c8a0ff', O: '#ffffff', g: '#3f8b63', K: '#22202a' }, st: {} },
+};
+const VERB_CACHE = new Map();
+function verbArt(type, state) {
+  const k = type + '|' + state; let c = VERB_CACHE.get(k); if (c) return c;
+  if (type === 'fogbank') c = fogbankArt();
+  else if (type === 'windmill') c = windmillArt(state === 'spinning2' ? Math.PI / 4 : state === 'spinning' ? Math.PI / 8 : 0);
+  else { const A = VERB_ART[type] || VERB_ART.glyph; c = asciiSprite(A.rows, Object.assign({}, A.pal, A.st[state] || {})); }
+  VERB_CACHE.set(k, c); return c;
+}
+function fogbankArt() {   // a 44 x 22 dithered mist bank (Bayer levels: it reads as see-through pixel fog)
+  const W = 44, H = 22, { c, x } = makeCanvas(W, H), img = x.createImageData(W, H), d = img.data, B = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  for (let y = 0; y < H; y++) for (let X = 0; X < W; X++) {
+    const u = ((X - 22) / 21) ** 2 + ((y - 13) / 9) ** 2 + 0.25 * Math.sin(X * 0.6) * Math.sin(y * 0.9); if (u > 1) continue;
+    const lvl = (1 - u) * 16, b = B[(y & 3) * 4 + (X & 3)]; if (lvl < b * 0.75) continue;
+    const i = (y * W + X) * 4, hi = y < 10 && lvl > 9; d[i] = hi ? 236 : 200; d[i + 1] = hi ? 230 : 192; d[i + 2] = hi ? 248 : 222; d[i + 3] = 255;
+  }
+  x.putImageData(img, 0, 0); return c;
+}
+function windmillArt(rot) {   // a 26 x 28 post mill: the tower rows + four blades at `rot`
+  const tower = ['....KKKK....', '...KwWWwK...', '..KwWWWWwK..', '..KWWwwWWK..', '..KWwKKwWK..', '..KWwKKwWK..', '.KwWWWWWWwK.', '.KWWWwwWWWK.', '.KWWWWWWWWK.', 'KwWWWWWWWWwK', 'KWWWWWWWWWWK', 'KKKKKKKKKKKK'];
+  const t = asciiSprite(tower, { K: '#2a1c18', W: '#c8b090', w: '#8a6a48' }), { c, x } = makeCanvas(26, 28);
+  x.drawImage(t, 7, 16);
+  const hx = 13, hy = 10;
+  for (let k = 0; k < 4; k++) {
+    const a = rot + k * Math.PI / 2;
+    for (let s = 1; s <= 10; s++) {
+      const px = Math.round(hx + Math.cos(a) * s), py = Math.round(hy + Math.sin(a) * s * 0.9);
+      x.fillStyle = s > 3 ? '#e8e0d0' : '#5a4030'; x.fillRect(px, py, 1, 1);
+      if (s > 3) { x.fillStyle = '#a89880'; x.fillRect(Math.round(px - Math.sin(a) * 1.5), Math.round(py + Math.cos(a) * 1.4), 1, 1); }
+    }
+  }
+  x.fillStyle = '#2a1c18'; x.fillRect(hx - 1, hy - 1, 3, 3); x.fillStyle = '#ffd35a'; x.fillRect(hx, hy, 1, 1);
+  return c;
+}
+// ---- the Tile patch layer: one canvas per 8 x 8-tile chunk, rebuilt only when dirty (at most 4 a frame: EW.flush) ----------------
+const PATCH_DECAL = {};
+function patchDecal(kind) {   // a 32 x 17 iso diamond per kind (hashed noise, hard steps)
+  if (PATCH_DECAL[kind]) return PATCH_DECAL[kind];
+  const { c, x } = makeCanvas(32, 17), img = x.createImageData(32, 17), d = img.data;
+  const hz = (X, Y) => { let h = (X * 374761393 + Y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  const set = (X, Y, hex, a) => { const r = hexToRgb(hex), i = (Y * 32 + X) * 4; d[i] = r[0]; d[i + 1] = r[1]; d[i + 2] = r[2]; d[i + 3] = a; };
+  for (let Y = 0; Y < 17; Y++) for (let X = 0; X < 32; X++) {
+    const u = Math.abs(X + 0.5 - 16) / 16 + Math.abs(Y + 0.5 - 8.5) / 8.5; if (u > 1) continue;
+    const n = hz(X, Y), edge = u > 0.82;
+    if (kind === 'drygrass') { if (n > 0.8) set(X, Y, n > 0.93 ? '#e0c878' : '#b8984a', 255); else if (n > 0.66 && Y > 0) set(X, Y, '#8a7034', 220); }
+    else if (kind === 'scorch' || kind === 'burning') { const b = hz(X >> 1, Y >> 1); if (b < 0.18 + u * 0.35) continue; set(X, Y, n > 0.95 ? '#ff8a3a' : b > 0.6 ? '#1a1210' : '#3a2418', 230); }
+    else if (kind === 'ice') { if (edge) set(X, Y, n > 0.4 ? '#ffffff' : '#bff4ff', 255); else if ((X + 2 * Y) % 11 === 0 || (X - 2 * Y + 44) % 13 === 0) set(X, Y, '#ffffff', 255); else set(X, Y, n > 0.7 ? '#bff4ff' : n > 0.25 ? '#9fe0f8' : '#7fc8ec', 255); }
+    else if (kind === 'rime') { if (n > 0.72 || (edge && n > 0.4)) set(X, Y, n > 0.9 ? '#ffffff' : '#d8f4ff', 200); }
+    else if (kind === 'obsidian') { if (u > 0.95 && n < 0.5) continue; set(X, Y, (X + Y) % 9 === 0 ? '#8a7aaa' : n > 0.6 ? '#3a2c4a' : '#1e1628', 255); }
+    else if (kind === 'vine') { if ((X + 2 * Y) % 6 < 2 || (X - 2 * Y + 60) % 6 < 2) set(X, Y, n > 0.5 ? '#94cf7f' : '#3f8b63', 255); else if (n > 0.55) set(X, Y, '#2a5a3a', 255); }
+    else if (kind === 'raft') { set(X, Y, (X + Y) % 6 === 0 ? '#5a3a20' : n > 0.5 ? '#a07850' : '#8a6440', 255); }
+  }
+  x.putImageData(img, 0, 0);
+  return (PATCH_DECAL[kind] = c);
+}
+function buildPatchChunk(m, key) {
+  const M = m._ew, C = EW.N.chunk, [cx, cy] = key.split(',').map(Number), tiles = [];
+  for (let j = cy * C; j < Math.min(M.H, cy * C + C); j++) for (let i = cx * C; i < Math.min(M.W, cx * C + C); i++) { const k = M.pt[j * M.W + i]; if (k) tiles.push([i, j, k]); }
+  const old = M.chunks.get(key); if (old) old.c.width = 0;
+  if (!tiles.length) { M.chunks.delete(key); return; }
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const t of tiles) { const z = m.h[t[1]] ? m.h[t[1]][t[0]] || 0 : 0; t[3] = isoX(t[0], t[1]) - 16; t[4] = isoY(t[0], t[1], z); x0 = Math.min(x0, t[3]); y0 = Math.min(y0, t[4]); x1 = Math.max(x1, t[3] + 32); y1 = Math.max(y1, t[4] + 17); }
+  const L = makeCanvas(x1 - x0, y1 - y0);
+  for (const t of tiles) L.x.drawImage(patchDecal(EW.KINDS[t[2]]), t[3] - x0, t[4] - y0);
+  M.chunks.set(key, { c: L.c, x0, y0, w: x1 - x0, h: y1 - y0 });
+}
+function drawPatches(ctx, m) {
+  const M = m._ew; EW.flush(k => buildPatchChunk(m, k));
+  const ox = RW / 2 - camX, oy = RH / 2 - camY;
+  for (const ch of M.chunks.values()) { const vx = ch.x0 + ox, vy = ch.y0 + oy; if (vx > RW || vy > RH || vx + ch.w < 0 || vy + ch.h < 0) continue; ctx.drawImage(ch.c, Math.round(vx), Math.round(vy)); }
+}
+// the Receivers' state lights (a lit torch flickers, a live conduit strobes); bloom 1 like lanterns
+function rxLights(objs, lights) {
+  for (const o of objs) {
+    const R = o.rx; if (!R || o.gone) continue;
+    const L = R.def.states[R.state] && R.def.states[R.state].light; if (!L) continue;
+    const a = L.fx === 'flicker' ? L.a * (0.82 + 0.18 * Math.sin(G.t * 13 + o.x * 3)) : L.fx === 'strobe' ? ((Math.floor(G.t * 12 + o.y) & 1) ? L.a : L.a * 0.45) : L.a;
+    lights.push({ sx: isoX(o.x, o.y), sy: isoY(o.x, o.y, o.z || 0) - (L.h || 8), r: L.r, col: L.col, a, bloom: 1 });
+  }
 }

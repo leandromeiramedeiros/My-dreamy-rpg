@@ -18,7 +18,7 @@ The client's zones: [world-brief.md](world-brief.md). Ship gate: [balance.md](ba
 | `pack-<zone>` (6) | 32x24 | The zone's encounter grammar: room 1 to 3 packs behind gates, the elite guarding the key |
 | `elite` | 24x24 | Eight elite modifiers as an elite pocket each, one gate per pocket |
 | `boss-<id>` (12) | per boss | One per boss: the arena shape it needs (pillars, void tiles, lava ring, tide), `arena` + `closeGate` triggers, shrine 20 s away |
-| `verbs` | 32x32 | All 15 Receiver objects, Tile patches (ice, grass fire), Dream Oil, Opal, a dawn source shrine |
+| `verbs` | 32x32 | All 15 Receiver objects in four rooms, a water channel (ice, vine, raft), dry grass for a grass fire, an Elder Stone (Dream Oil, free), an Opal chest, a dawn shrine; 3 puzzles: two torches (`object_state`), two conduits (`object_state`), a holy seal (`element_hit`) |
 | `stress` | 32x32 | 24 awake bodies, 40 lights, 6 status bodies, burning ring: the perf gate scene |
 | `touch` | 24x16 | Phone controls: wheel, aim modes, pockets, a chest, a dialogue, a shrine |
 | `ruins` | 22x22 | The Ruins bestiary test arena; it becomes `pack-ruins` and the id `ruins` stays an alias until that lane merges |
@@ -45,6 +45,7 @@ screenshots to `tools/shots/arenas/`.
 * `boss-<id>`: wind-ups of at least 0.55 to 0.6 s (`bossFairness`), no unwarned lethal hit, phases fire at their HP bars, the loot drops,
   the arena resets on death, a screenshot per telegraph.
 * `verbs`: each Receiver reacts to its element once and only once; Tile patches expire; a source exists within 20 tiles of every puzzle.
+  Checked by `tools/qa/verbs-check.js` (arena-route has no walk for it: the cards need element hits, not a teleport).
 * `stress`: phone p95 at most 20.0 ms, desktop at most 16.7 ms (`tools/perf.js`).
 * `touch`: the wheel, aim modes and pockets work; the chest, dialogue and shrine are reachable by thumb.
 

@@ -1118,3 +1118,19 @@ const CAPS = {
   heroResMin: -0.5,       // hero resist clamp, low
   heroResMax: 0.6,        // hero resist clamp, high
 };
+
+// ===== Dream Oil (docs/design/elements-statuses.md "Wiring"): a per-element weapon coat made at the Elder Stone for Dust. =====
+// dur: seconds of coat; build: the oil element's status build on a basic hit (x the ladder's 25); price: Dust (a Stone object's
+// `price` overrides it: the verbs arena's Stone is free). Applied by items.js buyOil -> elements-world.js EW.coat.
+const DREAM_OIL = {
+  dur: 60, build: 0.3, price: 15,
+  rows: {
+    fire: { name: 'Ember Oil', col: '#ff9a4a', text: 'Basic hits also carry fire: Burning, lights torches and dry grass' },
+    frost: { name: 'Rime Oil', col: '#9fe8ff', text: 'Basic hits also carry frost: Chilled, freezes water' },
+    lightning: { name: 'Storm Oil', col: '#fff07a', text: 'Basic hits also carry lightning: Jolted, wakes conduits' },
+    nature: { name: 'Seed Oil', col: '#8fe0a0', text: 'Basic hits also carry nature: Poisoned, grows seeds' },
+    arcane: { name: 'Rune Oil', col: '#d6b0ff', text: 'Basic hits also carry arcane: Marked, lights glyphs' },
+    holy: { name: 'Dawn Oil', col: '#fff2b0', text: 'Basic hits also carry holy: Smitten, breaks seals' },
+    wind: { name: 'Breath Oil', col: '#c8f0e8', text: 'Basic hits also carry wind: Buffeted, turns windmills' },
+  },
+};

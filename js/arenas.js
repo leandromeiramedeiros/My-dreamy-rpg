@@ -16,8 +16,10 @@
 // Boss arenas: boss-<id> for every boss in BOSSES (mossjaw and bramblehorn are written out, the rest are stubs from bossArena()).
 // Zones with no enemies yet (grotto, caldera, spire) use placeholder packs of existing enemy types: TODO(M6) marks each.
 //
-// verbs arena (stub, not built): a 32x24 room, one lane per hero verb (dash, parry, charge, block, dodge-through) with a
-// trigger-driven telegraph spawner. Add as ARENAS.verbs = { ... } when the Skills lane ships the verb table.
+// verbs arena (32x32): elements in the world (js/elements-world.js, docs/design/elements-statuses.md "World verbs"): all 15
+// Receiver objects, dry grass for a grass fire, water for ice / vine / raft, a dawn shrine, a free Elder Stone (Dream Oil), the Opal
+// as the torch puzzle's reward, and 3 puzzles gated by object_state / element_hit cards (torches -> gate_a, conduits -> gate_b,
+// the holy seal -> gate_c). Extra record field: `grass: [[x, y, w, h]]` (dry-grass rects, read by elements-world.js).
 
 const flatHeights = (W, H) => Array.from({ length: H }, () => '0'.repeat(W));
 const ARENA_SETS = {   // reference armour per weapon line (head, chest, boots) + the offhand line (null: none)
@@ -575,6 +577,76 @@ const ARENAS = {
       '.gggggggggggggggggggggg.',
       '.gggggggggggggggggggggg.',
       '........................',
+    ],
+  }),
+  // elements in the world: the record is written out (no builder) so every Receiver row reads as data
+  verbs: arenaBase({ name: 'Elements in the world', sub: 'Arena: world verbs', theme: 'vale', W: 32, H: 32, start: { x: 15.5, y: 29 }, level: [6, 12],
+    desc: 'All 15 Receivers, grass fire, ice, Pip\'s charge, Dream Oil, the Opal, 3 element puzzles (L8)', loadout: { weapon: 'sword', level: 8 },
+    objective: 'Light the torches, wake the conduits, break the seal', grass: [[2, 23, 7, 6]],
+    objects: [
+      // north (behind gate_c): frost then a blade, wind, arcane
+      { t: 'crystal_wall', id: 'crystal_n', x: 8.5, y: 4.5 }, { t: 'glyph', id: 'glyph_n', x: 16, y: 4 }, { t: 'fogbank', id: 'fog_n', x: 24.5, y: 4.5 },
+      { t: 'chest', x: 16, y: 2, tier: 'gold', label: 'verbs-seal-chest' }, { t: 'lantern', x: 3, y: 2 }, { t: 'lantern', x: 29, y: 2 },
+      // puzzle 3: the holy seal before gate_c (source: the dawn shrine, 17 tiles south)
+      { t: 'seal', id: 'seal_c', x: 16, y: 10.4 }, { t: 'gate', id: 'gate_c', x: 16, y: 9.5, ang: 1.5708, len: 4.2 },
+      // puzzle 1: two torches at the west door (source: the lit brazier); puzzle 2: two conduits at the east door (source: the storm crystal)
+      { t: 'torch', id: 'torch_a', x: 11.6, y: 12.2 }, { t: 'torch', id: 'torch_b', x: 11.6, y: 16.8 }, { t: 'gate', id: 'gate_a', x: 10.5, y: 14.5, ang: 0, len: 3.2 },
+      { t: 'brazier', id: 'brazier_src', state: 'lit', x: 14.5, y: 14.5 }, { t: 'brazier', id: 'brazier_b', state: 'unlit', x: 17.5, y: 11.5 },
+      { t: 'conduit', id: 'conduit_a', x: 19.6, y: 12.2 }, { t: 'conduit', id: 'conduit_b', x: 19.6, y: 16.8 }, { t: 'gate', id: 'gate_b', x: 21.5, y: 14.5, ang: 0, len: 3.2 },
+      { t: 'storm_crystal', id: 'storm_m', x: 17.5, y: 17.6 },
+      { t: 'chest', x: 5, y: 12, tier: 'silver', label: 'verbs-torch-chest' }, { t: 'lantern', x: 2, y: 11 },
+      { t: 'chest', x: 26, y: 14.5, tier: 'silver', label: 'verbs-conduit-chest' }, { t: 'lantern', x: 29, y: 11 },
+      // the channel: a raft (wind drifts it to `to`: a 2x2 crossing), a seed (nature grows a vine over `bridge`), ice from any frost
+      { t: 'raft', id: 'raft_w', x: 4.5, y: 20.6, to: { x: 8, y: 21 } }, { t: 'seed', id: 'seed_s', x: 12.5, y: 22.4, bridge: [12, 20, 1, 2] },
+      // south: the dry-grass field with a bramble, the dawn shrine, the free Elder Stone, frost and wind receivers, the ice wall
+      { t: 'bramble', id: 'bramble_s', x: 5.5, y: 25.5 },
+      { t: 'shrine', id: 'shrine_verbs', dawn: true, x: 13.5, y: 27.2, name: 'Dawn shrine', label: 'checkpoint' },
+      { t: 'elderstone', id: 'stone_verbs', x: 18.5, y: 27.2, price: 0 },
+      { t: 'rime_crystal', id: 'rime_s', x: 21.5, y: 24.5 }, { t: 'vent', id: 'vent_s', x: 24.5, y: 27.5 }, { t: 'windmill', id: 'mill_s', x: 27.5, y: 24 },
+      { t: 'icewall', id: 'icewall_s', x: 28.5, y: 28.4 }, { t: 'lantern', x: 2, y: 30 }, { t: 'lantern', x: 30, y: 30 },
+    ],
+    triggers: [
+      { id: 'in', name: 'Enter', when: { type: 'map_enter' }, actions: [{ type: 'banner', title: 'Elements in the world', sub: 'Pip carries a charge; the Elder Stone gives oil' }, { type: 'objective', text: 'Light both torches by the west door' }] },
+      { id: 'p1_torches', name: 'Both torches lit', when: { type: 'object_state', ids: ['torch_a', 'torch_b'], state: 'lit' },
+        actions: [{ type: 'openGate', id: 'gate_a' }, { type: 'message', text: 'The west gate opens' }, { type: 'loot', item: 'opal_3', count: 1, x: 5, y: 14.5 }, { type: 'objective', text: 'Wake both conduits by the east door' }] },
+      { id: 'p2_conduits', name: 'Both conduits live', when: { type: 'object_state', ids: ['conduit_a', 'conduit_b'], state: 'live' },
+        actions: [{ type: 'openGate', id: 'gate_b' }, { type: 'message', text: 'The east gate opens' }, { type: 'objective', text: 'Break the seal on the north gate with holy light' }] },
+      { id: 'p3_seal', name: 'Holy on the seal', when: { type: 'element_hit', id: 'seal_c', el: 'holy' },
+        actions: [{ type: 'openGate', id: 'gate_c' }, { type: 'message', text: 'The seal breaks; the north gate opens' }, { type: 'objective', text: 'Frost the crystal wall, then cut it' }] },
+    ],
+    tiles: [
+      '................................',
+      '.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.',
+      '.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.',
+      '.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.',
+      '.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.',
+      '.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.',
+      '.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.',
+      '.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.',
+      '.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.',
+      '..............xxxx..............',
+      '.ggggggggg.gggggggggg.ggggggggg.',
+      '.ggggggggg.gggggggggg.ggggggggg.',
+      '.ggggggggg.gggggggggg.ggggggggg.',
+      '.gggggggggggggggggggggggggggggg.',
+      '.gggggggggggggggggggggggggggggg.',
+      '.gggggggggggggggggggggggggggggg.',
+      '.ggggggggg.gggggggggg.ggggggggg.',
+      '.ggggggggg.gggggggggg.ggggggggg.',
+      '.ggggggggg.gggggggggg.ggggggggg.',
+      '.ggggggggg.gggggggggg.ggggggggg.',
+      '.wwwwwwwwwwwwwwbbwwwwwwwwwwwwww.',
+      '.wwwwwwwwwwwwwwbbwwwwwwwwwwwwww.',
+      '.gggggggggggggggggggggggggggggg.',
+      '.gggggggggggggggggggggggggggggg.',
+      '.gggggggggggggggggggggggggggggg.',
+      '.gggggggggggggggggggggggggggggg.',
+      '.gggggggggggggggggggggggggggggg.',
+      '.gggggggggggggggggggggggggggggg.',
+      '.gggggggggggggggggggggggggggggg.',
+      '.gggggggggggggggggggggggggggggg.',
+      '.gggggggggggggggggggggggggggggg.',
+      '................................',
     ],
   }),
 };

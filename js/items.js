@@ -278,13 +278,16 @@ const GEMS = {
   amethyst: { name: 'Amethyst', col: '#b46aff', el: 'arcane', arm: g => ({ power: G5([0.01, 0.02, 0.04])(g), resArcane: G5([0.015, 0.03, 0.05])(g), resGloom: G5([0.015, 0.03, 0.05])(g) }), wpn: g => ({ skillDmg: G5([0.04, 0.08, 0.14])(g) }), amp: 'Arcane skills' },
   diamond: { name: 'Diamond', col: '#e8f4ff', el: null, arm: g => ({ def: G5([0.01, 0.03, 0.06])(g), resAll: GR(g) / 2 }),
     wpn: g => { const v = G5([0.01, 0.02, 0.04])(g); return { power: v, def: v, crit: v / 2, haste: v }; }, amp: 'Ultimate cooldown' },
+  // the wind gem (Breath; docs/design/elements-statuses.md "Wiring"): armour move speed, weapon wind damage, +5 % wind skills per grade
+  opal: { name: 'Opal', col: '#9ff0dc', el: 'wind', arm: g => ({ speed: G5([0.05, 0.1, 0.18])(g) }), wpn: g => ({ windDmg: G5([0.04, 0.08, 0.14])(g) }), amp: 'Wind skills' },
 };
+PCT_STATS.windDmg = 1; STAT_NAME.windDmg = 'Wind damage';   // wind has no DMG_ELS row: the Opal's weapon line reads as a percent
 const GEM_TYPES = Object.keys(GEMS);
 const gemParse = id => { const [t, g] = String(id).split('_'); return GEMS[t] && +g >= 1 && +g <= GEM_MAX ? { type: t, grade: +g, def: GEMS[t] } : null; };
 const gemName = id => { const g = gemParse(id); return g ? `${GEM_GRADES[g.grade - 1]} ${g.def.name}` : '?'; };
 const gemStats = (id, slot) => { const g = gemParse(id); return g ? (slot === 'weapon' ? g.def.wpn : g.def.arm)(g.grade) : {}; };
 // skill amplification (any slot): grades summed per gem type across all equipped sockets
-const EL_GEM = { fire: 'ruby', frost: 'sapphire', nature: 'emerald', lightning: 'topaz', arcane: 'amethyst' };
+const EL_GEM = { fire: 'ruby', frost: 'sapphire', nature: 'emerald', lightning: 'topaz', arcane: 'amethyst', wind: 'opal' };
 function gemAmp(p) {
   const a = {}; for (const t of GEM_TYPES) a[t] = 0;
   for (const s of EQUIP_SLOTS) for (const id of (p.equip[s] || { sockets: [] }).sockets) { const g = id && gemParse(id); if (g) a[g.type] += g.grade; }
@@ -743,6 +746,18 @@ function temperItem(it, affixId, p = G.player) {
   return '';
 }
 const maxSocketsOf = it => it.slot === 'ring' ? 0 : TRINKET_KINDS.includes(it.slot) ? 1 : RARITY[it.rarity].sockets[1];
+// buyOil(p, el, price): a Dream Oil of that element (itemdata.js DREAM_OIL) for Dust at the Elder Stone, coated on the weapon at
+// once (60 s; elements-world.js EW.coat). No carried stock until the Stone panel and the Belt / Satchel land (M5).
+function buyOil(p = G.player, el = 'fire', price) {
+  const D = typeof DREAM_OIL !== 'undefined' ? DREAM_OIL : null, row = D && D.rows[el]; if (!row) return 'No such oil';
+  const cost = price != null ? +price : D.price;
+  if ((p.dust || 0) < cost) return `Needs ${cost} Dust`;
+  p.dust = (p.dust || 0) - cost;
+  if (typeof EW !== 'undefined') EW.coat(p, el, D.dur);
+  if (typeof UI !== 'undefined' && UI.toast) UI.toast({ text: `${row.name}: ${D.dur} s`, col: row.col }); else say(`${row.name}: ${D.dur} s`);
+  sfx('pickup');
+  return '';
+}
 function imbueItem(it, p = G.player) {
   if (!it || it.gem || !baseOf(it.base)) return 'Nothing to imbue';
   if (it.slot === 'ring') return 'Rings cannot hold sockets';
@@ -795,6 +810,7 @@ function lootAction(a) {
   for (let i = 0; i < clamp(n, 0, 12); i++) { let r = rollRarity('elite', L); if (!rarityAtLeast(r, rmin)) r = rmin; const it = a.slot === 'upgrade' ? rollUpgrade(p, L, r, upgradeSlot(p, L)) : rollItem(L, r, SLOTS.includes(a.slot) || TRINKET_KINDS.includes(a.slot) ? a.slot : undefined); if (+a.sockets > 0) it.sockets = Array(Math.min(3, +a.sockets)).fill(null); list.push({ kind: 'item', it }); }
   // generator extras: gem: true · chest: 'gold' | 'silver' (one more item, a better gem) · item: key_* | socket_rune | unique id
   if (a.gem) list.push({ kind: 'gem', gem: rollGem(L) });
+  if (a.item && gemParse(a.item)) { list.push({ kind: 'gem', gem: a.item }); a = Object.assign({}, a, { item: null }); }   // a named gem (the verbs arena's Opal)
   if (a.chest === 'gold' || a.chest === 'silver') { list.push({ kind: 'item', it: rollItem(L, a.chest === 'gold' ? 'epic' : 'rare') }); if (a.chest === 'gold') list.push({ kind: 'gem', gem: rollGem(L + 5) }); }
   if (a.item) {
     if (/^key_/.test(a.item)) { const S = G.prog.secrets || (G.prog.secrets = {}); S['key:' + a.item] = true; text(p.x, p.y, p.z + 3.4, 'Key found', '#ffd35a', true); if (typeof UI !== 'undefined') UI.toast({ text: 'Key: ' + a.item.replace(/^key_/, '').replace(/_/g, ' '), col: '#ffd35a' }); sfx('loot'); }
@@ -1014,6 +1030,7 @@ function setCheckpoint(x, y, label) {
   G.checkpoint = { map: G.map.id, x, y };
   refillPockets(p);
   say(`${label || 'Checkpoint'} — pockets refilled`); sfx('heal'); fx({ type: 'ring', x, y, r: 1.4, col: '#9ef0ff', life: 0.5 }); saveGame();
+  if (typeof EW !== 'undefined') EW.onRest(x, y);   // a dawn shrine: Pip takes a holy charge (elements-world.js)
 }
 const INTERACT_R = 2.5, LOOT_NEAR = [];
 function updateLoot(dt) {

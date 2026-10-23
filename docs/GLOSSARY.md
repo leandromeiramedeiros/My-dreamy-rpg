@@ -619,15 +619,16 @@ Mythic armour (one per suit family): Shardheart Plate, Gloomspire Vestment, Forg
 | Clear | Gem grade 2 | `GEM_GRADES` | — | live |
 | Diamond | Neutral gem: defence and all resists | `diamond` | — | live |
 | Dream Dust | Currency from salvaging; spent at the Elder Stone | `dust` | — | live |
-| Dream Oil | Consumable that fuels world puzzles (oil) | — | — | M4b |
-| Elder Stone | Shop and upgrade NPC-object in the Vale hub | — | — | live |
+| Dream Oil | Per-element coat from the Elder Stone: 60 s, basic hits add the element at x0.3 (world and enemies) | `DREAM_OIL` | Oil (alone) | live |
+| Dream Oil names | Ember Oil (fire), Rime Oil (frost), Storm Oil (lightning), Seed Oil (nature), Rune Oil (arcane), Dawn Oil (holy), Breath Oil (wind) | `DREAM_OIL.rows` | — | live |
+| Elder Stone | Shop and upgrade NPC-object in the Vale hub; sells Dream Oil | `elderstone` | — | live |
 | Emerald | Nature gem | `emerald` | — | live |
 | Fire Bomb | Pocket bomb: throw a bomb that bursts into flame at your aim | `bomb` | — | M4a |
 | Gem | Socketable stone: Ruby, Sapphire, Emerald, Topaz, Amethyst, Diamond | `GEMS` | — | live |
 | Gem grade | Chipped, Clear, Radiant | `GEM_GRADES` | — | live |
 | Health Potion | Pocket potion: heal 40% of max HP | `potion` | — | live |
 | Mana Flask | Pocket flask: restore 50% of max MP | `flask` | — | M4a |
-| Opal | Wind gem (client-approved) | — | — | M4b |
+| Opal | Wind gem: armour speed, weapon wind damage, amp Wind skills | `opal` | — | live |
 | Pearl slot | Extra socket on a legendary, traded from the Elder Stone for a legendary fish | — | — | M4b |
 | Pocket item | Consumable placed in a Pocket (flasks, bombs, traps, oils) | — | — | M4a |
 | Potion | Healing flask held in a Pocket; max 3 | `MAX_POTIONS` | — | live |
@@ -766,7 +767,7 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
 | Bramblehorn's Clearing | Boss arena in Pinewood | — | — | live |
-| Brazier | Lightable world object | — | — | live |
+| Brazier | Lightable world object; with a `state` it is a Receiver, and a lit one is a fire World source | `brazier` | — | live |
 | Broken Stair | Ruins set piece | — | — | M4b |
 | Checkpoint shrine | Respawn and warp point | `shrine` | — | live |
 | Dream Arena | Vale section reached by bridge | — | — | live |
@@ -806,19 +807,38 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 ## 17. World objects and verbs
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
-| Condition | World verb: object test (e.g. Wet, burning) | — | — | M4b |
+| Bramble | Receiver: thorny bush that blocks a path; fire burns it away | `bramble` | — | live |
+| Condition | World verb: trigger test on a Receiver, its state or an element hit | `object_state`, `element_hit` | — | live |
+| Conduit | Receiver: lightning makes it live for 10 s and chains to conduits nearby | `conduit` | — | live |
+| Crystal wall | Receiver: frost rimes it, then a physical hit shatters it | `crystal_wall` | — | live |
+| Dawn shrine | Checkpoint shrine that is a holy World source: Rest there to give Pip a holy charge | `dawn` | — | live |
+| Dry grass | Tiles that a Grass fire can burn; set per map by `grass` rects | `drygrass` | — | live |
 | Fishing spot | Dreamfishing point | — | — | live |
+| Fog bank | Receiver: wind clears it | `fogbank` | — | live |
 | Gate | Door opened by a switch | — | — | live |
+| Glyph | Receiver: floor rune that arcane lights | `glyph` | — | live |
+| Grass fire | Fire spreading over Dry grass: 0.4 s a tile, at most 16 tiles, one per map; never hurts the hero | `ignite` | Wildfire (that is a reaction) | live |
 | Hidden wall | Wall revealed by an element | — | — | live |
+| Ice wall | Receiver: fire melts it (needs a double build) | `icewall` | — | live |
 | Key door | Door needing a key | — | — | live |
 | Lever | Switch object | — | — | live |
 | Lore tablet | Readable stone with lore | — | — | live |
-| Receiver | World verb: object that reacts to an element | — | — | M4b |
-| State | World verb: object's current phase | — | — | M4b |
+| Pip's charge | Pip carries a World source's element to the nearest Receiver within 8 tiles; lasts 30 s | `EW.take` | — | live |
+| Raft | Receiver: wind drifts it across water to its mooring | `raft` | — | live |
+| Receiver | World verb: object that reacts to an element | `RX` | — | live |
+| Rime crystal | Receiver and frost World source; spent for 20 s after Pip takes its charge | `rime_crystal` | — | live |
+| Seal | Receiver: holy breaks it | `seal` | — | live |
+| Seed | Receiver: nature grows it into a vine bridge over water | `seed` | — | live |
+| State | World verb: object's current phase; lasting or transient | `setState` | — | live |
+| Storm crystal | Receiver and lightning World source; spent for 20 s after Pip takes its charge | `storm_crystal` | — | live |
 | Sunbeam | Light object | — | — | live |
-| Tile patch | World verb: tile changes (ice, grass) | — | — | M4b |
+| Tile patch | World verb: timed tile change (dry grass, burning, scorch, ice, rime, obsidian, vine, raft) | `tilePatch` | — | live |
+| Torch | Receiver: fire lights it | `torch` | — | live |
 | Treasure chest | Loot chest; tiers wood, silver, gold | — | — | live |
+| Vent | Receiver: frost caps it and leaves an obsidian patch | `vent` | — | live |
 | Warp door | Door into a section or dungeon | — | Rift; portal | live |
+| Windmill | Receiver: wind spins it for 12 s, and it gusts a wind zone | `windmill` | — | live |
+| World source | Object Pip can take an element from: lit brazier (fire), rime crystal, storm crystal, Dawn shrine | `source` | — | live |
 
 ## 18. UI terms
 | Term | Meaning | Code id | Not | Status |
