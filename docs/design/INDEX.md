@@ -2,7 +2,7 @@
 
 Current truth only, one system per file, at most 150 lines each (`names.md` is exempt). Read your lane's files, not all of them.
 Canonical names: [../GLOSSARY.md](../GLOSSARY.md). Lanes and rulings: [../PRODUCTION.md](../PRODUCTION.md). Port contract: [../PORTING.md](../PORTING.md).
-Lanes: Forge, Loadout, Lighting, Wind, Gear art (A suits, B weapons), Enemy forge, Arenas, Export, Balance and QA, Docs.
+Lanes: Forge, Loadout, Lighting, Wind, Gear art (A suits, B weapons), Enemy forge, Arenas, Export, Elements (the `verbs` arena), Balance and QA, Docs.
 
 | File | Covers | Read by |
 |---|---|---|
