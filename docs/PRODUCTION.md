@@ -59,7 +59,8 @@ The studio rewrites the game code in GDScript and hands the client a **playable 
 GL Compatibility, web export). Contract: `docs/PORTING.md` (folder tree, autoloads, what ports 1:1, trigger vocabulary).
 * **When:** after M9. Systems, tables and art are frozen by then, so nothing is ported twice. The risk is found early by the
   **port spike** in M5: hero movement, one weapon line's hand action and spell, damage and one status ladder, one enemy
-  (Ogre) in `godot-sample/`, matched against golden vectors from the JS build.
+  (Ogre) in `godot-sample/`, matched against golden vectors from the JS build; plus a web-build stress scene (24 bodies,
+  40 `Light2D`s) on a phone, because Godot web lighting cost is the port's biggest unknown.
 * **Data, not code:** every number is read from the exported JSON (`handoff/data/`); GDScript holds only the maths.
 * **Arenas only:** the studio rebuilds the mockup arenas as Godot scenes (`godot/arenas/`, the same ids as `js/arenas.js`)
   to test the port. It never makes zones: the client builds them in `godot/zones/`, which no lane touches.
