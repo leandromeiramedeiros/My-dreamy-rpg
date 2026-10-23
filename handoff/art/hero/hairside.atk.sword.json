@@ -1,0 +1,86 @@
+{
+ "unit": "hairside",
+ "sheet": "atk.sword",
+ "images": {
+  "color": "hairside.atk.sword.png",
+  "depth": "hairside.atk.sword_z.png",
+  "normal": "hairside.atk.sword_n.png"
+ },
+ "slot": "hair",
+ "tier": null,
+ "class": null,
+ "hides": [],
+ "tag": "hairSide",
+ "group": "hair",
+ "own": false,
+ "depth": {
+  "image": "hairside.atk.sword_z.png",
+  "scale": 0.16666666666666666,
+  "unit": "px",
+  "offset": 128,
+  "default": {
+   "S": 190,
+   "SE": 169,
+   "E": 149,
+   "NE": 150,
+   "N": 153,
+   "NW": 174,
+   "W": 161,
+   "SW": 191
+  },
+  "about": "grey v = depth (v - offset) * scale px towards the camera from the rig root (higher = nearer); alpha 0 = unpainted: use default[dir] (the median depth of this sheet's covered pixels in that direction); 0 = behind every other layer (outline, rear smear); 255 = in front (front smear)"
+ },
+ "shade": {
+  "#382136": "#382136",
+  "#523048": "#382136",
+  "#6b4058": "#382136",
+  "#995f74": "#382136"
+ },
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  6,
+  8
+ ],
+ "anims": {
+  "attack": {
+   "from": 0,
+   "count": 6,
+   "ms": [
+    100,
+    50,
+    50,
+    50,
+    100,
+    50
+   ],
+   "loop": false
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl"
+}

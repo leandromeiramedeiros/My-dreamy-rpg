@@ -2,27 +2,39 @@
  "unit": "hair",
  "sheet": "core",
  "images": {
-  "front": "hair_front.png",
-  "back": "hair_back.png",
+  "color": "hair.png",
+  "depth": "hair_z.png",
   "normal": "hair_n.png"
  },
- "layer": "hair",
- "zorder": {
-  "S": 50,
-  "SE": 46,
-  "E": 46,
-  "NE": 49,
-  "N": 49,
-  "NW": 49,
-  "W": 49,
-  "SW": 43
- },
- "hides": [],
  "slot": "hair",
+ "tier": null,
  "class": null,
- "split": {
-  "rule": "front = pixels where body + this unit differs from the body alone; back = this unit's own pixels hidden behind the body",
-  "body_pixels_lost": 0
+ "hides": [],
+ "tag": "hair",
+ "group": "hair",
+ "own": false,
+ "depth": {
+  "image": "hair_z.png",
+  "scale": 0.16666666666666666,
+  "unit": "px",
+  "offset": 128,
+  "default": {
+   "S": 197,
+   "SE": 198,
+   "E": 199,
+   "NE": 196,
+   "N": 194,
+   "NW": 196,
+   "W": 199,
+   "SW": 198
+  },
+  "about": "grey v = depth (v - offset) * scale px towards the camera from the rig root (higher = nearer); alpha 0 = unpainted: use default[dir] (the median depth of this sheet's covered pixels in that direction); 0 = behind every other layer (outline, rear smear); 255 = in front (front smear)"
+ },
+ "shade": {
+  "#382136": "#382136",
+  "#523048": "#382136",
+  "#6b4058": "#382136",
+  "#995f74": "#382136"
  },
  "rig": "chibi",
  "cell": [

@@ -825,7 +825,21 @@ const FORGE = (function () {
     for (let i = 0; i < N; i++) fine[i] = RS.M[i] >= 0 && RS.KP[i] ? 1 : 0;     // drawn by a fine material (the lint skips it)
     const out = { w: cam.w, h: cam.h, rgba, fine, sockets, anim };
     if (opt.normals) out.nrm = normalMap(list, rgba, N);
+    if (opt.depth) out.depth = depthOf(N, ro, stack, list);
     return out;
+  }
+  // export-only (tools/export/art.js depth sheets; off = the same bytes as before): the resolved frame's per-pixel depth
+  // and what drew each pixel. z = the winning layer's dq (1..255, 1/6 px steps, 128 = the root; 0 where no layer won);
+  // kind: 0 nothing, 1 a covered pixel, 2 an outline pixel (outer outline or pinhole), 3 a smear pixel; smearOver: the
+  // frame's smear draws over the body (tip in front); shade: [rgbKey, rgbKey of its material's shadow tone] for every tone
+  // of every non-flat material of the stack (stage B's seam colour, no innerColor)
+  function depthOf(N, ro, stack, list) {
+    const z = new Uint8Array(N), kind = new Uint8Array(N), shade = [];
+    for (let i = 0; i < N; i++) {
+      if (RS.SM[i]) kind[i] = 3; else if (RS.M[i] >= 0) { z[i] = RS.Z[i] > 0 ? RS.Z[i] : 0; kind[i] = 1; } else if (RS.OL[i]) kind[i] = 2;
+    }
+    stack.forEach((a, l) => { const mt = matTable(a.layer); list[l].pal.forEach((tones, m) => { if (mt.list[m].flat == null) for (const c of tones) shade.push([rgbKey(c), rgbKey(tones[0])]); }); });
+    return { z, kind, smearOver: !!(ro.smears && ro.smears.some(s => s.over)), shade };
   }
   // opt-in normal map of a resolved frame (RGBA8, x right / y up / z out mapped to 0..255, alpha = the colour's alpha): the
   // winning layer's smooth normal per pixel; outline and seam pixels with no winner get a flat (0, 0, 1)
@@ -875,17 +889,25 @@ const FORGE = (function () {
     }
     const SW = w * layout.length, SH = h * dirs.length, rgba = new Uint8ClampedArray(SW * SH * 4), fine = new Uint8Array(SW * SH), sockets = {};
     const nrm = opt.normals ? new Uint8ClampedArray(SW * SH * 4) : null;   // opt-in: the normal sheet, same grid
+    // export-only opt-in { depth: true }: .depth = { z, kind (per pixel, see depthOf), smearOver[row][col], shade: Map }
+    const dep = opt.depth ? { z: new Uint8Array(SW * SH), kind: new Uint8Array(SW * SH), smearOver: dirs.map(() => []), shade: new Map() } : null;
     dirs.forEach(([dn], r) => {
       sockets[dn] = {};
       layout.forEach(([a, f], c) => {
-        const fr = render(model, nrm ? { dir: dn, anim: a, frame: f, pieces: opt.pieces, normals: true } : { dir: dn, anim: a, frame: f, pieces: opt.pieces });
+        const fr = render(model, { dir: dn, anim: a, frame: f, pieces: opt.pieces, ...(nrm ? { normals: true } : {}), ...(dep ? { depth: true } : {}) });
         for (let y = 0; y < h; y++) { rgba.set(fr.rgba.subarray(y * w * 4, (y + 1) * w * 4), ((r * h + y) * SW + c * w) * 4); fine.set(fr.fine.subarray(y * w, (y + 1) * w), (r * h + y) * SW + c * w); }
         if (nrm) for (let y = 0; y < h; y++) nrm.set(fr.nrm.subarray(y * w * 4, (y + 1) * w * 4), ((r * h + y) * SW + c * w) * 4);
+        if (dep) {
+          for (let y = 0; y < h; y++) { dep.z.set(fr.depth.z.subarray(y * w, (y + 1) * w), (r * h + y) * SW + c * w); dep.kind.set(fr.depth.kind.subarray(y * w, (y + 1) * w), (r * h + y) * SW + c * w); }
+          dep.smearOver[r][c] = fr.depth.smearOver;
+          for (const [k, v] of fr.depth.shade) if (!dep.shade.has(k)) dep.shade.set(k, v);
+        }
         (sockets[dn][a] = sockets[dn][a] || [])[f] = fr.sockets;
       });
     });
     const out = { w: SW, h: SH, rgba, fine, cols: layout.length, rows: dirs.length, layout, frame: [w, h], sockets };
     if (nrm) out.nrm = nrm;
+    if (dep) out.depth = dep;
     return out;
   }
 

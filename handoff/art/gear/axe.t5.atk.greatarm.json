@@ -1,0 +1,477 @@
+{
+ "unit": "axe.t5",
+ "sheet": "atk.greatarm",
+ "images": {
+  "color": "axe.t5.atk.greatarm.png",
+  "depth": "axe.t5.atk.greatarm_z.png"
+ },
+ "slot": "weapon",
+ "tier": 5,
+ "class": "greatarm",
+ "hides": [],
+ "tag": null,
+ "group": "axe.t5",
+ "own": true,
+ "depth": {
+  "image": "axe.t5.atk.greatarm_z.png",
+  "scale": 0.16666666666666666,
+  "unit": "px",
+  "offset": 128,
+  "default": {
+   "S": 172,
+   "SE": 173,
+   "E": 162,
+   "NE": 132,
+   "N": 115,
+   "NW": 122,
+   "W": 145,
+   "SW": 160
+  },
+  "about": "grey v = depth (v - offset) * scale px towards the camera from the rig root (higher = nearer); alpha 0 = unpainted: use default[dir] (the median depth of this sheet's covered pixels in that direction); 0 = behind every other layer (outline, rear smear); 255 = in front (front smear)"
+ },
+ "shade": {
+  "#0a3a20": "#0a3a20",
+  "#0c2470": "#0c2470",
+  "#1c8a44": "#0a3a20",
+  "#1e2440": "#1e2440",
+  "#1e4ccc": "#0c2470",
+  "#2a2842": "#2a2842",
+  "#3a2216": "#3a2216",
+  "#3a4672": "#1e2440",
+  "#40d878": "#0a3a20",
+  "#4a8cff": "#0c2470",
+  "#535478": "#2a2842",
+  "#5a3608": "#5a3608",
+  "#5e3a24": "#3a2216",
+  "#6878ae": "#1e2440",
+  "#85573a": "#3a2216",
+  "#8b8fb8": "#2a2842",
+  "#9a6414": "#5a3608",
+  "#b07e56": "#3a2216",
+  "#b0bfe8": "#1e2440",
+  "#b4f8c0": "#0a3a20",
+  "#b8dcff": "#0c2470",
+  "#cfd4ec": "#2a2842",
+  "#d8a030": "#5a3608",
+  "#f0c858": "#5a3608",
+  "#fff4c0": "#5a3608",
+  "#ffffff": "#2a2842"
+ },
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  6,
+  8
+ ],
+ "anims": {
+  "attack": {
+   "from": 0,
+   "count": 6,
+   "ms": [
+    250,
+    50,
+    50,
+    50,
+    150,
+    70
+   ],
+   "loop": false
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl",
+ "sockets": {
+  "S": {
+   "attack": [
+    {
+     "tip": {
+      "x": 24.6,
+      "y": 19.9,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 25.1,
+      "y": 32.9,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 24.4,
+      "y": 45.9,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 24.1,
+      "y": 53.7,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 24.1,
+      "y": 54,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 24.4,
+      "y": 39.7,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SE": {
+   "attack": [
+    {
+     "tip": {
+      "x": 19.9,
+      "y": 21.4,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 33.3,
+      "y": 31.7,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 37.5,
+      "y": 44,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 34.3,
+      "y": 52.4,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 33.1,
+      "y": 53,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 35.7,
+      "y": 38.1,
+      "front": true
+     }
+    }
+   ]
+  },
+  "E": {
+   "attack": [
+    {
+     "tip": {
+      "x": 18.8,
+      "y": 24,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 37.2,
+      "y": 28.1,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 43.8,
+      "y": 38.3,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 39.7,
+      "y": 48.2,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 37.9,
+      "y": 49.3,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 41.4,
+      "y": 33.2,
+      "front": true
+     }
+    }
+   ]
+  },
+  "NE": {
+   "attack": [
+    {
+     "tip": {
+      "x": 21.9,
+      "y": 26.2,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 34.6,
+      "y": 24.2,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 39.7,
+      "y": 32.1,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 37,
+      "y": 43.4,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 35.7,
+      "y": 45.1,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 38.1,
+      "y": 27.9,
+      "front": false
+     }
+    }
+   ]
+  },
+  "N": {
+   "attack": [
+    {
+     "tip": {
+      "x": 27.4,
+      "y": 26.7,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 26.9,
+      "y": 22.4,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 27.6,
+      "y": 29.2,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 27.9,
+      "y": 40.8,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 27.9,
+      "y": 42.8,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 27.6,
+      "y": 25.2,
+      "front": false
+     }
+    }
+   ]
+  },
+  "NW": {
+   "attack": [
+    {
+     "tip": {
+      "x": 32.1,
+      "y": 25.2,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 18.7,
+      "y": 23.6,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 14.5,
+      "y": 31.1,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 17.7,
+      "y": 42.1,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 18.9,
+      "y": 43.9,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 16.3,
+      "y": 26.8,
+      "front": false
+     }
+    }
+   ]
+  },
+  "W": {
+   "attack": [
+    {
+     "tip": {
+      "x": 33.2,
+      "y": 22.6,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 14.8,
+      "y": 27.2,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 8.2,
+      "y": 36.8,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 12.3,
+      "y": 46.4,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 14.1,
+      "y": 47.5,
+      "front": false
+     }
+    },
+    {
+     "tip": {
+      "x": 10.6,
+      "y": 31.7,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SW": {
+   "attack": [
+    {
+     "tip": {
+      "x": 30.1,
+      "y": 20.4,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 17.4,
+      "y": 31.1,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 12.3,
+      "y": 42.9,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 15,
+      "y": 51.2,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 16.3,
+      "y": 51.8,
+      "front": true
+     }
+    },
+    {
+     "tip": {
+      "x": 13.9,
+      "y": 37,
+      "front": true
+     }
+    }
+   ]
+  }
+ }
+}

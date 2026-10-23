@@ -1,0 +1,130 @@
+{
+ "unit": "hairside",
+ "sheet": "core",
+ "images": {
+  "color": "hairside.png",
+  "depth": "hairside_z.png",
+  "normal": "hairside_n.png"
+ },
+ "slot": "hair",
+ "tier": null,
+ "class": null,
+ "hides": [],
+ "tag": "hairSide",
+ "group": "hair",
+ "own": false,
+ "depth": {
+  "image": "hairside_z.png",
+  "scale": 0.16666666666666666,
+  "unit": "px",
+  "offset": 128,
+  "default": {
+   "S": 184,
+   "SE": 173,
+   "E": 159,
+   "NE": 165,
+   "N": 161,
+   "NW": 164,
+   "W": 159,
+   "SW": 173
+  },
+  "about": "grey v = depth (v - offset) * scale px towards the camera from the rig root (higher = nearer); alpha 0 = unpainted: use default[dir] (the median depth of this sheet's covered pixels in that direction); 0 = behind every other layer (outline, rear smear); 255 = in front (front smear)"
+ },
+ "shade": {
+  "#382136": "#382136",
+  "#523048": "#382136",
+  "#6b4058": "#382136",
+  "#995f74": "#382136"
+ },
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  19,
+  8
+ ],
+ "anims": {
+  "idle": {
+   "from": 0,
+   "count": 6,
+   "ms": [
+    200,
+    200,
+    400,
+    200,
+    200,
+    400
+   ],
+   "loop": true
+  },
+  "walk": {
+   "from": 6,
+   "count": 6,
+   "ms": [
+    100,
+    100,
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": true
+  },
+  "cast": {
+   "from": 12,
+   "count": 4,
+   "ms": [
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  },
+  "dash": {
+   "from": 16,
+   "count": 2,
+   "ms": [
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  },
+  "hit": {
+   "from": 18,
+   "count": 1,
+   "ms": [
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl"
+}

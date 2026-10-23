@@ -26,7 +26,7 @@ async function main() {
   if (parts.has('tiles')) log.push(`tiles: ${zones.length} zones`);
   if (parts.has('props')) { const r = await require('./props.js').exportProps(STAGE); staged.push(...r.files); log.push(`props: ${r.props} props, ${r.trees} trees`); }
   let forgePal = null;
-  if (parts.has('art')) { const r = require('./art.js').exportArt(STAGE, { normalsGear: a.includes('--normals-gear') }); staged.push(...r.files); forgePal = r.pal; log.push(`art: ${r.stats.sheets} sheets, ${r.stats.images} PNGs`); }
+  if (parts.has('art')) { const r = await require('./art.js').exportArt(STAGE, { normalsGear: a.includes('--normals-gear') }); staged.push(...r.files); forgePal = r.pal; const s = r.stats; log.push(`art: ${s.units} units, ${s.sheets} sheets, ${s.images} PNGs (depth dq ${s.dqMin}..${s.dqMax}, ${s.clamp} of ${s.covered} covered px at the clamp ends 1 / 255; shade map max ${s.shadeMax})`); }
   if (parts.has('palettes') || forgePal) staged.push(...require('./palettes.js').writePalettes(STAGE, zones, forgePal));
   // ---- sync under the manifest rule
   const man = fs.existsSync(MANIFEST) ? JSON.parse(fs.readFileSync(MANIFEST, 'utf8')) : { files: {} };
