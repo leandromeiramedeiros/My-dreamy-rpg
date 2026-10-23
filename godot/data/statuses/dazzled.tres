@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_bov2w"]
+
+[resource]
+script = ExtResource("1_bov2w")
+id = &"dazzled"
+display_name = "Dazzled"
+element = "holy"
+tier = 2
+duration = 1.5
+reacts_with = PackedStringArray()
+tint_alpha = 0.32
+motif_rate = 2.0
+socket = "head"
+light_color = Color(1, 0.9490196, 0.76862746, 1)
+light_radius = 20.0
+light_alpha = 0.25
+light_mode = "flicker"

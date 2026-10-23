@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/shadehound.tres" id="1_2kv7j"]
+[ext_resource type="Resource" path="res://data/loot/common_pinewood.tres" id="2_fyy6u"]
+[ext_resource type="Texture2D" path="res://art/enemies/shadehound_n.png" id="3_xmstb"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4_jhr0u"]
+
+[resource]
+script = ExtResource("4_jhr0u")
+id = &"thornbackboar"
+display_name = "Thornback Boar"
+hp = 375.0
+speed = 2.6
+damage = 56.0
+element = "nature"
+damage_type = "pierce"
+stagger = 3.0
+resists = Dictionary[StringName, float]({
+&"fire": -0.5,
+&"nature": 0.5,
+&"slash": 0.5
+})
+tags = PackedStringArray("beast", "armoured")
+xp = 0.14
+movement = "burrow"
+attacks = PackedStringArray("brute")
+part_params = {
+"brute": {
+"r": 1.8,
+"range": 1.6,
+"shape": "cone"
+},
+"burrow": {
+"erupt": {
+"r": 2.0,
+"shape": "circle"
+},
+"staggerOnSurface": true,
+"vanish": 1.5
+}
+}
+loot = ExtResource("2_fyy6u")
+frames = ExtResource("1_2kv7j")
+normal_map = ExtResource("3_xmstb")
+scale = 1.25
+blood = Color(0.78039217, 0.65882355, 1, 1)
+origin = Vector2(36, 47)
+todo = "Behaviour: parts [\"burrow\",\"brute\"] run by parts.js (part runtime); the Bestiary lane makes them components."

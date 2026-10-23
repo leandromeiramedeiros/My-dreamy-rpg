@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_e3o34"]
+
+[resource]
+script = ExtResource("1_e3o34")
+id = &"warn_vanish"
+priority = 3
+caption = "[boss vanishes]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 3000.0,
+"f1": 300.0,
+"filter": {
+"freq": 1500.0,
+"q": 1.0,
+"type": "bandpass"
+},
+"gain": 0.07,
+"osc": "noise"
+}]
+}

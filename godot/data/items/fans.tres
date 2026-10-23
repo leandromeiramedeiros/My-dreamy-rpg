@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/fans_action.tres" id="1_p34sw"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_05nlq"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_cjcqf"]
+[ext_resource type="Resource" path="res://data/skills/veildance.tres" id="4_iqggr"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_abpiu"]
+[ext_resource type="Resource" path="res://data/skills/thousandpetals.tres" id="6_gs1jy"]
+
+[sub_resource type="Resource" id="Resource_6kt7g"]
+script = ExtResource("5_abpiu")
+base_id = &"paperfans"
+display_name = "Paper Fans"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_nht38"]
+script = ExtResource("5_abpiu")
+base_id = &"moonfans"
+display_name = "Moonfans"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_4q7n0"]
+script = ExtResource("5_abpiu")
+base_id = &"silverplume"
+display_name = "Silverplume"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_g7tw7"]
+script = ExtResource("5_abpiu")
+base_id = &"eclipsefans"
+display_name = "Eclipse Fans"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_kysp6"]
+script = ExtResource("5_abpiu")
+base_id = &"fanseternal"
+display_name = "Fans Eternal"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_cjcqf")
+id = &"fans"
+display_name = "Fans"
+description = "Paper and moonlight. Every hit leaves a Mark, and each Mark slows by 10 %."
+item_class = &"shadows"
+element = "slash"
+tiers = Array[ExtResource("5_abpiu")]([SubResource("Resource_6kt7g"), SubResource("Resource_nht38"), SubResource("Resource_4q7n0"), SubResource("Resource_g7tw7"), SubResource("Resource_kysp6")])
+action = ExtResource("1_p34sw")
+spell = ExtResource("4_iqggr")
+ultimate = ExtResource("6_gs1jy")
+mp_on_hit = 6.0
+stats = Dictionary[StringName, float]({
+&"dmg": 27.0
+})
+flags = {
+"kind": "daggers",
+"markAll": true,
+"off_action": "step"
+}
+color = Color(1, 0.78431374, 0.9098039, 1)
+todo = "Line name (T2 base): Moonfans. Class passive: Backstab: +30% crit from the rear arc; Marks. Off-action in OFFHAND: step."

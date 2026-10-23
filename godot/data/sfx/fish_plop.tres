@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_c4ul5"]
+
+[resource]
+script = ExtResource("1_c4ul5")
+id = &"fish_plop"
+pitch_vary = 0.03
+recipe = {
+"layers": [{
+"dur": 0.15,
+"f0": 500.0,
+"f1": 180.0,
+"gain": 0.07,
+"osc": "sine"
+}]
+}

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="GemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/gem_data.gd" id="1_rkuod"]
+
+[resource]
+script = ExtResource("1_rkuod")
+id = &"emerald"
+display_name = "Emerald"
+color = Color(0.22745098, 0.8392157, 0.47843137, 1)
+element = "nature"
+grade_names = PackedStringArray("Chipped", "Clear", "Radiant")
+armour_stats = Array[Dictionary]([{
+"regen": 1.0,
+"resNature": 0.02
+}, {
+"regen": 3.5,
+"resNature": 0.04
+}, {
+"regen": 7.0,
+"resNature": 0.07
+}])
+weapon_stats = Array[Dictionary]([{
+"haste": 0.03
+}, {
+"haste": 0.06
+}, {
+"haste": 0.1
+}])
+amp = "Nature skills, heals"

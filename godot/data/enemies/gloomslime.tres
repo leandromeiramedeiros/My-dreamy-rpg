@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Resource" path="res://data/loot/common_pinewood.tres" id="1_brhkp"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="2_hwf43"]
+
+[resource]
+script = ExtResource("2_hwf43")
+id = &"gloomslime"
+display_name = "Gloom Slime"
+hp = 520.0
+speed = 2.2
+damage = 32.0
+element = "gloom"
+damage_type = "gloom"
+stagger = 2.0
+resists = Dictionary[StringName, float]({
+&"pierce": 0.25,
+&"slash": -0.5
+})
+tags = PackedStringArray("amorphous", "gloom")
+xp = 0.12
+attacks = PackedStringArray("brute")
+support = &"split"
+part_params = {
+"brute": {
+"cd": 1.1,
+"r": 1.15,
+"range": 1.0,
+"rec": 0.4,
+"shape": "circle",
+"splat": true,
+"stopK": 0.8,
+"wind": 0.55
+},
+"chase": {
+"hop": 1.8
+},
+"split": {
+"n": 2.0,
+"type": "gloomslime_small"
+}
+}
+loot = ExtResource("1_brhkp")
+blood = Color(0.78039217, 0.65882355, 1, 1)
+todo = "Behaviour: parts [\"chase\",\"brute\",\"split\"] run by parts.js (part runtime); the Bestiary lane makes them components.
+Look: JS draws \"slime\"; no sheet yet.
+No forge sheet in handoff/art/enemies yet."

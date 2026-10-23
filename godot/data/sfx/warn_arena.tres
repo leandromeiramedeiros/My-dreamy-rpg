@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_gi4ep"]
+
+[resource]
+script = ExtResource("1_gi4ep")
+id = &"warn_arena"
+priority = 3
+caption = "[arena shifting]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 120.0,
+"f1": 60.0,
+"filter": {
+"freq": 400.0,
+"q": 1.0,
+"type": "lowpass"
+},
+"gain": 0.1,
+"osc": "sine"
+}]
+}

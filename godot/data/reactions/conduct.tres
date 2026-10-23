@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ReactionData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/reaction_data.gd" id="1_bolt5"]
+
+[resource]
+script = ExtResource("1_bolt5")
+id = &"conduct"
+display_name = "Conduct"
+trigger_elements = PackedStringArray("lightning")
+on_statuses = PackedStringArray("chilled", "wet")
+damage_type = &"lightning"
+effect_text = "Lightning on Chilled or Wet: Shock jumps to nearby Chilled or Wet bodies."
+todo = "No JS implementation (design only, elements-statuses.md); the Status lane builds it."

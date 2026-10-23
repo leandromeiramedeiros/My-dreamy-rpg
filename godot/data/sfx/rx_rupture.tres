@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_2pkbf"]
+
+[resource]
+script = ExtResource("1_2pkbf")
+id = &"rx_rupture"
+pitch_vary = 0.03
+priority = 3
+caption = "[rupture reaction]"
+recipe = {
+"layers": [{
+"dur": 0.4,
+"f0": 70.0,
+"f1": 40.0,
+"gain": 0.16,
+"osc": "sine"
+}, {
+"delay": 0.1,
+"dur": 0.08,
+"f0": 2000.0,
+"f1": 2000.0,
+"gain": 0.05,
+"osc": "sine"
+}]
+}

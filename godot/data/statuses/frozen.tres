@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Resource" path="res://data/statuses/numb.tres" id="1_i3l4q"]
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="2_ivvyv"]
+
+[resource]
+script = ExtResource("2_ivvyv")
+id = &"frozen"
+display_name = "Frozen"
+element = "frost"
+tier = 2
+duration = 1.0
+boss_duration = 0.25
+hero_variant = ExtResource("1_i3l4q")
+reacts_with = PackedStringArray("fire", "slash", "pierce")
+rule = "Never twice in 8 s."
+tint = Color(0.7490196, 0.95686275, 1, 1)
+tint_alpha = 0.45
+overlay = &"ice"
+overlay_alpha = 0.75
+socket = "head"
+pose = "still"
+light_color = Color(0.62352943, 0.9098039, 1, 1)
+light_radius = 16.0
+light_alpha = 0.2
+light_mode = "cool"

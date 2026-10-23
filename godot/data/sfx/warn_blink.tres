@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_yghjo"]
+
+[resource]
+script = ExtResource("1_yghjo")
+id = &"warn_blink"
+priority = 3
+caption = "[boss blink]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 1600.0,
+"f1": 2400.0,
+"gain": 0.05,
+"osc": "sine"
+}]
+}

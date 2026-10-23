@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_c56cu"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_htq54"]
+
+[sub_resource type="Resource" id="Resource_01nlq"]
+script = ExtResource("2_htq54")
+display_name = "Smoldering"
+roll = Vector2(0.04, 0.06)
+
+[sub_resource type="Resource" id="Resource_y7s5k"]
+script = ExtResource("2_htq54")
+display_name = "Blazing"
+roll = Vector2(0.08, 0.1)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_craof"]
+script = ExtResource("2_htq54")
+display_name = "Searing"
+roll = Vector2(0.12, 0.15)
+item_level = 28
+
+[resource]
+script = ExtResource("1_c56cu")
+id = &"fireDmg"
+tiers = Array[ExtResource("2_htq54")]([SubResource("Resource_01nlq"), SubResource("Resource_y7s5k"), SubResource("Resource_craof")])

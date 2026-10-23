@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_dj8wv"]
+[ext_resource type="Script" path="res://scripts/data/projectile_block.gd" id="2_nwlgw"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_r7ec4"]
+
+[sub_resource type="Resource" id="Resource_b06v0"]
+script = ExtResource("2_nwlgw")
+speed = 13.0
+radius = 0.35
+life = 0.9
+color = Color(0.90588236, 0.93333334, 1, 1)
+damage = 40.0
+hit_params = {
+"bounce": 5.0,
+"zap": 30.0
+}
+
+[resource]
+script = ExtResource("3_r7ec4")
+id = &"ricochet"
+display_name = "Ricochet"
+description = "A disc that bounces between foes: 4 hits (6 with the Lodestar grip)."
+element = "slash"
+cooldown = 3.0
+mp_cost = 18.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_dj8wv")]([SubResource("Resource_b06v0")])
+aim_shape = "proj"
+aim_range = 10.0
+aim_width = 0.35
+color = Color(0.90588236, 0.93333334, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) { castAnim(p, 0.15); const lode = p.grip === 'grip_lodestar'; spawnProj({ x: p.x, y: p.y, z: p.z + 1.4, ang: a, speed: 13, r: 0.35, dmg: 40, life: 0.9, kind: 'arcane', col: '#e7eeff', bounce: lode ? 5 : 3, zap: lode ? 30 : 0 }); sfx('swing'); }"

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_yjleg"]
+
+[resource]
+script = ExtResource("1_yjleg")
+id = &"fish_reel"
+pitch_vary = 0.03
+caption = "[reeling in]"
+recipe = {
+"layers": [{
+"dur": 0.6,
+"f0": 900.0,
+"f1": 1400.0,
+"filter": {
+"freq": 1200.0,
+"q": 3.0,
+"type": "bandpass"
+},
+"gain": 0.03,
+"osc": "square"
+}]
+}

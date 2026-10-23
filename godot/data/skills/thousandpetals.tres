@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_8gi73"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="2_ye5d3"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_syspm"]
+
+[sub_resource type="Resource" id="Resource_11fay"]
+script = ExtResource("2_ye5d3")
+radius = 3.0
+life = 3.0
+tick = 0.25
+follow = true
+color = Color(1, 0.78431374, 0.9098039, 1)
+damage = 30.0
+hit_params = {
+"kind": "petals",
+"marks": 1.0
+}
+
+[resource]
+script = ExtResource("3_syspm")
+id = &"thousandpetals"
+display_name = "Thousand Petals"
+description = "ULTIMATE — a storm of blade-petals wheels with you for 3 s, Marking all it cuts."
+element = "slash"
+kind = "ultimate"
+cooldown = 16.0
+mp_cost = 60.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_8gi73")]([SubResource("Resource_11fay")])
+aim_radius = 3.0
+hit_weight = 2.0
+color = Color(1, 0.78431374, 0.9098039, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { zone({ x: p.x, y: p.y, r: 3, life: 3, tick: 0.25, dmg: 30, marks: 1, col: '#ffc8e8', kind: 'petals', follow: true }); burst(p.x, p.y, p.z + 1, 30, ['#ffc8e8', '#ffffff'], 3); sfx('wave'); }"

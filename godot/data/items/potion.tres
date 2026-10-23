@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_0bv3h"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_3v7vl"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_53lbm"]
+
+[resource]
+script = ExtResource("2_3v7vl")
+id = &"potion"
+display_name = "Health Potion"
+description = "Heal 40% of max HP."
+kind = "consumable"
+slot = "pocket"
+hands = 0
+color = Color(1, 0.41568628, 0.5411765, 1)
+attack_pose = "none"
+todo = "Pocket consumable; its use is game.js usePocket (wave 2: a SkillData)."

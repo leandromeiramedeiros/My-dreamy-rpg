@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_x8qkx"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_32ap6"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_5agdw"]
+
+[sub_resource type="Resource" id="Resource_ef7tt"]
+script = ExtResource("3_5agdw")
+base_id = &"tidewovenclasp"
+display_name = "Tidewoven Clasp"
+required_level = 16
+
+[resource]
+script = ExtResource("2_32ap6")
+id = &"tidewovenclasp"
+display_name = "Tidewoven Clasp"
+description = "Zone skills follow you as you move."
+kind = "trinket"
+slot = "belt"
+hands = 0
+tiers = Array[ExtResource("3_5agdw")]([SubResource("Resource_ef7tt")])
+stats = Dictionary[StringName, float]({
+&"mpRegen": 0.5
+})
+flags = {
+"rule": {
+"zoneFollows": true
+}
+}
+attack_pose = "none"
+todo = "Unique rule (JS `rule`): {\"zoneFollows\":true}. Wave 2: an Effect."

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_tarq6"]
+
+[resource]
+script = ExtResource("1_tarq6")
+id = &"shatterRadius"
+display_name = "Wide Fracture"
+hint = "Shatter radius +1"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"shatterRadius": 2.0
+},
+"minor": {
+"shatterRadius": 1.0
+}
+}
+tags = PackedStringArray("reaction", "shatter")
+data_only = true
+todo = "Boon numbers: minor {\"shatterRadius\":1}, major {\"shatterRadius\":2}"

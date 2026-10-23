@@ -1,0 +1,164 @@
+[gd_resource type="Resource" script_class="BossData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/ogre.tres" id="1_aucey"]
+[ext_resource type="Resource" path="res://data/loot/boss_oathless.tres" id="2_821ls"]
+[ext_resource type="Script" path="res://scripts/data/boss_move.gd" id="3_sh82h"]
+[ext_resource type="Texture2D" path="res://art/enemies/ogre_n.png" id="4_gh321"]
+[ext_resource type="Script" path="res://scripts/data/boss_phase.gd" id="5_7wmpb"]
+[ext_resource type="Script" path="res://scripts/data/boss_data.gd" id="6_or40w"]
+
+[sub_resource type="Resource" id="Resource_t8b60"]
+script = ExtResource("3_sh82h")
+id = &"shieldWall"
+wind = 0.4
+cooldown = 0.6
+element = "gloom"
+params = {
+"arc": 150.0,
+"dur": 2.0,
+"mul": 0.1,
+"then": "shieldBash",
+"turn": 70.0
+}
+todo = "Move type \"shield\" runs in bosses.js BOSS_MOVES.shield (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_i2aeu"]
+script = ExtResource("3_sh82h")
+id = &"shieldBash"
+wind = 0.75
+open = 1.2
+cooldown = 0.8
+damage_pct = 0.16
+element = "gloom"
+params = {
+"arc": 100.0,
+"r": 2.6
+}
+todo = "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_4rvph"]
+script = ExtResource("3_sh82h")
+id = &"cleave"
+wind = 0.9
+open = 1.3
+hit = "big"
+damage_pct = 0.62
+range_band = "near"
+params = {
+"arc": 120.0,
+"r": 3.0
+}
+todo = "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_txttn"]
+script = ExtResource("3_sh82h")
+id = &"backswing"
+wind = 0.9
+open = 1.3
+damage_pct = 0.18
+params = {
+"arc": 120.0,
+"r": 3.2
+}
+todo = "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_kwtyv"]
+script = ExtResource("3_sh82h")
+id = &"volley"
+damage_pct = 0.05
+element = "gloom"
+params = {
+"col": "#c070ff",
+"delay": 0.7,
+"gap": 0.5,
+"life": 3.0,
+"n": 8.0,
+"rings": 3.0,
+"rot": 0.3,
+"scale": "none",
+"speed": 4.8
+}
+todo = "Move type \"volley\" runs in bosses.js BOSS_MOVES.volley (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_pmxgn"]
+script = ExtResource("3_sh82h")
+id = &"oathCharge"
+wind = 1.0
+open = 1.3
+hit = "big"
+damage_pct = 0.62
+range_band = "far"
+params = {
+"len": 7.0,
+"scale": "wind",
+"speed": 13.0,
+"w": 1.0
+}
+todo = "Move type \"charge\" runs in bosses.js BOSS_MOVES.charge (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_xpdhh"]
+script = ExtResource("5_7wmpb")
+moves = Dictionary[StringName, float]({
+&"cleave": 3.0,
+&"shieldWall": 2.0,
+&"volley": 2.0
+})
+cooldown_mul = 0.9
+
+[sub_resource type="Resource" id="Resource_a4t0p"]
+script = ExtResource("5_7wmpb")
+hp_below = 0.5
+moves = Dictionary[StringName, float]({
+&"cleave": 3.0,
+&"oathCharge": 2.5,
+&"shieldWall": 2.0,
+&"volley": 2.0
+})
+wind_mul = 0.85
+cooldown_mul = 0.65
+speed_mul = 1.2
+forms = {
+"cleave": {
+"open": 0.35,
+"then": "backswing"
+}
+}
+on_enter = Array[Dictionary]([{
+"banner": "The Oathless breaks its vow",
+"dur": 1.2,
+"type": "roar"
+}])
+
+[resource]
+script = ExtResource("6_or40w")
+level = 12
+zone = &"oathReliquary"
+stagger_max = 6.0
+moves = Array[ExtResource("3_sh82h")]([SubResource("Resource_t8b60"), SubResource("Resource_i2aeu"), SubResource("Resource_4rvph"), SubResource("Resource_txttn"), SubResource("Resource_kwtyv"), SubResource("Resource_pmxgn")])
+phases = Array[ExtResource("5_7wmpb")]([SubResource("Resource_xpdhh"), SubResource("Resource_a4t0p")])
+id = &"oathless"
+display_name = "The Oathless"
+hp = 11600.0
+speed = 1.7
+damage = 0.0
+radius = 0.85
+height = 4.6
+element = "gloom"
+damage_type = "gloom"
+resists = Dictionary[StringName, float]({
+&"arcane": 0.5,
+&"holy": -0.5,
+&"pierce": -0.5,
+&"wind": 0.5
+})
+tags = PackedStringArray("armoured", "gloom")
+xp = 0.5
+attacks = PackedStringArray()
+loot = ExtResource("2_821ls")
+frames = ExtResource("1_aucey")
+normal_map = ExtResource("4_gh321")
+scale = 1.7
+blood = Color(0.5411765, 0.47843137, 0.72156864, 1)
+origin = Vector2(40, 72)
+todo = "Boss AI: bosses.js (move picker, fairness floors, bars); the Bosses lane ports it.
+JS loot key: "

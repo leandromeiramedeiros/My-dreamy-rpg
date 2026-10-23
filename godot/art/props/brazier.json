@@ -1,0 +1,23 @@
+{
+ "id": "brazier",
+ "kind": "brazier",
+ "label": "Brazier",
+ "size": [
+  11,
+  10
+ ],
+ "origin": [
+  5.5,
+  9
+ ],
+ "collider_r": 0.3,
+ "shadow": 5,
+ "light": {
+  "r": 80,
+  "col": "#b36bff",
+  "a": 1,
+  "h": 12
+ },
+ "image": "brazier.png",
+ "frames": null
+}

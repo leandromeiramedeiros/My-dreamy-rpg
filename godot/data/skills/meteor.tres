@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_tjm3m"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="2_mwvc1"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_5qcdb"]
+
+[sub_resource type="Resource" id="Resource_6e7hm"]
+script = ExtResource("2_mwvc1")
+at = "target"
+cast_range = 7.0
+radius = 2.7
+delay = 0.9
+damage = 400.0
+knockback = 0.6
+hit_params = {
+"burn": 4.0
+}
+
+[resource]
+script = ExtResource("3_5qcdb")
+id = &"meteor"
+display_name = "Meteor"
+description = "ULTIMATE — call down a meteor. Massive area damage + burn."
+element = "fire"
+kind = "ultimate"
+cooldown = 18.0
+mp_cost = 70.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_tjm3m")]([SubResource("Resource_6e7hm")])
+aim_shape = "circle"
+aim_range = 7.0
+aim_radius = 2.7
+hit_weight = 2.0
+color = Color(1, 0.47843137, 0.2901961, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a, tx, ty) {
+      castAnim(p); [tx, ty] = targetIn(p, tx, ty, 7);
+      fx({ type: 'marker', x: tx, y: ty, r: 2.7, col: '#ff8a4a', life: 0.9 });
+      fx({ type: 'meteor', x: tx, y: ty, life: 0.9, col: '#ff9a4a' });
+      delay(0.9, () => { hitArea(tx, ty, 2.7, 400, { burn: 4, knock: 0.6 }); fx({ type: 'ring', x: tx, y: ty, r: 3, col: '#ffb070', life: 0.5 }); burst(tx, ty, 0, 60, ['#ffd27a', '#ff8a4a', '#ff4a3a', '#fff'], 7); shake(10); sfx('boom'); });
+    }"

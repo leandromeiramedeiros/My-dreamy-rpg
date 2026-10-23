@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="GripData" format=3]
+
+[ext_resource type="Resource" path="res://data/effects/grip_fletcher.tres" id="1_ebeo5"]
+[ext_resource type="Script" path="res://scripts/data/grip_data.gd" id="2_m3acg"]
+
+[resource]
+script = ExtResource("2_m3acg")
+id = &"grip_fletcher"
+display_name = "Fletcher"
+tags = PackedStringArray("bow", "quiver")
+hint = "A loosed arrow gains +40% crit chance."
+effect = ExtResource("1_ebeo5")

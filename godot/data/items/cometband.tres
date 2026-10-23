@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_oejsi"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_fivvn"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_0m4mm"]
+
+[sub_resource type="Resource" id="Resource_5n1jh"]
+script = ExtResource("3_0m4mm")
+base_id = &"cometband"
+display_name = "Comet Band"
+required_level = 16
+
+[resource]
+script = ExtResource("2_fivvn")
+id = &"cometband"
+display_name = "Comet Band"
+description = "Projectiles curve toward Marked enemies."
+kind = "trinket"
+slot = "ring"
+hands = 0
+tiers = Array[ExtResource("3_0m4mm")]([SubResource("Resource_5n1jh")])
+stats = Dictionary[StringName, float]({
+&"statusChance": 0.04
+})
+flags = {
+"rule": {
+"projCurveToMarked": true
+}
+}
+attack_pose = "none"
+todo = "Unique rule (JS `rule`): {\"projCurveToMarked\":true}. Wave 2: an Effect."

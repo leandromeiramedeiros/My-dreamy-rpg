@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_g2hl6"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_vubwo"]
+
+[sub_resource type="Resource" id="Resource_7av3i"]
+script = ExtResource("2_vubwo")
+display_name = "Lucid"
+roll = Vector2(0.8, 1.2)
+
+[sub_resource type="Resource" id="Resource_5fwsj"]
+script = ExtResource("2_vubwo")
+display_name = "Tranquil"
+roll = Vector2(1.6, 2.2)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_ev34l"]
+script = ExtResource("2_vubwo")
+display_name = "Serene"
+roll = Vector2(2.4, 3.2)
+item_level = 28
+
+[resource]
+script = ExtResource("1_g2hl6")
+id = &"mpRegen"
+kind = "suffix"
+tiers = Array[ExtResource("2_vubwo")]([SubResource("Resource_7av3i"), SubResource("Resource_5fwsj"), SubResource("Resource_ev34l")])

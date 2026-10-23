@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_uw81d"]
+[ext_resource type="Script" path="res://scripts/data/projectile_block.gd" id="2_0lyfp"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_i7cqt"]
+
+[sub_resource type="Resource" id="Resource_c7liy"]
+script = ExtResource("2_0lyfp")
+speed = 12.0
+life = 0.8
+count = 3
+spread = 25.21
+pierce = 1
+color = Color(0.7490196, 0.95686275, 1, 1)
+damage = 68.0
+hit_params = {
+"slow": 2.0
+}
+
+[resource]
+script = ExtResource("3_i7cqt")
+id = &"frostshard"
+display_name = "Frost Shards"
+description = "Fire three piercing shards that slow."
+element = "frost"
+cooldown = 3.0
+mp_cost = 20.0
+tags = PackedStringArray()
+decks = PackedStringArray("page")
+blocks = Array[ExtResource("1_uw81d")]([SubResource("Resource_c7liy")])
+aim_shape = "proj"
+aim_range = 9.6
+aim_width = 0.3
+color = Color(0.62352943, 0.9098039, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) { castAnim(p); for (const o of [-0.22, 0, 0.22]) spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a + o, speed: 12, r: 0.3, dmg: 68, life: 0.8, kind: 'frost', col: '#bff4ff', pierce: 1, slow: 2 }); sfx('frost'); }"

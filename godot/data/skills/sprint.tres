@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_3a4lo"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_oo4gc"]
+
+[resource]
+script = ExtResource("2_oo4gc")
+id = &"sprint"
+display_name = "Sprint"
+description = "BOOTS — +80% move speed for 3s and shake off slows."
+element = "nature"
+cooldown = 9.0
+stamina_cost = 30.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+color = Color(0.7529412, 0.5411765, 0.36862746, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { addBuff(p, 'sprint', 3); p.slowT = 0; burst(p.x, p.y, 0.2, 10, ['#ffffff', '#e7d6c0'], 2); sfx('dash'); }"

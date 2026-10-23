@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_butjy"]
+
+[resource]
+script = ExtResource("1_butjy")
+id = &"affix_onDodge"
+display_name = "onDodge"
+source = "affix"
+when_event = "dodge"
+if_tags = PackedStringArray()
+do_action = &"affix_onDodge"
+tags = PackedStringArray()
+todo = "JS:
+do: do(c, v, p) { healPlayer(p, p.maxHp * v); }"

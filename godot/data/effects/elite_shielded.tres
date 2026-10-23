@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_tt3fr"]
+
+[resource]
+script = ExtResource("1_tt3fr")
+id = &"elite_shielded"
+display_name = "Shielded"
+hint = "Elite modifier"
+source = "elite"
+if_tags = PackedStringArray()
+do_action = &"elite_shielded"
+do_params = {
+"color": "#cfe6ff",
+"damage_mult": 1.25,
+"hp_mult": 3.2,
+"rare": false
+}
+icd = 0.0
+tags = PackedStringArray()
+todo = "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.
+JS:
+spawn: spawn(e) { e.eShieldT = 2; }
+tick: tick(e, dt) {
+      if (e.eShield > 0) return;
+      e.eShieldT -= dt;
+      if (e.eShieldT <= 0) { e.eShield = e.eShieldMax = e.maxHp * 0.15; fx({ type: 'ring', x: e.x, y: e.y, r: e.r + 0.6, col: '#cfe6ff', life: 0.4 }); sfx('shield'); }
+    }
+onHurt: onHurt(e, dmg) {
+      if (!(e.eShield > 0)) return dmg;
+      const take = Math.min(e.eShield, dmg); e.eShield -= take;
+      if (e.eShield <= 0) { e.eShieldT = 6; e.stunT = Math.max(e.stunT, 0.8); text(e.x, e.y, e.z + e.hgt + 0.5, 'SHIELD BROKEN', '#cfe6ff', true); burst(e.x, e.y, e.z + 1, 20, ['#cfe6ff', '#ffffff'], 3); }
+      return dmg - take;
+    }"

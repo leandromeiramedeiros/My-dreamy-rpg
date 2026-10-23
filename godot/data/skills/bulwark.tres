@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_ixyxw"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="2_ylbs4"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_xnjj5"]
+
+[sub_resource type="Resource" id="Resource_56r6e"]
+script = ExtResource("2_ylbs4")
+radius = 1.7
+damage = 30.0
+knockback = 1.0
+
+[resource]
+script = ExtResource("3_xnjj5")
+id = &"bulwark"
+display_name = "Bulwark"
+description = "CHEST — take 60% less damage for 3.5s and shove foes away."
+element = "slash"
+kind = "active"
+cooldown = 14.0
+mp_cost = 20.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_ixyxw")]([SubResource("Resource_56r6e")])
+aim_radius = 1.7
+stagger = 2.0
+color = Color(0.6627451, 0.7058824, 0.83137256, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { addBuff(p, 'bulwark', 3.5); hitArea(p.x, p.y, 1.7, 30, { knock: 1.0 }); fx({ type: 'ring', x: p.x, y: p.y, r: 1.8, col: '#cfe0ff', life: 0.35 }); sfx('shield'); }"

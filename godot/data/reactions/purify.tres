@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ReactionData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/reaction_data.gd" id="1_bptp7"]
+
+[resource]
+script = ExtResource("1_bptp7")
+id = &"purify"
+display_name = "Purify"
+trigger_elements = PackedStringArray("holy")
+on_statuses = PackedStringArray("burning", "ablaze", "poisoned")
+damage_type = &"holy"
+effect_text = "Holy on Burning or Poisoned: heals; strong against gloom."
+todo = "No JS implementation (design only, elements-statuses.md); the Status lane builds it."

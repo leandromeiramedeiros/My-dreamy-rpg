@@ -1,0 +1,1151 @@
+{
+ "image": "terrain_stone_stairs.png",
+ "terrain": "stone_stairs",
+ "engine_tile": "s",
+ "over": "grass",
+ "layout": "blob47",
+ "grid": [
+  12,
+  5
+ ],
+ "frames": null,
+ "zone": "vale",
+ "theme": "vale",
+ "cell": [
+  32,
+  16
+ ],
+ "tile_shape": "isometric",
+ "tile_layout": "diamond_down",
+ "texture_origin": [
+  0,
+  0
+ ],
+ "directions": [
+  {
+   "bit": 0,
+   "offset": [
+    -1,
+    0
+   ],
+   "name": "NW",
+   "godot": "TOP_LEFT_SIDE"
+  },
+  {
+   "bit": 1,
+   "offset": [
+    1,
+    0
+   ],
+   "name": "SE",
+   "godot": "BOTTOM_RIGHT_SIDE"
+  },
+  {
+   "bit": 2,
+   "offset": [
+    0,
+    -1
+   ],
+   "name": "NE",
+   "godot": "TOP_RIGHT_SIDE"
+  },
+  {
+   "bit": 3,
+   "offset": [
+    0,
+    1
+   ],
+   "name": "SW",
+   "godot": "BOTTOM_LEFT_SIDE"
+  },
+  {
+   "bit": 4,
+   "offset": [
+    -1,
+    -1
+   ],
+   "name": "N",
+   "godot": "TOP_CORNER"
+  },
+  {
+   "bit": 5,
+   "offset": [
+    1,
+    -1
+   ],
+   "name": "E",
+   "godot": "RIGHT_CORNER"
+  },
+  {
+   "bit": 6,
+   "offset": [
+    -1,
+    1
+   ],
+   "name": "W",
+   "godot": "LEFT_CORNER"
+  },
+  {
+   "bit": 7,
+   "offset": [
+    1,
+    1
+   ],
+   "name": "S",
+   "godot": "BOTTOM_CORNER"
+  }
+ ],
+ "about": "Blob-47 of stone_stairs over grass: bits[k] = 1 where neighbour k (directions[k]) is stone_stairs (or anything that does not lap over it), 0 where the base laps over it as a scalloped tongue. Corners only count when both adjacent sides are 1. Row 4 cols 0-3: plain fills (all bits 1).",
+ "cells": [
+  {
+   "col": 0,
+   "row": 0,
+   "bits": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 8,
+   "connect": [
+    "SW"
+   ]
+  },
+  {
+   "col": 1,
+   "row": 0,
+   "bits": [
+    0,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1
+   ],
+   "mask": 138,
+   "connect": [
+    "SE",
+    "SW",
+    "S"
+   ]
+  },
+  {
+   "col": 2,
+   "row": 0,
+   "bits": [
+    1,
+    1,
+    0,
+    1,
+    0,
+    0,
+    1,
+    1
+   ],
+   "mask": 203,
+   "connect": [
+    "NW",
+    "SE",
+    "SW",
+    "W",
+    "S"
+   ]
+  },
+  {
+   "col": 3,
+   "row": 0,
+   "bits": [
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0
+   ],
+   "mask": 73,
+   "connect": [
+    "NW",
+    "SW",
+    "W"
+   ]
+  },
+  {
+   "col": 0,
+   "row": 1,
+   "bits": [
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 12,
+   "connect": [
+    "NE",
+    "SW"
+   ]
+  },
+  {
+   "col": 1,
+   "row": 1,
+   "bits": [
+    0,
+    1,
+    1,
+    1,
+    0,
+    1,
+    0,
+    1
+   ],
+   "mask": 174,
+   "connect": [
+    "SE",
+    "NE",
+    "SW",
+    "E",
+    "S"
+   ]
+  },
+  {
+   "col": 2,
+   "row": 1,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mask": 255,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "N",
+    "E",
+    "W",
+    "S"
+   ]
+  },
+  {
+   "col": 3,
+   "row": 1,
+   "bits": [
+    1,
+    0,
+    1,
+    1,
+    1,
+    0,
+    1,
+    0
+   ],
+   "mask": 93,
+   "connect": [
+    "NW",
+    "NE",
+    "SW",
+    "N",
+    "W"
+   ]
+  },
+  {
+   "col": 0,
+   "row": 2,
+   "bits": [
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 4,
+   "connect": [
+    "NE"
+   ]
+  },
+  {
+   "col": 1,
+   "row": 2,
+   "bits": [
+    0,
+    1,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+   ],
+   "mask": 38,
+   "connect": [
+    "SE",
+    "NE",
+    "E"
+   ]
+  },
+  {
+   "col": 2,
+   "row": 2,
+   "bits": [
+    1,
+    1,
+    1,
+    0,
+    1,
+    1,
+    0,
+    0
+   ],
+   "mask": 55,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "N",
+    "E"
+   ]
+  },
+  {
+   "col": 3,
+   "row": 2,
+   "bits": [
+    1,
+    0,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0
+   ],
+   "mask": 21,
+   "connect": [
+    "NW",
+    "NE",
+    "N"
+   ]
+  },
+  {
+   "col": 0,
+   "row": 3,
+   "bits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 0,
+   "connect": []
+  },
+  {
+   "col": 1,
+   "row": 3,
+   "bits": [
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 2,
+   "connect": [
+    "SE"
+   ]
+  },
+  {
+   "col": 2,
+   "row": 3,
+   "bits": [
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 3,
+   "connect": [
+    "NW",
+    "SE"
+   ]
+  },
+  {
+   "col": 3,
+   "row": 3,
+   "bits": [
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 1,
+   "connect": [
+    "NW"
+   ]
+  },
+  {
+   "col": 4,
+   "row": 0,
+   "bits": [
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 5,
+   "connect": [
+    "NW",
+    "NE"
+   ]
+  },
+  {
+   "col": 5,
+   "row": 0,
+   "bits": [
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 6,
+   "connect": [
+    "SE",
+    "NE"
+   ]
+  },
+  {
+   "col": 6,
+   "row": 0,
+   "bits": [
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 9,
+   "connect": [
+    "NW",
+    "SW"
+   ]
+  },
+  {
+   "col": 7,
+   "row": 0,
+   "bits": [
+    0,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 10,
+   "connect": [
+    "SE",
+    "SW"
+   ]
+  },
+  {
+   "col": 8,
+   "row": 0,
+   "bits": [
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 7,
+   "connect": [
+    "NW",
+    "SE",
+    "NE"
+   ]
+  },
+  {
+   "col": 9,
+   "row": 0,
+   "bits": [
+    1,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 11,
+   "connect": [
+    "NW",
+    "SE",
+    "SW"
+   ]
+  },
+  {
+   "col": 10,
+   "row": 0,
+   "bits": [
+    1,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 13,
+   "connect": [
+    "NW",
+    "NE",
+    "SW"
+   ]
+  },
+  {
+   "col": 11,
+   "row": 0,
+   "bits": [
+    0,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 14,
+   "connect": [
+    "SE",
+    "NE",
+    "SW"
+   ]
+  },
+  {
+   "col": 4,
+   "row": 1,
+   "bits": [
+    1,
+    1,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0
+   ],
+   "mask": 23,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "N"
+   ]
+  },
+  {
+   "col": 5,
+   "row": 1,
+   "bits": [
+    1,
+    0,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0
+   ],
+   "mask": 29,
+   "connect": [
+    "NW",
+    "NE",
+    "SW",
+    "N"
+   ]
+  },
+  {
+   "col": 6,
+   "row": 1,
+   "bits": [
+    1,
+    1,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+   ],
+   "mask": 39,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "E"
+   ]
+  },
+  {
+   "col": 7,
+   "row": 1,
+   "bits": [
+    0,
+    1,
+    1,
+    1,
+    0,
+    1,
+    0,
+    0
+   ],
+   "mask": 46,
+   "connect": [
+    "SE",
+    "NE",
+    "SW",
+    "E"
+   ]
+  },
+  {
+   "col": 8,
+   "row": 1,
+   "bits": [
+    1,
+    1,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0
+   ],
+   "mask": 75,
+   "connect": [
+    "NW",
+    "SE",
+    "SW",
+    "W"
+   ]
+  },
+  {
+   "col": 9,
+   "row": 1,
+   "bits": [
+    1,
+    0,
+    1,
+    1,
+    0,
+    0,
+    1,
+    0
+   ],
+   "mask": 77,
+   "connect": [
+    "NW",
+    "NE",
+    "SW",
+    "W"
+   ]
+  },
+  {
+   "col": 10,
+   "row": 1,
+   "bits": [
+    1,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1
+   ],
+   "mask": 139,
+   "connect": [
+    "NW",
+    "SE",
+    "SW",
+    "S"
+   ]
+  },
+  {
+   "col": 11,
+   "row": 1,
+   "bits": [
+    0,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    1
+   ],
+   "mask": 142,
+   "connect": [
+    "SE",
+    "NE",
+    "SW",
+    "S"
+   ]
+  },
+  {
+   "col": 4,
+   "row": 2,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "mask": 15,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW"
+   ]
+  },
+  {
+   "col": 5,
+   "row": 2,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0
+   ],
+   "mask": 31,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "N"
+   ]
+  },
+  {
+   "col": 6,
+   "row": 2,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    0,
+    1,
+    0,
+    0
+   ],
+   "mask": 47,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "E"
+   ]
+  },
+  {
+   "col": 7,
+   "row": 2,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0
+   ],
+   "mask": 63,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "N",
+    "E"
+   ]
+  },
+  {
+   "col": 8,
+   "row": 2,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    1,
+    0
+   ],
+   "mask": 79,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "W"
+   ]
+  },
+  {
+   "col": 9,
+   "row": 2,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    1,
+    0
+   ],
+   "mask": 95,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "N",
+    "W"
+   ]
+  },
+  {
+   "col": 10,
+   "row": 2,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    0,
+    1,
+    1,
+    0
+   ],
+   "mask": 111,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "E",
+    "W"
+   ]
+  },
+  {
+   "col": 11,
+   "row": 2,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0
+   ],
+   "mask": 127,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "N",
+    "E",
+    "W"
+   ]
+  },
+  {
+   "col": 4,
+   "row": 3,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    1
+   ],
+   "mask": 143,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "S"
+   ]
+  },
+  {
+   "col": 5,
+   "row": 3,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    1
+   ],
+   "mask": 159,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "N",
+    "S"
+   ]
+  },
+  {
+   "col": 6,
+   "row": 3,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    0,
+    1,
+    0,
+    1
+   ],
+   "mask": 175,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "E",
+    "S"
+   ]
+  },
+  {
+   "col": 7,
+   "row": 3,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    1
+   ],
+   "mask": 191,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "N",
+    "E",
+    "S"
+   ]
+  },
+  {
+   "col": 8,
+   "row": 3,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    1,
+    1
+   ],
+   "mask": 207,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "W",
+    "S"
+   ]
+  },
+  {
+   "col": 9,
+   "row": 3,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    1,
+    1
+   ],
+   "mask": 223,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "N",
+    "W",
+    "S"
+   ]
+  },
+  {
+   "col": 10,
+   "row": 3,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    0,
+    1,
+    1,
+    1
+   ],
+   "mask": 239,
+   "connect": [
+    "NW",
+    "SE",
+    "NE",
+    "SW",
+    "E",
+    "W",
+    "S"
+   ]
+  },
+  {
+   "col": 0,
+   "row": 4,
+   "variant": 0,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mask": 255
+  },
+  {
+   "col": 1,
+   "row": 4,
+   "variant": 1,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mask": 255
+  },
+  {
+   "col": 2,
+   "row": 4,
+   "variant": 2,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mask": 255
+  },
+  {
+   "col": 3,
+   "row": 4,
+   "variant": 3,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mask": 255
+  }
+ ]
+}

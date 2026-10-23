@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/brambleshaman.tres" id="1_x40at"]
+[ext_resource type="Resource" path="res://data/loot/common_pinewood.tres" id="2_khlof"]
+[ext_resource type="Texture2D" path="res://art/enemies/brambleshaman_n.png" id="3_pl62j"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4_7rs3v"]
+
+[resource]
+script = ExtResource("4_7rs3v")
+id = &"voidarcher"
+display_name = "Void Archer"
+hp = 520.0
+damage = 42.0
+element = "gloom"
+damage_type = "gloom"
+stagger = 1.0
+resists = Dictionary[StringName, float]({
+&"arcane": 0.5,
+&"holy": -0.5,
+&"pierce": -0.5
+})
+tags = PackedStringArray("ranged", "gloom")
+xp = 0.15
+movement = "kite"
+attacks = PackedStringArray("sniper", "shoot")
+part_params = {
+"kite": {
+"far": 7.5,
+"near": 4.0,
+"strafe": 0.5
+},
+"shoot": {
+"cd": 2.6,
+"col": "#c070ff",
+"n": 3.0,
+"range": 4.0,
+"speed": 6.0,
+"spread": 0.3,
+"tele": true,
+"wind": 0.65
+},
+"sniper": {
+"cd": 3.4,
+"range": 9.0,
+"speed": 14.0,
+"wind": 1.0
+}
+}
+loot = ExtResource("2_khlof")
+frames = ExtResource("1_x40at")
+normal_map = ExtResource("3_pl62j")
+scale = 0.75
+blood = Color(0.47843137, 0.3529412, 0.6901961, 1)
+origin = Vector2(34, 57)
+todo = "Behaviour: parts [\"kite\",\"sniper\",\"shoot\"] run by parts.js (part runtime); the Bestiary lane makes them components."

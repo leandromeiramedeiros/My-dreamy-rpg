@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_fun0e"]
+
+[resource]
+script = ExtResource("1_fun0e")
+id = &"drop5"
+bus = "ui"
+priority = 3
+caption = "[mythic drop]"
+recipe = {
+"layers": [{
+"dur": 0.42,
+"f0": 660.0,
+"f1": 661.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.07,
+"dur": 0.42,
+"f0": 825.0,
+"f1": 826.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.14,
+"dur": 0.42,
+"f0": 1040.0,
+"f1": 1041.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.21,
+"dur": 0.42,
+"f0": 1310.0,
+"f1": 1311.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.28,
+"dur": 0.42,
+"f0": 1650.0,
+"f1": 1651.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.28,
+"dur": 0.5,
+"f0": 2640.0,
+"f1": 3520.0,
+"gain": 0.02,
+"osc": "sine"
+}]
+}

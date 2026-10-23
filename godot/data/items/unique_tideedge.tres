@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/sword_action.tres" id="1_dp0fw"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_7l8fm"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_3cl26"]
+[ext_resource type="Resource" path="res://data/skills/sunslash.tres" id="4_43m4v"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_0ud5o"]
+[ext_resource type="JSON" path="res://art/gear/sword.t4.json" id="6_o28wd"]
+[ext_resource type="Resource" path="res://data/skills/judgement.tres" id="7_34qdl"]
+
+[sub_resource type="Resource" id="Resource_ch711"]
+script = ExtResource("5_0ud5o")
+base_id = &"auroraedge"
+display_name = "Aurora Edge"
+required_level = 24
+multiplier = 2.1
+sheet = ExtResource("6_o28wd")
+
+[resource]
+script = ExtResource("3_3cl26")
+id = &"unique_tideedge"
+display_name = "Tide-Edge"
+description = "Dash Strike leaves a frost trail that slows."
+item_class = &"blades"
+element = "slash"
+tiers = Array[ExtResource("5_0ud5o")]([SubResource("Resource_ch711")])
+action = ExtResource("1_dp0fw")
+spell = ExtResource("4_43m4v")
+ultimate = ExtResource("7_34qdl")
+flags = {
+"anyWeapon": false,
+"base": "auroraedge",
+"boss": "grotto:mirelle",
+"mythic": false
+}
+todo = "Named legendary: a rule hook on its base line (JS hasUnique/hasRule checks). Wave 2: the rule as an Effect."

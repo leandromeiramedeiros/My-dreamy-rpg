@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_xsejb"]
+
+[resource]
+script = ExtResource("1_xsejb")
+id = &"chest"
+pitch_vary = 0.03
+priority = 2
+caption = "[chest opened]"
+recipe = {
+"layers": [{
+"dur": 0.22,
+"f0": 180.0,
+"f1": 420.0,
+"gain": 0.04,
+"osc": "square"
+}, {
+"dur": 0.2,
+"f0": 2000.0,
+"f1": 600.0,
+"filter": {
+"freq": 2000.0,
+"q": 2.0,
+"type": "bandpass"
+},
+"gain": 0.04,
+"osc": "noise"
+}]
+}

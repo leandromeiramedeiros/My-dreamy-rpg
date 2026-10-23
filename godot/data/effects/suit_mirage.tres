@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_4tw31"]
+
+[resource]
+script = ExtResource("1_4tw31")
+id = &"suit_mirage"
+display_name = "Mirage twist"
+hint = "Mirror Image bolts +50% and the image lasts 4 s longer"
+source = "suit"
+if_tags = PackedStringArray()
+tags = PackedStringArray()
+todo = "Inline engine check at SKILLS.mirrorimage (no bus event).
+Live while three mirage pieces are worn."

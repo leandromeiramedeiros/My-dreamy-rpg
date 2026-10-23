@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_e4cue"]
+
+[resource]
+script = ExtResource("1_e4cue")
+id = &"heavy"
+pitch_vary = 0.06
+priority = 2
+caption = "[heavy impact]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 900.0,
+"f1": 80.0,
+"filter": {
+"freq": 900.0,
+"q": 1.0,
+"type": "bandpass"
+},
+"gain": 0.12,
+"osc": "noise"
+}, {
+"dur": 0.3,
+"f0": 140.0,
+"f1": 50.0,
+"gain": 0.05,
+"osc": "square"
+}]
+}

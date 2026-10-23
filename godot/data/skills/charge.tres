@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_h2hdv"]
+[ext_resource type="Script" path="res://scripts/data/dash_block.gd" id="2_ch1j8"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_rnc38"]
+
+[sub_resource type="Resource" id="Resource_arkxm"]
+script = ExtResource("2_ch1j8")
+distance = 4.2
+duration = 0.26
+iframes = 0.26
+hit_radius = 1.0
+damage = 60.0
+knockback = 1.0
+
+[resource]
+script = ExtResource("3_rnc38")
+id = &"charge"
+display_name = "Charge"
+description = "BOOTS — charge forward, bowling enemies over."
+element = "slash"
+kind = "active"
+cooldown = 7.0
+stamina_cost = 35.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_h2hdv")]([SubResource("Resource_arkxm")])
+aim_shape = "dash"
+aim_range = 4.2
+aim_width = 1.0
+stagger = 3.0
+hit_weight = 1.5
+color = Color(0.7254902, 0.7607843, 0.8627451, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) { dashPlayer(p, Math.cos(a), Math.sin(a), 4.2, 0.26, { trail: '#cfe0ff', hit: { dmg: 60, r: 1.0, knock: 1.0 }, invuln: true }); sfx('dash'); }"

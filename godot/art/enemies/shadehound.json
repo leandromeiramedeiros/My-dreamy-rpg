@@ -1,0 +1,2355 @@
+{
+ "unit": "shadehound",
+ "sheet": "core",
+ "images": {
+  "color": "shadehound.png",
+  "normal": "shadehound_n.png"
+ },
+ "layer": "body",
+ "zorder": {
+  "S": 0,
+  "SE": 0,
+  "E": 0,
+  "NE": 0,
+  "N": 0,
+  "NW": 0,
+  "W": 0,
+  "SW": 0
+ },
+ "rig": "shadehound",
+ "cell": [
+  72,
+  60
+ ],
+ "origin": [
+  36,
+  47
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  16,
+  8
+ ],
+ "anims": {
+  "idle": {
+   "from": 0,
+   "count": 6,
+   "ms": [
+    200,
+    200,
+    400,
+    200,
+    200,
+    400
+   ],
+   "loop": true
+  },
+  "walk": {
+   "from": 6,
+   "count": 6,
+   "ms": [
+    100,
+    100,
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": true
+  },
+  "hit": {
+   "from": 12,
+   "count": 1,
+   "ms": [
+    200
+   ],
+   "loop": false
+  },
+  "death": {
+   "from": 13,
+   "count": 3,
+   "ms": [
+    180,
+    180,
+    400
+   ],
+   "loop": false
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   72,
+   60
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_shadehound.gpl",
+ "sockets": {
+  "S": {
+   "idle": [
+    {
+     "head": {
+      "x": 36,
+      "y": 32.8,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 38.2,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 41.6,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 33.1,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 38.4,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 41.9,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 33.4,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 38.5,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 42.2,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 33.4,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 38.5,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 42.2,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 33.1,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 38.4,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 41.9,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 32.8,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 38.2,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 41.6,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "head": {
+      "x": 36,
+      "y": 34.4,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 38.2,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 43.2,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 33.6,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 38.2,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 42.3,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 32.4,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 37.7,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 41,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 34.4,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 38.2,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 43.2,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 33.6,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 38.2,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 42.3,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 32.4,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 37.7,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 41,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "head": {
+      "x": 38.2,
+      "y": 27.7,
+      "front": true
+     },
+     "chest": {
+      "x": 37.8,
+      "y": 36.1,
+      "front": true
+     },
+     "maw": {
+      "x": 39.1,
+      "y": 34.2,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "head": {
+      "x": 36,
+      "y": 26.1,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 35.2,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 32.2,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 32.4,
+      "y": 45.7,
+      "front": true
+     },
+     "chest": {
+      "x": 35.1,
+      "y": 44.1,
+      "front": true
+     },
+     "maw": {
+      "x": 35.7,
+      "y": 52.6,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 23.9,
+      "y": 50.2,
+      "front": true
+     },
+     "chest": {
+      "x": 33.5,
+      "y": 46.7,
+      "front": true
+     },
+     "maw": {
+      "x": 33.2,
+      "y": 51.9,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SE": {
+   "idle": [
+    {
+     "head": {
+      "x": 49.2,
+      "y": 30.2,
+      "front": true
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 36.9,
+      "front": true
+     },
+     "maw": {
+      "x": 53.1,
+      "y": 38.3,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 49.2,
+      "y": 30.5,
+      "front": true
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 37.1,
+      "front": true
+     },
+     "maw": {
+      "x": 53.1,
+      "y": 38.5,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 49.3,
+      "y": 30.8,
+      "front": true
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 37.3,
+      "front": true
+     },
+     "maw": {
+      "x": 53.2,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 49.3,
+      "y": 30.8,
+      "front": true
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 37.3,
+      "front": true
+     },
+     "maw": {
+      "x": 53.2,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 49.2,
+      "y": 30.5,
+      "front": true
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 37.1,
+      "front": true
+     },
+     "maw": {
+      "x": 53.1,
+      "y": 38.5,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 49.2,
+      "y": 30.2,
+      "front": true
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 36.9,
+      "front": true
+     },
+     "maw": {
+      "x": 53.1,
+      "y": 38.3,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "head": {
+      "x": 50.3,
+      "y": 31.6,
+      "front": true
+     },
+     "chest": {
+      "x": 42.7,
+      "y": 36.8,
+      "front": true
+     },
+     "maw": {
+      "x": 53.5,
+      "y": 39.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 49.7,
+      "y": 30.9,
+      "front": true
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 36.9,
+      "front": true
+     },
+     "maw": {
+      "x": 53.4,
+      "y": 39,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 49.2,
+      "y": 29.9,
+      "front": true
+     },
+     "chest": {
+      "x": 42.5,
+      "y": 36.4,
+      "front": true
+     },
+     "maw": {
+      "x": 53.2,
+      "y": 37.7,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 50.3,
+      "y": 31.6,
+      "front": true
+     },
+     "chest": {
+      "x": 42.7,
+      "y": 36.8,
+      "front": true
+     },
+     "maw": {
+      "x": 53.5,
+      "y": 39.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 49.7,
+      "y": 30.9,
+      "front": true
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 36.9,
+      "front": true
+     },
+     "maw": {
+      "x": 53.4,
+      "y": 39,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 49.2,
+      "y": 29.9,
+      "front": true
+     },
+     "chest": {
+      "x": 42.5,
+      "y": 36.4,
+      "front": true
+     },
+     "maw": {
+      "x": 53.2,
+      "y": 37.7,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "head": {
+      "x": 45.6,
+      "y": 25.4,
+      "front": true
+     },
+     "chest": {
+      "x": 42.8,
+      "y": 34.5,
+      "front": true
+     },
+     "maw": {
+      "x": 52.8,
+      "y": 30.4,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "head": {
+      "x": 42.7,
+      "y": 24.8,
+      "front": true
+     },
+     "chest": {
+      "x": 41.2,
+      "y": 34.2,
+      "front": true
+     },
+     "maw": {
+      "x": 49.6,
+      "y": 29.5,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 50.1,
+      "y": 43.7,
+      "front": true
+     },
+     "chest": {
+      "x": 41.6,
+      "y": 43.2,
+      "front": true
+     },
+     "maw": {
+      "x": 51.1,
+      "y": 49.7,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 42.4,
+      "y": 51.3,
+      "front": true
+     },
+     "chest": {
+      "x": 40.9,
+      "y": 46.3,
+      "front": true
+     },
+     "maw": {
+      "x": 50.5,
+      "y": 49.6,
+      "front": true
+     }
+    }
+   ]
+  },
+  "E": {
+   "idle": [
+    {
+     "head": {
+      "x": 54.6,
+      "y": 24,
+      "front": true
+     },
+     "chest": {
+      "x": 45.4,
+      "y": 33.8,
+      "front": true
+     },
+     "maw": {
+      "x": 60.1,
+      "y": 30.2,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 54.7,
+      "y": 24.3,
+      "front": true
+     },
+     "chest": {
+      "x": 45.4,
+      "y": 33.9,
+      "front": true
+     },
+     "maw": {
+      "x": 60.2,
+      "y": 30.5,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 54.8,
+      "y": 24.6,
+      "front": true
+     },
+     "chest": {
+      "x": 45.4,
+      "y": 34.1,
+      "front": true
+     },
+     "maw": {
+      "x": 60.3,
+      "y": 30.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 54.8,
+      "y": 24.6,
+      "front": true
+     },
+     "chest": {
+      "x": 45.4,
+      "y": 34.1,
+      "front": true
+     },
+     "maw": {
+      "x": 60.3,
+      "y": 30.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 54.7,
+      "y": 24.3,
+      "front": true
+     },
+     "chest": {
+      "x": 45.4,
+      "y": 33.9,
+      "front": true
+     },
+     "maw": {
+      "x": 60.2,
+      "y": 30.5,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 54.6,
+      "y": 24,
+      "front": true
+     },
+     "chest": {
+      "x": 45.4,
+      "y": 33.8,
+      "front": true
+     },
+     "maw": {
+      "x": 60.1,
+      "y": 30.2,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "head": {
+      "x": 56.3,
+      "y": 24.9,
+      "front": true
+     },
+     "chest": {
+      "x": 45.5,
+      "y": 33.7,
+      "front": true
+     },
+     "maw": {
+      "x": 60.7,
+      "y": 31.6,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 55.4,
+      "y": 24.5,
+      "front": true
+     },
+     "chest": {
+      "x": 45.4,
+      "y": 33.8,
+      "front": true
+     },
+     "maw": {
+      "x": 60.6,
+      "y": 30.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 54.7,
+      "y": 23.7,
+      "front": true
+     },
+     "chest": {
+      "x": 45.2,
+      "y": 33.4,
+      "front": true
+     },
+     "maw": {
+      "x": 60.3,
+      "y": 29.6,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 56.3,
+      "y": 24.9,
+      "front": true
+     },
+     "chest": {
+      "x": 45.5,
+      "y": 33.7,
+      "front": true
+     },
+     "maw": {
+      "x": 60.7,
+      "y": 31.6,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 55.4,
+      "y": 24.5,
+      "front": true
+     },
+     "chest": {
+      "x": 45.4,
+      "y": 33.8,
+      "front": true
+     },
+     "maw": {
+      "x": 60.6,
+      "y": 30.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 54.7,
+      "y": 23.7,
+      "front": true
+     },
+     "chest": {
+      "x": 45.2,
+      "y": 33.4,
+      "front": true
+     },
+     "maw": {
+      "x": 60.3,
+      "y": 29.6,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "head": {
+      "x": 47.4,
+      "y": 21.3,
+      "front": true
+     },
+     "chest": {
+      "x": 43.8,
+      "y": 31.6,
+      "front": true
+     },
+     "maw": {
+      "x": 56.6,
+      "y": 23.1,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "head": {
+      "x": 45.5,
+      "y": 21.6,
+      "front": true
+     },
+     "chest": {
+      "x": 43.4,
+      "y": 31.7,
+      "front": true
+     },
+     "maw": {
+      "x": 55.2,
+      "y": 23.2,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 59.5,
+      "y": 36.4,
+      "front": true
+     },
+     "chest": {
+      "x": 44.8,
+      "y": 40.4,
+      "front": true
+     },
+     "maw": {
+      "x": 57.7,
+      "y": 42.5,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 57.1,
+      "y": 46,
+      "front": true
+     },
+     "chest": {
+      "x": 45.4,
+      "y": 43.5,
+      "front": true
+     },
+     "maw": {
+      "x": 59.4,
+      "y": 42.2,
+      "front": true
+     }
+    }
+   ]
+  },
+  "NE": {
+   "idle": [
+    {
+     "head": {
+      "x": 49.2,
+      "y": 17.9,
+      "front": false
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 30.6,
+      "front": false
+     },
+     "maw": {
+      "x": 53.1,
+      "y": 22.2,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 49.2,
+      "y": 18.1,
+      "front": false
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 30.8,
+      "front": false
+     },
+     "maw": {
+      "x": 53.1,
+      "y": 22.5,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 49.3,
+      "y": 18.3,
+      "front": false
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 31,
+      "front": false
+     },
+     "maw": {
+      "x": 53.2,
+      "y": 22.7,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 49.3,
+      "y": 18.3,
+      "front": false
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 31,
+      "front": false
+     },
+     "maw": {
+      "x": 53.2,
+      "y": 22.7,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 49.2,
+      "y": 18.1,
+      "front": false
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 30.8,
+      "front": false
+     },
+     "maw": {
+      "x": 53.1,
+      "y": 22.5,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 49.2,
+      "y": 17.9,
+      "front": false
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 30.6,
+      "front": false
+     },
+     "maw": {
+      "x": 53.1,
+      "y": 22.2,
+      "front": false
+     }
+    }
+   ],
+   "walk": [
+    {
+     "head": {
+      "x": 50.3,
+      "y": 18.2,
+      "front": false
+     },
+     "chest": {
+      "x": 42.7,
+      "y": 30.6,
+      "front": false
+     },
+     "maw": {
+      "x": 53.5,
+      "y": 23.4,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 49.7,
+      "y": 18,
+      "front": false
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 30.6,
+      "front": false
+     },
+     "maw": {
+      "x": 53.4,
+      "y": 22.6,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 49.2,
+      "y": 17.5,
+      "front": false
+     },
+     "chest": {
+      "x": 42.5,
+      "y": 30.3,
+      "front": false
+     },
+     "maw": {
+      "x": 53.2,
+      "y": 21.6,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 50.3,
+      "y": 18.2,
+      "front": false
+     },
+     "chest": {
+      "x": 42.7,
+      "y": 30.6,
+      "front": false
+     },
+     "maw": {
+      "x": 53.5,
+      "y": 23.4,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 49.7,
+      "y": 18,
+      "front": false
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 30.6,
+      "front": false
+     },
+     "maw": {
+      "x": 53.4,
+      "y": 22.6,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 49.2,
+      "y": 17.5,
+      "front": false
+     },
+     "chest": {
+      "x": 42.5,
+      "y": 30.3,
+      "front": false
+     },
+     "maw": {
+      "x": 53.2,
+      "y": 21.6,
+      "front": false
+     }
+    }
+   ],
+   "hit": [
+    {
+     "head": {
+      "x": 42.5,
+      "y": 17.9,
+      "front": false
+     },
+     "chest": {
+      "x": 40.3,
+      "y": 29.2,
+      "front": false
+     },
+     "maw": {
+      "x": 48.4,
+      "y": 16.7,
+      "front": false
+     }
+    }
+   ],
+   "death": [
+    {
+     "head": {
+      "x": 42.7,
+      "y": 18.4,
+      "front": false
+     },
+     "chest": {
+      "x": 41.2,
+      "y": 29.3,
+      "front": false
+     },
+     "maw": {
+      "x": 49.6,
+      "y": 16.8,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 55.1,
+      "y": 28.1,
+      "front": false
+     },
+     "chest": {
+      "x": 42.8,
+      "y": 37.3,
+      "front": false
+     },
+     "maw": {
+      "x": 51.6,
+      "y": 35.3,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 59.5,
+      "y": 37.3,
+      "front": false
+     },
+     "chest": {
+      "x": 44.4,
+      "y": 40,
+      "front": false
+     },
+     "maw": {
+      "x": 54.5,
+      "y": 34.1,
+      "front": false
+     }
+    }
+   ]
+  },
+  "N": {
+   "idle": [
+    {
+     "head": {
+      "x": 36,
+      "y": 15.3,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29.4,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 18.9,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 15.5,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29.5,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 19.1,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 15.7,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29.7,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 19.4,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 15.7,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29.7,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 19.4,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 15.5,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29.5,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 19.1,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 15.3,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29.4,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 18.9,
+      "front": false
+     }
+    }
+   ],
+   "walk": [
+    {
+     "head": {
+      "x": 36,
+      "y": 15.4,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29.3,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 20,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 15.4,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29.4,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 19.2,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 14.9,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 18.2,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 15.4,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29.3,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 20,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 15.4,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29.4,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 19.2,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 14.9,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 18.2,
+      "front": false
+     }
+    }
+   ],
+   "hit": [
+    {
+     "head": {
+      "x": 33.8,
+      "y": 17,
+      "front": false
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 28.8,
+      "front": false
+     },
+     "maw": {
+      "x": 32.9,
+      "y": 14.9,
+      "front": false
+     }
+    }
+   ],
+   "death": [
+    {
+     "head": {
+      "x": 36,
+      "y": 17.1,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 28.2,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 14.2,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 39.6,
+      "y": 23.7,
+      "front": false
+     },
+     "chest": {
+      "x": 36.9,
+      "y": 35.9,
+      "front": false
+     },
+     "maw": {
+      "x": 36.3,
+      "y": 32.2,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 48.1,
+      "y": 30.4,
+      "front": false
+     },
+     "chest": {
+      "x": 38.5,
+      "y": 37.9,
+      "front": false
+     },
+     "maw": {
+      "x": 38.8,
+      "y": 29.9,
+      "front": false
+     }
+    }
+   ]
+  },
+  "NW": {
+   "idle": [
+    {
+     "head": {
+      "x": 22.8,
+      "y": 17.9,
+      "front": false
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 30.6,
+      "front": false
+     },
+     "maw": {
+      "x": 18.9,
+      "y": 22.2,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 22.8,
+      "y": 18.1,
+      "front": false
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 30.8,
+      "front": false
+     },
+     "maw": {
+      "x": 18.9,
+      "y": 22.5,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 22.7,
+      "y": 18.3,
+      "front": false
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 31,
+      "front": false
+     },
+     "maw": {
+      "x": 18.8,
+      "y": 22.7,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 22.7,
+      "y": 18.3,
+      "front": false
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 31,
+      "front": false
+     },
+     "maw": {
+      "x": 18.8,
+      "y": 22.7,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 22.8,
+      "y": 18.1,
+      "front": false
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 30.8,
+      "front": false
+     },
+     "maw": {
+      "x": 18.9,
+      "y": 22.5,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 22.8,
+      "y": 17.9,
+      "front": false
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 30.6,
+      "front": false
+     },
+     "maw": {
+      "x": 18.9,
+      "y": 22.2,
+      "front": false
+     }
+    }
+   ],
+   "walk": [
+    {
+     "head": {
+      "x": 21.7,
+      "y": 18.2,
+      "front": false
+     },
+     "chest": {
+      "x": 29.3,
+      "y": 30.6,
+      "front": false
+     },
+     "maw": {
+      "x": 18.5,
+      "y": 23.4,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 22.3,
+      "y": 18,
+      "front": false
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 30.6,
+      "front": false
+     },
+     "maw": {
+      "x": 18.6,
+      "y": 22.6,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 22.8,
+      "y": 17.5,
+      "front": false
+     },
+     "chest": {
+      "x": 29.5,
+      "y": 30.3,
+      "front": false
+     },
+     "maw": {
+      "x": 18.8,
+      "y": 21.6,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 21.7,
+      "y": 18.2,
+      "front": false
+     },
+     "chest": {
+      "x": 29.3,
+      "y": 30.6,
+      "front": false
+     },
+     "maw": {
+      "x": 18.5,
+      "y": 23.4,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 22.3,
+      "y": 18,
+      "front": false
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 30.6,
+      "front": false
+     },
+     "maw": {
+      "x": 18.6,
+      "y": 22.6,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 22.8,
+      "y": 17.5,
+      "front": false
+     },
+     "chest": {
+      "x": 29.5,
+      "y": 30.3,
+      "front": false
+     },
+     "maw": {
+      "x": 18.8,
+      "y": 21.6,
+      "front": false
+     }
+    }
+   ],
+   "hit": [
+    {
+     "head": {
+      "x": 26.4,
+      "y": 19.3,
+      "front": false
+     },
+     "chest": {
+      "x": 29.2,
+      "y": 30.5,
+      "front": false
+     },
+     "maw": {
+      "x": 19.2,
+      "y": 18.8,
+      "front": false
+     }
+    }
+   ],
+   "death": [
+    {
+     "head": {
+      "x": 29.3,
+      "y": 18.4,
+      "front": false
+     },
+     "chest": {
+      "x": 30.8,
+      "y": 29.3,
+      "front": false
+     },
+     "maw": {
+      "x": 22.4,
+      "y": 16.8,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 21.9,
+      "y": 25.7,
+      "front": false
+     },
+     "chest": {
+      "x": 30.4,
+      "y": 36.8,
+      "front": false
+     },
+     "maw": {
+      "x": 20.9,
+      "y": 35.1,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 29.6,
+      "y": 29.3,
+      "front": false
+     },
+     "chest": {
+      "x": 31.1,
+      "y": 38.4,
+      "front": false
+     },
+     "maw": {
+      "x": 21.5,
+      "y": 32.2,
+      "front": false
+     }
+    }
+   ]
+  },
+  "W": {
+   "idle": [
+    {
+     "head": {
+      "x": 17.4,
+      "y": 24,
+      "front": true
+     },
+     "chest": {
+      "x": 26.6,
+      "y": 33.8,
+      "front": true
+     },
+     "maw": {
+      "x": 11.9,
+      "y": 30.2,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 17.3,
+      "y": 24.3,
+      "front": true
+     },
+     "chest": {
+      "x": 26.6,
+      "y": 33.9,
+      "front": true
+     },
+     "maw": {
+      "x": 11.8,
+      "y": 30.5,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 17.2,
+      "y": 24.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26.6,
+      "y": 34.1,
+      "front": true
+     },
+     "maw": {
+      "x": 11.7,
+      "y": 30.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 17.2,
+      "y": 24.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26.6,
+      "y": 34.1,
+      "front": true
+     },
+     "maw": {
+      "x": 11.7,
+      "y": 30.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 17.3,
+      "y": 24.3,
+      "front": true
+     },
+     "chest": {
+      "x": 26.6,
+      "y": 33.9,
+      "front": true
+     },
+     "maw": {
+      "x": 11.8,
+      "y": 30.5,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 17.4,
+      "y": 24,
+      "front": true
+     },
+     "chest": {
+      "x": 26.6,
+      "y": 33.8,
+      "front": true
+     },
+     "maw": {
+      "x": 11.9,
+      "y": 30.2,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "head": {
+      "x": 15.7,
+      "y": 24.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26.5,
+      "y": 33.7,
+      "front": true
+     },
+     "maw": {
+      "x": 11.3,
+      "y": 31.6,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 16.6,
+      "y": 24.5,
+      "front": true
+     },
+     "chest": {
+      "x": 26.6,
+      "y": 33.8,
+      "front": true
+     },
+     "maw": {
+      "x": 11.4,
+      "y": 30.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 17.3,
+      "y": 23.7,
+      "front": true
+     },
+     "chest": {
+      "x": 26.8,
+      "y": 33.4,
+      "front": true
+     },
+     "maw": {
+      "x": 11.7,
+      "y": 29.6,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 15.7,
+      "y": 24.9,
+      "front": true
+     },
+     "chest": {
+      "x": 26.5,
+      "y": 33.7,
+      "front": true
+     },
+     "maw": {
+      "x": 11.3,
+      "y": 31.6,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 16.6,
+      "y": 24.5,
+      "front": true
+     },
+     "chest": {
+      "x": 26.6,
+      "y": 33.8,
+      "front": true
+     },
+     "maw": {
+      "x": 11.4,
+      "y": 30.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 17.3,
+      "y": 23.7,
+      "front": true
+     },
+     "chest": {
+      "x": 26.8,
+      "y": 33.4,
+      "front": true
+     },
+     "maw": {
+      "x": 11.7,
+      "y": 29.6,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "head": {
+      "x": 24.6,
+      "y": 23.4,
+      "front": true
+     },
+     "chest": {
+      "x": 28.2,
+      "y": 33.3,
+      "front": true
+     },
+     "maw": {
+      "x": 15.4,
+      "y": 26,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "head": {
+      "x": 26.5,
+      "y": 21.6,
+      "front": true
+     },
+     "chest": {
+      "x": 28.6,
+      "y": 31.7,
+      "front": true
+     },
+     "maw": {
+      "x": 16.8,
+      "y": 23.2,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 12.5,
+      "y": 33,
+      "front": false
+     },
+     "chest": {
+      "x": 27.2,
+      "y": 39.6,
+      "front": false
+     },
+     "maw": {
+      "x": 14.3,
+      "y": 42.2,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 14.9,
+      "y": 34.6,
+      "front": false
+     },
+     "chest": {
+      "x": 26.6,
+      "y": 41.2,
+      "front": false
+     },
+     "maw": {
+      "x": 12.6,
+      "y": 39.6,
+      "front": false
+     }
+    }
+   ]
+  },
+  "SW": {
+   "idle": [
+    {
+     "head": {
+      "x": 22.8,
+      "y": 30.2,
+      "front": true
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 36.9,
+      "front": true
+     },
+     "maw": {
+      "x": 18.9,
+      "y": 38.3,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 22.8,
+      "y": 30.5,
+      "front": true
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 37.1,
+      "front": true
+     },
+     "maw": {
+      "x": 18.9,
+      "y": 38.5,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 22.7,
+      "y": 30.8,
+      "front": true
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 37.3,
+      "front": true
+     },
+     "maw": {
+      "x": 18.8,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 22.7,
+      "y": 30.8,
+      "front": true
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 37.3,
+      "front": true
+     },
+     "maw": {
+      "x": 18.8,
+      "y": 38.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 22.8,
+      "y": 30.5,
+      "front": true
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 37.1,
+      "front": true
+     },
+     "maw": {
+      "x": 18.9,
+      "y": 38.5,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 22.8,
+      "y": 30.2,
+      "front": true
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 36.9,
+      "front": true
+     },
+     "maw": {
+      "x": 18.9,
+      "y": 38.3,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "head": {
+      "x": 21.7,
+      "y": 31.6,
+      "front": true
+     },
+     "chest": {
+      "x": 29.3,
+      "y": 36.8,
+      "front": true
+     },
+     "maw": {
+      "x": 18.5,
+      "y": 39.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 22.3,
+      "y": 30.9,
+      "front": true
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 36.9,
+      "front": true
+     },
+     "maw": {
+      "x": 18.6,
+      "y": 39,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 22.8,
+      "y": 29.9,
+      "front": true
+     },
+     "chest": {
+      "x": 29.5,
+      "y": 36.4,
+      "front": true
+     },
+     "maw": {
+      "x": 18.8,
+      "y": 37.7,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 21.7,
+      "y": 31.6,
+      "front": true
+     },
+     "chest": {
+      "x": 29.3,
+      "y": 36.8,
+      "front": true
+     },
+     "maw": {
+      "x": 18.5,
+      "y": 39.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 22.3,
+      "y": 30.9,
+      "front": true
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 36.9,
+      "front": true
+     },
+     "maw": {
+      "x": 18.6,
+      "y": 39,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 22.8,
+      "y": 29.9,
+      "front": true
+     },
+     "chest": {
+      "x": 29.5,
+      "y": 36.4,
+      "front": true
+     },
+     "maw": {
+      "x": 18.8,
+      "y": 37.7,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "head": {
+      "x": 29.5,
+      "y": 26.9,
+      "front": true
+     },
+     "chest": {
+      "x": 31.7,
+      "y": 35.7,
+      "front": true
+     },
+     "maw": {
+      "x": 23.6,
+      "y": 32.4,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "head": {
+      "x": 29.3,
+      "y": 24.8,
+      "front": true
+     },
+     "chest": {
+      "x": 30.8,
+      "y": 34.2,
+      "front": true
+     },
+     "maw": {
+      "x": 22.4,
+      "y": 29.5,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 16.9,
+      "y": 41.3,
+      "front": true
+     },
+     "chest": {
+      "x": 29.2,
+      "y": 42.6,
+      "front": true
+     },
+     "maw": {
+      "x": 20.4,
+      "y": 49.5,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 12.5,
+      "y": 43.3,
+      "front": true
+     },
+     "chest": {
+      "x": 27.6,
+      "y": 44.6,
+      "front": true
+     },
+     "maw": {
+      "x": 17.5,
+      "y": 47.7,
+      "front": true
+     }
+    }
+   ]
+  }
+ }
+}

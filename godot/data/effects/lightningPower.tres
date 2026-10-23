@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_sjar4"]
+
+[resource]
+script = ExtResource("1_sjar4")
+id = &"lightningPower"
+display_name = "Storm Ring"
+hint = "+15% lightning damage; Shock lasts 1 s longer"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"lightningDmg": 0.15,
+"shockDur": 1.0
+},
+"minor": {
+"lightningDmg": 0.08,
+"shockDur": 0.5
+}
+}
+stats = {
+"lightningDmg": "lightningDmg"
+}
+tags = PackedStringArray("lightning", "shock")
+todo = "Partial in JS: shockDur (no Shock status yet)
+Boon numbers: minor {\"lightningDmg\":0.08,\"shockDur\":0.5}, major {\"lightningDmg\":0.15,\"shockDur\":1}"

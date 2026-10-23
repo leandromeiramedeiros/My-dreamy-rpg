@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_i8uae"]
+[ext_resource type="Script" path="res://scripts/data/cone_block.gd" id="2_ec3oq"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_868im"]
+
+[sub_resource type="Resource" id="Resource_y4wf7"]
+script = ExtResource("2_ec3oq")
+reach = 11.0
+width = 0.9
+delay = 0.35
+damage = 310.0
+knockback = 0.5
+
+[resource]
+script = ExtResource("3_868im")
+id = &"moonbeam"
+display_name = "Moonbeam"
+description = "PAGE — Channel a beam of moonlight down a long line."
+element = "holy"
+kind = "page"
+cooldown = 15.0
+mp_cost = 55.0
+tags = PackedStringArray()
+decks = PackedStringArray("page", "arrow")
+blocks = Array[ExtResource("1_i8uae")]([SubResource("Resource_y4wf7")])
+aim_shape = "line"
+aim_range = 11.0
+aim_width = 0.9
+hit_weight = 2.0
+color = Color(0.84705883, 0.89411765, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) {
+      castAnim(p, 0.4); p.rootT = 0.35;
+      fx({ type: 'line', x: p.x, y: p.y, ang: a, len: 11, w: 0.9, col: '#d8e4ff', life: 0.35, tele: true });
+      delay(0.35, () => { hitLine(p.x, p.y, a, 11, 0.9, 310, { knock: 0.5 }); fx({ type: 'beam', x: p.x, y: p.y, z: p.z + 1.5, ang: a, len: 11, col: '#e8f0ff', life: 0.4 }); shake(6); sfx('beam'); });
+    }"

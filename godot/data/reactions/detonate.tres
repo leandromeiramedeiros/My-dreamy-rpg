@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ReactionData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/reaction_data.gd" id="1_aqanq"]
+
+[resource]
+script = ExtResource("1_aqanq")
+id = &"detonate"
+display_name = "Detonate"
+trigger_elements = PackedStringArray()
+on_statuses = PackedStringArray("burning", "ablaze")
+needs_stagger = 3.0
+damage_type = &"fire"
+effect_text = "Stagger 3 or more on a Burning body: consumes the Burn for damage."
+todo = "No JS implementation (design only, elements-statuses.md); the Status lane builds it."

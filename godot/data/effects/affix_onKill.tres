@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_iboa0"]
+
+[resource]
+script = ExtResource("1_iboa0")
+id = &"affix_onKill"
+display_name = "onKill"
+source = "affix"
+when_event = "kill"
+if_tags = PackedStringArray()
+do_action = &"affix_onKill"
+tags = PackedStringArray()
+todo = "JS:
+do: do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + p.maxMp * v); }"

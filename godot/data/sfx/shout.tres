@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_q54po"]
+
+[resource]
+script = ExtResource("1_q54po")
+id = &"shout"
+pitch_vary = 0.06
+priority = 2
+caption = "[shout]"
+recipe = {
+"layers": [{
+"dur": 0.4,
+"f0": 180.0,
+"f1": 90.0,
+"gain": 0.06,
+"osc": "saw"
+}]
+}

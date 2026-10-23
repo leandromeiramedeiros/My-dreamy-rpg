@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_vsftb"]
+
+[resource]
+script = ExtResource("1_vsftb")
+id = &"die"
+priority = 3
+caption = "[defeated]"
+recipe = {
+"layers": [{
+"dur": 0.4,
+"f0": 400.0,
+"f1": 60.0,
+"filter": {
+"freq": 400.0,
+"q": 1.0,
+"type": "bandpass"
+},
+"gain": 0.08,
+"osc": "noise"
+}]
+}

@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_bsx57"]
+
+[resource]
+script = ExtResource("1_bsx57")
+id = &"legendary_choir"
+bus = "ui"
+priority = 3
+caption = "[legendary drop]"
+recipe = {
+"layers": [{
+"dur": 2.0,
+"f0": 262.0,
+"f1": 262.0,
+"gain": 0.04,
+"osc": "sine"
+}, {
+"dur": 2.0,
+"f0": 330.0,
+"f1": 330.0,
+"gain": 0.035,
+"osc": "sine"
+}, {
+"dur": 2.0,
+"f0": 392.0,
+"f1": 392.0,
+"gain": 0.03,
+"osc": "sine"
+}]
+}

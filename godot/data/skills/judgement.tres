@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_ugreq"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="2_h4mwi"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_5r2uv"]
+
+[sub_resource type="Resource" id="Resource_6uuux"]
+script = ExtResource("2_h4mwi")
+at = "target"
+radius = 2.5
+delay = 0.5
+damage = 340.0
+stun = 1.4
+
+[resource]
+script = ExtResource("3_5r2uv")
+id = &"judgement"
+display_name = "Radiant Judgement"
+description = "ULTIMATE — call a pillar of light: huge damage and a long stun."
+element = "holy"
+kind = "ultimate"
+cooldown = 16.0
+mp_cost = 60.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_ugreq")]([SubResource("Resource_6uuux")])
+aim_shape = "circle"
+aim_range = 6.0
+aim_radius = 2.5
+hit_weight = 2.0
+color = Color(1, 0.9490196, 0.6901961, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a, tx, ty) {
+      [tx, ty] = targetIn(p, tx, ty, 6);
+      fx({ type: 'marker', x: tx, y: ty, r: 2.5, col: '#ffe9a0', life: 0.5 });
+      delay(0.5, () => { hitArea(tx, ty, 2.5, 340, { stun: 1.4 }); fx({ type: 'pillar', x: tx, y: ty, col: '#fff2b0', life: 0.7, r: 2.5 }); burst(tx, ty, 0, 40, ['#fff6d6', '#ffd77a', '#ffffff'], 5); shake(8); sfx('boom'); });
+    }"

@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_d1sqj"]
+
+[resource]
+script = ExtResource("1_d1sqj")
+id = &"rx_shatter"
+pitch_vary = 0.03
+priority = 3
+caption = "[shatter reaction]"
+recipe = {
+"layers": [{
+"dur": 0.15,
+"f0": 5000.0,
+"f1": 3000.0,
+"filter": {
+"freq": 3000.0,
+"q": 1.0,
+"type": "highpass"
+},
+"gain": 0.06,
+"osc": "noise"
+}, {
+"delay": 0.02,
+"dur": 0.2,
+"f0": 1046.0,
+"f1": 1046.0,
+"gain": 0.05,
+"osc": "sine"
+}, {
+"delay": 0.14,
+"dur": 0.25,
+"f0": 698.0,
+"f1": 698.0,
+"gain": 0.05,
+"osc": "sine"
+}]
+}

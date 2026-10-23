@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_sbsqp"]
+
+[resource]
+script = ExtResource("1_sbsqp")
+id = &"legendary_stinger"
+bus = "ui"
+priority = 3
+caption = "[legendary drop]"
+recipe = {
+"layers": [{
+"dur": 1.0,
+"f0": 523.0,
+"f1": 523.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.5,
+"dur": 1.0,
+"f0": 659.0,
+"f1": 659.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 1.0,
+"dur": 1.4,
+"f0": 784.0,
+"f1": 784.0,
+"gain": 0.05,
+"osc": "triangle"
+}]
+}

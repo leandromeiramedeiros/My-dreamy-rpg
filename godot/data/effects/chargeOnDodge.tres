@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_j2kkx"]
+
+[resource]
+script = ExtResource("1_j2kkx")
+id = &"chargeOnDodge"
+display_name = "Nimble Heart"
+hint = "Dodges grant 5 charge"
+source = "trinket"
+when_event = "dodge"
+if_tags = PackedStringArray()
+do_action = &"chargeOnDodge"
+do_params = {
+"major": {
+"chargeOnDodge": 5.0
+},
+"minor": {
+"chargeOnDodge": 3.0
+}
+}
+tags = PackedStringArray("dodge", "ultimate")
+todo = "Boon numbers: minor {\"chargeOnDodge\":3}, major {\"chargeOnDodge\":5}
+JS:
+do: do(c, v, p) { p.ult = Math.min(100, p.ult + (v.chargeOnDodge || 0)); }"

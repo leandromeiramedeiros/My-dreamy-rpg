@@ -1,0 +1,74 @@
+{
+ "unit": "sword.t1",
+ "sheet": "atk.sword",
+ "images": {
+  "front": "sword.t1.atk.sword_front.png",
+  "back": "sword.t1.atk.sword_back.png"
+ },
+ "layer": "weapon",
+ "zorder": {
+  "S": 13,
+  "SE": 37,
+  "E": 37,
+  "NE": 27,
+  "N": 8,
+  "NW": 4,
+  "W": 6,
+  "SW": 6
+ },
+ "hides": [],
+ "slot": "weapon",
+ "tier": 1,
+ "class": "sword",
+ "split": {
+  "rule": "front = pixels where body + this unit differs from the body alone; back = this unit's own pixels hidden behind the body",
+  "body_pixels_lost": 0
+ },
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  6,
+  8
+ ],
+ "anims": {
+  "attack": {
+   "from": 0,
+   "count": 6,
+   "ms": [
+    100,
+    50,
+    50,
+    50,
+    100,
+    50
+   ],
+   "loop": false
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl"
+}

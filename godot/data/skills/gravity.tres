@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_jjo20"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="2_3rlmh"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_giujg"]
+
+[sub_resource type="Resource" id="Resource_8okew"]
+script = ExtResource("2_3rlmh")
+at = "target"
+cast_range = 7.0
+radius = 2.8
+life = 2.6
+tick = 0.25
+pull = 3.2
+color = Color(0.627451, 0.47843137, 1, 1)
+damage = 26.0
+hit_params = {
+"kind": "well"
+}
+
+[resource]
+script = ExtResource("3_giujg")
+id = &"gravity"
+display_name = "Gravity Well"
+description = "Open a well that drags enemies in and grinds them."
+element = "arcane"
+kind = "page"
+cooldown = 9.0
+mp_cost = 35.0
+tags = PackedStringArray()
+decks = PackedStringArray("page")
+blocks = Array[ExtResource("1_jjo20")]([SubResource("Resource_8okew")])
+aim_shape = "circle"
+aim_range = 7.0
+aim_radius = 2.8
+color = Color(0.627451, 0.47843137, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a, tx, ty) { castAnim(p); [tx, ty] = targetIn(p, tx, ty, 7); zone({ x: tx, y: ty, r: 2.8, life: 2.6, tick: 0.25, dmg: 26, pull: 3.2, col: '#a07aff', kind: 'well' }); WIND.cast('well', tx, ty, 0); sfx('arcane'); }"

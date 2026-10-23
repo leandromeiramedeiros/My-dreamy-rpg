@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_gd4fv"]
+
+[resource]
+script = ExtResource("1_gd4fv")
+id = &"gemWrap"
+display_name = "Wrapped Gems"
+hint = "Gems in chest and boots count +1 grade, clamped at Radiant"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"gemWrapGrade": 1.0,
+"gemWrapSlots": ["chest", "boots"]
+},
+"minor": {
+"gemWrapGrade": 1.0,
+"gemWrapSlots": ["chest"]
+}
+}
+tags = PackedStringArray("gem", "chest", "boots")
+todo = "Boon numbers: minor {\"gemWrapSlots\":[\"chest\"],\"gemWrapGrade\":1}, major {\"gemWrapSlots\":[\"chest\",\"boots\"],\"gemWrapGrade\":1}"

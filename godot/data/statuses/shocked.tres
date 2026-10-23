@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_2ems8"]
+
+[resource]
+script = ExtResource("1_2ems8")
+id = &"shocked"
+display_name = "Shocked"
+element = "lightning"
+tier = 2
+duration = 2.5
+reacts_with = PackedStringArray("arcane")
+tint = Color(1, 0.9019608, 0.1882353, 1)
+tint_alpha = 0.32
+motif_rate = 10.0
+light_color = Color(1, 0.9019608, 0.1882353, 1)
+light_radius = 16.0
+light_alpha = 0.35
+light_mode = "strobe"

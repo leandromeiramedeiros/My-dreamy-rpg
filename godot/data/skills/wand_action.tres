@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_bie4b"]
+[ext_resource type="Script" path="res://scripts/data/projectile_block.gd" id="2_08qlf"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_hov8s"]
+
+[sub_resource type="Resource" id="Resource_rihtv"]
+script = ExtResource("2_08qlf")
+life = 0.9
+height = 1.6
+damage = 31.0
+
+[resource]
+script = ExtResource("3_hov8s")
+id = &"wand_action"
+display_name = "Spark"
+description = "bolt, 0.48 s, builds MP. reactions refund 10 % MP; cantrips are free"
+element = "arcane"
+kind = "action"
+cooldown = 0.42
+tags = PackedStringArray("ranged", "projectile")
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_bie4b")]([SubResource("Resource_rihtv")])
+aim_shape = "proj"
+aim_range = 9.0
+color = Color(0.78039217, 0.9098039, 1, 1)
+todo = "Basic attack: swing template \"magic\" from game.js basicSwing (one block per combo hit). Hold-M1 \"none\" (game.js holdAttack) is wave 2."

@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/mirrorimage.tres" id="1_v4ntw"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_m3gmg"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_6qhst"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_vd1x3"]
+
+[sub_resource type="Resource" id="Resource_w5un5"]
+script = ExtResource("4_vd1x3")
+base_id = &"gauzesilks"
+display_name = "Gauze Silks"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_jxux2"]
+script = ExtResource("4_vd1x3")
+base_id = &"miragesilks"
+display_name = "Mirage Silks"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_voq6q"]
+script = ExtResource("4_vd1x3")
+base_id = &"glasssilks"
+display_name = "Glasswoven Silks"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_3eqqy"]
+script = ExtResource("4_vd1x3")
+base_id = &"aurorasilks"
+display_name = "Aurora Silks"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_h1fhi"]
+script = ExtResource("4_vd1x3")
+base_id = &"mirroreternal"
+display_name = "Mirror Eternal"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_6qhst")
+id = &"mirage"
+display_name = "Mirage Silks"
+description = "+12% crit, +7% move speed, +8% arcane damage."
+kind = "armour"
+slot = "chest"
+item_class = &"shadow"
+suit = &"mirage"
+hands = 0
+element = "arcane"
+tiers = Array[ExtResource("4_vd1x3")]([SubResource("Resource_w5un5"), SubResource("Resource_jxux2"), SubResource("Resource_voq6q"), SubResource("Resource_3eqqy"), SubResource("Resource_h1fhi")])
+active = ExtResource("1_v4ntw")
+stats = Dictionary[StringName, float]({
+&"arcaneDmg": 0.08,
+&"crit": 0.12,
+&"speed": 0.25
+})
+resists = Dictionary[StringName, float]({
+&"arcane": 0.1,
+&"nature": -0.25,
+&"pierce": 0.25
+})
+color = Color(0.72156864, 0.59607846, 0.8784314, 1)
+attack_pose = "none"
+todo = "Suit Mirage (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_nkhb5"]
+
+[resource]
+script = ExtResource("1_nkhb5")
+id = &"ui_hover"
+bus = "ui"
+recipe = {
+"layers": [{
+"dur": 0.002,
+"f0": 1800.0,
+"f1": 1800.0,
+"gain": 0.05,
+"osc": "sine"
+}]
+}

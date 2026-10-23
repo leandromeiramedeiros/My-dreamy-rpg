@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_cptmv"]
+
+[resource]
+script = ExtResource("1_cptmv")
+id = &"rx_conduct"
+pitch_vary = 0.03
+priority = 3
+caption = "[conduct reaction]"
+recipe = {
+"layers": [{
+"dur": 0.06,
+"f0": 2400.0,
+"f1": 300.0,
+"gain": 0.04,
+"osc": "saw"
+}, {
+"delay": 0.07,
+"dur": 0.06,
+"f0": 2400.0,
+"f1": 300.0,
+"gain": 0.04,
+"osc": "saw"
+}, {
+"delay": 0.14,
+"dur": 0.06,
+"f0": 2400.0,
+"f1": 300.0,
+"gain": 0.04,
+"osc": "saw"
+}]
+}

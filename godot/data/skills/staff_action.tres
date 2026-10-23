@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_uviw1"]
+[ext_resource type="Script" path="res://scripts/data/projectile_block.gd" id="2_6e8og"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_p0jhg"]
+
+[sub_resource type="Resource" id="Resource_7kqil"]
+script = ExtResource("2_6e8og")
+life = 0.9
+height = 1.6
+damage = 32.0
+
+[resource]
+script = ExtResource("3_p0jhg")
+id = &"staff_action"
+display_name = "Arcane Bolt"
+description = "bolt, 0.48 s, builds MP. reactions refund 10 % MP; cantrips are free"
+element = "arcane"
+kind = "action"
+cooldown = 0.48
+tags = PackedStringArray("ranged", "projectile")
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_uviw1")]([SubResource("Resource_7kqil")])
+aim_shape = "proj"
+aim_range = 9.0
+color = Color(0.49803922, 0.9019608, 1, 1)
+todo = "Basic attack: swing template \"magic\" from game.js basicSwing (one block per combo hit). Hold-M1 \"channel\" (game.js holdAttack) is wave 2."

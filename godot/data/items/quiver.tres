@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/nock.tres" id="1_auuq1"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_6bpqr"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_yhj4y"]
+[ext_resource type="Resource" path="res://data/skills/loose.tres" id="4_025t8"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_qmgjg"]
+[ext_resource type="Resource" path="res://data/skills/quiverstorm.tres" id="6_ce8vh"]
+
+[sub_resource type="Resource" id="Resource_wowuh"]
+script = ExtResource("5_qmgjg")
+base_id = &"leatherquiver"
+display_name = "Leather Quiver"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_1bi33"]
+script = ExtResource("5_qmgjg")
+base_id = &"moonquiver"
+display_name = "Moon Quiver"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_gx2ut"]
+script = ExtResource("5_qmgjg")
+base_id = &"silverquiver"
+display_name = "Silver Quiver"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_jppse"]
+script = ExtResource("5_qmgjg")
+base_id = &"eclipsequiver"
+display_name = "Eclipse Quiver"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_fbppi"]
+script = ExtResource("5_qmgjg")
+base_id = &"quivereternal"
+display_name = "Quiver Eternal"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_yhj4y")
+id = &"quiver"
+display_name = "Quiver"
+description = "A quiver of special arrows. Nock one, loose it, or empty the quiver."
+kind = "companion"
+slot = "offhand"
+item_class = &"companions"
+hands = 0
+element = "pierce"
+tiers = Array[ExtResource("5_qmgjg")]([SubResource("Resource_wowuh"), SubResource("Resource_1bi33"), SubResource("Resource_gx2ut"), SubResource("Resource_jppse"), SubResource("Resource_fbppi")])
+action = ExtResource("1_auuq1")
+spell = ExtResource("4_025t8")
+ultimate = ExtResource("6_ce8vh")
+deck = &"arrow"
+stats = Dictionary[StringName, float]({
+&"crit": 0.04,
+&"haste": 0.04
+})
+color = Color(0.6509804, 0.78431374, 1, 1)
+attack_pose = "none"
+swing_style = "none"
+carry_pose = "float"
+todo = "Line name (T2 base): Moon Quiver."

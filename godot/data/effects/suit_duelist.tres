@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_el13t"]
+
+[resource]
+script = ExtResource("1_el13t")
+id = &"suit_duelist"
+display_name = "Duelist twist"
+hint = "A parry resets Side-step and grants 1 s of haste"
+source = "suit"
+when_event = "parry"
+if_tags = PackedStringArray()
+do_action = &"suit_duelist"
+tags = PackedStringArray()
+todo = "Live while three duelist pieces are worn.
+JS:
+do: do(c, v, p) { p.cds.sidestep = 0; addBuff(p, 'haste', 1); }"

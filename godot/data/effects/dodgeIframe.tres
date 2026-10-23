@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_1whrx"]
+
+[resource]
+script = ExtResource("1_1whrx")
+id = &"dodgeIframe"
+display_name = "Long Veil"
+hint = "Dodge i-frame window 0.1 s longer"
+source = "trinket"
+when_event = "dodge"
+if_tags = PackedStringArray()
+do_action = &"dodgeIframe"
+do_params = {
+"major": {
+"dodgeIframeDur": 0.1
+},
+"minor": {
+"dodgeIframeDur": 0.05
+}
+}
+icd = 0.0
+tags = PackedStringArray("dodge")
+todo = "Boon numbers: minor {\"dodgeIframeDur\":0.05}, major {\"dodgeIframeDur\":0.1}
+JS:
+do: do(c, v, p) { const x = v.dodgeIframeDur || 0; if (p.dash && p.dash.opt.invuln) p.invulnT = Math.max(p.invulnT, p.dash.t + x); else if (p.invulnT > 0) p.invulnT += x; }"

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_epv4n"]
+
+[resource]
+script = ExtResource("1_epv4n")
+id = &"originRanger"
+display_name = "Keen Eye"
+hint = "+10% crit damage"
+source = "trinket"
+if_tags = PackedStringArray()
+stats = {
+"critDmg": "critDmg"
+}
+tags = PackedStringArray("crit")

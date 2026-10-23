@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/bellow.tres" id="1_xi5sj"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_rhb4b"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_rgq6r"]
+[ext_resource type="Resource" path="res://data/skills/call.tres" id="4_vibjj"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_o7l25"]
+[ext_resource type="Resource" path="res://data/skills/laststand.tres" id="6_ty2uj"]
+
+[sub_resource type="Resource" id="Resource_ejth4"]
+script = ExtResource("5_o7l25")
+base_id = &"cowhorn"
+display_name = "Cow Horn"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_orn3n"]
+script = ExtResource("5_o7l25")
+base_id = &"rallyinghorn"
+display_name = "Rallying Horn"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_y5epb"]
+script = ExtResource("5_o7l25")
+base_id = &"sunhorn"
+display_name = "Sunhorn"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_qsy1y"]
+script = ExtResource("5_o7l25")
+base_id = &"auroraclarion"
+display_name = "Aurora Clarion"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_h1pn4"]
+script = ExtResource("5_o7l25")
+base_id = &"calleternal"
+display_name = "Call Eternal"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_rgq6r")
+id = &"warhorn"
+display_name = "Warhorn"
+description = "A horn of battle calls. Bellow to break a guard, sound the call, or make a Last Stand."
+kind = "companion"
+slot = "offhand"
+item_class = &"companions"
+hands = 0
+element = "slash"
+tiers = Array[ExtResource("5_o7l25")]([SubResource("Resource_ejth4"), SubResource("Resource_orn3n"), SubResource("Resource_y5epb"), SubResource("Resource_qsy1y"), SubResource("Resource_h1pn4")])
+action = ExtResource("1_xi5sj")
+spell = ExtResource("4_vibjj")
+ultimate = ExtResource("6_ty2uj")
+deck = &"call"
+stats = Dictionary[StringName, float]({
+&"def": 0.04,
+&"hp": 60.0
+})
+color = Color(0.8784314, 0.6901961, 0.4392157, 1)
+attack_pose = "none"
+swing_style = "none"
+carry_pose = "float"
+todo = "Line name (T2 base): Rallying Horn."

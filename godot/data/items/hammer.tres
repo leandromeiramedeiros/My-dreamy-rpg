@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/hammer_action.tres" id="1_inamq"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_t0ju4"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_0wgfa"]
+[ext_resource type="Resource" path="res://data/skills/earthbreaker.tres" id="4_65eep"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_igh8g"]
+[ext_resource type="Resource" path="res://data/skills/aftershock.tres" id="6_cod1n"]
+
+[sub_resource type="Resource" id="Resource_6rsde"]
+script = ExtResource("5_igh8g")
+base_id = &"sledge"
+display_name = "Sledge"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_bt0h6"]
+script = ExtResource("5_igh8g")
+base_id = &"sunhammer"
+display_name = "Sunhammer"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_hpil3"]
+script = ExtResource("5_igh8g")
+base_id = &"mountainmaul"
+display_name = "Mountain Maul"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_1parf"]
+script = ExtResource("5_igh8g")
+base_id = &"auroraanvil"
+display_name = "Aurora Anvil"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_puten"]
+script = ExtResource("5_igh8g")
+base_id = &"hammereternal"
+display_name = "Hammer Eternal"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_0wgfa")
+id = &"hammer"
+display_name = "Hammer"
+description = "A maul that cracks the ground. Slow, staggering blows."
+item_class = &"greatarms"
+hands = 2
+element = "slash"
+tiers = Array[ExtResource("5_igh8g")]([SubResource("Resource_6rsde"), SubResource("Resource_bt0h6"), SubResource("Resource_hpil3"), SubResource("Resource_1parf"), SubResource("Resource_puten")])
+action = ExtResource("1_inamq")
+spell = ExtResource("4_65eep")
+ultimate = ExtResource("6_cod1n")
+mp_on_hit = 14.0
+hold = &"heavy"
+stats = Dictionary[StringName, float]({
+&"dmg": 92.0
+})
+flags = {
+"kind": "sword",
+"off_action": ""
+}
+color = Color(0.8784314, 0.78431374, 0.5647059, 1)
+carry_pose = "shoulder"
+todo = "Line name (T2 base): Sunhammer. Class passive: Heavy Strike holds poise; a worn companion supplies the tools. Off-action in OFFHAND: none."

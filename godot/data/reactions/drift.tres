@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ReactionData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/reaction_data.gd" id="1_b7ijc"]
+
+[resource]
+script = ExtResource("1_b7ijc")
+id = &"drift"
+display_name = "Drift"
+trigger_elements = PackedStringArray("wind")
+on_statuses = PackedStringArray("burning", "chilled", "jolted", "poisoned", "marked", "smitten", "pierced", "dread")
+effect_text = "Wind on a body with a tier-1 status: carries the status to bodies in the gust."
+todo = "No JS implementation (design only, elements-statuses.md); the Status lane builds it."

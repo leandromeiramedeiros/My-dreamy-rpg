@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_u77eg"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_r0trn"]
+
+[resource]
+script = ExtResource("2_r0trn")
+id = &"aegis"
+display_name = "Aegis"
+description = "ULTIMATE — for 3 s every hit is parried, and each parry restores 10% HP."
+element = "holy"
+kind = "ultimate"
+cooldown = 12.0
+mp_cost = 30.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+aim_radius = 1.6
+hit_weight = 2.0
+color = Color(1, 0.9490196, 0.6901961, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { addBuff(p, 'aegis', 3); fx({ type: 'ring', x: p.x, y: p.y, r: 1.6, col: '#fff2b0', life: 0.5 }); sfx('shield'); }"

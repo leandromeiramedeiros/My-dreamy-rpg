@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/wintersveil.tres" id="1_kt3mp"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_ynr6y"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_65r74"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_famgt"]
+
+[sub_resource type="Resource" id="Resource_f84sc"]
+script = ExtResource("4_famgt")
+base_id = &"woolrobe"
+display_name = "Wool Robe"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_c0fr3"]
+script = ExtResource("4_famgt")
+base_id = &"frostrobe"
+display_name = "Frostweave Robe"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_eq35t"]
+script = ExtResource("4_famgt")
+base_id = &"rimerobe"
+display_name = "Rimewoven Robe"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_ofy1j"]
+script = ExtResource("4_famgt")
+base_id = &"aurorarime"
+display_name = "Aurora Rimecloak"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_l2nbn"]
+script = ExtResource("4_famgt")
+base_id = &"wintereternal"
+display_name = "Winter Eternal"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_65r74")
+id = &"frostweave"
+display_name = "Frostweave Robe"
+description = "+22% power, +100 MP, +6% frost damage."
+kind = "armour"
+slot = "chest"
+item_class = &"caster"
+suit = &"frostweave"
+hands = 0
+element = "frost"
+tiers = Array[ExtResource("4_famgt")]([SubResource("Resource_f84sc"), SubResource("Resource_c0fr3"), SubResource("Resource_eq35t"), SubResource("Resource_ofy1j"), SubResource("Resource_l2nbn")])
+active = ExtResource("1_kt3mp")
+stats = Dictionary[StringName, float]({
+&"frostDmg": 0.06,
+&"mp": 100.0,
+&"mpRegen": 4.0,
+&"power": 0.22
+})
+resists = Dictionary[StringName, float]({
+&"arcane": 0.25,
+&"frost": 0.1,
+&"pierce": -0.25,
+&"slash": -0.25
+})
+color = Color(0.62352943, 0.84705883, 0.9411765, 1)
+attack_pose = "none"
+todo = "Suit Frostweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."

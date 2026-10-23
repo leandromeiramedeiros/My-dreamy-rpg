@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_5axs0"]
+
+[resource]
+script = ExtResource("1_5axs0")
+id = &"potionCap"
+display_name = "Full Pouch"
+hint = "+1 potion charge"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"potionCharge": 2.0
+},
+"minor": {
+"potionCharge": 1.0
+}
+}
+stats = {
+"potionCharge": "potionCharge"
+}
+tags = PackedStringArray("potion")
+todo = "Boon numbers: minor {\"potionCharge\":1}, major {\"potionCharge\":2}"

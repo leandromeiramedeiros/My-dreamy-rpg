@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_i28ie"]
+
+[resource]
+script = ExtResource("1_i28ie")
+id = &"ultDmg"
+display_name = "Lantern Heart"
+hint = "+10% ultimate damage"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"ultDmg": 0.1
+},
+"minor": {
+"ultDmg": 0.05
+}
+}
+stats = {
+"ultDmg": "ultDmg"
+}
+tags = PackedStringArray("ultimate")
+todo = "Boon numbers: minor {\"ultDmg\":0.05}, major {\"ultDmg\":0.1}"

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_ubojt"]
+
+[resource]
+script = ExtResource("1_ubojt")
+id = &"suit_frostweave"
+display_name = "Frostweave twist"
+hint = "Frost hits on a Chilled foe deal +30%"
+source = "suit"
+if_tags = PackedStringArray()
+tags = PackedStringArray()
+todo = "Inline engine check at damageEnemy (no bus event).
+Live while three frostweave pieces are worn."

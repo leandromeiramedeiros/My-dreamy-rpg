@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_bkuwh"]
+
+[resource]
+script = ExtResource("1_bkuwh")
+id = &"twohand_hit"
+pitch_vary = 0.06
+priority = 3
+caption = "[heavy impact]"
+recipe = {
+"layers": [{
+"dur": 0.25,
+"f0": 60.0,
+"f1": 50.0,
+"gain": 0.18,
+"osc": "sine"
+}, {
+"dur": 0.15,
+"f0": 1500.0,
+"f1": 300.0,
+"filter": {
+"freq": 2000.0,
+"q": 0.7,
+"type": "lowpass"
+},
+"gain": 0.1,
+"osc": "noise"
+}, {
+"delay": 0.1,
+"dur": 0.6,
+"f0": 45.0,
+"f1": 35.0,
+"gain": 0.08,
+"osc": "sine"
+}]
+}

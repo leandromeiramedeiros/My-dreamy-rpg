@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_ltlh1"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_8jwes"]
+
+[sub_resource type="Resource" id="Resource_gcsn3"]
+script = ExtResource("2_8jwes")
+display_name = "Warded"
+roll = Vector2(0.06, 0.08)
+
+[sub_resource type="Resource" id="Resource_jhxf4"]
+script = ExtResource("2_8jwes")
+display_name = "Hardened"
+roll = Vector2(0.1, 0.14)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_wfk8y"]
+script = ExtResource("2_8jwes")
+display_name = "Unyielding"
+roll = Vector2(0.17, 0.2)
+item_level = 28
+
+[resource]
+script = ExtResource("1_ltlh1")
+id = &"resGloom"
+kind = "suffix"
+tiers = Array[ExtResource("2_8jwes")]([SubResource("Resource_gcsn3"), SubResource("Resource_jhxf4"), SubResource("Resource_wfk8y")])

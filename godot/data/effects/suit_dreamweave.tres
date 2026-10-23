@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_p3do5"]
+
+[resource]
+script = ExtResource("1_p3do5")
+id = &"suit_dreamweave"
+display_name = "Dreamweave twist"
+hint = "The Arcane Ward nova restores 8 MP per enemy hit"
+source = "suit"
+if_tags = PackedStringArray()
+tags = PackedStringArray()
+todo = "Inline engine check at updateArcaneWard (no bus event).
+Live while three dreamweave pieces are worn."

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_argh2"]
+
+[resource]
+script = ExtResource("1_argh2")
+id = &"lifted"
+display_name = "Lifted"
+element = "wind"
+tier = 2
+duration = 0.8
+boss_duration = 0.0
+reacts_with = PackedStringArray()
+rule = "Elite 0.4 s, boss never."
+tint = Color(0.49803922, 0.78431374, 0.7529412, 1)
+motif_rate = 0.0
+pose = "hop"

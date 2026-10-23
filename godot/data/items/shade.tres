@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/fadestep.tres" id="1_k6a54"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_qw2k0"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_scupw"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_xdmhb"]
+
+[sub_resource type="Resource" id="Resource_0diyq"]
+script = ExtResource("4_xdmhb")
+base_id = &"ragleathers"
+display_name = "Rag Leathers"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_jw85c"]
+script = ExtResource("4_xdmhb")
+base_id = &"shadeleathers"
+display_name = "Shade Leathers"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_hxtxy"]
+script = ExtResource("4_xdmhb")
+base_id = &"duskleathers"
+display_name = "Duskwoven Leathers"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_1usal"]
+script = ExtResource("4_xdmhb")
+base_id = &"auroraleathers"
+display_name = "Aurora Leathers"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_wbx28"]
+script = ExtResource("4_xdmhb")
+base_id = &"gloameternal"
+display_name = "Gloam Eternal"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_scupw")
+id = &"shade"
+display_name = "Shade Leathers"
+description = "+14% crit, +8% move speed, +8% attack speed."
+kind = "armour"
+slot = "chest"
+item_class = &"shadow"
+suit = &"shade"
+hands = 0
+element = "gloom"
+tiers = Array[ExtResource("4_xdmhb")]([SubResource("Resource_0diyq"), SubResource("Resource_jw85c"), SubResource("Resource_hxtxy"), SubResource("Resource_1usal"), SubResource("Resource_wbx28")])
+active = ExtResource("1_k6a54")
+stats = Dictionary[StringName, float]({
+&"crit": 0.14,
+&"haste": 0.08,
+&"speed": 0.3
+})
+resists = Dictionary[StringName, float]({
+&"gloom": 0.1,
+&"nature": -0.25,
+&"pierce": 0.25
+})
+color = Color(0.3529412, 0.2901961, 0.47843137, 1)
+attack_pose = "none"
+todo = "Suit Shade (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."

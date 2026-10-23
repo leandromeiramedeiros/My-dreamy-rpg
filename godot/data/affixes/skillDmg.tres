@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_boamh"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_gupk7"]
+
+[sub_resource type="Resource" id="Resource_ljqwn"]
+script = ExtResource("2_gupk7")
+display_name = "Vivid"
+roll = Vector2(0.04, 0.06)
+
+[sub_resource type="Resource" id="Resource_iud6s"]
+script = ExtResource("2_gupk7")
+display_name = "Luminous"
+roll = Vector2(0.08, 0.1)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_run2n"]
+script = ExtResource("2_gupk7")
+display_name = "Resplendent"
+roll = Vector2(0.12, 0.15)
+item_level = 28
+
+[resource]
+script = ExtResource("1_boamh")
+id = &"skillDmg"
+tiers = Array[ExtResource("2_gupk7")]([SubResource("Resource_ljqwn"), SubResource("Resource_iud6s"), SubResource("Resource_run2n")])

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_yjcym"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_ljlon"]
+
+[resource]
+script = ExtResource("2_ljlon")
+id = &"nock"
+display_name = "Nock"
+description = "Nock the next arrow; your next shot hits 40% harder and pierces once."
+element = "pierce"
+kind = "action"
+cooldown = 0.5
+stamina_cost = 8.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+color = Color(0.6509804, 0.78431374, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { deckNext(p); p.nocked = G.t + 4; sfx('bow'); }
+JS fields: {\"off\":true}"

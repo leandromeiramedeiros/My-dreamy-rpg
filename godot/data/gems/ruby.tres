@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="GemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/gem_data.gd" id="1_c6w08"]
+
+[resource]
+script = ExtResource("1_c6w08")
+id = &"ruby"
+display_name = "Ruby"
+color = Color(1, 0.2901961, 0.3529412, 1)
+element = "fire"
+grade_names = PackedStringArray("Chipped", "Clear", "Radiant")
+armour_stats = Array[Dictionary]([{
+"hp": 23.0,
+"resFire": 0.02
+}, {
+"hp": 46.0,
+"resFire": 0.04
+}, {
+"hp": 80.0,
+"resFire": 0.07
+}])
+weapon_stats = Array[Dictionary]([{
+"power": 0.04
+}, {
+"power": 0.08
+}, {
+"power": 0.14
+}])
+amp = "Fire skills"

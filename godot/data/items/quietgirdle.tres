@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_3ym4b"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_8hnum"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_couy1"]
+
+[sub_resource type="Resource" id="Resource_uk1ft"]
+script = ExtResource("3_couy1")
+base_id = &"quietgirdle"
+display_name = "Girdle of Quiet Dusk"
+required_level = 16
+
+[resource]
+script = ExtResource("2_8hnum")
+id = &"quietgirdle"
+display_name = "Girdle of Quiet Dusk"
+description = "Potions refill on every boss phase change."
+kind = "trinket"
+slot = "belt"
+hands = 0
+tiers = Array[ExtResource("3_couy1")]([SubResource("Resource_uk1ft")])
+stats = Dictionary[StringName, float]({
+&"potionCharge": 1.0
+})
+flags = {
+"rule": {
+"potionsRefillOnPhase": true
+}
+}
+attack_pose = "none"
+todo = "Unique rule (JS `rule`): {\"potionsRefillOnPhase\":true}. Wave 2: an Effect."

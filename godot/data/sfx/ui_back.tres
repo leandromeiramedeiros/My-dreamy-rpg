@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_p5muc"]
+
+[resource]
+script = ExtResource("1_p5muc")
+id = &"ui_back"
+bus = "ui"
+recipe = {
+"layers": [{
+"dur": 0.14,
+"f0": 660.0,
+"f1": 330.0,
+"gain": 0.05,
+"osc": "sine"
+}]
+}

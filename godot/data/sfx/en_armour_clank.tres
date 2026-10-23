@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_gwccs"]
+
+[resource]
+script = ExtResource("1_gwccs")
+id = &"en_armour_clank"
+pitch_vary = 0.1
+priority = 2
+caption = "[armoured enemy]"
+recipe = {
+"layers": [{
+"dur": 0.12,
+"f0": 1800.0,
+"f1": 1700.0,
+"gain": 0.05,
+"osc": "sine"
+}, {
+"dur": 0.03,
+"f0": 3000.0,
+"f1": 2000.0,
+"filter": {
+"freq": 2000.0,
+"q": 1.0,
+"type": "highpass"
+},
+"gain": 0.04,
+"osc": "noise"
+}]
+}

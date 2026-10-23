@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="GemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/gem_data.gd" id="1_bwgeq"]
+
+[resource]
+script = ExtResource("1_bwgeq")
+id = &"opal"
+display_name = "Opal"
+color = Color(0.62352943, 0.9411765, 0.8627451, 1)
+element = "wind"
+grade_names = PackedStringArray("Chipped", "Clear", "Radiant")
+armour_stats = Array[Dictionary]([{
+"speed": 0.05
+}, {
+"speed": 0.1
+}, {
+"speed": 0.18
+}])
+weapon_stats = Array[Dictionary]([{
+"windDmg": 0.04
+}, {
+"windDmg": 0.08
+}, {
+"windDmg": 0.14
+}])
+amp = "Wind skills"

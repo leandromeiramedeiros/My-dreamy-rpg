@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_j21td"]
+
+[resource]
+script = ExtResource("1_j21td")
+id = &"step_water"
+pitch_vary = 0.08
+priority = 0
+recipe = {
+"layers": [{
+"dur": 0.16,
+"f0": 4000.0,
+"f1": 2000.0,
+"filter": {
+"freq": 1500.0,
+"q": 0.7,
+"type": "highpass"
+},
+"gain": 0.03,
+"osc": "noise"
+}]
+}

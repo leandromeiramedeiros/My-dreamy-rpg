@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Resource" path="res://data/loot/common_vale.tres" id="1_0k36p"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="2_jhogm"]
+
+[resource]
+script = ExtResource("2_jhogm")
+id = &"dreammoth"
+display_name = "Dream Moth"
+hp = 450.0
+speed = 3.0
+damage = 20.0
+element = "arcane"
+damage_type = "arcane"
+stagger = 1.0
+resists = Dictionary[StringName, float]({
+&"holy": -0.5
+})
+tags = PackedStringArray("flying", "swarm")
+xp = 0.08
+movement = "orbit"
+attacks = PackedStringArray("shoot")
+support = &"swarm"
+part_params = {
+"orbit": {
+"r": 2.6
+},
+"shoot": {
+"cd": 2.8,
+"col": "#e8d0ff",
+"r": 0.25,
+"range": 4.5,
+"speed": 4.5,
+"wind": 0.6
+},
+"swarm": {
+"n": 4.0,
+"source": "moth_nest",
+"spread": 1.6
+}
+}
+loot = ExtResource("1_0k36p")
+blood = Color(0.78039217, 0.65882355, 1, 1)
+todo = "Behaviour: parts [\"orbit\",\"shoot\",\"swarm\"] run by parts.js (part runtime); the Bestiary lane makes them components.
+Look: JS draws \"wisp\"; no sheet yet.
+No forge sheet in handoff/art/enemies yet."

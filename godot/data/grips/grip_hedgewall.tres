@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="GripData" format=3]
+
+[ext_resource type="Resource" path="res://data/effects/grip_hedgewall.tres" id="1_u2r7l"]
+[ext_resource type="Script" path="res://scripts/data/grip_data.gd" id="2_nes67"]
+
+[resource]
+script = ExtResource("2_nes67")
+id = &"grip_hedgewall"
+display_name = "Hedgewall"
+tags = PackedStringArray("halberd", "quiver")
+hint = "Nock primes the Halberd too: the next hit is +40% and pins for 0.6 s."
+effect = ExtResource("1_u2r7l")

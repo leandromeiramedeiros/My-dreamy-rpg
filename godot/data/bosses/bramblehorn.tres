@@ -1,0 +1,214 @@
+[gd_resource type="Resource" script_class="BossData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/mountaintroll.tres" id="1_a6krh"]
+[ext_resource type="Resource" path="res://data/loot/boss_bramblehorn.tres" id="2_8iyit"]
+[ext_resource type="Script" path="res://scripts/data/boss_move.gd" id="3_w8r0k"]
+[ext_resource type="Texture2D" path="res://art/enemies/mountaintroll_n.png" id="4_w36aa"]
+[ext_resource type="Script" path="res://scripts/data/boss_phase.gd" id="5_4tk5v"]
+[ext_resource type="Script" path="res://scripts/data/boss_data.gd" id="6_gyi8k"]
+
+[sub_resource type="Resource" id="Resource_ar8wc"]
+script = ExtResource("3_w8r0k")
+id = &"stomp"
+wind = 0.9
+open = 1.5
+cooldown = 1.5
+hit = "big"
+element = "nature"
+stagger = 1.0
+params = {
+"at": "self",
+"hitstop": 0.06,
+"r": 3.0,
+"scale": "none",
+"why": "self-centred r3: 0.9 s in every bar (x0.7 = 0.63 s leaves 1.2 tiles of walk after a 0.3 s reaction; it needs 1.5 from melee range)"
+}
+todo = "Move type \"circle\" runs in bosses.js BOSS_MOVES.circle (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_nmd0k"]
+script = ExtResource("3_w8r0k")
+id = &"rootGrab"
+wind = 0.85
+open = 1.2
+cooldown = 1.5
+element = "nature"
+params = {
+"len": 7.0,
+"root": 1.5,
+"w": 0.6
+}
+todo = "Move type \"line\" runs in bosses.js BOSS_MOVES.line (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_mvpe6"]
+script = ExtResource("3_w8r0k")
+id = &"trunkSwipe"
+wind = 0.95
+open = 1.2
+cooldown = 1.4
+damage_pct = 0.14
+params = {
+"arc": 90.0,
+"r": 3.0
+}
+todo = "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_t4rvi"]
+script = ExtResource("3_w8r0k")
+id = &"backhand"
+wind = 0.95
+open = 1.2
+cooldown = 1.4
+damage_pct = 0.14
+params = {
+"arc": 90.0,
+"r": 3.2
+}
+todo = "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_uqqrx"]
+script = ExtResource("3_w8r0k")
+id = &"trample"
+wind = 1.1
+open = 1.3
+cooldown = 1.5
+hit = "big"
+element = "nature"
+range_band = "far"
+params = {
+"len": 7.0,
+"scale": "wind",
+"speed": 14.0,
+"w": 1.0
+}
+todo = "Move type \"charge\" runs in bosses.js BOSS_MOVES.charge (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_g3oya"]
+script = ExtResource("3_w8r0k")
+id = &"rootWall"
+wind = 0.8
+open = 1.2
+cooldown = 0.6
+hit = "none"
+element = "nature"
+params = {
+"dur": 2.0,
+"k": 0.75,
+"pattern": "roots_inward",
+"rMin": 5.5
+}
+todo = "Move type \"arenaShrink\" runs in bosses.js BOSS_MOVES.arenaShrink (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_30h3m"]
+script = ExtResource("3_w8r0k")
+id = &"saplings"
+wind = 1.0
+open = 1.5
+cooldown = 0.8
+hit = "none"
+element = "nature"
+params = {
+"kind": "sapling",
+"max": 3.0,
+"n": 2.0
+}
+todo = "Move type \"summon\" runs in bosses.js BOSS_MOVES.summon (wave 2: the Bosses lane)."
+
+[sub_resource type="Resource" id="Resource_fn5ve"]
+script = ExtResource("5_4tk5v")
+moves = Dictionary[StringName, float]({
+&"rootGrab": 2.0,
+&"stomp": 2.0,
+&"trunkSwipe": 2.0
+})
+
+[sub_resource type="Resource" id="Resource_le4rf"]
+script = ExtResource("5_4tk5v")
+hp_below = 0.62
+moves = Dictionary[StringName, float]({
+&"rootGrab": 2.0,
+&"rootWall": 1.0,
+&"saplings": 1.0,
+&"stomp": 1.5,
+&"trunkSwipe": 2.0
+})
+wind_mul = 0.85
+cooldown_mul = 0.8
+forms = {
+"trunkSwipe": {
+"open": 0.35,
+"then": "backhand"
+}
+}
+on_enter = Array[Dictionary]([{
+"k": 0.75,
+"pattern": "roots_inward",
+"rMin": 5.5,
+"type": "arenaShrink"
+}, {
+"banner": "The roots wake",
+"dur": 1.2,
+"type": "roar"
+}])
+
+[sub_resource type="Resource" id="Resource_nrrdk"]
+script = ExtResource("5_4tk5v")
+hp_below = 0.25
+moves = Dictionary[StringName, float]({
+&"rootGrab": 2.0,
+&"rootWall": 1.0,
+&"saplings": 1.0,
+&"stomp": 1.0,
+&"trample": 2.0,
+&"trunkSwipe": 2.0
+})
+wind_mul = 0.7
+cooldown_mul = 0.65
+speed_mul = 1.2
+forms = {
+"rootGrab": {
+"lead": 0.45
+},
+"trunkSwipe": {
+"open": 0.35,
+"then": "backhand"
+}
+}
+on_enter = Array[Dictionary]([{
+"banner": "Old Bramblehorn splinters into a fury",
+"dur": 1.0,
+"type": "roar"
+}])
+
+[resource]
+script = ExtResource("6_gyi8k")
+kind = "guardian"
+level = 8
+zone = &"pinewood"
+length_target = Vector2(150, 240)
+stagger_max = 5.0
+moves = Array[ExtResource("3_w8r0k")]([SubResource("Resource_ar8wc"), SubResource("Resource_nmd0k"), SubResource("Resource_mvpe6"), SubResource("Resource_t4rvi"), SubResource("Resource_uqqrx"), SubResource("Resource_g3oya"), SubResource("Resource_30h3m")])
+phases = Array[ExtResource("5_4tk5v")]([SubResource("Resource_fn5ve"), SubResource("Resource_le4rf"), SubResource("Resource_nrrdk")])
+id = &"bramblehorn"
+display_name = "Old Bramblehorn"
+hp = 22000.0
+speed = 1.5
+damage = 0.0
+radius = 1.0
+height = 5.2
+element = "nature"
+damage_type = "nature"
+resists = Dictionary[StringName, float]({
+&"fire": -0.5,
+&"nature": 0.5
+})
+tags = PackedStringArray("beast")
+xp = 1.0
+attacks = PackedStringArray()
+loot = ExtResource("2_8iyit")
+frames = ExtResource("1_a6krh")
+normal_map = ExtResource("4_w36aa")
+scale = 1.35
+blood = Color(0.6039216, 0.6901961, 0.41568628, 1)
+origin = Vector2(40, 68)
+todo = "Boss AI: bosses.js (move picker, fairness floors, bars); the Bosses lane ports it.
+JS loot key: root_crown"

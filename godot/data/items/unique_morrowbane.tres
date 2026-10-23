@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/sword_action.tres" id="1_ebisd"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_s13yk"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_vl34v"]
+[ext_resource type="Resource" path="res://data/skills/sunslash.tres" id="4_qdgr6"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_q2sam"]
+[ext_resource type="JSON" path="res://art/gear/sword.t5.json" id="6_ljg30"]
+[ext_resource type="Resource" path="res://data/skills/judgement.tres" id="7_bjll6"]
+
+[sub_resource type="Resource" id="Resource_o7uge"]
+script = ExtResource("5_q2sam")
+base_id = &"dawneternal"
+display_name = "Dawn Eternal"
+required_level = 32
+multiplier = 2.8
+sheet = ExtResource("6_ljg30")
+
+[resource]
+script = ExtResource("3_vl34v")
+id = &"unique_morrowbane"
+display_name = "Morrowbane"
+description = "R ultimate resets on boss phase change."
+item_class = &"blades"
+element = "slash"
+tiers = Array[ExtResource("5_q2sam")]([SubResource("Resource_o7uge")])
+action = ExtResource("1_ebisd")
+spell = ExtResource("4_qdgr6")
+ultimate = ExtResource("7_bjll6")
+flags = {
+"anyWeapon": false,
+"base": "dawneternal",
+"boss": "spire:morrow",
+"mythic": true
+}
+todo = "Named legendary: a rule hook on its base line (JS hasUnique/hasRule checks). Wave 2: the rule as an Effect."

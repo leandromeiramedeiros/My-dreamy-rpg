@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_57ooo"]
+[ext_resource type="Script" path="res://scripts/data/dash_block.gd" id="2_2gdgx"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_tk4da"]
+
+[sub_resource type="Resource" id="Resource_kuvoj"]
+script = ExtResource("2_2gdgx")
+direction = "back"
+distance = 3.0
+duration = 0.28
+roll = true
+
+[resource]
+script = ExtResource("3_tk4da")
+id = &"rootvault"
+display_name = "Root Vault"
+description = "BOOTS — vault back from your aim, leaving a snare where you stood."
+element = "nature"
+kind = "active"
+cooldown = 7.0
+stamina_cost = 28.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_57ooo")]([SubResource("Resource_kuvoj")])
+aim_shape = "dash"
+aim_range = 3.0
+color = Color(0.30980393, 0.5411765, 0.36862746, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+template CT.dash {\"dir\":\"back\",\"dist\":3,\"dur\":0.28,\"roll\":true,\"originZone\":{\"r\":1.4,\"life\":6,\"trap\":true,\"dmg\":40,\"root\":1.5,\"kind\":\"trap\"},\"col\":\"#8fe0a0\"}
+JS:
+cast: cast(p, a) {
+    let d = a;
+    if (o.dir === 'back') d = a + Math.PI;
+    else if (o.dir === 'side') { const m = moveAngle(p); d = m != null ? m : a + Math.PI / 2; }
+    else if (o.dir === 'move') { const m = moveAngle(p); if (m != null) d = m; }
+    const x0 = p.x, y0 = p.y;
+    if (o.decoy) spawnDecoy(x0, y0, o.decoy);
+    const end = () => {
+      if (o.land) { hitArea(p.x, p.y, o.land.r, o.land.dmg, o.land.hit || {}); fx({ type: 'ring', x: p.x, y: p.y, r: o.land.r + 0.2, col: o.col, life: 0.3 }); shake(3); }
+      if (o.originZone) zone(Object.assign({ x: x0, y: y0, col: o.col }, o.originZone));
+      if (o.after) o.after(p, x0, y0);
+    };
+    p.invulnT = Math.max(p.invulnT, o.iframes || 0.25);   // every boots skill keeps >= 0.25 s of i-frames (armour-suits.md)
+    if (o.blink) { blinkPlayer(p, d, o.dist); p.invulnT = Math.max(p.invulnT, o.iframes || 0.25); end(); }
+    else dashPlayer(p, Math.cos(d), Math.sin(d), o.dist, o.dur || 0.25, { invuln: true, trail: o.trail === false ? null : o.col, roll: !!o.roll, hit: o.hit || null, carry: !!o.carry, zoneTrail: o.zoneTrail || null, reflect: !!o.reflect, onEnd: end });
+    if (o.buff) addBuff(p, o.buff[0], o.buff[1]);
+    if (o.wind) WIND.emit(Object.assign({ x: p.x, y: p.y, dir: d, by: 1 }, o.wind));
+    sfx(o.sfx || 'dash');
+  }"

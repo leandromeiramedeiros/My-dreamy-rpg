@@ -1,0 +1,10 @@
+{
+ "about": "Seed from the JS reference (tools/godot/seed.js). One-time: edit the .tres in res://data/, not this file.",
+ "rows": [
+  {
+   "id": "game_rules",
+   "default_hit_fx": "hit_light",
+   "default_death_fx": "death_fade"
+  }
+ ]
+}

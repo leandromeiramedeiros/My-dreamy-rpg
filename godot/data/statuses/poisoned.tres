@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_6u71b"]
+
+[resource]
+script = ExtResource("1_6u71b")
+id = &"poisoned"
+display_name = "Poisoned"
+element = "nature"
+duration = 5.0
+max_stacks = 3
+reacts_with = PackedStringArray("holy", "fire", "wind")
+tint = Color(0.56078434, 0.8784314, 0.47843137, 1)
+tint_alpha = 0.24
+motif_rate = 1.5
+socket = "head"

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_pryti"]
+
+[resource]
+script = ExtResource("1_pryti")
+id = &"markCap"
+display_name = "Many Threads"
+hint = "+1 Mark cap"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"markCap": 2.0
+},
+"minor": {
+"markCap": 1.0
+}
+}
+stats = {
+"markCap": "markCap"
+}
+tags = PackedStringArray("mark")
+todo = "Partial in JS: capped (Mark cap 5); Marks land in M4
+Boon numbers: minor {\"markCap\":1}, major {\"markCap\":2}"

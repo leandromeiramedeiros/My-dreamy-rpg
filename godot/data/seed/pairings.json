@@ -1,0 +1,113 @@
+{
+ "about": "Seed from the JS reference (tools/godot/seed.js). One-time: edit the .tres in res://data/, not this file.",
+ "rows": [
+  {
+   "id": "pairings",
+   "rules": [
+    {
+     "offhand": [
+      "sword",
+      "rapier",
+      "mace",
+      "daggers",
+      "claws",
+      "fans"
+     ],
+     "hand": [
+      "sword",
+      "rapier",
+      "mace",
+      "daggers",
+      "claws",
+      "fans"
+     ],
+     "note": "Melee 1H: any melee 1H (dual wield)"
+    },
+    {
+     "offhand": [
+      "wand",
+      "orb",
+      "chakram"
+     ],
+     "hand": [
+      "wand",
+      "orb",
+      "chakram"
+     ],
+     "note": "Caster 1H and Chakram: Wand, Orb, Chakram"
+    },
+    {
+     "offhand": [
+      "buckler"
+     ],
+     "hand": [
+      "sword",
+      "rapier",
+      "mace",
+      "daggers",
+      "claws",
+      "fans",
+      "chakram"
+     ],
+     "note": "Buckler: any melee 1H, Chakram"
+    },
+    {
+     "offhand": [
+      "heater"
+     ],
+     "hand": [
+      "sword",
+      "mace",
+      "chakram"
+     ],
+     "note": "Heater: Sword, Mace, Chakram"
+    },
+    {
+     "offhand": [
+      "tower"
+     ],
+     "hand": [
+      "sword",
+      "mace"
+     ],
+     "note": "Tower: Sword, Mace"
+    },
+    {
+     "offhand": [
+      "grimoire"
+     ],
+     "hand": [
+      "staff",
+      "wand",
+      "orb",
+      "sword"
+     ],
+     "note": "Grimoire: Staff, Wand, Orb, Sword (Spellblade)"
+    },
+    {
+     "offhand": [
+      "quiver"
+     ],
+     "hand": [
+      "bow",
+      "crossbow"
+     ],
+     "note": "Quiver: Bow, Crossbow only"
+    },
+    {
+     "offhand": [
+      "warhorn"
+     ],
+     "hand": [
+      "axe",
+      "hammer",
+      "halberd",
+      "sword",
+      "mace"
+     ],
+     "note": "Warhorn: Axe, Hammer, Halberd, Sword, Mace"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,44 @@
+{
+ "id": "tree_poplar_09",
+ "kind": "tree_poplar",
+ "label": "Poplar",
+ "size": [
+  18,
+  46
+ ],
+ "origin": [
+  9,
+  45
+ ],
+ "collider_r": 0.32,
+ "shadow": 7,
+ "light": null,
+ "layers": {
+  "trunk": "tree_poplar_09_trunk.png",
+  "canopy": "tree_poplar_09_canopy.png"
+ },
+ "canopy": {
+  "box": [
+   0,
+   1,
+   16,
+   29
+  ],
+  "fade": 0.35,
+  "fade_s": 0.2,
+  "rule": "split while the hero (14 x 32 px box at his feet) overlaps box and stands behind the trunk; canopy alpha 1 -> fade"
+ },
+ "wind": {
+  "cut_row": 28,
+  "px": [
+   -2,
+   -1,
+   0,
+   1,
+   2
+  ],
+  "about": "rows above cut_row shift by the wind frame (js/wind.js); Godot: a canopy shader"
+ },
+ "flip_by_light": true,
+ "flip_about": "mirrored when the zone light is on the left (zones.json light_side)"
+}

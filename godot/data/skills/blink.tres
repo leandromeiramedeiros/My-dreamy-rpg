@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_vr1p8"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_3m0j8"]
+
+[resource]
+script = ExtResource("2_3m0j8")
+id = &"blink"
+display_name = "Blink"
+description = "BOOTS — teleport a short distance toward your aim."
+element = "arcane"
+kind = "active"
+cooldown = 6.0
+stamina_cost = 30.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+aim_shape = "dash"
+aim_range = 3.6
+color = Color(0.90588236, 0.7882353, 0.627451, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) { blinkPlayer(p, a, 3.6); sfx('blink'); }"

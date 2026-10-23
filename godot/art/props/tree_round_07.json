@@ -1,0 +1,44 @@
+{
+ "id": "tree_round_07",
+ "kind": "tree_round",
+ "label": "Round tree",
+ "size": [
+  28,
+  44
+ ],
+ "origin": [
+  14,
+  43
+ ],
+ "collider_r": 0.32,
+ "shadow": 11,
+ "light": null,
+ "layers": {
+  "trunk": "tree_round_07_trunk.png",
+  "canopy": "tree_round_07_canopy.png"
+ },
+ "canopy": {
+  "box": [
+   0,
+   2,
+   26,
+   29
+  ],
+  "fade": 0.35,
+  "fade_s": 0.2,
+  "rule": "split while the hero (14 x 32 px box at his feet) overlaps box and stands behind the trunk; canopy alpha 1 -> fade"
+ },
+ "wind": {
+  "cut_row": 26,
+  "px": [
+   -2,
+   -1,
+   0,
+   1,
+   2
+  ],
+  "about": "rows above cut_row shift by the wind frame (js/wind.js); Godot: a canopy shader"
+ },
+ "flip_by_light": true,
+ "flip_about": "mirrored when the zone light is on the left (zones.json light_side)"
+}

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_uwqea"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_l66nw"]
+
+[resource]
+script = ExtResource("2_l66nw")
+id = &"cast"
+display_name = "cast"
+tags = PackedStringArray()
+decks = PackedStringArray()
+todo = "No SKILLS row in JS (spell of grimoire): built in game.js. Wave 2."

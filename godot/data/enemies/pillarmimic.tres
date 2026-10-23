@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/mountaintroll.tres" id="1_hdjuf"]
+[ext_resource type="Resource" path="res://data/loot/common_pinewood.tres" id="2_qh776"]
+[ext_resource type="Texture2D" path="res://art/enemies/mountaintroll_n.png" id="3_500p1"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4_s4uo5"]
+
+[resource]
+script = ExtResource("4_s4uo5")
+id = &"pillarmimic"
+display_name = "Pillar Mimic"
+hp = 480.0
+speed = 1.3
+damage = 70.0
+radius = 0.5
+height = 3.6
+element = "gloom"
+stagger = 4.0
+resists = Dictionary[StringName, float]({
+&"arcane": 0.5,
+&"holy": -0.5,
+&"pierce": -0.5,
+&"slash": 0.5
+})
+tags = PackedStringArray("armoured", "sleeper", "gloom")
+xp = 0.2
+movement = "mimic"
+attacks = PackedStringArray("brute")
+part_params = {
+"brute": {
+"cd": 2.0,
+"open": 1.2,
+"r": 2.0,
+"range": 1.6,
+"shape": "circle",
+"wind": 0.8
+},
+"mimic": {
+"as": "pillar",
+"then": "chase",
+"wakeRadius": 1.8
+}
+}
+loot = ExtResource("2_qh776")
+frames = ExtResource("1_hdjuf")
+normal_map = ExtResource("3_500p1")
+scale = 0.8
+blood = Color(0.65882355, 0.6117647, 0.7529412, 1)
+origin = Vector2(40, 68)
+todo = "Behaviour: parts [\"mimic\",\"brute\"] run by parts.js (part runtime); the Bestiary lane makes them components."

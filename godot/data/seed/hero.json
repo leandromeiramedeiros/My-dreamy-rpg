@@ -1,0 +1,21 @@
+{
+ "about": "Seed from the JS reference (tools/godot/seed.js). One-time: edit the .tres in res://data/, not this file.",
+ "rows": [
+  {
+   "id": "hero",
+   "display_name": "Karea",
+   "hp": 650,
+   "mp": 260,
+   "stamina": 100,
+   "speed": 3.7,
+   "vertical_speed_bonus": 0.3,
+   "radius": 0.4,
+   "height": 2,
+   "dodge": "roll",
+   "body_sheet": "res://art/hero/body.json",
+   "hair_sheet": "res://art/hero/hair.json",
+   "camera_zoom": 1,
+   "camera_smoothing": 8
+  }
+ ]
+}

@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_iw8qp"]
+[ext_resource type="Script" path="res://scripts/data/projectile_block.gd" id="2_frprw"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_2g1p7"]
+
+[sub_resource type="Resource" id="Resource_e4ko4"]
+script = ExtResource("2_frprw")
+speed = 22.0
+radius = 0.4
+life = 0.6
+pierce = 99
+color = Color(0.8117647, 0.8784314, 1, 1)
+damage = 175.0
+knockback = 0.4
+hit_params = {
+"big": true
+}
+
+[resource]
+script = ExtResource("3_2g1p7")
+id = &"piercing"
+display_name = "Piercing Shot"
+description = "A charged arrow that pierces every enemy in a line."
+element = "pierce"
+kind = "page"
+cooldown = 4.0
+mp_cost = 22.0
+tags = PackedStringArray()
+decks = PackedStringArray("arrow")
+blocks = Array[ExtResource("1_iw8qp")]([SubResource("Resource_e4ko4")])
+aim_shape = "proj"
+aim_range = 13.2
+aim_width = 0.4
+hit_weight = 1.5
+color = Color(0.6509804, 0.78431374, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) { castAnim(p); spawnProj({ x: p.x, y: p.y, z: p.z + 1.5, ang: a, speed: 22, r: 0.4, dmg: 175, life: 0.6, kind: 'arrow', col: '#cfe0ff', pierce: 99, big: true, knock: 0.4 }); sfx('bow'); shake(2); }"

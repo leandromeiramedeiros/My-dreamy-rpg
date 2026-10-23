@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/daggers_action.tres" id="1_xy5o8"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_71x14"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_mixd2"]
+[ext_resource type="Resource" path="res://data/skills/fanknives.tres" id="4_4ixpa"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_uuihg"]
+[ext_resource type="Resource" path="res://data/skills/deathmark.tres" id="6_xxdb3"]
+
+[sub_resource type="Resource" id="Resource_ft1tg"]
+script = ExtResource("5_uuihg")
+base_id = &"shiv"
+display_name = "Shiv"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_rp661"]
+script = ExtResource("5_uuihg")
+base_id = &"nightfang"
+display_name = "Nightfang"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_kdi37"]
+script = ExtResource("5_uuihg")
+base_id = &"twineclipse"
+display_name = "Twin Eclipse"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_l42i2"]
+script = ExtResource("5_uuihg")
+base_id = &"widowskiss"
+display_name = "Widow's Kiss"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_5sllq"]
+script = ExtResource("5_uuihg")
+base_id = &"fangseternal"
+display_name = "Fangs Eternal"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_mixd2")
+id = &"daggers"
+display_name = "Daggers"
+description = "A pair of night-forged fangs. Four quick cuts; circle to the rear."
+item_class = &"shadows"
+element = "pierce"
+tiers = Array[ExtResource("5_uuihg")]([SubResource("Resource_ft1tg"), SubResource("Resource_rp661"), SubResource("Resource_kdi37"), SubResource("Resource_l42i2"), SubResource("Resource_5sllq")])
+action = ExtResource("1_xy5o8")
+spell = ExtResource("4_4ixpa")
+ultimate = ExtResource("6_xxdb3")
+mp_on_hit = 6.0
+stats = Dictionary[StringName, float]({
+&"dmg": 33.0
+})
+flags = {
+"art": "sword",
+"kind": "daggers",
+"legacy": "nightfang",
+"off_action": "step"
+}
+color = Color(0.7254902, 0.65882355, 1, 1)
+todo = "Line name (T2 base): Nightfang. Class passive: Backstab: +30% crit from the rear arc; Marks. Off-action in OFFHAND: step."

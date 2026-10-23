@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_eslfx"]
+
+[resource]
+script = ExtResource("1_eslfx")
+id = &"fish_snap"
+pitch_vary = 0.03
+priority = 2
+caption = "[line snaps]"
+recipe = {
+"layers": [{
+"dur": 0.05,
+"f0": 4000.0,
+"f1": 2000.0,
+"filter": {
+"freq": 2000.0,
+"q": 1.0,
+"type": "highpass"
+},
+"gain": 0.08,
+"osc": "noise"
+}, {
+"dur": 0.1,
+"f0": 200.0,
+"f1": 90.0,
+"gain": 0.05,
+"osc": "sine"
+}]
+}

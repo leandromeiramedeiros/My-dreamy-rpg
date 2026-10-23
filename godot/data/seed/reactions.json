@@ -1,0 +1,122 @@
+{
+ "about": "Seed from the JS reference (tools/godot/seed.js). One-time: edit the .tres in res://data/, not this file.",
+ "rows": [
+  {
+   "todo": "No JS implementation (design only, elements-statuses.md); the Status lane builds it.",
+   "id": "shatter",
+   "display_name": "Shatter",
+   "trigger_elements": [
+    "slash",
+    "pierce"
+   ],
+   "on_statuses": [
+    "frozen"
+   ],
+   "damage_type": "shatter",
+   "effect_text": "Physical hit on Frozen: an AoE of damage type shatter."
+  },
+  {
+   "todo": "No JS implementation (design only, elements-statuses.md); the Status lane builds it.",
+   "id": "wildfire",
+   "display_name": "Wildfire",
+   "trigger_elements": [
+    "fire"
+   ],
+   "on_statuses": [
+    "poisoned"
+   ],
+   "damage_type": "fire",
+   "effect_text": "Fire on Poisoned: Burning spreads 2 tiles.",
+   "params": {
+    "spread": 2
+   }
+  },
+  {
+   "todo": "No JS implementation (design only, elements-statuses.md); the Status lane builds it.",
+   "id": "conduct",
+   "display_name": "Conduct",
+   "trigger_elements": [
+    "lightning"
+   ],
+   "on_statuses": [
+    "chilled",
+    "wet"
+   ],
+   "damage_type": "lightning",
+   "effect_text": "Lightning on Chilled or Wet: Shock jumps to nearby Chilled or Wet bodies."
+  },
+  {
+   "todo": "No JS implementation (design only, elements-statuses.md); the Status lane builds it.",
+   "id": "overload",
+   "display_name": "Overload",
+   "trigger_elements": [
+    "arcane"
+   ],
+   "on_statuses": [
+    "shocked"
+   ],
+   "damage_type": "arcane",
+   "effect_text": "Arcane on Shocked: extra damage and a cooldown cut."
+  },
+  {
+   "todo": "No JS implementation (design only, elements-statuses.md); the Status lane builds it.",
+   "id": "purify",
+   "display_name": "Purify",
+   "trigger_elements": [
+    "holy"
+   ],
+   "on_statuses": [
+    "burning",
+    "ablaze",
+    "poisoned"
+   ],
+   "damage_type": "holy",
+   "effect_text": "Holy on Burning or Poisoned: heals; strong against gloom."
+  },
+  {
+   "todo": "No JS implementation (design only, elements-statuses.md); the Status lane builds it.",
+   "id": "rupture",
+   "display_name": "Rupture",
+   "trigger_elements": [
+    "pierce"
+   ],
+   "on_statuses": [],
+   "needs_stagger": -1,
+   "damage_type": "pierce",
+   "effect_text": "Pierce on a full stagger bar: a guaranteed crit."
+  },
+  {
+   "todo": "No JS implementation (design only, elements-statuses.md); the Status lane builds it.",
+   "id": "detonate",
+   "display_name": "Detonate",
+   "trigger_elements": [],
+   "on_statuses": [
+    "burning",
+    "ablaze"
+   ],
+   "needs_stagger": 3,
+   "damage_type": "fire",
+   "effect_text": "Stagger 3 or more on a Burning body: consumes the Burn for damage."
+  },
+  {
+   "todo": "No JS implementation (design only, elements-statuses.md); the Status lane builds it.",
+   "id": "drift",
+   "display_name": "Drift",
+   "trigger_elements": [
+    "wind"
+   ],
+   "on_statuses": [
+    "burning",
+    "chilled",
+    "jolted",
+    "poisoned",
+    "marked",
+    "smitten",
+    "pierced",
+    "dread"
+   ],
+   "damage_type": "",
+   "effect_text": "Wind on a body with a tier-1 status: carries the status to bodies in the gust."
+  }
+ ]
+}

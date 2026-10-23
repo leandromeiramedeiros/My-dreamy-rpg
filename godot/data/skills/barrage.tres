@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_3bcc3"]
+[ext_resource type="Script" path="res://scripts/data/projectile_block.gd" id="2_rwo3g"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_20s7i"]
+
+[sub_resource type="Resource" id="Resource_k5d6j"]
+script = ExtResource("2_rwo3g")
+speed = 8.0
+life = 1.8
+count = 5
+homing = 7.0
+color = Color(0.8392157, 0.6901961, 1, 1)
+damage = 30.0
+
+[resource]
+script = ExtResource("3_20s7i")
+id = &"barrage"
+display_name = "Arcane Barrage"
+description = "Five homing missiles seek out foes."
+element = "arcane"
+kind = "page"
+cooldown = 6.0
+mp_cost = 30.0
+tags = PackedStringArray()
+decks = PackedStringArray("page")
+blocks = Array[ExtResource("1_3bcc3")]([SubResource("Resource_k5d6j")])
+aim_shape = "proj"
+aim_range = 14.4
+aim_width = 0.3
+color = Color(0.78039217, 0.60784316, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) { castAnim(p); for (let k = 0; k < 5; k++) delay(k * 0.07, () => spawnProj({ x: p.x, y: p.y, z: p.z + 1.6, ang: a + (k - 2) * 0.35, speed: 8, r: 0.3, dmg: 30, life: 1.8, kind: 'arcane', col: '#d6b0ff', homing: 7 })); sfx('arcane'); }"

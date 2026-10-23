@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/rapier_action.tres" id="1_vqtvt"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_530gg"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_aqj55"]
+[ext_resource type="Resource" path="res://data/skills/fleche.tres" id="4_gvnec"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_8enl3"]
+[ext_resource type="Resource" path="res://data/skills/perforate.tres" id="6_fq3jn"]
+
+[sub_resource type="Resource" id="Resource_jqc7n"]
+script = ExtResource("5_8enl3")
+base_id = &"tinneedle"
+display_name = "Tin Needle"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_gyn5d"]
+script = ExtResource("5_8enl3")
+base_id = &"moonpoint"
+display_name = "Moonpoint"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_i2dh5"]
+script = ExtResource("5_8enl3")
+base_id = &"silverestoc"
+display_name = "Silver Estoc"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_sj8xd"]
+script = ExtResource("5_8enl3")
+base_id = &"starpoint"
+display_name = "Starpoint"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_hla1e"]
+script = ExtResource("5_8enl3")
+base_id = &"needleeternal"
+display_name = "Needle Eternal"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_aqj55")
+id = &"rapier"
+display_name = "Rapier"
+description = "A duelist's needle. Long, narrow thrusts; a parry ripostes for a sure crit."
+item_class = &"blades"
+element = "pierce"
+tiers = Array[ExtResource("5_8enl3")]([SubResource("Resource_jqc7n"), SubResource("Resource_gyn5d"), SubResource("Resource_i2dh5"), SubResource("Resource_sj8xd"), SubResource("Resource_hla1e")])
+action = ExtResource("1_vqtvt")
+spell = ExtResource("4_gvnec")
+ultimate = ExtResource("6_fq3jn")
+mp_on_hit = 8.0
+stats = Dictionary[StringName, float]({
+&"dmg": 52.0
+})
+flags = {
+"kind": "sword",
+"off_action": "parry",
+"riposte": true,
+"sw": "thrust3"
+}
+color = Color(0.84705883, 0.89411765, 1, 1)
+swing_style = "thrust"
+todo = "Line name (T2 base): Moonpoint. Class passive: Parry as off-action; the 3rd hit is wide. Off-action in OFFHAND: parry."

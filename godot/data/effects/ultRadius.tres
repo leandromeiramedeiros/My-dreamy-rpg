@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_aq2gi"]
+
+[resource]
+script = ExtResource("1_aq2gi")
+id = &"ultRadius"
+display_name = "Wider Glow"
+hint = "R radius +1"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"ultRadius": 1.0
+},
+"minor": {
+"ultRadius": 0.5
+}
+}
+stats = {
+"ultRadius": "ultRadius"
+}
+tags = PackedStringArray("ultimate")
+todo = "Boon numbers: minor {\"ultRadius\":0.5}, major {\"ultRadius\":1}"

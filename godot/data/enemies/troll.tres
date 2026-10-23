@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/mountaintroll.tres" id="1_xncpt"]
+[ext_resource type="Resource" path="res://data/loot/class_normal.tres" id="2_d0alc"]
+[ext_resource type="Texture2D" path="res://art/enemies/mountaintroll_n.png" id="3_kkwxr"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4_bhoph"]
+
+[resource]
+script = ExtResource("4_bhoph")
+id = &"troll"
+display_name = "Mountain troll"
+hp = 1245.0
+speed = 1.3
+damage = 95.0
+radius = 0.75
+height = 4.0
+element = "nature"
+resists = Dictionary[StringName, float]({
+&"fire": -0.5,
+&"pierce": 0.5
+})
+tags = PackedStringArray("beast")
+xp = 1.15
+movement = "none"
+attacks = PackedStringArray()
+loot = ExtResource("2_d0alc")
+frames = ExtResource("1_xncpt")
+normal_map = ExtResource("3_kkwxr")
+blood = Color(0.6039216, 0.6901961, 0.41568628, 1)
+origin = Vector2(40, 68)
+todo = "Behaviour: parts [] run by parts.js (part runtime); the Bestiary lane makes them components."

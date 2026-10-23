@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_jqwa1"]
+[ext_resource type="Script" path="res://scripts/data/cone_block.gd" id="2_k2f1p"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_ad6p3"]
+
+[sub_resource type="Resource" id="Resource_xhpsp"]
+script = ExtResource("2_k2f1p")
+reach = 3.0
+arc = 80.21
+damage = 80.0
+knockback = 1.6
+
+[resource]
+script = ExtResource("3_ad6p3")
+id = &"shove"
+display_name = "Shove"
+description = "Heave the wall forward: a gust that hurls a line of foes back."
+element = "slash"
+cooldown = 4.0
+mp_cost = 18.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_jqwa1")]([SubResource("Resource_xhpsp")])
+aim_shape = "cone"
+aim_range = 3.0
+aim_arc = 80.21
+stagger = 2.0
+hit_weight = 1.5
+color = Color(0.53333336, 0.59607846, 0.72156864, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) { swingWeapon(p, 0.2, 1.4, 1); hitCone(p.x, p.y, a, 1.4, 3, 80, { knock: 1.6 }); WIND.emit({ kind: 'vector', x: p.x, y: p.y, dir: a, r: 3.5, force: 4, life: 0.6, arc: 1, by: 1 }); fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 1.4, r: 3, col: '#c8d8f0', life: 0.25, w: 6 }); shake(4); sfx('heavy'); }"

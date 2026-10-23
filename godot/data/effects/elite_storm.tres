@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_0aqf5"]
+
+[resource]
+script = ExtResource("1_0aqf5")
+id = &"elite_storm"
+display_name = "Storm"
+hint = "Elite modifier"
+source = "elite"
+if_tags = PackedStringArray()
+do_action = &"elite_storm"
+do_params = {
+"color": "#fff07a",
+"damage_mult": 1.25,
+"hp_mult": 3.2,
+"rare": false
+}
+icd = 0.0
+tags = PackedStringArray()
+todo = "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.
+JS:
+tick: tick(e, dt) {
+      e.eArcT = (e.eArcT || 1.2) - dt; const p = G.player;
+      if (e.eArcT <= 0 && dist(e.x, e.y, p.x, p.y) < 1.8 + e.r) { e.eArcT = 1.2; fx({ type: 'lightning', pts: [[e.x, e.y, e.z + 1.5], [p.x, p.y, p.z + 1]], life: 0.2, col: '#fff07a' }); enemyHit(e, e.def.dmg * e.dm * 0.35, 'lightning'); sfx('zap'); }
+      else if (e.eArcT <= 0) e.eArcT = 0.3;
+    }"

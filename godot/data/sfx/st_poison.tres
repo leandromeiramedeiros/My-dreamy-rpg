@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_e2gx0"]
+
+[resource]
+script = ExtResource("1_e2gx0")
+id = &"st_poison"
+pitch_vary = 0.06
+caption = "[poisoned]"
+recipe = {
+"layers": [{
+"dur": 0.06,
+"f0": 300.0,
+"f1": 600.0,
+"gain": 0.04,
+"osc": "sine"
+}, {
+"delay": 0.08,
+"dur": 0.06,
+"f0": 400.0,
+"f1": 800.0,
+"gain": 0.03,
+"osc": "sine"
+}]
+}

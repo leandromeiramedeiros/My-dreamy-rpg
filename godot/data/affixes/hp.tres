@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_osnai"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_5d1tl"]
+
+[sub_resource type="Resource" id="Resource_4um0s"]
+script = ExtResource("2_5d1tl")
+display_name = "Sturdy"
+roll = Vector2(25, 35)
+
+[sub_resource type="Resource" id="Resource_alwxj"]
+script = ExtResource("2_5d1tl")
+display_name = "Hale"
+roll = Vector2(55, 70)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_qtjk6"]
+script = ExtResource("2_5d1tl")
+display_name = "Unbroken"
+roll = Vector2(75, 90)
+item_level = 28
+
+[resource]
+script = ExtResource("1_osnai")
+id = &"hp"
+kind = "suffix"
+tiers = Array[ExtResource("2_5d1tl")]([SubResource("Resource_4um0s"), SubResource("Resource_alwxj"), SubResource("Resource_qtjk6")])

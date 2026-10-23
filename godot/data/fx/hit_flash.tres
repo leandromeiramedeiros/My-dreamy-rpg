@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/fx_layer.gd" id="1_b2usa"]
+[ext_resource type="Script" path="res://scripts/data/fx_tint.gd" id="2_umvtf"]
+[ext_resource type="Script" path="res://scripts/data/fx_data.gd" id="3_kl2sr"]
+
+[sub_resource type="Resource" id="Resource_pvyhu"]
+script = ExtResource("2_umvtf")
+strength = 0.85
+life = 0.09
+
+[resource]
+script = ExtResource("3_kl2sr")
+id = &"hit_flash"
+display_name = "Hit flash"
+layers = Array[ExtResource("1_b2usa")]([SubResource("Resource_pvyhu")])

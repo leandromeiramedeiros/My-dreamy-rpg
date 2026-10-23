@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/chakram_action.tres" id="1_342to"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_35ggm"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_axagl"]
+[ext_resource type="Resource" path="res://data/skills/ricochet.tres" id="4_grv47"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_kj1f6"]
+[ext_resource type="Resource" path="res://data/skills/guillotine.tres" id="6_3jqul"]
+
+[sub_resource type="Resource" id="Resource_507u8"]
+script = ExtResource("5_kj1f6")
+base_id = &"rim"
+display_name = "Rim"
+multiplier = 0.7
+
+[sub_resource type="Resource" id="Resource_6mp8s"]
+script = ExtResource("5_kj1f6")
+base_id = &"moonchakram"
+display_name = "Moon Chakram"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_3q2oe"]
+script = ExtResource("5_kj1f6")
+base_id = &"silverring"
+display_name = "Silverring"
+required_level = 16
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_saicq"]
+script = ExtResource("5_kj1f6")
+base_id = &"eclipsering"
+display_name = "Eclipse Ring"
+required_level = 24
+multiplier = 2.1
+
+[sub_resource type="Resource" id="Resource_s3ioq"]
+script = ExtResource("5_kj1f6")
+base_id = &"ringeternal"
+display_name = "Ring Eternal"
+required_level = 32
+multiplier = 2.8
+
+[resource]
+script = ExtResource("3_axagl")
+id = &"chakram"
+display_name = "Chakram"
+description = "A returning disc: it cuts going out and coming back. The one-handed shot."
+item_class = &"shots"
+element = "slash"
+tiers = Array[ExtResource("5_kj1f6")]([SubResource("Resource_507u8"), SubResource("Resource_6mp8s"), SubResource("Resource_3q2oe"), SubResource("Resource_saicq"), SubResource("Resource_s3ioq")])
+action = ExtResource("1_342to")
+spell = ExtResource("4_grv47")
+ultimate = ExtResource("6_3jqul")
+mp_on_hit = 7.0
+hold = &"focus"
+stats = Dictionary[StringName, float]({
+&"dmg": 19.0
+})
+flags = {
+"kind": "chakram",
+"off_action": "snapshot",
+"sw": "disc"
+}
+color = Color(0.90588236, 0.93333334, 1, 1)
+attack_pose = "none"
+swing_style = "aim"
+carry_pose = "float"
+todo = "Line name (T2 base): Moon Chakram. Class passive: Focus: still for 0.6 s, next shot crits; Snapshot crits. Off-action in OFFHAND: snapshot."

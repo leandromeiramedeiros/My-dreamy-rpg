@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_1n4r7"]
+
+[resource]
+script = ExtResource("1_1n4r7")
+id = &"loot"
+bus = "ui"
+priority = 2
+caption = "[loot]"
+recipe = {
+"layers": [{
+"dur": 0.25,
+"f0": 660.0,
+"f1": 1320.0,
+"gain": 0.05,
+"osc": "triangle"
+}, {
+"delay": 0.06,
+"dur": 0.3,
+"f0": 990.0,
+"f1": 1980.0,
+"gain": 0.03,
+"osc": "sine"
+}]
+}

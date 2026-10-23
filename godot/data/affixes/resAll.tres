@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_wsgyu"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_q810s"]
+
+[sub_resource type="Resource" id="Resource_k4qjt"]
+script = ExtResource("2_q810s")
+display_name = "Sovereign"
+roll = Vector2(0.03, 0.04)
+
+[sub_resource type="Resource" id="Resource_m6krj"]
+script = ExtResource("2_q810s")
+display_name = "Unbowed"
+roll = Vector2(0.05, 0.06)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_7d8pj"]
+script = ExtResource("2_q810s")
+display_name = "Dreamwarded"
+roll = Vector2(0.08, 0.1)
+item_level = 28
+
+[resource]
+script = ExtResource("1_wsgyu")
+id = &"resAll"
+kind = "suffix"
+tiers = Array[ExtResource("2_q810s")]([SubResource("Resource_k4qjt"), SubResource("Resource_m6krj"), SubResource("Resource_7d8pj")])
+min_rarity = &"legendary"

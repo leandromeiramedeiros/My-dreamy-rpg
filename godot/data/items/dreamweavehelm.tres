@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/arcaneward.tres" id="1_tgw58"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_alexv"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_tgshb"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_s20f7"]
+
+[sub_resource type="Resource" id="Resource_p6krm"]
+script = ExtResource("4_s20f7")
+base_id = &"linencirclet"
+display_name = "Linen Circlet"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_ilaf5"]
+script = ExtResource("4_s20f7")
+base_id = &"dreamcirclet"
+display_name = "Dreamweave Circlet"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_re50w"]
+script = ExtResource("4_s20f7")
+base_id = &"starcirclet"
+display_name = "Starlit Circlet"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_acoq0"]
+script = ExtResource("4_s20f7")
+base_id = &"nebuladiadem"
+display_name = "Nebula Diadem"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_5ujvp"]
+script = ExtResource("4_s20f7")
+base_id = &"crownofdreams"
+display_name = "Crown of Dreams"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_tgshb")
+id = &"dreamweavehelm"
+display_name = "Dreamweave Circlet"
+description = "+8% power, +40 MP."
+kind = "armour"
+slot = "head"
+item_class = &"caster"
+suit = &"dreamweave"
+hands = 0
+element = "arcane"
+tiers = Array[ExtResource("4_s20f7")]([SubResource("Resource_p6krm"), SubResource("Resource_ilaf5"), SubResource("Resource_re50w"), SubResource("Resource_acoq0"), SubResource("Resource_5ujvp")])
+active = ExtResource("1_tgw58")
+stats = Dictionary[StringName, float]({
+&"mp": 40.0,
+&"power": 0.08
+})
+color = Color(0.72156864, 0.627451, 0.9411765, 1)
+attack_pose = "none"
+todo = "Suit Dreamweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."

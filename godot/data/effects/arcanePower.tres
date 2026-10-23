@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_umewn"]
+
+[resource]
+script = ExtResource("1_umewn")
+id = &"arcanePower"
+display_name = "Mirror Loop"
+hint = "+15% arcane damage; Marks last 1 s longer"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"arcaneDmg": 0.15,
+"markDur": 1.0
+},
+"minor": {
+"arcaneDmg": 0.08,
+"markDur": 0.5
+}
+}
+stats = {
+"arcaneDmg": "arcaneDmg"
+}
+tags = PackedStringArray("arcane", "mark")
+todo = "Partial in JS: markDur (no Marks yet)
+Boon numbers: minor {\"arcaneDmg\":0.08,\"markDur\":0.5}, major {\"arcaneDmg\":0.15,\"markDur\":1}"

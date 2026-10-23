@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_hjrcp"]
+
+[resource]
+script = ExtResource("1_hjrcp")
+id = &"warn_ring"
+priority = 3
+caption = "[boss wind-up]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 50.0,
+"f1": 90.0,
+"gain": 0.18,
+"osc": "sine"
+}]
+}

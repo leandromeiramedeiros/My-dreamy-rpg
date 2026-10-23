@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="SpriteFrames" path="res://art/enemies/ogre.tres" id="1_dvv71"]
+[ext_resource type="Resource" path="res://data/loot/common_pinewood.tres" id="2_pcpua"]
+[ext_resource type="Texture2D" path="res://art/enemies/ogre_n.png" id="3_w813g"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4_1pdn1"]
+
+[resource]
+script = ExtResource("4_1pdn1")
+id = &"gloomknight"
+display_name = "Gloom Knight"
+hp = 300.0
+speed = 1.6
+damage = 54.0
+radius = 0.45
+height = 3.2
+element = "gloom"
+stagger = 3.0
+resists = Dictionary[StringName, float]({
+&"arcane": 0.5,
+&"holy": -0.5,
+&"pierce": -0.5,
+&"slash": 0.5,
+&"wind": 0.5
+})
+tags = PackedStringArray("armoured", "gloom")
+xp = 0.16
+attacks = PackedStringArray("brute")
+support = &"shield-front"
+part_params = {
+"brute": {
+"arc": 100.0,
+"cd": 1.6,
+"front": 120.0,
+"open": 1.0,
+"r": 2.0,
+"range": 1.7,
+"shape": "cone",
+"wind": 0.75
+},
+"shield-front": {
+"arc": 140.0,
+"mul": 0.15,
+"rear": 1.3,
+"turn": 140.0
+}
+}
+loot = ExtResource("2_pcpua")
+frames = ExtResource("1_dvv71")
+normal_map = ExtResource("3_w813g")
+scale = 0.9
+blood = Color(0.5411765, 0.47843137, 0.72156864, 1)
+origin = Vector2(40, 72)
+todo = "Behaviour: parts [\"chase\",\"brute\",\"shield-front\"] run by parts.js (part runtime); the Bestiary lane makes them components."

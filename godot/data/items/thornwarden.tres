@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/briarmantle.tres" id="1_cio3j"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_25gng"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_66ohl"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_yivxb"]
+
+[sub_resource type="Resource" id="Resource_afbav"]
+script = ExtResource("4_yivxb")
+base_id = &"mosscoat"
+display_name = "Moss Coat"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_n0rck"]
+script = ExtResource("4_yivxb")
+base_id = &"thorncoat"
+display_name = "Thornwarden Coat"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_vochd"]
+script = ExtResource("4_yivxb")
+base_id = &"briarcoat"
+display_name = "Briarwoven Coat"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_f75n8"]
+script = ExtResource("4_yivxb")
+base_id = &"aurorabriarcoat"
+display_name = "Aurora Briarcoat"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_xa1it"]
+script = ExtResource("4_yivxb")
+base_id = &"rootseternal"
+display_name = "Roots Eternal"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_66ohl")
+id = &"thornwarden"
+display_name = "Thornwarden Coat"
+description = "+12% crit, +10% attack speed, +4 HP/s."
+kind = "armour"
+slot = "chest"
+item_class = &"medium"
+suit = &"thornwarden"
+hands = 0
+element = "nature"
+tiers = Array[ExtResource("4_yivxb")]([SubResource("Resource_afbav"), SubResource("Resource_n0rck"), SubResource("Resource_vochd"), SubResource("Resource_f75n8"), SubResource("Resource_xa1it")])
+active = ExtResource("1_cio3j")
+stats = Dictionary[StringName, float]({
+&"crit": 0.12,
+&"haste": 0.1,
+&"regen": 4.0
+})
+resists = Dictionary[StringName, float]({
+&"fire": -0.25,
+&"nature": 0.1,
+&"pierce": 0.25
+})
+color = Color(0.37254903, 0.6039216, 0.43137255, 1)
+attack_pose = "none"
+todo = "Suit Thornwarden (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."

@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_0w8ua"]
+
+[resource]
+script = ExtResource("1_0w8ua")
+id = &"fireBurn"
+display_name = "Ember Sign"
+hint = "+15% fire damage and +10% Burn chance"
+source = "trinket"
+when_event = "hit"
+if_tags = PackedStringArray()
+do_action = &"fireBurn"
+do_params = {
+"major": {
+"burnChance": 0.1,
+"fireDmg": 0.15
+},
+"minor": {
+"burnChance": 0.05,
+"fireDmg": 0.08
+}
+}
+stats = {
+"fireDmg": "fireDmg"
+}
+tags = PackedStringArray("fire", "burn")
+todo = "Boon numbers: minor {\"fireDmg\":0.08,\"burnChance\":0.05}, major {\"fireDmg\":0.15,\"burnChance\":0.1}
+JS:
+do: do(c, v) { if (c.el === 'fire' && Math.random() < (v.burnChance || 0)) { const e = c.e; applyStatus(e, 'burning', Math.max(e.burnT || 0, 2), 'fire'); e.burnTick = e.burnTick || 0.5; e.burnCast = c.cast; } }"

@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_4sail"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_rn178"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_vnrt4"]
+
+[sub_resource type="Resource" id="Resource_24heu"]
+script = ExtResource("3_vnrt4")
+base_id = &"cindersash"
+display_name = "Cinder Sash"
+required_level = 16
+
+[resource]
+script = ExtResource("2_rn178")
+id = &"cindersash"
+display_name = "Cinder Sash"
+description = "Potions leave an ember that burns nearby foes."
+kind = "trinket"
+slot = "belt"
+hands = 0
+tiers = Array[ExtResource("3_vnrt4")]([SubResource("Resource_24heu")])
+stats = Dictionary[StringName, float]({
+&"potionCharge": 1.0
+})
+flags = {
+"rule": {
+"potionEmber": true
+}
+}
+attack_pose = "none"
+todo = "Unique rule (JS `rule`): {\"potionEmber\":true}. Wave 2: an Effect."

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_efyn0"]
+
+[resource]
+script = ExtResource("1_efyn0")
+id = &"twohand_windup"
+pitch_vary = 0.06
+priority = 2
+caption = "[charging swing]"
+recipe = {
+"layers": [{
+"dur": 0.4,
+"f0": 300.0,
+"f1": 1800.0,
+"filter": {
+"freq": 600.0,
+"q": 0.8,
+"type": "bandpass"
+},
+"gain": 0.05,
+"osc": "noise"
+}]
+}

@@ -1,0 +1,997 @@
+{
+ "about": "Seed from the JS reference (tools/godot/seed.js). One-time: edit the .tres in res://data/, not this file.",
+ "rows": [
+  {
+   "id": "power",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Keen",
+     "roll": [
+      0.03,
+      0.05
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Fierce",
+     "roll": [
+      0.06,
+      0.08
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Savage",
+     "roll": [
+      0.1,
+      0.13
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "crit",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Sharpened",
+     "roll": [
+      0.02,
+      0.03
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Honed",
+     "roll": [
+      0.04,
+      0.05
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Lethal",
+     "roll": [
+      0.07,
+      0.08
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "critDmg",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Heavy",
+     "roll": [
+      0.08,
+      0.12
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Crushing",
+     "roll": [
+      0.16,
+      0.2
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Ruinous",
+     "roll": [
+      0.24,
+      0.3
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "haste",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Quick",
+     "roll": [
+      0.03,
+      0.04
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Swift",
+     "roll": [
+      0.06,
+      0.07
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Whirling",
+     "roll": [
+      0.09,
+      0.11
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "skillDmg",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Vivid",
+     "roll": [
+      0.04,
+      0.06
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Luminous",
+     "roll": [
+      0.08,
+      0.1
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Resplendent",
+     "roll": [
+      0.12,
+      0.15
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "cdr",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Patient",
+     "roll": [
+      0.02,
+      0.03
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Steady",
+     "roll": [
+      0.04,
+      0.05
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Timeless",
+     "roll": [
+      0.06,
+      0.08
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "fireDmg",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Smoldering",
+     "roll": [
+      0.04,
+      0.06
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Blazing",
+     "roll": [
+      0.08,
+      0.1
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Searing",
+     "roll": [
+      0.12,
+      0.15
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "frostDmg",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Rimed",
+     "roll": [
+      0.04,
+      0.06
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Frosted",
+     "roll": [
+      0.08,
+      0.1
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Glacial",
+     "roll": [
+      0.12,
+      0.15
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "natureDmg",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Mossy",
+     "roll": [
+      0.04,
+      0.06
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Verdant",
+     "roll": [
+      0.08,
+      0.1
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Overgrown",
+     "roll": [
+      0.12,
+      0.15
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "lightningDmg",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Crackling",
+     "roll": [
+      0.04,
+      0.06
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Thundering",
+     "roll": [
+      0.08,
+      0.1
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Stormborn",
+     "roll": [
+      0.12,
+      0.15
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "arcaneDmg",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Shimmering",
+     "roll": [
+      0.04,
+      0.06
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Starlit",
+     "roll": [
+      0.08,
+      0.1
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Eventide",
+     "roll": [
+      0.12,
+      0.15
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "holyDmg",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Hallowed",
+     "roll": [
+      0.04,
+      0.06
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Dawnlit",
+     "roll": [
+      0.08,
+      0.1
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Sunwrought",
+     "roll": [
+      0.12,
+      0.15
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "statusChance",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Restless",
+     "roll": [
+      0.05,
+      0.07
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Fated",
+     "roll": [
+      0.09,
+      0.12
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Ominous",
+     "roll": [
+      0.16,
+      0.2
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "markCap",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Tethered",
+     "roll": [
+      1,
+      1
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Bound",
+     "roll": [
+      2,
+      2
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Fettered",
+     "roll": [
+      3,
+      3
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "chargeSpeed",
+   "kind": "prefix",
+   "tiers": [
+    {
+     "display_name": "Eager",
+     "roll": [
+      0.05,
+      0.07
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Ardent",
+     "roll": [
+      0.09,
+      0.12
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Kindled",
+     "roll": [
+      0.14,
+      0.18
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "hp",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Sturdy",
+     "roll": [
+      25,
+      35
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Hale",
+     "roll": [
+      55,
+      70
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Unbroken",
+     "roll": [
+      75,
+      90
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "def",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Guarded",
+     "roll": [
+      0.02,
+      0.03
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Bulwarked",
+     "roll": [
+      0.04,
+      0.055
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Impregnable",
+     "roll": [
+      0.06,
+      0.08
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "regen",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Mending",
+     "roll": [
+      1,
+      1.5
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Renewing",
+     "roll": [
+      2,
+      2.5
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Undying",
+     "roll": [
+      3,
+      4
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "mpRegen",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Lucid",
+     "roll": [
+      0.8,
+      1.2
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Tranquil",
+     "roll": [
+      1.6,
+      2.2
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Serene",
+     "roll": [
+      2.4,
+      3.2
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "speed",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Lithe",
+     "roll": [
+      0.1,
+      0.14
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Nimble",
+     "roll": [
+      0.2,
+      0.26
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Windborne",
+     "roll": [
+      0.3,
+      0.38
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "resFire",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Warded",
+     "roll": [
+      0.06,
+      0.08
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Hardened",
+     "roll": [
+      0.1,
+      0.14
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Unyielding",
+     "roll": [
+      0.17,
+      0.2
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "resFrost",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Warded",
+     "roll": [
+      0.06,
+      0.08
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Hardened",
+     "roll": [
+      0.1,
+      0.14
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Unyielding",
+     "roll": [
+      0.17,
+      0.2
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "resNature",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Warded",
+     "roll": [
+      0.06,
+      0.08
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Hardened",
+     "roll": [
+      0.1,
+      0.14
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Unyielding",
+     "roll": [
+      0.17,
+      0.2
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "resLightning",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Warded",
+     "roll": [
+      0.06,
+      0.08
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Hardened",
+     "roll": [
+      0.1,
+      0.14
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Unyielding",
+     "roll": [
+      0.17,
+      0.2
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "resArcane",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Warded",
+     "roll": [
+      0.06,
+      0.08
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Hardened",
+     "roll": [
+      0.1,
+      0.14
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Unyielding",
+     "roll": [
+      0.17,
+      0.2
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "resHoly",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Warded",
+     "roll": [
+      0.06,
+      0.08
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Hardened",
+     "roll": [
+      0.1,
+      0.14
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Unyielding",
+     "roll": [
+      0.17,
+      0.2
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "resSlash",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Warded",
+     "roll": [
+      0.06,
+      0.08
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Hardened",
+     "roll": [
+      0.1,
+      0.14
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Unyielding",
+     "roll": [
+      0.17,
+      0.2
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "resPierce",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Warded",
+     "roll": [
+      0.06,
+      0.08
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Hardened",
+     "roll": [
+      0.1,
+      0.14
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Unyielding",
+     "roll": [
+      0.17,
+      0.2
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "resAll",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Sovereign",
+     "roll": [
+      0.03,
+      0.04
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Unbowed",
+     "roll": [
+      0.05,
+      0.06
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Dreamwarded",
+     "roll": [
+      0.08,
+      0.1
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": "legendary"
+  },
+  {
+   "id": "resGloom",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Warded",
+     "roll": [
+      0.06,
+      0.08
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Hardened",
+     "roll": [
+      0.1,
+      0.14
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Unyielding",
+     "roll": [
+      0.17,
+      0.2
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": ""
+  },
+  {
+   "id": "onDodge",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Evasive",
+     "roll": [
+      0.01,
+      0.015
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Phantom",
+     "roll": [
+      0.02,
+      0.03
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Wraithstep",
+     "roll": [
+      0.035,
+      0.04
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": "epic"
+  },
+  {
+   "id": "onKill",
+   "kind": "suffix",
+   "tiers": [
+    {
+     "display_name": "Gleaning",
+     "roll": [
+      0.02,
+      0.03
+     ],
+     "item_level": 1
+    },
+    {
+     "display_name": "Reaping",
+     "roll": [
+      0.04,
+      0.05
+     ],
+     "item_level": 14
+    },
+    {
+     "display_name": "Ravening",
+     "roll": [
+      0.06,
+      0.07
+     ],
+     "item_level": 28
+    }
+   ],
+   "min_rarity": "epic"
+  }
+ ]
+}

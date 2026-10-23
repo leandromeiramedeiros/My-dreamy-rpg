@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_dvc07"]
+[ext_resource type="Resource" path="res://data/effects/originWarrior.tres" id="2_6csvr"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_b14hv"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_tgyel"]
+
+[sub_resource type="Resource" id="Resource_t6kwn"]
+script = ExtResource("4_tgyel")
+base_id = &"origin_warrior"
+display_name = "Ring of the Vow"
+
+[resource]
+script = ExtResource("3_b14hv")
+id = &"origin_warrior"
+display_name = "Ring of the Vow"
+description = "+1 stagger on weapon skills"
+kind = "trinket"
+slot = "ring"
+hands = 0
+tiers = Array[ExtResource("4_tgyel")]([SubResource("Resource_t6kwn")])
+passives = Array[ExtResource("1_dvc07")]([ExtResource("2_6csvr")])
+attack_pose = "none"
+todo = "Origin ring (Warrior)."

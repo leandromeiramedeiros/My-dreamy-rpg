@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_eelgk"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_rbeyk"]
+
+[sub_resource type="Resource" id="Resource_181rh"]
+script = ExtResource("2_rbeyk")
+display_name = "Warded"
+roll = Vector2(0.06, 0.08)
+
+[sub_resource type="Resource" id="Resource_uku41"]
+script = ExtResource("2_rbeyk")
+display_name = "Hardened"
+roll = Vector2(0.1, 0.14)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_mlf54"]
+script = ExtResource("2_rbeyk")
+display_name = "Unyielding"
+roll = Vector2(0.17, 0.2)
+item_level = 28
+
+[resource]
+script = ExtResource("1_eelgk")
+id = &"resPierce"
+kind = "suffix"
+tiers = Array[ExtResource("2_rbeyk")]([SubResource("Resource_181rh"), SubResource("Resource_uku41"), SubResource("Resource_mlf54")])

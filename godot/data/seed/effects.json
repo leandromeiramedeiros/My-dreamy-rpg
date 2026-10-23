@@ -1,0 +1,1663 @@
+{
+ "about": "Seed from the JS reference (tools/godot/seed.js). One-time: edit the .tres in res://data/, not this file.",
+ "rows": [
+  {
+   "id": "fireBurn",
+   "display_name": "Ember Sign",
+   "hint": "+15% fire damage and +10% Burn chance",
+   "source": "trinket",
+   "when_event": "hit",
+   "icd": 0.5,
+   "tags": [
+    "fire",
+    "burn"
+   ],
+   "stats": {
+    "fireDmg": "fireDmg"
+   },
+   "do_params": {
+    "minor": {
+     "fireDmg": 0.08,
+     "burnChance": 0.05
+    },
+    "major": {
+     "fireDmg": 0.15,
+     "burnChance": 0.1
+    }
+   },
+   "do_action": "fireBurn",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"fireDmg\":0.08,\"burnChance\":0.05}, major {\"fireDmg\":0.15,\"burnChance\":0.1}\nJS:\ndo: do(c, v) { if (c.el === 'fire' && Math.random() < (v.burnChance || 0)) { const e = c.e; applyStatus(e, 'burning', Math.max(e.burnT || 0, 2), 'fire'); e.burnTick = e.burnTick || 0.5; e.burnCast = c.cast; } }"
+  },
+  {
+   "id": "shatterRadius",
+   "display_name": "Wide Fracture",
+   "hint": "Shatter radius +1",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "reaction",
+    "shatter"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "shatterRadius": 1
+    },
+    "major": {
+     "shatterRadius": 2
+    }
+   },
+   "do_action": "",
+   "data_only": true,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"shatterRadius\":1}, major {\"shatterRadius\":2}"
+  },
+  {
+   "id": "conductJump",
+   "display_name": "Leaping Current",
+   "hint": "Conduct +1 jump",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "lightning",
+    "conduct"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "conductJump": 1
+    },
+    "major": {
+     "conductJump": 2
+    }
+   },
+   "do_action": "",
+   "data_only": true,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"conductJump\":1}, major {\"conductJump\":2}"
+  },
+  {
+   "id": "backstabArc",
+   "display_name": "Wider Shadow",
+   "hint": "Backstab arc +30 degrees",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "melee",
+    "backstab"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "backstab": 15
+    },
+    "major": {
+     "backstab": 30
+    }
+   },
+   "do_action": "",
+   "data_only": true,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"backstab\":15}, major {\"backstab\":30}"
+  },
+  {
+   "id": "markCap",
+   "display_name": "Many Threads",
+   "hint": "+1 Mark cap",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "mark"
+   ],
+   "stats": {
+    "markCap": "markCap"
+   },
+   "do_params": {
+    "minor": {
+     "markCap": 1
+    },
+    "major": {
+     "markCap": 2
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Partial in JS: capped (Mark cap 5); Marks land in M4\nBoon numbers: minor {\"markCap\":1}, major {\"markCap\":2}"
+  },
+  {
+   "id": "chargedSwing",
+   "display_name": "Quickened Wrath",
+   "hint": "Charged swings 0.25 s faster",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "melee",
+    "charge"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "chargeTime": 0.12
+    },
+    "major": {
+     "chargeTime": 0.25
+    }
+   },
+   "do_action": "",
+   "data_only": true,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"chargeTime\":0.12}, major {\"chargeTime\":0.25}"
+  },
+  {
+   "id": "projPierce",
+   "display_name": "Piercing Thought",
+   "hint": "Projectiles +1 pierce",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "projectile"
+   ],
+   "stats": {
+    "pierce": "pierce"
+   },
+   "do_params": {
+    "minor": {
+     "pierce": 1
+    },
+    "major": {
+     "pierce": 2
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"pierce\":1}, major {\"pierce\":2}"
+  },
+  {
+   "id": "frostPower",
+   "display_name": "Hoarfrost Band",
+   "hint": "+15% frost damage and +10% Freeze chance",
+   "source": "trinket",
+   "when_event": "hit",
+   "icd": 0.5,
+   "tags": [
+    "frost",
+    "freeze"
+   ],
+   "stats": {
+    "frostDmg": "frostDmg"
+   },
+   "do_params": {
+    "minor": {
+     "frostDmg": 0.08,
+     "freezeChance": 0.05
+    },
+    "major": {
+     "frostDmg": 0.15,
+     "freezeChance": 0.1
+    }
+   },
+   "do_action": "frostPower",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"frostDmg\":0.08,\"freezeChance\":0.05}, major {\"frostDmg\":0.15,\"freezeChance\":0.1}\nJS:\ndo: do(c, v) { if (c.el === 'frost' && Math.random() < (v.freezeChance || 0)) { const e = c.e; applyStatus(e, 'frozen', Math.max(e.stunT, e.boss ? 0.25 : 1), 'frost'); } }"
+  },
+  {
+   "id": "naturePower",
+   "display_name": "Rootbound Loop",
+   "hint": "+15% nature damage and +10% Poison chance",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "nature",
+    "poison"
+   ],
+   "stats": {
+    "natureDmg": "natureDmg"
+   },
+   "do_params": {
+    "minor": {
+     "natureDmg": 0.08,
+     "poisonChance": 0.05
+    },
+    "major": {
+     "natureDmg": 0.15,
+     "poisonChance": 0.1
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Partial in JS: poisonChance (no hero poison yet)\nBoon numbers: minor {\"natureDmg\":0.08,\"poisonChance\":0.05}, major {\"natureDmg\":0.15,\"poisonChance\":0.1}"
+  },
+  {
+   "id": "lightningPower",
+   "display_name": "Storm Ring",
+   "hint": "+15% lightning damage; Shock lasts 1 s longer",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "lightning",
+    "shock"
+   ],
+   "stats": {
+    "lightningDmg": "lightningDmg"
+   },
+   "do_params": {
+    "minor": {
+     "lightningDmg": 0.08,
+     "shockDur": 0.5
+    },
+    "major": {
+     "lightningDmg": 0.15,
+     "shockDur": 1
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Partial in JS: shockDur (no Shock status yet)\nBoon numbers: minor {\"lightningDmg\":0.08,\"shockDur\":0.5}, major {\"lightningDmg\":0.15,\"shockDur\":1}"
+  },
+  {
+   "id": "arcanePower",
+   "display_name": "Mirror Loop",
+   "hint": "+15% arcane damage; Marks last 1 s longer",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "arcane",
+    "mark"
+   ],
+   "stats": {
+    "arcaneDmg": "arcaneDmg"
+   },
+   "do_params": {
+    "minor": {
+     "arcaneDmg": 0.08,
+     "markDur": 0.5
+    },
+    "major": {
+     "arcaneDmg": 0.15,
+     "markDur": 1
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Partial in JS: markDur (no Marks yet)\nBoon numbers: minor {\"arcaneDmg\":0.08,\"markDur\":0.5}, major {\"arcaneDmg\":0.15,\"markDur\":1}"
+  },
+  {
+   "id": "holyPower",
+   "display_name": "Halo Hoop",
+   "hint": "+15% holy damage; holy hits stagger more",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "holy"
+   ],
+   "stats": {
+    "holyDmg": "holyDmg",
+    "stagger": "holyStagger"
+   },
+   "do_params": {
+    "minor": {
+     "holyDmg": 0.08,
+     "stagger": 0.5
+    },
+    "major": {
+     "holyDmg": 0.15,
+     "stagger": 1
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"holyDmg\":0.08,\"stagger\":0.5}, major {\"holyDmg\":0.15,\"stagger\":1}"
+  },
+  {
+   "id": "chargeFromReact",
+   "display_name": "Reaction Locket",
+   "hint": "+15% charge from reactions",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "reaction",
+    "ultimate"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "reactCharge": 0.08
+    },
+    "major": {
+     "reactCharge": 0.15
+    }
+   },
+   "do_action": "",
+   "data_only": true,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"reactCharge\":0.08}, major {\"reactCharge\":0.15}"
+  },
+  {
+   "id": "rFrostTag",
+   "display_name": "Frozen Ultimate",
+   "hint": "R gains the frost tag",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "ultimate",
+    "frost"
+   ],
+   "stats": {
+    "rDmg": "ultDmg"
+   },
+   "do_params": {
+    "minor": {
+     "rTag": "frost"
+    },
+    "major": {
+     "rTag": "frost",
+     "rDmg": 0.1
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Partial in JS: the frost tag (tags land in M4)\nBoon numbers: minor {\"rTag\":\"frost\"}, major {\"rTag\":\"frost\",\"rDmg\":0.1}"
+  },
+  {
+   "id": "rCost",
+   "display_name": "Thrifty Light",
+   "hint": "R costs 80 charge",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "ultimate"
+   ],
+   "stats": {
+    "rCost": "rCost"
+   },
+   "do_params": {
+    "minor": {
+     "rCost": 90
+    },
+    "major": {
+     "rCost": 80
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"rCost\":90}, major {\"rCost\":80}"
+  },
+  {
+   "id": "rFirstFree",
+   "display_name": "First Dawn",
+   "hint": "The first R in each fight is free",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "ultimate"
+   ],
+   "stats": {
+    "rFirstCost": "rFirstCost"
+   },
+   "do_params": {
+    "minor": {
+     "rFirstCost": 0.5
+    },
+    "major": {
+     "rFirstFree": true
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"rFirstCost\":0.5}, major {\"rFirstFree\":true}"
+  },
+  {
+   "id": "ultDmg",
+   "display_name": "Lantern Heart",
+   "hint": "+10% ultimate damage",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "ultimate"
+   ],
+   "stats": {
+    "ultDmg": "ultDmg"
+   },
+   "do_params": {
+    "minor": {
+     "ultDmg": 0.05
+    },
+    "major": {
+     "ultDmg": 0.1
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"ultDmg\":0.05}, major {\"ultDmg\":0.1}"
+  },
+  {
+   "id": "ultRadius",
+   "display_name": "Wider Glow",
+   "hint": "R radius +1",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "ultimate"
+   ],
+   "stats": {
+    "ultRadius": "ultRadius"
+   },
+   "do_params": {
+    "minor": {
+     "ultRadius": 0.5
+    },
+    "major": {
+     "ultRadius": 1
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"ultRadius\":0.5}, major {\"ultRadius\":1}"
+  },
+  {
+   "id": "ultBuffDur",
+   "display_name": "Lingering Dream",
+   "hint": "R buffs last 2 s longer",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "ultimate",
+    "buff"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "ultBuffDur": 1
+    },
+    "major": {
+     "ultBuffDur": 2
+    }
+   },
+   "do_action": "",
+   "data_only": true,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"ultBuffDur\":1}, major {\"ultBuffDur\":2}"
+  },
+  {
+   "id": "skillDmgFull",
+   "display_name": "Full Charge",
+   "hint": "+8% skill damage while charge is full",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "ultimate"
+   ],
+   "stats": {
+    "skillDmg": "skillDmgFull"
+   },
+   "do_params": {
+    "minor": {
+     "skillDmg": 0.04
+    },
+    "major": {
+     "skillDmg": 0.08
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"skillDmg\":0.04}, major {\"skillDmg\":0.08}"
+  },
+  {
+   "id": "chargeOnDodge",
+   "display_name": "Nimble Heart",
+   "hint": "Dodges grant 5 charge",
+   "source": "trinket",
+   "when_event": "dodge",
+   "icd": 0.5,
+   "tags": [
+    "dodge",
+    "ultimate"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "chargeOnDodge": 3
+    },
+    "major": {
+     "chargeOnDodge": 5
+    }
+   },
+   "do_action": "chargeOnDodge",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"chargeOnDodge\":3}, major {\"chargeOnDodge\":5}\nJS:\ndo: do(c, v, p) { p.ult = Math.min(100, p.ult + (v.chargeOnDodge || 0)); }"
+  },
+  {
+   "id": "chargeOnKill",
+   "display_name": "Gathered Light",
+   "hint": "Kills grant 2 charge",
+   "source": "trinket",
+   "when_event": "kill",
+   "icd": 0,
+   "tags": [
+    "kill",
+    "ultimate"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "chargeOnKill": 1
+    },
+    "major": {
+     "chargeOnKill": 2
+    }
+   },
+   "do_action": "chargeOnKill",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"chargeOnKill\":1}, major {\"chargeOnKill\":2}\nJS:\ndo: do(c, v, p) { p.ult = Math.min(100, p.ult + (v.chargeOnKill || 0)); }"
+  },
+  {
+   "id": "mpOnR",
+   "display_name": "Quiet Reserve",
+   "hint": "R restores 20 MP",
+   "source": "trinket",
+   "when_event": "ultimate",
+   "icd": 0.5,
+   "tags": [
+    "ultimate",
+    "mp"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "mpOnR": 10
+    },
+    "major": {
+     "mpOnR": 20
+    }
+   },
+   "do_action": "mpOnR",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"mpOnR\":10}, major {\"mpOnR\":20}\nJS:\ndo: do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + (v.mpOnR || 0)); }"
+  },
+  {
+   "id": "critAfterR",
+   "display_name": "Sharpened Dusk",
+   "hint": "+5% crit chance for 6 s after R",
+   "source": "trinket",
+   "when_event": "ultimate",
+   "icd": 0.5,
+   "tags": [
+    "ultimate",
+    "crit"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "crit": 0.03
+    },
+    "major": {
+     "crit": 0.05
+    }
+   },
+   "do_action": "critAfterR",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"crit\":0.03}, major {\"crit\":0.05}\nJS:\ndo: do(c, v, p) { p.critR = { v: v.crit || 0, until: G.t + 6 }; }"
+  },
+  {
+   "id": "potionCleanse",
+   "display_name": "Cleansing Sash",
+   "hint": "Potions also cleanse one status",
+   "source": "trinket",
+   "when_event": "potion",
+   "icd": 0,
+   "tags": [
+    "potion"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "potionCleanse": 1
+    },
+    "major": {
+     "potionCleanse": 2
+    }
+   },
+   "do_action": "potionCleanse",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"potionCleanse\":1}, major {\"potionCleanse\":2}\nJS:\ndo: do(c, v, p) { let n = v.potionCleanse || 1; for (const k of ['rootT', 'slowT', 'dreadT']) if (n > 0 && p[k] > 0) { p[k] = 0; n--; } }"
+  },
+  {
+   "id": "killHeal",
+   "display_name": "Gift of Victory",
+   "hint": "Kill-heal +50%",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "kill",
+    "heal"
+   ],
+   "stats": {
+    "killHeal": "killHeal"
+   },
+   "do_params": {
+    "minor": {
+     "killHeal": 0.25
+    },
+    "major": {
+     "killHeal": 0.5
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"killHeal\":0.25}, major {\"killHeal\":0.5}"
+  },
+  {
+   "id": "cookingDur",
+   "display_name": "Lasting Supper",
+   "hint": "Cooking buffs last 15 min",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "food"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "cookingDurMin": 10
+    },
+    "major": {
+     "cookingDurMin": 15
+    }
+   },
+   "do_action": "",
+   "data_only": true,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"cookingDurMin\":10}, major {\"cookingDurMin\":15}"
+  },
+  {
+   "id": "salvageDust",
+   "display_name": "Thrifty Hands",
+   "hint": "Salvage Dust x1.5",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "salvage"
+   ],
+   "stats": {
+    "salvageDust": "salvageDust"
+   },
+   "do_params": {
+    "minor": {
+     "salvageDust": 1.25
+    },
+    "major": {
+     "salvageDust": 1.5
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"salvageDust\":1.25}, major {\"salvageDust\":1.5}"
+  },
+  {
+   "id": "gemWrap",
+   "display_name": "Wrapped Gems",
+   "hint": "Gems in chest and boots count +1 grade, clamped at Radiant",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "gem",
+    "chest",
+    "boots"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "gemWrapSlots": [
+      "chest"
+     ],
+     "gemWrapGrade": 1
+    },
+    "major": {
+     "gemWrapSlots": [
+      "chest",
+      "boots"
+     ],
+     "gemWrapGrade": 1
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"gemWrapSlots\":[\"chest\"],\"gemWrapGrade\":1}, major {\"gemWrapSlots\":[\"chest\",\"boots\"],\"gemWrapGrade\":1}"
+  },
+  {
+   "id": "potionCap",
+   "display_name": "Full Pouch",
+   "hint": "+1 potion charge",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "potion"
+   ],
+   "stats": {
+    "potionCharge": "potionCharge"
+   },
+   "do_params": {
+    "minor": {
+     "potionCharge": 1
+    },
+    "major": {
+     "potionCharge": 2
+    }
+   },
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"potionCharge\":1}, major {\"potionCharge\":2}"
+  },
+  {
+   "id": "dustOnKill",
+   "display_name": "Drifting Dust",
+   "hint": "+2 Dust on elite kills",
+   "source": "trinket",
+   "when_event": "kill",
+   "icd": 0,
+   "tags": [
+    "kill",
+    "salvage"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "dustOnElite": 1
+    },
+    "major": {
+     "dustOnElite": 2
+    }
+   },
+   "do_action": "dustOnKill",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"dustOnElite\":1}, major {\"dustOnElite\":2}\nJS:\ndo: do(c, v, p) { if (enemyClassOf(c.e) !== 'normal') p.dust += v.dustOnElite || 0; }"
+  },
+  {
+   "id": "flaskRegen",
+   "display_name": "Slow Mending",
+   "hint": "Potions heal 3% of max HP per second for 4 s",
+   "source": "trinket",
+   "when_event": "potion",
+   "icd": 0,
+   "tags": [
+    "potion",
+    "heal"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "potionRegen": 0.01
+    },
+    "major": {
+     "potionRegen": 0.03
+    }
+   },
+   "do_action": "flaskRegen",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"potionRegen\":0.01}, major {\"potionRegen\":0.03}\nJS:\ndo: do(c, v, p) { for (let k = 1; k <= 4; k++) delay(k, () => { if (!p.dead) healPlayer(p, p.maxHp * (v.potionRegen || 0)); }); }"
+  },
+  {
+   "id": "foodXp",
+   "display_name": "Shared Meal",
+   "hint": "+10% XP from food",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "food"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "foodXp": 0.05
+    },
+    "major": {
+     "foodXp": 0.1
+    }
+   },
+   "do_action": "",
+   "data_only": true,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"foodXp\":0.05}, major {\"foodXp\":0.1}"
+  },
+  {
+   "id": "fishLuck",
+   "display_name": "Patient Line",
+   "hint": "+5% fishing luck",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "fishing"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "fishLuck": 0.03
+    },
+    "major": {
+     "fishLuck": 0.05
+    }
+   },
+   "do_action": "",
+   "data_only": true,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"fishLuck\":0.03}, major {\"fishLuck\":0.05}"
+  },
+  {
+   "id": "potionMp",
+   "display_name": "Still Water",
+   "hint": "Potions also restore 20% MP",
+   "source": "trinket",
+   "when_event": "potion",
+   "icd": 0,
+   "tags": [
+    "potion",
+    "mp"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "potionMp": 0.1
+    },
+    "major": {
+     "potionMp": 0.2
+    }
+   },
+   "do_action": "potionMp",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"potionMp\":0.1}, major {\"potionMp\":0.2}\nJS:\ndo: do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + p.maxMp * (v.potionMp || 0)); }"
+  },
+  {
+   "id": "dodgeIframe",
+   "display_name": "Long Veil",
+   "hint": "Dodge i-frame window 0.1 s longer",
+   "source": "trinket",
+   "when_event": "dodge",
+   "icd": 0,
+   "tags": [
+    "dodge"
+   ],
+   "stats": {},
+   "do_params": {
+    "minor": {
+     "dodgeIframeDur": 0.05
+    },
+    "major": {
+     "dodgeIframeDur": 0.1
+    }
+   },
+   "do_action": "dodgeIframe",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Boon numbers: minor {\"dodgeIframeDur\":0.05}, major {\"dodgeIframeDur\":0.1}\nJS:\ndo: do(c, v, p) { const x = v.dodgeIframeDur || 0; if (p.dash && p.dash.opt.invuln) p.invulnT = Math.max(p.invulnT, p.dash.t + x); else if (p.invulnT > 0) p.invulnT += x; }"
+  },
+  {
+   "id": "originKnight",
+   "display_name": "Oath of the Shield",
+   "hint": "+10% defence",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "defence"
+   ],
+   "stats": {
+    "def": "def"
+   },
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "originMystic",
+   "display_name": "Dream Tithe",
+   "hint": "+10% MP on hit",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "mp"
+   ],
+   "stats": {
+    "mpOnHit": "mpOnHit"
+   },
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "originRanger",
+   "display_name": "Keen Eye",
+   "hint": "+10% crit damage",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "crit"
+   ],
+   "stats": {
+    "critDmg": "critDmg"
+   },
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "originThief",
+   "display_name": "Unseen Debt",
+   "hint": "+10% damage from behind",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "backstab"
+   ],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": true,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "originWarrior",
+   "display_name": "Vow of Iron",
+   "hint": "+1 stagger on weapon skills",
+   "source": "trinket",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [
+    "weapon",
+    "stagger"
+   ],
+   "stats": {
+    "stagger": "weaponStagger"
+   },
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "affix_onDodge",
+   "display_name": "onDodge",
+   "hint": "",
+   "source": "affix",
+   "when_event": "dodge",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "affix_onDodge",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "JS:\ndo: do(c, v, p) { healPlayer(p, p.maxHp * v); }"
+  },
+  {
+   "id": "affix_onKill",
+   "display_name": "onKill",
+   "hint": "",
+   "source": "affix",
+   "when_event": "kill",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "affix_onKill",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "JS:\ndo: do(c, v, p) { p.mp = Math.min(p.maxMp, p.mp + p.maxMp * v); }"
+  },
+  {
+   "id": "unique_echo",
+   "display_name": "Echo",
+   "hint": "A spirit repeats your attacks",
+   "source": "unique",
+   "when_event": "cast",
+   "icd": 0,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "unique_echo",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "JS:\ndo: do(c, v, p) { echoRecord(p, c); }"
+  },
+  {
+   "id": "suit_warden",
+   "display_name": "Warden twist",
+   "hint": "Bulwark reflects projectiles at any tier; a reflected shot staggers 1",
+   "source": "suit",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at updateProjs (no bus event).\nLive while three warden pieces are worn."
+  },
+  {
+   "id": "suit_crusader",
+   "display_name": "Crusader twist",
+   "hint": "Vault lands in a Consecrated Guard zone",
+   "source": "suit",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at SKILLS.vault (no bus event).\nLive while three crusader pieces are worn."
+  },
+  {
+   "id": "suit_juggernaut",
+   "display_name": "Juggernaut twist",
+   "hint": "Poise never breaks below 25% HP",
+   "source": "suit",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at poised (no bus event).\nLive while three juggernaut pieces are worn."
+  },
+  {
+   "id": "suit_dreamweave",
+   "display_name": "Dreamweave twist",
+   "hint": "The Arcane Ward nova restores 8 MP per enemy hit",
+   "source": "suit",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at updateArcaneWard (no bus event).\nLive while three dreamweave pieces are worn."
+  },
+  {
+   "id": "suit_frostweave",
+   "display_name": "Frostweave twist",
+   "hint": "Frost hits on a Chilled foe deal +30%",
+   "source": "suit",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at damageEnemy (no bus event).\nLive while three frostweave pieces are worn."
+  },
+  {
+   "id": "suit_stormweave",
+   "display_name": "Stormweave twist",
+   "hint": "Conduct jumps +1 (Chain Lightning +1 jump)",
+   "source": "suit",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at chainLightning (no bus event).\nLive while three stormweave pieces are worn."
+  },
+  {
+   "id": "suit_stalker",
+   "display_name": "Stalker twist",
+   "hint": "A hit from stealth deals +50% crit damage",
+   "source": "suit",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at damageEnemy (no bus event).\nLive while three stalker pieces are worn."
+  },
+  {
+   "id": "suit_thornwarden",
+   "display_name": "Thornwarden twist",
+   "hint": "Snares and thorns Poison; Poisoned foes take +15% fire",
+   "source": "suit",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at damageEnemy (no bus event).\nLive while three thornwarden pieces are worn."
+  },
+  {
+   "id": "suit_duelist",
+   "display_name": "Duelist twist",
+   "hint": "A parry resets Side-step and grants 1 s of haste",
+   "source": "suit",
+   "when_event": "parry",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "suit_duelist",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Live while three duelist pieces are worn.\nJS:\ndo: do(c, v, p) { p.cds.sidestep = 0; addBuff(p, 'haste', 1); }"
+  },
+  {
+   "id": "suit_shade",
+   "display_name": "Shade twist",
+   "hint": "A decoy pops into 2 Marks on every foe near it",
+   "source": "suit",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at updateDecoys (no bus event).\nLive while three shade pieces are worn."
+  },
+  {
+   "id": "suit_nightshade",
+   "display_name": "Nightshade twist",
+   "hint": "Poison spreads to two foes nearby on a kill",
+   "source": "suit",
+   "when_event": "kill",
+   "icd": 0,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "suit_nightshade",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Live while three nightshade pieces are worn.\nJS:\ndo: do(c) { const e = c.e; if (!(e.poisonN > 0)) return; const near = new Set([e]); for (let k = 0; k < 2; k++) { const n = nearestEnemy(e.x, e.y, 3, near); if (!n) break; near.add(n); poisonEnemy(n, e.poisonN, c.e.poisonCast); } }"
+  },
+  {
+   "id": "suit_mirage",
+   "display_name": "Mirage twist",
+   "hint": "Mirror Image bolts +50% and the image lasts 4 s longer",
+   "source": "suit",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at SKILLS.mirrorimage (no bus event).\nLive while three mirage pieces are worn."
+  },
+  {
+   "id": "class_heavy",
+   "display_name": "Heavy rule",
+   "hint": "Melee skills gain poise",
+   "source": "class",
+   "when_event": "passive",
+   "icd": 0,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at useSkill (no bus event).\nLive while three heavy pieces are worn."
+  },
+  {
+   "id": "class_caster",
+   "display_name": "Caster rule",
+   "hint": "Zones you create near you follow you",
+   "source": "class",
+   "when_event": "passive",
+   "icd": 0,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at zone (no bus event).\nLive while three caster pieces are worn."
+  },
+  {
+   "id": "class_medium",
+   "display_name": "Medium rule",
+   "hint": "Your projectiles pierce once more",
+   "source": "class",
+   "when_event": "passive",
+   "icd": 0,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at spawnProj (no bus event).\nLive while three medium pieces are worn."
+  },
+  {
+   "id": "class_shadow",
+   "display_name": "Shadow rule",
+   "hint": "Dashes leave a decoy (once per 3 s)",
+   "source": "class",
+   "when_event": "passive",
+   "icd": 0,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "Inline engine check at dashPlayer (no bus event).\nLive while three shadow pieces are worn."
+  },
+  {
+   "id": "grip_vanguard",
+   "display_name": "Vanguard",
+   "hint": "A parry primes Sunslash: +40% damage.",
+   "source": "grip",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "grip_twinfangs",
+   "display_name": "Twin Fangs",
+   "hint": "Mark cap +1.",
+   "source": "grip",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "grip_twinstars",
+   "display_name": "Twin Stars",
+   "hint": "An arcane hit on a Jolted foe takes 2 s off both spells (ICD 4 s).",
+   "source": "grip",
+   "when_event": "hit",
+   "icd": 4,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "grip_twinstars",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "JS:\ndo: do(c, v, p) { if (c.el === 'arcane' && c.e.status && c.e.status.jolted && c.e.status.jolted.until > G.t) for (const k of ['q', 'e']) { const id = slotSkill(p, k); if (id && p.cds[id] > 0) p.cds[id] = Math.max(0, p.cds[id] - 2); } }"
+  },
+  {
+   "id": "grip_archmage",
+   "display_name": "Archmage",
+   "hint": "Pages hit 20% harder; Chapter costs 80 charge.",
+   "source": "grip",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "grip_fletcher",
+   "display_name": "Fletcher",
+   "hint": "A loosed arrow gains +40% crit chance.",
+   "source": "grip",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "grip_warband",
+   "display_name": "Warband",
+   "hint": "Calls Detonate: a call hit on a Burning foe consumes the Burn for damage.",
+   "source": "grip",
+   "when_event": "hit",
+   "icd": 0,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "grip_warband",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "JS:\ndo: do(c, v, p) { const e = c.e; if (c.cast && c.cast.call && e.burnT > 0 && !e.dead) { const n = Math.ceil(e.burnT / 0.5); e.burnT = 0; damageEnemy(e, 14 * n * 1.5, { dot: true, el: 'fire', cast: c.cast }); fx({ type: 'ring', x: e.x, y: e.y, r: 1, col: '#ff9a4a', life: 0.3 }); } }"
+  },
+  {
+   "id": "grip_dancer",
+   "display_name": "Dancer",
+   "hint": "Step shares Parry's cooldown: every Step opens a parry window.",
+   "source": "grip",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "grip_sanctuary",
+   "display_name": "Sanctuary",
+   "hint": "Consecrate follows you; Block inside it restores 2% HP a second (one zone, no stacking).",
+   "source": "grip",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "grip_faultline",
+   "display_name": "Faultline",
+   "hint": "A call makes every live crack erupt again.",
+   "source": "grip",
+   "when_event": "cast",
+   "icd": 0,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "grip_faultline",
+   "data_only": false,
+   "if_tags": [],
+   "todo": "JS:\ndo: do(c, v, p) { if (c.c && c.c.call) eruptCracks(); }"
+  },
+  {
+   "id": "grip_lodestar",
+   "display_name": "Lodestar",
+   "hint": "Ricochet bounces twice more and each bounce zaps for lightning.",
+   "source": "grip",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "grip_cornered",
+   "display_name": "Cornered",
+   "hint": "Below half HP Frenzy reaches +75%; a parry adds 3 Frenzy.",
+   "source": "grip",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "grip_spellblade",
+   "display_name": "Spellblade",
+   "hint": "Pages retype Sunslash: it takes the active page's element, +15%.",
+   "source": "grip",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "grip_hedgewall",
+   "display_name": "Hedgewall",
+   "hint": "Nock primes the Halberd too: the next hit is +40% and pins for 0.6 s.",
+   "source": "grip",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "grip_siegeworks",
+   "display_name": "Siegeworks",
+   "hint": "Crossbow clip 6.",
+   "source": "grip",
+   "when_event": "passive",
+   "icd": 0.5,
+   "tags": [],
+   "stats": {},
+   "do_params": {},
+   "do_action": "",
+   "data_only": false,
+   "if_tags": [],
+   "todo": ""
+  },
+  {
+   "id": "elite_shielded",
+   "display_name": "Shielded",
+   "hint": "Elite modifier",
+   "source": "elite",
+   "when_event": "passive",
+   "icd": 0,
+   "do_action": "elite_shielded",
+   "do_params": {
+    "color": "#cfe6ff",
+    "rare": false,
+    "hp_mult": 3.2,
+    "damage_mult": 1.25
+   },
+   "todo": "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.\nJS:\nspawn: spawn(e) { e.eShieldT = 2; }\ntick: tick(e, dt) {\n      if (e.eShield > 0) return;\n      e.eShieldT -= dt;\n      if (e.eShieldT <= 0) { e.eShield = e.eShieldMax = e.maxHp * 0.15; fx({ type: 'ring', x: e.x, y: e.y, r: e.r + 0.6, col: '#cfe6ff', life: 0.4 }); sfx('shield'); }\n    }\nonHurt: onHurt(e, dmg) {\n      if (!(e.eShield > 0)) return dmg;\n      const take = Math.min(e.eShield, dmg); e.eShield -= take;\n      if (e.eShield <= 0) { e.eShieldT = 6; e.stunT = Math.max(e.stunT, 0.8); text(e.x, e.y, e.z + e.hgt + 0.5, 'SHIELD BROKEN', '#cfe6ff', true); burst(e.x, e.y, e.z + 1, 20, ['#cfe6ff', '#ffffff'], 3); }\n      return dmg - take;\n    }"
+  },
+  {
+   "id": "elite_storm",
+   "display_name": "Storm",
+   "hint": "Elite modifier",
+   "source": "elite",
+   "when_event": "passive",
+   "icd": 0,
+   "do_action": "elite_storm",
+   "do_params": {
+    "color": "#fff07a",
+    "rare": false,
+    "hp_mult": 3.2,
+    "damage_mult": 1.25
+   },
+   "todo": "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.\nJS:\ntick: tick(e, dt) {\n      e.eArcT = (e.eArcT || 1.2) - dt; const p = G.player;\n      if (e.eArcT <= 0 && dist(e.x, e.y, p.x, p.y) < 1.8 + e.r) { e.eArcT = 1.2; fx({ type: 'lightning', pts: [[e.x, e.y, e.z + 1.5], [p.x, p.y, p.z + 1]], life: 0.2, col: '#fff07a' }); enemyHit(e, e.def.dmg * e.dm * 0.35, 'lightning'); sfx('zap'); }\n      else if (e.eArcT <= 0) e.eArcT = 0.3;\n    }"
+  },
+  {
+   "id": "elite_burning",
+   "display_name": "Burning",
+   "hint": "Elite modifier",
+   "source": "elite",
+   "when_event": "passive",
+   "icd": 0,
+   "do_action": "elite_burning",
+   "do_params": {
+    "color": "#ff9a4a",
+    "rare": false,
+    "hp_mult": 3.2,
+    "damage_mult": 1.25
+   },
+   "todo": "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.\nJS:\ntick: tick(e, dt) {\n      e.eTrailT = (e.eTrailT || 0) - dt;\n      const moved = dist(e.x, e.y, e.lx == null ? e.x : e.lx, e.ly == null ? e.y : e.ly) > 0.6;\n      if (e.eTrailT <= 0 && moved) { e.eTrailT = 0.45; e.lx = e.x; e.ly = e.y; hostileZone(zoneOf('fire', { x: e.x, y: e.y, r: 0.7, life: 2.5, tick: 0.5, dmg: e.def.dmg * e.dm * 0.15 })); }\n    }"
+  },
+  {
+   "id": "elite_frozen",
+   "display_name": "Frozen",
+   "hint": "Elite modifier",
+   "source": "elite",
+   "when_event": "passive",
+   "icd": 0,
+   "do_action": "elite_frozen",
+   "do_params": {
+    "color": "#9fe8ff",
+    "rare": true,
+    "hp_mult": 3.2,
+    "damage_mult": 1.25
+   },
+   "todo": "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.\nJS:\ntick: tick(e) { const p = G.player; if (dist(e.x, e.y, p.x, p.y) < 2.4) p.slowT = Math.max(p.slowT, 0.2); }\nonHit: onHit() { G.player.slowT = Math.max(G.player.slowT, 1.2); }"
+  },
+  {
+   "id": "elite_gloomed",
+   "display_name": "Gloomed",
+   "hint": "Elite modifier",
+   "source": "elite",
+   "when_event": "passive",
+   "icd": 0,
+   "do_action": "elite_gloomed",
+   "do_params": {
+    "color": "#c070ff",
+    "rare": false,
+    "hp_mult": 3.2,
+    "damage_mult": 1.25
+   },
+   "todo": "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.\nJS:\ntick: tick(e) { const p = G.player; if (dist(e.x, e.y, p.x, p.y) < 3) p.dreadT = 0.2; }"
+  },
+  {
+   "id": "elite_twin",
+   "display_name": "Twin",
+   "hint": "Elite modifier",
+   "source": "elite",
+   "when_event": "passive",
+   "icd": 0,
+   "do_action": "elite_twin",
+   "do_params": {
+    "color": "#ffb0e0",
+    "rare": false,
+    "hp_mult": 3.2,
+    "damage_mult": 1.25
+   },
+   "todo": "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.\nJS:\nspawn: spawn(e) {\n      if (e.twinOf || e.swarm) return;   // a swarm is already many bodies (its group bookkeeping would break): no linked copy\n      e.hp = e.maxHp = Math.round(e.maxHp * 0.5);\n      const t = spawnEnemyRaw(e.type, e.x + 1, e.y + 0.5, e.spawnT); initParts(t, e.def);\n      t.elite = true; t.mods = e.mods.slice(); t.twinOf = e; t.hp = t.maxHp = e.maxHp; t.dm = e.dm; t.dmgK = e.dmgK;\n      e.swarm = t.swarm = { alive: 2, n: 2 };   // linked: XP and loot once, when both are down\n    }"
+  },
+  {
+   "id": "elite_vampiric",
+   "display_name": "Vampiric",
+   "hint": "Elite modifier",
+   "source": "elite",
+   "when_event": "passive",
+   "icd": 0,
+   "do_action": "elite_vampiric",
+   "do_params": {
+    "color": "#ff4a6a",
+    "rare": false,
+    "hp_mult": 3.2,
+    "damage_mult": 1.25
+   },
+   "todo": "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.\nJS:\nonHit: onHit(e, dmg) { const n = Math.max(dmg * 0.5, e.maxHp * 0.03); e.hp = Math.min(e.maxHp, e.hp + n); text(e.x, e.y, e.z + e.hgt, '+' + Math.round(n), '#ff4a6a'); }"
+  },
+  {
+   "id": "elite_summoner",
+   "display_name": "Summoner",
+   "hint": "Elite modifier",
+   "source": "elite",
+   "when_event": "passive",
+   "icd": 0,
+   "do_action": "elite_summoner",
+   "do_params": {
+    "color": "#b36bff",
+    "rare": false,
+    "hp_mult": 3.2,
+    "damage_mult": 1.25
+   },
+   "todo": "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.\nJS:\ntick: tick(e, dt) {\n      e.eSumT = (e.eSumT == null ? 4 : e.eSumT) - dt;\n      if (e.eSumT > 0) return; e.eSumT = 8;\n      if (G.enemies.filter(o => o.summoner === e && !o.dead).length >= 4) return;\n      const kind = ENEMY.dreammoth ? 'dreammoth' : 'slime';\n      fx({ type: 'ring', x: e.x, y: e.y, r: 1.4, col: '#b36bff', life: 0.5 });\n      const s = spawnAt(kind, e.x + 1, e.y, 0.6); if (s) { s.summoner = e; s.noXp = true; }\n    }"
+  }
+ ]
+}

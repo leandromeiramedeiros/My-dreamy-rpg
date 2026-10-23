@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_iyq6w"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_8rcl1"]
+
+[resource]
+script = ExtResource("2_8rcl1")
+id = &"wall"
+display_name = "Wall"
+description = "HOLD — stop everything from the front, shots included; you move at half speed."
+element = "slash"
+kind = "action"
+cooldown = 0.3
+stamina_cost = 6.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+color = Color(0.53333336, 0.59607846, 0.72156864, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+template CT.guard {\"kind\":\"wall\",\"cut\":1,\"arc\":2.1,\"speed\":0.5,\"drain\":8}
+no starter block covers CT.guard (buff / guard): wave 2
+JS:
+cast: cast(p) { startGuard(p, o); }
+JS fields: {\"off\":true}"

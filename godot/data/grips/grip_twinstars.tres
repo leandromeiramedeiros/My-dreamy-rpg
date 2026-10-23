@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="GripData" format=3]
+
+[ext_resource type="Resource" path="res://data/effects/grip_twinstars.tres" id="1_ai5ja"]
+[ext_resource type="Script" path="res://scripts/data/grip_data.gd" id="2_g3p2m"]
+
+[resource]
+script = ExtResource("2_g3p2m")
+id = &"grip_twinstars"
+display_name = "Twin Stars"
+tags = PackedStringArray("wand", "orb")
+hint = "An arcane hit on a Jolted foe takes 2 s off both spells (ICD 4 s)."
+effect = ExtResource("1_ai5ja")

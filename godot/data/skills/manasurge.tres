@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_nm00i"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_c5kx4"]
+
+[resource]
+script = ExtResource("2_c5kx4")
+id = &"manasurge"
+display_name = "Mana Surge"
+description = "CHEST — restore 120 MP and gain +30% power for 6s."
+element = "arcane"
+kind = "active"
+cooldown = 18.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+aim_radius = 1.4
+color = Color(0.6117647, 0.47843137, 0.8784314, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { p.mp = Math.min(p.maxMp, p.mp + 120); addBuff(p, 'surge', 6); fx({ type: 'ring', x: p.x, y: p.y, r: 1.4, col: '#c7a8ff', life: 0.5 }); burst(p.x, p.y, p.z + 1, 20, ['#c7a8ff', '#ffffff'], 2); sfx('arcane'); }"

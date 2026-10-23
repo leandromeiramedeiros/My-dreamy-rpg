@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_ojeou"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_mpu28"]
+
+[resource]
+script = ExtResource("2_mpu28")
+id = &"mend"
+display_name = "Mend"
+description = "HELMET — heal 25% of max HP over 4s."
+element = "nature"
+kind = "active"
+cooldown = 14.0
+mp_cost = 25.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+color = Color(0.56078434, 0.8784314, 0.627451, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { addBuff(p, 'mend', 4); sfx('heal'); }"

@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_a251m"]
+[ext_resource type="Script" path="res://scripts/data/cone_block.gd" id="2_0cf1a"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_o2mpr"]
+
+[sub_resource type="Resource" id="Resource_5rijt"]
+script = ExtResource("2_0cf1a")
+reach = 1.3
+arc = 74.48
+damage = 27.0
+knockback = 0.08
+
+[sub_resource type="Resource" id="Resource_u6p1t"]
+script = ExtResource("2_0cf1a")
+reach = 1.3
+arc = 74.48
+swing_dir = -1
+damage = 27.0
+knockback = 0.08
+
+[sub_resource type="Resource" id="Resource_dp3gu"]
+script = ExtResource("2_0cf1a")
+reach = 1.3
+arc = 74.48
+damage = 27.0
+knockback = 0.08
+
+[sub_resource type="Resource" id="Resource_rqibn"]
+script = ExtResource("2_0cf1a")
+arc = 103.13
+swing_dir = -1
+damage = 40.5
+knockback = 0.3
+
+[resource]
+script = ExtResource("3_o2mpr")
+id = &"fans_action"
+display_name = "Flutter"
+description = "4-hit, 0.28 s, 6 MP. Backstab: +30% crit from the rear arc; Marks"
+element = "slash"
+kind = "action"
+cooldown = 0.28
+tags = PackedStringArray("melee")
+decks = PackedStringArray()
+block_mode = "combo"
+blocks = Array[ExtResource("1_a251m")]([SubResource("Resource_5rijt"), SubResource("Resource_u6p1t"), SubResource("Resource_dp3gu"), SubResource("Resource_rqibn")])
+aim_shape = "cone"
+aim_range = 1.3
+color = Color(1, 0.78431374, 0.9098039, 1)
+todo = "Basic attack: swing template \"shadow4\" from game.js basicSwing (one block per combo hit). Hold-M1 \"none\" (game.js holdAttack) is wave 2."

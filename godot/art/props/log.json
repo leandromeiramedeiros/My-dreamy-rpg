@@ -1,0 +1,18 @@
+{
+ "id": "log",
+ "kind": "log",
+ "label": "Fallen log",
+ "size": [
+  30,
+  12
+ ],
+ "origin": [
+  15,
+  11
+ ],
+ "collider_r": 0.45,
+ "shadow": 9,
+ "light": null,
+ "image": "log.png",
+ "frames": null
+}

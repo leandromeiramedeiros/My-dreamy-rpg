@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/slink.tres" id="1_qtk5s"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_4dhdr"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_t2xhh"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_jays7"]
+
+[sub_resource type="Resource" id="Resource_gbp7a"]
+script = ExtResource("4_jays7")
+base_id = &"mossshoes"
+display_name = "Moss Shoes"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_w67cx"]
+script = ExtResource("4_jays7")
+base_id = &"nightshadesteps"
+display_name = "Nightshade Steps"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_pt5df"]
+script = ExtResource("4_jays7")
+base_id = &"venomsteps"
+display_name = "Venomweave Steps"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_1e0v2"]
+script = ExtResource("4_jays7")
+base_id = &"auroracreepers"
+display_name = "Aurora Creepers"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_myhn5"]
+script = ExtResource("4_jays7")
+base_id = &"creepereternal"
+display_name = "Creeper Eternal"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_t2xhh")
+id = &"nightshadeboots"
+display_name = "Nightshade Steps"
+description = "+12% move speed, +2% crit chance."
+kind = "armour"
+slot = "boots"
+item_class = &"shadow"
+suit = &"nightshade"
+hands = 0
+element = "nature"
+tiers = Array[ExtResource("4_jays7")]([SubResource("Resource_gbp7a"), SubResource("Resource_w67cx"), SubResource("Resource_pt5df"), SubResource("Resource_1e0v2"), SubResource("Resource_myhn5")])
+active = ExtResource("1_qtk5s")
+stats = Dictionary[StringName, float]({
+&"crit": 0.02,
+&"speed": 0.45
+})
+color = Color(0.2901961, 0.41568628, 0.22745098, 1)
+attack_pose = "none"
+todo = "Suit Nightshade (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."

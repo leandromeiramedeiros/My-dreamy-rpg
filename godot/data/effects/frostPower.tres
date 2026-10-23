@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_xcs5v"]
+
+[resource]
+script = ExtResource("1_xcs5v")
+id = &"frostPower"
+display_name = "Hoarfrost Band"
+hint = "+15% frost damage and +10% Freeze chance"
+source = "trinket"
+when_event = "hit"
+if_tags = PackedStringArray()
+do_action = &"frostPower"
+do_params = {
+"major": {
+"freezeChance": 0.1,
+"frostDmg": 0.15
+},
+"minor": {
+"freezeChance": 0.05,
+"frostDmg": 0.08
+}
+}
+stats = {
+"frostDmg": "frostDmg"
+}
+tags = PackedStringArray("frost", "freeze")
+todo = "Boon numbers: minor {\"frostDmg\":0.08,\"freezeChance\":0.05}, major {\"frostDmg\":0.15,\"freezeChance\":0.1}
+JS:
+do: do(c, v) { if (c.el === 'frost' && Math.random() < (v.freezeChance || 0)) { const e = c.e; applyStatus(e, 'frozen', Math.max(e.stunT, e.boss ? 0.25 : 1), 'frost'); } }"

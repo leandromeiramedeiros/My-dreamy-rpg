@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/parryplus.tres" id="1_6vi33"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_iem6n"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_41es3"]
+[ext_resource type="Resource" path="res://data/skills/bash.tres" id="4_2ro1o"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_i4kmw"]
+[ext_resource type="JSON" path="res://art/gear/buckler.t1.json" id="6_0tqk0"]
+[ext_resource type="JSON" path="res://art/gear/buckler.t2.json" id="7_yqfor"]
+[ext_resource type="JSON" path="res://art/gear/buckler.t3.json" id="8_cacmj"]
+[ext_resource type="JSON" path="res://art/gear/buckler.t4.json" id="9_a56hu"]
+[ext_resource type="JSON" path="res://art/gear/buckler.t5.json" id="10_vwg4m"]
+[ext_resource type="Resource" path="res://data/skills/aegis.tres" id="11_vmjbs"]
+
+[sub_resource type="Resource" id="Resource_kiw17"]
+script = ExtResource("5_i4kmw")
+base_id = &"woodbuckler"
+display_name = "Wooden Buckler"
+multiplier = 0.6
+sheet = ExtResource("6_0tqk0")
+
+[sub_resource type="Resource" id="Resource_ylh25"]
+script = ExtResource("5_i4kmw")
+base_id = &"ironbuckler"
+display_name = "Iron Buckler"
+required_level = 8
+sheet = ExtResource("7_yqfor")
+
+[sub_resource type="Resource" id="Resource_ievs7"]
+script = ExtResource("5_i4kmw")
+base_id = &"sunbuckler"
+display_name = "Sunforged Buckler"
+required_level = 16
+multiplier = 1.25
+sheet = ExtResource("8_cacmj")
+
+[sub_resource type="Resource" id="Resource_mej1t"]
+script = ExtResource("5_i4kmw")
+base_id = &"aurorabuckler"
+display_name = "Aurora Buckler"
+required_level = 24
+multiplier = 1.5
+sheet = ExtResource("9_a56hu")
+
+[sub_resource type="Resource" id="Resource_c65yo"]
+script = ExtResource("5_i4kmw")
+base_id = &"bucklereternal"
+display_name = "Buckler Eternal"
+required_level = 32
+multiplier = 1.8
+sheet = ExtResource("10_vwg4m")
+
+[resource]
+script = ExtResource("3_41es3")
+id = &"buckler"
+display_name = "Buckler"
+description = "A small round shield. Parry, bash, and hold the line."
+kind = "shield"
+slot = "offhand"
+item_class = &"shields"
+element = "slash"
+tiers = Array[ExtResource("5_i4kmw")]([SubResource("Resource_kiw17"), SubResource("Resource_ylh25"), SubResource("Resource_ievs7"), SubResource("Resource_mej1t"), SubResource("Resource_c65yo")])
+action = ExtResource("1_6vi33")
+spell = ExtResource("4_2ro1o")
+ultimate = ExtResource("11_vmjbs")
+stats = Dictionary[StringName, float]({
+&"def": 0.08,
+&"hp": 60.0
+})
+color = Color(0.7882353, 0.7058824, 0.5411765, 1)
+attack_pose = "none"
+swing_style = "thrust"
+carry_pose = "braced"
+todo = "Line name (T2 base): Iron Buckler."

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_rcskt"]
+
+[resource]
+script = ExtResource("1_rcskt")
+id = &"naturePower"
+display_name = "Rootbound Loop"
+hint = "+15% nature damage and +10% Poison chance"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"natureDmg": 0.15,
+"poisonChance": 0.1
+},
+"minor": {
+"natureDmg": 0.08,
+"poisonChance": 0.05
+}
+}
+stats = {
+"natureDmg": "natureDmg"
+}
+tags = PackedStringArray("nature", "poison")
+todo = "Partial in JS: poisonChance (no hero poison yet)
+Boon numbers: minor {\"natureDmg\":0.08,\"poisonChance\":0.05}, major {\"natureDmg\":0.15,\"poisonChance\":0.1}"

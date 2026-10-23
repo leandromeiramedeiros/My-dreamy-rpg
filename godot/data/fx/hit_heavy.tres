@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/fx_layer.gd" id="1_glnue"]
+[ext_resource type="Script" path="res://scripts/data/fx_tint.gd" id="2_jnqtm"]
+[ext_resource type="Script" path="res://scripts/data/fx_shake.gd" id="3_kjyp3"]
+[ext_resource type="Script" path="res://scripts/data/fx_hitstop.gd" id="4_p8fc7"]
+[ext_resource type="Script" path="res://scripts/data/fx_data.gd" id="5_kkggv"]
+
+[sub_resource type="Resource" id="Resource_u8y1w"]
+script = ExtResource("2_jnqtm")
+color = Color(1, 0.9490196, 0.6901961, 1)
+strength = 0.9
+life = 0.12
+
+[sub_resource type="Resource" id="Resource_ivc31"]
+script = ExtResource("3_kjyp3")
+amplitude = 3.0
+frequency = 28.0
+life = 0.15
+
+[sub_resource type="Resource" id="Resource_15dnm"]
+script = ExtResource("4_p8fc7")
+life = 0.06
+
+[resource]
+script = ExtResource("5_kkggv")
+id = &"hit_heavy"
+display_name = "Heavy hit"
+layers = Array[ExtResource("1_glnue")]([SubResource("Resource_u8y1w"), SubResource("Resource_ivc31"), SubResource("Resource_15dnm")])

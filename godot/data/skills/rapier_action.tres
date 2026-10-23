@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_ebudd"]
+[ext_resource type="Script" path="res://scripts/data/cone_block.gd" id="2_pdfmc"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_hb5t7"]
+
+[sub_resource type="Resource" id="Resource_mga3r"]
+script = ExtResource("2_pdfmc")
+reach = 2.1
+width = 0.42
+damage = 52.0
+knockback = 0.1
+
+[sub_resource type="Resource" id="Resource_kgd40"]
+script = ExtResource("2_pdfmc")
+reach = 2.1
+width = 0.42
+damage = 52.0
+knockback = 0.1
+
+[sub_resource type="Resource" id="Resource_gppl3"]
+script = ExtResource("2_pdfmc")
+reach = 2.4
+width = 0.6
+damage = 83.2
+knockback = 0.35
+
+[resource]
+script = ExtResource("3_hb5t7")
+id = &"rapier_action"
+display_name = "Thrust"
+description = "3-hit, 0.42 s, 8 MP/hit. Parry as off-action; the 3rd hit is wide"
+element = "pierce"
+kind = "action"
+cooldown = 0.4
+tags = PackedStringArray("melee")
+decks = PackedStringArray()
+block_mode = "combo"
+blocks = Array[ExtResource("1_ebudd")]([SubResource("Resource_mga3r"), SubResource("Resource_kgd40"), SubResource("Resource_gppl3")])
+aim_shape = "cone"
+aim_range = 2.1
+color = Color(0.84705883, 0.89411765, 1, 1)
+todo = "Basic attack: swing template \"thrust3\" from game.js basicSwing (one block per combo hit). Hold-M1 \"none\" (game.js holdAttack) is wave 2."

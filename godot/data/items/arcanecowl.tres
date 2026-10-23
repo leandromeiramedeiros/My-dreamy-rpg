@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/frostnova.tres" id="1_2pru2"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_48068"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_4iqfl"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_0t6ud"]
+
+[sub_resource type="Resource" id="Resource_meqr1"]
+script = ExtResource("4_0t6ud")
+base_id = &"novicehood"
+display_name = "Novice Hood"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_0dqqs"]
+script = ExtResource("4_0t6ud")
+base_id = &"arcanecowl"
+display_name = "Arcane Cowl"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_cqugr"]
+script = ExtResource("4_0t6ud")
+base_id = &"starweave"
+display_name = "Starweave Cowl"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_l8e3q"]
+script = ExtResource("4_0t6ud")
+base_id = &"astralcirclet"
+display_name = "Astral Circlet"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_4b4fr"]
+script = ExtResource("4_0t6ud")
+base_id = &"crownofstars"
+display_name = "Crown of Stars"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_4iqfl")
+id = &"arcanecowl"
+display_name = "Arcane Cowl"
+description = "+10% power."
+kind = "armour"
+slot = "head"
+item_class = &"caster"
+suit = &"frostweave"
+hands = 0
+element = "frost"
+tiers = Array[ExtResource("4_0t6ud")]([SubResource("Resource_meqr1"), SubResource("Resource_0dqqs"), SubResource("Resource_cqugr"), SubResource("Resource_l8e3q"), SubResource("Resource_4b4fr")])
+active = ExtResource("1_2pru2")
+stats = Dictionary[StringName, float]({
+&"power": 0.1
+})
+color = Color(0.6117647, 0.47843137, 0.8784314, 1)
+attack_pose = "none"
+todo = "Suit Frostweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."

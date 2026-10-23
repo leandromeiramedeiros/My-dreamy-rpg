@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_qodh5"]
+
+[resource]
+script = ExtResource("1_qodh5")
+id = &"rx_overload"
+pitch_vary = 0.03
+priority = 3
+caption = "[overload reaction]"
+recipe = {
+"layers": [{
+"dur": 0.5,
+"f0": 220.0,
+"f1": 220.0,
+"gain": 0.05,
+"osc": "saw"
+}, {
+"dur": 0.5,
+"f0": 223.0,
+"f1": 223.0,
+"gain": 0.05,
+"osc": "saw"
+}, {
+"delay": 0.1,
+"dur": 0.45,
+"f0": 330.0,
+"f1": 330.0,
+"filter": {
+"freq": 1800.0,
+"q": 1.0,
+"type": "lowpass"
+},
+"gain": 0.03,
+"osc": "saw"
+}]
+}

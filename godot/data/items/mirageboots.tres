@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/phase.tres" id="1_11on7"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_rqeur"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_1kht6"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_ry7ka"]
+
+[sub_resource type="Resource" id="Resource_85a1o"]
+script = ExtResource("4_ry7ka")
+base_id = &"gauzeslippers"
+display_name = "Gauze Slippers"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_tq0on"]
+script = ExtResource("4_ry7ka")
+base_id = &"mirageslippers"
+display_name = "Mirage Slippers"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_vhel4"]
+script = ExtResource("4_ry7ka")
+base_id = &"glassslippers"
+display_name = "Glass Slippers"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_t2swr"]
+script = ExtResource("4_ry7ka")
+base_id = &"auroraslippers"
+display_name = "Aurora Slippers"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_vq227"]
+script = ExtResource("4_ry7ka")
+base_id = &"shimmereternal"
+display_name = "Shimmer Eternal"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_1kht6")
+id = &"mirageboots"
+display_name = "Mirage Slippers"
+description = "+12% move speed, 2% shorter cooldowns."
+kind = "armour"
+slot = "boots"
+item_class = &"shadow"
+suit = &"mirage"
+hands = 0
+element = "arcane"
+tiers = Array[ExtResource("4_ry7ka")]([SubResource("Resource_85a1o"), SubResource("Resource_tq0on"), SubResource("Resource_vhel4"), SubResource("Resource_t2swr"), SubResource("Resource_vq227")])
+active = ExtResource("1_11on7")
+stats = Dictionary[StringName, float]({
+&"cdr": 0.02,
+&"speed": 0.45
+})
+color = Color(0.65882355, 0.53333336, 0.8156863, 1)
+attack_pose = "none"
+todo = "Suit Mirage (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."

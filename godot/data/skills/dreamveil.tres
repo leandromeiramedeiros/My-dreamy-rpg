@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_8ubva"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_0htko"]
+
+[resource]
+script = ExtResource("2_0htko")
+id = &"dreamveil"
+display_name = "Dreamveil"
+description = "PAGE — bend the dream: enemies move at 35% speed for 4s."
+element = "arcane"
+kind = "active"
+cooldown = 30.0
+mp_cost = 40.0
+tags = PackedStringArray()
+decks = PackedStringArray("page")
+aim_radius = 8.0
+color = Color(1, 0.6901961, 0.8784314, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { addBuff(p, 'dreamveil', 4); fx({ type: 'ring', x: p.x, y: p.y, r: 8, col: '#ffb0e0', life: 0.8 }); sfx('veil'); }"

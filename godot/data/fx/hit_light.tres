@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/fx_layer.gd" id="1_y68no"]
+[ext_resource type="Script" path="res://scripts/data/fx_tint.gd" id="2_rfpjc"]
+[ext_resource type="Script" path="res://scripts/data/fx_shake.gd" id="3_5f4lk"]
+[ext_resource type="Script" path="res://scripts/data/fx_hitstop.gd" id="4_xxjdi"]
+[ext_resource type="Script" path="res://scripts/data/fx_data.gd" id="5_my2jg"]
+
+[sub_resource type="Resource" id="Resource_o7i8h"]
+script = ExtResource("2_rfpjc")
+strength = 0.85
+life = 0.09
+
+[sub_resource type="Resource" id="Resource_xviiy"]
+script = ExtResource("3_5f4lk")
+amplitude = 1.0
+life = 0.08
+
+[sub_resource type="Resource" id="Resource_u5rln"]
+script = ExtResource("4_xxjdi")
+life = 0.03
+
+[resource]
+script = ExtResource("5_my2jg")
+id = &"hit_light"
+display_name = "Light hit"
+layers = Array[ExtResource("1_y68no")]([SubResource("Resource_o7i8h"), SubResource("Resource_xviiy"), SubResource("Resource_u5rln")])

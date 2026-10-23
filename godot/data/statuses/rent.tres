@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_2kr5r"]
+
+[resource]
+script = ExtResource("1_2kr5r")
+id = &"rent"
+display_name = "Rent"
+element = "slash"
+tier = 2
+reacts_with = PackedStringArray()
+tint = Color(1, 0.2901961, 0.3529412, 1)
+tint_alpha = 0.16
+overlay = &"rent"
+overlay_alpha = 0.85
+motif_rate = 0.0

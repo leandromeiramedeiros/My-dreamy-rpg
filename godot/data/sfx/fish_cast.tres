@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_o3ohh"]
+
+[resource]
+script = ExtResource("1_o3ohh")
+id = &"fish_cast"
+pitch_vary = 0.03
+recipe = {
+"layers": [{
+"dur": 0.4,
+"f0": 400.0,
+"f1": 2400.0,
+"filter": {
+"freq": 900.0,
+"q": 1.0,
+"type": "bandpass"
+},
+"gain": 0.04,
+"osc": "noise"
+}]
+}

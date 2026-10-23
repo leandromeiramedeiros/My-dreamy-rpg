@@ -1,0 +1,1090 @@
+{
+ "about": "Seed from the JS reference (tools/godot/seed.js). One-time: edit the .tres in res://data/, not this file.",
+ "rows": [
+  {
+   "id": "boss",
+   "display_name": "The Gloam Warden",
+   "hp": 25970,
+   "speed": 1.6,
+   "damage": 0,
+   "radius": 0.95,
+   "height": 9,
+   "element": "gloom",
+   "damage_type": "gloom",
+   "stagger": 0,
+   "resists": {
+    "arcane": 0.5,
+    "gloom": 0.5,
+    "holy": -0.5
+   },
+   "tags": [
+    "gloom",
+    "ethereal"
+   ],
+   "xp": 1,
+   "dummy": false,
+   "movement": "chase",
+   "attacks": [],
+   "support": "",
+   "part_params": {},
+   "loot": "boss_boss",
+   "frames": "",
+   "normal_map": "",
+   "scale": 1,
+   "blood": "#c78bff",
+   "todo": "Boss AI: bosses.js (move picker, fairness floors, bars); the Bosses lane ports it.\nJS loot key: ",
+   "kind": "guardian",
+   "level": 17,
+   "zone": "",
+   "length_target": [
+    60,
+    90
+   ],
+   "stagger_max": 4.8,
+   "bars": false,
+   "transition": 1.5,
+   "moves": [
+    {
+     "id": "cleave",
+     "type": "cone",
+     "wind": 0.85,
+     "open": 0.55,
+     "cooldown": 0.9,
+     "hit": "big",
+     "damage_pct": 0.72,
+     "element": "slash",
+     "range_band": "near",
+     "params": {
+      "arc": 2,
+      "r": 3.6,
+      "legacy": true
+     },
+     "todo": "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "slam",
+     "type": "circle",
+     "wind": 1.1,
+     "open": 0.6,
+     "cooldown": 0.8,
+     "hit": "big",
+     "damage_pct": 0.56,
+     "element": "gloom",
+     "range_band": "near",
+     "params": {
+      "at": "self",
+      "r": 3.4,
+      "hitstop": 0.08,
+      "legacy": true
+     },
+     "todo": "Move type \"circle\" runs in bosses.js BOSS_MOVES.circle (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "volley",
+     "type": "volley",
+     "cooldown": 1,
+     "hit": "chip",
+     "damage_pct": 0.04,
+     "element": "arcane",
+     "range_band": "any",
+     "params": {
+      "n": 16,
+      "rings": 3,
+      "delay": 0.35,
+      "gap": 0.45,
+      "rot": 0.2,
+      "speed": 4.6,
+      "life": 3.2,
+      "dur": 1.8,
+      "scale": "none",
+      "legacy": true
+     },
+     "todo": "Move type \"volley\" runs in bosses.js BOSS_MOVES.volley (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "charge",
+     "type": "charge",
+     "wind": 0.75,
+     "open": 0.6,
+     "cooldown": 0.8,
+     "hit": "big",
+     "damage_pct": 0.72,
+     "element": "slash",
+     "range_band": "far",
+     "params": {
+      "len": 8,
+      "w": 1.1,
+      "speed": 15,
+      "dur": 0.5,
+      "scale": "wind",
+      "legacy": true
+     },
+     "todo": "Move type \"charge\" runs in bosses.js BOSS_MOVES.charge (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "voidrain",
+     "type": "rain",
+     "wind": 1,
+     "cooldown": 0.6,
+     "hit": "chip",
+     "element": "gloom",
+     "range_band": "any",
+     "params": {
+      "count": 6,
+      "r": 1.3,
+      "spread": [
+       1,
+       4
+      ],
+      "dur": 1.5,
+      "scale": "none"
+     },
+     "todo": "Move type \"rain\" runs in bosses.js BOSS_MOVES.rain (wave 2: the Bosses lane)."
+    }
+   ],
+   "phases": [
+    {
+     "hp_below": 1,
+     "moves": {
+      "cleave": 2,
+      "slam": 1,
+      "volley": 1,
+      "charge": 2
+     },
+     "wind_mul": 1,
+     "cooldown_mul": 1,
+     "speed_mul": 1,
+     "forms": {},
+     "on_enter": []
+    },
+    {
+     "hp_below": 0.5,
+     "moves": {
+      "cleave": 2,
+      "slam": 1,
+      "volley": 1,
+      "charge": 2,
+      "voidrain": 2
+     },
+     "wind_mul": 0.8,
+     "cooldown_mul": 0.75,
+     "speed_mul": 1.35,
+     "forms": {},
+     "on_enter": [
+      {
+       "type": "roar",
+       "text": "The Warden calls upon the nightmare!",
+       "dur": 1.6,
+       "cd": 0.5,
+       "ring": 6,
+       "adds": [
+        [
+         "slime",
+         0.4,
+         3.5
+        ],
+        [
+         "wisp",
+         1.97,
+         3.5
+        ],
+        [
+         "slime",
+         3.54,
+         3.5
+        ],
+        [
+         "wisp",
+         5.11,
+         3.5
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "mossjaw",
+   "display_name": "Mossjaw",
+   "hp": 10000,
+   "speed": 2.2,
+   "damage": 0,
+   "radius": 0.8,
+   "height": 3.6,
+   "element": "nature",
+   "damage_type": "nature",
+   "stagger": 0,
+   "resists": {
+    "nature": 0.5,
+    "fire": -0.5
+   },
+   "tags": [
+    "beast"
+   ],
+   "xp": 0.5,
+   "dummy": false,
+   "movement": "chase",
+   "attacks": [],
+   "support": "",
+   "part_params": {},
+   "loot": "boss_mossjaw",
+   "frames": "res://art/enemies/shadehound.tres",
+   "normal_map": "res://art/enemies/shadehound_n.png",
+   "origin": [
+    36,
+    47
+   ],
+   "scale": 1.9,
+   "blood": "#7ac060",
+   "todo": "Boss AI: bosses.js (move picker, fairness floors, bars); the Bosses lane ports it.\nJS loot key: mossjaw_skill_rune_guaranteed",
+   "kind": "mini",
+   "level": 5,
+   "zone": "rootHollow",
+   "length_target": [
+    60,
+    90
+   ],
+   "stagger_max": 4,
+   "bars": true,
+   "transition": 1.5,
+   "moves": [
+    {
+     "id": "lunge",
+     "type": "line",
+     "wind": 0.75,
+     "open": 1.2,
+     "cooldown": 0.6,
+     "hit": "big",
+     "damage_pct": 0.6,
+     "element": "slash",
+     "stagger": 1,
+     "range_band": "any",
+     "params": {
+      "w": 0.7,
+      "dash": true,
+      "scale": "wind",
+      "len": 6
+     },
+     "todo": "Move type \"line\" runs in bosses.js BOSS_MOVES.line (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "rootSpit",
+     "type": "rain",
+     "wind": 0.9,
+     "open": 1,
+     "hit": "chip",
+     "element": "nature",
+     "range_band": "any",
+     "params": {
+      "count": 3,
+      "r": 1.2,
+      "at": "player"
+     },
+     "todo": "Move type \"rain\" runs in bosses.js BOSS_MOVES.rain (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "burrow",
+     "type": "vanish",
+     "wind": 1.15,
+     "open": 1.2,
+     "cooldown": 0.6,
+     "hit": "big",
+     "element": "nature",
+     "range_band": "any",
+     "params": {
+      "scale": "wind",
+      "dur": 1.5,
+      "then": {
+       "type": "circle",
+       "r": 1.6,
+       "at": "self"
+      }
+     },
+     "todo": "Move type \"vanish\" runs in bosses.js BOSS_MOVES.vanish (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "howl",
+     "type": "summon",
+     "wind": 0.8,
+     "open": 1,
+     "cooldown": 0.8,
+     "hit": "none",
+     "element": "nature",
+     "range_band": "any",
+     "params": {
+      "max": 2,
+      "rest": 12,
+      "addHp": 0.8,
+      "addDmg": 0.7,
+      "why": "QA run-big M3: 12/12 deaths to a 3-hound pile -> 2 alive max, 12 s rest, hounds -20 % HP / -30 % bite, flee on the boss death",
+      "kind": "shadehound",
+      "n": 2
+     },
+     "todo": "Move type \"summon\" runs in bosses.js BOSS_MOVES.summon (wave 2: the Bosses lane)."
+    }
+   ],
+   "phases": [
+    {
+     "hp_below": 1,
+     "moves": {
+      "lunge": 3,
+      "rootSpit": 2,
+      "burrow": 3
+     },
+     "wind_mul": 1,
+     "cooldown_mul": 0.75,
+     "speed_mul": 1,
+     "forms": {},
+     "on_enter": []
+    },
+    {
+     "hp_below": 0.5,
+     "moves": {
+      "lunge": 3,
+      "rootSpit": 2,
+      "burrow": 3,
+      "howl": 8
+     },
+     "wind_mul": 0.85,
+     "cooldown_mul": 0.4,
+     "speed_mul": 1.2,
+     "forms": {
+      "lunge": {
+       "feint": 0.4
+      }
+     },
+     "on_enter": [
+      {
+       "type": "roar",
+       "banner": "Mossjaw rears up",
+       "dur": 1.2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bramblehorn",
+   "display_name": "Old Bramblehorn",
+   "hp": 22000,
+   "speed": 1.5,
+   "damage": 0,
+   "radius": 1,
+   "height": 5.2,
+   "element": "nature",
+   "damage_type": "nature",
+   "stagger": 0,
+   "resists": {
+    "nature": 0.5,
+    "fire": -0.5
+   },
+   "tags": [
+    "beast"
+   ],
+   "xp": 1,
+   "dummy": false,
+   "movement": "chase",
+   "attacks": [],
+   "support": "",
+   "part_params": {},
+   "loot": "boss_bramblehorn",
+   "frames": "res://art/enemies/mountaintroll.tres",
+   "normal_map": "res://art/enemies/mountaintroll_n.png",
+   "origin": [
+    40,
+    68
+   ],
+   "scale": 1.35,
+   "blood": "#9ab06a",
+   "todo": "Boss AI: bosses.js (move picker, fairness floors, bars); the Bosses lane ports it.\nJS loot key: root_crown",
+   "kind": "guardian",
+   "level": 8,
+   "zone": "pinewood",
+   "length_target": [
+    150,
+    240
+   ],
+   "stagger_max": 5,
+   "bars": true,
+   "transition": 1.5,
+   "moves": [
+    {
+     "id": "stomp",
+     "type": "circle",
+     "wind": 0.9,
+     "open": 1.5,
+     "cooldown": 1.5,
+     "hit": "big",
+     "element": "nature",
+     "stagger": 1,
+     "range_band": "any",
+     "params": {
+      "hitstop": 0.06,
+      "scale": "none",
+      "why": "self-centred r3: 0.9 s in every bar (x0.7 = 0.63 s leaves 1.2 tiles of walk after a 0.3 s reaction; it needs 1.5 from melee range)",
+      "r": 3,
+      "at": "self"
+     },
+     "todo": "Move type \"circle\" runs in bosses.js BOSS_MOVES.circle (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "rootGrab",
+     "type": "line",
+     "wind": 0.85,
+     "open": 1.2,
+     "cooldown": 1.5,
+     "hit": "chip",
+     "element": "nature",
+     "range_band": "any",
+     "params": {
+      "w": 0.6,
+      "len": 7,
+      "root": 1.5
+     },
+     "todo": "Move type \"line\" runs in bosses.js BOSS_MOVES.line (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "trunkSwipe",
+     "type": "cone",
+     "wind": 0.95,
+     "open": 1.2,
+     "cooldown": 1.4,
+     "hit": "chip",
+     "damage_pct": 0.14,
+     "element": "slash",
+     "range_band": "any",
+     "params": {
+      "arc": 90,
+      "r": 3
+     },
+     "todo": "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "backhand",
+     "type": "cone",
+     "wind": 0.95,
+     "open": 1.2,
+     "cooldown": 1.4,
+     "hit": "chip",
+     "damage_pct": 0.14,
+     "element": "slash",
+     "range_band": "any",
+     "params": {
+      "arc": 90,
+      "r": 3.2
+     },
+     "todo": "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "trample",
+     "type": "charge",
+     "wind": 1.1,
+     "open": 1.3,
+     "cooldown": 1.5,
+     "hit": "big",
+     "element": "nature",
+     "range_band": "far",
+     "params": {
+      "scale": "wind",
+      "len": 7,
+      "w": 1,
+      "speed": 14
+     },
+     "todo": "Move type \"charge\" runs in bosses.js BOSS_MOVES.charge (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "rootWall",
+     "type": "arenaShrink",
+     "wind": 0.8,
+     "open": 1.2,
+     "cooldown": 0.6,
+     "hit": "none",
+     "element": "nature",
+     "range_band": "any",
+     "params": {
+      "k": 0.75,
+      "rMin": 5.5,
+      "dur": 2,
+      "pattern": "roots_inward"
+     },
+     "todo": "Move type \"arenaShrink\" runs in bosses.js BOSS_MOVES.arenaShrink (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "saplings",
+     "type": "summon",
+     "wind": 1,
+     "open": 1.5,
+     "cooldown": 0.8,
+     "hit": "none",
+     "element": "nature",
+     "range_band": "any",
+     "params": {
+      "kind": "sapling",
+      "max": 3,
+      "n": 2
+     },
+     "todo": "Move type \"summon\" runs in bosses.js BOSS_MOVES.summon (wave 2: the Bosses lane)."
+    }
+   ],
+   "phases": [
+    {
+     "hp_below": 1,
+     "moves": {
+      "stomp": 2,
+      "rootGrab": 2,
+      "trunkSwipe": 2
+     },
+     "wind_mul": 1,
+     "cooldown_mul": 1,
+     "speed_mul": 1,
+     "forms": {},
+     "on_enter": []
+    },
+    {
+     "hp_below": 0.62,
+     "moves": {
+      "stomp": 1.5,
+      "rootGrab": 2,
+      "trunkSwipe": 2,
+      "rootWall": 1,
+      "saplings": 1
+     },
+     "wind_mul": 0.85,
+     "cooldown_mul": 0.8,
+     "speed_mul": 1,
+     "forms": {
+      "trunkSwipe": {
+       "open": 0.35,
+       "then": "backhand"
+      }
+     },
+     "on_enter": [
+      {
+       "type": "arenaShrink",
+       "pattern": "roots_inward",
+       "k": 0.75,
+       "rMin": 5.5
+      },
+      {
+       "type": "roar",
+       "banner": "The roots wake",
+       "dur": 1.2
+      }
+     ]
+    },
+    {
+     "hp_below": 0.25,
+     "moves": {
+      "stomp": 1,
+      "rootGrab": 2,
+      "trunkSwipe": 2,
+      "rootWall": 1,
+      "saplings": 1,
+      "trample": 2
+     },
+     "wind_mul": 0.7,
+     "cooldown_mul": 0.65,
+     "speed_mul": 1.2,
+     "forms": {
+      "trunkSwipe": {
+       "open": 0.35,
+       "then": "backhand"
+      },
+      "rootGrab": {
+       "lead": 0.45
+      }
+     },
+     "on_enter": [
+      {
+       "type": "roar",
+       "banner": "Old Bramblehorn splinters into a fury",
+       "dur": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "oathless",
+   "display_name": "The Oathless",
+   "hp": 11600,
+   "speed": 1.7,
+   "damage": 0,
+   "radius": 0.85,
+   "height": 4.6,
+   "element": "gloom",
+   "damage_type": "gloom",
+   "stagger": 0,
+   "resists": {
+    "arcane": 0.5,
+    "wind": 0.5,
+    "holy": -0.5,
+    "pierce": -0.5
+   },
+   "tags": [
+    "armoured",
+    "gloom"
+   ],
+   "xp": 0.5,
+   "dummy": false,
+   "movement": "chase",
+   "attacks": [],
+   "support": "",
+   "part_params": {},
+   "loot": "boss_oathless",
+   "frames": "res://art/enemies/ogre.tres",
+   "normal_map": "res://art/enemies/ogre_n.png",
+   "origin": [
+    40,
+    72
+   ],
+   "scale": 1.7,
+   "blood": "#8a7ab8",
+   "todo": "Boss AI: bosses.js (move picker, fairness floors, bars); the Bosses lane ports it.\nJS loot key: ",
+   "kind": "mini",
+   "level": 12,
+   "zone": "oathReliquary",
+   "length_target": [
+    60,
+    90
+   ],
+   "stagger_max": 6,
+   "bars": true,
+   "transition": 1.5,
+   "moves": [
+    {
+     "id": "shieldWall",
+     "type": "shield",
+     "wind": 0.4,
+     "cooldown": 0.6,
+     "hit": "chip",
+     "element": "gloom",
+     "range_band": "any",
+     "params": {
+      "arc": 150,
+      "dur": 2,
+      "mul": 0.1,
+      "turn": 70,
+      "then": "shieldBash"
+     },
+     "todo": "Move type \"shield\" runs in bosses.js BOSS_MOVES.shield (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "shieldBash",
+     "type": "cone",
+     "wind": 0.75,
+     "open": 1.2,
+     "cooldown": 0.8,
+     "hit": "chip",
+     "damage_pct": 0.16,
+     "element": "gloom",
+     "range_band": "any",
+     "params": {
+      "arc": 100,
+      "r": 2.6
+     },
+     "todo": "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "cleave",
+     "type": "cone",
+     "wind": 0.9,
+     "open": 1.3,
+     "cooldown": 1,
+     "hit": "big",
+     "damage_pct": 0.62,
+     "element": "slash",
+     "range_band": "near",
+     "params": {
+      "arc": 120,
+      "r": 3
+     },
+     "todo": "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "backswing",
+     "type": "cone",
+     "wind": 0.9,
+     "open": 1.3,
+     "cooldown": 1,
+     "hit": "chip",
+     "damage_pct": 0.18,
+     "element": "slash",
+     "range_band": "any",
+     "params": {
+      "arc": 120,
+      "r": 3.2
+     },
+     "todo": "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "volley",
+     "type": "volley",
+     "cooldown": 1,
+     "hit": "chip",
+     "damage_pct": 0.05,
+     "element": "gloom",
+     "range_band": "any",
+     "params": {
+      "n": 8,
+      "rings": 3,
+      "delay": 0.7,
+      "gap": 0.5,
+      "rot": 0.3,
+      "speed": 4.8,
+      "life": 3,
+      "col": "#c070ff",
+      "scale": "none"
+     },
+     "todo": "Move type \"volley\" runs in bosses.js BOSS_MOVES.volley (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "oathCharge",
+     "type": "charge",
+     "wind": 1,
+     "open": 1.3,
+     "cooldown": 1,
+     "hit": "big",
+     "damage_pct": 0.62,
+     "element": "slash",
+     "range_band": "far",
+     "params": {
+      "len": 7,
+      "w": 1,
+      "speed": 13,
+      "scale": "wind"
+     },
+     "todo": "Move type \"charge\" runs in bosses.js BOSS_MOVES.charge (wave 2: the Bosses lane)."
+    }
+   ],
+   "phases": [
+    {
+     "hp_below": 1,
+     "moves": {
+      "shieldWall": 2,
+      "cleave": 3,
+      "volley": 2
+     },
+     "wind_mul": 1,
+     "cooldown_mul": 0.9,
+     "speed_mul": 1,
+     "forms": {},
+     "on_enter": []
+    },
+    {
+     "hp_below": 0.5,
+     "moves": {
+      "shieldWall": 2,
+      "cleave": 3,
+      "volley": 2,
+      "oathCharge": 2.5
+     },
+     "wind_mul": 0.85,
+     "cooldown_mul": 0.65,
+     "speed_mul": 1.2,
+     "forms": {
+      "cleave": {
+       "open": 0.35,
+       "then": "backswing"
+      }
+     },
+     "on_enter": [
+      {
+       "type": "roar",
+       "banner": "The Oathless breaks its vow",
+       "dur": 1.2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "gloamwarden",
+   "display_name": "The Gloam Warden",
+   "hp": 11000,
+   "speed": 1.6,
+   "damage": 0,
+   "radius": 0.95,
+   "height": 9,
+   "element": "gloom",
+   "damage_type": "gloom",
+   "stagger": 0,
+   "resists": {
+    "slash": 0.5,
+    "pierce": 0.5,
+    "arcane": 0.5,
+    "holy": -0.5,
+    "lightning": -0.5
+   },
+   "tags": [
+    "ethereal",
+    "gloom"
+   ],
+   "xp": 1,
+   "dummy": false,
+   "movement": "chase",
+   "attacks": [],
+   "support": "",
+   "part_params": {},
+   "loot": "boss_gloamwarden",
+   "frames": "",
+   "normal_map": "",
+   "scale": 1,
+   "blood": "#c78bff",
+   "todo": "Boss AI: bosses.js (move picker, fairness floors, bars); the Bosses lane ports it.\nJS loot key: lanternplate",
+   "kind": "guardian",
+   "level": 14,
+   "zone": "wardensHall",
+   "length_target": [
+    150,
+    240
+   ],
+   "stagger_max": 5,
+   "bars": true,
+   "transition": 1.5,
+   "moves": [
+    {
+     "id": "cleave",
+     "type": "cone",
+     "wind": 1.05,
+     "open": 1.2,
+     "cooldown": 1,
+     "hit": "big",
+     "damage_pct": 0.62,
+     "element": "slash",
+     "range_band": "near",
+     "params": {
+      "arc": 110,
+      "r": 3.4
+     },
+     "todo": "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "backcleave",
+     "type": "cone",
+     "wind": 1.05,
+     "open": 1.3,
+     "cooldown": 1,
+     "hit": "chip",
+     "damage_pct": 0.18,
+     "element": "slash",
+     "range_band": "any",
+     "params": {
+      "arc": 110,
+      "r": 3.6
+     },
+     "todo": "Move type \"cone\" runs in bosses.js BOSS_MOVES.cone (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "slam",
+     "type": "circle",
+     "wind": 1,
+     "open": 1.3,
+     "cooldown": 1,
+     "hit": "big",
+     "element": "gloom",
+     "range_band": "near",
+     "params": {
+      "at": "self",
+      "r": 3,
+      "hitstop": 0.06,
+      "scale": "none"
+     },
+     "todo": "Move type \"circle\" runs in bosses.js BOSS_MOVES.circle (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "volley",
+     "type": "volley",
+     "cooldown": 1,
+     "hit": "chip",
+     "damage_pct": 0.03,
+     "element": "arcane",
+     "range_band": "any",
+     "params": {
+      "n": 12,
+      "rings": 3,
+      "delay": 0.75,
+      "gap": 0.5,
+      "rot": 0.2,
+      "speed": 4.4,
+      "life": 3.2,
+      "scale": "none"
+     },
+     "todo": "Move type \"volley\" runs in bosses.js BOSS_MOVES.volley (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "charge",
+     "type": "charge",
+     "wind": 1.1,
+     "open": 1.3,
+     "cooldown": 1,
+     "hit": "big",
+     "damage_pct": 0.62,
+     "element": "slash",
+     "range_band": "far",
+     "params": {
+      "len": 8,
+      "w": 1.1,
+      "speed": 14,
+      "scale": "wind"
+     },
+     "todo": "Move type \"charge\" runs in bosses.js BOSS_MOVES.charge (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "voidrain",
+     "type": "rain",
+     "wind": 1,
+     "cooldown": 0.8,
+     "hit": "chip",
+     "element": "gloom",
+     "range_band": "any",
+     "params": {
+      "count": 6,
+      "r": 1.3,
+      "spread": [
+       1,
+       4
+      ],
+      "scale": "none"
+     },
+     "todo": "Move type \"rain\" runs in bosses.js BOSS_MOVES.rain (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "wisps",
+     "type": "summon",
+     "wind": 0.9,
+     "open": 0.8,
+     "cooldown": 0.6,
+     "hit": "none",
+     "element": "gloom",
+     "range_band": "any",
+     "params": {
+      "kind": "wisp",
+      "n": 1,
+      "max": 2,
+      "rest": 18,
+      "addHp": 0.8,
+      "addDmg": 0.7
+     },
+     "todo": "Move type \"summon\" runs in bosses.js BOSS_MOVES.summon (wave 2: the Bosses lane)."
+    },
+    {
+     "id": "gloam",
+     "type": "gloam",
+     "wind": 1.8,
+     "open": 1.3,
+     "cooldown": 1.2,
+     "hit": "big",
+     "damage_pct": 0.45,
+     "element": "gloom",
+     "range_band": "any",
+     "params": {
+      "safeR": 2.2,
+      "near": 2.5,
+      "far": 4,
+      "scale": "none",
+      "rest": 9
+     },
+     "todo": "Move type \"gloam\" runs in bosses.js BOSS_MOVES.gloam (wave 2: the Bosses lane)."
+    }
+   ],
+   "phases": [
+    {
+     "hp_below": 1,
+     "moves": {
+      "cleave": 2,
+      "slam": 1.5,
+      "volley": 1.5,
+      "charge": 1.5
+     },
+     "wind_mul": 1,
+     "cooldown_mul": 1,
+     "speed_mul": 1,
+     "forms": {},
+     "on_enter": []
+    },
+    {
+     "hp_below": 0.5,
+     "moves": {
+      "cleave": 2,
+      "slam": 1.5,
+      "volley": 1.5,
+      "charge": 1.5,
+      "voidrain": 2,
+      "wisps": 1
+     },
+     "wind_mul": 0.85,
+     "cooldown_mul": 0.8,
+     "speed_mul": 1.25,
+     "forms": {
+      "cleave": {
+       "open": 0.35,
+       "then": "backcleave"
+      }
+     },
+     "on_enter": [
+      {
+       "type": "roar",
+       "banner": "The Gloam Warden raises its lantern",
+       "dur": 1.2
+      },
+      "wisps"
+     ]
+    },
+    {
+     "hp_below": 0.2,
+     "moves": {
+      "cleave": 2,
+      "slam": 1.5,
+      "volley": 2,
+      "charge": 1.5,
+      "voidrain": 1.5,
+      "wisps": 1,
+      "gloam": 3
+     },
+     "wind_mul": 0.7,
+     "cooldown_mul": 0.7,
+     "speed_mul": 1.3,
+     "forms": {
+      "cleave": {
+       "open": 0.35,
+       "then": "backcleave"
+      },
+      "volley": {
+       "spiral": true,
+       "n": 10,
+       "rings": 6,
+       "gap": 0.24,
+       "rot": 0.3,
+       "dmgPct": 0.025
+      },
+      "charge": {
+       "lead": 0.4
+      }
+     },
+     "on_enter": [
+      {
+       "type": "arenaShrink",
+       "pattern": "pillars_fall",
+       "k": 0.72,
+       "rMin": 5.5,
+       "dur": 2,
+       "wind": 0.9,
+       "open": 1.2,
+       "text": "The pillars fall!",
+       "warn": "PILLARS! GET INSIDE",
+       "col": "#c78bff",
+       "el": "gloom"
+      },
+      {
+       "type": "roar",
+       "banner": "The hall goes dark",
+       "dur": 1
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

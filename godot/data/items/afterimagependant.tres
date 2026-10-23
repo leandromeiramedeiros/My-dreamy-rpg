@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_bjss1"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_0mqfp"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_wgfbx"]
+
+[sub_resource type="Resource" id="Resource_tq0rd"]
+script = ExtResource("3_wgfbx")
+base_id = &"afterimagependant"
+display_name = "Afterimage Pendant"
+required_level = 16
+
+[resource]
+script = ExtResource("2_0mqfp")
+id = &"afterimagependant"
+display_name = "Afterimage Pendant"
+description = "Dashes leave an image that recasts your last skill once."
+kind = "trinket"
+slot = "amulet"
+hands = 0
+tiers = Array[ExtResource("3_wgfbx")]([SubResource("Resource_tq0rd")])
+stats = Dictionary[StringName, float]({
+&"speed": 0.1
+})
+flags = {
+"rule": {
+"dashImageRecasts": 1.0
+}
+}
+attack_pose = "none"
+todo = "Unique rule (JS `rule`): {\"dashImageRecasts\":1}. Wave 2: an Effect."

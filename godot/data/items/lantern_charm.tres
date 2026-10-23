@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_qdk0j"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_ai110"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_fhdf1"]
+
+[sub_resource type="Resource" id="Resource_430b6"]
+script = ExtResource("3_fhdf1")
+base_id = &"lantern_charm"
+display_name = "Lantern Charm"
+
+[resource]
+script = ExtResource("2_ai110")
+id = &"lantern_charm"
+display_name = "Lantern Charm"
+description = "+3% charge rate"
+kind = "trinket"
+slot = "amulet"
+hands = 0
+tiers = Array[ExtResource("3_fhdf1")]([SubResource("Resource_430b6")])
+stats = Dictionary[StringName, float]({
+&"chargeSpeed": 0.03
+})
+attack_pose = "none"
+todo = "Boon rolled at drop (BOONS amulet)."

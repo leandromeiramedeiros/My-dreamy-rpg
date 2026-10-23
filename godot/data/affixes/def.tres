@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_q2wr6"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_ud6dk"]
+
+[sub_resource type="Resource" id="Resource_eq4rt"]
+script = ExtResource("2_ud6dk")
+display_name = "Guarded"
+roll = Vector2(0.02, 0.03)
+
+[sub_resource type="Resource" id="Resource_m1ldf"]
+script = ExtResource("2_ud6dk")
+display_name = "Bulwarked"
+roll = Vector2(0.04, 0.055)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_cm16k"]
+script = ExtResource("2_ud6dk")
+display_name = "Impregnable"
+roll = Vector2(0.06, 0.08)
+item_level = 28
+
+[resource]
+script = ExtResource("1_q2wr6")
+id = &"def"
+kind = "suffix"
+tiers = Array[ExtResource("2_ud6dk")]([SubResource("Resource_eq4rt"), SubResource("Resource_m1ldf"), SubResource("Resource_cm16k")])

@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/groundslam.tres" id="1_oifm1"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_c6n6o"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_12c8f"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_xohhm"]
+
+[sub_resource type="Resource" id="Resource_x4jkh"]
+script = ExtResource("4_xohhm")
+base_id = &"buckethelm"
+display_name = "Bucket Helm"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_whqd1"]
+script = ExtResource("4_xohhm")
+base_id = &"juggernauthelm"
+display_name = "Juggernaut Helm"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_mchgo"]
+script = ExtResource("4_xohhm")
+base_id = &"forgehelm"
+display_name = "Forgebrow Helm"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_b5w3l"]
+script = ExtResource("4_xohhm")
+base_id = &"auroraram"
+display_name = "Aurora Ramhelm"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_vdqfx"]
+script = ExtResource("4_xohhm")
+base_id = &"crownofcinders"
+display_name = "Crown of Cinders"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_12c8f")
+id = &"juggernauthelm"
+display_name = "Juggernaut Helm"
+description = "+7% defence, +20 HP."
+kind = "armour"
+slot = "head"
+item_class = &"heavy"
+suit = &"juggernaut"
+hands = 0
+element = "fire"
+tiers = Array[ExtResource("4_xohhm")]([SubResource("Resource_x4jkh"), SubResource("Resource_whqd1"), SubResource("Resource_mchgo"), SubResource("Resource_b5w3l"), SubResource("Resource_vdqfx")])
+active = ExtResource("1_oifm1")
+stats = Dictionary[StringName, float]({
+&"def": 0.07,
+&"hp": 20.0
+})
+color = Color(0.65882355, 0.59607846, 0.53333336, 1)
+attack_pose = "none"
+todo = "Suit Juggernaut (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."

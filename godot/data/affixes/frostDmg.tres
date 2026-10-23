@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_nomkx"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_0w55l"]
+
+[sub_resource type="Resource" id="Resource_o5ks7"]
+script = ExtResource("2_0w55l")
+display_name = "Rimed"
+roll = Vector2(0.04, 0.06)
+
+[sub_resource type="Resource" id="Resource_kipvy"]
+script = ExtResource("2_0w55l")
+display_name = "Frosted"
+roll = Vector2(0.08, 0.1)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_051jf"]
+script = ExtResource("2_0w55l")
+display_name = "Glacial"
+roll = Vector2(0.12, 0.15)
+item_level = 28
+
+[resource]
+script = ExtResource("1_nomkx")
+id = &"frostDmg"
+tiers = Array[ExtResource("2_0w55l")]([SubResource("Resource_o5ks7"), SubResource("Resource_kipvy"), SubResource("Resource_051jf")])

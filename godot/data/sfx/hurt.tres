@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_u6ics"]
+
+[resource]
+script = ExtResource("1_u6ics")
+id = &"hurt"
+pitch_vary = 0.06
+priority = 3
+caption = "[you are hit]"
+recipe = {
+"layers": [{
+"dur": 0.2,
+"f0": 160.0,
+"f1": 60.0,
+"gain": 0.07,
+"osc": "saw"
+}]
+}

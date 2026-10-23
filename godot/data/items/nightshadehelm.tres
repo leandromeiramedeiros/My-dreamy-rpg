@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/toxinflask.tres" id="1_sgtc7"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_qod8a"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_l6lio"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_8ocb7"]
+
+[sub_resource type="Resource" id="Resource_tuevb"]
+script = ExtResource("4_8ocb7")
+base_id = &"clothmask"
+display_name = "Cloth Mask"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_5ks8y"]
+script = ExtResource("4_8ocb7")
+base_id = &"nightshademask"
+display_name = "Nightshade Mask"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_0lmrf"]
+script = ExtResource("4_8ocb7")
+base_id = &"venommask"
+display_name = "Venomweave Mask"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_xypmi"]
+script = ExtResource("4_8ocb7")
+base_id = &"auroramask"
+display_name = "Aurora Mask"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_787ah"]
+script = ExtResource("4_8ocb7")
+base_id = &"crownofthorns"
+display_name = "Crown of Thorns"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_l6lio")
+id = &"nightshadehelm"
+display_name = "Nightshade Mask"
+description = "+5% crit chance, +5% status chance."
+kind = "armour"
+slot = "head"
+item_class = &"shadow"
+suit = &"nightshade"
+hands = 0
+element = "nature"
+tiers = Array[ExtResource("4_8ocb7")]([SubResource("Resource_tuevb"), SubResource("Resource_5ks8y"), SubResource("Resource_0lmrf"), SubResource("Resource_xypmi"), SubResource("Resource_787ah")])
+active = ExtResource("1_sgtc7")
+stats = Dictionary[StringName, float]({
+&"crit": 0.05,
+&"statusChance": 0.05
+})
+color = Color(0.41568628, 0.5411765, 0.3529412, 1)
+attack_pose = "none"
+todo = "Suit Nightshade (Shadow: speed/crit; pierce +25, nature -25; 3-piece rule: dashes leave decoys)."

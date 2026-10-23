@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/huntersmark.tres" id="1_nwwnm"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_oq3kc"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_f4une"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_qg15c"]
+
+[sub_resource type="Resource" id="Resource_xf8om"]
+script = ExtResource("4_qg15c")
+base_id = &"leathercap"
+display_name = "Leather Cap"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_njmc8"]
+script = ExtResource("4_qg15c")
+base_id = &"stalkerhood"
+display_name = "Stalker Hood"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_8m76m"]
+script = ExtResource("4_qg15c")
+base_id = &"nightstalkerhood"
+display_name = "Nightstalker Hood"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_reyvx"]
+script = ExtResource("4_qg15c")
+base_id = &"shadowweavecowl"
+display_name = "Shadowweave Cowl"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_ahoe8"]
+script = ExtResource("4_qg15c")
+base_id = &"eclipsemask"
+display_name = "Eclipse Mask"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_f4une")
+id = &"stalkerhelm"
+display_name = "Stalker Hood"
+description = "+5% crit chance."
+kind = "armour"
+slot = "head"
+item_class = &"medium"
+suit = &"stalker"
+hands = 0
+element = "pierce"
+tiers = Array[ExtResource("4_qg15c")]([SubResource("Resource_xf8om"), SubResource("Resource_njmc8"), SubResource("Resource_8m76m"), SubResource("Resource_reyvx"), SubResource("Resource_ahoe8")])
+active = ExtResource("1_nwwnm")
+stats = Dictionary[StringName, float]({
+&"crit": 0.05
+})
+color = Color(0.627451, 0.4392157, 0.3137255, 1)
+attack_pose = "none"
+todo = "Suit Stalker (Medium: crit/haste; pierce +25, fire -25; 3-piece rule: projectiles pierce once)."

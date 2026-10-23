@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ReactionData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/reaction_data.gd" id="1_uqfsv"]
+
+[resource]
+script = ExtResource("1_uqfsv")
+id = &"rupture"
+display_name = "Rupture"
+trigger_elements = PackedStringArray("pierce")
+on_statuses = PackedStringArray()
+needs_stagger = -1.0
+damage_type = &"pierce"
+effect_text = "Pierce on a full stagger bar: a guaranteed crit."
+todo = "No JS implementation (design only, elements-statuses.md); the Status lane builds it."

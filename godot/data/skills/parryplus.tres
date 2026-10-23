@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_kkxx6"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2_h5u4m"]
+
+[resource]
+script = ExtResource("2_h5u4m")
+id = &"parryplus"
+display_name = "Parry+"
+description = "BUCKLER — a 0.35 s parry window; reflects projectiles from T3."
+element = "slash"
+kind = "action"
+stamina_cost = 12.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+color = Color(0.7882353, 0.7058824, 0.5411765, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { startParry(p, PARRY.buckler, { reflect: offTier(p) >= 2 }); }
+JS fields: {\"cdKey\":\"parry\",\"off\":true}"

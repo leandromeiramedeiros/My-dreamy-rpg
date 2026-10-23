@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_n8uo5"]
+[ext_resource type="Script" path="res://scripts/data/dash_block.gd" id="2_lpk7x"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_keaf1"]
+
+[sub_resource type="Resource" id="Resource_h7lvu"]
+script = ExtResource("2_lpk7x")
+distance = 0.6
+duration = 0.1
+iframes = 0.0
+
+[resource]
+script = ExtResource("3_keaf1")
+id = &"step"
+display_name = "Step"
+description = "OFF-ACTION — a 0.6-tile sidestep; your next hit is a backstab (+30% crit)."
+element = "pierce"
+cooldown = 0.8
+stamina_cost = 10.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_n8uo5")]([SubResource("Resource_h7lvu")])
+aim_shape = "dash"
+aim_range = 0.6
+color = Color(0.7254902, 0.65882355, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) { const s = IN && IN.move && IN.move.mag ? 1 : -1, sa = a + s * Math.PI / 2; dashPlayer(p, Math.cos(sa), Math.sin(sa), 0.6, 0.1, {}); p.stepMark = G.t + 2; sfx('dash'); }
+JS fields: {\"off\":true}"

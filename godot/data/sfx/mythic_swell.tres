@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_n82vp"]
+
+[resource]
+script = ExtResource("1_n82vp")
+id = &"mythic_swell"
+bus = "ui"
+priority = 3
+caption = "[mythic drop]"
+recipe = {
+"layers": [{
+"dur": 0.9,
+"f0": 300.0,
+"f1": 6000.0,
+"filter": {
+"freq": 1500.0,
+"q": 0.8,
+"type": "bandpass"
+},
+"gain": 0.06,
+"osc": "noise"
+}]
+}

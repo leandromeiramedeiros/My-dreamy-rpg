@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AffixData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_data.gd" id="1_ii3pj"]
+[ext_resource type="Script" path="res://scripts/data/affix_tier.gd" id="2_v63in"]
+
+[sub_resource type="Resource" id="Resource_l71j0"]
+script = ExtResource("2_v63in")
+display_name = "Hallowed"
+roll = Vector2(0.04, 0.06)
+
+[sub_resource type="Resource" id="Resource_qr37a"]
+script = ExtResource("2_v63in")
+display_name = "Dawnlit"
+roll = Vector2(0.08, 0.1)
+item_level = 14
+
+[sub_resource type="Resource" id="Resource_x8ee7"]
+script = ExtResource("2_v63in")
+display_name = "Sunwrought"
+roll = Vector2(0.12, 0.15)
+item_level = 28
+
+[resource]
+script = ExtResource("1_ii3pj")
+id = &"holyDmg"
+tiers = Array[ExtResource("2_v63in")]([SubResource("Resource_l71j0"), SubResource("Resource_qr37a"), SubResource("Resource_x8ee7")])

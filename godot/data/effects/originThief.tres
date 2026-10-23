@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_3wf6o"]
+
+[resource]
+script = ExtResource("1_3wf6o")
+id = &"originThief"
+display_name = "Unseen Debt"
+hint = "+10% damage from behind"
+source = "trinket"
+if_tags = PackedStringArray()
+tags = PackedStringArray("backstab")
+data_only = true

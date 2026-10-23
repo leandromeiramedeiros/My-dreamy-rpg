@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_c0nuo"]
+[ext_resource type="Script" path="res://scripts/data/dash_block.gd" id="2_cuwt6"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="3_lrap8"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="4_p8cuw"]
+
+[sub_resource type="Resource" id="Resource_sjsv8"]
+script = ExtResource("2_cuwt6")
+distance = 5.0
+duration = 0.35
+iframes = 0.35
+hit_radius = 1.0
+carry = true
+damage = 60.0
+knockback = 0.2
+
+[sub_resource type="Resource" id="Resource_k18wd"]
+script = ExtResource("3_lrap8")
+cast_range = 5.0
+radius = 1.8
+damage = 220.0
+knockback = 0.8
+stun = 1.0
+
+[resource]
+script = ExtResource("4_p8cuw")
+id = &"bulwarkcharge"
+display_name = "Bulwark Charge"
+description = "ULTIMATE — charge behind the shield, carrying the first foe, and slam it down."
+element = "slash"
+kind = "ultimate"
+cooldown = 14.0
+mp_cost = 30.0
+tags = PackedStringArray()
+decks = PackedStringArray()
+blocks = Array[ExtResource("1_c0nuo")]([SubResource("Resource_sjsv8"), SubResource("Resource_k18wd")])
+aim_shape = "dash"
+aim_range = 5.0
+aim_width = 1.0
+stagger = 3.0
+hit_weight = 2.0
+color = Color(0.65882355, 0.72156864, 0.84705883, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) {
+      dashPlayer(p, Math.cos(a), Math.sin(a), 5, 0.35, { trail: '#c8d8f0', hit: { dmg: 60, r: 1, knock: 0.2 }, carry: true, invuln: true, onEnd: () => {
+        hitArea(p.x + Math.cos(a) * 0.8, p.y + Math.sin(a) * 0.8, 1.8, 220, { stun: 1, knock: 0.8 }); fx({ type: 'ring', x: p.x, y: p.y, r: 2, col: '#e0e8ff', life: 0.35 }); shake(7); sfx('boom');
+      } }); sfx('dash');
+    }"

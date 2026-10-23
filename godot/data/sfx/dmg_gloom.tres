@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_u62bc"]
+
+[resource]
+script = ExtResource("1_u62bc")
+id = &"dmg_gloom"
+pitch_vary = 0.06
+priority = 2
+caption = "[gloom damage]"
+recipe = {
+"layers": [{
+"dur": 0.4,
+"f0": 150.0,
+"f1": 150.0,
+"filter": {
+"freq": 400.0,
+"q": 1.0,
+"type": "lowpass"
+},
+"gain": 0.08,
+"osc": "sine"
+}]
+}

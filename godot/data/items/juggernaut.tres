@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/brace.tres" id="1_ylohr"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_2gy4g"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_rl1l3"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_cx5gb"]
+
+[sub_resource type="Resource" id="Resource_my1pt"]
+script = ExtResource("4_cx5gb")
+base_id = &"scrapplate"
+display_name = "Scrap Plate"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_uo8jq"]
+script = ExtResource("4_cx5gb")
+base_id = &"juggernautcuirass"
+display_name = "Juggernaut Cuirass"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_vm5gp"]
+script = ExtResource("4_cx5gb")
+base_id = &"forgecuirass"
+display_name = "Forgeborn Cuirass"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_6pb28"]
+script = ExtResource("4_cx5gb")
+base_id = &"auroracuirass"
+display_name = "Aurora Cuirass"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_cp8hx"]
+script = ExtResource("4_cx5gb")
+base_id = &"anvilheart"
+display_name = "Anvilheart"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_rl1l3")
+id = &"juggernaut"
+display_name = "Juggernaut Cuirass"
+description = "+16% defence, +300 HP."
+kind = "armour"
+slot = "chest"
+item_class = &"heavy"
+suit = &"juggernaut"
+hands = 0
+element = "fire"
+tiers = Array[ExtResource("4_cx5gb")]([SubResource("Resource_my1pt"), SubResource("Resource_uo8jq"), SubResource("Resource_vm5gp"), SubResource("Resource_6pb28"), SubResource("Resource_cp8hx")])
+active = ExtResource("1_ylohr")
+stats = Dictionary[StringName, float]({
+&"def": 0.16,
+&"hp": 300.0
+})
+resists = Dictionary[StringName, float]({
+&"fire": 0.1,
+&"lightning": -0.25,
+&"pierce": 0.25,
+&"slash": 0.25
+})
+color = Color(0.6039216, 0.53333336, 0.47058824, 1)
+attack_pose = "none"
+todo = "Suit Juggernaut (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."

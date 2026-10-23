@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_f71ky"]
+
+[resource]
+script = ExtResource("1_f71ky")
+id = &"numb"
+display_name = "Numb"
+element = "frost"
+tier = 2
+duration = 0.5
+reacts_with = PackedStringArray()
+rule = "Hero side of Frozen: a 0.5 s root."
+tint = Color(0.7490196, 0.95686275, 1, 1)
+tint_alpha = 0.3
+overlay = &"ice"
+overlay_alpha = 0.45
+socket = "head"
+light_color = Color(0.62352943, 0.9098039, 1, 1)
+light_radius = 16.0
+light_alpha = 0.2
+light_mode = "cool"

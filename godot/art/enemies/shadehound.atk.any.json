@@ -1,0 +1,916 @@
+{
+ "unit": "shadehound",
+ "sheet": "atk.any",
+ "images": {
+  "color": "shadehound.atk.any.png",
+  "normal": "shadehound.atk.any_n.png"
+ },
+ "layer": "body",
+ "zorder": {
+  "S": 0,
+  "SE": 0,
+  "E": 0,
+  "NE": 0,
+  "N": 0,
+  "NW": 0,
+  "W": 0,
+  "SW": 0
+ },
+ "rig": "shadehound",
+ "cell": [
+  72,
+  60
+ ],
+ "origin": [
+  36,
+  47
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  6,
+  8
+ ],
+ "anims": {
+  "attack": {
+   "from": 0,
+   "count": 6,
+   "ms": [
+    300,
+    300,
+    250,
+    250,
+    250,
+    250
+   ],
+   "loop": false
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   72,
+   60
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_shadehound.gpl",
+ "sockets": {
+  "S": {
+   "attack": [
+    {
+     "head": {
+      "x": 36,
+      "y": 39.1,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 40.5,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 48.3,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 32.8,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 38,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 42.4,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 27.3,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 34.7,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 37.3,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 37.1,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 39.5,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 45.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 39.2,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 41.2,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 48.2,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 33.7,
+      "front": true
+     },
+     "chest": {
+      "x": 36,
+      "y": 38.4,
+      "front": true
+     },
+     "maw": {
+      "x": 36,
+      "y": 42.7,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SE": {
+   "attack": [
+    {
+     "head": {
+      "x": 51,
+      "y": 36.2,
+      "front": true
+     },
+     "chest": {
+      "x": 42.2,
+      "y": 39.3,
+      "front": true
+     },
+     "maw": {
+      "x": 53.2,
+      "y": 45,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 48.1,
+      "y": 30.5,
+      "front": true
+     },
+     "chest": {
+      "x": 41.4,
+      "y": 37,
+      "front": true
+     },
+     "maw": {
+      "x": 52.2,
+      "y": 39.3,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 48.1,
+      "y": 24.9,
+      "front": true
+     },
+     "chest": {
+      "x": 43,
+      "y": 33.3,
+      "front": true
+     },
+     "maw": {
+      "x": 52.6,
+      "y": 34.1,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 51.9,
+      "y": 34,
+      "front": true
+     },
+     "chest": {
+      "x": 43.4,
+      "y": 38,
+      "front": true
+     },
+     "maw": {
+      "x": 54.2,
+      "y": 42.3,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 51.4,
+      "y": 36.2,
+      "front": true
+     },
+     "chest": {
+      "x": 42.9,
+      "y": 39.9,
+      "front": true
+     },
+     "maw": {
+      "x": 53.8,
+      "y": 44.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 49.8,
+      "y": 31,
+      "front": true
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 37.1,
+      "front": true
+     },
+     "maw": {
+      "x": 53.2,
+      "y": 39.3,
+      "front": true
+     }
+    }
+   ]
+  },
+  "E": {
+   "attack": [
+    {
+     "head": {
+      "x": 57.1,
+      "y": 29.1,
+      "front": true
+     },
+     "chest": {
+      "x": 44.8,
+      "y": 36.4,
+      "front": true
+     },
+     "maw": {
+      "x": 60.3,
+      "y": 36.9,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 53.1,
+      "y": 24.8,
+      "front": true
+     },
+     "chest": {
+      "x": 43.7,
+      "y": 34.4,
+      "front": true
+     },
+     "maw": {
+      "x": 59,
+      "y": 31.6,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 53.1,
+      "y": 19.2,
+      "front": true
+     },
+     "chest": {
+      "x": 45.9,
+      "y": 30,
+      "front": true
+     },
+     "maw": {
+      "x": 59.4,
+      "y": 26.3,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 58.5,
+      "y": 26.5,
+      "front": true
+     },
+     "chest": {
+      "x": 46.5,
+      "y": 34.5,
+      "front": true
+     },
+     "maw": {
+      "x": 61.7,
+      "y": 33.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 57.8,
+      "y": 29,
+      "front": true
+     },
+     "chest": {
+      "x": 45.8,
+      "y": 36.6,
+      "front": true
+     },
+     "maw": {
+      "x": 61.2,
+      "y": 36.4,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 55.5,
+      "y": 24.6,
+      "front": true
+     },
+     "chest": {
+      "x": 45.4,
+      "y": 34,
+      "front": true
+     },
+     "maw": {
+      "x": 60.3,
+      "y": 31.3,
+      "front": true
+     }
+    }
+   ]
+  },
+  "NE": {
+   "attack": [
+    {
+     "head": {
+      "x": 51,
+      "y": 22.1,
+      "front": false
+     },
+     "chest": {
+      "x": 42.2,
+      "y": 33.5,
+      "front": false
+     },
+     "maw": {
+      "x": 53.2,
+      "y": 28.9,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 48.1,
+      "y": 19.1,
+      "front": false
+     },
+     "chest": {
+      "x": 41.4,
+      "y": 31.9,
+      "front": false
+     },
+     "maw": {
+      "x": 52.2,
+      "y": 24,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 48.1,
+      "y": 13.6,
+      "front": false
+     },
+     "chest": {
+      "x": 43,
+      "y": 26.7,
+      "front": false
+     },
+     "maw": {
+      "x": 52.6,
+      "y": 18.6,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 51.9,
+      "y": 19.1,
+      "front": false
+     },
+     "chest": {
+      "x": 43.4,
+      "y": 31,
+      "front": false
+     },
+     "maw": {
+      "x": 54.2,
+      "y": 25.2,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 51.4,
+      "y": 21.7,
+      "front": false
+     },
+     "chest": {
+      "x": 42.9,
+      "y": 33.4,
+      "front": false
+     },
+     "maw": {
+      "x": 53.8,
+      "y": 28.1,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 49.8,
+      "y": 18.1,
+      "front": false
+     },
+     "chest": {
+      "x": 42.6,
+      "y": 30.9,
+      "front": false
+     },
+     "maw": {
+      "x": 53.2,
+      "y": 23.2,
+      "front": false
+     }
+    }
+   ]
+  },
+  "N": {
+   "attack": [
+    {
+     "head": {
+      "x": 36,
+      "y": 19.2,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 32.3,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 25.5,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 16.7,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 30.8,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 20.9,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 11.2,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 25.4,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 15.3,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 16,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29.6,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 21.7,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 18.7,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 32,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 24.6,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 36,
+      "y": 15.4,
+      "front": false
+     },
+     "chest": {
+      "x": 36,
+      "y": 29.6,
+      "front": false
+     },
+     "maw": {
+      "x": 36,
+      "y": 19.9,
+      "front": false
+     }
+    }
+   ]
+  },
+  "NW": {
+   "attack": [
+    {
+     "head": {
+      "x": 21,
+      "y": 22.1,
+      "front": false
+     },
+     "chest": {
+      "x": 29.8,
+      "y": 33.5,
+      "front": false
+     },
+     "maw": {
+      "x": 18.8,
+      "y": 28.9,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 23.9,
+      "y": 19.1,
+      "front": false
+     },
+     "chest": {
+      "x": 30.6,
+      "y": 31.9,
+      "front": false
+     },
+     "maw": {
+      "x": 19.8,
+      "y": 24,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 23.9,
+      "y": 13.6,
+      "front": false
+     },
+     "chest": {
+      "x": 29,
+      "y": 26.7,
+      "front": false
+     },
+     "maw": {
+      "x": 19.4,
+      "y": 18.6,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 20.1,
+      "y": 19.1,
+      "front": false
+     },
+     "chest": {
+      "x": 28.6,
+      "y": 31,
+      "front": false
+     },
+     "maw": {
+      "x": 17.8,
+      "y": 25.2,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 20.6,
+      "y": 21.7,
+      "front": false
+     },
+     "chest": {
+      "x": 29.1,
+      "y": 33.4,
+      "front": false
+     },
+     "maw": {
+      "x": 18.2,
+      "y": 28.1,
+      "front": false
+     }
+    },
+    {
+     "head": {
+      "x": 22.2,
+      "y": 18.1,
+      "front": false
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 30.9,
+      "front": false
+     },
+     "maw": {
+      "x": 18.8,
+      "y": 23.2,
+      "front": false
+     }
+    }
+   ]
+  },
+  "W": {
+   "attack": [
+    {
+     "head": {
+      "x": 14.9,
+      "y": 29.1,
+      "front": true
+     },
+     "chest": {
+      "x": 27.2,
+      "y": 36.4,
+      "front": true
+     },
+     "maw": {
+      "x": 11.7,
+      "y": 36.9,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 18.9,
+      "y": 24.8,
+      "front": true
+     },
+     "chest": {
+      "x": 28.3,
+      "y": 34.4,
+      "front": true
+     },
+     "maw": {
+      "x": 13,
+      "y": 31.6,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 18.9,
+      "y": 19.2,
+      "front": true
+     },
+     "chest": {
+      "x": 26.1,
+      "y": 30,
+      "front": true
+     },
+     "maw": {
+      "x": 12.6,
+      "y": 26.3,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 13.5,
+      "y": 26.5,
+      "front": true
+     },
+     "chest": {
+      "x": 25.5,
+      "y": 34.5,
+      "front": true
+     },
+     "maw": {
+      "x": 10.3,
+      "y": 33.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 14.2,
+      "y": 29,
+      "front": true
+     },
+     "chest": {
+      "x": 26.2,
+      "y": 36.6,
+      "front": true
+     },
+     "maw": {
+      "x": 10.8,
+      "y": 36.4,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 16.5,
+      "y": 24.6,
+      "front": true
+     },
+     "chest": {
+      "x": 26.6,
+      "y": 34,
+      "front": true
+     },
+     "maw": {
+      "x": 11.7,
+      "y": 31.3,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SW": {
+   "attack": [
+    {
+     "head": {
+      "x": 21,
+      "y": 36.2,
+      "front": true
+     },
+     "chest": {
+      "x": 29.8,
+      "y": 39.3,
+      "front": true
+     },
+     "maw": {
+      "x": 18.8,
+      "y": 45,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 23.9,
+      "y": 30.5,
+      "front": true
+     },
+     "chest": {
+      "x": 30.6,
+      "y": 37,
+      "front": true
+     },
+     "maw": {
+      "x": 19.8,
+      "y": 39.3,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 23.9,
+      "y": 24.9,
+      "front": true
+     },
+     "chest": {
+      "x": 29,
+      "y": 33.3,
+      "front": true
+     },
+     "maw": {
+      "x": 19.4,
+      "y": 34.1,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 20.1,
+      "y": 34,
+      "front": true
+     },
+     "chest": {
+      "x": 28.6,
+      "y": 38,
+      "front": true
+     },
+     "maw": {
+      "x": 17.8,
+      "y": 42.3,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 20.6,
+      "y": 36.2,
+      "front": true
+     },
+     "chest": {
+      "x": 29.1,
+      "y": 39.9,
+      "front": true
+     },
+     "maw": {
+      "x": 18.2,
+      "y": 44.8,
+      "front": true
+     }
+    },
+    {
+     "head": {
+      "x": 22.2,
+      "y": 31,
+      "front": true
+     },
+     "chest": {
+      "x": 29.4,
+      "y": 37.1,
+      "front": true
+     },
+     "maw": {
+      "x": 18.8,
+      "y": 39.3,
+      "front": true
+     }
+    }
+   ]
+  }
+ }
+}

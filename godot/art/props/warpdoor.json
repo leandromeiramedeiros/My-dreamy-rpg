@@ -1,0 +1,23 @@
+{
+ "id": "warpdoor",
+ "kind": "warpdoor",
+ "label": "Warp door (id, to: {x,y} | anchor id, key?)",
+ "size": [
+  12,
+  15
+ ],
+ "origin": [
+  6,
+  14
+ ],
+ "collider_r": 0.3,
+ "shadow": 6,
+ "light": {
+  "r": 34,
+  "col": "#9ef0ff",
+  "a": 0.7,
+  "h": 14
+ },
+ "image": "warpdoor.png",
+ "frames": null
+}

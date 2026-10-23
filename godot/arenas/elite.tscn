@@ -1,0 +1,718 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/systems/arena.gd" id="1_6wnnj"]
+[ext_resource type="Resource" path="res://data/items/sword.tres" id="2_6nism"]
+[ext_resource type="Resource" path="res://data/items/buckler.tres" id="3_246bo"]
+[ext_resource type="Resource" path="res://data/items/knighthelm.tres" id="4_4vovy"]
+[ext_resource type="Resource" path="res://data/items/warden.tres" id="5_aalrr"]
+[ext_resource type="Resource" path="res://data/items/knightgreaves.tres" id="6_jwrbm"]
+[ext_resource type="TileSet" path="res://art/tiles/vale/vale_tileset.tres" id="7_vbhb3"]
+[ext_resource type="PackedScene" path="res://scenes/hero/hero.tscn" id="8_ibipo"]
+[ext_resource type="PackedScene" path="res://scenes/props/prop.tscn" id="9_ryo25"]
+[ext_resource type="JSON" path="res://art/props/shrine.json" id="10_nd4af"]
+[ext_resource type="JSON" path="res://art/props/lantern.json" id="11_mc0bj"]
+[ext_resource type="JSON" path="res://art/props/brazier.json" id="12_fisdm"]
+[ext_resource type="JSON" path="res://art/props/sign.json" id="13_01ptk"]
+[ext_resource type="JSON" path="res://art/props/crystal.json" id="14_vwfr3"]
+
+[node name="Elite" type="Node2D" unique_id=1555338258]
+script = ExtResource("1_6wnnj")
+arena_id = &"elite"
+arena_name = "Elite pockets"
+description = "Eight pockets, one elite modifier each, one gate per pocket (L12)"
+objective = "One elite per pocket"
+level_range = Vector2i(8, 16)
+kit_hand = ExtResource("2_6nism")
+kit_offhand = ExtResource("3_246bo")
+kit_head = ExtResource("4_4vovy")
+kit_chest = ExtResource("5_aalrr")
+kit_boots = ExtResource("6_jwrbm")
+kit_tier = 1
+hero_level = 12
+triggers = Array[Dictionary]([{
+"actions": [{
+"id": "gate_p0",
+"type": "closeGate"
+}, {
+"sub": "ogre",
+"title": "SHIELDED ELITE",
+"type": "banner"
+}, {
+"text": "Defeat the shielded ogre",
+"type": "objective"
+}, {
+"count": 1.0,
+"elite": "shielded",
+"enemy": "ogre",
+"radius": 0.8,
+"type": "spawn",
+"x": 3.0,
+"y": 3.4
+}],
+"id": "go_p0",
+"name": "shielded ogre",
+"when": {
+"r": 1.8,
+"type": "enter_area",
+"x": 3.0,
+"y": 5.0
+}
+}, {
+"actions": [{
+"id": "gate_p0",
+"type": "openGate"
+}, {
+"pct": 100.0,
+"type": "heal"
+}, {
+"text": "Pick the next pocket",
+"type": "objective"
+}, {
+"text": "shielded elite down. Gate open",
+"type": "message"
+}],
+"id": "done_p0",
+"name": "shielded down",
+"requires": ["go_p0"],
+"when": {
+"type": "all_enemies_dead"
+}
+}, {
+"actions": [{
+"id": "gate_p1",
+"type": "closeGate"
+}, {
+"sub": "shadehound",
+"title": "STORM ELITE",
+"type": "banner"
+}, {
+"text": "Defeat the storm shadehound",
+"type": "objective"
+}, {
+"count": 1.0,
+"elite": "storm",
+"enemy": "shadehound",
+"radius": 0.8,
+"type": "spawn",
+"x": 9.0,
+"y": 3.4
+}],
+"id": "go_p1",
+"name": "storm shadehound",
+"when": {
+"r": 1.8,
+"type": "enter_area",
+"x": 9.0,
+"y": 5.0
+}
+}, {
+"actions": [{
+"id": "gate_p1",
+"type": "openGate"
+}, {
+"pct": 100.0,
+"type": "heal"
+}, {
+"text": "Pick the next pocket",
+"type": "objective"
+}, {
+"text": "storm elite down. Gate open",
+"type": "message"
+}],
+"id": "done_p1",
+"name": "storm down",
+"requires": ["go_p1"],
+"when": {
+"type": "all_enemies_dead"
+}
+}, {
+"actions": [{
+"id": "gate_p2",
+"type": "closeGate"
+}, {
+"sub": "thornbackboar",
+"title": "BURNING ELITE",
+"type": "banner"
+}, {
+"text": "Defeat the burning thornbackboar",
+"type": "objective"
+}, {
+"count": 1.0,
+"elite": "burning",
+"enemy": "thornbackboar",
+"radius": 0.8,
+"type": "spawn",
+"x": 15.0,
+"y": 3.4
+}],
+"id": "go_p2",
+"name": "burning thornbackboar",
+"when": {
+"r": 1.8,
+"type": "enter_area",
+"x": 15.0,
+"y": 5.0
+}
+}, {
+"actions": [{
+"id": "gate_p2",
+"type": "openGate"
+}, {
+"pct": 100.0,
+"type": "heal"
+}, {
+"text": "Pick the next pocket",
+"type": "objective"
+}, {
+"text": "burning elite down. Gate open",
+"type": "message"
+}],
+"id": "done_p2",
+"name": "burning down",
+"requires": ["go_p2"],
+"when": {
+"type": "all_enemies_dead"
+}
+}, {
+"actions": [{
+"id": "gate_p3",
+"type": "closeGate"
+}, {
+"sub": "gloomslime",
+"title": "FROZEN ELITE",
+"type": "banner"
+}, {
+"text": "Defeat the frozen gloomslime",
+"type": "objective"
+}, {
+"count": 1.0,
+"elite": "frozen",
+"enemy": "gloomslime",
+"radius": 0.8,
+"type": "spawn",
+"x": 21.0,
+"y": 3.4
+}],
+"id": "go_p3",
+"name": "frozen gloomslime",
+"when": {
+"r": 1.8,
+"type": "enter_area",
+"x": 21.0,
+"y": 5.0
+}
+}, {
+"actions": [{
+"id": "gate_p3",
+"type": "openGate"
+}, {
+"pct": 100.0,
+"type": "heal"
+}, {
+"text": "Pick the next pocket",
+"type": "objective"
+}, {
+"text": "frozen elite down. Gate open",
+"type": "message"
+}],
+"id": "done_p3",
+"name": "frozen down",
+"requires": ["go_p3"],
+"when": {
+"type": "all_enemies_dead"
+}
+}, {
+"actions": [{
+"id": "gate_p4",
+"type": "closeGate"
+}, {
+"sub": "dreammoth",
+"title": "GLOOMED ELITE",
+"type": "banner"
+}, {
+"text": "Defeat the gloomed dreammoth",
+"type": "objective"
+}, {
+"count": 1.0,
+"elite": "gloomed",
+"enemy": "dreammoth",
+"radius": 0.8,
+"type": "spawn",
+"x": 3.0,
+"y": 20.6
+}],
+"id": "go_p4",
+"name": "gloomed dreammoth",
+"when": {
+"r": 1.8,
+"type": "enter_area",
+"x": 3.0,
+"y": 19.0
+}
+}, {
+"actions": [{
+"id": "gate_p4",
+"type": "openGate"
+}, {
+"pct": 100.0,
+"type": "heal"
+}, {
+"text": "Pick the next pocket",
+"type": "objective"
+}, {
+"text": "gloomed elite down. Gate open",
+"type": "message"
+}],
+"id": "done_p4",
+"name": "gloomed down",
+"requires": ["go_p4"],
+"when": {
+"type": "all_enemies_dead"
+}
+}, {
+"actions": [{
+"id": "gate_p5",
+"type": "closeGate"
+}, {
+"sub": "shadehound",
+"title": "TWIN ELITE",
+"type": "banner"
+}, {
+"text": "Defeat the twin shadehound",
+"type": "objective"
+}, {
+"count": 1.0,
+"elite": "twin",
+"enemy": "shadehound",
+"radius": 0.8,
+"type": "spawn",
+"x": 9.0,
+"y": 20.6
+}],
+"id": "go_p5",
+"name": "twin shadehound",
+"when": {
+"r": 1.8,
+"type": "enter_area",
+"x": 9.0,
+"y": 19.0
+}
+}, {
+"actions": [{
+"id": "gate_p5",
+"type": "openGate"
+}, {
+"pct": 100.0,
+"type": "heal"
+}, {
+"text": "Pick the next pocket",
+"type": "objective"
+}, {
+"text": "twin elite down. Gate open",
+"type": "message"
+}],
+"id": "done_p5",
+"name": "twin down",
+"requires": ["go_p5"],
+"when": {
+"type": "all_enemies_dead"
+}
+}, {
+"actions": [{
+"id": "gate_p6",
+"type": "closeGate"
+}, {
+"sub": "ogre",
+"title": "VAMPIRIC ELITE",
+"type": "banner"
+}, {
+"text": "Defeat the vampiric ogre",
+"type": "objective"
+}, {
+"count": 1.0,
+"elite": "vampiric",
+"enemy": "ogre",
+"radius": 0.8,
+"type": "spawn",
+"x": 15.0,
+"y": 20.6
+}],
+"id": "go_p6",
+"name": "vampiric ogre",
+"when": {
+"r": 1.8,
+"type": "enter_area",
+"x": 15.0,
+"y": 19.0
+}
+}, {
+"actions": [{
+"id": "gate_p6",
+"type": "openGate"
+}, {
+"pct": 100.0,
+"type": "heal"
+}, {
+"text": "Pick the next pocket",
+"type": "objective"
+}, {
+"text": "vampiric elite down. Gate open",
+"type": "message"
+}],
+"id": "done_p6",
+"name": "vampiric down",
+"requires": ["go_p6"],
+"when": {
+"type": "all_enemies_dead"
+}
+}, {
+"actions": [{
+"id": "gate_p7",
+"type": "closeGate"
+}, {
+"sub": "brambleshaman",
+"title": "SUMMONER ELITE",
+"type": "banner"
+}, {
+"text": "Defeat the summoner brambleshaman",
+"type": "objective"
+}, {
+"count": 1.0,
+"elite": "summoner",
+"enemy": "brambleshaman",
+"radius": 0.8,
+"type": "spawn",
+"x": 21.0,
+"y": 20.6
+}],
+"id": "go_p7",
+"name": "summoner brambleshaman",
+"when": {
+"r": 1.8,
+"type": "enter_area",
+"x": 21.0,
+"y": 19.0
+}
+}, {
+"actions": [{
+"id": "gate_p7",
+"type": "openGate"
+}, {
+"pct": 100.0,
+"type": "heal"
+}, {
+"text": "Pick the next pocket",
+"type": "objective"
+}, {
+"text": "summoner elite down. Gate open",
+"type": "message"
+}],
+"id": "done_p7",
+"name": "summoner down",
+"requires": ["go_p7"],
+"when": {
+"type": "all_enemies_dead"
+}
+}, {
+"actions": [{
+"sub": "One modifier per pocket",
+"title": "Elite arena",
+"type": "banner"
+}, {
+"text": "Walk into a pocket: its gate closes and the elite wakes",
+"type": "objective"
+}],
+"id": "in",
+"name": "Enter",
+"when": {
+"type": "map_enter"
+}
+}])
+objects = Array[Dictionary]([{
+"ang": 1.5708,
+"id": "gate_p0",
+"len": 2.4,
+"open": true,
+"t": "gate",
+"x": 3.0,
+"y": 9.0
+}, {
+"ang": 1.5708,
+"id": "gate_p1",
+"len": 2.4,
+"open": true,
+"t": "gate",
+"x": 9.0,
+"y": 9.0
+}, {
+"ang": 1.5708,
+"id": "gate_p2",
+"len": 2.4,
+"open": true,
+"t": "gate",
+"x": 15.0,
+"y": 9.0
+}, {
+"ang": 1.5708,
+"id": "gate_p3",
+"len": 2.4,
+"open": true,
+"t": "gate",
+"x": 21.0,
+"y": 9.0
+}, {
+"ang": 1.5708,
+"id": "gate_p4",
+"len": 2.4,
+"open": true,
+"t": "gate",
+"x": 3.0,
+"y": 15.0
+}, {
+"ang": 1.5708,
+"id": "gate_p5",
+"len": 2.4,
+"open": true,
+"t": "gate",
+"x": 9.0,
+"y": 15.0
+}, {
+"ang": 1.5708,
+"id": "gate_p6",
+"len": 2.4,
+"open": true,
+"t": "gate",
+"x": 15.0,
+"y": 15.0
+}, {
+"ang": 1.5708,
+"id": "gate_p7",
+"len": 2.4,
+"open": true,
+"t": "gate",
+"x": 21.0,
+"y": 15.0
+}])
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=898911509]
+tile_map_data = PackedByteArray("AAAVABQAAAAAAAAAAAAUABQAAAAAAAAAAAAPABQAAAABAAAAAAAOABQAAAACAAAAAAAJABQAAAADAAAAAAAIABQAAAAAAAAAAAADABQAAAADAAAAAAACABQAAAAAAAAAAAAVABMAAAAAAAAAAAAUABMAAAAAAAAAAAAPABMAAAABAAAAAAAOABMAAAABAAAAAAAJABMAAAAAAAAAAAAIABMAAAACAAAAAAADABMAAAAAAAAAAAACABMAAAAAAAAAAAAVABIAAAABAAAAAAAUABIAAAAAAAAAAAAPABIAAAACAAAAAAAOABIAAAAAAAAAAAAJABIAAAABAAAAAAAIABIAAAABAAAAAAADABIAAAADAAAAAAACABIAAAADAAAAAAAVABEAAAABAAAAAAAUABEAAAADAAAAAAAPABEAAAAAAAAAAAAOABEAAAABAAAAAAAJABEAAAAAAAAAAAAIABEAAAADAAAAAAADABEAAAAAAAAAAAACABEAAAACAAAAAAAVABAAAAAAAAAAAAAPABAAAAAAAAAAAAAJABAAAAAAAAAAAAADABAAAAAAAAAAAAAVAA0AAAADAAAAAAAUAA0AAAAAAAAAAAAPAA0AAAAAAAAAAAAOAA0AAAABAAAAAAAJAA0AAAABAAAAAAAIAA0AAAADAAAAAAADAA0AAAAAAAAAAAACAA0AAAAAAAAAAAAVAAwAAAAAAAAAAAAUAAwAAAACAAAAAAATAAwAAAABAAAAAAASAAwAAAABAAAAAAARAAwAAAABAAAAAAAQAAwAAAAAAAAAAAAPAAwAAAABAAAAAAAOAAwAAAACAAAAAAANAAwAAAACAAAAAAAMAAwAAAADAAAAAAALAAwAAAAAAAAAAAAKAAwAAAACAAAAAAAJAAwAAAACAAAAAAAIAAwAAAAAAAAAAAAHAAwAAAAAAAAAAAAGAAwAAAAAAAAAAAAFAAwAAAADAAAAAAAEAAwAAAACAAAAAAADAAwAAAAAAAAAAAACAAwAAAAAAAAAAAAVAAsAAAADAAAAAAAUAAsAAAACAAAAAAATAAsAAAAAAAAAAAASAAsAAAAAAAAAAAARAAsAAAACAAAAAAAQAAsAAAAAAAAAAAAPAAsAAAAAAAAAAAAOAAsAAAAAAAAAAAANAAsAAAADAAAAAAAMAAsAAAAAAAAAAAALAAsAAAAAAAAAAAAKAAsAAAAAAAAAAAAJAAsAAAAAAAAAAAAIAAsAAAAAAAAAAAAHAAsAAAAAAAAAAAAGAAsAAAAAAAAAAAAFAAsAAAACAAAAAAAEAAsAAAAAAAAAAAADAAsAAAABAAAAAAACAAsAAAAAAAAAAAAVAAoAAAAAAAAAAAAPAAoAAAADAAAAAAAJAAoAAAACAAAAAAADAAoAAAABAAAAAAAVAAcAAAAAAAAAAAAUAAcAAAACAAAAAAAPAAcAAAABAAAAAAAOAAcAAAACAAAAAAAJAAcAAAAAAAAAAAAIAAcAAAAAAAAAAAADAAcAAAAAAAAAAAACAAcAAAADAAAAAAAVAAYAAAADAAAAAAAUAAYAAAAAAAAAAAAPAAYAAAAAAAAAAAAOAAYAAAACAAAAAAAJAAYAAAAAAAAAAAAIAAYAAAAAAAAAAAADAAYAAAACAAAAAAACAAYAAAAAAAAAAAAVAAUAAAABAAAAAAAUAAUAAAABAAAAAAAPAAUAAAAAAAAAAAAOAAUAAAACAAAAAAAJAAUAAAACAAAAAAAIAAUAAAABAAAAAAADAAUAAAAAAAAAAAACAAUAAAAAAAAAAAAVAAQAAAAAAAAAAAAUAAQAAAACAAAAAAAPAAQAAAAAAAAAAAAOAAQAAAABAAAAAAAJAAQAAAABAAAAAAAIAAQAAAABAAAAAAADAAQAAAAAAAAAAAACAAQAAAACAAAAAAAVAAMAAAAAAAAAAAAUAAMAAAAAAAAAAAAPAAMAAAAAAAAAAAAOAAMAAAAAAAAAAAAJAAMAAAAAAAAAAAAIAAMAAAABAAAAAAADAAMAAAADAAAAAAACAAMAAAAAAAAAAAA=")
+tile_set = ExtResource("7_vbhb3")
+
+[node name="Entities" type="Node2D" parent="." unique_id=1429820599]
+y_sort_enabled = true
+
+[node name="Columns" type="TileMapLayer" parent="Entities" unique_id=137789789]
+y_sort_enabled = true
+tile_set = ExtResource("7_vbhb3")
+
+[node name="Hero" parent="Entities" unique_id=781394542 instance=ExtResource("8_ibipo")]
+position = Vector2(24, 180)
+
+[node name="Shrine_1" parent="Entities" unique_id=180438154 instance=ExtResource("9_ryo25")]
+position = Vector2(-1.6000061, 192.8)
+sidecar = ExtResource("10_nd4af")
+object_data = {
+"id": "shrine_elite",
+"label": "checkpoint",
+"name": "Arena shrine",
+"t": "shrine",
+"x": 11.5,
+"y": 12.6
+}
+
+[node name="Lantern_2" parent="Entities" unique_id=1166260908 instance=ExtResource("9_ryo25")]
+position = Vector2(-121.600006, 100.8)
+sidecar = ExtResource("11_mc0bj")
+object_data = {
+"t": "lantern",
+"x": 2.0,
+"y": 10.6
+}
+
+[node name="Lantern_3" parent="Entities" unique_id=1413121088 instance=ExtResource("9_ryo25")]
+position = Vector2(182.4, 252.8)
+sidecar = ExtResource("11_mc0bj")
+object_data = {
+"t": "lantern",
+"x": 21.0,
+"y": 10.6
+}
+
+[node name="Lantern_4" parent="Entities" unique_id=1805921746 instance=ExtResource("9_ryo25")]
+position = Vector2(-166.4, 123.2)
+sidecar = ExtResource("11_mc0bj")
+object_data = {
+"t": "lantern",
+"x": 2.0,
+"y": 13.4
+}
+
+[node name="Lantern_5" parent="Entities" unique_id=1305183010 instance=ExtResource("9_ryo25")]
+position = Vector2(137.6, 275.2)
+sidecar = ExtResource("11_mc0bj")
+object_data = {
+"t": "lantern",
+"x": 21.0,
+"y": 13.4
+}
+
+[node name="Lantern_6" parent="Entities" unique_id=442676731 instance=ExtResource("9_ryo25")]
+position = Vector2(32, 176)
+sidecar = ExtResource("11_mc0bj")
+object_data = {
+"t": "lantern",
+"x": 11.5,
+"y": 10.5
+}
+
+[node name="Brazier_7" parent="Entities" unique_id=103680393 instance=ExtResource("9_ryo25")]
+position = Vector2(0, 35.2)
+sidecar = ExtResource("12_fisdm")
+object_data = {
+"t": "brazier",
+"x": 1.7,
+"y": 2.7
+}
+
+[node name="Sign_8" parent="Entities" unique_id=523327009 instance=ExtResource("9_ryo25")]
+position = Vector2(-54.4, 83.2)
+sidecar = ExtResource("13_01ptk")
+object_data = {
+"label": "shielded",
+"t": "sign",
+"x": 3.0,
+"y": 7.4
+}
+
+[node name="Crystal_9" parent="Entities" unique_id=1934088969 instance=ExtResource("9_ryo25")]
+position = Vector2(96, 83.2)
+sidecar = ExtResource("14_vwfr3")
+object_data = {
+"t": "crystal",
+"x": 7.7,
+"y": 2.7
+}
+
+[node name="Sign_10" parent="Entities" unique_id=1338377823 instance=ExtResource("9_ryo25")]
+position = Vector2(41.6, 131.2)
+sidecar = ExtResource("13_01ptk")
+object_data = {
+"label": "storm",
+"t": "sign",
+"x": 9.0,
+"y": 7.4
+}
+
+[node name="Brazier_11" parent="Entities" unique_id=2042116438 instance=ExtResource("9_ryo25")]
+position = Vector2(192, 131.2)
+sidecar = ExtResource("12_fisdm")
+object_data = {
+"t": "brazier",
+"x": 13.7,
+"y": 2.7
+}
+
+[node name="Sign_12" parent="Entities" unique_id=1703896183 instance=ExtResource("9_ryo25")]
+position = Vector2(137.6, 179.2)
+sidecar = ExtResource("13_01ptk")
+object_data = {
+"label": "burning",
+"t": "sign",
+"x": 15.0,
+"y": 7.4
+}
+
+[node name="Crystal_13" parent="Entities" unique_id=75237792 instance=ExtResource("9_ryo25")]
+position = Vector2(288, 179.20001)
+sidecar = ExtResource("14_vwfr3")
+object_data = {
+"t": "crystal",
+"x": 19.7,
+"y": 2.7
+}
+
+[node name="Sign_14" parent="Entities" unique_id=2026800609 instance=ExtResource("9_ryo25")]
+position = Vector2(233.6, 227.2)
+sidecar = ExtResource("13_01ptk")
+object_data = {
+"label": "frozen",
+"t": "sign",
+"x": 21.0,
+"y": 7.4
+}
+
+[node name="Brazier_15" parent="Entities" unique_id=1329966241 instance=ExtResource("9_ryo25")]
+position = Vector2(-297.59998, 184)
+sidecar = ExtResource("12_fisdm")
+object_data = {
+"t": "brazier",
+"x": 1.7,
+"y": 21.3
+}
+
+[node name="Sign_16" parent="Entities" unique_id=1841744863 instance=ExtResource("9_ryo25")]
+position = Vector2(-201.6, 156.8)
+sidecar = ExtResource("13_01ptk")
+object_data = {
+"label": "gloomed",
+"t": "sign",
+"x": 3.0,
+"y": 16.6
+}
+
+[node name="Crystal_17" parent="Entities" unique_id=1350648347 instance=ExtResource("9_ryo25")]
+position = Vector2(-201.59999, 232)
+sidecar = ExtResource("14_vwfr3")
+object_data = {
+"t": "crystal",
+"x": 7.7,
+"y": 21.3
+}
+
+[node name="Sign_18" parent="Entities" unique_id=1663338822 instance=ExtResource("9_ryo25")]
+position = Vector2(-105.600006, 204.8)
+sidecar = ExtResource("13_01ptk")
+object_data = {
+"label": "twin",
+"t": "sign",
+"x": 9.0,
+"y": 16.6
+}
+
+[node name="Brazier_19" parent="Entities" unique_id=1399235612 instance=ExtResource("9_ryo25")]
+position = Vector2(-105.59999, 280)
+sidecar = ExtResource("12_fisdm")
+object_data = {
+"t": "brazier",
+"x": 13.7,
+"y": 21.3
+}
+
+[node name="Sign_20" parent="Entities" unique_id=759490246 instance=ExtResource("9_ryo25")]
+position = Vector2(-9.600006, 252.8)
+sidecar = ExtResource("13_01ptk")
+object_data = {
+"label": "vampiric",
+"t": "sign",
+"x": 15.0,
+"y": 16.6
+}
+
+[node name="Crystal_21" parent="Entities" unique_id=1600222635 instance=ExtResource("9_ryo25")]
+position = Vector2(-9.599976, 328)
+sidecar = ExtResource("14_vwfr3")
+object_data = {
+"t": "crystal",
+"x": 19.7,
+"y": 21.3
+}
+
+[node name="Sign_22" parent="Entities" unique_id=650037954 instance=ExtResource("9_ryo25")]
+position = Vector2(86.399994, 300.8)
+sidecar = ExtResource("13_01ptk")
+object_data = {
+"label": "summoner",
+"t": "sign",
+"x": 21.0,
+"y": 16.6
+}

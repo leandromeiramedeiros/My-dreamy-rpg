@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/manasurge.tres" id="1_qsu8a"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_if75p"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_230o6"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_k76yx"]
+
+[sub_resource type="Resource" id="Resource_5gmhp"]
+script = ExtResource("4_k76yx")
+base_id = &"linenrobe"
+display_name = "Linen Robe"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_3rtps"]
+script = ExtResource("4_k76yx")
+base_id = &"dreamrobe"
+display_name = "Dreamweave Robe"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_5qe5s"]
+script = ExtResource("4_k76yx")
+base_id = &"starwoven"
+display_name = "Starwoven Robe"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_mq26b"]
+script = ExtResource("4_k76yx")
+base_id = &"nebularobe"
+display_name = "Nebula Vestments"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_7o0bo"]
+script = ExtResource("4_k76yx")
+base_id = &"dreamshroud"
+display_name = "Eternal Dreamshroud"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_230o6")
+id = &"dreamweave"
+display_name = "Dreamweave Robe"
+description = "+25% power, +120 MP."
+kind = "armour"
+slot = "chest"
+item_class = &"caster"
+suit = &"dreamweave"
+hands = 0
+element = "arcane"
+tiers = Array[ExtResource("4_k76yx")]([SubResource("Resource_5gmhp"), SubResource("Resource_3rtps"), SubResource("Resource_5qe5s"), SubResource("Resource_mq26b"), SubResource("Resource_7o0bo")])
+active = ExtResource("1_qsu8a")
+stats = Dictionary[StringName, float]({
+&"mp": 120.0,
+&"mpRegen": 5.0,
+&"power": 0.25
+})
+resists = Dictionary[StringName, float]({
+&"arcane": 0.25,
+&"pierce": -0.25,
+&"slash": -0.25
+})
+color = Color(0.6117647, 0.47843137, 0.8784314, 1)
+attack_pose = "none"
+todo = "Suit Dreamweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_skmr6"]
+
+[resource]
+script = ExtResource("1_skmr6")
+id = &"elite_gloomed"
+display_name = "Gloomed"
+hint = "Elite modifier"
+source = "elite"
+if_tags = PackedStringArray()
+do_action = &"elite_gloomed"
+do_params = {
+"color": "#c070ff",
+"damage_mult": 1.25,
+"hp_mult": 3.2,
+"rare": false
+}
+icd = 0.0
+tags = PackedStringArray()
+todo = "Elite modifier (parts.js ELITE_MODS); behaviour by the Bestiary lane.
+JS:
+tick: tick(e) { const p = G.player; if (dist(e.x, e.y, p.x, p.y) < 3) p.dreadT = 0.2; }"

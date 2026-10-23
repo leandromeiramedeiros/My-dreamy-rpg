@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_bk3y1"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_ncumt"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_awvnd"]
+
+[sub_resource type="Resource" id="Resource_qh3ie"]
+script = ExtResource("3_awvnd")
+base_id = &"mistwoven_belt"
+display_name = "Mistwoven Belt"
+required_level = 16
+
+[resource]
+script = ExtResource("2_ncumt")
+id = &"mistwoven_belt"
+display_name = "Mistwoven Belt"
+description = "+1 potion charge"
+kind = "trinket"
+slot = "belt"
+hands = 0
+tiers = Array[ExtResource("3_awvnd")]([SubResource("Resource_qh3ie")])
+stats = Dictionary[StringName, float]({
+&"potionCharge": 1.0
+})
+attack_pose = "none"
+todo = "Boon rolled at drop (BOONS belt)."

@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/vault.tres" id="1_r5yr6"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_h7vah"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_iyc50"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_qresd"]
+
+[sub_resource type="Resource" id="Resource_i3o8r"]
+script = ExtResource("4_qresd")
+base_id = &"hobnails"
+display_name = "Hobnail Boots"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_dbp1o"]
+script = ExtResource("4_qresd")
+base_id = &"crusadersabatons"
+display_name = "Crusader Sabatons"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_i3rm1"]
+script = ExtResource("4_qresd")
+base_id = &"sunsabatons"
+display_name = "Sunsworn Sabatons"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_qsng4"]
+script = ExtResource("4_qresd")
+base_id = &"aurorasabatons"
+display_name = "Aurora Sabatons"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_nv3sh"]
+script = ExtResource("4_qresd")
+base_id = &"pilgrimsteps"
+display_name = "Pilgrim Steps"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_iyc50")
+id = &"crusaderboots"
+display_name = "Crusader Sabatons"
+description = "+4% defence, +1 HP/s."
+kind = "armour"
+slot = "boots"
+item_class = &"heavy"
+suit = &"crusader"
+hands = 0
+element = "holy"
+tiers = Array[ExtResource("4_qresd")]([SubResource("Resource_i3o8r"), SubResource("Resource_dbp1o"), SubResource("Resource_i3rm1"), SubResource("Resource_qsng4"), SubResource("Resource_nv3sh")])
+active = ExtResource("1_r5yr6")
+stats = Dictionary[StringName, float]({
+&"def": 0.04,
+&"regen": 1.0
+})
+color = Color(0.8784314, 0.8156863, 0.627451, 1)
+attack_pose = "none"
+todo = "Suit Crusader (Heavy: HP/def; slash/pierce +25, lightning -25; 3-piece rule: melee skills gain poise)."

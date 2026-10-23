@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_khvxq"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_82x10"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_pldx3"]
+
+[sub_resource type="Resource" id="Resource_dqony"]
+script = ExtResource("3_pldx3")
+base_id = &"pipslantern"
+display_name = "Pip's Lantern"
+required_level = 16
+
+[resource]
+script = ExtResource("2_82x10")
+id = &"pipslantern"
+display_name = "Pip's Lantern"
+description = "Your ultimate casts twice, each at half power."
+kind = "trinket"
+slot = "amulet"
+hands = 0
+tiers = Array[ExtResource("3_pldx3")]([SubResource("Resource_dqony")])
+stats = Dictionary[StringName, float]({
+&"chargeSpeed": 0.05
+})
+flags = {
+"rule": {
+"powerMul": 0.5,
+"ult": "double"
+}
+}
+attack_pose = "none"
+todo = "Unique rule (JS `rule`): {\"ult\":\"double\",\"powerMul\":0.5}. Wave 2: an Effect."

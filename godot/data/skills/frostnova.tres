@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_bma4g"]
+[ext_resource type="Script" path="res://scripts/data/zone_block.gd" id="2_cnvpj"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="3_i6k5q"]
+
+[sub_resource type="Resource" id="Resource_m31bf"]
+script = ExtResource("2_cnvpj")
+radius = 2.6
+damage = 60.0
+stun = 2.0
+hit_params = {
+"freeze": true
+}
+
+[resource]
+script = ExtResource("3_i6k5q")
+id = &"frostnova"
+display_name = "Frost Nova"
+description = "HELMET — freeze all nearby enemies in place for 2s."
+element = "frost"
+kind = "active"
+cooldown = 12.0
+mp_cost = 25.0
+tags = PackedStringArray()
+decks = PackedStringArray("page")
+blocks = Array[ExtResource("1_bma4g")]([SubResource("Resource_m31bf")])
+aim_radius = 2.6
+color = Color(0.62352943, 0.9098039, 1, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p) { hitArea(p.x, p.y, 2.6, 60, { stun: 2.0, freeze: true }); fx({ type: 'ring', x: p.x, y: p.y, r: 2.7, col: '#bff4ff', life: 0.5 }); burst(p.x, p.y, 0.5, 30, ['#ffffff', '#bff4ff', '#7fd2ff'], 4); sfx('frost'); }"

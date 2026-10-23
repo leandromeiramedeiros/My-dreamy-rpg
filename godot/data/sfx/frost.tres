@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_qfcn3"]
+
+[resource]
+script = ExtResource("1_qfcn3")
+id = &"frost"
+pitch_vary = 0.06
+priority = 2
+caption = "[frost]"
+recipe = {
+"layers": [{
+"dur": 0.25,
+"f0": 2600.0,
+"f1": 1800.0,
+"gain": 0.04,
+"osc": "triangle"
+}]
+}

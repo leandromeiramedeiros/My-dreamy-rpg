@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/action_block.gd" id="1_3546q"]
+[ext_resource type="Script" path="res://scripts/data/dash_block.gd" id="2_1g0vg"]
+[ext_resource type="Script" path="res://scripts/data/cone_block.gd" id="3_p75me"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="4_ilqgr"]
+
+[sub_resource type="Resource" id="Resource_nuya4"]
+script = ExtResource("2_1g0vg")
+distance = 1.4
+duration = 0.12
+iframes = 0.0
+
+[sub_resource type="Resource" id="Resource_o0y61"]
+script = ExtResource("3_p75me")
+reach = 1.9
+arc = 97.4
+damage = 170.0
+knockback = 0.7
+stun = 1.0
+
+[resource]
+script = ExtResource("4_ilqgr")
+id = &"heroic"
+display_name = "Heroic Strike"
+description = "Lunge forward and smash — stuns for 1s."
+element = "slash"
+kind = "page"
+cooldown = 5.0
+mp_cost = 25.0
+tags = PackedStringArray()
+decks = PackedStringArray("call")
+blocks = Array[ExtResource("1_3546q")]([SubResource("Resource_nuya4"), SubResource("Resource_o0y61")])
+aim_shape = "cone"
+aim_range = 1.9
+aim_arc = 97.4
+stagger = 3.0
+hit_weight = 1.5
+color = Color(1, 0.72156864, 0.2901961, 1)
+todo = "Blocks seeded best-effort from the JS cast; check them against the JS (golden vectors) in wave 2.
+JS:
+cast: cast(p, a) {
+      dashPlayer(p, Math.cos(a), Math.sin(a), 1.4, 0.12, { onEnd: () => {
+        swingWeapon(p, 0.2, 2.2); hitCone(p.x, p.y, a, 1.7, 1.9, 170, { stun: 1.0, knock: 0.7 });
+        fx({ type: 'slash', x: p.x, y: p.y, z: p.z, ang: a, arc: 1.8, r: 1.9, col: '#fff2b0', life: 0.3, w: 7 }); shake(5); sfx('heavy');
+      } });
+    }"

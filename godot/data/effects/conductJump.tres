@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_ygn1l"]
+
+[resource]
+script = ExtResource("1_ygn1l")
+id = &"conductJump"
+display_name = "Leaping Current"
+hint = "Conduct +1 jump"
+source = "trinket"
+if_tags = PackedStringArray()
+do_params = {
+"major": {
+"conductJump": 2.0
+},
+"minor": {
+"conductJump": 1.0
+}
+}
+tags = PackedStringArray("lightning", "conduct")
+data_only = true
+todo = "Boon numbers: minor {\"conductJump\":1}, major {\"conductJump\":2}"

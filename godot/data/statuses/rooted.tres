@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StatusData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_data.gd" id="1_sjtld"]
+
+[resource]
+script = ExtResource("1_sjtld")
+id = &"rooted"
+display_name = "Rooted"
+element = "nature"
+tier = 2
+duration = 1.2
+reacts_with = PackedStringArray()
+tint = Color(0.24705882, 0.54509807, 0.3882353, 1)
+tint_alpha = 0.18
+overlay = &"vine"
+overlay_alpha = 0.85
+pose = "still"

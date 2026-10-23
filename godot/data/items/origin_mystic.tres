@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_y2nft"]
+[ext_resource type="Resource" path="res://data/effects/originMystic.tres" id="2_n4u6o"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_sifii"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_jmah0"]
+
+[sub_resource type="Resource" id="Resource_o4kxx"]
+script = ExtResource("4_jmah0")
+base_id = &"origin_mystic"
+display_name = "Ring of the Dream"
+
+[resource]
+script = ExtResource("3_sifii")
+id = &"origin_mystic"
+display_name = "Ring of the Dream"
+description = "+10% MP on hit"
+kind = "trinket"
+slot = "ring"
+hands = 0
+tiers = Array[ExtResource("4_jmah0")]([SubResource("Resource_o4kxx")])
+passives = Array[ExtResource("1_y2nft")]([ExtResource("2_n4u6o")])
+attack_pose = "none"
+todo = "Origin ring (Mystic)."

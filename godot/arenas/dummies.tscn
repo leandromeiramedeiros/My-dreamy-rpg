@@ -1,0 +1,563 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/systems/arena.gd" id="1_lkt25"]
+[ext_resource type="Resource" path="res://data/items/sword.tres" id="2_4ilrm"]
+[ext_resource type="Resource" path="res://data/items/buckler.tres" id="3_g5jml"]
+[ext_resource type="Resource" path="res://data/items/knighthelm.tres" id="4_mvpbg"]
+[ext_resource type="Resource" path="res://data/items/warden.tres" id="5_e6yix"]
+[ext_resource type="Resource" path="res://data/items/knightgreaves.tres" id="6_rdfu2"]
+[ext_resource type="TileSet" path="res://art/tiles/vale/vale_tileset.tres" id="7_vk6w1"]
+[ext_resource type="PackedScene" path="res://scenes/hero/hero.tscn" id="8_wgj1q"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="9_25s0i"]
+[ext_resource type="Resource" path="res://data/enemies/dummy.tres" id="10_0wblh"]
+[ext_resource type="PackedScene" path="res://scenes/props/prop.tscn" id="11_5k3x2"]
+[ext_resource type="JSON" path="res://art/props/sign.json" id="12_ghosk"]
+[ext_resource type="JSON" path="res://art/props/brazier.json" id="13_dtoc1"]
+[ext_resource type="JSON" path="res://art/props/mushroom.json" id="14_vw5wf"]
+[ext_resource type="JSON" path="res://art/props/shrine.json" id="15_dv405"]
+[ext_resource type="JSON" path="res://art/props/chest.json" id="16_swpoi"]
+[ext_resource type="JSON" path="res://art/props/lantern.json" id="17_jff2r"]
+
+[node name="Dummies" type="Node2D" unique_id=398006045]
+script = ExtResource("1_lkt25")
+arena_id = &"dummies"
+arena_name = "Dummies"
+description = "Nine dummies, weapon racks (sword, staff, bow, daggers), tier plates T1-T5"
+objective = "Hit things"
+level_range = Vector2i(6, 12)
+kit_hand = ExtResource("2_4ilrm")
+kit_offhand = ExtResource("3_g5jml")
+kit_head = ExtResource("4_mvpbg")
+kit_chest = ExtResource("5_e6yix")
+kit_boots = ExtResource("6_rdfu2")
+kit_tier = 1
+hero_level = 8
+triggers = Array[Dictionary]([{
+"actions": [{
+"type": "kit",
+"weapon": "sword"
+}, {
+"text": "Reference sword kit",
+"type": "message"
+}],
+"cooldown": 1.5,
+"id": "rack_sword",
+"name": "sword rack",
+"once": false,
+"when": {
+"r": 0.9,
+"type": "enter_area",
+"x": 4.0,
+"y": 3.1
+}
+}, {
+"actions": [{
+"type": "kit",
+"weapon": "staff"
+}, {
+"text": "Reference staff kit",
+"type": "message"
+}],
+"cooldown": 1.5,
+"id": "rack_staff",
+"name": "staff rack",
+"once": false,
+"when": {
+"r": 0.9,
+"type": "enter_area",
+"x": 8.0,
+"y": 3.1
+}
+}, {
+"actions": [{
+"type": "kit",
+"weapon": "bow"
+}, {
+"text": "Reference bow kit",
+"type": "message"
+}],
+"cooldown": 1.5,
+"id": "rack_bow",
+"name": "bow rack",
+"once": false,
+"when": {
+"r": 0.9,
+"type": "enter_area",
+"x": 12.0,
+"y": 3.1
+}
+}, {
+"actions": [{
+"type": "kit",
+"weapon": "daggers"
+}, {
+"text": "Reference daggers kit",
+"type": "message"
+}],
+"cooldown": 1.5,
+"id": "rack_daggers",
+"name": "daggers rack",
+"once": false,
+"when": {
+"r": 0.9,
+"type": "enter_area",
+"x": 16.0,
+"y": 3.1
+}
+}, {
+"actions": [{
+"tier": 0.0,
+"type": "kit"
+}, {
+"text": "Tier 1 kit (current weapon line)",
+"type": "message"
+}],
+"cooldown": 1.5,
+"id": "tier_1",
+"name": "Tier 1 plate",
+"once": false,
+"when": {
+"r": 0.9,
+"type": "enter_area",
+"x": 4.0,
+"y": 12.6
+}
+}, {
+"actions": [{
+"tier": 1.0,
+"type": "kit"
+}, {
+"text": "Tier 2 kit (current weapon line)",
+"type": "message"
+}],
+"cooldown": 1.5,
+"id": "tier_2",
+"name": "Tier 2 plate",
+"once": false,
+"when": {
+"r": 0.9,
+"type": "enter_area",
+"x": 7.2,
+"y": 12.6
+}
+}, {
+"actions": [{
+"tier": 2.0,
+"type": "kit"
+}, {
+"text": "Tier 3 kit (current weapon line)",
+"type": "message"
+}],
+"cooldown": 1.5,
+"id": "tier_3",
+"name": "Tier 3 plate",
+"once": false,
+"when": {
+"r": 0.9,
+"type": "enter_area",
+"x": 10.4,
+"y": 12.6
+}
+}, {
+"actions": [{
+"tier": 3.0,
+"type": "kit"
+}, {
+"text": "Tier 4 kit (current weapon line)",
+"type": "message"
+}],
+"cooldown": 1.5,
+"id": "tier_4",
+"name": "Tier 4 plate",
+"once": false,
+"when": {
+"r": 0.9,
+"type": "enter_area",
+"x": 13.6,
+"y": 12.6
+}
+}, {
+"actions": [{
+"tier": 4.0,
+"type": "kit"
+}, {
+"text": "Tier 5 kit (current weapon line)",
+"type": "message"
+}],
+"cooldown": 1.5,
+"id": "tier_5",
+"name": "Tier 5 plate",
+"once": false,
+"when": {
+"r": 0.9,
+"type": "enter_area",
+"x": 16.8,
+"y": 12.6
+}
+}, {
+"actions": [{
+"sub": "Racks pick the weapon line, plates the tier",
+"title": "Dummies",
+"type": "banner"
+}, {
+"text": "Hit the dummies; step on a rack or a plate to re-kit",
+"type": "objective"
+}, {
+"count": 1.0,
+"enemy": "dummy",
+"instant": true,
+"radius": 0.0,
+"type": "spawn",
+"x": 12.0,
+"y": 5.0
+}, {
+"count": 1.0,
+"enemy": "dummy",
+"instant": true,
+"radius": 0.0,
+"type": "spawn",
+"x": 16.0,
+"y": 5.0
+}, {
+"count": 1.0,
+"enemy": "dummy",
+"instant": true,
+"radius": 0.0,
+"type": "spawn",
+"x": 20.0,
+"y": 5.0
+}, {
+"count": 1.0,
+"enemy": "dummy",
+"instant": true,
+"radius": 0.0,
+"type": "spawn",
+"x": 12.0,
+"y": 8.0
+}, {
+"count": 1.0,
+"enemy": "dummy",
+"instant": true,
+"radius": 0.0,
+"type": "spawn",
+"x": 16.0,
+"y": 8.0
+}, {
+"count": 1.0,
+"enemy": "dummy",
+"instant": true,
+"radius": 0.0,
+"type": "spawn",
+"x": 20.0,
+"y": 8.0
+}, {
+"count": 1.0,
+"enemy": "dummy",
+"instant": true,
+"radius": 0.0,
+"type": "spawn",
+"x": 12.0,
+"y": 11.0
+}, {
+"count": 1.0,
+"enemy": "dummy",
+"instant": true,
+"radius": 0.0,
+"type": "spawn",
+"x": 16.0,
+"y": 11.0
+}, {
+"count": 1.0,
+"enemy": "dummy",
+"instant": true,
+"radius": 0.0,
+"type": "spawn",
+"x": 20.0,
+"y": 11.0
+}],
+"id": "in",
+"name": "Enter",
+"when": {
+"type": "map_enter"
+}
+}])
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=1165375098]
+tile_map_data = PackedByteArray("AAAVAA0AAAAAAAAAAAAUAA0AAAABAAAAAAATAA0AAAAAAAAAAAASAA0AAAABAAAAAAARAA0AAAADAAAAAAAQAA0AAAACAAAAAAAPAA0AAAADAAAAAAAOAA0AAAACAAAAAAANAA0AAAAAAAAAAAAMAA0AAAAAAAAAAAALAA0AAAADAAAAAAAKAA0AAAAAAAAAAAAJAA0AAAABAAAAAAAIAA0AAAAAAAAAAAAHAA0AAAACAAAAAAAGAA0AAAABAAAAAAAFAA0AAAABAAAAAAAEAA0AAAACAAAAAAADAA0AAAAAAAAAAAACAA0AAAADAAAAAAAVAAwAAAACAAAAAAAUAAwAAAABAAAAAAATAAwAAAAAAAAAAAASAAwAAAAAAAAAAAARAAwAAAAAAAAAAAAQAAwAAAACAAAAAAAPAAwAAAABAAAAAAAOAAwAAAAAAAAAAAANAAwAAAABAAAAAAAMAAwAAAABAAAAAAALAAwAAAADAAAAAAAKAAwAAAAAAAAAAAAJAAwAAAAAAAAAAAAIAAwAAAABAAAAAAAHAAwAAAAAAAAAAAAGAAwAAAABAAAAAAAFAAwAAAABAAAAAAAEAAwAAAADAAAAAAADAAwAAAADAAAAAAACAAwAAAAAAAAAAAAVAAsAAAAAAAAAAAAUAAsAAAACAAAAAAATAAsAAAAAAAAAAAASAAsAAAACAAAAAAARAAsAAAAAAAAAAAAQAAsAAAABAAAAAAAPAAsAAAAAAAAAAAAOAAsAAAAAAAAAAAANAAsAAAABAAAAAAAMAAsAAAAAAAAAAAALAAsAAAACAAAAAAAKAAsAAAACAAAAAAAJAAsAAAADAAAAAAAIAAsAAAAAAAAAAAAHAAsAAAABAAAAAAAGAAsAAAACAAAAAAAFAAsAAAADAAAAAAAEAAsAAAAAAAAAAAADAAsAAAAAAAAAAAACAAsAAAAAAAAAAAAVAAoAAAABAAAAAAAUAAoAAAABAAAAAAATAAoAAAAAAAAAAAASAAoAAAACAAAAAAARAAoAAAABAAAAAAAQAAoAAAAAAAAAAAAPAAoAAAABAAAAAAAOAAoAAAABAAAAAAANAAoAAAAAAAAAAAAMAAoAAAAAAAAAAAALAAoAAAACAAAAAAAKAAoAAAAAAAAAAAAJAAoAAAADAAAAAAAIAAoAAAABAAAAAAAHAAoAAAADAAAAAAAGAAoAAAAAAAAAAAAFAAoAAAAAAAAAAAAEAAoAAAACAAAAAAADAAoAAAAAAAAAAAACAAoAAAAAAAAAAAAVAAkAAAABAAAAAAAUAAkAAAACAAAAAAATAAkAAAAAAAAAAAASAAkAAAAAAAAAAAARAAkAAAACAAAAAAAQAAkAAAAAAAAAAAAPAAkAAAACAAAAAAAOAAkAAAABAAAAAAANAAkAAAAAAAAAAAAMAAkAAAADAAAAAAALAAkAAAAAAAAAAAAKAAkAAAAAAAAAAAAJAAkAAAAAAAAAAAAIAAkAAAADAAAAAAAHAAkAAAADAAAAAAAGAAkAAAABAAAAAAAFAAkAAAAAAAAAAAAEAAkAAAACAAAAAAADAAkAAAAAAAAAAAACAAkAAAAAAAAAAAAVAAgAAAAAAAAAAAAUAAgAAAACAAAAAAATAAgAAAADAAAAAAASAAgAAAAAAAAAAAARAAgAAAABAAAAAAAQAAgAAAAAAAAAAAAPAAgAAAAAAAAAAAAOAAgAAAABAAAAAAANAAgAAAAAAAAAAAAMAAgAAAAAAAAAAAALAAgAAAADAAAAAAAKAAgAAAAAAAAAAAAJAAgAAAAAAAAAAAAIAAgAAAAAAAAAAAAHAAgAAAADAAAAAAAGAAgAAAAAAAAAAAAFAAgAAAAAAAAAAAAEAAgAAAACAAAAAAADAAgAAAAAAAAAAAACAAgAAAADAAAAAAAVAAcAAAAAAAAAAAAUAAcAAAAAAAAAAAATAAcAAAAAAAAAAAASAAcAAAABAAAAAAARAAcAAAABAAAAAAAQAAcAAAAAAAAAAAAPAAcAAAAAAAAAAAAOAAcAAAABAAAAAAANAAcAAAAAAAAAAAAMAAcAAAAAAAAAAAALAAcAAAADAAAAAAAKAAcAAAACAAAAAAAJAAcAAAADAAAAAAAIAAcAAAABAAAAAAAHAAcAAAADAAAAAAAGAAcAAAADAAAAAAAFAAcAAAAAAAAAAAAEAAcAAAABAAAAAAADAAcAAAACAAAAAAACAAcAAAAAAAAAAAAVAAYAAAABAAAAAAAUAAYAAAABAAAAAAATAAYAAAAAAAAAAAASAAYAAAACAAAAAAARAAYAAAAAAAAAAAAQAAYAAAAAAAAAAAAPAAYAAAACAAAAAAAOAAYAAAABAAAAAAANAAYAAAADAAAAAAAMAAYAAAADAAAAAAALAAYAAAAAAAAAAAAKAAYAAAAAAAAAAAAJAAYAAAADAAAAAAAIAAYAAAAAAAAAAAAHAAYAAAAAAAAAAAAGAAYAAAAAAAAAAAAFAAYAAAADAAAAAAAEAAYAAAACAAAAAAADAAYAAAADAAAAAAACAAYAAAABAAAAAAAVAAUAAAADAAAAAAAUAAUAAAAAAAAAAAATAAUAAAAAAAAAAAASAAUAAAADAAAAAAARAAUAAAACAAAAAAAQAAUAAAADAAAAAAAPAAUAAAACAAAAAAAOAAUAAAABAAAAAAANAAUAAAAAAAAAAAAMAAUAAAACAAAAAAALAAUAAAAAAAAAAAAKAAUAAAAAAAAAAAAJAAUAAAAAAAAAAAAIAAUAAAABAAAAAAAHAAUAAAAAAAAAAAAGAAUAAAAAAAAAAAAFAAUAAAAAAAAAAAAEAAUAAAABAAAAAAADAAUAAAAAAAAAAAACAAUAAAAAAAAAAAAVAAQAAAAAAAAAAAAUAAQAAAAAAAAAAAATAAQAAAAAAAAAAAASAAQAAAAAAAAAAAARAAQAAAAAAAAAAAAQAAQAAAADAAAAAAAPAAQAAAACAAAAAAAOAAQAAAAAAAAAAAANAAQAAAABAAAAAAAMAAQAAAAAAAAAAAALAAQAAAADAAAAAAAKAAQAAAABAAAAAAAJAAQAAAACAAAAAAAIAAQAAAAAAAAAAAAHAAQAAAAAAAAAAAAGAAQAAAABAAAAAAAFAAQAAAABAAAAAAAEAAQAAAAAAAAAAAADAAQAAAACAAAAAAACAAQAAAAAAAAAAAAVAAMAAAACAAAAAAAUAAMAAAADAAAAAAATAAMAAAADAAAAAAASAAMAAAAAAAAAAAARAAMAAAACAAAAAAAQAAMAAAACAAAAAAAPAAMAAAAAAAAAAAAOAAMAAAABAAAAAAANAAMAAAAAAAAAAAAMAAMAAAAAAAAAAAALAAMAAAACAAAAAAAKAAMAAAAAAAAAAAAJAAMAAAACAAAAAAAIAAMAAAABAAAAAAAHAAMAAAAAAAAAAAAGAAMAAAAAAAAAAAAFAAMAAAAAAAAAAAAEAAMAAAAAAAAAAAADAAMAAAAAAAAAAAACAAMAAAAAAAAAAAAVAAIAAAADAAAAAAAUAAIAAAADAAAAAAATAAIAAAACAAAAAAASAAIAAAACAAAAAAARAAIAAAAAAAAAAAAQAAIAAAABAAAAAAAPAAIAAAAAAAAAAAAOAAIAAAACAAAAAAANAAIAAAAAAAAAAAAMAAIAAAAAAAAAAAALAAIAAAABAAAAAAAKAAIAAAAAAAAAAAAJAAIAAAACAAAAAAAIAAIAAAACAAAAAAAHAAIAAAADAAAAAAAGAAIAAAAAAAAAAAAFAAIAAAAAAAAAAAAEAAIAAAACAAAAAAADAAIAAAADAAAAAAACAAIAAAABAAAAAAA=")
+tile_set = ExtResource("7_vk6w1")
+
+[node name="Entities" type="Node2D" parent="." unique_id=908216893]
+y_sort_enabled = true
+
+[node name="Columns" type="TileMapLayer" parent="Entities" unique_id=1177303047]
+y_sort_enabled = true
+tile_set = ExtResource("7_vk6w1")
+
+[node name="Hero" parent="Entities" unique_id=116842755 instance=ExtResource("8_wgj1q")]
+position = Vector2(-48, 96)
+
+[node name="Dummy_1" parent="Entities" unique_id=1706600847 instance=ExtResource("9_25s0i")]
+position = Vector2(128, 136)
+data = ExtResource("10_0wblh")
+
+[node name="Dummy_2" parent="Entities" unique_id=955370365 instance=ExtResource("9_25s0i")]
+position = Vector2(192, 168)
+data = ExtResource("10_0wblh")
+
+[node name="Dummy_3" parent="Entities" unique_id=832878927 instance=ExtResource("9_25s0i")]
+position = Vector2(256, 200)
+data = ExtResource("10_0wblh")
+
+[node name="Dummy_4" parent="Entities" unique_id=2031215636 instance=ExtResource("9_25s0i")]
+position = Vector2(80, 160)
+data = ExtResource("10_0wblh")
+
+[node name="Dummy_5" parent="Entities" unique_id=2123448440 instance=ExtResource("9_25s0i")]
+position = Vector2(144, 192)
+data = ExtResource("10_0wblh")
+
+[node name="Dummy_6" parent="Entities" unique_id=929219900 instance=ExtResource("9_25s0i")]
+position = Vector2(208, 224)
+data = ExtResource("10_0wblh")
+
+[node name="Dummy_7" parent="Entities" unique_id=245043338 instance=ExtResource("9_25s0i")]
+position = Vector2(32, 184)
+data = ExtResource("10_0wblh")
+
+[node name="Dummy_8" parent="Entities" unique_id=585855471 instance=ExtResource("9_25s0i")]
+position = Vector2(96, 216)
+data = ExtResource("10_0wblh")
+
+[node name="Dummy_9" parent="Entities" unique_id=1934451073 instance=ExtResource("9_25s0i")]
+position = Vector2(160, 248)
+data = ExtResource("10_0wblh")
+
+[node name="Sign_1" parent="Entities" unique_id=1150702507 instance=ExtResource("11_5k3x2")]
+position = Vector2(41.6, 51.2)
+sidecar = ExtResource("12_ghosk")
+object_data = {
+"label": "sword rack",
+"t": "sign",
+"x": 4.0,
+"y": 2.4
+}
+
+[node name="Brazier_2" parent="Entities" unique_id=1510809317 instance=ExtResource("11_5k3x2")]
+position = Vector2(24, 42.4)
+sidecar = ExtResource("13_dtoc1")
+object_data = {
+"t": "brazier",
+"x": 2.9,
+"y": 2.4
+}
+
+[node name="Sign_3" parent="Entities" unique_id=547231854 instance=ExtResource("11_5k3x2")]
+position = Vector2(105.6, 83.2)
+sidecar = ExtResource("12_ghosk")
+object_data = {
+"label": "staff rack",
+"t": "sign",
+"x": 8.0,
+"y": 2.4
+}
+
+[node name="Brazier_4" parent="Entities" unique_id=1779035626 instance=ExtResource("11_5k3x2")]
+position = Vector2(88, 74.4)
+sidecar = ExtResource("13_dtoc1")
+object_data = {
+"t": "brazier",
+"x": 6.9,
+"y": 2.4
+}
+
+[node name="Sign_5" parent="Entities" unique_id=1228419248 instance=ExtResource("11_5k3x2")]
+position = Vector2(169.6, 115.2)
+sidecar = ExtResource("12_ghosk")
+object_data = {
+"label": "bow rack",
+"t": "sign",
+"x": 12.0,
+"y": 2.4
+}
+
+[node name="Brazier_6" parent="Entities" unique_id=1489942654 instance=ExtResource("11_5k3x2")]
+position = Vector2(152, 106.399994)
+sidecar = ExtResource("13_dtoc1")
+object_data = {
+"t": "brazier",
+"x": 10.9,
+"y": 2.4
+}
+
+[node name="Sign_7" parent="Entities" unique_id=120600700 instance=ExtResource("11_5k3x2")]
+position = Vector2(233.6, 147.2)
+sidecar = ExtResource("12_ghosk")
+object_data = {
+"label": "daggers rack",
+"t": "sign",
+"x": 16.0,
+"y": 2.4
+}
+
+[node name="Brazier_8" parent="Entities" unique_id=1071266358 instance=ExtResource("11_5k3x2")]
+position = Vector2(216, 138.4)
+sidecar = ExtResource("13_dtoc1")
+object_data = {
+"t": "brazier",
+"x": 14.9,
+"y": 2.4
+}
+
+[node name="Mushroom_9" parent="Entities" unique_id=1714836292 instance=ExtResource("11_5k3x2")]
+position = Vector2(-132.8, 138.4)
+sidecar = ExtResource("14_vw5wf")
+object_data = {
+"t": "mushroom",
+"x": 4.0,
+"y": 13.3
+}
+
+[node name="Sign_10" parent="Entities" unique_id=99794413 instance=ExtResource("11_5k3x2")]
+position = Vector2(-147.2, 145.6)
+sidecar = ExtResource("12_ghosk")
+object_data = {
+"label": "T1",
+"t": "sign",
+"x": 4.0,
+"y": 14.2
+}
+
+[node name="Mushroom_11" parent="Entities" unique_id=728129277 instance=ExtResource("11_5k3x2")]
+position = Vector2(-81.600006, 164)
+sidecar = ExtResource("14_vw5wf")
+object_data = {
+"t": "mushroom",
+"x": 7.2,
+"y": 13.3
+}
+
+[node name="Sign_12" parent="Entities" unique_id=1821986314 instance=ExtResource("11_5k3x2")]
+position = Vector2(-96, 171.2)
+sidecar = ExtResource("12_ghosk")
+object_data = {
+"label": "T2",
+"t": "sign",
+"x": 7.2,
+"y": 14.2
+}
+
+[node name="Mushroom_13" parent="Entities" unique_id=1894369762 instance=ExtResource("11_5k3x2")]
+position = Vector2(-30.40001, 189.6)
+sidecar = ExtResource("14_vw5wf")
+object_data = {
+"t": "mushroom",
+"x": 10.4,
+"y": 13.3
+}
+
+[node name="Sign_14" parent="Entities" unique_id=262748939 instance=ExtResource("11_5k3x2")]
+position = Vector2(-44.800003, 196.79999)
+sidecar = ExtResource("12_ghosk")
+object_data = {
+"label": "T3",
+"t": "sign",
+"x": 10.4,
+"y": 14.2
+}
+
+[node name="Mushroom_15" parent="Entities" unique_id=822015674 instance=ExtResource("11_5k3x2")]
+position = Vector2(20.800003, 215.20001)
+sidecar = ExtResource("14_vw5wf")
+object_data = {
+"t": "mushroom",
+"x": 13.6,
+"y": 13.3
+}
+
+[node name="Sign_16" parent="Entities" unique_id=383741523 instance=ExtResource("11_5k3x2")]
+position = Vector2(6.400009, 222.4)
+sidecar = ExtResource("12_ghosk")
+object_data = {
+"label": "T4",
+"t": "sign",
+"x": 13.6,
+"y": 14.2
+}
+
+[node name="Mushroom_17" parent="Entities" unique_id=1704385080 instance=ExtResource("11_5k3x2")]
+position = Vector2(71.999985, 240.79999)
+sidecar = ExtResource("14_vw5wf")
+object_data = {
+"t": "mushroom",
+"x": 16.8,
+"y": 13.3
+}
+
+[node name="Sign_18" parent="Entities" unique_id=202838693 instance=ExtResource("11_5k3x2")]
+position = Vector2(57.59999, 248)
+sidecar = ExtResource("12_ghosk")
+object_data = {
+"label": "T5",
+"t": "sign",
+"x": 16.8,
+"y": 14.2
+}
+
+[node name="Shrine_19" parent="Entities" unique_id=292353516 instance=ExtResource("11_5k3x2")]
+position = Vector2(-72, 84)
+sidecar = ExtResource("15_dv405")
+object_data = {
+"id": "shrine_dummies",
+"label": "checkpoint",
+"name": "Arena shrine",
+"t": "shrine",
+"x": 2.5,
+"y": 8.0
+}
+
+[node name="Chest_20" parent="Entities" unique_id=1252152513 instance=ExtResource("11_5k3x2")]
+position = Vector2(310.4, 188.8)
+sidecar = ExtResource("16_swpoi")
+object_data = {
+"label": "dummies-chest",
+"t": "chest",
+"tier": "wood",
+"x": 21.0,
+"y": 2.6
+}
+
+[node name="Lantern_21" parent="Entities" unique_id=40567973 instance=ExtResource("11_5k3x2")]
+position = Vector2(16, 32)
+sidecar = ExtResource("17_jff2r")
+object_data = {
+"t": "lantern",
+"x": 2.0,
+"y": 2.0
+}
+
+[node name="Lantern_22" parent="Entities" unique_id=168950291 instance=ExtResource("11_5k3x2")]
+position = Vector2(336, 192)
+sidecar = ExtResource("17_jff2r")
+object_data = {
+"t": "lantern",
+"x": 22.0,
+"y": 2.0
+}
+
+[node name="Lantern_23" parent="Entities" unique_id=1648513262 instance=ExtResource("11_5k3x2")]
+position = Vector2(-176, 128)
+sidecar = ExtResource("17_jff2r")
+object_data = {
+"t": "lantern",
+"x": 2.0,
+"y": 14.0
+}
+
+[node name="Lantern_24" parent="Entities" unique_id=1307546486 instance=ExtResource("11_5k3x2")]
+position = Vector2(144, 288)
+sidecar = ExtResource("17_jff2r")
+object_data = {
+"t": "lantern",
+"x": 22.0,
+"y": 14.0
+}

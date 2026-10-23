@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_trsop"]
+
+[resource]
+script = ExtResource("1_trsop")
+id = &"suit_warden"
+display_name = "Warden twist"
+hint = "Bulwark reflects projectiles at any tier; a reflected shot staggers 1"
+source = "suit"
+if_tags = PackedStringArray()
+tags = PackedStringArray()
+todo = "Inline engine check at updateProjs (no bus event).
+Live while three warden pieces are worn."

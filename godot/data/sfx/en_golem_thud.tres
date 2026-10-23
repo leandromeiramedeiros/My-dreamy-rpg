@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_68qm0"]
+
+[resource]
+script = ExtResource("1_68qm0")
+id = &"en_golem_thud"
+pitch_vary = 0.1
+priority = 2
+caption = "[golem stomp]"
+recipe = {
+"layers": [{
+"dur": 0.3,
+"f0": 80.0,
+"f1": 40.0,
+"gain": 0.15,
+"osc": "sine"
+}, {
+"dur": 0.12,
+"f0": 800.0,
+"f1": 200.0,
+"filter": {
+"freq": 800.0,
+"q": 1.0,
+"type": "lowpass"
+},
+"gain": 0.05,
+"osc": "noise"
+}]
+}

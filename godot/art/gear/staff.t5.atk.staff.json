@@ -1,0 +1,73 @@
+{
+ "unit": "staff.t5",
+ "sheet": "atk.staff",
+ "images": {
+  "front": "staff.t5.atk.staff_front.png",
+  "back": "staff.t5.atk.staff_back.png"
+ },
+ "layer": "weapon",
+ "zorder": {
+  "S": 41,
+  "SE": 52,
+  "E": 54,
+  "NE": 47,
+  "N": 35,
+  "NW": 17,
+  "W": 11,
+  "SW": 22
+ },
+ "hides": [],
+ "slot": "weapon",
+ "tier": 5,
+ "class": "staff",
+ "split": {
+  "rule": "front = pixels where body + this unit differs from the body alone; back = this unit's own pixels hidden behind the body",
+  "body_pixels_lost": 0
+ },
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  4,
+  8
+ ],
+ "anims": {
+  "attack": {
+   "from": 0,
+   "count": 4,
+   "ms": [
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl"
+}

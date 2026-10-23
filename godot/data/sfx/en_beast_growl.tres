@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SfxData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/sfx_data.gd" id="1_lf3qo"]
+
+[resource]
+script = ExtResource("1_lf3qo")
+id = &"en_beast_growl"
+pitch_vary = 0.1
+caption = "[beast growl]"
+recipe = {
+"layers": [{
+"dur": 0.5,
+"f0": 110.0,
+"f1": 80.0,
+"filter": {
+"freq": 600.0,
+"q": 1.0,
+"type": "lowpass"
+},
+"gain": 0.05,
+"osc": "saw"
+}]
+}

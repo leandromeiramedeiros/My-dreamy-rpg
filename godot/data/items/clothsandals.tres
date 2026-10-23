@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/blink.tres" id="1_f1h1k"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_1cpfo"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_doa7y"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="4_ufhlv"]
+
+[sub_resource type="Resource" id="Resource_s2uwh"]
+script = ExtResource("4_ufhlv")
+base_id = &"ropesandals"
+display_name = "Rope Sandals"
+multiplier = 0.6
+
+[sub_resource type="Resource" id="Resource_l06ql"]
+script = ExtResource("4_ufhlv")
+base_id = &"clothsandals"
+display_name = "Cloud Sandals"
+required_level = 8
+
+[sub_resource type="Resource" id="Resource_u6urd"]
+script = ExtResource("4_ufhlv")
+base_id = &"mistwalkers"
+display_name = "Mistwalkers"
+required_level = 16
+multiplier = 1.25
+
+[sub_resource type="Resource" id="Resource_t4fql"]
+script = ExtResource("4_ufhlv")
+base_id = &"skystep"
+display_name = "Skystep Sandals"
+required_level = 24
+multiplier = 1.5
+
+[sub_resource type="Resource" id="Resource_yi5g6"]
+script = ExtResource("4_ufhlv")
+base_id = &"cloudsteps"
+display_name = "Eternal Cloudsteps"
+required_level = 32
+multiplier = 1.8
+
+[resource]
+script = ExtResource("3_doa7y")
+id = &"clothsandals"
+display_name = "Cloud Sandals"
+description = "+3 MP/s."
+kind = "armour"
+slot = "boots"
+item_class = &"caster"
+suit = &"dreamweave"
+hands = 0
+element = "arcane"
+tiers = Array[ExtResource("4_ufhlv")]([SubResource("Resource_s2uwh"), SubResource("Resource_l06ql"), SubResource("Resource_u6urd"), SubResource("Resource_t4fql"), SubResource("Resource_yi5g6")])
+active = ExtResource("1_f1h1k")
+stats = Dictionary[StringName, float]({
+&"mpRegen": 3.0
+})
+color = Color(0.90588236, 0.7882353, 0.627451, 1)
+attack_pose = "none"
+todo = "Suit Dreamweave (Caster: MP/power; arcane +25, physical -25; 3-piece rule: zones follow you)."

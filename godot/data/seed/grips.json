@@ -1,0 +1,145 @@
+{
+ "about": "Seed from the JS reference (tools/godot/seed.js). One-time: edit the .tres in res://data/, not this file.",
+ "rows": [
+  {
+   "id": "grip_vanguard",
+   "display_name": "Vanguard",
+   "tags": [
+    "sword",
+    "buckler"
+   ],
+   "hint": "A parry primes Sunslash: +40% damage.",
+   "effect": "grip_vanguard"
+  },
+  {
+   "id": "grip_twinfangs",
+   "display_name": "Twin Fangs",
+   "tags": [
+    "daggers",
+    "daggers"
+   ],
+   "hint": "Mark cap +1.",
+   "effect": "grip_twinfangs"
+  },
+  {
+   "id": "grip_twinstars",
+   "display_name": "Twin Stars",
+   "tags": [
+    "wand",
+    "orb"
+   ],
+   "hint": "An arcane hit on a Jolted foe takes 2 s off both spells (ICD 4 s).",
+   "effect": "grip_twinstars"
+  },
+  {
+   "id": "grip_archmage",
+   "display_name": "Archmage",
+   "tags": [
+    "staff",
+    "grimoire"
+   ],
+   "hint": "Pages hit 20% harder; Chapter costs 80 charge.",
+   "effect": "grip_archmage"
+  },
+  {
+   "id": "grip_fletcher",
+   "display_name": "Fletcher",
+   "tags": [
+    "bow",
+    "quiver"
+   ],
+   "hint": "A loosed arrow gains +40% crit chance.",
+   "effect": "grip_fletcher"
+  },
+  {
+   "id": "grip_warband",
+   "display_name": "Warband",
+   "tags": [
+    "axe",
+    "warhorn"
+   ],
+   "hint": "Calls Detonate: a call hit on a Burning foe consumes the Burn for damage.",
+   "effect": "grip_warband"
+  },
+  {
+   "id": "grip_dancer",
+   "display_name": "Dancer",
+   "tags": [
+    "rapier",
+    "fans"
+   ],
+   "hint": "Step shares Parry's cooldown: every Step opens a parry window.",
+   "effect": "grip_dancer"
+  },
+  {
+   "id": "grip_sanctuary",
+   "display_name": "Sanctuary",
+   "tags": [
+    "mace",
+    "heater"
+   ],
+   "hint": "Consecrate follows you; Block inside it restores 2% HP a second (one zone, no stacking).",
+   "effect": "grip_sanctuary"
+  },
+  {
+   "id": "grip_faultline",
+   "display_name": "Faultline",
+   "tags": [
+    "hammer",
+    "warhorn"
+   ],
+   "hint": "A call makes every live crack erupt again.",
+   "effect": "grip_faultline"
+  },
+  {
+   "id": "grip_lodestar",
+   "display_name": "Lodestar",
+   "tags": [
+    "chakram",
+    "orb"
+   ],
+   "hint": "Ricochet bounces twice more and each bounce zaps for lightning.",
+   "effect": "grip_lodestar"
+  },
+  {
+   "id": "grip_cornered",
+   "display_name": "Cornered",
+   "tags": [
+    "claws",
+    "buckler"
+   ],
+   "hint": "Below half HP Frenzy reaches +75%; a parry adds 3 Frenzy.",
+   "effect": "grip_cornered"
+  },
+  {
+   "id": "grip_spellblade",
+   "display_name": "Spellblade",
+   "tags": [
+    "sword",
+    "grimoire"
+   ],
+   "hint": "Pages retype Sunslash: it takes the active page's element, +15%.",
+   "effect": "grip_spellblade"
+  },
+  {
+   "id": "grip_hedgewall",
+   "display_name": "Hedgewall",
+   "tags": [
+    "halberd",
+    "quiver"
+   ],
+   "hint": "Nock primes the Halberd too: the next hit is +40% and pins for 0.6 s.",
+   "effect": "grip_hedgewall"
+  },
+  {
+   "id": "grip_siegeworks",
+   "display_name": "Siegeworks",
+   "tags": [
+    "crossbow",
+    "quiver"
+   ],
+   "hint": "Crossbow clip 6.",
+   "effect": "grip_siegeworks"
+  }
+ ]
+}

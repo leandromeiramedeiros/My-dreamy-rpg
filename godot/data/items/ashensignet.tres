@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_l7nmq"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_4d6yb"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="3_ug2tq"]
+
+[sub_resource type="Resource" id="Resource_i58qm"]
+script = ExtResource("3_ug2tq")
+base_id = &"ashensignet"
+display_name = "Ashen Signet"
+required_level = 16
+
+[resource]
+script = ExtResource("2_4d6yb")
+id = &"ashensignet"
+display_name = "Ashen Signet"
+description = "Burn ticks spread Burn to one nearby foe."
+kind = "trinket"
+slot = "ring"
+hands = 0
+tiers = Array[ExtResource("3_ug2tq")]([SubResource("Resource_i58qm")])
+stats = Dictionary[StringName, float]({
+&"fireDmg": 0.03
+})
+flags = {
+"rule": {
+"burnSpreads": 1.0
+}
+}
+attack_pose = "none"
+todo = "Unique rule (JS `rule`): {\"burnSpreads\":1}. Wave 2: an Effect."

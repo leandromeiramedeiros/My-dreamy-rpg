@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Effect" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="1_t5xm6"]
+
+[resource]
+script = ExtResource("1_t5xm6")
+id = &"dustOnKill"
+display_name = "Drifting Dust"
+hint = "+2 Dust on elite kills"
+source = "trinket"
+when_event = "kill"
+if_tags = PackedStringArray()
+do_action = &"dustOnKill"
+do_params = {
+"major": {
+"dustOnElite": 2.0
+},
+"minor": {
+"dustOnElite": 1.0
+}
+}
+icd = 0.0
+tags = PackedStringArray("kill", "salvage")
+todo = "Boon numbers: minor {\"dustOnElite\":1}, major {\"dustOnElite\":2}
+JS:
+do: do(c, v, p) { if (enemyClassOf(c.e) !== 'normal') p.dust += v.dustOnElite || 0; }"

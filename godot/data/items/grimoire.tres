@@ -1,0 +1,76 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Resource" path="res://data/skills/turn.tres" id="1_islgh"]
+[ext_resource type="Script" path="res://scripts/data/effect.gd" id="2_h33xu"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_py6fn"]
+[ext_resource type="Resource" path="res://data/skills/cast.tres" id="4_2ilq4"]
+[ext_resource type="Script" path="res://scripts/data/item_tier.gd" id="5_fku86"]
+[ext_resource type="JSON" path="res://art/gear/grimoire.t1.json" id="6_i4e5e"]
+[ext_resource type="JSON" path="res://art/gear/grimoire.t2.json" id="7_gg4id"]
+[ext_resource type="JSON" path="res://art/gear/grimoire.t3.json" id="8_7kdwc"]
+[ext_resource type="JSON" path="res://art/gear/grimoire.t4.json" id="9_6cywb"]
+[ext_resource type="JSON" path="res://art/gear/grimoire.t5.json" id="10_lxltq"]
+[ext_resource type="Resource" path="res://data/skills/chapter.tres" id="11_gqtpx"]
+
+[sub_resource type="Resource" id="Resource_gkv4k"]
+script = ExtResource("5_fku86")
+base_id = &"worngrimoire"
+display_name = "Primer"
+multiplier = 0.6
+sheet = ExtResource("6_i4e5e")
+
+[sub_resource type="Resource" id="Resource_15ydq"]
+script = ExtResource("5_fku86")
+base_id = &"dreamgrimoire"
+display_name = "Dreambook"
+required_level = 8
+sheet = ExtResource("7_gg4id")
+
+[sub_resource type="Resource" id="Resource_666ep"]
+script = ExtResource("5_fku86")
+base_id = &"stargrimoire"
+display_name = "Sun Codex"
+required_level = 16
+multiplier = 1.25
+sheet = ExtResource("8_7kdwc")
+
+[sub_resource type="Resource" id="Resource_vbqie"]
+script = ExtResource("5_fku86")
+base_id = &"nebulacodex"
+display_name = "Aurora Grimoire"
+required_level = 24
+multiplier = 1.5
+sheet = ExtResource("9_6cywb")
+
+[sub_resource type="Resource" id="Resource_2p2hl"]
+script = ExtResource("5_fku86")
+base_id = &"codexeternal"
+display_name = "Book Eternal"
+required_level = 32
+multiplier = 1.8
+sheet = ExtResource("10_lxltq")
+
+[resource]
+script = ExtResource("3_py6fn")
+id = &"grimoire"
+display_name = "Grimoire"
+description = "A book of dream pages. Turn the page, cast it, or read the whole chapter."
+kind = "companion"
+slot = "offhand"
+item_class = &"companions"
+hands = 0
+element = "arcane"
+tiers = Array[ExtResource("5_fku86")]([SubResource("Resource_gkv4k"), SubResource("Resource_15ydq"), SubResource("Resource_666ep"), SubResource("Resource_vbqie"), SubResource("Resource_2p2hl")])
+action = ExtResource("1_islgh")
+spell = ExtResource("4_2ilq4")
+ultimate = ExtResource("11_gqtpx")
+deck = &"page"
+stats = Dictionary[StringName, float]({
+&"mp": 40.0,
+&"mpRegen": 1.0
+})
+color = Color(0.78039217, 0.60784316, 1, 1)
+attack_pose = "none"
+swing_style = "none"
+carry_pose = "float"
+todo = "Line name (T2 base): Dreambook."
