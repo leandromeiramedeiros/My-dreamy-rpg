@@ -94,7 +94,7 @@ const enemySheetsOf = (page, want) => page.evaluate(async ([rigs, want]) => {
     const fkb = fs.statSync(path.join(ROOT, 'js', 'forge-bank', f)).size / 1024; if (f !== `${RIG}.js` && !ENEMY_RIGS.includes(f.slice(0, -3)) && fkb > top.kb) top = { f, kb: fkb };
   }
   const starter = (fs.statSync(path.join(ROOT, 'js', 'forge-rt.js')).size + fs.statSync(path.join(ROOT, 'js', 'forge-bank', `${RIG}.js`)).size) / 1024;
-  const named = new Set([RIG, ...ENEMY_RIGS, ...Object.values(BANK.lines), ...Object.values(BANK.atk || {})].map(l => l + '.js')), stale = files.filter(f => !named.has(f)), missing = [...named].filter(f => !files.includes(f));
+  const named = new Set([RIG, ...ENEMY_RIGS, ...Object.values(BANK.lines), ...Object.values(BANK.atk || {}), ...Object.values(BANK.patk || {})].map(l => l + '.js')), stale = files.filter(f => !named.has(f)), missing = [...named].filter(f => !files.includes(f));
   check('banks', worst.kb <= 64 && starter <= 400 && !stale.length && !missing.length,
     `${files.length} files, ${n} sheets, largest sheet ${worst.key} ${worst.kb.toFixed(1)} KB (<= 64) | starter bundle ${starter.toFixed(0)} KB (<= 400)` +
     (stale.length ? ` | stale: ${stale.join(' ')}` : ' | no stale file') + (missing.length ? ` | missing: ${missing.join(' ')}` : ''));

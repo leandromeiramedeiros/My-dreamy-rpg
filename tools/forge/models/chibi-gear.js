@@ -272,6 +272,10 @@ const pieces = {};
 for (const t of TIERS) for (const fn of [knighthelm, warden, knightgreaves, sword, heater, cape]) { const p = fn(t); pieces[p.id] = p; }
 // the other lines of this rig: models/chibi-<line>.js each export { pieces }
 for (const f of require('fs').readdirSync(__dirname).sort()) if (/^chibi-[a-z]+\.js$/.test(f) && !['chibi-gear.js', 'chibi-palette.js', 'chibi-wpal.js'].includes(f)) Object.assign(pieces, require('./' + f).pieces);   // weapon, shield and companion lines (suits: chibi-suit-*.js, loaded by their own lane)
+// the other 11 suits: models/chibi-suit-<suit>.js each export { pieces } (chibi-suit-lib.js: the suit table and shared shells)
+for (const f of require('fs').readdirSync(__dirname).filter(f => /^chibi-suit-.+\.js$/.test(f)).sort()) { const m = require('./' + f); if (m.pieces) Object.assign(pieces, m.pieces); }
 const set = t => ['knighthelm', 'warden', 'knightgreaves', 'sword', 'heater', 'cape'].map(f => `${f}.t${t}`);
 const loadouts = { bare: [], squire: set(1), footman: set(2), knight: set(3), paladin: set(4), radiant: set(5) };
+// one board loadout per suit tier (head, chest, boots): crusader1 .. crusader6, for every suit piece that exists
+for (const [suit, fams] of Object.entries(require('./chibi-suit-lib.js').SUITS)) for (const t of [1, 2, 3, 4, 5, 6]) { const ids = fams.map(f => `${f}.t${t}`).filter(id => pieces[id]); if (ids.length) loadouts[suit + t] = ids; }
 module.exports = { pieces, loadouts };
