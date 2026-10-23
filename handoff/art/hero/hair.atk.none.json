@@ -1,0 +1,73 @@
+{
+ "unit": "hair",
+ "sheet": "atk.none",
+ "images": {
+  "front": "hair.atk.none_front.png",
+  "back": "hair.atk.none_back.png",
+  "normal": "hair.atk.none_n.png"
+ },
+ "layer": "hair",
+ "zorder": {
+  "S": 50,
+  "SE": 46,
+  "E": 46,
+  "NE": 49,
+  "N": 49,
+  "NW": 49,
+  "W": 49,
+  "SW": 43
+ },
+ "hides": [],
+ "slot": "hair",
+ "class": null,
+ "split": {
+  "rule": "front = pixels where body + this unit differs from the body alone; back = this unit's own pixels hidden behind the body",
+  "body_pixels_lost": 0
+ },
+ "rig": "chibi",
+ "cell": [
+  52,
+  56
+ ],
+ "origin": [
+  26,
+  49
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  4,
+  8
+ ],
+ "anims": {
+  "attack": {
+   "from": 0,
+   "count": 4,
+   "ms": [
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   52,
+   56
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_chibi.gpl"
+}

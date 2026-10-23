@@ -1,0 +1,191 @@
+{
+ "about": "One record per exported zone theme (tools/export/tiles.js reads it; edit names, file names and terrain lists, then rerun node tools/export/all.js). theme = the engine theme in js/maps.js THEMES; ch = the engine tile character.",
+ "zones": [
+  {
+   "id": "vale",
+   "theme": "vale",
+   "name": "Whispering Vale",
+   "palette": "palettes/vale.gpl",
+   "tiles": "tiles/vale/",
+   "terrains": [
+    {
+     "file": "terrain_grass.png",
+     "id": "grass",
+     "ch": "g",
+     "base": true
+    },
+    {
+     "file": "terrain_flower_meadow.png",
+     "id": "flower_meadow",
+     "ch": "f"
+    },
+    {
+     "file": "terrain_dark_moss.png",
+     "id": "dark_moss",
+     "ch": "d"
+    },
+    {
+     "file": "terrain_path.png",
+     "id": "path",
+     "ch": "p"
+    },
+    {
+     "file": "terrain_stone_stairs.png",
+     "id": "stone_stairs",
+     "ch": "s"
+    },
+    {
+     "file": "terrain_flagstones.png",
+     "id": "flagstones",
+     "ch": "x"
+    },
+    {
+     "file": "terrain_water.png",
+     "id": "water",
+     "ch": "w",
+     "frames": 4,
+     "ms": 220
+    },
+    {
+     "file": "terrain_bridge.png",
+     "id": "bridge",
+     "ch": "b",
+     "plain": true
+    },
+    {
+     "file": "terrain_rune_floor.png",
+     "id": "rune_floor",
+     "ch": "r",
+     "plain": true
+    }
+   ],
+   "cliff": "cliff_vale.png",
+   "coast": "coast.png",
+   "water": "water.png"
+  },
+  {
+   "id": "pinewood",
+   "theme": "forest",
+   "name": "Misty Pinewood",
+   "palette": "palettes/pinewood.gpl",
+   "tiles": "tiles/pinewood/",
+   "terrains": [
+    {
+     "file": "terrain_grass.png",
+     "id": "grass",
+     "ch": "g",
+     "base": true
+    },
+    {
+     "file": "terrain_flower_meadow.png",
+     "id": "flower_meadow",
+     "ch": "f"
+    },
+    {
+     "file": "terrain_dark_moss.png",
+     "id": "dark_moss",
+     "ch": "d"
+    },
+    {
+     "file": "terrain_path.png",
+     "id": "path",
+     "ch": "p"
+    },
+    {
+     "file": "terrain_stone_stairs.png",
+     "id": "stone_stairs",
+     "ch": "s"
+    },
+    {
+     "file": "terrain_flagstones.png",
+     "id": "flagstones",
+     "ch": "x"
+    },
+    {
+     "file": "terrain_water.png",
+     "id": "water",
+     "ch": "w",
+     "frames": 4,
+     "ms": 220
+    },
+    {
+     "file": "terrain_bridge.png",
+     "id": "bridge",
+     "ch": "b",
+     "plain": true
+    },
+    {
+     "file": "terrain_rune_floor.png",
+     "id": "rune_floor",
+     "ch": "r",
+     "plain": true
+    }
+   ],
+   "cliff": "cliff_pinewood.png",
+   "coast": "coast.png",
+   "water": "water.png"
+  },
+  {
+   "id": "ruins",
+   "theme": "ruins",
+   "name": "Gloomspire Ruins",
+   "palette": "palettes/ruins.gpl",
+   "tiles": "tiles/ruins/",
+   "terrains": [
+    {
+     "file": "terrain_grass.png",
+     "id": "grass",
+     "ch": "g",
+     "base": true
+    },
+    {
+     "file": "terrain_flower_meadow.png",
+     "id": "flower_meadow",
+     "ch": "f"
+    },
+    {
+     "file": "terrain_dark_moss.png",
+     "id": "dark_moss",
+     "ch": "d"
+    },
+    {
+     "file": "terrain_path.png",
+     "id": "path",
+     "ch": "p"
+    },
+    {
+     "file": "terrain_stone_stairs.png",
+     "id": "stone_stairs",
+     "ch": "s"
+    },
+    {
+     "file": "terrain_flagstones.png",
+     "id": "flagstones",
+     "ch": "x"
+    },
+    {
+     "file": "terrain_water.png",
+     "id": "water",
+     "ch": "w",
+     "frames": 4,
+     "ms": 220
+    },
+    {
+     "file": "terrain_bridge.png",
+     "id": "bridge",
+     "ch": "b",
+     "plain": true
+    },
+    {
+     "file": "terrain_rune_floor.png",
+     "id": "rune_floor",
+     "ch": "r",
+     "plain": true
+    }
+   ],
+   "cliff": "cliff_ruins.png",
+   "coast": "coast.png",
+   "water": "water.png"
+  }
+ ]
+}

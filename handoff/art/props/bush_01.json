@@ -1,0 +1,34 @@
+{
+ "id": "bush_01",
+ "kind": "bush",
+ "label": "Bush",
+ "size": [
+  20,
+  13
+ ],
+ "origin": [
+  10,
+  12
+ ],
+ "collider_r": 0.2,
+ "shadow": 6,
+ "light": null,
+ "layers": {
+  "trunk": "bush_01_trunk.png",
+  "canopy": "bush_01_canopy.png"
+ },
+ "canopy": null,
+ "wind": {
+  "cut_row": 8,
+  "px": [
+   -2,
+   -1,
+   0,
+   1,
+   2
+  ],
+  "about": "rows above cut_row shift by the wind frame (js/wind.js); Godot: a canopy shader"
+ },
+ "flip_by_light": false,
+ "flip_about": "mirrored when the zone light is on the left (zones.json light_side)"
+}

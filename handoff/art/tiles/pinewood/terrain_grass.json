@@ -1,0 +1,165 @@
+{
+ "image": "terrain_grass.png",
+ "terrain": "grass",
+ "engine_tile": "g",
+ "over": null,
+ "layout": "fill4",
+ "grid": [
+  4,
+  1
+ ],
+ "frames": null,
+ "zone": "pinewood",
+ "theme": "forest",
+ "cell": [
+  32,
+  16
+ ],
+ "tile_shape": "isometric",
+ "tile_layout": "diamond_down",
+ "texture_origin": [
+  0,
+  0
+ ],
+ "directions": [
+  {
+   "bit": 0,
+   "offset": [
+    -1,
+    0
+   ],
+   "name": "NW",
+   "godot": "TOP_LEFT_SIDE"
+  },
+  {
+   "bit": 1,
+   "offset": [
+    1,
+    0
+   ],
+   "name": "SE",
+   "godot": "BOTTOM_RIGHT_SIDE"
+  },
+  {
+   "bit": 2,
+   "offset": [
+    0,
+    -1
+   ],
+   "name": "NE",
+   "godot": "TOP_RIGHT_SIDE"
+  },
+  {
+   "bit": 3,
+   "offset": [
+    0,
+    1
+   ],
+   "name": "SW",
+   "godot": "BOTTOM_LEFT_SIDE"
+  },
+  {
+   "bit": 4,
+   "offset": [
+    -1,
+    -1
+   ],
+   "name": "N",
+   "godot": "TOP_CORNER"
+  },
+  {
+   "bit": 5,
+   "offset": [
+    1,
+    -1
+   ],
+   "name": "E",
+   "godot": "RIGHT_CORNER"
+  },
+  {
+   "bit": 6,
+   "offset": [
+    -1,
+    1
+   ],
+   "name": "W",
+   "godot": "LEFT_CORNER"
+  },
+  {
+   "bit": 7,
+   "offset": [
+    1,
+    1
+   ],
+   "name": "S",
+   "godot": "BOTTOM_CORNER"
+  }
+ ],
+ "about": "Plain fills (4 variants, cols 0-3). Godot: one tile each, all peering bits = this terrain, probability 1.",
+ "cells": [
+  {
+   "col": 0,
+   "row": 0,
+   "variant": 0,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mask": 255
+  },
+  {
+   "col": 1,
+   "row": 0,
+   "variant": 1,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mask": 255
+  },
+  {
+   "col": 2,
+   "row": 0,
+   "variant": 2,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mask": 255
+  },
+  {
+   "col": 3,
+   "row": 0,
+   "variant": 3,
+   "bits": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mask": 255
+  }
+ ]
+}

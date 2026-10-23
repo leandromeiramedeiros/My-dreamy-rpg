@@ -1,0 +1,3196 @@
+{
+ "unit": "brambleshaman",
+ "sheet": "core",
+ "images": {
+  "color": "brambleshaman.png",
+  "normal": "brambleshaman_n.png"
+ },
+ "layer": "body",
+ "zorder": {
+  "S": 0,
+  "SE": 0,
+  "E": 0,
+  "NE": 0,
+  "N": 0,
+  "NW": 0,
+  "W": 0,
+  "SW": 0
+ },
+ "rig": "brambleshaman",
+ "cell": [
+  68,
+  72
+ ],
+ "origin": [
+  34,
+  57
+ ],
+ "dirs": [
+  "S",
+  "SE",
+  "E",
+  "NE",
+  "N",
+  "NW",
+  "W",
+  "SW"
+ ],
+ "grid": [
+  17,
+  8
+ ],
+ "anims": {
+  "idle": {
+   "from": 0,
+   "count": 6,
+   "ms": [
+    200,
+    200,
+    400,
+    200,
+    200,
+    400
+   ],
+   "loop": true
+  },
+  "walk": {
+   "from": 6,
+   "count": 6,
+   "ms": [
+    100,
+    100,
+    100,
+    100,
+    100,
+    100
+   ],
+   "loop": true
+  },
+  "hit": {
+   "from": 12,
+   "count": 1,
+   "ms": [
+    100
+   ],
+   "loop": false,
+   "ms_source": "game (the game times this anim; 100 ms per frame shown)"
+  },
+  "death": {
+   "from": 13,
+   "count": 3,
+   "ms": [
+    180,
+    180,
+    400
+   ],
+   "loop": false
+  },
+  "heal": {
+   "from": 16,
+   "count": 1,
+   "ms": [
+    800
+   ],
+   "loop": false
+  }
+ },
+ "aseprite": {
+  "type": "grid",
+  "cell": [
+   68,
+   72
+  ],
+  "about": "Aseprite: File > Import Sprite Sheet, Type: By Rows... use Grid: width / height = cell, no offset, no padding; or tools/export/aseprite.js to-ase"
+ },
+ "palette": "palettes/forge_brambleshaman.gpl",
+ "sockets": {
+  "S": {
+   "idle": [
+    {
+     "handR": {
+      "x": 28.5,
+      "y": 46.2,
+      "front": true
+     },
+     "tip": {
+      "x": 26.6,
+      "y": 32.7,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 27.5,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.5,
+      "y": 46.8,
+      "front": true
+     },
+     "tip": {
+      "x": 26.6,
+      "y": 33.3,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 28.1,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.5,
+      "y": 47.4,
+      "front": true
+     },
+     "tip": {
+      "x": 26.6,
+      "y": 33.9,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 28.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.5,
+      "y": 47.4,
+      "front": true
+     },
+     "tip": {
+      "x": 26.6,
+      "y": 33.9,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 28.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.5,
+      "y": 46.8,
+      "front": true
+     },
+     "tip": {
+      "x": 26.6,
+      "y": 33.3,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 28.1,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.5,
+      "y": 46.2,
+      "front": true
+     },
+     "tip": {
+      "x": 26.6,
+      "y": 32.7,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 27.5,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 28.7,
+      "y": 40.5,
+      "front": false
+     },
+     "tip": {
+      "x": 26.8,
+      "y": 28.8,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 27.3,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 37.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.7,
+      "y": 43.4,
+      "front": false
+     },
+     "tip": {
+      "x": 26.7,
+      "y": 30.6,
+      "front": true
+     },
+     "head": {
+      "x": 33.7,
+      "y": 29.1,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.5,
+      "y": 45.2,
+      "front": true
+     },
+     "tip": {
+      "x": 26.6,
+      "y": 31.1,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 28.2,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 38.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.9,
+      "y": 45,
+      "front": true
+     },
+     "tip": {
+      "x": 26.9,
+      "y": 30.9,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 27.3,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 37.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.8,
+      "y": 47,
+      "front": true
+     },
+     "tip": {
+      "x": 26.8,
+      "y": 34.3,
+      "front": true
+     },
+     "head": {
+      "x": 34.3,
+      "y": 29.1,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28.5,
+      "y": 46,
+      "front": true
+     },
+     "tip": {
+      "x": 26.7,
+      "y": 34.3,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 28.2,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 38.7,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 24.8,
+      "y": 38,
+      "front": false
+     },
+     "tip": {
+      "x": 21.8,
+      "y": 21.8,
+      "front": false
+     },
+     "head": {
+      "x": 33.4,
+      "y": 25.7,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.3,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "handR": {
+      "x": 25.8,
+      "y": 36.8,
+      "front": false
+     },
+     "tip": {
+      "x": 19.1,
+      "y": 21.6,
+      "front": false
+     },
+     "head": {
+      "x": 33.3,
+      "y": 26.5,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 27.8,
+      "y": 52.4,
+      "front": true
+     },
+     "tip": {
+      "x": 16.1,
+      "y": 54.8,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 39.3,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 44.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.8,
+      "y": 57.5,
+      "front": true
+     },
+     "tip": {
+      "x": 15.2,
+      "y": 56.9,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 56.8,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 50.9,
+      "front": true
+     }
+    }
+   ],
+   "heal": [
+    {
+     "handR": {
+      "x": 26.2,
+      "y": 34.6,
+      "front": true
+     },
+     "tip": {
+      "x": 22.3,
+      "y": 23.2,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 26.1,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.3,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SE": {
+   "idle": [
+    {
+     "handR": {
+      "x": 31.1,
+      "y": 47.9,
+      "front": true
+     },
+     "tip": {
+      "x": 31.1,
+      "y": 34.7,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 27.4,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 31.2,
+      "y": 48.4,
+      "front": true
+     },
+     "tip": {
+      "x": 31.2,
+      "y": 35.3,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 28,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 31.3,
+      "y": 49,
+      "front": true
+     },
+     "tip": {
+      "x": 31.3,
+      "y": 35.8,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 28.5,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 31.3,
+      "y": 49,
+      "front": true
+     },
+     "tip": {
+      "x": 31.3,
+      "y": 35.8,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 28.5,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 31.2,
+      "y": 48.4,
+      "front": true
+     },
+     "tip": {
+      "x": 31.2,
+      "y": 35.3,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 28,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 31.1,
+      "y": 47.9,
+      "front": true
+     },
+     "tip": {
+      "x": 31.1,
+      "y": 34.7,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 27.4,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 26.8,
+      "y": 42.9,
+      "front": true
+     },
+     "tip": {
+      "x": 28.9,
+      "y": 31.1,
+      "front": true
+     },
+     "head": {
+      "x": 36,
+      "y": 27,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 37.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 27.7,
+      "y": 45.6,
+      "front": true
+     },
+     "tip": {
+      "x": 28.6,
+      "y": 33.1,
+      "front": true
+     },
+     "head": {
+      "x": 36.1,
+      "y": 28.7,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 39.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.6,
+      "y": 46.9,
+      "front": true
+     },
+     "tip": {
+      "x": 29.8,
+      "y": 33.3,
+      "front": true
+     },
+     "head": {
+      "x": 36.3,
+      "y": 27.8,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 38.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 35.5,
+      "y": 45.7,
+      "front": true
+     },
+     "tip": {
+      "x": 34.7,
+      "y": 32.1,
+      "front": true
+     },
+     "head": {
+      "x": 36.6,
+      "y": 26.8,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 37.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 34.8,
+      "y": 47.9,
+      "front": true
+     },
+     "tip": {
+      "x": 35.7,
+      "y": 35.3,
+      "front": true
+     },
+     "head": {
+      "x": 36.5,
+      "y": 28.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 39.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32.3,
+      "y": 47.4,
+      "front": true
+     },
+     "tip": {
+      "x": 34.3,
+      "y": 35.6,
+      "front": true
+     },
+     "head": {
+      "x": 36.3,
+      "y": 27.8,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 38.6,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 22.4,
+      "y": 42,
+      "front": true
+     },
+     "tip": {
+      "x": 16,
+      "y": 27.6,
+      "front": true
+     },
+     "head": {
+      "x": 29.4,
+      "y": 26.7,
+      "front": true
+     },
+     "chest": {
+      "x": 33.7,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "handR": {
+      "x": 21.5,
+      "y": 40.8,
+      "front": true
+     },
+     "tip": {
+      "x": 11.6,
+      "y": 28.8,
+      "front": true
+     },
+     "head": {
+      "x": 28.1,
+      "y": 27.8,
+      "front": true
+     },
+     "chest": {
+      "x": 33.2,
+      "y": 40.2,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32.6,
+      "y": 53.9,
+      "front": true
+     },
+     "tip": {
+      "x": 32.4,
+      "y": 58.6,
+      "front": true
+     },
+     "head": {
+      "x": 39.8,
+      "y": 38.2,
+      "front": true
+     },
+     "chest": {
+      "x": 33.6,
+      "y": 44.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 37.7,
+      "y": 58.2,
+      "front": true
+     },
+     "tip": {
+      "x": 21.8,
+      "y": 62.9,
+      "front": true
+     },
+     "head": {
+      "x": 44.9,
+      "y": 54.7,
+      "front": true
+     },
+     "chest": {
+      "x": 35.1,
+      "y": 50.6,
+      "front": true
+     }
+    }
+   ],
+   "heal": [
+    {
+     "handR": {
+      "x": 31.9,
+      "y": 36.6,
+      "front": true
+     },
+     "tip": {
+      "x": 32.4,
+      "y": 25.7,
+      "front": true
+     },
+     "head": {
+      "x": 31.6,
+      "y": 26.6,
+      "front": true
+     },
+     "chest": {
+      "x": 33.9,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ]
+  },
+  "E": {
+   "idle": [
+    {
+     "handR": {
+      "x": 35.3,
+      "y": 48.2,
+      "front": true
+     },
+     "tip": {
+      "x": 37.3,
+      "y": 34.6,
+      "front": true
+     },
+     "head": {
+      "x": 34.6,
+      "y": 27.2,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 35.5,
+      "y": 48.7,
+      "front": true
+     },
+     "tip": {
+      "x": 37.5,
+      "y": 35.1,
+      "front": true
+     },
+     "head": {
+      "x": 34.6,
+      "y": 27.8,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 35.6,
+      "y": 49.2,
+      "front": true
+     },
+     "tip": {
+      "x": 37.6,
+      "y": 35.6,
+      "front": true
+     },
+     "head": {
+      "x": 34.6,
+      "y": 28.3,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 35.6,
+      "y": 49.2,
+      "front": true
+     },
+     "tip": {
+      "x": 37.6,
+      "y": 35.6,
+      "front": true
+     },
+     "head": {
+      "x": 34.6,
+      "y": 28.3,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 35.5,
+      "y": 48.7,
+      "front": true
+     },
+     "tip": {
+      "x": 37.5,
+      "y": 35.1,
+      "front": true
+     },
+     "head": {
+      "x": 34.6,
+      "y": 27.8,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 35.3,
+      "y": 48.2,
+      "front": true
+     },
+     "tip": {
+      "x": 37.3,
+      "y": 34.6,
+      "front": true
+     },
+     "head": {
+      "x": 34.6,
+      "y": 27.2,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 29.2,
+      "y": 45.2,
+      "front": true
+     },
+     "tip": {
+      "x": 33.9,
+      "y": 32.2,
+      "front": true
+     },
+     "head": {
+      "x": 37.3,
+      "y": 26,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 37.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.4,
+      "y": 47.5,
+      "front": true
+     },
+     "tip": {
+      "x": 33.7,
+      "y": 34.2,
+      "front": true
+     },
+     "head": {
+      "x": 37.3,
+      "y": 27.7,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 39.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 34.7,
+      "y": 47.4,
+      "front": true
+     },
+     "tip": {
+      "x": 35.5,
+      "y": 33.8,
+      "front": true
+     },
+     "head": {
+      "x": 37.3,
+      "y": 26.7,
+      "front": true
+     },
+     "chest": {
+      "x": 34.3,
+      "y": 38.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 41.3,
+      "y": 44,
+      "front": true
+     },
+     "tip": {
+      "x": 42.1,
+      "y": 30.4,
+      "front": true
+     },
+     "head": {
+      "x": 37.3,
+      "y": 25.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 37.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 40.4,
+      "y": 46.5,
+      "front": true
+     },
+     "tip": {
+      "x": 43.6,
+      "y": 33.1,
+      "front": true
+     },
+     "head": {
+      "x": 37.3,
+      "y": 27.4,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 37.1,
+      "y": 47.1,
+      "front": true
+     },
+     "tip": {
+      "x": 41.8,
+      "y": 34.1,
+      "front": true
+     },
+     "head": {
+      "x": 37.3,
+      "y": 26.7,
+      "front": true
+     },
+     "chest": {
+      "x": 34.3,
+      "y": 38.6,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 26.8,
+      "y": 45.7,
+      "front": true
+     },
+     "tip": {
+      "x": 20.8,
+      "y": 33.7,
+      "front": true
+     },
+     "head": {
+      "x": 28.1,
+      "y": 28.8,
+      "front": true
+     },
+     "chest": {
+      "x": 33.6,
+      "y": 39.5,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "handR": {
+      "x": 24.6,
+      "y": 45,
+      "front": true
+     },
+     "tip": {
+      "x": 17.1,
+      "y": 36.4,
+      "front": true
+     },
+     "head": {
+      "x": 26.4,
+      "y": 30.4,
+      "front": true
+     },
+     "chest": {
+      "x": 32.9,
+      "y": 40.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 38.2,
+      "y": 53.4,
+      "front": true
+     },
+     "tip": {
+      "x": 49.6,
+      "y": 55.9,
+      "front": true
+     },
+     "head": {
+      "x": 42.2,
+      "y": 35.4,
+      "front": true
+     },
+     "chest": {
+      "x": 33.4,
+      "y": 44.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 46.3,
+      "y": 55.1,
+      "front": true
+     },
+     "tip": {
+      "x": 35.6,
+      "y": 64.9,
+      "front": true
+     },
+     "head": {
+      "x": 49.4,
+      "y": 49.5,
+      "front": true
+     },
+     "chest": {
+      "x": 35.6,
+      "y": 50.1,
+      "front": true
+     }
+    }
+   ],
+   "heal": [
+    {
+     "handR": {
+      "x": 38.8,
+      "y": 36,
+      "front": true
+     },
+     "tip": {
+      "x": 43.4,
+      "y": 24.2,
+      "front": true
+     },
+     "head": {
+      "x": 30.6,
+      "y": 27.7,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ]
+  },
+  "NE": {
+   "idle": [
+    {
+     "handR": {
+      "x": 38.8,
+      "y": 47,
+      "front": true
+     },
+     "tip": {
+      "x": 41.6,
+      "y": 32.5,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 27,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 38.9,
+      "y": 47.4,
+      "front": true
+     },
+     "tip": {
+      "x": 41.7,
+      "y": 33,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 27.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 39,
+      "y": 47.9,
+      "front": true
+     },
+     "tip": {
+      "x": 41.8,
+      "y": 33.4,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 28.1,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 39,
+      "y": 47.9,
+      "front": true
+     },
+     "tip": {
+      "x": 41.8,
+      "y": 33.4,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 28.1,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 38.9,
+      "y": 47.4,
+      "front": true
+     },
+     "tip": {
+      "x": 41.7,
+      "y": 33,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 27.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 38.8,
+      "y": 47,
+      "front": true
+     },
+     "tip": {
+      "x": 41.6,
+      "y": 32.5,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 27,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 34.3,
+      "y": 46.1,
+      "front": true
+     },
+     "tip": {
+      "x": 39,
+      "y": 31.2,
+      "front": true
+     },
+     "head": {
+      "x": 36.6,
+      "y": 24.8,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 37.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 35.2,
+      "y": 48,
+      "front": true
+     },
+     "tip": {
+      "x": 38.9,
+      "y": 33.3,
+      "front": true
+     },
+     "head": {
+      "x": 36.5,
+      "y": 26.5,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 38.4,
+      "y": 46.4,
+      "front": true
+     },
+     "tip": {
+      "x": 40.4,
+      "y": 32.3,
+      "front": true
+     },
+     "head": {
+      "x": 36.3,
+      "y": 25.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 38.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 42.8,
+      "y": 40.9,
+      "front": true
+     },
+     "tip": {
+      "x": 44.8,
+      "y": 26.7,
+      "front": true
+     },
+     "head": {
+      "x": 36,
+      "y": 24.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 37.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 42.2,
+      "y": 43.6,
+      "front": true
+     },
+     "tip": {
+      "x": 45.9,
+      "y": 28.9,
+      "front": true
+     },
+     "head": {
+      "x": 36.1,
+      "y": 26.4,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 40,
+      "y": 45.3,
+      "front": true
+     },
+     "tip": {
+      "x": 44.7,
+      "y": 30.5,
+      "front": true
+     },
+     "head": {
+      "x": 36.3,
+      "y": 25.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 38.5,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 35.4,
+      "y": 46.8,
+      "front": true
+     },
+     "tip": {
+      "x": 33.3,
+      "y": 36.4,
+      "front": true
+     },
+     "head": {
+      "x": 30.2,
+      "y": 30.7,
+      "front": true
+     },
+     "chest": {
+      "x": 33.7,
+      "y": 39.6,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "handR": {
+      "x": 33.2,
+      "y": 47,
+      "front": true
+     },
+     "tip": {
+      "x": 32.6,
+      "y": 40,
+      "front": true
+     },
+     "head": {
+      "x": 29.1,
+      "y": 32.8,
+      "front": true
+     },
+     "chest": {
+      "x": 33.3,
+      "y": 40.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 41.4,
+      "y": 51.1,
+      "front": true
+     },
+     "tip": {
+      "x": 57.7,
+      "y": 48.3,
+      "front": true
+     },
+     "head": {
+      "x": 39.8,
+      "y": 32.7,
+      "front": true
+     },
+     "chest": {
+      "x": 33.6,
+      "y": 45,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 47.8,
+      "y": 50,
+      "front": false
+     },
+     "tip": {
+      "x": 48.4,
+      "y": 61.8,
+      "front": true
+     },
+     "head": {
+      "x": 44.9,
+      "y": 44.4,
+      "front": false
+     },
+     "chest": {
+      "x": 35.1,
+      "y": 49.6,
+      "front": false
+     }
+    }
+   ],
+   "heal": [
+    {
+     "handR": {
+      "x": 42.9,
+      "y": 33.4,
+      "front": true
+     },
+     "tip": {
+      "x": 48.9,
+      "y": 19.5,
+      "front": true
+     },
+     "head": {
+      "x": 31.6,
+      "y": 28.8,
+      "front": true
+     },
+     "chest": {
+      "x": 33.9,
+      "y": 39.5,
+      "front": true
+     }
+    }
+   ]
+  },
+  "N": {
+   "idle": [
+    {
+     "handR": {
+      "x": 39.5,
+      "y": 45,
+      "front": false
+     },
+     "tip": {
+      "x": 41.4,
+      "y": 29.6,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 27,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 39.5,
+      "y": 45.4,
+      "front": false
+     },
+     "tip": {
+      "x": 41.4,
+      "y": 30,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 27.5,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 39.5,
+      "y": 45.8,
+      "front": false
+     },
+     "tip": {
+      "x": 41.4,
+      "y": 30.5,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 28,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 39.5,
+      "y": 45.8,
+      "front": false
+     },
+     "tip": {
+      "x": 41.4,
+      "y": 30.5,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 28,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 39.5,
+      "y": 45.4,
+      "front": false
+     },
+     "tip": {
+      "x": 41.4,
+      "y": 30,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 27.5,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 39.5,
+      "y": 45,
+      "front": false
+     },
+     "tip": {
+      "x": 41.4,
+      "y": 29.6,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 27,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 39.3,
+      "y": 45,
+      "front": true
+     },
+     "tip": {
+      "x": 41.2,
+      "y": 28.8,
+      "front": true
+     },
+     "head": {
+      "x": 34.4,
+      "y": 24.2,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 37.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 39.3,
+      "y": 46.7,
+      "front": true
+     },
+     "tip": {
+      "x": 41.3,
+      "y": 30.9,
+      "front": true
+     },
+     "head": {
+      "x": 34.3,
+      "y": 26,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.3,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 39.5,
+      "y": 44.5,
+      "front": false
+     },
+     "tip": {
+      "x": 41.4,
+      "y": 29.6,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 25.1,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 38.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 39.1,
+      "y": 38.2,
+      "front": false
+     },
+     "tip": {
+      "x": 41.1,
+      "y": 23.3,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 24.2,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 37.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 39.2,
+      "y": 41,
+      "front": false
+     },
+     "tip": {
+      "x": 41.2,
+      "y": 25.2,
+      "front": true
+     },
+     "head": {
+      "x": 33.7,
+      "y": 26,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.3,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 39.5,
+      "y": 43.1,
+      "front": false
+     },
+     "tip": {
+      "x": 41.3,
+      "y": 26.9,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 25.1,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 38.4,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 43.2,
+      "y": 44.7,
+      "front": true
+     },
+     "tip": {
+      "x": 46.2,
+      "y": 34.2,
+      "front": true
+     },
+     "head": {
+      "x": 34.6,
+      "y": 31.3,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.7,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "handR": {
+      "x": 42.2,
+      "y": 45.6,
+      "front": true
+     },
+     "tip": {
+      "x": 48.9,
+      "y": 37.4,
+      "front": true
+     },
+     "head": {
+      "x": 34.7,
+      "y": 33.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 41.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 40.2,
+      "y": 48.4,
+      "front": false
+     },
+     "tip": {
+      "x": 51.9,
+      "y": 40.2,
+      "front": false
+     },
+     "head": {
+      "x": 34,
+      "y": 31.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 45.1,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 41.2,
+      "y": 46,
+      "front": false
+     },
+     "tip": {
+      "x": 52.8,
+      "y": 55.4,
+      "front": false
+     },
+     "head": {
+      "x": 34,
+      "y": 42.3,
+      "front": false
+     },
+     "chest": {
+      "x": 34,
+      "y": 49.4,
+      "front": false
+     }
+    }
+   ],
+   "heal": [
+    {
+     "handR": {
+      "x": 41.8,
+      "y": 30.1,
+      "front": true
+     },
+     "tip": {
+      "x": 45.7,
+      "y": 14.3,
+      "front": true
+     },
+     "head": {
+      "x": 34,
+      "y": 29.3,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.5,
+      "front": true
+     }
+    }
+   ]
+  },
+  "NW": {
+   "idle": [
+    {
+     "handR": {
+      "x": 36.9,
+      "y": 43.3,
+      "front": false
+     },
+     "tip": {
+      "x": 36.9,
+      "y": 27.6,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 27,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 36.8,
+      "y": 43.8,
+      "front": false
+     },
+     "tip": {
+      "x": 36.8,
+      "y": 28,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 27.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 36.7,
+      "y": 44.2,
+      "front": false
+     },
+     "tip": {
+      "x": 36.7,
+      "y": 28.5,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 28.1,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 36.7,
+      "y": 44.2,
+      "front": false
+     },
+     "tip": {
+      "x": 36.7,
+      "y": 28.5,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 28.1,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 36.8,
+      "y": 43.8,
+      "front": false
+     },
+     "tip": {
+      "x": 36.8,
+      "y": 28,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 27.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 36.9,
+      "y": 43.3,
+      "front": false
+     },
+     "tip": {
+      "x": 36.9,
+      "y": 27.6,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 27,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 41.2,
+      "y": 42.6,
+      "front": true
+     },
+     "tip": {
+      "x": 39.1,
+      "y": 26.4,
+      "front": true
+     },
+     "head": {
+      "x": 32,
+      "y": 24.6,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 37.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 40.3,
+      "y": 44.5,
+      "front": false
+     },
+     "tip": {
+      "x": 39.4,
+      "y": 28.5,
+      "front": true
+     },
+     "head": {
+      "x": 31.9,
+      "y": 26.4,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 37.4,
+      "y": 42.8,
+      "front": false
+     },
+     "tip": {
+      "x": 38.2,
+      "y": 27.4,
+      "front": true
+     },
+     "head": {
+      "x": 31.7,
+      "y": 25.6,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 38.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32.5,
+      "y": 37.5,
+      "front": false
+     },
+     "tip": {
+      "x": 33.3,
+      "y": 22,
+      "front": false
+     },
+     "head": {
+      "x": 31.4,
+      "y": 24.8,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 37.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 33.2,
+      "y": 40.2,
+      "front": false
+     },
+     "tip": {
+      "x": 32.3,
+      "y": 24.2,
+      "front": false
+     },
+     "head": {
+      "x": 31.5,
+      "y": 26.5,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 35.7,
+      "y": 41.7,
+      "front": false
+     },
+     "tip": {
+      "x": 33.7,
+      "y": 25.6,
+      "front": false
+     },
+     "head": {
+      "x": 31.7,
+      "y": 25.6,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 38.5,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 45.6,
+      "y": 40.7,
+      "front": true
+     },
+     "tip": {
+      "x": 52,
+      "y": 28.3,
+      "front": true
+     },
+     "head": {
+      "x": 38.6,
+      "y": 30.3,
+      "front": true
+     },
+     "chest": {
+      "x": 34.3,
+      "y": 39.6,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "handR": {
+      "x": 46.5,
+      "y": 41.6,
+      "front": true
+     },
+     "tip": {
+      "x": 56.4,
+      "y": 30.1,
+      "front": true
+     },
+     "head": {
+      "x": 39.9,
+      "y": 32.4,
+      "front": true
+     },
+     "chest": {
+      "x": 34.8,
+      "y": 40.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 35.4,
+      "y": 47,
+      "front": false
+     },
+     "tip": {
+      "x": 35.6,
+      "y": 36.4,
+      "front": false
+     },
+     "head": {
+      "x": 28.2,
+      "y": 32.7,
+      "front": true
+     },
+     "chest": {
+      "x": 34.4,
+      "y": 45,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.3,
+      "y": 45.3,
+      "front": false
+     },
+     "tip": {
+      "x": 46.2,
+      "y": 49.4,
+      "front": false
+     },
+     "head": {
+      "x": 23.1,
+      "y": 44.4,
+      "front": false
+     },
+     "chest": {
+      "x": 32.9,
+      "y": 49.6,
+      "front": false
+     }
+    }
+   ],
+   "heal": [
+    {
+     "handR": {
+      "x": 36.1,
+      "y": 28.2,
+      "front": false
+     },
+     "tip": {
+      "x": 35.6,
+      "y": 11.7,
+      "front": true
+     },
+     "head": {
+      "x": 36.4,
+      "y": 28.8,
+      "front": true
+     },
+     "chest": {
+      "x": 34.1,
+      "y": 39.5,
+      "front": true
+     }
+    }
+   ]
+  },
+  "W": {
+   "idle": [
+    {
+     "handR": {
+      "x": 32.7,
+      "y": 43,
+      "front": false
+     },
+     "tip": {
+      "x": 30.7,
+      "y": 27.7,
+      "front": true
+     },
+     "head": {
+      "x": 33.4,
+      "y": 27.2,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32.5,
+      "y": 43.5,
+      "front": false
+     },
+     "tip": {
+      "x": 30.5,
+      "y": 28.2,
+      "front": true
+     },
+     "head": {
+      "x": 33.4,
+      "y": 27.8,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32.4,
+      "y": 44,
+      "front": false
+     },
+     "tip": {
+      "x": 30.4,
+      "y": 28.7,
+      "front": true
+     },
+     "head": {
+      "x": 33.4,
+      "y": 28.3,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32.4,
+      "y": 44,
+      "front": false
+     },
+     "tip": {
+      "x": 30.4,
+      "y": 28.7,
+      "front": true
+     },
+     "head": {
+      "x": 33.4,
+      "y": 28.3,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32.5,
+      "y": 43.5,
+      "front": false
+     },
+     "tip": {
+      "x": 30.5,
+      "y": 28.2,
+      "front": true
+     },
+     "head": {
+      "x": 33.4,
+      "y": 27.8,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32.7,
+      "y": 43,
+      "front": false
+     },
+     "tip": {
+      "x": 30.7,
+      "y": 27.7,
+      "front": true
+     },
+     "head": {
+      "x": 33.4,
+      "y": 27.2,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 38.8,
+      "y": 40.3,
+      "front": false
+     },
+     "tip": {
+      "x": 34.1,
+      "y": 25.4,
+      "front": true
+     },
+     "head": {
+      "x": 30.7,
+      "y": 25.6,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 37.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 37.6,
+      "y": 42.5,
+      "front": false
+     },
+     "tip": {
+      "x": 34.3,
+      "y": 27.3,
+      "front": true
+     },
+     "head": {
+      "x": 30.7,
+      "y": 27.4,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 33.3,
+      "y": 42.3,
+      "front": false
+     },
+     "tip": {
+      "x": 32.5,
+      "y": 26.8,
+      "front": true
+     },
+     "head": {
+      "x": 30.7,
+      "y": 26.7,
+      "front": true
+     },
+     "chest": {
+      "x": 33.7,
+      "y": 38.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.7,
+      "y": 39.2,
+      "front": false
+     },
+     "tip": {
+      "x": 25.9,
+      "y": 23.7,
+      "front": true
+     },
+     "head": {
+      "x": 30.7,
+      "y": 26,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 37.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 27.6,
+      "y": 41.6,
+      "front": false
+     },
+     "tip": {
+      "x": 24.4,
+      "y": 26.4,
+      "front": true
+     },
+     "head": {
+      "x": 30.7,
+      "y": 27.7,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 39.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 30.9,
+      "y": 42,
+      "front": false
+     },
+     "tip": {
+      "x": 26.2,
+      "y": 27.2,
+      "front": true
+     },
+     "head": {
+      "x": 30.7,
+      "y": 26.7,
+      "front": true
+     },
+     "chest": {
+      "x": 33.7,
+      "y": 38.6,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 41.2,
+      "y": 37,
+      "front": false
+     },
+     "tip": {
+      "x": 47.2,
+      "y": 22.2,
+      "front": false
+     },
+     "head": {
+      "x": 39.9,
+      "y": 28.2,
+      "front": true
+     },
+     "chest": {
+      "x": 34.4,
+      "y": 39.5,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "handR": {
+      "x": 43.4,
+      "y": 37.3,
+      "front": false
+     },
+     "tip": {
+      "x": 50.9,
+      "y": 22.5,
+      "front": false
+     },
+     "head": {
+      "x": 41.6,
+      "y": 29.7,
+      "front": true
+     },
+     "chest": {
+      "x": 35.1,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.8,
+      "y": 47.5,
+      "front": false
+     },
+     "tip": {
+      "x": 18.4,
+      "y": 39.1,
+      "front": false
+     },
+     "head": {
+      "x": 25.8,
+      "y": 35.4,
+      "front": true
+     },
+     "chest": {
+      "x": 34.6,
+      "y": 44.9,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 21.7,
+      "y": 48.4,
+      "front": false
+     },
+     "tip": {
+      "x": 32.4,
+      "y": 47.3,
+      "front": false
+     },
+     "head": {
+      "x": 18.6,
+      "y": 49.5,
+      "front": true
+     },
+     "chest": {
+      "x": 32.4,
+      "y": 50.1,
+      "front": true
+     }
+    }
+   ],
+   "heal": [
+    {
+     "handR": {
+      "x": 29.2,
+      "y": 28.7,
+      "front": true
+     },
+     "tip": {
+      "x": 24.6,
+      "y": 13.2,
+      "front": true
+     },
+     "head": {
+      "x": 37.4,
+      "y": 27.7,
+      "front": true
+     },
+     "chest": {
+      "x": 34.2,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ]
+  },
+  "SW": {
+   "idle": [
+    {
+     "handR": {
+      "x": 29.2,
+      "y": 44.2,
+      "front": false
+     },
+     "tip": {
+      "x": 26.4,
+      "y": 29.8,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 27.4,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.1,
+      "y": 44.8,
+      "front": false
+     },
+     "tip": {
+      "x": 26.3,
+      "y": 30.3,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 28,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29,
+      "y": 45.3,
+      "front": false
+     },
+     "tip": {
+      "x": 26.2,
+      "y": 30.9,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 28.5,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29,
+      "y": 45.3,
+      "front": false
+     },
+     "tip": {
+      "x": 26.2,
+      "y": 30.9,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 28.5,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.1,
+      "y": 44.8,
+      "front": false
+     },
+     "tip": {
+      "x": 26.3,
+      "y": 30.3,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 28,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 40,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.2,
+      "y": 44.2,
+      "front": false
+     },
+     "tip": {
+      "x": 26.4,
+      "y": 29.8,
+      "front": true
+     },
+     "head": {
+      "x": 33.6,
+      "y": 27.4,
+      "front": true
+     },
+     "chest": {
+      "x": 34,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ],
+   "walk": [
+    {
+     "handR": {
+      "x": 33.7,
+      "y": 39.4,
+      "front": false
+     },
+     "tip": {
+      "x": 29,
+      "y": 26.4,
+      "front": true
+     },
+     "head": {
+      "x": 31.4,
+      "y": 26.8,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 37.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 32.8,
+      "y": 42.1,
+      "front": false
+     },
+     "tip": {
+      "x": 29.1,
+      "y": 28.2,
+      "front": true
+     },
+     "head": {
+      "x": 31.5,
+      "y": 28.6,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 39.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 29.6,
+      "y": 43.3,
+      "front": false
+     },
+     "tip": {
+      "x": 27.6,
+      "y": 28.4,
+      "front": true
+     },
+     "head": {
+      "x": 31.7,
+      "y": 27.8,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 38.6,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.2,
+      "y": 42.3,
+      "front": true
+     },
+     "tip": {
+      "x": 23.2,
+      "y": 27.4,
+      "front": true
+     },
+     "head": {
+      "x": 32,
+      "y": 27,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 37.8,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 25.8,
+      "y": 44.4,
+      "front": true
+     },
+     "tip": {
+      "x": 22.1,
+      "y": 30.5,
+      "front": true
+     },
+     "head": {
+      "x": 31.9,
+      "y": 28.7,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 39.5,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 28,
+      "y": 43.8,
+      "front": false
+     },
+     "tip": {
+      "x": 23.3,
+      "y": 30.8,
+      "front": true
+     },
+     "head": {
+      "x": 31.7,
+      "y": 27.8,
+      "front": true
+     },
+     "chest": {
+      "x": 33.8,
+      "y": 38.6,
+      "front": true
+     }
+    }
+   ],
+   "hit": [
+    {
+     "handR": {
+      "x": 32.6,
+      "y": 35.9,
+      "front": false
+     },
+     "tip": {
+      "x": 34.7,
+      "y": 19.5,
+      "front": false
+     },
+     "head": {
+      "x": 37.8,
+      "y": 26.3,
+      "front": true
+     },
+     "chest": {
+      "x": 34.3,
+      "y": 39.3,
+      "front": true
+     }
+    }
+   ],
+   "death": [
+    {
+     "handR": {
+      "x": 34.8,
+      "y": 35.3,
+      "front": false
+     },
+     "tip": {
+      "x": 35.4,
+      "y": 18.9,
+      "front": false
+     },
+     "head": {
+      "x": 38.9,
+      "y": 27.3,
+      "front": true
+     },
+     "chest": {
+      "x": 34.7,
+      "y": 40.2,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 26.6,
+      "y": 49.8,
+      "front": false
+     },
+     "tip": {
+      "x": 10.3,
+      "y": 46.7,
+      "front": true
+     },
+     "head": {
+      "x": 28.2,
+      "y": 38.2,
+      "front": true
+     },
+     "chest": {
+      "x": 34.4,
+      "y": 44.7,
+      "front": true
+     }
+    },
+    {
+     "handR": {
+      "x": 20.2,
+      "y": 53.5,
+      "front": true
+     },
+     "tip": {
+      "x": 19.6,
+      "y": 50.4,
+      "front": false
+     },
+     "head": {
+      "x": 23.1,
+      "y": 54.7,
+      "front": true
+     },
+     "chest": {
+      "x": 32.9,
+      "y": 50.6,
+      "front": true
+     }
+    }
+   ],
+   "heal": [
+    {
+     "handR": {
+      "x": 25.1,
+      "y": 31.4,
+      "front": true
+     },
+     "tip": {
+      "x": 19.1,
+      "y": 18,
+      "front": true
+     },
+     "head": {
+      "x": 36.4,
+      "y": 26.6,
+      "front": true
+     },
+     "chest": {
+      "x": 34.1,
+      "y": 39.4,
+      "front": true
+     }
+    }
+   ]
+  }
+ }
+}

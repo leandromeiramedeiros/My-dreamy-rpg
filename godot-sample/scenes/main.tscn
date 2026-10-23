@@ -1,0 +1,186 @@
+[gd_scene format=4]
+
+[ext_resource type="TileSet" path="res://art/tiles/vale/vale_tileset.tres" id="1_dp3eg"]
+[ext_resource type="SpriteFrames" path="res://art/gear/cape.t3_back.tres" id="2_0ld40"]
+[ext_resource type="SpriteFrames" path="res://art/gear/knightgreaves.t3_back.tres" id="3_gqmmt"]
+[ext_resource type="SpriteFrames" path="res://art/gear/shield.t3_back.tres" id="4_yc10j"]
+[ext_resource type="SpriteFrames" path="res://art/gear/sword.t3_back.tres" id="5_jscy8"]
+[ext_resource type="SpriteFrames" path="res://art/gear/warden.t3_back.tres" id="6_pm3ni"]
+[ext_resource type="SpriteFrames" path="res://art/gear/knighthelm.t3_back.tres" id="7_y6deb"]
+[ext_resource type="SpriteFrames" path="res://art/hero/body.tres" id="8_og1vs"]
+[ext_resource type="SpriteFrames" path="res://art/gear/cape.t3_front.tres" id="9_2wyq8"]
+[ext_resource type="SpriteFrames" path="res://art/gear/knightgreaves.t3_front.tres" id="10_vxglm"]
+[ext_resource type="SpriteFrames" path="res://art/gear/shield.t3_front.tres" id="11_2f3dj"]
+[ext_resource type="SpriteFrames" path="res://art/gear/sword.t3_front.tres" id="12_yq6so"]
+[ext_resource type="SpriteFrames" path="res://art/gear/warden.t3_front.tres" id="13_fv21b"]
+[ext_resource type="SpriteFrames" path="res://art/gear/knighthelm.t3_front.tres" id="14_tel4y"]
+[ext_resource type="Texture2D" path="res://art/enemies/ogre.png" id="15_qkpxi"]
+[ext_resource type="Texture2D" path="res://art/enemies/ogre_n.png" id="16_5q0nq"]
+[ext_resource type="Texture2D" path="res://art/props/tree_round_00_trunk.png" id="17_dgi5k"]
+[ext_resource type="Texture2D" path="res://art/props/tree_round_00_canopy.png" id="18_j8jky"]
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_kmb1v"]
+diffuse_texture = ExtResource("15_qkpxi")
+normal_texture = ExtResource("16_5q0nq")
+
+[sub_resource type="Gradient" id="Gradient_fuf3a"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_pibwh"]
+gradient = SubResource("Gradient_fuf3a")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[node name="Main" type="Node2D" unique_id=950402768]
+
+[node name="Ambient" type="CanvasModulate" parent="." unique_id=1498178911]
+color = Color(0.82, 0.78, 0.95, 1)
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=1798360215]
+tile_map_data = PackedByteArray("AAAMAAwAAAAAAAAAAAALAAwAAAAAAAAAAAAKAAwAAAAAAAAAAAAJAAwAAAABAAAAAAAIAAwAAAADAAAAAAAHAAwAAAACAAAAAAAGAAwAAAAAAAAAAAAFAAwAAAABAAAAAAAEAAwAAAAAAAAAAAADAAwAAAAAAAAAAAACAAwAAAADAAAAAAABAAwAAAADAAAAAAAMAAsAAAAAAAAAAAALAAsAAAAAAAAAAAAKAAsAAAAAAAAAAAAJAAsAAAADAAAAAAAIAAsAAAAAAAAAAAAHAAsAAwADAAIAAAAGAAsAAwABAAIAAAAFAAsAAAACAAAAAAAEAAsAAAAAAAAAAAADAAsAAAAAAAAAAAACAAsAAAADAAAAAAABAAsAAAAAAAAAAAAMAAoAAAAAAAAAAAALAAoAAAAAAAAAAAAKAAoAAAADAAAAAAAJAAoAAAAAAAAAAAAIAAoAAAAAAAAAAAAHAAoAAwADAAEAAAAGAAoAAwABAAEAAAAFAAoAAAABAAAAAAAEAAoAAAAAAAAAAAADAAoAAAAAAAAAAAACAAoAAAAAAAAAAAABAAoAAAAAAAAAAAAMAAkAAAACAAAAAAALAAkAAAABAAAAAAAKAAkAAAABAAAAAAAJAAkAAAABAAAAAAAIAAkAAAAAAAAAAAAHAAkAAwADAAEAAAAGAAkAAwABAAEAAAAFAAkAAAAAAAAAAAAEAAkAAAAAAAAAAAADAAkAAAAAAAAAAAACAAkAAAACAAAAAAABAAkAAAAAAAAAAAAMAAgAAAADAAAAAAALAAgAAAABAAAAAAAKAAgAAAAAAAAAAAAJAAgAAAAAAAAAAAAIAAgAAAAAAAAAAAAHAAgAAwADAAEAAAAGAAgAAwABAAEAAAAFAAgAAAAAAAAAAAAEAAgAAAAAAAAAAAADAAgAAAACAAAAAAACAAgAAAAAAAAAAAABAAgAAAACAAAAAAAMAAcAAAAAAAAAAAALAAcAAAACAAAAAAAKAAcAAAABAAAAAAAJAAcAAAAAAAAAAAAIAAcAAAACAAAAAAAHAAcAAwADAAEAAAAGAAcAAwABAAEAAAAFAAcAAAACAAAAAAAEAAcAAAAAAAAAAAADAAcAAAADAAAAAAACAAcAAAADAAAAAAABAAcAAAACAAAAAAAMAAYAAAAAAAAAAAALAAYAAAAAAAAAAAAKAAYAAAAAAAAAAAAJAAYAAAAAAAAAAAAIAAYAAAADAAAAAAAHAAYAAwADAAEAAAAGAAYAAwABAAEAAAAFAAYAAAABAAAAAAAEAAYAAAACAAAAAAADAAYAAAADAAAAAAACAAYAAAADAAAAAAABAAYAAAAAAAAAAAAMAAUAAAADAAAAAAALAAUABgAAAAIAAAAKAAUAAAAAAAAAAAAJAAUAAAADAAAAAAAIAAUAAAADAAAAAAAHAAUAAwADAAEAAAAGAAUAAwABAAEAAAAFAAUAAAAAAAAAAAAEAAUAAAAAAAAAAAADAAUAAAACAAAAAAACAAUAAAAAAAAAAAABAAUAAAAAAAAAAAAMAAQABgADAAMAAAALAAQABgAFAAIAAAAKAAQABgABAAIAAAAJAAQAAAAAAAAAAAAIAAQAAAABAAAAAAAHAAQAAwADAAEAAAAGAAQAAwABAAEAAAAFAAQAAAAAAAAAAAAEAAQAAAAAAAAAAAADAAQAAAADAAAAAAACAAQAAAAAAAAAAAABAAQAAAAAAAAAAAAMAAMAAAAAAAAAAAALAAMABgADAAAAAAAKAAMABgABAAAAAAAJAAMAAAADAAAAAAAIAAMAAAAAAAAAAAAHAAMAAwADAAEAAAAGAAMAAwABAAEAAAAFAAMAAAACAAAAAAAEAAMAAAACAAAAAAADAAMAAAAAAAAAAAACAAMAAAAAAAAAAAABAAMAAAACAAAAAAAMAAIAAAACAAAAAAALAAIAAAABAAAAAAAKAAIAAAAAAAAAAAAJAAIAAAADAAAAAAAIAAIAAAADAAAAAAAHAAIAAwADAAAAAAAGAAIAAwABAAAAAAAFAAIAAAACAAAAAAAEAAIAAAAAAAAAAAADAAIAAAACAAAAAAACAAIAAAAAAAAAAAABAAIAAAABAAAAAAAMAAEAAAAAAAAAAAALAAEAAAAAAAAAAAAKAAEAAAADAAAAAAAJAAEAAAABAAAAAAAIAAEAAAACAAAAAAAHAAEAAAADAAAAAAAGAAEAAAAAAAAAAAAFAAEAAAACAAAAAAAEAAEAAAADAAAAAAADAAEAAAAAAAAAAAACAAEAAAAAAAAAAAABAAEAAAAAAAAAAAA=")
+tile_set = ExtResource("1_dp3eg")
+
+[node name="Coast" type="TileMapLayer" parent="." unique_id=382591645]
+tile_map_data = PackedByteArray("AAAAAA0ACgAAAAEAAAANAAAACgAEAAEAAAABAA0ACgABAAEAAAANAAEACgAFAAEAAAACAA0ACgACAAEAAAANAAIACgAGAAEAAAADAA0ACgADAAEAAAANAAMACgAHAAEAAAAEAA0ACgAAAAEAAAANAAQACgAEAAEAAAAFAA0ACgABAAEAAAANAAUACgAFAAEAAAAGAA0ACgACAAEAAAANAAYACgAGAAEAAAAHAA0ACgADAAEAAAANAAcACgAHAAEAAAAIAA0ACgAAAAEAAAANAAgACgAEAAEAAAAJAA0ACgABAAEAAAANAAkACgAFAAEAAAAKAA0ACgACAAEAAAANAAoACgAGAAEAAAALAA0ACgADAAEAAAANAAsACgAHAAEAAAAMAA0ACgAAAAEAAAANAAwACgAEAAEAAAANAA0ACgAJAAEAAAA=")
+tile_set = ExtResource("1_dp3eg")
+
+[node name="FootShadows" type="TileMapLayer" parent="." unique_id=2085813327]
+tile_map_data = PackedByteArray("AAAFAAIACQAJAAYAAAAFAAMACQANAAYAAAAFAAQACQANAAYAAAACAAUACQAIAAYAAAADAAUACQAMAAYAAAAEAAUACQAMAAYAAAAFAAUACQALAAYAAAA=")
+tile_set = ExtResource("1_dp3eg")
+
+[node name="Entities" type="Node2D" parent="." unique_id=838755186]
+y_sort_enabled = true
+
+[node name="Columns" type="TileMapLayer" parent="Entities" unique_id=1852542295]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAACAAIACQAMAAAAAAADAAIACQAIAAAAAAAEAAIACQAKAAAAAAACAAMACQAEAAAAAAADAAMACQAAAAAAAAAEAAMACQACAAAAAAACAAQACQAFAAAAAAADAAQACQABAAAAAAAEAAQACQADAAAAAAA=")
+tile_set = ExtResource("1_dp3eg")
+
+[node name="Hero" type="Node2D" parent="Entities" unique_id=1579457598]
+position = Vector2(16, 136)
+
+[node name="cape_t3_back" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=1038416029]
+sprite_frames = ExtResource("2_0ld40")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="knightgreaves_t3_back" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=811556442]
+sprite_frames = ExtResource("3_gqmmt")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="shield_t3_back" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=1324107113]
+sprite_frames = ExtResource("4_yc10j")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="sword_t3_back" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=1372373495]
+sprite_frames = ExtResource("5_jscy8")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="warden_t3_back" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=1233006902]
+sprite_frames = ExtResource("6_pm3ni")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="knighthelm_t3_back" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=800870011]
+sprite_frames = ExtResource("7_y6deb")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="body" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=1527227805]
+sprite_frames = ExtResource("8_og1vs")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="cape_t3_front" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=1686097992]
+sprite_frames = ExtResource("9_2wyq8")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="knightgreaves_t3_front" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=1771870418]
+sprite_frames = ExtResource("10_vxglm")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="shield_t3_front" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=991812715]
+sprite_frames = ExtResource("11_2f3dj")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="sword_t3_front" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=879370691]
+sprite_frames = ExtResource("12_yq6so")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="warden_t3_front" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=155355870]
+sprite_frames = ExtResource("13_fv21b")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="knighthelm_t3_front" type="AnimatedSprite2D" parent="Entities/Hero" unique_id=797182646]
+sprite_frames = ExtResource("14_tel4y")
+animation = &"walk_S"
+autoplay = "walk_S"
+centered = false
+offset = Vector2(-26, -49)
+
+[node name="Ogre" type="Sprite2D" parent="Entities" unique_id=2141776474]
+position = Vector2(64, 160)
+texture = SubResource("CanvasTexture_kmb1v")
+centered = false
+offset = Vector2(-40, -72)
+region_enabled = true
+region_rect = Rect2(0, 0, 80, 88)
+
+[node name="tree_round_00" type="Node2D" parent="Entities" unique_id=323884822]
+position = Vector2(-64, 112)
+
+[node name="Trunk" type="Sprite2D" parent="Entities/tree_round_00" unique_id=2080372112]
+texture = ExtResource("17_dgi5k")
+centered = false
+offset = Vector2(-19, -59)
+
+[node name="Canopy" type="Sprite2D" parent="Entities/tree_round_00" unique_id=963025250]
+texture = ExtResource("18_j8jky")
+centered = false
+offset = Vector2(-19, -59)
+
+[node name="OgreLight" type="PointLight2D" parent="." unique_id=1584366524]
+position = Vector2(34, 120)
+color = Color(1, 0.8, 0.55, 1)
+energy = 1.4
+texture = SubResource("GradientTexture2D_pibwh")
+height = 24.0
+
+[node name="Camera" type="Camera2D" parent="." unique_id=768438188]
+position = Vector2(16, 104)
+zoom = Vector2(2, 2)

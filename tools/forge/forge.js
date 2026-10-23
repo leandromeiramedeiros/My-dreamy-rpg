@@ -15,6 +15,8 @@
 //
 //   FORGE.render(model, { dir, anim, frame, pieces })  -> { w, h, rgba, sockets, anim }
 //   FORGE.sheet(model, { pieces, anims })              -> one loadout, rows = dirs, cols = every frame of every anim
+//     render / sheet opt-in { normals: true }          -> also .nrm: an RGBA normal sheet on the same grid (tools/export/art.js
+//                                                         _n.png; screen x right / y up / z out; off = the same bytes as before)
 //   FORGE.bake(model, { piece? | group?, anims? })     -> { w, h, rgba (encoded G-buffer sheet), meta, empty } for a piece or a
 //                                                         base group ('body', 'hair'; every base layer when neither), for
 //                                                         the given anims only (default: all)
@@ -386,6 +388,11 @@ const FORGE = (function () {
       G.flat[i] = M.flat != null ? 1 : 0; G.keep[i] = M.fine || M.keep ? 1 : 0;
       let tn = 0; for (let k = 0; k < TT.length; k++) if (s > TT[k]) { tn = TT.length - k; break; }
       G.tone[i] = M.flat != null ? M.flat : M.spec != null && dot(nn, H) > M.spec ? M.ramp.length - 1 : Math.max(M.lift || 0, tn);
+      if (cam.normals) {                                         // opt-in (render opt.normals, the export's _n sheets): the smooth
+        const n0 = norm(pick.nn);                                // normal before posterising, in screen space (x right, y up, z out)
+        if (!G.nrm) G.nrm = new Float32Array(N * 3);
+        G.nrm[i * 3] = dot(n0, RT); G.nrm[i * 3 + 1] = dot(n0, UP); G.nrm[i * 3 + 2] = -dot(n0, D);
+      }
     }
     // lines: 1 px in screen space, depth-tested inside the layer
     for (const pr of lines) {
@@ -801,6 +808,7 @@ const FORGE = (function () {
   }
   function render(model, opt) {
     const cam = camera(model), stack = assemble(model, opt.pieces), ps = pieceList(opt.pieces);
+    if (opt.normals) cam.normals = true;                         // opt-in: also return nrm (see the end of render)
     const anim = animName(model, opt.anim || 'idle', opt.pieces), f = opt.frame || 0;
     const yaw0 = opt.yaw != null ? opt.yaw * Math.PI / 180 : yawOf(model, opt.dir), extra = ps.filter(p => p.piece.pose).map(p => p.piece.pose);
     const W = pose(model, yaw0, anim, f, extra);
@@ -815,7 +823,20 @@ const FORGE = (function () {
     }
     const rgba = resolve(list, cam.w, cam.h, ro), N = cam.w * cam.h, fine = new Uint8Array(N);
     for (let i = 0; i < N; i++) fine[i] = RS.M[i] >= 0 && RS.KP[i] ? 1 : 0;     // drawn by a fine material (the lint skips it)
-    return { w: cam.w, h: cam.h, rgba, fine, sockets, anim };
+    const out = { w: cam.w, h: cam.h, rgba, fine, sockets, anim };
+    if (opt.normals) out.nrm = normalMap(list, rgba, N);
+    return out;
+  }
+  // opt-in normal map of a resolved frame (RGBA8, x right / y up / z out mapped to 0..255, alpha = the colour's alpha): the
+  // winning layer's smooth normal per pixel; outline and seam pixels with no winner get a flat (0, 0, 1)
+  function normalMap(list, rgba, N) {
+    const out = new Uint8ClampedArray(N * 4);
+    for (let i = 0; i < N; i++) {
+      if (!rgba[i * 4 + 3]) continue;
+      const m = RS.M[i], g = m >= 0 ? list[m >> 8].g : null, n = g && g.nrm && g.cov[i] ? [g.nrm[i * 3], g.nrm[i * 3 + 1], g.nrm[i * 3 + 2]] : [0, 0, 1];
+      out[i * 4] = Math.round((n[0] * 0.5 + 0.5) * 255); out[i * 4 + 1] = Math.round((n[1] * 0.5 + 0.5) * 255); out[i * 4 + 2] = Math.round((n[2] * 0.5 + 0.5) * 255); out[i * 4 + 3] = rgba[i * 4 + 3];
+    }
+    return out;
   }
 
   // ---- sockets only (no raster): the rig's and the pieces' sockets of one frame, for measuring (board.js cape lengths)
@@ -853,15 +874,19 @@ const FORGE = (function () {
       for (let f = 0; f < model.anims[real].frames; f++) layout.push([a, f]);
     }
     const SW = w * layout.length, SH = h * dirs.length, rgba = new Uint8ClampedArray(SW * SH * 4), fine = new Uint8Array(SW * SH), sockets = {};
+    const nrm = opt.normals ? new Uint8ClampedArray(SW * SH * 4) : null;   // opt-in: the normal sheet, same grid
     dirs.forEach(([dn], r) => {
       sockets[dn] = {};
       layout.forEach(([a, f], c) => {
-        const fr = render(model, { dir: dn, anim: a, frame: f, pieces: opt.pieces });
+        const fr = render(model, nrm ? { dir: dn, anim: a, frame: f, pieces: opt.pieces, normals: true } : { dir: dn, anim: a, frame: f, pieces: opt.pieces });
         for (let y = 0; y < h; y++) { rgba.set(fr.rgba.subarray(y * w * 4, (y + 1) * w * 4), ((r * h + y) * SW + c * w) * 4); fine.set(fr.fine.subarray(y * w, (y + 1) * w), (r * h + y) * SW + c * w); }
+        if (nrm) for (let y = 0; y < h; y++) nrm.set(fr.nrm.subarray(y * w * 4, (y + 1) * w * 4), ((r * h + y) * SW + c * w) * 4);
         (sockets[dn][a] = sockets[dn][a] || [])[f] = fr.sockets;
       });
     });
-    return { w: SW, h: SH, rgba, fine, cols: layout.length, rows: dirs.length, layout, frame: [w, h], sockets };
+    const out = { w: SW, h: SH, rgba, fine, cols: layout.length, rows: dirs.length, layout, frame: [w, h], sockets };
+    if (nrm) out.nrm = nrm;
+    return out;
   }
 
   // ---- bake: the G-buffer sheet of one UNIT (a base group of the rig: 'body', 'hair'; or a piece) ---------------

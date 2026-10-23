@@ -1,0 +1,18 @@
+{
+ "id": "mushroom_red",
+ "kind": "mushroom_red",
+ "label": "Toadstool",
+ "size": [
+  8,
+  8
+ ],
+ "origin": [
+  4,
+  7
+ ],
+ "collider_r": 0,
+ "shadow": 0,
+ "light": null,
+ "image": "mushroom_red.png",
+ "frames": null
+}
