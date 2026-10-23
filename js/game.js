@@ -498,7 +498,7 @@ function addSkillHit(p, id) {
   if (after > before) {
     const sk = SKILLS[id], msg = `${sk.name} — Rank ${after}`;
     say(msg); sfx('levelup');
-    if (typeof UI !== 'undefined') UI.toast({ text: msg, icon: typeof skillIcon === 'function' ? skillIcon(id) : null, col: '#ffd35a' });
+    if (typeof UI !== 'undefined') UI.toast({ text: msg, icon: typeof uiSkillIcon === 'function' ? uiSkillIcon(id) : null, framed: typeof ICONS !== 'undefined' && !!ICONS.skill, col: '#ffd35a' });
   }
 }
 // ultimate charge: fed by the pre-multiplier damage of every hit (level-independent), reactions x2 (M4)

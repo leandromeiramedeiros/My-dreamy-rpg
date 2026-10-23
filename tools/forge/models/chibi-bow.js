@@ -11,12 +11,12 @@
 const { TIERS, metal, METAL, GOLD, WOOD, LEATHER, RUBY, SAPPHIRE, CORE, HOLYG, piece, glowOf, notAttack, fine, cp, el, dc } = require('./chibi-wpal.js');
 
 function bow(t) {
-  const M = t === 6, O = 'offhand', hl = [11.5, 12.5, 13.0, 13.4, 13.8, 14.0][t - 1], bz = -4.2;
+  const M = t === 6, O = 'offhand', hl = [13.5, 14.5, 15.0, 15.4, 13.8, 14.0][t - 1], bz = -4.2, RK = t <= 4 ? 1.3 : 1;   // T1-T4: +2 limb length, 1.3x limb girth (they read faint at x1)
   const mats = { limb: t === 1 ? WOOD : t === 5 ? CORE : M ? HOLYG : t === 2 ? WOOD : metal(METAL[Math.min(t, 4) - 1]), riser: M ? metal(METAL[5]) : t === 5 ? GOLD : t >= 3 ? metal(METAL[Math.min(t, 4) - 1]) : WOOD,
     grip: LEATHER, gold: GOLD, iron: metal(METAL[1]), gem: t === 3 ? RUBY : M ? HOLYG : SAPPHIRE, ray: fine(M ? HOLYG : GOLD),
     str: fine(t === 5 ? CORE : { ramp: ['#3a2c1c', '#5c4630', '#8c7352', '#c4ab80'] }), glow: glowOf('holy') };
   const P = [];
-  for (const s of [1, -1]) P.push(cp(O, 'limb', 'limb', [0, s * 1.6, 0], [0, s * hl * 0.55, bz * 0.35], 1.15, 0.95), cp(O, 'limb', 'limb', [0, s * hl * 0.55, bz * 0.35], [0, s * hl, bz], 0.95, 0.5),
+  for (const s of [1, -1]) P.push(cp(O, 'limb', 'limb', [0, s * 1.6, 0], [0, s * hl * 0.55, bz * 0.35], 1.15 * RK, 0.95 * RK), cp(O, 'limb', 'limb', [0, s * hl * 0.55, bz * 0.35], [0, s * hl, bz], 0.95 * RK, 0.5 * RK),
     cp(O, 'str', 'string', [0, s * hl, bz], [0, s * 0.4, bz], 0.55, 0.55));
   P.push(cp(O, 'riser', 'riser', [0, -2.2, 0], [0, 2.2, 0], 1.5, 1.5), cp(O, 'grip', 'grip', [0, -1.5, 0.2], [0, 1.5, 0.2], 1.65, 1.65));
   if (t >= 2) for (const s of [1, -1]) P.push(el(O, t === 2 ? 'iron' : 'gold', 'cap', [0, s * hl, bz], [0.8, 0.9, 0.8]));
@@ -31,9 +31,9 @@ function bow(t) {
     P.push(el(O, 'gem', 'gem', [0, 0, 1.4], [1.0, 1.0, 0.7]), el(O, 'gold', 'cap', [0, hl, bz], [0.8, 0.9, 0.8]), el(O, 'gold', 'cap', [0, -hl, bz], [0.8, 0.9, 0.8]));
     stamps.push({ bone: O, at: [0, hl * 0.55, bz * 0.35 + 0.9], n: [0, 0, 1], facing: 0.2, on: 'limb', px: [[0, -1, 'glow'], [0, 0, 'glow'], [0, 1, 'glow']] });
   }
-  const hold = { rest: [0.5, 0.78, 0.35], cast: [-0.1, 0.9, 0.4], hit: [-0.1, 0.95, 0.3], dash: [0.1, 0.8, -0.6] };
+  const hold = { rest: [0.55, 0.8, 0.4], cast: [-0.1, 0.9, 0.4], hit: [-0.1, 0.95, 0.3], dash: [0.1, 0.8, -0.6] };
   return piece('bow', 'weapon', t, { mats, prims: P, stamps }, { class: 'bow', sockets: { tip: { bone: O, at: [0, hl + 2, bz] } },
-    pose: notAttack(a => ({ offhand: { aim: a === 'cast' ? hold.cast : a === 'hit' ? hold.hit : a === 'dash' ? hold.dash : hold.rest, roll: a === 'cast' || a === 'hit' || a === 'dash' ? [0, 0, 1] : [1, 0, 0] } })) });
+    pose: notAttack(a => ({ offhand: { aim: a === 'cast' ? hold.cast : a === 'hit' ? hold.hit : a === 'dash' ? hold.dash : hold.rest, roll: a === 'cast' || a === 'hit' || a === 'dash' ? [0, 0, 1] : [0, 0, 1] } })) });
 }
 
 const pieces = {};

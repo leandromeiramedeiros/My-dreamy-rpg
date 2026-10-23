@@ -39,13 +39,13 @@ function frostweave(t) {
   const M = t === 6, mats = matsOf(t), P = [], stamps = [];
   P.push(...torso('cloth', 'robe', { k: 1.02, kz: 1.02 }),
     ...arms({ up: 'cloth', fore: t >= 2 ? 'fur' : 'cloth', hand: t >= 2 ? 'fur' : 'dark' }, { k: 1.15 }),
-    { bone: 'hips', mat: 'cloth', part: 'skirt', shape: 'cap', a: [0, 0.8, 0], b: [0, -3.2, 0], ra: 4.5, rb: 5.0 },                  // the robe skirt
+    { bone: 'hips', mat: 'cloth', part: 'skirt', shape: 'cap', a: [0, 0.8, 0], b: [0, -1.0, 0], ra: 4.5, rb: 4.7, clip: [0, -1, 0, 2.6] },   // the robe skirt: a flat hem at the knee (the capsule's round end used to reach the feet), so the legs read
     { bone: 'chest', mat: 'fur', part: 'collar', shape: 'ell', c: [0, 4.2, 0.2], r: [4.5, 1.5, 3.6] },
-    { bone: 'spine', mat: 'dark', part: 'belt', shape: 'disc', c: [0, 3.0, 0], r: [5.1, 0.55, 4.1], weight: 2 });
+    { bone: 'spine', mat: 'dark', part: 'belt', shape: 'disc', c: [0, 3.0, 0], r: [5.1, 0.55, 4.1], weight: 2 },
+    { bone: 'hips', mat: t >= 3 ? 'metal' : 'fur', part: 'hem', shape: 'disc', c: [0, -2.2, 0], r: [4.85, 0.5, 4.85] });   // a hem band: a tone break between the robe and the legs
   if (t >= 2) P.push({ bone: 'spine', mat: 'fur', part: 'tassel', shape: 'box', c: [2.2, -1.6, 4.0], h: [0.55, 2.6, 0.3], round: 0.2 },
     ...both((s, k) => [{ bone: 'upper' + s, mat: 'fur', part: 'mantle' + s, shape: 'ell', c: [0.4 * k, 0.7, 0], r: [3.0, 2.4, 2.9], clip: [0, -1, 0, 0.9] }]));
   if (t >= 3) P.push({ bone: 'spine', mat: 'metal', part: 'clasp', shape: 'ell', c: [0, 3.0, 4.1], r: [0.9, 0.8, 0.4] },
-    { bone: 'hips', mat: 'metal', part: 'hem', shape: 'disc', c: [0, -3.0, 0], r: [5.05, 0.4, 4.6] },
     ...both((s, k) => [spike('upper' + s, 'ice', 'mantle' + s, [1.6 * k, 2.2, -0.2], [2.8 * k, 5.0, -0.6], 1.0, 0.14)]));
   if (t >= 4) P.push({ bone: 'chest', mat: 'ice', part: 'gem', shape: 'ell', c: [0, 3.4, 3.6], r: [0.8, 1.0, 0.5] },
     ...both((s, k) => [spike('upper' + s, 'ice', 'mantle' + s, [3.2 * k, 1.8, 0.2], [5.4 * k, 4.4, -0.2], 1.0, 0.14),
@@ -63,8 +63,8 @@ function frostweave(t) {
 function frostweaveboots(t) {
   const M = t === 6, mats = matsOf(t), stamps = [];
   const P = both((s, k) => {
-    const L = [...boots('cloth', 'boot', { k: 1.0, len: 1.0, top: 0.2 }).filter(p => p.bone.endsWith(s)),
-      { bone: 'shin' + s, mat: t >= 2 ? 'fur' : 'dark', part: 'cuff' + s, shape: 'ell', c: [0, -0.1, 0], r: t >= 2 ? [2.6, 1.2, 2.6] : [2.2, 0.7, 2.2] }];
+    const L = [...boots('dark', 'boot', { k: 0.85, len: 1.0, top: 0.2 }).filter(p => p.bone.endsWith(s)),   // dark boots under the pale robe: the legs split from the hem
+      { bone: 'shin' + s, mat: 'fur', part: 'cuff' + s, shape: 'ell', c: [0, -0.1, 0], r: t >= 2 ? [2.4, 1.1, 2.4] : [2.0, 0.7, 2.0] }];
     if (t >= 3) L.push({ bone: 'foot' + s, mat: 'metal', part: 'toe' + s, shape: 'ell', c: [0, -1.4, 3.4], r: [1.2, 0.7, 0.7] },
       { bone: 'shin' + s, mat: 'metal', part: 'clasp' + s, shape: 'ell', c: [0, -1.5, 1.8], r: [0.7, 0.5, 0.4] });
     if (t >= 4) L.push(spike('foot' + s, 'ice', 'tip' + s, [0, -0.6, 3.6], [0, 0.4, 5.6], 0.9, 0.12),

@@ -39,6 +39,10 @@ Element colours come from `ICONS.elementColor`.
   Cooldown = clockwise radial wipe at 70% dark with seconds centred. Not enough MP = desaturated icon with the tag tinted blue.
   Unavailable (rooted, dashing) = 50% dim. An uncharged ultimate shows its chord tag dim. Pockets show a charge pip row.
 * Minimap (top-right): 112x112 at (832,16), rounded-diamond frame, fog of war, hero arrow, enemies as 4 px dots, objective as a pulsing diamond.
+* Full map on touch (ruling 2026-10-23, follows controls.md "Map: button under the tracker"): the map button sits in the row under the tracker
+  (bag, map, help, fullscreen). The minimap is not a touch target (a mouse click on it still opens the full map), so a stray thumb in the top-right
+  corner never opens it. Open, the full map shows a close button (X, at least 44 CSS px) at the top of its panel, left of the mode label;
+  on touch, a tap anywhere that is not one of its controls (X, a shrine row) also closes it. M, Esc and pad Back still close it.
 * Objective tracker (top-left): no panel. Zone name in gold at (16,16); objective at (16,40) with a diamond bullet; up to 2 quest lines in small dim text.
   Fades to 45% after 6 s and returns to 100% on change. The enemy counter shows only during a wave.
 * Boss bar (top-centre): name centred at (480,14) with phase pips; bar 480x14 at (240,34) with ghost lag, segmented per phase;

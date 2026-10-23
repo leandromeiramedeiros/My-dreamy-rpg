@@ -544,11 +544,20 @@ class TouchDriver {
     const tp = [...this.pts.entries()].map(([id, q]) => ({ x: c.l + q.x / c.DW * c.w, y: c.t + q.y / c.DH * c.h, id }));
     await this.cdp.send('Input.dispatchTouchEvent', { type, touchPoints: tp });
   }
-  async down(id, x, y) { this.pts.set(id, { x, y }); await this.send('touchStart'); }
-  async mv(id, x, y) { this.pts.set(id, { x, y }); await this.send('touchMove'); }
-  async up(id) { if (!this.pts.has(id)) return; const q = this.pts.get(id); await this.send('touchMove'); const c = this.cv; const tp = [...this.pts.entries()].filter(([k]) => k !== id).map(([k, v]) => ({ x: c.l + v.x / c.DW * c.w, y: c.t + v.y / c.DH * c.h, id: k })); await this.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: tp }); this.pts.delete(id); }
+  // CDP touch semantics (Chromium): touchStart / touchMove carry every active point; touchEnd / touchCancel RELEASE the points they
+  // list (an empty list releases all). The old up() sent the *other* points with touchEnd, so it lifted the stick / attack fingers
+  // and leaked the tapped one: after 16 taps CDP refused every event ("Exceeded maximum touch points limit of 16") and the run hung.
+  async down(id, x, y) { if (this.pts.has(id)) await this.up(id); this.pts.set(id, { x, y }); await this.send('touchStart'); }
+  async mv(id, x, y) { if (!this.pts.has(id)) return this.down(id, x, y); this.pts.set(id, { x, y }); await this.send('touchMove'); }
+  async up(id) {
+    if (!this.pts.has(id)) return;
+    const c = this.cv || await this.c(), q = this.pts.get(id);
+    this.pts.delete(id);
+    await this.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [{ x: c.l + q.x / c.DW * c.w, y: c.t + q.y / c.DH * c.h, id }] });
+  }
+  async releaseAll() { this.pts.clear(); this.stick = null; this.atkOn = false; try { await this.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); } catch (e) { /* nothing held */ } }
   async btn(slot) { const b = (await this.page.evaluate(() => window.__qa.touchBtns())).find(q => q.slot === slot); return b; }
-  async tapAt(x, y, ms = 70) { const id = 50 + ((Math.random() * 40) | 0); await this.down(id, x, y); await sleep(ms); await this.up(id); await sleep(40); }
+  async tapAt(x, y, ms = 70) { const id = this.tapId = 50 + (((this.tapId || 50) - 49) % 40); await this.down(id, x, y); await sleep(ms); await this.up(id); await sleep(40); }   // ids 50..89 in turn, never a live one
   async tapBtn(slot) { const b = await this.btn(slot); if (!b) return false; await this.tapAt(b.x, b.y); return true; }
   async move(sx, sy) {
     const m = Math.hypot(sx, sy);
@@ -572,13 +581,13 @@ class TouchDriver {
     if (cand) { await this.tapAt(cand.x + cand.w / 2, cand.y + cand.h / 2); return; }
     await this.tapAt(930, 20);
   }
-  async closeMap() { await this.tapAt(480, 500); }
-  async openMap() { await this.tapAt(880, 70); }
+  async closeMap() { const r = await this.page.evaluate(() => typeof fullMapCloseRect === 'function' ? fullMapCloseRect() : null); if (r) await this.tapAt(r.x + r.w / 2, r.y + r.h / 2); else await this.tapAt(480, 300); }   // the X (hud.js)
+  async openMap() { const m = (await this.page.evaluate(() => window.__qa.touchMenu())).find(q => q.id === 'map'); if (m) await this.tapAt(m.x + m.w / 2, m.y + m.h / 2); }   // the map button under the tracker
   async respawn() { const fl = await this.page.evaluate(() => window.__qa.focusList()); const r = fl.find(q => q.id === 'btn:wake'); if (r) await this.tapAt(r.x + r.w / 2, r.y + r.h / 2); else await this.tapAt(480, 320); }
   async title() { await this.tapAt(480, 372); await sleep(900); }
   async openBag() { const m = (await this.page.evaluate(() => window.__qa.touchMenu())).find(q => q.id === 'gear'); await this.tapAt(m.x + m.w / 2, m.y + m.h / 2); }
   async clickDisp(x, y) { await this.tapAt(x, y, 90); }
-  async reset() { await this.move(0, 0); await this.attack(false); }
+  async reset() { await this.move(0, 0); await this.attack(false); await this.releaseAll(); }
 }
 
 async function launch(opts = {}) {

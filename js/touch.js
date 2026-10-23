@@ -71,11 +71,12 @@ function touchHit(x, y) {
   for (const b of touchButtons()) { const d = Math.hypot(x - b.x, y - b.y); if (d < b.r + 6 && d / b.r < bd) { bd = d / b.r; best = b; } }
   return best;
 }
-// three 40x40 icon buttons under the tracker: bag, help, fullscreen
+// four 40x40 icon buttons under the tracker: bag, map, help, fullscreen (controls.md: on touch the full map opens from the button
+// under the tracker, never from the minimap, so a stray tap in the top-right corner cannot open it; hud-ui.md "Full map on touch")
 function touchMenu() {
   const sf = TSAFE();
   const d = touchSize(40);
-  return ['gear', 'help', 'full'].map((id, i) => ({ id, x: sf.l + i * (d + 4), y: Math.max(112, sf.t + 88), w: d, h: d }));
+  return ['gear', 'map', 'help', 'full'].map((id, i) => ({ id, x: sf.l + i * (d + 4), y: Math.max(112, sf.t + 88), w: d, h: d }));
 }
 
 function toDisplay(ev) {
@@ -113,8 +114,11 @@ function onTouchDown(ev) {
   if (G.state === 'dead') { uiClick(x, y); return; }
   if (G.ui.help) { if (!uiClick(x, y)) G.ui.help = false; return; }
   if (G.ui.open || G.ui.pause) { menuPress(ev, x, y); return; }
+  // full map open: a tap on one of its controls (the close button, a shrine row) acts; a tap anywhere else closes it (like help)
+  if (G.ui.map) { if (!uiClick(x, y) && typeof closeFullMap === 'function') closeFullMap(); return; }
   for (const m of touchMenu()) if (x >= m.x && x < m.x + m.w && y >= m.y && y < m.y + m.h) {
     if (m.id === 'gear') { if (G.state === 'play') IN.touchTap('inventory'); }
+    else if (m.id === 'map') { if (typeof openFullMap === 'function') openFullMap(); }
     else if (m.id === 'help') G.ui.help = true;
     else tryFullscreen();
     return;

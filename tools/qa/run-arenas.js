@@ -33,20 +33,14 @@ async function runOne(id) {
   let mapForced = 0, touchResets = 0;
   if (PASS === 'touch') {
     await drv.init();
-    // finding (touch.js): once the full map is open (a stray tap on the minimap) no touch control closes it -- no map / back / pause
-    // action reaches it from touch -- so the Bot would wait forever. The harness closes it directly and counts it (printed in the note).
-    const tapAt0 = drv.tapAt.bind(drv), lastTaps = [];
+    // the full map should never open during a touch run (no minimap tap on touch); count it if it does (a finding), the driver closes it by touch
+    const tapAt0 = drv.tapAt.bind(drv), lastTaps = [], close0 = drv.closeMap.bind(drv);
     drv.tapAt = async (x, y, ms) => { lastTaps.push([Math.round(x), Math.round(y), +(now() / 1000).toFixed(1)]); if (lastTaps.length > 4) lastTaps.shift(); return tapAt0(x, y, ms); };
-    drv.closeMap = async () => { mapForced++; if (mapForced <= 3) bot.log('full map open; closing', { lastTaps }); await page.evaluate(() => closeFullMap()); };
-    // the lib TouchDriver leaks touch points (CDP "Exceeded maximum touch points limit of 16"): release everything and carry on
+    drv.closeMap = async s => { mapForced++; if (mapForced <= 3) bot.log('full map open; closing by touch', { lastTaps }); await close0(s); };
+    // any CDP touch error is a driver bug now (the point leak is fixed in lib.js): count it, release everything, carry on
     const send0 = drv.send.bind(drv);
     drv.send = async type => {
-      try { return await send0(type); } catch (e) {
-        if (!/touch points limit/.test(e.message)) throw e;
-        touchResets++; drv.pts.clear(); drv.stick = null; drv.atkOn = false;
-        try { await drv.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); } catch (e2) { /* ignore */ }
-        try { await drv.cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] }); } catch (e2) { /* ignore */ }
-      }
+      try { return await send0(type); } catch (e) { touchResets++; if (touchResets <= 3) bot.log('touch send error ' + e.message); await drv.releaseAll(); }
     };
   }
   const bot = new Bot(page, drv, `arena-${id}-${PASS}`);
@@ -134,8 +128,8 @@ async function runOne(id) {
   const fs0 = await bot.snap().catch(() => null);
   res.deaths = fs0 && fs0.deaths != null ? fs0.deaths - d0 : 0;
   res.gameSec = +((now() - t0) / 1000).toFixed(1); res.realSec = +((Date.now() - r0) / 1000).toFixed(1);
-  if (mapForced) res.note += (res.note ? '; ' : '') + 'full map closed by harness x' + mapForced + ' (no touch control closes it)';
-  if (touchResets) res.note += (res.note ? '; ' : '') + 'touch points reset x' + touchResets + ' (lib TouchDriver leak)';
+  if (mapForced) res.note += (res.note ? '; ' : '') + 'full map opened during play x' + mapForced + ' (closed by touch)';
+  if (touchResets) res.note += (res.note ? '; ' : '') + 'touch send errors x' + touchResets;
   if (errors.length) { res.note += (res.note ? '; ' : '') + errors.length + ' page error(s): ' + errors[0].msg.slice(0, 80); if (res.result === 'WIN') res.result = 'WIN*'; }
   bot.out.result = res; bot.out.errors = errors; bot.out.mode = { turbo: TURBO, god: GOD, seed: SEED };
   try { await bot.closeMap(now()); } catch (e) { /* */ }

@@ -262,7 +262,7 @@ function drawStatusRow(ctx, p, x0, y0, rightAlign) {
 function slotIcon(p, st) {
   if (st.slot === 'lmb') return uiItemIcon(p.equip.weapon);
   if (st.pocket) { const P = POCKETS[st.pocket]; return P ? (st.pocket === 'potion' ? miscIcon('potion') : icon(P.icon, P.color)) : null; }
-  return st.id ? skillIcon(st.id) : null;
+  return st.id ? uiSkillIcon(st.id) : null;   // the 24 px framed art (icons.js); hudIcon draws it 1:1
 }
 // The Hush (combat-feel.md): the world slows while the hero does not. M4a draws it as a cool tint over the scene that follows
 // G.timeScale (no desaturation / audio filter yet: the Lighting lane owns render.js).
@@ -430,7 +430,8 @@ function drawMinimap(ctx, p, X, Y) {
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(mi.shown, X, Y, 112, 112);
   UI.sprite(ctx, 'minimap', X, Y, { scale: 2 });
-  if (G.state === 'play' && !G.ui.map && !G.ui.open && !G.ui.pause && typeof openFullMap === 'function') UI.hit(X, Y, 112, 112, () => openFullMap(), { id: 'hud-minimap' });
+  // mouse only: on touch the full map opens from the map button under the tracker (hud-ui.md "Full map on touch"), so a stray tap here does nothing
+  if (G.state === 'play' && !G.touch && IN.device !== 'touch' && !G.ui.map && !G.ui.open && !G.ui.pause && typeof openFullMap === 'function') UI.hit(X, Y, 112, 112, () => openFullMap(), { id: 'hud-minimap' });
   const mp = (x, y) => { const [a, b] = miniAt(mi, x, y); return [X + (a - wx + 28) * 2, Y + (b - wy + 28) * 2]; };
   const inside = (px, py) => Math.abs(px - (X + 56)) + Math.abs(py - (Y + 56)) < 46;
   for (const e of G.enemies) {
@@ -706,10 +707,33 @@ function drawHUD(ctx) {
   if (p && G.state === 'play') drawHushTint(ctx, p);
   drawPlayHud(ctx, p, modal);
   if (G.touch && G.state === 'play' && !modal) drawTouchControls(ctx);
-  if (u.map && typeof drawFullMap === 'function') drawFullMap(ctx);   // full-map screen (screens.js)
+  if (u.map && typeof drawFullMap === 'function') { drawFullMap(ctx); drawFullMapClose(ctx); }   // full-map screen (screens.js) + its close button
   if (u.pause) drawPause(ctx);
   if (u.help) drawHelp(ctx);
   if (G.state === 'dead') drawDeath(ctx);
+}
+// the touch map button's glyph: a small rounded diamond (the minimap's shape) with the hero dot, centred on (cx, cy)
+function drawMapGlyph(ctx, cx, cy) {
+  ctx.fillStyle = UC.text;
+  for (let k = 0; k <= 12; k += 2) { const w = 2 + k * 2; ctx.fillRect(cx - w / 2, cy - 14 + k, w, 2); ctx.fillRect(cx - w / 2, cy + 12 - k, w, 2); }
+  ctx.fillStyle = '#15102a'; for (let k = 2; k <= 12; k += 2) { const w = k * 2 - 4; if (w > 0) { ctx.fillRect(cx - w / 2, cy - 14 + k, w, 2); ctx.fillRect(cx - w / 2, cy + 12 - k, w, 2); } }
+  ctx.fillStyle = '#4a9a63'; for (let k = 4; k <= 12; k += 2) { const w = k * 2 - 8; if (w > 0) { ctx.fillRect(cx - w / 2, cy - 14 + k, w, 2); ctx.fillRect(cx - w / 2, cy + 12 - k, w, 2); } }
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 2, cy - 2, 4, 4);
+}
+// full map close button (hud-ui.md "Full map on touch"): top-right of the map panel, at least 44 CSS px on touch; a tap anywhere
+// else that is not a control also closes it on touch (touch.js onTouchDown). Mouse can click it too; M / Esc / pad Back still close.
+// It sits at the panel top, just left of the mode label (MAP / SHRINE WARP, screens.js, right-aligned at x 912) so it never covers it.
+function fullMapCloseRect() {
+  const d = G.touch && typeof touchSize === 'function' ? touchSize(40) : 32, lw = UI.measure('SHRINE WARP', 'small');   // the longer label: one fixed spot
+  return { x: 912 - lw - 2 - d, y: 26, w: d, h: d };
+}
+function drawFullMapClose(ctx) {
+  if (!G.ui.map || typeof closeFullMap !== 'function') return;
+  const r = fullMapCloseRect(), cx = r.x + r.w / 2, cy = r.y + r.h / 2, s = Math.max(6, Math.floor(r.w / 5));
+  UI.frame(ctx, r.x, r.y, r.w, r.h, 'plain');
+  ctx.fillStyle = UC.text;
+  for (let k = -s; k < s; k += 2) { ctx.fillRect(UI.snap(cx + k), UI.snap(cy + k), 2, 2); ctx.fillRect(UI.snap(cx + k), UI.snap(cy - k - 2), 2, 2); }
+  UI.hit(r.x, r.y, r.w, r.h, () => closeFullMap(), { id: 'map:close' });
 }
 
 
@@ -722,7 +746,7 @@ function touchBtn(ctx, x, y, r, col, o = {}) {
   if (o.lift) { ctx.fillStyle = '#05030c'; ctx.globalAlpha *= 0.4; ctx.beginPath(); ctx.arc(x, y + 2, r, 0, 7); ctx.fill(); ctx.globalAlpha /= 0.4; y -= o.lift; }
   ctx.fillStyle = '#15102a'; ctx.globalAlpha *= 0.8; ctx.beginPath(); ctx.arc(x, y, r - 2, 0, 7); ctx.fill(); ctx.globalAlpha /= 0.8;
   ctx.lineWidth = 2; ctx.strokeStyle = '#0b0716'; ctx.beginPath(); ctx.arc(x, y, r - 1, 0, 7); ctx.stroke();
-  { const is = o.iconSize || 32; if (o.icon) hudIcon(ctx, o.icon, x - is / 2, y - is / 2, { gray: o.gray, size: is }); }
+  { const is = o.iconSize || (o.icon && o.icon.width === 24 ? 24 * Math.max(1, Math.floor(r * 1.2 / 24)) : 32); if (o.icon) hudIcon(ctx, o.icon, x - is / 2, y - is / 2, { gray: o.gray, size: is }); }   // 24 px art at an integer scale
   if (o.cdFrac > 0) {   // clockwise radial wipe at 70 % dark
     ctx.save(); ctx.beginPath(); ctx.arc(x, y, r - 4, 0, 7); ctx.clip();
     ctx.fillStyle = '#0b0716'; ctx.globalAlpha *= 0.7; ctx.beginPath(); ctx.moveTo(x, y);
@@ -810,11 +834,12 @@ function drawTouchControls(ctx) {
   const cf = touchChargeFrac(p), hb = Object.values(TOUCH.ptrs).find(t => t.kind === 'btn' && t.b.slot === 'atk');
   if (cf > 0 && hb) UI.ring(ctx, hb.b.x, hb.b.y, hb.b.r - 7, cf, mixHex('#ffffff', UC.gold, cf), 3);
   drawTouchCancel(ctx);
-  // bag / help / fullscreen
+  // bag / map / help / fullscreen
   for (const m of touchMenu()) {
     UI.frame(ctx, m.x, m.y, m.w, m.h, 'plain');   // m.w grows past 40 on a scaled-down phone canvas (touch.js touchSize: 44 CSS px)
     const mx = m.x + Math.floor((m.w - 40) / 2), my = m.y + Math.floor((m.h - 40) / 2);
     if (m.id === 'gear') ctx.drawImage(miscIcon('chest'), mx + 4, my + 4, 32, 32);
+    else if (m.id === 'map') drawMapGlyph(ctx, mx + 20, my + 20);
     else if (m.id === 'help') UI.sprite(ctx, 'help', mx + 8, my + 8, { scale: 2 });
     else { ctx.fillStyle = UC.text; for (const [cx, cy, dx, dy] of [[10, 10, 1, 1], [30, 10, -1, 1], [10, 30, 1, -1], [30, 30, -1, -1]]) { ctx.fillRect(mx + cx - (dx < 0 ? 6 : 0), my + cy - (dy < 0 ? 2 : 0), 6, 2); ctx.fillRect(mx + cx - (dx < 0 ? 2 : 0), my + cy - (dy < 0 ? 6 : 0), 2, 6); } }
   }
