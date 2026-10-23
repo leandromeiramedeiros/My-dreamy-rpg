@@ -52,4 +52,4 @@ Each fails the gate.
 `node tools/check.js` runs: smoke (balsim + save-migrate), `tools/play.js`, `tools/arena-route.js`, `tools/validate-ids.js` (including the data-export round trip),
 `tools/perf.js` and `tools/qa/run-arenas.js kbm|pad|touch`. Arenas: [arenas.md](arenas.md).
 Perf budgets, measured on the `stress` arena: phone p95 at most 20.0 ms, desktop at most 16.7 ms.
-The Bot fights each `pack-*` and `boss-*` arena with reference gear per band; `--god` stays blocker-only.
+Boss fight times are judged with the in-game reference tier at the boss's level (Act II: T2 at L12 to L14), never a higher band. The Bot fights each `pack-*` and `boss-*` arena with reference gear per band; `--god` stays blocker-only.

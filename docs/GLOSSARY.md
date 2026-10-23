@@ -670,7 +670,9 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Sunken Grotto | Zone 4 | — | — | later |
 | Tide Well | Set piece | — | — | client |
 | Vantage | A high viewpoint set piece, e.g. Hawk's Rest | `vantage` | — | live |
-| Warden Crypt | Vault section | — | — | M4b |
+| Oath Reliquary | Ruins vault section; the Oathless's den | — | — | client |
+| Warden Crypt | Vault section | — | — | client |
+| Warden's Hall | Ruins guardian arena; the Gloam Warden | — | — | client |
 | Whispering Vale | Zone 1, the hub | — | — | live |
 | Zone | One of the eight areas of the world; the client builds each in Godot | — | Big map (retired) | live |
 
