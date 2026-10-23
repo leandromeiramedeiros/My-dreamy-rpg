@@ -18,7 +18,8 @@ function mace(t) {
     tassel: ['#8a2238', '#b8324a', '#e0475e', '#ff8a9a'], glow: glowOf('lightning') };
   const W = 'weapon', P = [cp(W, 'haft', 'haft', [0, -2.6, 0], [0, HEAD - 1.2, 0], 0.72, 0.68), cp(W, 'grip', 'grip', [0, -1.6, 0], [0, 1.6, 0], 0.95, 0.95)];
   P.push(el(W, 'head', 'head', [0, HEAD, 0], [rH, rH * 1.12, rH]));
-  if (t === 1) P.push(...[[1.9, 0.6, 0.9], [-1.4, -0.4, 1.7], [0.2, 1.6, -1.8]].map(([x, y, z]) => el(W, 'iron', 'nail', [x, HEAD + y, z], [0.5, 0.5, 0.5])));
+  if (t === 1) P.push(...spokes(W, 'iron', 'flange', [0, HEAD, 0], 6, rH * 0.7, rH + 1.9, 1.0, 0.55, 0, 'xz'), dc(W, 'iron', 'ring', [0, HEAD - rH * 0.55, 0], [rH + 0.4, 0.45, rH + 0.4]),
+    ...[0, 1, 2, 3, 4, 5].map(i => { const a = i * Math.PI / 3 + 0.5; return el(W, 'iron', 'stud', [Math.cos(a) * (rH + 1.5), HEAD, Math.sin(a) * (rH + 1.5)], [0.65, 0.65, 0.65]); }), el(W, 'iron', 'stud', [0, HEAD + rH * 1.12 + 0.3, 0], [0.7, 0.7, 0.7]));
   if (t >= 2) P.push(...spokes(W, 'flange', 'flange', [0, HEAD, 0], 6, rH * 0.6, rH + 2.0, 1.05, 0.6, 0, 'xz'), el(W, 'iron', 'pommel', [0, -2.9, 0], [0.9, 0.8, 0.9]));
   if (t >= 3) P.push(dc(W, 'gold', 'collar', [0, HEAD - rH - 0.1, 0], [1.2, 0.35, 1.2]), el(W, 'gold', 'pommel', [0, -3.1, 0], [1.1, 1.0, 1.1]), dc(W, 'gold', 'band', [0, 3.0, 0], [1.0, 0.3, 1.0]));
   if (t === 3) P.push(el(W, 'gem', 'gem', [0, HEAD + rH + 0.2, 0], [0.95, 0.95, 0.95]), dc(W, 'gold', 'crown', [0, HEAD + rH - 0.5, 0], [1.1, 0.3, 1.1]));
