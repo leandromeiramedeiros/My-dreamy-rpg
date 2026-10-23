@@ -19,6 +19,11 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
   base hero bare (casual clothes only, all gear layered at runtime); held items keep their own outline (client pick B);
   approval is by the client's eye (scores are info).
 
+- M4a merged (PR #10) and live. codex-image is the studio's raster artist, for art outside the forge only (never hero,
+  gear, enemies, item icons). First board (git-ignored, tools/out/art/board.png): title wordmark + dialogue portraits
+  for Pip, Elder Stone, Fox kit, palette-snapped to native size (portraits ~44 px shown x2 in the 88 px slot). Awaiting
+  the client's eye; on approval: ruling into visual-bible.md, a Sonnet lane embeds them as data-URI PNGs (file://).
+
 ## Next
-1. M4a merged to claude/dreamy-rpg-concept → client plays the slice on the live site (desktop + phone) → their notes.
+1. Client verdict on the art board; client plays the M4a slice on the live site (desktop + phone) → their notes.
 2. After all branches merge: purge tools/qa/old from history (filter-repo + force-push; client-approved).
