@@ -30,8 +30,12 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
 - Lane worktrees start at origin's default branch: every brief begins with `git merge --ff-only claude/m4b`.
   Director commits each worktree on its branch and merges into claude/m4b; after Gear A + B merge, rerun
   `node tools/forge/build.js chibi` (js/forge-bank/chibi.js is a generated manifest both touch).
-- Usage pace (client, 2026-10-23): **two lanes at a time**. Skill visuals and Map cut run; when one finishes, resume the
-  next paused lane (SendMessage, full scope) in this order: Elements (the `verbs` arena), then Balance + QA (touch bot, gloomknight, polish backlog).
+- Usage pace (client, 2026-10-23): **two lanes at a time**. Map cut and Elements (the `verbs` arena; also fixes Glide's
+  frost trail) run; next: Balance + QA (touch bot, gloomknight, polish backlog). Elements must `git merge claude/m4b`
+  after Map cut merges (both touch arenas.js / game.js in different places).
+- Skill visuals merged: decoys, chakram disc, cracks, frost trail, consecrate, Fortress dome, held poses, 79 skill icons,
+  Codex Grips (inside BESTIARY; undiscovered Grips show ???). Stress p95 18.2 ms. Balance + QA backlog: action bar
+  (hud.js:265) and toast (game.js:501) still use old `skillIcon()`; switch to `uiSkillIcon()`.
 - Wave 1 complete. Gear A merged: 11 suits x 3 x 6 (per-piece lazy .atk banks; forge-rt-check all PASS). Polish backlog:
   Frostweave robe reads as a blob (no legs/silhouette).
 - Enemy forge merged: 20 rigs at 8 dirs incl. 4 bosses (base + moves rigs); perf p95 18.0 ms. enemyart.js still used by
