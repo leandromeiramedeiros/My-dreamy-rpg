@@ -60,7 +60,13 @@ GL Compatibility, web export). Contract: `docs/PORTING.md` (folder tree, autoloa
 * **When:** after M9. Systems, tables and art are frozen by then, so nothing is ported twice. The risk is found early by the
   **port spike** in M5: hero movement, one weapon line's hand action and spell, damage and one status ladder, one enemy
   (Ogre) in `godot-sample/`, matched against golden vectors from the JS build.
-* **Data, not code:** every number is read from the exported JSON (`handoff/data/`); GDScript holds only the maths.
+* **Data, not code:** every number lives in data; GDScript holds only the maths.
+* **Editor-first authoring (client ruling 2026-10-23):** everything is a Godot `Resource` (`.tres`: EnemyData, ItemData,
+  SkillData, LootTable, Effect, StatusData, BossMove, SfxData…) edited in the Inspector, and every placeable is a scene the
+  client drags into a zone (enemy, chest, shrine, gate, trigger, receiver). Enemy behaviour is picked from part components
+  (one movement, 1 to 2 attacks, 0 to 1 support) in dropdowns; loot, effects, audio and resists are slots on the resource.
+  A **Data table** editor dock shows each table as a spreadsheet (sort, filter, edit in place). Saving a `.tres` while the
+  game runs from the editor hot-reloads it into live bodies. The JSON export is only the one-time seed of the resources.
 * **Arenas only:** the studio rebuilds the mockup arenas as Godot scenes (`godot/arenas/`, the same ids as `js/arenas.js`)
   to test the port. It never makes zones: the client builds them in `godot/zones/`, which no lane touches.
 * **After M10** the Godot project is the game: the JS build freezes as the reference, and later gameplay work happens in GDScript.
@@ -81,6 +87,7 @@ web export runs with 0 errors (no web or phone perf target, client ruling); desk
 ## Client rulings (latest first)
 * 2026-10-23 — **Runtime layering:** no `_front`/`_back` split; every gear piece is one colour + one depth sheet, layered per pixel at runtime (JS and Godot). Export v2 lane.
 * 2026-10-23 — **The artist paints the world art and skill icons:** `codex-image` makes tiles, props, trees, decals, skill icons and item icons (current ones judged ugly); every prompt anchored on forge references for visual constancy; a sample board first, for the client's eye. Hero, gear, enemies and bosses stay forge-made.
+* 2026-10-23 — **Editor-first Godot:** drag-and-drop enemies and every other game object, edit all their properties (HP, resists, loot, effects, audio, behaviour) in the Inspector and a table editor, live while the game runs. Godot stays the engine.
 * 2026-10-23 — **No web optimisation for the Godot build**: the web export must run, but there is no web/phone perf target or tuning work.
 * 2026-10-23 — **The studio ports the game code to GDScript** (M10): the client gets a playable Godot project and builds his zones in it. Reverses "the client ports the game".
 * 2026-10-23 — Every sprite sheet must open and edit cleanly in **Aseprite** (client owns 1.3.18); the studio may use Aseprite's CLI as a tool.

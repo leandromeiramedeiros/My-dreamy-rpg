@@ -9,7 +9,9 @@ The client builds every zone in Godot ([design/world-brief.md](design/world-brie
 
 ## Engine and settings
 * Godot **4.7.2**, **GDScript**. The client wants **web (HTML5) builds**, which rules out C# (no supported web export in Godot 4). Renderer: Compatibility (web and phone).
-* **Every tuning number is data, not code**: stats, damage, timings, drop rates, pacing, zone content. Port the maths; read the numbers from `res://data/`.
+* **Every tuning number is data, not code**: stats, damage, timings, drop rates, pacing, zone content. Port the maths; the numbers live in
+  Godot `Resource`s (`res://data/**/*.tres`) seeded once from the JSON export and then edited in the Inspector and the Data table dock
+  (editor-first authoring, [PRODUCTION.md](PRODUCTION.md) M10).
   Zone content lives in `res://data/zones.json` ([design/world-brief.md](design/world-brief.md)).
 * The GitHub Pages build comes down at handoff. The JS build stays in the repo as the reference implementation only.
 * Viewport 480x270, window stretch mode `canvas_items`, aspect `keep`, nearest-neighbour filtering, integer scale. The HUD is 960x540.
