@@ -30,9 +30,11 @@ Plan and lanes: `docs/PRODUCTION.md`. Design: `docs/design/INDEX.md`. Names: `do
 - Lane worktrees start at origin's default branch: every brief begins with `git merge --ff-only claude/m4b`.
   Director commits each worktree on its branch and merges into claude/m4b; after Gear A + B merge, rerun
   `node tools/forge/build.js chibi` (js/forge-bank/chibi.js is a generated manifest both touch).
-- Usage pace (client, 2026-10-23): **two lanes at a time**. Skills + data and Export run; when one finishes, resume the
-  next paused lane (SendMessage, full scope) in this order: Arenas, Enemy forge (re-run play.js + perf, then merge),
+- Usage pace (client, 2026-10-23): **two lanes at a time**. Skills + data and Arenas (part 2) run; when one finishes, resume the
+  next paused lane (SendMessage, full scope) in this order: Enemy forge (re-run play.js + perf, then merge),
   Gear A suits (then rebuild chibi in claude/m4b; knighthelm.t4/t5 219.6 KB > 160 cap to fix).
+- Export merged: handoff/ (tiles vale/pinewood/ruins, props, sheets, palettes, zones.json, manifest), Aseprite round trip
+  411 sheets identical, godot-sample/ (Godot 4.7.2: import, run, web export 0 errors). Rebuild: tools/export/all.js, godot.js.
 - Arenas part 1 merged (12 arenas, ?map=, title list, arena-route). On resume: perf stress, run-arenas, validate-ids;
   commit the arenas.js generator template into tools/ (it lives in the lane's scratchpad) or make arenas.js the hand-edited
   source; pack-ruins should use the Ruins commons.
