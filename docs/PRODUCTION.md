@@ -12,7 +12,7 @@ Plan: `docs/meetings/2026-10-23-godot-handoff.md`. Act I maps tagged `maps-pre-g
 `node tools/check.js` (`--fast` skips perf + bot): smoke (balsim + save-migrate) · play · validate-ids · forge-rt · perf · the bot.
 Until the M4b Arena cut lands: act1-route, maps/engine-check, qa/run-big. After it: `tools/arena-route.js`,
 `tools/qa/run-arenas.js kbm|pad|touch`, perf on the `stress` arena. Director reviews shots, merges.
-Local box: Windows 11, Node 24, Python 3.13 + PIL, Playwright with its own Chromium (`npm i`). Godot 4.7.2 + export templates (web): `C:SERSeANDROAPPDATAocalprogramsgodotgodot_v4.7.2-stable_win64_console.exe` (headless: `--headless --path godot-sample`).
+Local box: Windows 11, Node 24, Python 3.13 + PIL, Playwright with its own Chromium (`npm i`). Godot 4.7.2 + export templates (web): `%LOCALAPPDATA%/Programs/Godot/Godot_v4.7.2-stable_win64_console.exe` (headless: `--headless --path godot-sample`).
 Known flakes: play.js warp-fade, perf under load.
 
 ## Status
