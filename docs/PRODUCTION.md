@@ -58,7 +58,7 @@ Gate: check.js green on arenas; 100 % forge sprites; phone p95 ≤ 20 ms on `str
 The studio rewrites the game code in GDScript and hands the client a **playable Godot project** (`godot/`, Godot 4.7.2,
 GL Compatibility, web export). Contract: `docs/PORTING.md` (folder tree, autoloads, what ports 1:1, trigger vocabulary).
 * **When:** after M9. Systems, tables and art are frozen by then, so nothing is ported twice. The risk is found early by the
-  **port spike** in M5: hero movement, one weapon line's hand action and spell, damage and one status ladder, one enemy
+  **port spike** in M5: hero movement, one weapon line's hand action and spell (built as action blocks, edited in the Inspector), damage and one status ladder, one enemy
   (Ogre) in `godot-sample/`, matched against golden vectors from the JS build.
 * **Data, not code:** every number lives in data; GDScript holds only the maths.
 * **Editor-first authoring (client ruling 2026-10-23):** everything is a Godot `Resource` (`.tres`: EnemyData, ItemData,
