@@ -2,7 +2,7 @@
 
 Terms: [../GLOSSARY.md](../GLOSSARY.md). Skill bar and slots: [loadout.md](loadout.md). On-screen layout: [hud-ui.md](hud-ui.md).
 
-## Input abstraction (`js/input.js`)
+## Input abstraction (`js-final:js/input.js`)
 * The game reads actions, never keys. There is one action per active: hand and offhand action, spell and ultimate; head, chest and boots (dodge);
   pockets 1 to 3. Plus move, aim (mode cursor, stick or auto), interact, the screen toggles (bag, character, quests, bestiary, map, pause) and menu navigation.
 * Every device writes into one `IN.actions` table with `pressed / held / released` per frame.
@@ -78,4 +78,4 @@ Movement stays on WASD. Interact is Space, so it never conflicts with a skill ke
 2. Two-pointer touch emulation (move plus aim-drag) on an 844x390 landscape phone viewport.
 3. Device switching mid-run: prompt glyphs change on the skill bar and in dialogue.
 4. A rebinding round-trip through the save.
-5. `tools/validate-ids.js` checks hotkey conflicts; `tools/play.js` routes all three devices.
+5. `js-final:tools/validate-ids.js` checks hotkey conflicts; `js-final:tools/play.js` routes all three devices.

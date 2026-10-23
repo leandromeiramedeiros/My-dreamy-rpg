@@ -782,7 +782,7 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Gloomspire Ruins | Zone 3; Act II | — | — | M4b |
 | Hawk's Rest | Pinewood vantage, height 16 | — | — | live |
 | Misty Pinewood | Zone 2; Act I | — | — | live |
-| Mockup arena | Hand-written test map of at most 32x32 tiles in which the studio tests systems, enemies and bosses; the studio makes no zone maps | `js/arenas.js` (`ARENAS`) | test map; arena map | M4b |
+| Mockup arena | Hand-written test map of at most 32x32 tiles in which the studio tests systems, enemies and bosses; the studio makes no zone maps | `js-final:js/arenas.js` (`ARENAS`) | test map; arena map | M4b |
 | Moon Pond | Vale section behind a key gate | — | — | live |
 | Morrow's Throne | Final map | — | — | later |
 | Pip's Lanterns | Vale bridge section | — | — | live |
@@ -868,26 +868,22 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 ## 19. Production and tools
 | Term | Meaning | Code id | Not | Status |
 |---|---|---|---|---|
-| Balsim | Balance simulator | `tools/balsim.js` | — | live |
-| Bot | Automated play-through runner | `tools/qa/run-big.js` | — | live |
-| God mode | Bot flag `?god`: the hero takes no damage; blocker hunts only, never the ship gate | `--god` | invincible run | M3 hot-fix |
-| Turbo | Bot lockstep fast-forward: the sim advances only when the Bot steps it, no rendering | `--turbo` `?turbo` | god mode (that is invincibility); speed hack | M3 hot-fix |
 | Director | Orchestrating role who merges and rules | — | — | live |
 | Dressing room | Forge preview page | `tools/forge/preview.html` | — | M4a |
-| ELFX | Effects registry and renderer (rim light, shadows, rays, fog) | `elfx.js` | — | live |
+| ELFX | Effects registry and renderer (rim light, shadows, rays, fog) | `js-final:js/elfx.js` (colour rows copied to `tools/lib/elfx.js`) | — | live |
 | Forge | Deterministic sprite generator | `tools/forge/` | — | M4a |
-| Forge bank | Packed sprite data | `js/forge-bank/` | — | M4a |
-| Forge runtime | In-game compositor of forge banks into a cached sheet per loadout | `js/forge-rt.js` (`FORGE`) | — | M4a |
+| Forge bank | Packed sprite data | `tools/forge/runtime/forge-bank/` | — | M4a |
+| Forge runtime | In-game compositor of forge banks into a cached sheet per loadout | `tools/forge/runtime/forge-rt.js` (`FORGE`) | — | M4a |
 | Unit | One forge layer baked on its own: body, hair or a gear piece | — | — | M4a |
 | Core sheet | A unit's sheet with every anim except attacks | `<unit>.core` | — | M4a |
 | Atk sheet | A unit's attack anims for one weapon class | `<unit>.atk.<class>` | attack sheet | M4a |
-| Line bank | One gear line's tier file in the forge bank | `js/forge-bank/<line>.t<N>.js` | — | M4a |
-| Forge enemy | Enemy drawn from forge banks (8 true directions); others still use the old sprite | `js/forge-bank/<rig>.js` | — | M4a |
+| Line bank | One gear line's tier file in the forge bank | `tools/forge/runtime/forge-bank/<line>.t<N>.js` | — | M4a |
+| Forge enemy | Enemy drawn from forge banks (8 true directions); others still use the old sprite | `tools/forge/runtime/forge-bank/<rig>.js` | — | M4a |
 | Quadruped rig | Shared four-legged forge rig and anims for beasts | `tools/forge/models/quadruped-anims.js` | beast rig | M4a |
 | Die sheet | A unit's hit and death anims in their own sheet | `<unit>.die` | — | M4a |
 | Flat depth | Forge option: one depth value per body part, for smaller banks | `flatDepth` | — | M4a |
 | FORGE_FX | Forge table of tier and rarity effects per item line (geometry per tier, palette, rim light and emitters per rarity) | `FORGE_FX` | — | M4a |
-| Raster art | Painted art outside the forge (wordmark, dialogue portraits, key art), embedded as data-URI PNGs | `js/art-raster.js` (`RASTER`) | forge art | M4b |
+| Raster art | Painted art outside the forge (wordmark, dialogue portraits, key art), embedded as data-URI PNGs | `js-final:js/art-raster.js` (`RASTER`, web build only) | forge art | M4b |
 | Lane | One parallel work stream | — | — | live |
 | Milestone | Delivery step: M1 to M8 | — | — | live |
 | `ref` rig | Hero-frame skeleton: 32 px body in a 48 px frame | — | — | M4a |
@@ -896,7 +892,7 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Save version | Save format: v4 live, v5 with Loadout v3 | `SAVE_VERSION` | — | live |
 | Side-by-side board | Reference vs forge approval board (M4a gate) | — | — | M4a |
 | Socket (forge) | Attachment point on the rig: handR, handL, head, chest, cast, weaponTip, offhandTip | — | — | M4a |
-| Wind field | Runtime wind: `WIND.sample`, emitters (vector, radial, pull, blast, zone) | `js/wind.js` | — | M4a |
+| Wind field | Runtime wind: `WIND.sample`, emitters (vector, radial, pull, blast, zone) | `js-final:js/wind.js` | — | M4a |
 | Handoff package | The folder of everything the studio delivers for the client's Godot port: art, tiles, data, audio, docs | `handoff/` | export folder | M4b |
 | Sidecar | JSON beside each sheet PNG: cell, origin, dirs, anims, sockets, layer, zorder, palette | `<sheet>.json` | metadata file | M4b |
 | Terrain set | Godot TileSet terrain ("Match Corners and Sides") filled from a blob-47 template | `terrain_<name>.png` | autotile | M4b |
@@ -919,11 +915,14 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 ## 20. Retired terms
 | Retired term | Replaced by | Code id | Retired by | Status |
 |---|---|---|---|---|
+| Balsim | Retired with the web build (balance sheets come from the Godot data tables); source at tag `js-final` | `js-final:tools/balsim.js` | Godot pivot 2026-10-23 | retired |
 | Big map | Zone (the client builds it in Godot) | — | Godot pivot 2026-10-23 | retired |
+| Bot | Retired with the web build; source at tag `js-final` | `js-final:tools/qa/run-big.js` | Godot pivot 2026-10-23 | retired |
 | Changeover | removed (OFFHAND is the second weapon) | — | meeting 4.6 | retired |
 | Character skills 1 / 2 / 3 | Pages (re-homed casts) | `CHAR_SKILLS` | meeting 4.6 | retired |
 | Dream Tomes | removed (pages replace them) | — | meeting 4.6 | retired |
-| Dreamy Editor | removed; the client builds zones in Godot (`editor.html`, `js/editor.js` deleted) | — | Godot pivot 2026-10-23 | retired |
+| Dreamy Editor | removed; the client builds zones in Godot (`editor.html`, `js/editor.js` deleted; kept at tag `js-final`) | — | Godot pivot 2026-10-23 | retired |
+| God mode | Retired with the Bot (flag `?god`: the hero took no damage) | `--god` | Godot pivot 2026-10-23 | retired |
 | HUD skill bar (old) | Skill bar (4 groups of 3) | — | meeting 4.7 | retired |
 | Level lane | Arenas lane (mockup arenas) and Export lane (tiles); Docs lane (placement brief) | — | Godot pivot 2026-10-23 | retired |
 | Modifier slots | removed (second form replaces them) | — | meeting 4.5 | retired |
@@ -933,4 +932,5 @@ Note: count reconciled in docs/design/enemies-bosses.md (12 named bosses).
 | Slice (vertical) | Mockup arenas (the M4a Vale and Pinewood scope is gone with the Act I maps) | — | Godot pivot 2026-10-23 | retired |
 | Spellbook (hand weapon) | Grimoire (companion); Wand takes the Foci 1H seat | `spellbook` | meeting 4.3 | retired |
 | Two weapon slots | HAND and OFFHAND | — | meeting 4.6 | retired |
+| Turbo | Retired with the Bot (lockstep fast-forward, no rendering) | `--turbo` `?turbo` | Godot pivot 2026-10-23 | retired |
 | Story difficulty | Removed; Normal is the only difficulty | `difficulty` | client 2026-10-22 | retired |

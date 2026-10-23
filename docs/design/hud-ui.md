@@ -23,7 +23,7 @@ Skill bar content: [loadout.md](loadout.md). Status icons: [elements-statuses.md
 | WEAK hit / RESIST hit | `#ffe36a` / `#a7a3b8` |
 
 Element colours come from `ICONS.elementColor`.
-* Font: a bundled bitmap font as a base64 PNG sheet in `js/font.js`. "DreamSmall" 5x7 (numbers, labels), "DreamBody" 7x9.
+* Font: a bundled bitmap font as a base64 PNG sheet in `js-final:js/font.js`. "DreamSmall" 5x7 (numbers, labels), "DreamBody" 7x9.
   Drawn glyph by glyph with `drawImage`: crisp, no font-load race, works from `file://`. Sizes on 960: small 5x7 x2, body 7x9 x2, heading 7x9 x3.
   Every string has a 2 px `#0b0716` drop shadow at +2,+2; headings get a full 2 px outline.
 * Animation: bars have a white ghost fill that lags 0.4 s behind damage; heals fill with a bright wipe; HP under 25% pulses the frame red at 2 Hz;
@@ -101,7 +101,7 @@ Every skill has `aim:{shape: cone | circle | line | proj | self | dash, range, r
 * Performance: cache range ellipses per (range, element); cache shape sprites per equipped skill; rotate cones instead of rebuilding; one indicator at a time.
 
 ## Implementation
-* `js/ui.js` (before hud.js in both html files): bitmap font `UI.text`, theme table, `UI.frame` (9-slice), `UI.bar`, `UI.sweep`, `UI.toast`,
+* `js-final:js/ui.js` (web build): bitmap font `UI.text`, theme table, `UI.frame` (9-slice), `UI.bar`, `UI.sweep`, `UI.toast`,
   `UI.tooltip`, `UI.button`, `UI.ring`. hud.js keeps layout only.
 * Cache static pieces (frames, minimap base, bestiary portraits) in offscreen canvases rebuilt on change. `imageSmoothingEnabled = false`; integer draw targets.
 * Menu interaction logic is separate from drawing: a table of hit regions plus a focus model shared by mouse, touch and gamepad ([controls.md](controls.md)).

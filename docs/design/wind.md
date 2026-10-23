@@ -1,6 +1,6 @@
 # Wind
 
-Terms: [../GLOSSARY.md](../GLOSSARY.md). Code: `js/wind.js`. Statuses (Buffeted, Lifted, Drift): [elements-statuses.md](elements-statuses.md).
+Terms: [../GLOSSARY.md](../GLOSSARY.md). Code: `js-final:js/wind.js`. Statuses (Buffeted, Lifted, Drift): [elements-statuses.md](elements-statuses.md).
 Visual layers that scroll with wind: [lighting-status-fx.md](lighting-status-fx.md). Hush slows the wind field: [combat-feel.md](combat-feel.md).
 
 ## Field

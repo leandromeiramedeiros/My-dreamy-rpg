@@ -32,12 +32,11 @@ Runtime lights and status layers: [lighting-status-fx.md](lighting-status-fx.md)
 ## Forge pipeline
 `tools/forge/models/chibi.js` (rig, bare base) and `chibi-gear.js` / `chibi-<line>.js` (tiers T1 to T5 plus Mythic)
 then `node tools/forge/build.js chibi` (same input gives byte-identical output; only changed files are rewritten)
-then `js/forge-bank/chibi.js` (body + hair) and `js/forge-bank/<line>.t<N>.js` (one file per tier, `FORGE_BANK`, lazily inserted `<script>`)
-then `js/forge-rt.js` (engine copied from forge.js by build.js): `FORGE.sheet(rig, loadout)` once per loadout change, time-sliced over 3 frames, last 6 loadouts cached; `FORGE.frame` per draw
+then `tools/forge/runtime/forge-bank/chibi.js` (body + hair) and `tools/forge/runtime/forge-bank/<line>.t<N>.js` (one file per tier, `FORGE_BANK`, lazily inserted `<script>`)
+then `tools/forge/runtime/forge-rt.js` (engine copied from forge.js by build.js): `FORGE.sheet(rig, loadout)` once per loadout change, time-sliced over 3 frames, last 6 loadouts cached; `FORGE.frame` per draw
 then render.js `drawPlayer` / `drawEnemy` / `drawNpc`: one `drawImage` per frame.
 The **export stage** runs beside the bank stage: `tools/export/art.js` writes PNG sheets + JSON sidecars + `.gpl` palettes to `handoff/art/`
-(`build.js --split-body` makes the `_front`/`_back` pieces, `--normals` the normal sheets) and `tools/export/embed.js` turns PNGs on disk into the generated
-`js/*.js` the JS build reads. Layout, sidecar and manifest rules: [asset-pipeline.md](asset-pipeline.md).
+(`build.js --split-body` makes the `_front`/`_back` pieces, `--normals` the normal sheets). Layout, sidecar and manifest rules: [asset-pipeline.md](asset-pipeline.md).
 * Each unit (body, hair, gear piece) ships as a core sheet (every anim except attacks) plus one atk sheet per weapon class;
   only the equipped HAND class's atk sheet is decoded.
 * Layering at runtime is a depth resolve of baked pieces (nearest layer wins, inner line between parts on a depth jump).
@@ -47,7 +46,7 @@ The **export stage** runs beside the bank stage: `tools/export/art.js` writes PN
 * Sockets exported: handR, handL, head, chest, cast, tip, capeTop, capeHem. Also a 1-bit rim mask with a facing hint (`FORGE.rim`) and a bbox;
   in the handoff package the rim mask becomes an optional normal sheet ([asset-pipeline.md](asset-pipeline.md)).
 * Approval gate: the client's eye on the chibi board and tier strips (quality bar: the first chibi knight's 5 tiers). Checks: sha256 stable, 0 lone pixels, runtime equals offline byte for byte.
-* Tools: `build.js`, `forge.js`, `tiers.js` (gear-line checks), `tools/forge-rt-check.js`, `icons.js` (24x24 item icons from the same models at a fixed 3/4 pose),
+* Tools: `build.js`, `forge.js`, `tiers.js` (gear-line checks), `tools/forge-rt-check.js`,
   `board.js`, `preview.html` (dressing room). The `hero` rig is a regression fixture for one milestone; `ref` is retired.
 
 ## Tiles and world art
@@ -56,8 +55,8 @@ The studio makes no zone maps; it makes reusable tile and prop assets for the cl
 * Cliffs: 3-band strata, base occlusion, overhang lip, baked wedge shadows; at least 3 strata and visible thickness on every edge.
 * Coasts: raised north and west band, 3-band skirt (lobes, roots, alpha fade).
 * Hue-shifted 7-step ramps per zone palette. Trees: trunk and canopy as separate PNGs, canopy over the hero with fade; 16 ground-decal kinds per zone.
-* Pixel art props of 24 px or less are hand-written ASCII; larger ones are frozen from procedural code (`tools/freeze*.js`).
-* The ground is rasterised from `js/maps.js` with the noise pinned to a fixed seed; that code stays until the exporter has consumed it.
+* Pixel art props of 24 px or less are hand-written ASCII; larger ones were frozen from procedural code (`js-final:tools/freeze.js`, retired).
+* The ground is rasterised from the ground grammar copy `tools/export/lib/maps.js` with the noise pinned to a fixed seed.
 
 ## Gear scope
 12 suits x 3 pieces x 6 tiers; 15 weapon lines + 3 shields + 3 companions = 21 lines x 6 tiers. Icons come from the forge.
@@ -85,6 +84,6 @@ The studio makes no zone maps; it makes reusable tile and prop assets for the cl
 * Every `codex-image` prompt is anchored on forge references (hero, gear, enemy renders; for an item icon, the forge render of
   that item) and asks to match their palette, outline weight, shading and pixel density, so raster and forge art stay one style.
 * Every raster piece is palette-snapped and shipped at native size (portraits ~44 px, drawn x2 in the 88 px dialogue slot;
-  wordmark 240x52), embedded as data-URI PNGs in `js/art-raster.js` (`RASTER`), so `file://` still works. Sources live in the
+  wordmark 240x52), embedded as data-URI PNGs in `js-final:js/art-raster.js` (`RASTER`), so `file://` still works. Sources live in the
   git-ignored `tools/out/art/`.
 

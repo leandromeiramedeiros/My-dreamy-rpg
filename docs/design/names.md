@@ -55,7 +55,7 @@ Suit skills and rules: [armour-suits.md](armour-suits.md). Mythic names, one per
 | Nightshade | Mossjaw's Skin |
 | Mirage | Glasswarp Silk |
 
-Piece tiers in the game data (T1 to T5, `FAMILY_TIERS` in `js/items.js`):
+Piece tiers in the game data (T1 to T5, `FAMILY_TIERS` in `js-final:js/items.js`):
 
 | Suit | Head | Chest | Boots |
 |---|---|---|---|

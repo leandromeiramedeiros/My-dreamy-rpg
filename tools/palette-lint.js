@@ -3,7 +3,7 @@
 // Palette lint (M4a). Checks every colour ramp it can find:
 //   - forge material ramps in tools/forge/models/**/*.js: explicit arrays of hex colours (the form
 //     [shadow, low, mid, high, (glint)] that forge.js reads from `ramp:` / material fields);
-//   - ELFX colour rows in js/elfx.js: the `ramp` of each registry row (loaded in a vm sandbox, read as data).
+//   - ELFX colour rows in tools/lib/elfx.js: the `ramp` of each registry row (loaded in a vm sandbox, read as data).
 // Rules per ramp:
 //   R1  4 tones, plus an optional 5th glint colour (any other length is a finding);
 //   R2  luminance (CIE L*) strictly increases along the ramp, glint included;
@@ -18,7 +18,7 @@ const vm = require('vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const MODELS = path.join(ROOT, 'tools', 'forge', 'models');
-const ELFX = path.join(ROOT, 'js', 'elfx.js');
+const ELFX = path.join(ROOT, 'tools', 'lib', 'elfx.js');
 const OUTLINE = '#0c0714';
 const MIN_DL = 8;
 const STRICT = process.argv.includes('--strict');
@@ -59,14 +59,14 @@ for (const f of modelFiles) {
 if (fs.existsSync(ELFX)) {
   const ctx = vm.createContext({ console, Math });
   try {
-    vm.runInContext(fs.readFileSync(ELFX, 'utf8'), ctx, { filename: 'js/elfx.js' });
+    vm.runInContext(fs.readFileSync(ELFX, 'utf8'), ctx, { filename: 'tools/lib/elfx.js' });
     const rows = vm.runInContext('ELFX.rows', ctx);
     for (const [el, row] of Object.entries(rows)) {
       if (!Array.isArray(row.ramp)) continue;
-      ramps.push({ src: 'js/elfx.js', id: `rows.${el}`, line: 0, colours: row.ramp.map(norm) });
+      ramps.push({ src: 'tools/lib/elfx.js', id: `rows.${el}`, line: 0, colours: row.ramp.map(norm) });
     }
   } catch (e) {
-    findings.push(`ERROR js/elfx.js  could not load ELFX.rows: ${e.message}`);
+    findings.push(`ERROR tools/lib/elfx.js  could not load ELFX.rows: ${e.message}`);
   }
 }
 
@@ -94,7 +94,7 @@ for (const r of ramps) {
 }
 
 // ---- report
-console.log(`palette-lint: ${ramps.length} ramp(s) found (${modelFiles.length} forge model files, ELFX rows from js/elfx.js)`);
+console.log(`palette-lint: ${ramps.length} ramp(s) found (${modelFiles.length} forge model files, ELFX rows from tools/lib/elfx.js)`);
 console.log(`              checked ${checked}, flat ${flat} (skipped), forge derived from one colour + tones ${derived} (skipped)`);
 console.log(`              outline ${OUTLINE} L* ${outlineL.toFixed(1)}; rules: 4 tones (+1 glint), L* strictly rising, dL >= ${MIN_DL}`);
 for (const f of findings) console.log(f);

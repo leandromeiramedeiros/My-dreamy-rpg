@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 'use strict';
-// Forge runtime check (M4a): js/forge-rt.js + js/forge-bank/* in headless Chromium against the offline forge (tools/forge).
+// Forge runtime check (M4a): tools/forge/runtime/forge-rt.js + tools/forge/runtime/forge-bank/* in headless Chromium against the offline forge (tools/forge).
 //   node tools/forge-rt-check.js            exit 1 on any FAIL
 // Checks:
-//   engine     js/forge-rt.js's engine block == the <rt> blocks of tools/forge/forge.js (rebuild: node tools/forge/build.js chibi)
+//   engine     tools/forge/runtime/forge-rt.js's engine block == the <rt> blocks of tools/forge/forge.js (rebuild: node tools/forge/build.js chibi)
 //   banks      every bank sheet <= 64 KB of PNG; starter bundle (forge-rt.js + chibi.js) <= 400 KB; the files are exactly
 //              chibi.js + one per piece file the rig bank names (no stale file)
 //   tier       every piece file (<line>.t<N>.js, one tier: what a drop loads) <= 160 KB
@@ -14,18 +14,18 @@
 //   doll       the bag paper doll, one direction (FORGE.doll), <= 12 ms (x4)
 //   sha256     every loadout sheet hashes the same in two fresh page loads
 //   rim/sock   a rim mask and the sockets come back for a frame
-//   enemies    the forge enemies (build.js ENEMY_RIGS: js/forge-bank/<rig>.js, gearless): each file <= 160 KB; runtime sheet ==
+//   enemies    the forge enemies (build.js ENEMY_RIGS: tools/forge/runtime/forge-bank/<rig>.js, gearless): each file <= 160 KB; runtime sheet ==
 //              offline FORGE.render byte for byte on every frame of every sheet anim x 8 dirs; head + chest sockets; the sheet's
 //              compose cost at CPU throttle x4 (<= 120 ms busy, like the hero's); sha256 stable over two fresh loads
 const http = require('http'), fs = require('fs'), path = require('path'), crypto = require('crypto');
 const { chromium } = require('playwright');
-const ROOT = path.resolve(__dirname, '..'), FD = path.join(ROOT, 'tools', 'forge');
+const ROOT = path.resolve(__dirname, '..'), FD = path.join(ROOT, 'tools', 'forge'), RT = path.join(FD, 'runtime');
 const FORGE = require(path.join(FD, 'forge.js')), RIG = 'chibi', model = require(path.join(FD, 'models', `${RIG}.js`));
-const BANK = require(path.join(ROOT, 'js', 'forge-bank', `${RIG}.js`))[RIG];
+const BANK = require(path.join(RT, 'forge-bank', `${RIG}.js`))[RIG];
 const ENEMY_RIGS = require(path.join(FD, 'build.js')).ENEMY_RIGS, EMODEL = {};
 for (const rig of ENEMY_RIGS) EMODEL[rig] = require(path.join(FD, 'models', `${rig}.js`));
 const MIME = { '.html': 'text/html', '.js': 'text/javascript' };
-const PAGE = '<!doctype html><html><head><meta charset="utf-8"></head><body><script src="js/forge-rt.js"></script></body></html>';
+const PAGE = '<!doctype html><html><head><meta charset="utf-8"></head><body><script src="tools/forge/runtime/forge-rt.js"></script></body></html>';
 const results = [];
 const check = (name, ok, detail) => { results.push({ name, ok }); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name.padEnd(9)} ${detail}`); };
 
@@ -81,27 +81,25 @@ const enemySheetsOf = (page, want) => page.evaluate(async ([rigs, want]) => {
 
 (async () => {
   // engine sync
-  const rt = fs.readFileSync(path.join(ROOT, 'js', 'forge-rt.js'), 'utf8').replace(/\r\n/g, '\n');
+  const rt = fs.readFileSync(path.join(RT, 'forge-rt.js'), 'utf8').replace(/\r\n/g, '\n');
   const want = [...fs.readFileSync(path.join(FD, 'forge.js'), 'utf8').replace(/\r\n/g, '\n').matchAll(/^ {2}\/\/ <rt>[^\n]*\n([\s\S]*?)^ {2}\/\/ <\/rt>\n/gm)].map(m => m[1]).join('');
   const a = rt.indexOf('  // <engine>'), b = rt.indexOf('  // </engine>'), have = a >= 0 && b > a ? rt.slice(rt.indexOf('\n', a) + 1, b) : '';
   check('engine', have === want && want.length > 0, have === want ? `${want.split('\n').length - 1} lines in sync with tools/forge/forge.js` : 'out of sync: node tools/forge/build.js chibi');
   // bank sizes
-  const files = fs.readdirSync(path.join(ROOT, 'js', 'forge-bank')).filter(f => f.endsWith('.js'));
+  const files = fs.readdirSync(path.join(RT, 'forge-bank')).filter(f => f.endsWith('.js'));
   let worst = { key: '', kb: 0 }, top = { f: '', kb: 0 }, n = 0;
   for (const f of files) {
-    const B = require(path.join(ROOT, 'js', 'forge-bank', f)), L = B[f.slice(0, -3)];
+    const B = require(path.join(RT, 'forge-bank', f)), L = B[f.slice(0, -3)];
     for (const k in L.sheets) { n++; const kb = Buffer.from(L.sheets[k].png, 'base64').length / 1024; if (kb > worst.kb) worst = { key: k, kb }; }
-    const fkb = fs.statSync(path.join(ROOT, 'js', 'forge-bank', f)).size / 1024; if (f !== `${RIG}.js` && !ENEMY_RIGS.includes(f.slice(0, -3)) && fkb > top.kb) top = { f, kb: fkb };
+    const fkb = fs.statSync(path.join(RT, 'forge-bank', f)).size / 1024; if (f !== `${RIG}.js` && !ENEMY_RIGS.includes(f.slice(0, -3)) && fkb > top.kb) top = { f, kb: fkb };
   }
-  const starter = (fs.statSync(path.join(ROOT, 'js', 'forge-rt.js')).size + fs.statSync(path.join(ROOT, 'js', 'forge-bank', `${RIG}.js`)).size) / 1024;
+  const starter = (fs.statSync(path.join(RT, 'forge-rt.js')).size + fs.statSync(path.join(RT, 'forge-bank', `${RIG}.js`)).size) / 1024;
   const named = new Set([RIG, ...ENEMY_RIGS, ...Object.values(BANK.lines), ...Object.values(BANK.atk || {}), ...Object.values(BANK.patk || {})].map(l => l + '.js')), stale = files.filter(f => !named.has(f)), missing = [...named].filter(f => !files.includes(f));
   check('banks', worst.kb <= 64 && starter <= 400 && !stale.length && !missing.length,
     `${files.length} files, ${n} sheets, largest sheet ${worst.key} ${worst.kb.toFixed(1)} KB (<= 64) | starter bundle ${starter.toFixed(0)} KB (<= 400)` +
     (stale.length ? ` | stale: ${stale.join(' ')}` : ' | no stale file') + (missing.length ? ` | missing: ${missing.join(' ')}` : ''));
-  const over = files.filter(f => f !== `${RIG}.js` && !ENEMY_RIGS.includes(f.slice(0, -3)) && fs.statSync(path.join(ROOT, 'js', 'forge-bank', f)).size > 160 * 1024);
+  const over = files.filter(f => f !== `${RIG}.js` && !ENEMY_RIGS.includes(f.slice(0, -3)) && fs.statSync(path.join(RT, 'forge-bank', f)).size > 160 * 1024);
   check('tier', top.kb <= 160, `largest piece file ${top.f} ${top.kb.toFixed(1)} KB (<= 160)${over.length ? ` | over: ${over.join(' ')}` : ''}`);
-  const tags = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/<script src="js\/forge-rt\.js"><\/script>/g) || []).length;
-  check('tag', tags === 1, `index.html loads js/forge-rt.js ${tags}x`);
 
   await new Promise(r => srv.listen(0, '127.0.0.1', r));
   const br = await chromium.launch({ headless: true });
@@ -197,7 +195,7 @@ const enemySheetsOf = (page, want) => page.evaluate(async ([rigs, want]) => {
           if (Buffer.compare(A, B)) { eb++; if (ebAt.length < 5) ebAt.push(`${rig} ${dn} ${an}${f}`); break; }
         }
       }));
-      efile[rig] = fs.existsSync(path.join(ROOT, 'js', 'forge-bank', rig + '.js')) ? fs.statSync(path.join(ROOT, 'js', 'forge-bank', rig + '.js')).size / 1024 : Infinity;
+      efile[rig] = fs.existsSync(path.join(RT, 'forge-bank', rig + '.js')) ? fs.statSync(path.join(RT, 'forge-bank', rig + '.js')).size / 1024 : Infinity;
     }
     const eSock = ENEMY_RIGS.every(r => ['head', 'chest'].every(k => e1[r].sockets.includes(k))), eSlow = ENEMY_RIGS.filter(r => et[r].ms > 120), eBig = ENEMY_RIGS.filter(r => efile[r] > 160);
     for (const r of ENEMY_RIGS) console.log(`      ${r.padEnd(14)} ${e1[r].fw}x${e1[r].fh} | file ${efile[r].toFixed(1)} KB | compose at x4: ${et[r].frames} frames in ${et[r].ms.toFixed(1)} ms busy (${et[r].slices.map(v => v.toFixed(0)).join(' + ')}) | sockets ${e1[r].sockets.join(' ')}`);

@@ -34,11 +34,11 @@ and trades fish ([world-brief.md](world-brief.md)).
   and a modifiers screen with no NG+-only content.
 
 ## Saves
-* Three slots. Key `dreamy.save.v1` (slot 1), `dreamy.save.v1.s2`, `dreamy.save.v1.s3`; constants `SAVE_SLOTS = 3`, `SAVE_KEY_BASE` in `js/items.js`.
+* Three slots. Key `dreamy.save.v1` (slot 1), `dreamy.save.v1.s2`, `dreamy.save.v1.s3`; constants `SAVE_SLOTS = 3`, `SAVE_KEY_BASE` in `js-final:js/items.js`.
 * Every read and write is in try/catch. A `version` field and `migrate(save)` upgrade old saves. Loadout v3 raises `SAVE_VERSION` to 5 (it is 4 until that lands).
 * Stored: the hero, bag, loadout, `G.prog` trigger state, per-map sections and shrines, fog of war.
 * Not stored: status effects, Hush active, runtime timers.
-* `node tools/save-migrate.js` is the save migration gate.
+* `node js-final:tools/save-migrate.js` is the save migration gate.
 
 ## Fishing
 * Spots: 2 per outer map plus 1 hidden. Rods: Twig, Dawn Rod, Cinder, Moonline. Lava fishing needs the Cinder rod; void fishing a Cinder rod with an Amethyst;
@@ -50,7 +50,7 @@ and trades fish ([world-brief.md](world-brief.md)).
   legendary a unique effect (Moonmaw doubles kill-heal).
 * Fishing Log tab in the Bestiary: rewards at 10 / 20 / 30 entries. Elder Stone trades: 3 rare fish for a Clear gem;
   a legendary fish for a pearl slot on a legendary. The rod sits in a non-combat `tool` slot with 1 socket.
-* Code: `js/fishing.js`, state machine `idle, casting, waiting, bite, reeling, caught or snapped` in `G.fishing`; tables FISH, FOOD, ROD.
+* Code: `js-final:js/fishing.js`, state machine `idle, casting, waiting, bite, reeling, caught or snapped` in `G.fishing`; tables FISH, FOOD, ROD.
 
 ## Optional content
 Quests (1 to 2 per zone, given by NPCs, rewarding a gem or page), vaults, Starlit Shoals (no combat), the Gloaming Below, the Dream Arena.
