@@ -1,0 +1,242 @@
+<title>Karea's Dream Booklet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Silkscreen&display=swap">
+<style>
+/* Layout: a night-sky pocket book. Sticky top bar with two views (Booklet, Glossary); contents rail on wide screens. */
+:root {
+  --bg: #f5f1fa; --paper: #fffdfd; --fg: #2a2238; --muted: #6b6180; --line: #e2d9ee;
+  --accent: #a63d78; --accent-soft: #f6dcea; --pine: #2f7d68; --hl: #ffe7a3;
+  --display: "Gloock", "Georgia", serif; --body: "Literata", "Georgia", serif; --pixel: "Silkscreen", ui-monospace, monospace;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15111d; --paper: #1d1727; --fg: #ece6f5; --muted: #a79cbb; --line: #33293f;
+  --accent: #f08cbf; --accent-soft: #3a2236; --pine: #6fcfb2; --hl: #5a4a1c; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #15111d; --paper: #1d1727; --fg: #ece6f5; --muted: #a79cbb; --line: #33293f;
+  --accent: #f08cbf; --accent-soft: #3a2236; --pine: #6fcfb2; --hl: #5a4a1c; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 16px/1.6 var(--body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+a { color: var(--accent); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); border-bottom: 1px solid var(--line);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bar-in { max-width: 1180px; margin: 0 auto; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-block: 10px; }
+.brand { font: 22px/1 var(--display); letter-spacing: .01em; margin-right: auto; }
+.brand small { font: 10px var(--pixel); color: var(--muted); letter-spacing: .08em; margin-left: 8px; }
+.tabs { display: flex; gap: 4px; }
+.tab { font: 12px var(--pixel); letter-spacing: .06em; border: 1px solid var(--line); background: transparent; color: var(--fg);
+  padding: 7px 12px; border-radius: 6px; cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.tab:focus-visible, .back:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 80px; }
+.rail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 72px); align-self: start; max-height: calc(100vh - 100px); overflow: auto;
+  font-size: 13px; line-height: 1.4; }
+.rail a { display: block; color: var(--muted); text-decoration: none; padding: 3px 0; }
+.rail a.l3 { padding-left: 12px; font-size: 12px; }
+.rail a:hover { color: var(--accent); }
+.rail h4 { font: 10px var(--pixel); letter-spacing: .1em; color: var(--muted); margin: 0 0 8px; text-transform: uppercase; }
+main { min-width: 0; }
+.doc { max-width: 760px; }
+.doc h1 { font: 44px/1.05 var(--display); margin: 0 0 12px; text-wrap: balance; }
+.doc h2 { font: 30px/1.15 var(--display); margin: 56px 0 12px; padding-top: 12px; border-top: 2px solid var(--accent-soft); text-wrap: balance; }
+.doc h3 { font: 600 19px/1.3 var(--body); margin: 32px 0 8px; text-wrap: balance; }
+.doc p, .doc li { max-width: 68ch; }
+.doc ul, .doc ol { padding-left: 1.2em; }
+.doc hr { border: 0; border-top: 1px solid var(--line); margin: 32px 0; }
+.doc code { font: 13px var(--mono); background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+.doc table { border-collapse: collapse; font-size: 14px; line-height: 1.45; min-width: 560px; }
+.tbl { overflow-x: auto; margin: 12px 0 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+.doc th, .doc td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.doc th { font: 10px var(--pixel); letter-spacing: .08em; color: var(--muted); text-transform: uppercase; background: var(--bg); }
+figure { margin: 18px 0; }
+figure img { display: block; width: 100%; max-width: 100%; height: auto; border-radius: 10px; background: var(--line); }
+figure.panel { display: grid; gap: 10px; }
+figure.map img { max-width: 560px; }
+figcaption { font-size: 15px; }
+.pn { display: inline-grid; place-items: center; min-width: 26px; height: 26px; margin-right: 6px; font: 11px var(--pixel);
+  background: var(--accent); color: var(--paper); border-radius: 50%; }
+a.g { color: inherit; text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px; cursor: pointer; }
+a.g:hover { color: var(--accent); }
+a.sec { font: 12px var(--pixel); color: var(--pine); text-decoration: none; white-space: nowrap; }
+.back { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 6;
+  font: 12px var(--pixel); letter-spacing: .05em; background: var(--fg); color: var(--bg); border: 0; border-radius: 999px; padding: 12px 16px; cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+/* glossary view */
+.gtools { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+.gtools input { font: 15px var(--body); padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--fg); width: min(360px, 100%); }
+.gtools span { font-size: 13px; color: var(--muted); }
+.gsec h2 { font: 26px/1.2 var(--display); margin: 36px 0 10px; }
+.gsec h3 { font: 600 17px var(--body); margin: 24px 0 8px; }
+.gsec .num { font: 12px var(--pixel); color: var(--pine); margin-right: 8px; }
+.gtbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+.gtbl table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; line-height: 1.45; }
+.gtbl td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.gtbl td.t { font-weight: 600; width: 18%; }
+.gtbl td.c code { font: 12px var(--mono); }
+.gtbl td.n { color: var(--muted); width: 16%; }
+.gtbl tr.flash td { background: var(--hl); transition: background 1.6s; }
+.pill { display: inline-block; font: 10px var(--pixel); letter-spacing: .05em; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
+.pill.live { color: var(--pine); border-color: var(--pine); }
+.pill.retired { color: var(--muted); text-decoration: line-through; }
+.uses { display: block; margin-top: 4px; font-size: 12px; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); } .rail { display: none; } .doc h1 { font-size: 34px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<header class="bar"><div class="bar-in">
+  <div class="brand">Karea's Dream <small>THE BOOKLET</small></div>
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="t-booklet" aria-selected="true">Booklet</button>
+    <button class="tab" role="tab" id="t-glossary" aria-selected="false">Glossary</button>
+  </nav>
+</div></header>
+
+<div class="wrap">
+  <aside class="rail" id="rail"></aside>
+  <main>
+    <article class="doc" id="booklet"></article>
+    <section id="glossary" hidden>
+      <div class="gtools"><input id="q" type="search" placeholder="Find a term, code id or old name" aria-label="Find in the glossary"><span id="count"></span></div>
+      <div id="gbody"></div>
+    </section>
+  </main>
+</div>
+<button class="back" id="back" hidden>← Back to the booklet</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script>
+const DATA = /*__DATA__*/null;
+const $ = s => document.querySelector(s);
+const slug = s => s.toLowerCase().normalize('NFKD').replace(/[^\w]+/g, '-').replace(/^-|-$/g, '');
+const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const inline = s => marked.parseInline(s || '');
+
+// ---- glossary view ----
+const rowsBySec = {};
+DATA.rows.forEach(r => (rowsBySec[r.sec] ||= []).push(r));
+const termIds = new Map();
+DATA.rows.forEach(r => { const id = 'g-' + slug(r.t); if (!termIds.has(r.t)) termIds.set(r.t, id); });
+const uses = new Map();     // term -> mentions in the booklet (first element)
+
+function buildGlossary() {
+  let h = '';
+  for (const s of DATA.secs) {
+    const rows = rowsBySec[s.id] || [];
+    h += `<div class="gsec" id="sec-${s.id.replace('.', '-')}"><${s.sub ? 'h3' : 'h2'}><span class="num">§${s.id}</span>${s.title}</${s.sub ? 'h3' : 'h2'}>`;
+    if (rows.length) {
+      h += '<div class="gtbl"><table><tbody>';
+      for (const r of rows) {
+        const st = (r.s || '').toLowerCase();
+        const u = uses.get(r.t);
+        h += `<tr id="${termIds.get(r.t)}" data-q="${(r.t + ' ' + r.m + ' ' + r.c + ' ' + r.n).toLowerCase().replace(/"/g, '')}">
+          <td class="t">${inline(r.t)}${u ? `<a class="uses" href="#" data-use="${termIds.get(r.t)}">In the booklet ×${u.n} →</a>` : ''}</td>
+          <td>${inline(r.m)}</td><td class="c">${r.c && r.c !== '—' ? inline(r.c) : ''}</td>
+          <td class="n">${r.n && r.n !== '—' ? 'Not: ' + inline(r.n) : ''}</td>
+          <td><span class="pill ${st}">${r.s}</span></td></tr>`;
+      }
+      h += '</tbody></table></div>';
+    }
+    h += '</div>';
+  }
+  $('#gbody').innerHTML = h;
+  $('#count').textContent = `${DATA.rows.length} terms in ${DATA.secs.filter(s => !s.sub).length} sections`;
+}
+
+// ---- booklet view ----
+function buildBooklet() {
+  const el = $('#booklet');
+  el.innerHTML = marked.parse(DATA.md);
+  el.querySelectorAll('table').forEach(t => { const w = document.createElement('div'); w.className = 'tbl'; t.replaceWith(w); w.appendChild(t); });
+  el.querySelectorAll('h2, h3').forEach(h => { h.id ||= 'b-' + slug(h.textContent).slice(0, 60); });
+  // § references -> glossary sections
+  const secIds = new Set(DATA.secs.map(s => s.id));
+  // glossary terms -> rows (first mention per block, longest names first; skip short or generic words)
+  const STOP = new Set(['Rest', 'Step', 'Turn', 'Block', 'Charge', 'State', 'Page', 'Zone', 'Gear', 'Level', 'Gold', 'Dust', 'Map', 'Tier',
+    'Hand', 'Action', 'Spell', 'Ultimate', 'Boss', 'Elite', 'Stand', 'Call', 'Wall', 'Ward', 'Mend', 'Bash', 'Nock', 'Loose', 'Focus', 'Channel', 'Rift']);
+  const terms = [...termIds.keys()].filter(t => t.length >= 4 && !STOP.has(t) && !/[*`]/.test(t)).sort((a, b) => b.length - a.length);
+  const re = new RegExp(`§(\\d+(?:\\.\\d+)?)|(?<![\\w'’])(${terms.map(esc).join('|')})(?![\\w’])`, 'g');
+  const blocks = el.querySelectorAll('p, li, td, figcaption, h3');
+  for (const b of blocks) {
+    const seen = new Set();
+    const walker = document.createTreeWalker(b, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement.closest('a, code') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+    const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const n of nodes) {
+      const txt = n.nodeValue; re.lastIndex = 0; let m, last = 0, frag = null;
+      while ((m = re.exec(txt))) {
+        let a = null;
+        if (m[1] && secIds.has(m[1])) { a = document.createElement('a'); a.className = 'sec'; a.href = '#'; a.dataset.sec = m[1]; a.textContent = m[0]; }
+        else if (m[2] && !seen.has(m[2])) {
+          seen.add(m[2]); a = document.createElement('a'); a.className = 'g'; a.href = '#'; a.dataset.term = termIds.get(m[2]); a.textContent = m[2];
+          const u = uses.get(m[2]) || { n: 0, first: a }; u.n++; uses.set(m[2], u);
+        }
+        if (!a) continue;
+        frag ||= document.createDocumentFragment();
+        frag.append(txt.slice(last, m.index), a); last = m.index + m[0].length;
+      }
+      if (frag) { frag.append(txt.slice(last)); n.replaceWith(frag); }
+    }
+  }
+  // contents rail
+  let r = '<h4>Contents</h4>';
+  el.querySelectorAll('h2, h3').forEach(h => { r += `<a href="#" data-to="${h.id}" class="${h.tagName === 'H3' ? 'l3' : ''}">${h.textContent}</a>`; });
+  $('#rail').innerHTML = r;
+}
+
+// ---- navigation ----
+let backY = null;
+function show(view) {
+  const g = view === 'glossary';
+  $('#booklet').hidden = g; $('#glossary').hidden = !g;
+  $('#t-booklet').setAttribute('aria-selected', String(!g)); $('#t-glossary').setAttribute('aria-selected', String(g));
+  $('#back').hidden = !(g && backY !== null);
+  railFor(view);
+}
+function railFor(view) {
+  if (view === 'glossary') {
+    let r = '<h4>Glossary</h4>';
+    DATA.secs.forEach(s => { r += `<a href="#" data-to="sec-${s.id.replace('.', '-')}" class="${s.sub ? 'l3' : ''}">§${s.id} ${s.title}</a>`; });
+    $('#rail').innerHTML = r;
+  } else buildRailBooklet();
+}
+function buildRailBooklet() {
+  let r = '<h4>Contents</h4>';
+  $('#booklet').querySelectorAll('h2, h3').forEach(h => { r += `<a href="#" data-to="${h.id}" class="${h.tagName === 'H3' ? 'l3' : ''}">${h.textContent}</a>`; });
+  $('#rail').innerHTML = r;
+}
+function goGlossary(id) {
+  backY = window.scrollY; show('glossary');
+  $('#q').value = ''; filter('');
+  const t = document.getElementById(id); if (!t) return;
+  t.scrollIntoView({ block: 'center' });
+  if (t.tagName === 'TR') { t.classList.add('flash'); setTimeout(() => t.classList.remove('flash'), 1800); }
+}
+function filter(q) {
+  q = q.trim().toLowerCase(); let n = 0;
+  document.querySelectorAll('#gbody tr').forEach(tr => { const hit = !q || tr.dataset.q.includes(q); tr.hidden = !hit; if (hit) n++; });
+  document.querySelectorAll('#gbody .gsec').forEach(s => { const any = s.querySelector('tr:not([hidden])'); s.hidden = !!q && !any; });
+  $('#count').textContent = q ? `${n} of ${DATA.rows.length} terms` : `${DATA.rows.length} terms in ${DATA.secs.filter(s => !s.sub).length} sections`;
+}
+
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[data-term], a[data-sec], a[data-to], a[data-use]');
+  if (!a) return; e.preventDefault();
+  if (a.dataset.term) goGlossary(a.dataset.term);
+  else if (a.dataset.sec) goGlossary('sec-' + a.dataset.sec.replace('.', '-'));
+  else if (a.dataset.to) document.getElementById(a.dataset.to)?.scrollIntoView({ block: 'start' });
+  else if (a.dataset.use) {
+    const term = [...termIds].find(([, id]) => id === a.dataset.use)?.[0]; const u = uses.get(term);
+    backY = null; show('booklet'); if (u) { u.first.scrollIntoView({ block: 'center' }); u.first.focus({ preventScroll: true }); }
+  }
+});
+$('#t-booklet').onclick = () => { show('booklet'); if (backY !== null) window.scrollTo(0, backY); backY = null; };
+$('#t-glossary').onclick = () => { backY = null; show('glossary'); window.scrollTo(0, 0); };
+$('#back').onclick = () => { const y = backY; backY = null; show('booklet'); window.scrollTo(0, y || 0); };
+$('#q').addEventListener('input', e => filter(e.target.value));
+
+buildBooklet();
+buildGlossary();
+show(location.hash === '#glossary' ? 'glossary' : 'booklet');
+</script>

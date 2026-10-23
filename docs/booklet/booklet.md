@@ -1,7 +1,6 @@
 # Karea's Dream: the Booklet
 
-A pocket companion for building the game in Godot. Images live in `tools/out/booklet/img/` (git-ignored); the printable
-booklet is `tools/out/booklet/booklet.html` and `booklet.pdf`. Every name is canonical. **§N Term** points into
+A pocket companion for building the game in Godot. Every name is canonical; click one to open its glossary entry. **§N Term** points into
 `docs/GLOSSARY.md` (section N, the Term column). **§—** means the term is not in the glossary yet (see Open questions).
 Lines marked *Idea* are studio proposals, not canon.
 
@@ -15,7 +14,7 @@ Sources: `docs/design/story.md`, `world-brief.md`, `names.md`, `items.md`, `load
 **Premise.** Morrow (§14 Morrow) was the first Dreamwarden. When his daughter Karea died in the waking world he refused to
 wake and dreamed her back. The Gloam (§12 Gloam) is the cost: his dream drowns the other Wardens' (§12 Wardens) islands.
 The four Wardens tried to wake him; he made them guardians of his sleep. Pip (§12 Pip) is the last light of the real
-Karea's lantern. The hero, Karea (§12 Karea, renamed Karea by client ruling 2026-10-23), is three days old: she is Morrow's dream of his daughter.
+Karea's lantern. The hero, Karea (§12 Karea, formerly Aerin), is three days old: she is Morrow's dream of his daughter.
 **Twist (end of Act IV):** relighting the Dawn Shards (§15) does not wake Morrow; it wakes *you*.
 
 **Run shape.** Prologue (Vale) → Act I Pinewood → Act II Ruins → Act III Grotto → Act IV Caldera → Finale (Spire,
