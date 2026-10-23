@@ -3,6 +3,7 @@
 Terms: [../GLOSSARY.md](../GLOSSARY.md). Items and drops: [items.md](items.md). Power curves: [balance.md](balance.md).
 
 ## Levels
+**Client ruling 2026-10-23: the main path runs 7 to 10 hours; level cap 50; the Progression + content lane rescales this file.**
 * Level 1 to 40. `xpToNext(L) = round(60 * L^1.55)`. Each level gives +4% HP and +3% damage. No talent tree.
 * Level bands: Vale 1 to 3, Pinewood 3 to 10, Ruins 10 to 17, Grotto 17 to 24, Caldera 24 to 31, Spire 31 to 38. Levels 39 and 40 are optional or NG+.
 * Bosses grant 1 level, mini-bosses 0.5. XP falls to 10% once the hero is 3 levels above the band.

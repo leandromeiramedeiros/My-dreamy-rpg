@@ -102,6 +102,9 @@ Gate: golden vectors match; balsim parity ±2 % between JS and Godot; the Godot 
 web export runs with 0 errors (no web or phone perf target, client ruling); desktop p95 ≤ 16.7 ms on `stress`; the client plays the arenas in Godot (desktop + phone web) and approves.
 
 ## Client rulings (latest first)
+* 2026-10-23 — **The main path itself runs 7 to 10 hours** (today ~130 min). The studio stretches progression and content:
+  level cap 50 (bands rescaled per zone, ~1 h to 1 h 20 per zone, NG+ beyond), item tiers spread over the run, about two
+  times the enemies per zone (commons, elites, minis), more uniques, side quests and encounter slots per zone in data. Maps stay the client's.
 * 2026-10-23 — **Equip look = Terraria + "Weapons Out", in 8 directions.** Every worn piece is its own layer on the hero
   at runtime (head, chest, legs/boots, cape, trinkets); the held weapon and offhand are always visible (idle, walk, attack),
   drawn as one item sprite attached to the hand socket and rotated per frame by the socket angle (swing, thrust, aim),
