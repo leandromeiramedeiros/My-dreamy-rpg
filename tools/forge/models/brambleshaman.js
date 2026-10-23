@@ -156,7 +156,7 @@ module.exports = {
   tones: [0.8, 0.3, -0.3],
   outline: '#0c0714', innerLine: 2.0,
   pixel: { normalSteps: 0 },
-  flatDepth: true, bankSheets: { die: ['hit', 'death', 'heal'] },   // one layer: a part map for depth (forge.js flatDq); hit, death, heal in their own sheet
+  flatDepth: true, bankSheets: { mv: ['walk'], die: ['hit', 'death', 'heal'] },   // one layer: a part map for depth (forge.js flatDq); hit, death, heal in their own sheet
   bones, layers, anims, sheetAnims: ['idle', 'walk', 'attack', 'hit', 'death', 'heal'],
   sockets,
   dirs: [['S', 0], ['SE', 45], ['E', 90], ['NE', 135], ['N', 180], ['NW', 225], ['W', 270], ['SW', 315]],

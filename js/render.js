@@ -354,7 +354,13 @@ function drawScene() {
   const heroL = p.dead ? null : { sx: isoX(p.x, p.y), sy: isoY(p.x, p.y, p.z) - 10, r: 54 + 46 * look.dark, col: '#ffe6d0', a: 0.28 + 0.55 * look.dark, keep: true, own: p, bloom: look.dark };
   if (heroL) lights.push(heroL);
   const pl = typeof pipLight === 'function' && pipLight(); if (pl) { pl.bloom = 0; lights.push(pl); }   // §28 Pip's floating amber light (game.js)
-  applyLighting(ctx, lights, th, look.css);
+  // the Gloam Warden's gloam (bosses.js G.gloam): the hall goes dark; only the lantern's safe circle (and the hero's own lamp) is lit
+  const GL = G.gloam && G.t < G.gloam.until ? G.gloam : null;
+  if (GL) {   // the map's lamps and braziers go out (bodies' own lights and the hero's lamp stay); the lantern circle is the light
+    let n = 0; for (const L of lights) if (L.own) lights[n++] = L; lights.length = n;
+    lights.push({ sx: isoX(GL.x, GL.y), sy: isoY(GL.x, GL.y, tileH(m, GL.x, GL.y)) - 4, r: GL.r * 30, col: '#ffd27a', a: 1, keep: true, bloom: 1 });
+  }
+  applyLighting(ctx, lights, th, GL ? 'rgb(12,8,22)' : look.css);
 
   perfMark('lights');
   // ---- bloom + grade ----
@@ -806,6 +812,11 @@ function drawDecal(ctx, e) {
         ctx.beginPath(); pts.forEach((pt, i) => i ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1])); ctx.closePath();
       }
     };
+    if (e.cue) {   // a non-damaging cue (tele cue: true): dashed outline, no fill, a dashed countdown edge
+      ctx.setLineDash([3, 3]); ctx.lineWidth = 1; ctx.strokeStyle = rgba(e.col, T.edge);
+      shape(1); ctx.stroke(); ctx.strokeStyle = rgba(e.col, T.edge * 0.6); shape(k); ctx.stroke(); ctx.setLineDash([]);
+      return;
+    }
     shape(1); ctx.fill(); ctx.stroke();
     ctx.fillStyle = rgba(e.col, T.count); shape(k); ctx.fill();   // the filling countdown
   } else if (e.type === 'marker') {
@@ -911,7 +922,13 @@ function heroGhostFrame(e) {
 const CORPSE_PROBE = { face: 1, flash: 1, hitFreeze: 0, state: 'chase', anim: 0, asleep: false };
 function corpseLook(e) {
   const def = ENEMY[e.type] || {}, fly = (def.tags || e.tags || []).includes('flying');
-  const key = enemyArtKey(e);
+  const fr = forgeEnemyRig(e), fs = fr && FEN.last[fr];
+  if (fs && fs.at.hit != null) {   // M4b: a forge enemy's ghost / pop sprite is its forge hit frame, in the direction it faced
+    const d8 = DIR8[e.fDirI != null ? e.fDirI : 1], dir = fs.dirIdx[d8] != null ? d8 : forgeOneDir(fs);
+    const img = forgeEnemyCell(fr + '|hit|' + dir + '|0', fs.canvas, fs.at.hit * fs.w, fs.dirIdx[dir] * fs.h, fs.w, fs.h);
+    return { img, sc: 1, art: null, hover: FEN.hover[fr] ? FEN.hover[fr][0] / ZS : 0 };
+  }
+  const key = enemyArtKey(e, !!fr);   // a forge enemy whose sheet is not ready yet keeps ENEMY_ART's ghost
   if (key) return { img: ENEMY_ART.get(key, 'hit', 0), sc: 1, art: key, hover: fly ? 8 / ZS : 0 };   // img: the swarm squash-pop ghost
   const look = enemyLook(def, e.type), sc = (def.scale || 1) * LEGACY_ENEMY_K;
   let img = null, hover = 0;
@@ -1542,6 +1559,11 @@ function drawEnemy(ctx, e, lights) {
   const artKey = enemyArtKey(e);
   if (artKey) { drawEnemyArt(ctx, e, artKey, vx, vy, spawnA, lights); return; }
   if (e.under) { drawBurrowed(ctx, e, vx, vy); return; }
+  if (e.mimic && e.mimicAs === 'pillar') {   // the Pillar Mimic's disguise until its forge sheet is ready (drawn from the forge after): a plain stone column
+    const x = Math.round(vx), y = Math.round(vy); ctx.fillStyle = '#0c0714'; ctx.fillRect(x - 6, y - 31, 12, 32);
+    ctx.fillStyle = '#686480'; ctx.fillRect(x - 5, y - 30, 10, 30); ctx.fillStyle = '#46425a'; ctx.fillRect(x + 1, y - 30, 4, 30); ctx.fillStyle = '#9490ac'; ctx.fillRect(x - 5, y - 30, 10, 2);
+    return;
+  }
   if (e.mimic) { const ci = ART.chest; ctx.drawImage(hitF(e) ? silOf(ci, '#ffffff') : ci, Math.round(vx - ci.width / 2), Math.round(vy - ci.height + 1)); return; }
   ctx.globalAlpha = spawnA * (e.fadeT > 0 ? 0.35 : 1);
   if (e.elite) drawEliteAura(ctx, e);
@@ -1627,15 +1649,31 @@ function drawEnemy(ctx, e, lights) {
 // duration (e.windMax, P.strike / P.dur, P.rec) · walk (moved within 0.15 s, fleeing) · idle. Death: drawCorpse plays the 3
 // death frames over the corpse's flight. Until a sheet is ready (first sight: the bank loads, the sheet composes) the old
 // sprite draws; ?oldenemy keeps the old path everywhere.
+// M4b: every Act I / II enemy and boss has a rig (the built-in slime and hound rows stay on their old art: tools/play.js).
+// Amorphous / swarm rigs have 1 direction (wisp, gloomslime, shadelingswarm, sapling): every facing draws it. A boss is two rigs:
+// <boss> (idle, walk, hit, death, roar / howl) and FEN.split[<boss>] (its move anims), each its own bank file under the cap; the
+// boss move (e.bk.mv) picks the anim by type (forgeBossAnim) and its frames by the move clock (wind f0-1, hit f2-3, open f4-5).
+// Flyers hover (FEN.hover: px over the ground + bob); glows (FEN.glow: a light at a socket). FEN.type: a row whose rig is not
+// its art (the Thornsow Matriarch's art is the old boar key; ENEMY.boss is the Gloam Warden).
 const OLD_ENEMY = (() => { try { return new URLSearchParams(location.search).has('oldenemy'); } catch (e) { return false; } })();
-const FORGE_ENEMIES = new Set(['brambleshaman', 'ogre', 'mountaintroll', 'shadehound']);
-const FEN = { old: 0, oldFirst: null, last: {}, maps: {}, sock: new Map(), cells: new Map(), warned: new Set(), shadowR: { brambleshaman: 7, ogre: 10, mountaintroll: 11, shadehound: 8 }, eye: { shadehound: '#ff6b9a' } };
+const FORGE_ENEMIES = new Set(['brambleshaman', 'ogre', 'mountaintroll', 'shadehound', 'dreammoth', 'gloomslime', 'gloomslime_small', 'thornbackboar', 'thornsow',
+  'mossjaw', 'bramblehorn', 'sapling', 'wisp', 'gloomknight', 'gravechanter', 'pillarmimic', 'shadelingswarm', 'voidarcher', 'oathless', 'gloamwarden']);
+const FEN = { old: 0, oldFirst: null, last: {}, maps: {}, sock: new Map(), cells: new Map(), warned: new Set(),
+  shadowR: { brambleshaman: 7, ogre: 10, mountaintroll: 11, shadehound: 8, dreammoth: 4, gloomslime: 7, gloomslime_small: 5, thornbackboar: 9, thornsow: 11,
+    mossjaw: 16, bramblehorn: 18, sapling: 5, wisp: 4, gloomknight: 8, gravechanter: 7, pillarmimic: 8, shadelingswarm: 4, voidarcher: 7, oathless: 12, gloamwarden: 14 },
+  eye: { shadehound: '#ff6b9a' },
+  type: { thornsow: 'thornsow', boss: 'gloamwarden' },
+  split: { mossjaw: 'mossjaw_moves', bramblehorn: 'bramblehorn_moves', oathless: 'oathless_moves', gloamwarden: 'gloamwarden_moves' },
+  hover: { dreammoth: [8, 3], wisp: [2, 3], gloamwarden: [1, 2] },
+  glow: { wisp: [['chest', '#7fd6ff', 36, 0.9]], dreammoth: [['chest', '#e0a8ff', 16, 0.5]], gravechanter: [['tip', '#6ef0a0', 18, 0.6]], voidarcher: [['tip', '#c890ff', 14, 0.45]],
+    gloamwarden: [['lantern', '#ff7ae0', 48, 0.9], ['chest', '#c78bff', 40, 0.7]] } };
 const OCT = Math.PI / 4;
 function forgeEnemyRig(e) {
   if (OLD_ENEMY || typeof FORGE === 'undefined' || !e) return null;
-  const def = ENEMY[e.type] || {}, k = def.art || e.type;
+  const def = ENEMY[e.type] || {}, k = FEN.type[e.type] || def.art || e.type;
   return FORGE_ENEMIES.has(k) ? k : null;
 }
+const forgeOneDir = s => s.dir1 || (s.dir1 = Object.keys(s.dirIdx)[0]);   // a 1-direction rig's only direction
 function forgeEnemySheet(rig) {   // the ready sheet entry, or null (still loading / composing, or failed: the caller draws the old sprite)
   if (FEN.last[rig]) return FEN.last[rig];
   try {
@@ -1658,7 +1696,7 @@ function forgeEnemyPrewarm(mapId) {
     FEN.maps[mapId] = txt;
   }
   const rigs = new Set();
-  for (const t in ENEMY) { const r = forgeEnemyRig({ type: t }); if (r && !rigs.has(r) && txt.indexOf('"' + t + '"') >= 0) rigs.add(r); }
+  for (const t in ENEMY) { const r = forgeEnemyRig({ type: t }); if (r && !rigs.has(r) && txt.indexOf('"' + t + '"') >= 0) { rigs.add(r); if (FEN.split[r]) rigs.add(FEN.split[r]); } }
   for (const r of rigs) forgeEnemySheet(r);
   return [...rigs];
 }
@@ -1711,7 +1749,7 @@ function forgeEnemyBoxes(s) {
 function forgeEnemyCell(k, img, sx, sy, w, h) {
   let c = FEN.cells.get(k); if (c) return c;
   const C = makeCanvas(w, h); C.x.drawImage(img, sx, sy, w, h, 0, 0, w, h); c = C.c;
-  if (FEN.cells.size >= 768) FEN.cells.delete(FEN.cells.keys().next().value);   // 4 rigs x 22-24 columns x 8 dirs: ~730
+  if (FEN.cells.size >= 1536) FEN.cells.delete(FEN.cells.keys().next().value);   // ~6 rigs on screen x 22-26 columns x 8 dirs
   FEN.cells.set(k, c);
   return c;
 }
@@ -1721,12 +1759,37 @@ function forgeEnemyFace(e, a) {
   if (e.fDirI != null) { let d = Math.abs(th - e.fDirI * OCT) % (Math.PI * 2); if (d > Math.PI) d = Math.PI * 2 - d; if (d < OCT / 2 + 0.05) return; }
   e.fDirI = ((Math.round(th / OCT) % 8) + 8) % 8;
 }
-function forgeEnemyAnim(e, s, moving) {
-  const N = a => s.n[a] || 1, has = a => s.at[a] != null;
+// a boss's anim from its move (e.bk.mv: M, t, wind, open), its break / bar transition; null = the common states. The anim by
+// move type: a self-centred circle = stomp (else slam), a root / grab = grab, summon / roar / arena / zone = howl or roar,
+// vanish = burrow (then the dirt mound), a wall / shield move = wall, volley / rain / ring / beam / gloam = volley, charge = charge, else attack (a
+// rig without the anim plays attack). Frames: 6-frame anims wind f0-1 over the wind, the hit f2-3 (0.24 s), the open f4-5;
+// 2-frame anims wind f0, then f1; 1-frame anims hold.
+function forgeBossAnim(e, has, N) {
+  if (e.breakStun > 0) return ['hit', 0];
+  const K = e.bk; if (!K) return null;
+  if (K.transT > 0) return has('roar') ? ['roar', 0] : has('howl') ? ['howl', 0] : ['idle', 0];
+  const mv = K.mv; if (!mv || !mv.M) return null;
+  const M = mv.M, T = M.type;
+  let a = T === 'vanish' ? 'burrow' : M.root || /grab/i.test(M.name) ? 'grab' : T === 'circle' && M.at === 'self' ? (has('stomp') ? 'stomp' : 'slam')
+    : T === 'summon' || T === 'roar' || T === 'arenaShrink' || T === 'zone' ? (has('howl') ? 'howl' : 'roar')
+    : /wall|shield/i.test(M.name) || T === 'shieldwall' ? 'wall' : T === 'volley' || T === 'rain' || T === 'ring' || T === 'beam' || T === 'gloam' ? 'volley' : T === 'charge' ? 'charge' : 'attack';
+  if (!has(a)) a = 'attack';
+  if (!has(a)) return ['idle', 0];
+  const n = N(a), t = mv.t || 0, w = Math.max(0.05, mv.wind || 0);
+  if (a === 'burrow') return ['burrow', t < 0.18 ? 0 : 1];
+  if (n >= 6) { if (t < w) return [a, Math.min(1, Math.floor(t / w * 2))]; const q = t - w; return [a, q < 0.24 ? 2 + Math.floor(q / 0.12) : q < 0.24 + (mv.open || 0.6) / 2 ? 4 : 5]; }
+  return [a, Math.min(n - 1, t < w ? 0 : 1)];
+}
+function forgeEnemyAnim(e, s, moving, s2) {
+  const N = a => s.n[a] || (s2 && s2.n[a]) || 1, has = a => s.at[a] != null || !!(s2 && s2.at[a] != null);
   const prog = (f0, f1, k) => ['attack', Math.min(f1, f0 + Math.floor(clamp(k, 0, 0.999) * (f1 - f0 + 1)))];
-  if (hitF(e)) return ['hit', 0];
+  if (e.boss && !(e.bk && e.bk.mv)) { if (hitF(e)) return ['hit', 0]; }   // a boss mid-move keeps its telegraph pose (the white flash still shows)
+  else if (!e.boss && hitF(e)) return ['hit', 0];
+  if (e.boss) { const B = forgeBossAnim(e, has, N); if (B) return B; }
   if (e.asleep) return has('sleep') ? ['sleep', Math.floor(e.anim * 1.5) % N('sleep')] : ['idle', 0];
   const st = e.state, P = (e.act && e.pp && e.pp[e.act]) || {};
+  if (st === 'wind' && e.act === 'burrow' && has('burrow')) return ['burrow', Math.min(1, Math.floor(((e.windMax || 0) - e.st) / 0.18))];
+  if (st === 'erupt' && has('erupt')) return ['erupt', e.st > 0.3 ? 0 : 1];
   if (st === 'wind') return e.act === 'healer' && has('heal') ? ['heal', 0] : prog(0, 1, 1 - e.st / Math.max(0.05, e.windMax || 0.6));
   if (st === 'rec') {
     const k = 1 - e.st / Math.max(0.05, P.rec != null ? P.rec : 0.4);
@@ -1747,15 +1810,24 @@ function drawEnemyForge(ctx, e, rig, s, vx, vy, spawnA, lights) {
   const moving = e.fMoveT != null && G.t - e.fMoveT < 0.15 && G.t >= e.fMoveT;
   if (e.state === 'rec' && e.fPrev !== 'rec') e.fRec = e.fPrev === 'wind' ? 'cast' : e.fPrev === 'chase' || e.fPrev === 'flee' ? 'stun' : 'act';
   e.fPrev = e.state;
-  const p = G.player;
-  if (!hitF(e) && !e.asleep) {
+  const p = G.player, bmv = e.boss && e.bk && e.bk.mv;
+  if (bmv && bmv.aim != null && !e.breakStun) forgeEnemyFace(e, bmv.aim);   // a boss faces its move's aim
+  else if (!hitF(e) && !e.asleep) {
     if (!roam && e.aimA != null && (e.act === 'brute' || e.act === 'charge') && !(e.state === 'rec' && e.fRec === 'stun')) forgeEnemyFace(e, e.aimA);
     else if (!roam && p) forgeEnemyFace(e, Math.atan2(p.y - e.y, p.x - e.x));
     else if (moved) forgeEnemyFace(e, Math.atan2(my, mx));
     else if (!moving && p) forgeEnemyFace(e, Math.atan2(p.y - e.y, p.x - e.x));
   }
   if (e.fDirI == null) e.fDirI = e.face < 0 ? 3 : 1;   // SW / SE until it first moves
-  const dir = DIR8[e.fDirI], [a0, f0] = forgeEnemyAnim(e, s, moving), anim = s.at[a0] != null ? a0 : 'idle', f = anim === a0 ? f0 % (s.n[anim] || 1) : 0;
+  // underground (a burrow's vanish): the dirt mound, after the first 0.36 s of the dig
+  if (e.under && e.state !== 'erupt' && !(e.state === 'wind' && e.act === 'burrow' && (e.windMax || 0) - e.st < 0.36) && !(bmv && bmv.M && bmv.M.type === 'vanish' && bmv.t < 0.36)) { drawBurrowed(ctx, e, vx, vy); return; }
+  // a boss's move anims live on its second rig (FEN.split): drawn from that sheet once ready (asked for every draw: held after)
+  const rig0 = rig, r2 = FEN.split[rig], s2 = r2 ? forgeEnemySheet(r2) : null;
+  const [a0, f0] = forgeEnemyAnim(e, s, moving, s2);
+  if (s.at[a0] == null && s2 && s2.at[a0] != null) { s = s2; rig = r2; }
+  const anim = s.at[a0] != null ? a0 : 'idle', f = anim === a0 ? f0 % (s.n[anim] || 1) : 0, d8 = DIR8[e.fDirI], dir = s.dirIdx[d8] != null ? d8 : forgeOneDir(s);
+  const hv = FEN.hover[rig0];
+  if (hv) vy -= hv[0] + Math.sin((e.anim || G.t) * 3) * hv[1];   // flyers hover and bob (a draw offset; the shadow stays on the ground)
   const cx = Math.round(vx) - s.ax, cy = Math.round(vy) - s.ay, S = forgeEnemySockets(rig, anim, dir, f);
   const w = s.w, h = s.h, sx = 0, sy = 0, dx = cx, dy = cy;
   const col = s.at[anim] + f, row = s.dirIdx[dir] || 0, img = forgeEnemyCell(rig + '|' + anim + '|' + dir + '|' + f, s.canvas, col * w, row * h, w, h);
@@ -1785,9 +1857,11 @@ function drawEnemyForge(ctx, e, rig, s, vx, vy, spawnA, lights) {
     const BX = forgeEnemyBoxes(s), o = (row * s.cols + col) * 4, bx = BX[o], by = BX[o + 1], bw = BX[o + 2], bh = BX[o + 3];   // the tint covers the body's box only
     STATUS.body(ctx, e, img, bx, by, bw, bh, dx + bx, dy + by, bw, bh, head, chest, lights);
   }
-  if (FEN.eye[rig]) lights.push({ sx: head[0] + camX - RW / 2, sy: head[1] + 3 + camY - RH / 2, r: 14, col: FEN.eye[rig], a: 0.7, own: e });   // the hound's glowing eyes
+  if (FEN.eye[rig0]) lights.push({ sx: head[0] + camX - RW / 2, sy: head[1] + 3 + camY - RH / 2, r: 14, col: FEN.eye[rig0], a: 0.7, own: e });   // the hound's glowing eyes
+  const GL = FEN.glow[rig0];   // glows at a socket (the wisp's body, the Warden's lantern); a wind-up brightens them
+  if (GL) for (const [k, c, r, a] of GL) { const q = S[k] ? [cx + S[k].x, cy + S[k].y] : chest; lights.push({ sx: q[0] + camX - RW / 2, sy: q[1] + camY - RH / 2, r: r + (e.state === 'wind' || bmv ? 12 : 0), col: c, a, own: e }); }
   ctx.globalAlpha = 1;
-  if (e.asleep && Math.random() < 0.03) text(e.x, e.y, e.z + e.hgt + 0.3, 'z', '#c8c0e0', false, 1.2);
+  if (e.asleep && !e.mimic && Math.random() < 0.03) text(e.x, e.y, e.z + e.hgt + 0.3, 'z', '#c8c0e0', false, 1.2);   // a mimic gives no sign
   if (e.eShield > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = rgba('#cfe6ff', 0.4 + 0.4 * e.eShield / e.eShieldMax); projRing(ctx, e.x, e.y, 0.2, e.r + 0.45); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
   if (e.stunT > 0 && !e.frozen) for (let k = 0; k < 3; k++) { const a = G.t * 6 + k * 2.1; ctx.fillStyle = '#ffe36a'; ctx.fillRect(Math.round(head[0] + Math.cos(a) * 6), Math.round(head[1] - 4 + Math.sin(a) * 2), 1, 1); }
   const R = e.fRect || (e.fRect = {}); R.img = img; R.sx = sx; R.sy = sy; R.w = w; R.h = h; R.ax = s.ax; R.ay = s.ay;   // the shadow pass (next frame)
@@ -1803,10 +1877,9 @@ function enemyShadowSil(e) {
 }
 // the ground shadow's radius (the decal pass): bosses, wisps, the forge bodies by size, else the old 7 px
 function enemyShadowR(e) {
-  if (e.boss) return 18;
-  if (e.type === 'wisp') return 4;
   const r = forgeEnemyRig(e);
-  return r && FEN.last[r] ? FEN.shadowR[r] : 7;
+  if (r && FEN.last[r] && FEN.shadowR[r]) return FEN.shadowR[r];
+  return e.boss ? 18 : e.type === 'wisp' ? 4 : 7;
 }
 
 // ===== ENEMY_ART (js/enemyart.js, procedural 12+ frame sets): the primary enemy sprite source =====================
@@ -1815,8 +1888,8 @@ function enemyShadowR(e) {
 // telegraph frame 0, hit frame 1) · attack (wind 0, action 1) · walk (moving) · idle. Elites: tint + aura hooks.
 const ART_FLIP = new WeakMap();
 const flipOf = c => { let f = ART_FLIP.get(c); if (!f) ART_FLIP.set(c, f = flipH(c)); return f; };
-function enemyArtKey(e) {
-  if (typeof ENEMY_ART === 'undefined') return null;
+function enemyArtKey(e, any) {   // any: also for a forge enemy (corpseLook's fallback before its sheet is ready)
+  if (typeof ENEMY_ART === 'undefined' || (!any && forgeEnemyRig(e))) return null;   // M4b: a forge enemy never draws ENEMY_ART (?oldenemy: forgeEnemyRig is null)
   const def = ENEMY[e.type] || {}, k = def.art || e.type;
   return ENEMY_ART.info[k] ? k : null;
 }

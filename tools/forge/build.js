@@ -28,7 +28,12 @@ const FORGE = require('./forge.js');
 
 let name, model, gear;                                           // the CLI's rig (main)
 const OUT = path.join(__dirname, 'out'), ROOT = path.join(__dirname, '..', '..');
-const ENEMY_RIGS = ['brambleshaman', 'ogre', 'mountaintroll', 'shadehound'];   // gearless enemy rigs (render.js drawEnemy)
+// gearless enemy rigs (render.js drawEnemy). A boss is split over two rigs (<boss> + <boss>_moves: two bank files under the
+// 160 KB cap, render.js FEN.split); the _moves rig is not an enemy row
+const ENEMY_RIGS = ['brambleshaman', 'ogre', 'mountaintroll', 'shadehound',
+  'dreammoth', 'gloomslime', 'gloomslime_small', 'thornbackboar', 'thornsow', 'mossjaw', 'mossjaw_moves',
+  'bramblehorn', 'bramblehorn_moves', 'sapling', 'wisp', 'gloomknight', 'gravechanter', 'pillarmimic', 'shadelingswarm', 'voidarcher',
+  'oathless', 'oathless_moves', 'gloamwarden', 'gloamwarden_moves'];
 const GAME_RIGS = ['chibi', ...ENEMY_RIGS];                     // rigs whose banks ship in js/forge-bank
 
 const { png, pngSmall, unpng } = require('./png.js');

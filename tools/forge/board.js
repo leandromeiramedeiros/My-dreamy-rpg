@@ -123,7 +123,8 @@ function enemiesBoard() {
   for (const B of blocks) {
     text(img, W, 2, y0 + 1, `${B.rig}: ${B.w}x${B.h} frames`, INK);
     ANIMS.forEach((a, ai) => {
-      const x0 = LW + ai * (aw(B) + AG), A = B.m.anims[a], ms = A.ms || [];
+      const x0 = LW + ai * (aw(B) + AG), A = B.m.anims[a]; if (!A) return;   // a boss base rig has no attack (its <boss>_moves rig does)
+      const ms = A.ms || [];
       for (let f = 0; f < A.frames && f < 6; f++) text(img, W, x0 + f * (B.w + CG) + 2, y0 + TH, `${a.slice(0, 3)} ${f} ${ms[f] || ''}`, INK);
       B.m.dirs.forEach(([d], di) => {
         const y = y0 + TH + 8 + di * (B.h + CG);
