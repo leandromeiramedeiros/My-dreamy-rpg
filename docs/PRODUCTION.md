@@ -95,6 +95,14 @@ Gate: golden vectors match; balsim parity ±2 % between JS and Godot; the Godot 
 web export runs with 0 errors (no web or phone perf target, client ruling); desktop p95 ≤ 16.7 ms on `stress`; the client plays the arenas in Godot (desktop + phone web) and approves.
 
 ## Client rulings (latest first)
+* 2026-10-23 — **Scope change.** The client runs the Godot side: he builds every map and expands the story. The game runs
+  7 to 10 hours, early game to late game, following the story (two endings, NG+). The studio focuses on items, effects,
+  gems and socketables, skills and gameplay systems, plus every asset the booklet lists. Balance is **barebones** (sane
+  defaults the client tunes); testing is light ("vibes": the quick gate only, no new heavy test tools). No map thinking.
+* 2026-10-23 — **The Booklet:** a small illustrated book for the client: a codex-image storyboard from early game to both
+  endings and NG+, zone concept maps (he builds them), key scenes, and a catalogue of every system, item, enemy, boss, NPC,
+  status and Grip with its GLOSSARY section and where it is used. It drives the asset list for Godot; extras welcome.
+* 2026-10-23 — **Slot matrix pairings:** an offhand must fit its HAND's fantasy (no Quiver with a Sword); table in loadout.md "Pairings".
 * 2026-10-23 — **Everything parametric; FX swappable** (FX presets in slots on any data resource).
 * 2026-10-23 — **The client tunes balance.** The studio focuses on assets and logic; balance targets (parity, TTK, fight times, win rates) are report-only, never gates or tuning work. Gates keep correctness: no crash, every arena completable, the Godot port matching the JS maths.
 * 2026-10-23 — **Runtime layering:** no `_front`/`_back` split; every gear piece is one colour + one depth sheet, layered per pixel at runtime (JS and Godot). Export v2 lane.
