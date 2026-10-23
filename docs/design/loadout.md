@@ -48,7 +48,7 @@ A companion is a deck. Its action cycles or primes, its spell fires the active e
 
 * Pages, arrows and calls are items. Capacity by companion tier: 2/3/4/5/6/6.
 * They are socketed in the bag, stack by id, and sort into a "Pages" tab.
-* They are re-homed cast functions (zero new casts), about 40 in all: mage ~18, ranger ~10, warrior ~8, 4 shared.
+* Pages are re-homed cast functions; arrows (7) and calls (4) are new casts; about 40 entries in all: mage ~18, ranger ~10, warrior ~8, 4 shared.
 * The Elder Stone sells one per zone. More turn up at lore tablets, vaults and bosses.
 
 ## Grips

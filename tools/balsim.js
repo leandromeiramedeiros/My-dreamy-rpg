@@ -323,7 +323,7 @@ SMath.random = rng;
 // note; the -1 tier median is a note (losses are expected there). The fight lengths themselves are enforced on the frozen table above.
 const LIVE = { mossjaw: { L: +arg('moss-L', 8), max: 90, red: 120 }, bramblehorn: { L: 9, max: 240, red: 300 } };   // L: lowest arrival level. Mossjaw 7 -> 8: QA runs reached the den at L8-9 (M3), and at L7 tier 0 is the floor, so '-1 tier' was a rarity drop only
 const REACT = 0.3, MISTAKES = [3, 12], MISS_EVERY = +arg('miss', 10), LIVE_POTIONS = 2, LIVE_TRIALS = 6, LIVE_UNDER = [3, 4];
-const LIVE_ROWS = [{ k: 'under', label: '-1 tier', n: +arg('under-trials', 48) }, { k: 'reference', label: 'reference', n: +arg('ref-trials', LIVE_TRIALS) }];   // the Story -2 tier row is gone (Story removed)
+const LIVE_ROWS = [{ k: 'under', label: '-1 tier', n: +arg('under-trials', 96) }, { k: 'reference', label: 'reference', n: +arg('ref-trials', LIVE_TRIALS) }];   // the Story -2 tier row is gone (Story removed)
 const ONLY = arg('only', '');
 // --qa: also replay the QA bot's arrival hero (tools/qa/gear-mossjaw.json, written by run-big.js at the den) in the Mossjaw fight
 const QA_FILE = arg('qa-gear', path.join(ROOT, 'tools/qa/gear-mossjaw.json')), QA_GEAR = process.argv.includes('--qa') && fs.existsSync(QA_FILE) ? JSON.parse(fs.readFileSync(QA_FILE, 'utf8')) : null;
