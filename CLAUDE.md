@@ -29,8 +29,13 @@
 - Report with numbers and screenshot paths.
 
 ## Ship gate (the director checks after each report)
-`node tools/smoke.js` (runs balsim + save-migrate) · `tools/play.js` · `tools/act1-route.js` · `tools/validate-ids.js` ·
-`tools/maps/engine-check.js` · `tools/perf.js` · `tools/qa/run-big.js kbm all` (the bot). Known flakes: play.js warp-fade, perf under load.
+`node tools/check.js`: smoke (balsim + save-migrate) · play · validate-ids · forge-rt · perf · the bot; after the M4b
+Arena cut, `tools/arena-route.js` and `tools/qa/run-arenas.js` replace act1-route, maps/engine-check and run-big.
+Known flakes: play.js warp-fade, perf under load.
+
+## Godot pivot (client ruling 2026-10-23)
+The studio never makes maps: test only in mockup arenas (`js/arenas.js`). Every asset ships human-editable (PNG + JSON
+sidecar, see `docs/design/asset-pipeline.md`) for the client's Godot port.
 
 ## Glossary (enforced)
 `docs/GLOSSARY.md` holds the canonical name of every game term.

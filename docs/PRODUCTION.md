@@ -3,21 +3,25 @@
 Live: https://leandromeiramedeiros.github.io/My-dreamy-rpg/ — deploys from `claude/dreamy-rpg-concept` (default branch).
 A milestone ships when its PR merges there.
 
-Design source: `docs/design/INDEX.md` (one lean file per system). M4 vision and rulings: `docs/meetings/2026-10-22-studio-experts.md`.
+Design source: `docs/design/INDEX.md` (one lean file per system). M4 vision: `docs/meetings/2026-10-22-studio-experts.md`.
+**Godot pivot (2026-10-23):** the studio builds the game minus the world (systems, tables, sprites, audio), tested in
+mockup arenas; the client builds every zone in Godot. Deliverable: the `handoff/` package + the JS reference build.
+Plan: `docs/meetings/2026-10-23-godot-handoff.md`. Act I maps tagged `maps-pre-godot`, then removed.
 
 ## Ship gate
-`node tools/smoke.js` · `tools/play.js` · `tools/act1-route.js` · `tools/validate-ids.js` · `tools/maps/engine-check.js` ·
-`tools/perf.js` · `tools/qa/run-big.js kbm all` (from M4a: one runner, `node tools/check.js`). Director reviews shots, merges.
-Local box: Windows 11, Node 24, Python 3.13 + PIL, Playwright with its own Chromium (`npm i`). Known flakes: play.js
-warp-fade, perf under load.
+`node tools/check.js` (`--fast` skips perf + bot): smoke (balsim + save-migrate) · play · validate-ids · forge-rt · perf · the bot.
+Until the M4b Arena cut lands: act1-route, maps/engine-check, qa/run-big. After it: `tools/arena-route.js`,
+`tools/qa/run-arenas.js kbm|pad|touch`, perf on the `stress` arena. Director reviews shots, merges.
+Local box: Windows 11, Node 24, Python 3.13 + PIL, Playwright with its own Chromium (`npm i`). Godot not installed yet.
+Known flakes: play.js warp-fade, perf under load.
 
 ## Status
 | Milestone | State |
 |---|---|
 | M1 foundation, inventory, loot · M2a HUD/input/feel · M2b Act I slice · M3 items v2, hit feel, boss phases, Echo, opening, world art G1–G3, phone perf | **LIVE** |
 | M3 hot-fix · M4a foundations on a vertical slice (Vale + Pinewood) | **LIVE** |
-| **M4b** full content rollout + Act II Ruins + elements in the world | **in progress** (branch `claude/m4b`) |
-| M5 Act III Grotto · M6 Act IV Caldera · M7 Finale Spire + endings + NG+ · M8 polish, timed runs | planned (re-scoped after M4b) |
+| **M4b Arena cut** — wave 1 content (gear, enemy forge, skills, Ruins bestiary), mockup arenas, tile/prop export start, map deletes, docs | **in progress** (branch `claude/m4b`) |
+| M5 Systems + Godot import proof · M6 Bestiary · M7 Bosses · M8 UI, audio, feel · M9 Export and handoff | planned (minutes §6) |
 
 ## M4a — prove the vision on Vale + Pinewood (~5 weeks, 5 lanes in parallel)
 | Lane | Model | Owns | Acceptance |
@@ -31,20 +35,22 @@ warp-fade, perf under load.
 Order: Cleanup and Forge start first; Loadout starts when the hot-fix frees game.js; Lighting takes render.js after
 Forge exports rim masks. Gate: the client approves the forge-vs-reference board and plays the slice on desktop and phone.
 
-## M4b — full rollout (lanes run in their own git worktrees; the director merges)
+## M4b — Arena cut (lanes run in their own git worktrees; the director merges)
 | Wave | Lane | Model | Owns | Acceptance |
 |---|---|---|---|---|
-| 1 | Raster art embed | Sonnet | js/art-raster.js (new), index.html script tag, hud.js dialogue portrait, screens.js drawTitle, dialogue.js portrait ids | wordmark + 3 portraits drawn crisp at x2; `file://` works; palette-lint green |
-| 1 | Gear art A: suits | Sonnet | tools/forge/models/chibi-suit-*.js, suit loadouts in chibi-gear.js, generated suit line banks | 12 suits × 3 pieces × 6 tiers; tier strips per suit; lint + sha256 stable |
-| 1 | Gear art B: weapons, shields, companions | Sonnet | tools/forge/models/chibi-<line>.js (new lines), the line list in chibi-gear.js, js/icons.js forge icons | 21 lines × 6 tiers; icons from the forge |
-| 1 | Enemy forge | Opus | tools/forge/models/<enemy>.js, ENEMY_RIGS (build.js), render.js forge-enemy block only | every Act I + Ruins enemy and boss at 8 dirs (amorphous 1); enemyart.js unused in play |
-| 1 | Skills + data | Opus | js/data.js, items.js, itemdata.js, game.js (casts), input.js, balsim.js | every line and suit live; 21 lines × 3 skills; pages/arrows/calls; 14 Grips; tier names; balsim parity ±15 % |
-| 1 | Ruins bestiary | Opus | js/enemydata.js, parts.js, bosses.js | 6 Ruins commons + Oathless + Gloam Warden playable in a test arena |
-| 2 | Act II Ruins level | Opus | tools/maps/recipes/ruins.js, generated js/world.js, dialogue.js Ruins lines | Ruins map per world-maps.md; Broken Stair; 3 verb puzzles; bot clean to the end of Act II |
-| 2 | Elements in the world | Opus | js/elements-world.js (new), maps.js hooks, render.js tile hooks | receivers, object states, ice/grass tiles, Pip's charge, Dream Oil, Opal |
-| 3 | Balance + QA | Opus + Haiku | tools/balsim.js, tools/qa/*, perf scenes | balsim red flags green; run-big all devices to the end of Act II; perf p95 ≤ 20 ms on every zone |
+| 1 ✓ | Raster art embed | Sonnet | js/art-raster.js, tools/raster-embed.js, title + dialogue panel | merged |
+| 1 | Gear art A: suits | Sonnet | tools/forge/models/chibi-suit-*.js, suit loadouts in chibi-gear.js, generated suit banks | 12 suits × 3 pieces × 6 tiers; tier strips; lint + sha256 stable |
+| 1 | Gear art B: weapons, shields, companions | Sonnet | tools/forge/models/chibi-<line>.js, line list in chibi-gear.js, js/icons.js forge icons | 21 lines × 6 tiers; icons from the forge |
+| 1 | Enemy forge | Opus | tools/forge/models/<enemy>.js, ENEMY_RIGS, render.js forge-enemy block | every Act I + Ruins enemy and boss at 8 dirs; enemyart.js unused in play |
+| 1 | Skills + data | Opus | js/data.js, items.js, itemdata.js, game.js (casts), input.js, balsim.js | every line and suit live; 21 lines × 3 skills; 14 Grips; names; balsim parity ±15 % |
+| 1 | Ruins bestiary | Opus | js/enemydata.js, parts.js, bosses.js | 6 Ruins commons + Oathless + Gloam Warden in a test arena |
+| 2 | Docs (pivot rewrite) | Sonnet | docs/design/*, docs/PORTING.md, handoff/README.md, GLOSSARY.md | minutes §7 in full; docs-lint green |
+| 2 | Arenas | Sonnet | js/arenas.js, tools/arena-route.js, tools/qa/run-arenas.js, title Arena list, `?map=` | arena table (minutes §2); arena-route green |
+| 2 | Export: tiles, props, sheets | Opus | tools/export/*, handoff/, godot_import.gd, godot-sample/ | blob-47 terrain + cliff + water atlases per zone, props/trees, hero + enemy sheets with sidecars; manifest |
+| 3 | Elements in the world | Opus | js/elements-world.js, the `verbs` arena | receivers, states, tile patches, Pip's charge, Dream Oil, Opal |
+| 3 | Map cut (Haiku) | Haiku | deletes: tools/maps, editor, act1-route, engine-check, run-big; save v6 migration; check.js | check.js green on arenas |
 Piece ids: chest = suit id; new heads `<suit>helm`, new boots `<suit>boots`; weapon/shield/companion lines = their variant id.
-Gate: 100 % forge sprites in play; phone p95 ≤ 20 ms on every zone; docs current; ships to Pages.
+Gate: check.js green on arenas; 100 % forge sprites; phone p95 ≤ 20 ms on `stress`; Pages shows the Arena list.
 
 ## Client rulings (latest first)
 * 2026-10-23 (later) — **Godot pivot.** The studio no longer makes maps: the client builds every map himself in Godot. Act I maps are scrapped. The studio makes weapons, systems, gameplay, enemies, bosses, UI, and tests them only in tiny mockup arenas. When the game is finished the client ports it to Godot, so every asset (sprite sheets, map tiles, props) must be human-editable files. Map assets are remade only as reusable Godot tile/prop assets. This reverses the old "Godot port-ready rules" drop. Minutes: `docs/meetings/2026-10-23-godot-handoff.md`.
