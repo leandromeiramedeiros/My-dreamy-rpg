@@ -26,6 +26,20 @@ Terms: [../GLOSSARY.md](../GLOSSARY.md). Skills per line: [weapons-and-skills.md
 | Shields: Buckler, Heater, Tower | 1H | OFFHAND only | the shield's own action |
 | Companions: Grimoire, Quiver, Warhorn | worn | OFFHAND with a 2H or 1H | the deck's action |
 
+### Pairings (client ruling 2026-10-23: an offhand must fit its HAND's fantasy)
+| OFFHAND | Pairs with HAND |
+|---|---|
+| Melee 1H (Sword, Rapier, Mace, Daggers, Claws, Fans) | any melee 1H (dual wield) |
+| Caster 1H (Wand, Orb) and Chakram | Wand, Orb, Chakram |
+| Buckler | any melee 1H, Chakram |
+| Heater | Sword, Mace, Chakram |
+| Tower | Sword, Mace |
+| Grimoire | Staff, Wand, Orb, Sword (Spellblade) |
+| Quiver | Bow, Crossbow only |
+| Warhorn | Axe, Hammer, Halberd, Sword, Mace |
+* An offhand that does not pair is refused at equip (the bag greys it out with the reason); a loaded save that holds one
+  moves it to the bag. Every Grip is a legal pairing.
+
 * Empty offhand is allowed. With a 1H: M2 is the class off-action x1.0, E and Shift+E empty. With a 2H: M2, E, Shift+E empty.
 * Active keys: 1H + 1H, shield or companion = 6. 2H + companion = 6. 2H alone = 3. 1H alone = 4.
 * Class off-passives: Blades parry window +0.1 s; Shadows Step leaves a decoy at T3+; Foci cantrips cost 0 MP;
@@ -56,7 +70,7 @@ A Grip is a named pairing. It is an `EFFECTS` row (`src:'grip'`), matched by tag
 Each is a Codex discovery, shown as a glint and an aura. About 14:
 Sword+Buckler Vanguard; Daggers+Daggers Twin Fangs; Wand+Orb Twin Stars; Staff+Grimoire Archmage;
 Bow+Quiver Fletcher; Axe+Warhorn Warband; Rapier+Fans Dancer; Mace+Heater Sanctuary; Hammer+Warhorn Faultline;
-Chakram+Orb Lodestar; Claws+Buckler Cornered; Sword+Grimoire Spellblade; Halberd+Quiver Hedgewall;
+Chakram+Orb Lodestar; Claws+Buckler Cornered; Sword+Grimoire Spellblade; Halberd+Warhorn Hedgewall;
 Crossbow+Quiver Siegeworks (the M4b naming pass replaced the colliding Hunter, Orbit, Pike Square and Arbalest).
 * The Combo Codex tab sits beside the Bestiary and reveals a Grip on its first trigger.
 

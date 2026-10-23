@@ -164,7 +164,7 @@ A dash in "Code id" means no code id yet. Retired terms live only in the last se
 | OFFHAND slot | Second-hand item: M2, E, Shift+E; shield, 1H weapon or companion | — | weapon 2 (retired) | M4a |
 | Pocket | One of three consumable slots on the Belt or Satchel | `s1` `s2` `s3` | potion slot | M4a |
 | Satchel | Trinket slot: three pockets that also hold tools, +1 bag row, no boon | — | — | M4a |
-| Slot matrix | The rule of which item class fits HAND or OFFHAND | — | — | M4a |
+| Slot matrix | The rule of which item class fits HAND or OFFHAND, and which OFFHAND pairs with which HAND (loadout.md "Pairings") | — | Weapon Matrix | M4b |
 | Trinket slots | ring1, ring2, amulet, belt | `TRINKET_SLOTS` | — | live |
 | Two-hander | 2H item that takes only a worn companion in OFFHAND | — | — | M4a |
 
@@ -331,7 +331,7 @@ Each variant has three skills: **action** (primary, or off-action in OFFHAND), *
 | Grapple Arrow | Arrow (the deck shows the first word): a hooked line that drags the target to you | `grapplearrow` | — | M4b |
 | Gravity Well | Page: open a well that drags enemies in and grinds them | `gravity` | — | M4a |
 | Grip | Named pairing of two items; a Codex discovery with a glint and aura | `src:'grip'` | — | M4b |
-| Hedgewall | Grip: Halberd + Quiver; Nock primes the Halberd too: the next hit is +40% and pins for 0.6 s | `grip_hedgewall` | Pike Square (colliding name) | M4b |
+| Hedgewall | Grip: Halberd + Warhorn; Bellow primes the Halberd: the next hit is +40% and pins for 0.6 s | `grip_hedgewall` | Pike Square (colliding name) | M4b |
 | Lodestar | Grip: Chakram + Orb; Ricochet bounces twice more and each bounce zaps for lightning | `grip_lodestar` | Orbit (colliding name) | M4b |
 | Moonbeam | Shared page and arrow: channel a beam of moonlight down a long line | `moonbeam` | — | M4a |
 | Page | Item socketed into the Grimoire; a re-homed cast, T1 to T5 plus rarity | — | Dream Tome; rune alternate | M4a |
