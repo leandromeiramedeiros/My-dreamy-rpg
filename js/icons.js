@@ -334,6 +334,144 @@ const ICONS = (() => {
     },
   };
 
+  // ---- M4b skill art: every weapon line, offhand, deck entry and suit skill (data.js SKILLS) ----------------------------------
+  // slash / pierce skills take the 'physical' frame. Small shared painters: figures, shields, arrows, horns, books, rings, cracks.
+  Object.assign(elementOf, {
+    roll: 'physical', fanknives: 'physical', deathmark: 'physical', parry: 'physical', parryplus: 'physical', step: 'physical', snapshot: 'physical',
+    ward: 'arcane', bash: 'physical', aegis: 'holy', turn: 'arcane', nock: 'physical', chapter: 'arcane', quiverstorm: 'physical', hush: 'arcane',
+    fleche: 'physical', perforate: 'physical', crush: 'physical', consecrate: 'holy', cleave: 'physical', colossus: 'physical', earthbreaker: 'physical',
+    aftershock: 'physical', sweep: 'physical', skewer: 'physical', piercingbolt: 'physical', ballista: 'physical', ricochet: 'physical', guillotine: 'physical',
+    runebinding: 'arcane', tempest: 'lightning', rend: 'physical', savage: 'physical', veildance: 'physical', thousandpetals: 'physical',
+    block: 'physical', shieldbash: 'physical', bulwarkcharge: 'physical', wall: 'physical', shove: 'physical', fortress: 'holy',
+    bellow: 'physical', laststand: 'physical', rally: 'holy', taunt: 'physical', quakecall: 'physical', stand: 'physical',
+    venomarrow: 'nature', firearrow: 'fire', frostarrow: 'frost', bolaarrow: 'nature', grapplearrow: 'physical', splitarrow: 'physical', explosivearrow: 'fire',
+    stormcall: 'lightning', toxinflask: 'nature', judgementbell: 'holy', consecratedguard: 'holy', vault: 'holy', brace: 'physical', groundslam: 'physical',
+    bullrush: 'physical', arcaneward: 'arcane', wintersveil: 'frost', glide: 'frost', staticcloak: 'lightning', flashstep: 'lightning',
+    huntersmark: 'physical', briarmantle: 'nature', rootvault: 'nature', engarde: 'physical', sidestep: 'physical', fadestep: 'arcane',
+    smokebomb: 'nature', shadowstep: 'arcane', venomcoat: 'nature', slink: 'nature', mirrorimage: 'arcane', phase: 'arcane',
+  });
+  const fig = (x, y, rm) => { disc(x, y - 6.5, 2.3, rm, true); poly([[x - 2.6, y - 3.8], [x + 2.6, y - 3.8], [x + 2, y + 2], [x - 2, y + 2]], rm); bar(x - 1.2, y + 2, x - 1.8, y + 5.5, 1.6, 1.4, rm); bar(x + 1.2, y + 2, x + 1.8, y + 5.5, 1.6, 1.4, rm); };
+  const kite = (cx, cy, s, rm, rmT) => {
+    poly([[cx, cy - s], [cx - s * 0.8, cy - s * 0.78], [cx - s * 0.74, cy + s * 0.1], [cx, cy + s], [cx + s * 0.74, cy + s * 0.1], [cx + s * 0.8, cy - s * 0.78]], rm);
+    if (rmT) { bar(cx, cy - s * 0.8, cx, cy + s * 0.75, 1.6, 1, rmT); bar(cx - s * 0.6, cy - s * 0.32, cx + s * 0.6, cy - s * 0.32, 1.6, 1.6, rmT); }
+  };
+  const roundSh = (cx, cy, r, rm, rmB) => { disc(cx, cy, r, rm); arc(cx, cy, r - 1, 1.2, 0, 359.9, R.st); disc(cx, cy, r * 0.32, rmB || R.gd); };
+  const towerSh = (cx, cy, w, h, rm, rmT) => {
+    poly([[cx - w, cy - h], [cx + w, cy - h], [cx + w, cy + h * 0.72], [cx, cy + h], [cx - w, cy + h * 0.72]], rm);
+    if (rmT) { bar(cx - w + 1.5, cy - h + 1.5, cx + w - 1.5, cy - h + 1.5, 1.2, 1.2, rmT); bar(cx, cy - h + 2.5, cx, cy + h - 2, 1.4, 1.4, rmT); }
+  };
+  const arw = (x0, y0, x1, y1, rmH, s) => {
+    const a = Math.atan2(y1 - y0, x1 - x0); bar(x0, y0, x1 - Math.cos(a) * 2, y1 - Math.sin(a) * 2, 1.6, 1.6, R.wd); arrowHead(x1, y1, a, s || 3, rmH || R.st);
+    top(() => { line(x0, y0, x0 - Math.cos(a - 0.7) * 2.6, y0 - Math.sin(a - 0.7) * 2.6, R.wh[2]); line(x0, y0, x0 - Math.cos(a + 0.7) * 2.6, y0 - Math.sin(a + 0.7) * 2.6, R.wh[2]); });
+  };
+  const hornAt = (dx, dy, rm) => { bar(3 + dx, 19 + dy, 12 + dx, 11 + dy, 2.5, 7, rm || R.gd); ell(13.5 + dx, 9.5 + dy, 2.6, 4.2, rm || R.gd); ell(14 + dx, 9.5 + dy, 1.4, 3, R.dk, true); disc(2.5 + dx, 19.5 + dy, 1.3, R.wd); };
+  const waves = (cx, cy, rm, n, r0) => { for (let k = 0; k < (n || 2); k++) arc(cx, cy, (r0 || 5) + k * 3.5, 1.6, -55, 55, rm, true); };
+  const book = (rm, rmP) => {
+    poly([[1.5, 7], [11.5, 9.5], [11.5, 22], [1.5, 19]], rm); poly([[21.5, 7], [11.5, 9.5], [11.5, 22], [21.5, 19]], rm);
+    poly([[3, 6.5], [11, 8.6], [11, 19.5], [3, 17.4]], rmP || R.wh, false, 0.45); poly([[20, 6.5], [12, 8.6], [12, 19.5], [20, 17.4]], rmP || R.wh, false, 0.3);
+    top(() => { for (const y of [11, 13.5, 16]) { line(4.5, y - 1.5, 9.5, y, R.wh[0]); line(13.5, y, 18.5, y - 1.5, R.wh[0]); } });
+  };
+  const ringT = (cx, cy, r, w, rm, teeth, ph) => {
+    arc(cx, cy, r, w, 0, 359.9, rm);
+    for (let k = 0; k < (teeth || 0); k++) { const a = (ph || 0) + k * Math.PI * 2 / teeth, c = Math.cos(a), s = Math.sin(a); poly([[cx + c * r, cy + s * r], [cx + c * (r + 3) - s * 1.6, cy + s * (r + 3) + c * 1.6], [cx + c * r - s * 3.2, cy + s * r + c * 3.2]], R.wh); }
+  };
+  const crackAt = (y, c) => top(() => { for (const [a, b, d, e] of [[3, y, 7, y - 2], [7, y - 2, 11, y + 1], [11, y + 1, 15, y - 1], [15, y - 1, 20, y + 1], [7, y - 2, 6, y - 5], [15, y - 1, 17, y - 4], [11, y + 1, 12, y + 3]]) line(a, b, d, e, c); });
+  const claws = (rm, n) => { for (const o of (n === 2 ? [-2, 3] : [-4, 0, 4])) bar(8 + o, 3, 14 + o, 20, 1, 2.8, rm); };
+  const speed = (ys, x0, x1, rm) => { for (const y of ys) bar(x0, y, x1, y, 1, 1, rm || R.wh); };
+  const glint = (x, y) => spk(x, y, 1, '#ffffff', R.wh[2]);
+  Object.assign(SK, {
+    // ---- weapon actions and off-actions ----
+    roll() { SK.tumble(); },
+    fanknives() { for (const a of [-80, -55, -30, -5]) { const t = a * Math.PI / 180, x1 = 4 + Math.cos(t) * 17, y1 = 20 + Math.sin(t) * 17; bar(4 + Math.cos(t) * 6, 20 + Math.sin(t) * 6, x1, y1, 2.4, 1, R.st); } disc(4, 20, 2, R.wd); glint(19, 6); },
+    deathmark() { arc(11.5, 11.5, 8, 2, 0, 359.9, R.rd); top(() => { line(11.5, 1, 11.5, 7, R.rd[2]); line(11.5, 16, 11.5, 22, R.rd[2]); line(1, 11.5, 7, 11.5, R.rd[2]); line(16, 11.5, 22, 11.5, R.rd[2]); }); poly([[11.5, 7], [14.5, 12.5], [11.5, 16], [8.5, 12.5]], R.dk); top(() => P(11, 11, R.rd[3])); },
+    parry() { swd(3, 20, 18, 5, 3); swd(20, 20, 5, 5, 3, R.wh); spk(11.5, 12, 2, '#ffffff', R.lt[2]); },
+    parryplus() { SK.parry(); top(() => { line(18, 2, 18, 8, R.lt[3]); line(15, 5, 21, 5, R.lt[3]); }); },
+    step() { fig(14, 13, R.st); speed([8, 12, 16], 1, 8); },
+    snapshot() { arw(3, 20, 16, 7, R.st); poly(starPts(18, 5, 4.5, 1.8, 4), R.lt); top(() => P(18, 5, '#fff')); },
+    ward() { poly([[11.5, 2], [20, 7], [20, 16], [11.5, 21], [3, 16], [3, 7]], R.ar); poly([[11.5, 5], [17, 8.5], [17, 14.5], [11.5, 18], [6, 14.5], [6, 8.5]], R.dk, false, 0.5); poly(starPts(11.5, 11.5, 4, 1.6, 4), R.ar); glint(17, 5); },
+    bash() { roundSh(13, 12, 7.5, R.st); speed([6, 12, 18], 1, 4); spk(20, 4, 1, '#fff', R.wh[2]); },
+    aegis() { for (let a = -150; a <= -30; a += 30) { const r = a * Math.PI / 180; bar(11.5 + Math.cos(r) * 8, 12 + Math.sin(r) * 8, 11.5 + Math.cos(r) * 11, 12 + Math.sin(r) * 11, 2, 1, R.lt); } roundSh(11.5, 13, 8, R.gd, R.wh); },
+    turn() { book(R.ar); poly([[12, 8.6], [18, 2.5], [19.5, 12], [12, 19.5]], R.wh, false, 0.7); glint(19, 3); },
+    nock() { arc(15, 12, 9, 2.4, 120, 240, R.wd, true); top(() => { line(11, 4, 11, 20, R.wh[1]); }); arw(6, 12, 21, 12, R.st); },
+    chapter() { book(R.ar); for (const [x, y, s] of [[6, 4, 2.4], [17, 3.5, 2.8], [11.5, 13, 2]]) poly(starPts(x, y, s, s * 0.45, 5), R.lt); },
+    quiverstorm() { for (const [x, y] of [[5, 4], [9, 9], [14, 3], [18, 8], [11, 15]]) { bar(x - 3, y - 3, x, y, 1, 1, R.wd); arrowHead(x + 1, y + 1, Math.PI / 4, 2.4, R.st); } poly([[3, 15], [9, 21], [6, 23], [1, 18]], R.br); speed([20], 13, 21, R.wh); },
+    hush() { disc(11.5, 12, 8, R.dk); arc(11.5, 11, 6, 1.6, 20, 160, R.ar, false); top(() => { for (const x of [7, 10, 13, 16]) line(x, 16, x - 0.5, 18.5, R.ar[3]); }); top(() => { line(18, 3, 21, 3, R.ar[3]); line(21, 3, 18, 6, R.ar[3]); line(18, 6, 21, 6, R.ar[3]); }); },
+    // ---- Blades ----
+    fleche() { bar(2, 21, 21, 3, 1.6, 1, R.wh); bar(2, 21, 6, 17, 2, 2, R.gd); arc(6, 17, 3, 1.4, 180, 360, R.gd); speed([10, 15], 1, 9); glint(20, 4); },
+    perforate() { bar(2, 12, 21, 12, 1.8, 1, R.wh); bar(2, 12, 5, 12, 3, 3, R.gd); for (const x of [9, 13, 17]) { disc(x, 12, 1.6, R.rd); } spk(21, 12, 1, '#fff', R.wh[2]); speed([6, 18], 6, 18, R.st); },
+    crush() { bar(4, 21, 12, 12, 2, 2, R.wd); disc(14, 9, 5, R.st); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; arrowHead(14 + Math.cos(a) * 5.5, 9 + Math.sin(a) * 5.5, a, 1.8, R.st); } spk(20, 18, 2, '#fff', R.lt[2]); },
+    consecrate() { ell(11.5, 18, 10, 3.6, R.gd); ell(11.5, 18, 7, 2.2, R.lt, true); bar(11.5, 2, 11.5, 16, 2.4, 2.4, R.lt); bar(7, 6.5, 16, 6.5, 2.2, 2.2, R.lt); top(() => { line(11.5, 3, 11.5, 15, '#fff'); dots([[4, 10], [19, 9], [3, 14], [20, 14]], R.lt[3]); }); },
+    // ---- Greatarms ----
+    cleave() { arc(11.5, 12, 9, 3, -160, -20, R.wh, true); bar(5, 21, 15, 7, 2, 2, R.wd); poly([[13, 3], [21, 6], [19, 13], [15, 9]], R.st); },
+    colossus() { arc(11.5, 11.5, 10, 1.4, 0, 359.9, R.lt); bar(11.5, 22, 11.5, 6, 2.4, 2.4, R.wd); poly([[11.5, 2], [21, 4], [20, 12], [11.5, 9]], R.st); poly([[11.5, 2], [2, 4], [3, 12], [11.5, 9]], R.st); glint(20, 3); },
+    earthbreaker() { bar(3, 3, 11, 12, 2, 2, R.wd); poly([[8, 9], [14, 4], [19, 10], [13, 15]], R.st); ell(12, 19, 10, 3, R.br); crackAt(19, R.dk[0]); },
+    aftershock() { ell(11.5, 15, 10.5, 5, R.br); ell(11.5, 15, 6.5, 2.8, R.dk, true); arc(11.5, 15, 9, 1.4, 180, 360, R.lt, false); crackAt(15, R.lt[2]); for (const [x, y] of [[4, 6], [18, 5], [11, 3]]) disc(x, y, 1.6, R.br); },
+    sweep() { arc(11.5, 13, 9, 3, 160, 380, R.wh, true); bar(3, 20, 18, 6, 1.6, 1.6, R.wd); poly([[16, 4], [21, 3], [20, 9], [17, 8]], R.st); speed([21], 4, 10, R.wh); },
+    skewer() { bar(1, 18, 16, 8, 1.6, 1.6, R.wd); poly([[15, 6], [22, 4], [19, 11], [17, 10]], R.st); speed([12, 16, 20], 1, 7); disc(20, 15, 2.4, R.rd); },
+    // ---- Shots ----
+    piercingbolt() { arc(9, 12, 6, 2, -80, 80, R.ic, true); arc(15, 12, 5, 2, -80, 80, R.ic, true); bar(2, 12, 18, 12, 2.6, 2.6, R.wd); poly([[22, 12], [17, 8.5], [17, 15.5]], R.st); top(() => line(17, 12, 21, 12, '#fff')); },
+    ballista() { bar(3, 6, 20, 6, 2, 2, R.wd); arc(11.5, 14, 9, 2.2, 200, 340, R.wd, false); bar(11.5, 21, 11.5, 2, 3.4, 3, R.st); poly([[11.5, 0.5], [8, 5], [15, 5]], R.st); top(() => line(3, 7, 20, 7, R.wh[1])); },
+    ricochet() { ringT(7, 15, 4, 2.2, R.st, 3, 0.4); top(() => { line(10, 12, 14, 5, R.wh[2]); line(14, 5, 17, 11, R.wh[2]); line(17, 11, 21, 4, R.wh[2]); }); for (const [x, y] of [[14, 5], [17, 11]]) spk(x, y, 1, '#fff', R.wh[1]); },
+    guillotine() { arc(11.5, 11.5, 10, 1.4, 120, 330, R.wh, true); ringT(11.5, 11.5, 5.5, 3, R.st, 4, 0.3); disc(11.5, 11.5, 2, R.dk, true); glint(17, 6); },
+    // ---- Foci ----
+    runebinding() { arc(11.5, 11.5, 9, 1.6, 0, 359.9, R.ar); poly(starPts(11.5, 11.5, 8, 4.6, 6), R.ar, false, 0.5); poly(starPts(11.5, 11.5, 4.6, 2.2, 6), R.dk, false, 0.5); top(() => P(11, 11, R.ar[3])); },
+    tempest() { disc(7, 7, 4, R.sn); disc(12, 5.5, 5, R.sn); disc(17, 7.5, 4, R.sn); arc(11.5, 15, 7, 1.6, 200, 520, R.bl, true); bolt([12, 9], [9, 21], 1.6, 3, R.lt, '#fff'); },
+    // ---- Shadows ----
+    rend() { claws(R.wh); top(() => { for (const o of [-4, 0, 4]) line(9 + o, 6, 13 + o, 17, R.rd[2]); }); },
+    savage() { claws(R.wh); poly(starPts(15, 15, 6, 2.6, 7), R.rd); top(() => P(15, 15, R.rd[3])); spk(5, 18, 1, R.rd[3], R.rd[2]); },
+    veildance() { for (let a = 200; a <= 340; a += 20) { const t = a * Math.PI / 180; bar(11.5, 20, 11.5 + Math.cos(t) * 11, 20 + Math.sin(t) * 11, 1, 3, R.pk); } arc(11.5, 20, 11, 1.6, 200, 340, R.rd); arc(11.5, 8, 6, 1.4, -160, -20, R.wh, true); },
+    thousandpetals() { for (const [x, y, r] of [[5, 6, 2], [12, 4, 2.4], [18, 8, 2], [8, 13, 2.6], [16, 16, 2.2], [5, 19, 1.8], [12, 19, 2]]) { ell(x, y, r, r * 0.6, R.pk); } spk(19, 3, 1, '#fff', R.pk[3]); },
+    // ---- shields ----
+    block() { kite(11.5, 11.5, 9, R.bl, R.gd); },
+    shieldbash() { kite(13, 12, 8, R.bl, R.gd); speed([7, 12, 17], 1, 5); spk(21, 4, 1, '#fff', R.wh[2]); },
+    bulwarkcharge() { kite(9, 12, 7.5, R.bl, R.gd); for (const dx of [0, 4]) poly([[15 + dx, 7], [19 + dx, 12], [15 + dx, 17], [17 + dx, 17], [21 + dx, 12], [17 + dx, 7]], R.lt); },
+    wall() { towerSh(11.5, 11, 7.5, 9.5, R.st, R.gd); },
+    shove() { towerSh(9, 11.5, 6, 8.5, R.st, R.gd); waves(14, 12, R.wh, 2, 4); },
+    fortress() { ell(11.5, 19, 10, 2.6, R.gd); arc(11.5, 19, 10, 2, 180, 360, R.wh, false); arc(11.5, 19, 7, 1.2, 200, 340, R.lt, false); kite(11.5, 14, 4.6, R.st, R.gd); },
+    // ---- Warhorn and calls ----
+    bellow() { hornAt(0, 0, R.gd); waves(14, 9.5, R.rd, 2, 4.5); },
+    laststand() { bar(11.5, 21, 11.5, 2, 1.6, 1.6, R.wd); poly([[12, 2.5], [21, 4.5], [17, 7], [21, 9.5], [12, 11]], R.rd); arc(11.5, 20, 7, 1.6, 180, 360, R.lt, false); glint(4, 5); },
+    rally() { hornAt(0, 1, R.gd); top(() => { line(18, 2, 18, 8, R.lt[3]); line(15, 5, 21, 5, R.lt[3]); }); arc(14, 10.5, 8, 1.4, -40, 40, R.lt, true); },
+    taunt() { hornAt(-1, 1, R.gd); bar(19, 3, 19, 11, 2.4, 1.6, R.rd); disc(19, 14.5, 1.4, R.rd); },
+    quakecall() { hornAt(0, -3, R.gd); ell(12, 20, 10, 2.6, R.br); crackAt(20, R.dk[0]); },
+    stand() { kite(11.5, 9.5, 7.5, R.st, R.gd); ell(11.5, 20, 9, 2.4, R.sn); top(() => { line(4, 20, 19, 20, R.sn[3]); }); },
+    // ---- Quiver arrows ----
+    venomarrow() { arw(3, 20, 17, 6, R.gr); for (const [x, y] of [[19, 10], [20, 14]]) ell(x, y, 1.2, 1.8, R.gr); },
+    firearrow() { arw(3, 20, 16, 7, R.st); poly([[15, 9], [21, 2], [20, 8], [22, 11], [17, 11]], R.fr); top(() => P(18, 7, R.fr[3])); },
+    frostarrow() { arw(3, 20, 15, 8, R.ic); shard(15, 8, 21, 2, 3.4, R.ic); glint(20, 3); },
+    bolaarrow() { arw(3, 20, 16, 7, R.st); top(() => { line(9, 14, 14, 18, R.wh[1]); line(9, 14, 5, 9, R.wh[1]); }); disc(15, 19, 2.2, R.sn); disc(4.5, 8, 2.2, R.sn); },
+    grapplearrow() { bar(3, 20, 15, 8, 1.6, 1.6, R.wd); poly([[15, 8], [21, 2], [17, 9]], R.st); poly([[15, 8], [21, 2], [14, 5]], R.st); top(() => { for (let k = 0; k < 6; k++) P(2 + k, 20 - (k % 2), R.wh[1]); }); },
+    splitarrow() { bar(2, 21, 10, 13, 1.6, 1.6, R.wd); for (const [x, y] of [[20, 4], [21, 12], [13, 3]]) { bar(10, 13, x, y, 1, 1, R.wd); arrowHead(x, y, Math.atan2(y - 13, x - 10), 2.4, R.st); } },
+    explosivearrow() { arw(3, 20, 13, 10, R.st); poly(starPts(16, 7, 6, 2.6, 8), R.fr); disc(16, 7, 2.2, R.lt, true); },
+    // ---- suits ----
+    stormcall() { disc(7, 6, 4, R.sn); disc(12, 4.5, 4.5, R.sn); disc(17, 6.5, 3.6, R.sn); bolt([12, 9], [10, 22], 1.8, 3, R.lt, '#fff'); bolt([17, 9], [19, 17], 1.2, 2, R.lt, '#fff'); },
+    toxinflask() { disc(11.5, 15, 6, R.gr); bar(11.5, 3, 11.5, 9, 3.4, 3.4, R.wh); bar(9.5, 3, 13.5, 3, 2, 2, R.br); top(() => dots([[9, 13], [10, 12], [14, 17]], R.gr[3])); ell(18, 7, 1.4, 1.4, R.gr); },
+    judgementbell() { poly([[11.5, 3], [7, 7], [6, 15], [3, 18], [20, 18], [17, 15], [16, 7]], R.gd); disc(11.5, 19.5, 1.8, R.lt); arc(11.5, 11, 10.5, 1.2, -60, 60, R.lt, true); arc(11.5, 11, 10.5, 1.2, 120, 240, R.lt, true); },
+    consecratedguard() { ell(11.5, 19, 10, 3, R.lt, true); kite(11.5, 11, 7.5, R.wh, R.gd); top(() => dots([[3, 15], [20, 15]], R.lt[3])); },
+    vault() { arc(11.5, 18, 9, 2, 200, 340, R.lt, true); arrowHead(19.5, 15, 1.2, 3, R.lt); fig(6, 16, R.st); bar(13, 21, 13, 13, 1.4, 1.4, R.wd); },
+    brace() { kite(13, 11, 8, R.st, R.gd); for (const y of [6, 11, 16]) bar(1, y, 5, y + 1, 1.4, 1.4, R.br); ell(13, 21, 8, 1.4, R.sn); },
+    groundslam() { poly([[8, 2], [15, 2], [16, 8], [7, 8]], R.st); bar(11.5, 8, 11.5, 12, 3, 3, R.st); ell(11.5, 17, 10.5, 4, R.br); ell(11.5, 17, 5, 1.8, R.dk, true); crackAt(17, R.lt[2]); for (const [x, y] of [[3, 11], [20, 10]]) disc(x, y, 1.4, R.br); },
+    bullrush() { disc(13, 13, 5.5, R.br); arc(13, 9, 6.5, 2.2, 180, 260, R.wh, true); arc(13, 9, 6.5, 2.2, 280, 360, R.wh, true); top(() => dots([[11, 13], [15, 13]], R.rd[3])); speed([10, 15, 20], 1, 6); },
+    arcaneward() { arc(11.5, 11.5, 9, 2, 0, 359.9, R.ar); poly([[11.5, 5], [16, 11.5], [11.5, 18], [7, 11.5]], R.mn); top(() => P(10, 9, '#fff')); spk(19, 4, 1, '#fff', R.ar[2]); },
+    wintersveil() { poly([[11.5, 2], [5, 7], [3, 21], [20, 21], [18, 7]], R.ic); poly([[11.5, 5], [8, 8], [7, 18], [16, 18], [15, 8]], R.bl, false, 0.4);
+      top(() => { for (const a of [0, 60, 120]) { const r = a * Math.PI / 180, c = Math.cos(r) * 4, s = Math.sin(r) * 4; line(11.5 - c, 13 - s, 11.5 + c, 13 + s, R.ic[3]); } P(11.5, 13, '#fff'); }); glint(19, 4); },
+    glide() { fig(15, 11, R.ic); ell(9, 19, 8, 1.8, R.ic, true); speed([9, 13], 1, 8, R.ic); glint(5, 18); },
+    staticcloak() { poly([[11.5, 3], [5, 7], [3, 21], [20, 21], [18, 7]], R.bl); bolt([4, 9], [9, 15], 1.2, 2, R.lt, '#fff'); bolt([19, 8], [15, 16], 1.2, 2, R.lt, '#fff'); disc(11.5, 6, 2, R.dk, true); },
+    flashstep() { bolt([3, 19], [20, 4], 2, 4, R.lt, '#fff'); fig(19, 13, R.sn); speed([20], 2, 8, R.lt); },
+    huntersmark() { arc(11.5, 11.5, 8, 1.8, 0, 359.9, R.fr); arc(11.5, 11.5, 4, 1.4, 0, 359.9, R.fr); top(() => { line(11.5, 1, 11.5, 22, R.lt[2]); line(1, 11.5, 22, 11.5, R.lt[2]); P(11, 11, '#fff'); }); },
+    briarmantle() { arc(11.5, 11.5, 8, 2.6, 0, 359.9, R.lf); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; arrowHead(11.5 + Math.cos(a) * 10, 11.5 + Math.sin(a) * 10, a, 2, R.br); } disc(11.5, 11.5, 2.4, R.gr); },
+    rootvault() { arc(13, 15, 8, 2, 200, 330, R.gr, true); arrowHead(19.5, 9.5, -0.6, 2.8, R.gr); for (const x of [4, 8, 12]) bar(x, 22, x + 1, 15, 2, 1, R.br); fig(18, 17, R.sn); },
+    engarde() { bar(11.5, 21, 11.5, 2, 1.6, 1, R.wh); arc(11.5, 17, 3.2, 1.4, 180, 360, R.gd); bar(8, 17, 15, 17, 1.4, 1.4, R.gd); arc(11.5, 9, 8, 1.6, 200, 340, R.rd, true); glint(11, 3); },
+    sidestep() { fig(15, 13, R.st); ell(7, 13, 3, 6, R.wh, true); top(() => { line(2, 21, 8, 21, R.wh[2]); }); arrowHead(10, 21, 0, 2.6, R.wh); },
+    fadestep() { fig(16, 13, R.ar); for (const [x, a] of [[10, 0.6], [5, 0.35]]) { top(() => { for (let y = 7; y < 19; y += 2) P(x, y, R.ar[a > 0.5 ? 2 : 1]); for (let y = 8; y < 18; y += 3) P(x + 1, y, R.ar[1]); }); } },
+    smokebomb() { disc(7, 15, 4.6, R.sn); disc(12, 11, 5.4, R.sn); disc(17, 15, 4.2, R.sn); disc(11, 18, 3.6, R.sn); disc(17, 5, 2.6, R.dk); bar(18, 3, 20, 1, 1, 1, R.br); spk(21, 1, 1, R.lt[3], R.fr[2]); },
+    shadowstep() { fig(16, 13, R.dk); top(() => { for (let y = 6; y < 19; y += 2) for (let x = 4; x < 9; x += 2) if ((x + y) % 4 === 0) P(x, y, R.ar[2]); }); speed([10, 15], 8, 12, R.ar); glint(19, 4); },
+    venomcoat() { bar(4, 20, 16, 6, 2.6, 1, R.st); bar(3, 21, 6, 18, 2, 2, R.wd); for (const [x, y] of [[14, 11], [17, 13], [12, 14]]) ell(x, y, 1.2, 1.8, R.gr); },
+    slink() { ell(11.5, 16, 8, 4, R.dk); top(() => dots([[9, 15], [14, 15]], '#d8ff60')); speed([20], 3, 20, R.gr); },
+    mirrorimage() { fig(7.5, 13, R.ar); fig(16, 13, R.mn); top(() => { for (let y = 3; y < 21; y += 2) P(11.5, y, R.wh[2]); }); },
+    phase() { top(() => { for (let y = 3; y < 21; y++) if (y % 4) P(11, y, R.st[2]); }); fig(14, 13, R.ar); fig(7, 13, R.ar); },
+  });
+
   // ---- items ---------------------------------------------------------------------
   const MET = [['#2a1c18', '#5a3c2c', '#8a6048', '#b08a6a'], ['#2c3048', '#5a6078', '#8c94ac', '#c4cadc'], R.st, ['#1c3a78', '#3c78c8', '#78c0ff', '#e8faff'], ['#6a78a8', '#b0c0e8', '#e8f2ff', '#ffffff']];
   const trim = (t, rm) => (t >= 2 ? R.gd : rm);
